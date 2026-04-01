@@ -1,0 +1,678 @@
+---
+layout: base.njk
+title: Home — Map the System. Understand the Why.
+description: A living resource for clinical informatics, healthcare data architecture, and the real story behind the systems that run modern medicine.
+navPage: home
+---
+
+<style>
+/* ================================================================
+   INDEX PAGE — PAGE-SPECIFIC STYLES
+================================================================ */
+
+/* HERO */
+.hero {
+  position:relative; min-height:92vh;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:clamp(64px,10vh,120px) clamp(20px,5vw,80px) 56px;
+  overflow:hidden;
+}
+.hero-bg {
+  position:absolute; inset:0; z-index:0;
+  background:linear-gradient(180deg,var(--dark) 0%,#0b1730 60%,#091428 100%);
+}
+.hero-bg::before {
+  content:''; position:absolute; inset:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:48px 48px; opacity:.3;
+  animation:gridShift 24s linear infinite;
+}
+.hero-bg::after {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse 60% 50% at 72% 40%,rgba(27,95,168,.16) 0%,transparent 70%),
+             radial-gradient(ellipse 35% 30% at 15% 75%,rgba(78,205,196,.07) 0%,transparent 60%);
+}
+@keyframes gridShift { from{background-position:0 0} to{background-position:0 48px} }
+.hero-orb {
+  position:absolute; right:-100px; top:50%; transform:translateY(-50%);
+  width:560px; height:560px; border-radius:50%;
+  background:radial-gradient(circle,rgba(27,95,168,.2) 0%,transparent 70%);
+  animation:orbPulse 7s ease-in-out infinite; z-index:0;
+}
+@keyframes orbPulse { 0%,100%{transform:translateY(-50%) scale(1)} 50%{transform:translateY(-50%) scale(1.1)} }
+.hero-inner { position:relative; z-index:1; max-width:740px; }
+.hero-eyebrow {
+  display:inline-flex; align-items:center; gap:10px;
+  font-size:11px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--teal);
+  border:1px solid rgba(78,205,196,.25); background:rgba(78,205,196,.06);
+  padding:5px 16px; border-radius:20px; margin-bottom:28px;
+  animation:fadeUp .5s ease both;
+}
+.hero-eyebrow-dot { width:6px; height:6px; border-radius:50%; background:var(--teal); animation:blink 2.2s ease infinite; flex-shrink:0; }
+.hero h1 { font-family:var(--display); font-size:clamp(36px,5.5vw,66px); font-weight:800; line-height:1.05; letter-spacing:-.03em; margin-bottom:24px; animation:fadeUp .5s .08s ease both; }
+.hero h1 .dim  { color:var(--t2); display:block; }
+.hero h1 .teal { color:var(--teal); display:block; }
+.hero-rule { width:64px; height:3px; background:linear-gradient(90deg,var(--teal),var(--blue)); border-radius:3px; margin-bottom:24px; animation:fadeUp .5s .12s ease both; }
+.hero-sub  { font-size:clamp(15px,1.8vw,18px); color:var(--t2); line-height:1.75; max-width:580px; margin-bottom:14px; animation:fadeUp .5s .16s ease both; }
+.hero-creds { font-family:var(--mono); font-size:12px; color:var(--t3); margin-bottom:36px; animation:fadeUp .5s .2s ease both; }
+
+/* Search */
+.hero-search-wrap { position:relative; max-width:580px; margin-bottom:16px; animation:fadeUp .5s .24s ease both; }
+.search-icon-mark { position:absolute; left:16px; top:50%; transform:translateY(-50%); width:18px; height:18px; pointer-events:none; display:flex; align-items:center; justify-content:center; }
+.search-icon-mark::before,.search-icon-mark::after { content:''; position:absolute; transition:all .2s; }
+.search-icon-mark::before { width:11px; height:11px; border-radius:50%; border:2px solid var(--t3); top:0; left:0; }
+.search-icon-mark::after { width:5px; height:2px; background:var(--t3); transform:rotate(45deg); bottom:1px; right:0; border-radius:1px; }
+.hero-search:focus ~ .search-icon-mark::before { border-color:var(--teal); }
+.hero-search:focus ~ .search-icon-mark::after  { background:var(--teal); }
+.hero-search { width:100%; background:rgba(22,32,48,.9); border:1px solid var(--border2); border-radius:14px; padding:16px 120px 16px 48px; font-family:var(--font); font-size:15px; color:var(--t1); outline:none; transition:all .2s; backdrop-filter:blur(8px); }
+.hero-search::placeholder { color:var(--t3); }
+.hero-search:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(78,205,196,.1),0 8px 32px rgba(0,0,0,.3); }
+.search-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--blue); color:#fff; border-radius:10px; padding:8px 18px; font-size:13px; font-weight:600; transition:all .15s; }
+.search-btn:hover { background:var(--blue-hi); }
+.search-results { position:absolute; top:calc(100% + 8px); left:0; right:0; background:var(--raised); border:1px solid var(--border2); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); display:none; z-index:10; }
+.search-results.open { display:block; }
+.sr-item { display:flex; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; text-decoration:none; color:var(--t1); }
+.sr-item:last-child { border-bottom:none; }
+.sr-item:hover { background:var(--raised2); }
+.sr-cat { width:52px; flex-shrink:0; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:2px 0; text-align:center; border-radius:4px; }
+.sr-cat.tool      { background:rgba(78,205,196,.15); color:var(--teal); }
+.sr-cat.article   { background:rgba(27,95,168,.2); color:#6aabff; }
+.sr-cat.reference { background:rgba(124,111,205,.15); color:#a99ee8; }
+.sr-cat.learn     { background:rgba(45,155,111,.15); color:#4dc897; }
+.sr-cat.lab       { background:rgba(232,168,56,.12); color:var(--amber); }
+.sr-cat.roadmap   { background:rgba(74,106,138,.15); color:var(--t3); }
+.sr-label { font-size:13px; font-weight:500; color:var(--t1); flex:1; }
+.sr-sub { font-size:11px; color:var(--t3); margin-top:1px; }
+.search-pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:0; animation:fadeUp .5s .28s ease both; }
+.search-pill { font-size:11px; padding:4px 13px; background:rgba(27,95,168,.12); border:1px solid rgba(27,95,168,.3); border-radius:12px; color:var(--t2); cursor:pointer; transition:all .15s; }
+.search-pill:hover { background:rgba(78,205,196,.12); border-color:rgba(78,205,196,.4); color:var(--teal); }
+.hero-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:36px; animation:fadeUp .5s .32s ease both; }
+.scroll-cue { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:7px; z-index:1; font-family:var(--mono); font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--t3); animation:fadeIn 1s 1.2s ease both; }
+.scroll-track { width:20px; height:30px; border:1.5px solid var(--t4); border-radius:10px; position:relative; }
+.scroll-track::after { content:''; position:absolute; width:4px; height:7px; background:var(--teal); border-radius:2px; left:50%; transform:translateX(-50%); top:4px; animation:trackBob 1s ease-in-out infinite; }
+@keyframes trackBob { 0%,100%{top:4px;opacity:1} 80%{top:14px;opacity:.15} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* 4Ps STRIP */
+.fourps-strip { background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:32px clamp(20px,5vw,80px); }
+.fourps-inner { max-width:1100px; margin:0 auto; }
+.fourps-label { font-size:10px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--t3); margin-bottom:18px; display:flex; align-items:center; gap:12px; }
+.fourps-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.fourps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.fourp-card { background:var(--raised); border:1px solid var(--border); border-radius:10px; padding:20px 20px 16px; display:flex; flex-direction:column; gap:8px; transition:all .2s; text-decoration:none; }
+.fourp-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.3); }
+.fourp-letter { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:15px; font-weight:800; flex-shrink:0; margin-bottom:4px; }
+.fourp-card.patient  .fourp-letter { background:rgba(78,205,196,.15); color:var(--teal); }
+.fourp-card.provider .fourp-letter { background:rgba(36,120,212,.18); color:#6aabff; }
+.fourp-card.payer    .fourp-letter { background:rgba(232,168,56,.15); color:var(--amber); }
+.fourp-card.policy   .fourp-letter { background:rgba(124,111,205,.15); color:#a99ee8; }
+.fourp-card.patient  { border-top:2px solid var(--teal); }
+.fourp-card.provider { border-top:2px solid var(--blue-hi); }
+.fourp-card.payer    { border-top:2px solid var(--amber); }
+.fourp-card.policy   { border-top:2px solid #7C6FCD; }
+.fourp-name { font-family:var(--display); font-size:17px; font-weight:700; color:var(--t1); }
+.fourp-desc { font-size:12px; color:var(--t2); line-height:1.6; flex:1; }
+.fourp-chip { display:inline-block; font-size:10px; padding:2px 9px; border-radius:8px; font-weight:600; margin-top:4px; font-family:var(--mono); }
+.fourp-card.patient  .fourp-chip { background:rgba(78,205,196,.1); color:var(--teal); }
+.fourp-card.provider .fourp-chip { background:rgba(36,120,212,.15); color:#6aabff; }
+.fourp-card.payer    .fourp-chip { background:rgba(232,168,56,.1); color:var(--amber); }
+.fourp-card.policy   .fourp-chip { background:rgba(124,111,205,.1); color:#a99ee8; }
+
+/* START HERE */
+.start-here { background:var(--surface); }
+.start-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.start-card { background:var(--raised); border:1px solid var(--border); border-radius:var(--radius); padding:26px 24px; display:flex; flex-direction:column; gap:12px; position:relative; overflow:hidden; transition:all .2s; }
+.start-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.start-card.s1::after { background:var(--teal); }
+.start-card.s2::after { background:var(--blue-hi); }
+.start-card.s3::after { background:var(--amber); }
+.start-card:hover { border-color:var(--border2); transform:translateY(-3px); box-shadow:var(--shadow); }
+.start-num { font-family:var(--display); font-size:42px; font-weight:800; line-height:1; opacity:.12; position:absolute; top:16px; right:20px; }
+.start-card.s1 .start-num { color:var(--teal); }
+.start-card.s2 .start-num { color:var(--blue-hi); }
+.start-card.s3 .start-num { color:var(--amber); }
+.start-path-label { font-family:var(--mono); font-size:10px; color:var(--t3); letter-spacing:.1em; text-transform:uppercase; }
+.start-title { font-family:var(--display); font-size:19px; font-weight:700; color:var(--t1); }
+.start-desc { font-size:13px; color:var(--t2); line-height:1.65; flex:1; }
+.start-cta { font-size:12px; color:var(--teal); font-weight:600; display:flex; align-items:center; gap:6px; margin-top:4px; }
+.start-cta-arrow { display:inline-block; transition:transform .15s; }
+.start-card:hover .start-cta-arrow { transform:translateX(5px); }
+
+/* TOOLS */
+.tools-section { background:var(--dark); }
+.tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:14px; }
+.tool-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; display:flex; flex-direction:column; transition:all .2s; text-decoration:none; }
+.tool-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 10px 40px rgba(0,0,0,.4); }
+.tc-head { padding:22px 22px 18px; border-bottom:1px solid var(--border); flex:1; }
+.tc-badge { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:3px 10px; border-radius:8px; margin-bottom:14px; font-family:var(--mono); }
+.badge-interactive { background:rgba(78,205,196,.12); color:var(--teal); }
+.badge-learn       { background:rgba(36,120,212,.18); color:#6aabff; }
+.badge-lab         { background:rgba(232,168,56,.12); color:var(--amber); }
+.badge-reference   { background:rgba(124,111,205,.15); color:#a99ee8; }
+.badge-coming      { background:rgba(74,106,138,.1); color:var(--t3); }
+.tc-type-mark { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:13px; font-weight:800; margin-bottom:12px; color:var(--t1); }
+.mark-teal   { background:rgba(78,205,196,.15); color:var(--teal); }
+.mark-blue   { background:rgba(36,120,212,.15); color:#6aabff; }
+.mark-amber  { background:rgba(232,168,56,.12); color:var(--amber); }
+.mark-purple { background:rgba(124,111,205,.12); color:#a99ee8; }
+.mark-muted  { background:rgba(74,106,138,.12); color:var(--t3); }
+.tc-title { font-size:16px; font-weight:600; color:var(--t1); margin-bottom:6px; }
+.tc-desc  { font-size:13px; color:var(--t2); line-height:1.6; }
+.tc-foot { padding:14px 22px; display:flex; align-items:center; justify-content:space-between; }
+.tc-tags { display:flex; gap:5px; flex-wrap:wrap; }
+.tc-tag  { font-size:10px; padding:2px 8px; border-radius:8px; background:var(--raised); color:var(--t3); border:1px solid var(--border); }
+.tc-arrow  { color:var(--t3); font-size:13px; font-weight:600; transition:all .15s; flex-shrink:0; }
+.tool-card:hover .tc-arrow { transform:translateX(4px); color:var(--teal); }
+.tc-locked { font-size:11px; color:var(--t3); font-family:var(--mono); }
+.lab-notice { background:rgba(232,168,56,.06); border:1px solid rgba(232,168,56,.2); border-left:3px solid var(--amber); border-radius:0 10px 10px 0; padding:14px 20px; display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+.ln-marker { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; color:var(--amber); flex-shrink:0; }
+.ln-text { font-size:13px; color:var(--t2); }
+.ln-text strong { color:var(--amber); }
+.ln-link { font-size:12px; color:var(--amber); font-weight:600; flex-shrink:0; padding:5px 14px; border:1px solid rgba(232,168,56,.3); border-radius:8px; transition:all .15s; margin-left:auto; }
+.ln-link:hover { background:rgba(232,168,56,.12); color:var(--amber); }
+.row-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:48px; }
+.row-header .section-sub { margin-bottom:0; }
+.view-all { font-size:13px; color:var(--teal); font-weight:500; white-space:nowrap; }
+.view-all:hover { color:var(--t1); }
+
+/* STATS */
+.stats-bar { background:var(--dark); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:32px clamp(20px,5vw,80px); }
+.stats-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:22px; text-align:center; }
+.stat-num { font-family:var(--display); font-size:38px; font-weight:800; color:var(--teal); line-height:1; }
+.stat-label { font-size:12px; color:var(--t2); margin-top:7px; line-height:1.45; }
+.stat-source { margin-top:6px; }
+.stat-source a { color:var(--t3); font-size:10px; font-family:var(--mono); text-decoration:none; border-bottom:1px dotted var(--t4); transition:color .15s; }
+.stat-source a:hover { color:var(--teal); }
+.citations-bar { background:var(--surface); border-top:1px solid var(--border); padding:16px clamp(20px,5vw,80px); }
+.citations-inner { max-width:1100px; margin:0 auto; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+.citations-label { font-size:9px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--t3); flex-shrink:0; }
+.citations-list { display:flex; flex-wrap:wrap; gap:4px 18px; list-style:none; }
+.citations-list li { font-size:10px; font-family:var(--mono); }
+.citations-list a { color:var(--t3); text-decoration:none; border-bottom:1px dotted var(--t4); transition:color .15s; }
+.citations-list a:hover { color:var(--teal); }
+
+/* MAP CALLOUT */
+.map-callout { background:linear-gradient(135deg,#0e1f3a 0%,#0c1c30 50%,#091626 100%); border:1px solid var(--border2); border-radius:16px; padding:clamp(32px,5vw,52px); display:grid; grid-template-columns:1fr auto; gap:40px; align-items:center; position:relative; overflow:hidden; }
+.map-callout::before { content:''; position:absolute; right:-80px; top:-80px; width:280px; height:280px; border-radius:50%; background:radial-gradient(circle,rgba(78,205,196,.1) 0%,transparent 70%); }
+.mc-tag { font-size:10px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--teal); margin-bottom:12px; }
+.mc-title { font-family:var(--display); font-size:clamp(22px,2.8vw,34px); font-weight:800; color:var(--t1); margin-bottom:14px; letter-spacing:-.02em; }
+.mc-desc { font-size:14px; color:var(--t2); line-height:1.75; max-width:500px; margin-bottom:24px; }
+.map-diagram { background:rgba(10,15,26,.6); border:1px solid var(--border2); border-radius:12px; padding:22px 26px; min-width:250px; position:relative; z-index:1; }
+.md-title { font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--t3); margin-bottom:16px; }
+.md-lane { display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+.md-lane:last-child { margin-bottom:0; }
+.md-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.md-lane-label { font-size:12px; color:var(--t2); font-weight:500; }
+.md-lane-sub { font-size:10px; color:var(--t3); margin-top:2px; font-family:var(--mono); }
+
+/* POSTS */
+.posts-section { background:var(--surface); }
+.posts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+.post-card { background:var(--raised); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:all .2s; text-decoration:none; display:flex; flex-direction:column; }
+.post-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:var(--shadow); }
+.post-head { padding:22px 22px 16px; flex:1; }
+.post-cat { font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px; display:block; }
+.cat-blue   { color:var(--teal); }
+.cat-amber  { color:var(--amber); }
+.cat-purple { color:#a99ee8; }
+.cat-green  { color:#4dc897; }
+.post-title { font-size:16px; font-weight:600; color:var(--t1); line-height:1.4; margin-bottom:8px; }
+.post-excerpt { font-size:13px; color:var(--t2); line-height:1.65; }
+.post-foot { padding:14px 22px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.post-meta { font-size:11px; color:var(--t3); font-family:var(--mono); }
+.post-read { font-size:12px; color:var(--teal); font-weight:600; display:flex; align-items:center; gap:5px; }
+.post-arrow { display:inline-block; transition:transform .15s; }
+.post-card:hover .post-arrow { transform:translateX(4px); }
+
+/* ABOUT */
+.about-section { background:var(--raised); border-top:1px solid var(--border); }
+.about-grid { display:grid; grid-template-columns:auto 1fr; gap:56px; align-items:start; }
+.about-identity { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.about-avatar { width:96px; height:96px; background:linear-gradient(135deg,var(--blue),var(--teal)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:28px; font-weight:800; color:#fff; box-shadow:0 0 28px rgba(78,205,196,.2); flex-shrink:0; }
+.about-name  { font-family:var(--display); font-size:18px; font-weight:700; color:var(--t1); text-align:center; }
+.about-creds { font-family:var(--mono); font-size:11px; color:var(--teal); text-align:center; line-height:1.7; }
+.about-text  { font-size:15px; color:var(--t2); line-height:1.85; }
+.about-text p { margin-bottom:14px; }
+.about-text p:last-child { margin-bottom:0; }
+.about-text strong { color:var(--t1); font-weight:500; }
+.about-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+.about-tag { font-size:11px; padding:4px 12px; border-radius:8px; background:var(--raised2); color:var(--t2); border:1px solid var(--border2); }
+
+/* RESPONSIVE */
+@media (max-width:900px) {
+  .fourps-grid  { grid-template-columns:repeat(2,1fr); }
+  .start-grid   { grid-template-columns:1fr; }
+  .about-grid   { grid-template-columns:1fr; }
+  .about-identity { flex-direction:row; align-items:center; justify-content:flex-start; }
+  .about-identity .about-name, .about-creds { text-align:left; }
+  .map-callout  { grid-template-columns:1fr; }
+  .stats-inner  { grid-template-columns:repeat(2,1fr); }
+  .row-header   { flex-direction:column; align-items:flex-start; gap:10px; }
+}
+@media (max-width:640px) {
+  .fourps-grid  { grid-template-columns:1fr 1fr; }
+  .stats-inner  { grid-template-columns:1fr 1fr; }
+}
+</style>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-orb"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      Live Resource &middot; Clinical Informatics &amp; Healthcare IT
+    </div>
+    <h1>
+      <span class="dim">Map the System.</span>
+      <span class="teal">Understand the Why.</span>
+    </h1>
+    <div class="hero-rule"></div>
+    <p class="hero-sub">Healthcare technology is full of territory nobody maps in plain language. This is the resource built to change that &mdash; for clinicians, analysts, and anyone navigating the modern healthcare system.</p>
+    <p class="hero-creds">David Eitel &middot; RRT, MHA, MSRT, RRT-ACCS &middot; Clinical Informatics &amp; Healthcare Technology</p>
+    <div class="hero-search-wrap">
+      <input type="text" class="hero-search" id="heroSearch"
+        placeholder='Search topics, tools, concepts&hellip; (e.g. "FHIR", "EHR data model", "AI in healthcare")'
+        autocomplete="off">
+      <div class="search-icon-mark"></div>
+      <button class="search-btn" id="searchBtn">Search</button>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <div class="search-pills">
+      <span class="search-pill" data-q="FHIR">FHIR &amp; HL7</span>
+      <span class="search-pill" data-q="EHR data model">EHR Data Model</span>
+      <span class="search-pill" data-q="Epic FHIR">Epic FHIR API</span>
+      <span class="search-pill" data-q="AI clinical">AI in Clinics</span>
+      <span class="search-pill" data-q="billing claims">Billing &amp; Claims</span>
+      <span class="search-pill" data-q="HITECH">HITECH Act</span>
+      <span class="search-pill" data-q="interoperability">Interoperability</span>
+    </div>
+    <div class="hero-actions">
+      <a class="btn-primary"    href="#tools">Explore Tools</a>
+      <a class="btn-secondary"  href="#start-here">New Here? Start Here &rarr;</a>
+      <a class="btn-ghost"      href="/posts/">Read Posts</a>
+    </div>
+  </div>
+  <div class="scroll-cue">
+    <div class="scroll-track"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- 4Ps FRAMEWORK -->
+<div class="fourps-strip">
+  <div class="fourps-inner">
+    <div class="fourps-label">The 4Ps Framework &mdash; How Healthcare Uncharted maps the system</div>
+    <div class="fourps-grid">
+      <a class="fourp-card patient" href="/learn/#patient">
+        <div class="fourp-letter">Pt</div>
+        <div class="fourp-name">Patient</div>
+        <div class="fourp-desc">The center of everything &mdash; how clinical encounters are structured, recorded, and billed from the patient perspective.</div>
+        <span class="fourp-chip">Person &rarr; Encounter &rarr; Event</span>
+      </a>
+      <a class="fourp-card provider" href="/learn/#provider">
+        <div class="fourp-letter">Pr</div>
+        <div class="fourp-name">Provider</div>
+        <div class="fourp-desc">Clinicians, hospitals, and health systems &mdash; the EHR workflows, data models, and informatics that power care delivery.</div>
+        <span class="fourp-chip">EHR &middot; Workflows &middot; Data</span>
+      </a>
+      <a class="fourp-card payer" href="/learn/#payer">
+        <div class="fourp-letter">Pa</div>
+        <div class="fourp-name">Payer</div>
+        <div class="fourp-desc">Insurance, CMS, and the claims ecosystem &mdash; what payers need, how they adjudicate, and what gets denied.</div>
+        <span class="fourp-chip">Claims &middot; Codes &middot; Coverage</span>
+      </a>
+      <a class="fourp-card policy" href="/learn/#policy">
+        <div class="fourp-letter">Po</div>
+        <div class="fourp-name">Policy Makers</div>
+        <div class="fourp-desc">Regulators, legislators, and federal agencies &mdash; the rules, mandates, and incentive structures that shape the entire system.</div>
+        <span class="fourp-chip">CMS &middot; ONC &middot; HHS &middot; Law</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- START HERE -->
+<section class="section start-here" id="start-here">
+  <div class="section-inner">
+    <div class="section-tag">New Here?</div>
+    <h2 class="section-title">Three ways to get started</h2>
+    <p class="section-sub">Whether you work at the bedside, in analytics, or in a boardroom &mdash; pick the path that fits your role.</p>
+    <div class="start-grid">
+      <div class="start-card s1">
+        <div class="start-num">01</div>
+        <div class="start-path-label">Path 01 &middot; For Clinicians</div>
+        <div class="start-title">I Work in Healthcare</div>
+        <div class="start-desc">You use an enterprise EHR every shift but want to understand why data is structured the way it is &mdash; and why your documentation matters beyond patient care.</div>
+        <a class="start-cta" href="/learn/#clinicians">Start with the EHR explainer <span class="start-cta-arrow">&rarr;</span></a>
+      </div>
+      <div class="start-card s2">
+        <div class="start-num">02</div>
+        <div class="start-path-label">Path 02 &middot; For Analysts &amp; Informaticists</div>
+        <div class="start-title">I Work with Healthcare Data</div>
+        <div class="start-desc">You write SQL, pull reports, or work with healthcare datasets and need the clinical context behind the tables &mdash; what an encounter is, how patient identity works, and why reporting lags exist.</div>
+        <a class="start-cta" href="/tools/#sql">Try the SQL Mystery Game <span class="start-cta-arrow">&rarr;</span></a>
+      </div>
+      <div class="start-card s3">
+        <div class="start-num">03</div>
+        <div class="start-path-label">Path 03 &middot; For Leaders &amp; Strategists</div>
+        <div class="start-title">I Make Technology Decisions</div>
+        <div class="start-desc">You are evaluating AI platforms, interoperability initiatives, or EHR implementations and need an honest picture of what the data shows and where the real gaps are.</div>
+        <a class="start-cta" href="/tools/#ai-map">Explore the AI Healthcare Map <span class="start-cta-arrow">&rarr;</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section class="section tools-section" id="tools">
+  <div class="section-inner">
+    <div class="row-header">
+      <div>
+        <div class="section-tag">Interactive Tools</div>
+        <h2 class="section-title">Hands-on learning &amp; exploration</h2>
+        <p class="section-sub">Not slides. Not PDFs. Each tool is interactive &mdash; built to make the abstract concrete.</p>
+      </div>
+      <a class="view-all" href="/tools/">View all tools &rarr;</a>
+    </div>
+    <div class="lab-notice">
+      <span class="ln-marker">LAB</span>
+      <div class="ln-text"><strong>Lab section active</strong> &mdash; Works in progress and experimental tools are in the Lab. Some content is locked while under construction.</div>
+      <a class="ln-link" href="/lab/">Visit the Lab &rarr;</a>
+    </div>
+    <div class="tools-grid">
+      <a class="tool-card" href="/tools/ai-healthcare-map/" id="ai-map">
+        <div class="tc-head">
+          <span class="tc-badge badge-interactive">Interactive Map</span>
+          <div class="tc-type-mark mark-teal">AI</div>
+          <div class="tc-title">AI Healthcare Map</div>
+          <div class="tc-desc">A layered, clickable diagram of how AI intersects the healthcare system &mdash; from the bedside to the billing department. Built for leaders making real decisions.</div>
+        </div>
+        <div class="tc-foot">
+          <div class="tc-tags"><span class="tc-tag">AI</span><span class="tc-tag">Strategy</span><span class="tc-tag">Interactive</span></div>
+          <span class="tc-arrow">&rarr;</span>
+        </div>
+      </a>
+      <a class="tool-card" href="/tools/clinical-sql-mystery/" id="sql">
+        <div class="tc-head">
+          <span class="tc-badge badge-interactive">Game</span>
+          <div class="tc-type-mark mark-teal">SQL</div>
+          <div class="tc-title">Clinical SQL Mystery</div>
+          <div class="tc-desc">Learn the Patient &rarr; Encounter &rarr; Clinical Event data model by solving a real clinical mystery using SQL. No prior experience required &mdash; the game teaches as you go.</div>
+        </div>
+        <div class="tc-foot">
+          <div class="tc-tags"><span class="tc-tag">SQL</span><span class="tc-tag">EHR</span><span class="tc-tag">Beginner</span></div>
+          <span class="tc-arrow">&rarr;</span>
+        </div>
+      </a>
+      <a class="tool-card" href="/tools/event-vs-request-vs-observation/">
+        <div class="tc-head">
+          <span class="tc-badge badge-learn">Explainer</span>
+          <div class="tc-type-mark mark-blue">Ev</div>
+          <div class="tc-title">Event vs. Request vs. Observation</div>
+          <div class="tc-desc">The three fundamental building blocks of clinical data &mdash; and why confusing them causes real problems in reporting, billing, and AI model training.</div>
+        </div>
+        <div class="tc-foot">
+          <div class="tc-tags"><span class="tc-tag">FHIR</span><span class="tc-tag">Data Model</span><span class="tc-tag">Clinical</span></div>
+          <span class="tc-arrow">&rarr;</span>
+        </div>
+      </a>
+      <a class="tool-card" href="/lab/#disparity-map">
+        <div class="tc-head">
+          <span class="tc-badge badge-lab">Lab Preview</span>
+          <div class="tc-type-mark mark-amber">Gap</div>
+          <div class="tc-title">U.S. Healthcare Gap Map</div>
+          <div class="tc-desc">An interactive D3.js map of U.S. healthcare resource inequality &mdash; workforce shortages, rural-urban divides, and state-level disparity data. Currently in development.</div>
+        </div>
+        <div class="tc-foot">
+          <div class="tc-tags"><span class="tc-tag">D3.js</span><span class="tc-tag">Disparities</span><span class="tc-tag">Data</span></div>
+          <span class="tc-locked">In Lab &mdash; locked</span>
+        </div>
+      </a>
+      <a class="tool-card" href="/learn/#reference">
+        <div class="tc-head">
+          <span class="tc-badge badge-reference">Reference</span>
+          <div class="tc-type-mark mark-purple">Ref</div>
+          <div class="tc-title">HIT Terminology Reference</div>
+          <div class="tc-desc">Patient IDs, encounter identifiers, clinical events, and how they connect across systems. A living glossary for healthcare IT &mdash; written in plain English and sourced from public documentation.</div>
+        </div>
+        <div class="tc-foot">
+          <div class="tc-tags"><span class="tc-tag">HL7</span><span class="tc-tag">FHIR</span><span class="tc-tag">Glossary</span></div>
+          <span class="tc-arrow">&rarr;</span>
+        </div>
+      </a>
+      <a class="tool-card" href="/roadmap/">
+        <div class="tc-head">
+          <span class="tc-badge badge-coming">Roadmap</span>
+          <div class="tc-type-mark mark-muted">Rd</div>
+          <div class="tc-title">What&rsquo;s Coming Next</div>
+          <div class="tc-desc">Healthcare Uncharted is a living project. See what is in active development &mdash; from new interactive tools to deep-dive articles and the full 4Ps system map.</div>
+        </div>
+        <div class="tc-foot">
+          <div class="tc-tags"><span class="tc-tag">4Ps Map</span><span class="tc-tag">New Tools</span><span class="tc-tag">Updates</span></div>
+          <span class="tc-arrow">&rarr;</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-card">
+      <div class="stat-num">1987</div>
+      <div class="stat-label">Year HL7 was founded &mdash; the standard that made EHR interoperability possible</div>
+      <div class="stat-source"><a href="https://www.hl7.org/about/index.cfm" target="_blank" rel="noopener">HL7 International &middot; About HL7</a></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">$25.9B</div>
+      <div class="stat-label">HITECH Act EHR incentive payments that drove nationwide adoption from 2009 forward</div>
+      <div class="stat-source"><a href="https://www.hhs.gov/hipaa/for-professionals/special-topics/hitech-act-enforcement-interim-final-rule/index.html" target="_blank" rel="noopener">HHS.gov &middot; HITECH Act</a></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">~36%</div>
+      <div class="stat-label">U.S. hospital market share held by the largest single EHR vendor by bed count</div>
+      <div class="stat-source"><a href="https://klasresearch.com" target="_blank" rel="noopener">KLAS Research &middot; 2024 EHR Rankings</a></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">157</div>
+      <div class="stat-label">Defined FHIR R4 resource types &mdash; the open standard for healthcare data exchange</div>
+      <div class="stat-source"><a href="https://hl7.org/fhir/R4/resourcelist.html" target="_blank" rel="noopener">HL7 FHIR R4 &middot; Resource List</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- Citations bar -->
+<div class="citations-bar">
+  <div class="citations-inner">
+    <span class="citations-label">Page Sources</span>
+    <ul class="citations-list">
+      <li><a href="https://www.hl7.org/about/index.cfm" target="_blank" rel="noopener">HL7 International &mdash; About HL7</a></li>
+      <li><a href="https://hl7.org/fhir/R4/resourcelist.html" target="_blank" rel="noopener">HL7 FHIR R4 Resource List</a></li>
+      <li><a href="https://www.hhs.gov/hipaa/for-professionals/special-topics/hitech-act-enforcement-interim-final-rule/index.html" target="_blank" rel="noopener">HHS &mdash; HITECH Act Rule</a></li>
+      <li><a href="https://www.healthit.gov/topic/federal-hit-strategic-plan" target="_blank" rel="noopener">ONC &mdash; Federal HIT Strategic Plan</a></li>
+      <li><a href="https://klasresearch.com" target="_blank" rel="noopener">KLAS Research &mdash; EHR Market Data</a></li>
+      <li><a href="https://fhir.epic.com/" target="_blank" rel="noopener">Epic &mdash; Public FHIR API Docs</a></li>
+      <li><a href="https://fhir.cerner.com/" target="_blank" rel="noopener">Oracle Health (Cerner) &mdash; Public FHIR Docs</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- SYSTEM MAP CALLOUT -->
+<section class="section" style="background:var(--dark)">
+  <div class="section-inner">
+    <div class="map-callout">
+      <div>
+        <div class="mc-tag">The Big Picture</div>
+        <h2 class="mc-title">One map.<br>The whole healthcare system.</h2>
+        <p class="mc-desc">Most healthcare workers understand their lane. Clinicians know care delivery. Coders know billing. Analysts know reports. But nobody teaches how all of it connects &mdash; the full layered system from patient experience to policy to AI. That is what this site is building.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <a class="btn-primary" href="/tools/#ai-map">Explore the AI Map</a>
+          <a class="btn-ghost"   href="/roadmap/">See the Full Roadmap</a>
+        </div>
+      </div>
+      <div class="map-diagram">
+        <div class="md-title">System Lane Structure</div>
+        <div class="md-lane"><div class="md-dot" style="background:var(--teal)"></div><div><div class="md-lane-label">Patient Experience</div><div class="md-lane-sub">Access &middot; Encounters &middot; Outcomes</div></div></div>
+        <div class="md-lane"><div class="md-dot" style="background:var(--blue-hi)"></div><div><div class="md-lane-label">Clinical Medical (2a)</div><div class="md-lane-sub">Orders &middot; Flowsheets &middot; Documentation</div></div></div>
+        <div class="md-lane"><div class="md-dot" style="background:#6aabff"></div><div><div class="md-lane-label">Clinical Operations (2b)</div><div class="md-lane-sub">Charge Capture &middot; Supply &middot; Staffing</div></div></div>
+        <div class="md-lane"><div class="md-dot" style="background:var(--amber)"></div><div><div class="md-lane-label">Management &amp; Finance</div><div class="md-lane-sub">Payers &middot; Claims &middot; Revenue Cycle</div></div></div>
+        <div class="md-lane"><div class="md-dot" style="background:var(--purple)"></div><div><div class="md-lane-label">Technology &amp; Strategy</div><div class="md-lane-sub">AI &middot; Interoperability &middot; Analytics</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POSTS -->
+<section class="section posts-section" id="posts">
+  <div class="section-inner">
+    <div class="row-header">
+      <div>
+        <div class="section-tag">Latest Posts</div>
+        <h2 class="section-title">From the field &mdash; explained plainly</h2>
+        <p class="section-sub">Deep-dives, explainers, and honest assessments. Written for people who want to understand the why, not just the what.</p>
+      </div>
+      <a class="view-all" href="/posts/">All posts &rarr;</a>
+    </div>
+    <div class="posts-grid">
+      <a class="post-card" href="/posts/#ehr-data-model">
+        <div class="post-head">
+          <span class="post-cat cat-blue">EHR Fundamentals</span>
+          <div class="post-title">Why Every Piece of Clinical Data Has the Same Four-Part Address</div>
+          <div class="post-excerpt">Patient &rarr; Encounter &rarr; Clinical Event &rarr; Data Point. This structure is not a design choice &mdash; it is forced by medicine, billing law, and 30 years of regulatory pressure.</div>
+        </div>
+        <div class="post-foot">
+          <span class="post-meta">8 min read &middot; EHR &middot; Data Model</span>
+          <span class="post-read">Read <span class="post-arrow">&rarr;</span></span>
+        </div>
+      </a>
+      <a class="post-card" href="/posts/#hitech">
+        <div class="post-head">
+          <span class="post-cat cat-amber">Healthcare Policy</span>
+          <div class="post-title">The $25.9 Billion Law That Built Modern Healthcare IT</div>
+          <div class="post-excerpt">HITECH did not just pay hospitals to buy software. It fundamentally restructured how clinical data is created, stored, and shared &mdash; and created the fragmented landscape we still deal with today.</div>
+        </div>
+        <div class="post-foot">
+          <span class="post-meta">12 min read &middot; Policy &middot; History</span>
+          <span class="post-read">Read <span class="post-arrow">&rarr;</span></span>
+        </div>
+      </a>
+      <a class="post-card" href="/posts/#ai-reality">
+        <div class="post-head">
+          <span class="post-cat cat-purple">AI in Healthcare</span>
+          <div class="post-title">AI in Healthcare: What&rsquo;s Actually Working vs. What&rsquo;s Still Promise</div>
+          <div class="post-excerpt">A candid system-wide assessment. Ambient documentation is real. Autonomous diagnosis is not. Here is where the line actually is &mdash; with evidence.</div>
+        </div>
+        <div class="post-foot">
+          <span class="post-meta">15 min read &middot; AI &middot; Strategy</span>
+          <span class="post-read">Read <span class="post-arrow">&rarr;</span></span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section about-section" id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-identity">
+        <div class="about-avatar-img-wrap">
+          <img src="/assets/images/David_Picture.jpg" alt="David Eitel" class="about-avatar-img">
+        </div>
+        <div>
+          <div class="about-name">David Eitel</div>
+          <div class="about-creds">RRT &middot; MHA<br>MSRT &middot; RRT-ACCS</div>
+        </div>
+      </div>
+      <div>
+        <div class="section-tag">About Healthcare Uncharted</div>
+        <div class="about-text">
+          <p>Healthcare technology is full of territory that nobody maps in plain language. Clinicians use enterprise EHRs every day without understanding why the data is structured the way it is. Analysts write reports without knowing the clinical meaning behind the tables. Leaders make AI investments without knowing what actually works versus what is still emerging.</p>
+          <p><strong>Healthcare Uncharted exists to close that gap.</strong> This is a living resource built from real clinical and informatics experience &mdash; interactive tools, deep-dive articles, terminology guides, and honest assessments of where healthcare technology actually stands.</p>
+          <p>Built by a Respiratory Therapist turned healthcare informaticist. The goal is simple: <strong>explain the why, not just the what</strong> &mdash; for every role in the system, not just the technical ones.</p>
+        </div>
+        <div class="about-tags">
+          <span class="about-tag">Respiratory Therapy</span>
+          <span class="about-tag">Health Administration</span>
+          <span class="about-tag">Clinical Informatics</span>
+          <span class="about-tag">EHR Architecture</span>
+          <span class="about-tag">Health Data Standards</span>
+          <span class="about-tag">AI in Healthcare</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+const SEARCH_DATA = [
+  { label:'AI Healthcare Map',              sub:'Interactive diagram of AI across the full care system', type:'tool',      url:'/tools/ai-healthcare-map/' },
+  { label:'Clinical SQL Mystery Game',      sub:'Learn EHR data models by solving a clinical mystery',  type:'tool',      url:'/tools/clinical-sql-mystery/' },
+  { label:'Event vs. Request vs. Observation', sub:'The three core building blocks of clinical data (FHIR)', type:'tool', url:'/tools/event-vs-request-vs-observation/' },
+  { label:'EHR Data Model Explained',       sub:'Why Patient→Encounter→Event is universal',             type:'article',   url:'/posts/#ehr-data-model' },
+  { label:'HITECH Act — The $25.9B Law',    sub:'How one law built modern healthcare IT (HHS.gov)',     type:'article',   url:'/posts/#hitech' },
+  { label:'AI in Healthcare: Reality Check',sub:'What actually works vs. what is still promise',        type:'article',   url:'/posts/#ai-reality' },
+  { label:'Patient — The 4Ps Framework',    sub:'Encounters, events, and data from the patient view',   type:'learn',     url:'/learn/#patient' },
+  { label:'Provider — EHR Workflows',       sub:'Clinical data, orders, and documentation structure',   type:'learn',     url:'/learn/#provider' },
+  { label:'Payer — Claims and Billing',     sub:'How insurers adjudicate and what gets denied',         type:'learn',     url:'/learn/#payer' },
+  { label:'Policy Makers — CMS, ONC, HHS', sub:'The regulations and incentives that shape the system', type:'learn',     url:'/learn/#policy' },
+  { label:'FHIR R4 Resource Types',         sub:'HL7 FHIR R4 — 157 defined resource types',            type:'reference', url:'https://hl7.org/fhir/R4/resourcelist.html' },
+  { label:'Epic Public FHIR Documentation', sub:'fhir.epic.com — open API and resource docs',          type:'reference', url:'https://fhir.epic.com/' },
+  { label:'Oracle Health FHIR Documentation', sub:'fhir.cerner.com — open API and resource docs',     type:'reference', url:'https://fhir.cerner.com/' },
+  { label:'HIT Terminology Reference',      sub:'Patient IDs, encounter IDs, events — plain language', type:'reference', url:'/learn/#reference' },
+  { label:'Interoperability Explained',     sub:'ONC standards, FHIR, and what interop actually means',type:'article',   url:'/posts/#interop' },
+  { label:'U.S. Healthcare Gap Map',        sub:'State-level disparity analysis — in the Lab',          type:'lab',       url:'/lab/#disparity-map' },
+  { label:'Site Roadmap',                   sub:'What is being built next on Healthcare Uncharted',     type:'roadmap',   url:'/roadmap/' },
+];
+const input   = document.getElementById('heroSearch');
+const results = document.getElementById('searchResults');
+const btn     = document.getElementById('searchBtn');
+function runSearch(q) {
+  const query = q.trim().toLowerCase();
+  if (!query) { results.classList.remove('open'); return; }
+  const hits = SEARCH_DATA.filter(d =>
+    d.label.toLowerCase().includes(query) ||
+    d.sub.toLowerCase().includes(query) ||
+    d.type.toLowerCase().includes(query)
+  ).slice(0, 7);
+  if (!hits.length) {
+    results.innerHTML = '<div class="sr-item"><div class="sr-cat" style="background:none;color:var(--t3)">—</div><div><div class="sr-label">No results</div><div class="sr-sub">Try "FHIR", "EHR", "billing", or "AI"</div></div></div>';
+  } else {
+    results.innerHTML = hits.map(h =>
+      `<a class="sr-item" href="${h.url}" ${h.url.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+        <div class="sr-cat ${h.type}">${h.type.toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div class="sr-label">${h.label}</div>
+          <div class="sr-sub">${h.sub}</div>
+        </div>
+      </a>`
+    ).join('');
+  }
+  results.classList.add('open');
+}
+input.addEventListener('input', e => runSearch(e.target.value));
+btn.addEventListener('click', () => runSearch(input.value));
+input.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(input.value); });
+document.querySelectorAll('.search-pill').forEach(p =>
+  p.addEventListener('click', () => { input.value = p.dataset.q; input.focus(); runSearch(p.dataset.q); })
+);
+document.addEventListener('click', e => {
+  if (!e.target.closest('.hero-search-wrap')) results.classList.remove('open');
+});
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+  });
+}, { threshold: 0.07 });
+document.querySelectorAll('.tool-card,.post-card,.start-card,.fourp-card').forEach((el, i) => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = `opacity .45s ${i * 0.06}s ease, transform .45s ${i * 0.06}s ease`;
+  observer.observe(el);
+});
+</script>

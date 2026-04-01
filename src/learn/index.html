@@ -1,0 +1,178 @@
+---
+layout: base.njk
+title: Learn
+description: Deep-dive articles on clinical informatics, EHR data architecture, and the 4Ps framework.
+navPage: learn
+---
+
+<style>
+.page-hero { padding:clamp(56px,8vh,88px) clamp(20px,5vw,80px) 0; background:var(--dark); }
+.page-hero-inner { max-width:1100px; margin:0 auto; }
+.page-eyebrow { font-family:var(--mono); font-size:11px; color:var(--teal); letter-spacing:.16em; text-transform:uppercase; margin-bottom:14px; }
+.page-title { font-family:var(--display); font-size:clamp(32px,5vw,56px); font-weight:800; letter-spacing:-.03em; margin-bottom:16px; line-height:1.05; }
+.page-sub { font-size:16px; color:var(--t2); max-width:580px; line-height:1.75; padding-bottom:clamp(40px,6vh,72px); }
+
+.fourps-strip { background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:32px clamp(20px,5vw,80px); }
+.fourps-inner { max-width:1100px; margin:0 auto; }
+.fourps-label { font-size:10px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--t3); margin-bottom:18px; display:flex; align-items:center; gap:12px; }
+.fourps-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.fourps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.fourp-card { background:var(--raised); border:1px solid var(--border); border-radius:10px; padding:20px 20px 16px; display:flex; flex-direction:column; gap:8px; transition:all .2s; text-decoration:none; }
+.fourp-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.3); }
+.fourp-letter { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:15px; font-weight:800; margin-bottom:4px; }
+.fourp-card.patient  .fourp-letter { background:rgba(78,205,196,.15); color:var(--teal); }
+.fourp-card.provider .fourp-letter { background:rgba(36,120,212,.18); color:#6aabff; }
+.fourp-card.payer    .fourp-letter { background:rgba(232,168,56,.15); color:var(--amber); }
+.fourp-card.policy   .fourp-letter { background:rgba(124,111,205,.15); color:#a99ee8; }
+.fourp-card.patient  { border-top:2px solid var(--teal); }
+.fourp-card.provider { border-top:2px solid var(--blue-hi); }
+.fourp-card.payer    { border-top:2px solid var(--amber); }
+.fourp-card.policy   { border-top:2px solid #7C6FCD; }
+.fourp-name { font-family:var(--display); font-size:17px; font-weight:700; color:var(--t1); }
+.fourp-desc { font-size:12px; color:var(--t2); line-height:1.6; flex:1; }
+.fourp-chip { display:inline-block; font-size:10px; padding:2px 9px; border-radius:8px; font-weight:600; margin-top:4px; font-family:var(--mono); }
+.fourp-card.patient  .fourp-chip { background:rgba(78,205,196,.1); color:var(--teal); }
+.fourp-card.provider .fourp-chip { background:rgba(36,120,212,.15); color:#6aabff; }
+.fourp-card.payer    .fourp-chip { background:rgba(232,168,56,.1); color:var(--amber); }
+.fourp-card.policy   .fourp-chip { background:rgba(124,111,205,.1); color:#a99ee8; }
+
+.learn-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.learn-card { background:var(--raised); border:1px solid var(--border); border-left:3px solid var(--blue-hi); border-radius:0 10px 10px 0; padding:24px 26px; transition:all .2s; text-decoration:none; display:block; }
+.learn-card:hover { border-left-color:var(--teal); border-color:var(--border2); }
+.lc-number { font-family:var(--mono); font-size:11px; color:var(--teal); margin-bottom:8px; }
+.lc-title { font-size:16px; font-weight:600; color:var(--t1); margin-bottom:8px; }
+.lc-desc { font-size:13px; color:var(--t2); line-height:1.65; margin-bottom:14px; }
+.lc-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.lc-tag { font-size:10px; padding:2px 8px; border-radius:8px; background:rgba(27,95,168,.15); color:var(--t2); }
+.lc-tag-teal { background:rgba(78,205,196,.1); color:var(--teal); }
+.lc-status { font-family:var(--mono); font-size:10px; color:var(--t3); margin-top:12px; }
+
+.ref-strip { background:var(--raised); border:1px solid var(--border); border-left:3px solid var(--purple); border-radius:0 12px 12px 0; padding:24px 28px; margin-top:48px; }
+.ref-title { font-family:var(--display); font-size:20px; font-weight:700; color:var(--t1); margin-bottom:8px; }
+.ref-desc { font-size:14px; color:var(--t2); line-height:1.7; margin-bottom:20px; }
+.ref-links { display:flex; flex-wrap:wrap; gap:10px; }
+.ref-link { font-size:12px; color:var(--t2); padding:6px 14px; border:1px solid var(--border2); border-radius:8px; transition:all .15s; }
+.ref-link:hover { border-color:var(--teal); color:var(--teal); }
+
+.divider-label { font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--t3); display:flex; align-items:center; gap:12px; margin:48px 0 24px; }
+.divider-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+@media(max-width:900px) {
+  .fourps-grid { grid-template-columns:repeat(2,1fr); }
+  .learn-grid { grid-template-columns:1fr; }
+}
+</style>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <div class="page-eyebrow">Education</div>
+    <h1 class="page-title">Learn the System</h1>
+    <p class="page-sub">Deep-dive articles on clinical informatics, healthcare data architecture, and the forces that shaped the modern healthcare technology landscape. No vendor marketing. No surface-level overviews.</p>
+  </div>
+</div>
+
+<!-- 4Ps FRAMEWORK -->
+<div class="fourps-strip">
+  <div class="fourps-inner">
+    <div class="fourps-label">The 4Ps Framework &mdash; The lens Healthcare Uncharted uses to map the system</div>
+    <div class="fourps-grid">
+      <a class="fourp-card patient" href="#patient" id="patient">
+        <div class="fourp-letter">Pt</div>
+        <div class="fourp-name">Patient</div>
+        <div class="fourp-desc">The center of everything. How clinical encounters are structured, recorded, and billed from the patient perspective.</div>
+        <span class="fourp-chip">Person &rarr; Encounter &rarr; Event</span>
+      </a>
+      <a class="fourp-card provider" href="#provider" id="provider">
+        <div class="fourp-letter">Pr</div>
+        <div class="fourp-name">Provider</div>
+        <div class="fourp-desc">Clinicians, hospitals, and health systems. The EHR workflows, data models, and informatics that power care delivery.</div>
+        <span class="fourp-chip">EHR &middot; Workflows &middot; Data</span>
+      </a>
+      <a class="fourp-card payer" href="#payer" id="payer">
+        <div class="fourp-letter">Pa</div>
+        <div class="fourp-name">Payer</div>
+        <div class="fourp-desc">Insurance, CMS, and the claims ecosystem. What payers need, how they adjudicate, and what gets denied.</div>
+        <span class="fourp-chip">Claims &middot; Codes &middot; Coverage</span>
+      </a>
+      <a class="fourp-card policy" href="#policy" id="policy">
+        <div class="fourp-letter">Po</div>
+        <div class="fourp-name">Policy Makers</div>
+        <div class="fourp-desc">Regulators and federal agencies. The rules, mandates, and incentive structures that shape the entire system.</div>
+        <span class="fourp-chip">CMS &middot; ONC &middot; HHS &middot; Law</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- CORE CONCEPTS -->
+<section class="section" style="background:var(--dark)" id="clinicians">
+  <div class="section-inner">
+    <div class="section-tag">Core Concepts</div>
+    <h2 class="section-title">Start here</h2>
+    <p class="section-sub">These are the foundational concepts that every clinician, analyst, and healthcare IT professional should understand. They are the "why" behind the systems you use every day.</p>
+
+    <div class="learn-grid">
+      <a class="learn-card" href="/posts/#ehr-data-model">
+        <div class="lc-number">01 &middot; EHR FUNDAMENTALS</div>
+        <div class="lc-title">The Universal Healthcare Data Chain</div>
+        <div class="lc-desc">Patient &rarr; Encounter &rarr; Clinical Event &rarr; Data Point. This structure is not a design choice &mdash; it is forced by medicine, billing law, and 30 years of regulatory pressure. Understanding it unlocks everything else.</div>
+        <div class="lc-tags"><span class="lc-tag">Epic</span><span class="lc-tag">Cerner</span><span class="lc-tag">FHIR</span><span class="lc-tag lc-tag-teal">Essential</span></div>
+      </a>
+
+      <a class="learn-card" href="/posts/#hitech">
+        <div class="lc-number">02 &middot; HEALTHCARE POLICY</div>
+        <div class="lc-title">The $25.9 Billion Law That Built Modern Healthcare IT</div>
+        <div class="lc-desc">The HITECH Act didn&rsquo;t just pay hospitals to buy software. It restructured how clinical data is created, stored, and shared &mdash; and created the fragmented landscape we still navigate today.</div>
+        <div class="lc-tags"><span class="lc-tag">HITECH</span><span class="lc-tag">Meaningful Use</span><span class="lc-tag">History</span><span class="lc-tag lc-tag-teal">Essential</span></div>
+      </a>
+
+      <a class="learn-card" href="/tools/event-vs-request-vs-observation/">
+        <div class="lc-number">03 &middot; FHIR DATA MODEL</div>
+        <div class="lc-title">Event vs. Request vs. Observation</div>
+        <div class="lc-desc">The three building blocks of clinical data in every modern EHR. A medication order, a lab result, and a vital sign are fundamentally different types of information &mdash; and treating them the same breaks everything downstream.</div>
+        <div class="lc-tags"><span class="lc-tag">FHIR R4</span><span class="lc-tag">Data Model</span><span class="lc-tag">Clinical</span><span class="lc-tag lc-tag-teal">Interactive</span></div>
+      </a>
+
+      <a class="learn-card" href="/posts/#ai-reality">
+        <div class="lc-number">04 &middot; AI IN HEALTHCARE</div>
+        <div class="lc-title">What&rsquo;s Actually Working vs. What&rsquo;s Still Promise</div>
+        <div class="lc-desc">Ambient documentation is real. Autonomous diagnosis is not. A candid, evidence-based assessment of where the healthcare AI line actually is &mdash; so you can make better decisions about what to adopt.</div>
+        <div class="lc-tags"><span class="lc-tag">AI</span><span class="lc-tag">Strategy</span><span class="lc-tag">Evidence</span><span class="lc-tag lc-tag-teal">Deep dive</span></div>
+      </a>
+
+      <a class="learn-card" href="/posts/#interop" style="border-left-color:var(--amber)">
+        <div class="lc-number">05 &middot; INTEROPERABILITY</div>
+        <div class="lc-title">What Interoperability Actually Means (And Why It&rsquo;s Hard)</div>
+        <div class="lc-desc">HL7, FHIR, the 21st Century Cures Act, information blocking rules. The full picture of why healthcare data still doesn&rsquo;t flow freely despite decades of effort and billions in federal investment.</div>
+        <div class="lc-tags"><span class="lc-tag">HL7</span><span class="lc-tag">FHIR</span><span class="lc-tag">ONC</span><span class="lc-tag">Cures Act</span></div>
+        <div class="lc-status">Coming soon</div>
+      </a>
+
+      <a class="learn-card" href="/posts/#revenue-cycle" style="border-left-color:var(--amber)">
+        <div class="lc-number">06 &middot; REVENUE CYCLE</div>
+        <div class="lc-title">How a Clinical Encounter Becomes a Paid Claim</div>
+        <div class="lc-desc">From the moment a patient is registered to the moment a payer deposits money. Charge capture, coding, claims submission, adjudication, denial management, and the real reason clinical documentation matters beyond care.</div>
+        <div class="lc-tags"><span class="lc-tag">RCM</span><span class="lc-tag">ICD-10</span><span class="lc-tag">Claims</span><span class="lc-tag">Billing</span></div>
+        <div class="lc-status">Coming soon</div>
+      </a>
+    </div>
+
+    <!-- REFERENCE STRIP -->
+    <div class="ref-strip" id="reference">
+      <div class="section-tag">External References</div>
+      <div class="ref-title">Primary Source Library</div>
+      <div class="ref-desc">Every claim on this site links to a primary source. These are the authoritative public resources for healthcare data standards, federal policy, and EHR documentation.</div>
+      <div class="ref-links">
+        <a class="ref-link" href="https://hl7.org/fhir/R4/resourcelist.html" target="_blank" rel="noopener">HL7 FHIR R4 Resource List</a>
+        <a class="ref-link" href="https://fhir.epic.com/" target="_blank" rel="noopener">Epic FHIR API Docs</a>
+        <a class="ref-link" href="https://fhir.cerner.com/" target="_blank" rel="noopener">Oracle Health FHIR Docs</a>
+        <a class="ref-link" href="https://www.healthit.gov/" target="_blank" rel="noopener">ONC HealthIT.gov</a>
+        <a class="ref-link" href="https://www.cms.gov/" target="_blank" rel="noopener">CMS.gov</a>
+        <a class="ref-link" href="https://www.hhs.gov/" target="_blank" rel="noopener">HHS.gov</a>
+        <a class="ref-link" href="https://www.hl7.org/about/index.cfm" target="_blank" rel="noopener">HL7 International</a>
+        <a class="ref-link" href="https://www.healthit.gov/topic/federal-hit-strategic-plan" target="_blank" rel="noopener">ONC Federal HIT Strategic Plan</a>
+      </div>
+    </div>
+
+  </div>
+</section>
