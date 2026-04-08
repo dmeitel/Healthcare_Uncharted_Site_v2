@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical SQL Mystery</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;--border2:#3d444d;
+  --text:#e6edf3;--text2:#8b949e;--text3:#4d5562;
+  --green:#238636;--green2:#2ea043;--green-dim:#1a2e1a;--green-text:#3fb950;
+  --blue:#1f6feb;--blue2:#388bfd;--blue-dim:#1a2840;--blue-text:#58a6ff;
+  --amber:#9e6a03;--amber-dim:#2d1f0a;--amber-text:#e3b341;
+  --purple-dim:#2a1f40;--purple-text:#d2a8ff;
+  --red-dim:#3b1a1a;--red-text:#ff7b72;
+  --teal:#0d9488;--teal-dim:#0d2b28;--teal-text:#2dd4bf;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
+.spin{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--blue-text);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{color:var(--text2);font-size:14px}
+
+/* TOAST */
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-120px);background:#1a2e1a;border:1px solid var(--green);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:12px;z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+.toast-ico{font-size:22px}
+.toast-t{color:var(--green-text);font-weight:600;font-size:14px;margin-bottom:2px}
+.toast-s{color:var(--text2);font-size:12px}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;height:54px}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-ico{width:30px;height:30px;background:linear-gradient(135deg,#0d9488,#0284c7);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.hdr-title{font-size:15px;font-weight:600;color:var(--text)}
+.hdr-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.hdr-r{display:flex;align-items:center;gap:16px}
+.hdr-stat{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.badge{background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:10px;font-size:11px;color:var(--text2)}
+.badge.win{background:var(--green-dim);border-color:var(--green);color:var(--green-text)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:196px 1fr 252px;flex:1;overflow:hidden;min-height:0}
+
+/* CASE SIDEBAR */
+.case-sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:12px 0}
+.side-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;padding:0 14px 8px}
+.case-btn{padding:10px 14px;cursor:pointer;border-left:3px solid transparent;transition:all .12s;position:relative}
+.case-btn:hover{background:var(--surface2)}
+.case-btn.active{background:var(--surface2);border-left-color:var(--blue-text)}
+.case-btn.solved{border-left-color:var(--green-text)}
+.case-num{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.case-name{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:5px;padding-right:16px}
+.lvl-tag{font-size:10px;padding:1px 7px;border-radius:10px;display:inline-block}
+.lvl-intern{background:#1a2e1a;color:var(--green-text)}
+.lvl-resident{background:var(--blue-dim);color:var(--blue-text)}
+.lvl-attending{background:var(--amber-dim);color:var(--amber-text)}
+.lvl-fellowship{background:var(--purple-dim);color:var(--purple-text)}
+.case-check{position:absolute;right:12px;top:12px;color:var(--green-text);font-size:14px}
+
+/* CENTER */
+.center{display:flex;flex-direction:column;overflow:hidden;min-height:0}
+
+/* CASE DESC */
+.case-desc{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px;flex-shrink:0;max-height:190px;overflow-y:auto}
+.desc-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;gap:12px}
+.desc-title{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.hint-btn{background:none;border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .12s;font-family:'Inter',sans-serif}
+.hint-btn:hover{border-color:var(--amber-text);color:var(--amber-text)}
+.hint-btn:disabled{opacity:.4;cursor:default}
+.desc-story{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px}
+.desc-obj{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--blue-text);padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px}
+.desc-obj strong{color:var(--blue-text)}
+.hints-wrap{margin-top:6px;display:flex;flex-direction:column;gap:6px}
+.hint-card{background:var(--amber-dim);border:1px solid rgba(227,179,65,.25);border-left:3px solid var(--amber-text);padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:var(--text);line-height:1.6;display:none}
+.hint-card.on{display:block}
+
+/* EDITOR */
+.editor-wrap{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--border)}
+.editor-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
+.bar-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
+.bar-acts{display:flex;gap:7px;align-items:center}
+.btn-run{background:var(--green);border:none;color:#fff;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .12s;font-family:'Inter',sans-serif}
+.btn-run:hover{background:var(--green2)}
+.btn-sec{background:none;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .12s;font-family:'Inter',sans-serif}
+.btn-sec:hover{border-color:var(--text2);color:var(--text)}
+.shortcut{font-size:10px;color:var(--text3);padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px}
+textarea#editor{width:100%;background:var(--bg);border:none;color:#a8d8a8;font-family:'JetBrains Mono','Fira Code',monospace;font-size:12.5px;padding:14px 16px;resize:none;outline:none;height:120px;line-height:1.65;caret-color:#58a6ff}
+textarea#editor::placeholder{color:var(--text3)}
+
+/* RESULTS */
+.results-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.results-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.res-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
+#res-count{font-size:11px;color:var(--text2)}
+#res-container{flex:1;overflow:auto}
+.res-placeholder{padding:24px;text-align:center;color:var(--text3);font-size:13px}
+.res-placeholder span{font-size:28px;display:block;margin-bottom:8px}
+.res-table{width:100%;border-collapse:collapse;font-size:12px}
+.res-table th{padding:7px 12px;text-align:left;background:var(--surface);color:var(--text2);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);position:sticky;top:0;white-space:nowrap}
+.res-table td{padding:7px 12px;border-bottom:1px solid #1c2128;color:var(--text);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.res-table tr:hover td{background:var(--surface2)}
+.null-val{color:var(--text3);font-style:italic}
+.err-box{margin:12px 14px;background:var(--red-dim);border:1px solid rgba(255,123,114,.3);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--red-text);line-height:1.6}
+.solved-row{background:rgba(35,134,54,.05) !important}
+.solved-row td{color:var(--green-text) !important}
+
+/* SCHEMA */
+.schema-panel{background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;padding:12px 0}
+.schema-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;padding:0 14px 8px}
+.quick-wrap{padding:0 14px 12px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.quick-lbl{font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:500}
+.quick-btn{display:block;width:100%;text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 9px;margin-bottom:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue-text);cursor:pointer;transition:all .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.quick-btn:hover{background:var(--blue-dim);border-color:var(--blue-text)}
+.tbl-grp{border-bottom:1px solid #1c2128}
+.tbl-hdr{padding:8px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .1s}
+.tbl-hdr:hover{background:var(--surface2)}
+.tbl-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--teal-text)}
+.tbl-tog{color:var(--text3);font-size:10px;transition:transform .2s}
+.tbl-tog.open{transform:rotate(90deg)}
+.tbl-cols{display:none;padding:2px 0 8px 14px}
+.tbl-cols.open{display:block}
+.col-row{display:flex;align-items:center;gap:7px;padding:3px 14px 3px 10px}
+.col-n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text)}
+.col-t{font-size:10px;color:var(--text3)}
+.pk{font-size:9px;background:#1a2e1a;color:var(--green-text);padding:1px 5px;border-radius:3px;font-weight:600}
+.fk{font-size:9px;background:var(--blue-dim);color:var(--blue-text);padding:1px 5px;border-radius:3px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><div class="load-text">Initializing clinical database...</div></div>
+
+<div id="toast">
+  <div class="toast-ico">🏆</div>
+  <div><div class="toast-t" id="toast-t"></div><div class="toast-s" id="toast-s"></div></div>
+</div>
+
+<header>
+  <div class="hdr-l">
+    <div class="hdr-ico">🏥</div>
+    <div>
+      <div class="hdr-title">Clinical SQL Mystery</div>
+      <div class="hdr-sub">Healthcare Informatics Investigations · Epic Data Model</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div class="hdr-stat">Cases solved: <span class="badge" id="solved-badge">0 / 4</span></div>
+    <div class="hdr-stat">Engine: <span class="badge">SQLite · Epic-style schema</span></div>
+    <a href="/tools/" style="font-size:11px;color:#8b949e;text-decoration:none;padding:4px 10px;border:1px solid #30363d;border-radius:6px;margin-left:8px;transition:all .15s;" onmouseover="this.style.borderColor='#2dd4bf';this.style.color='#2dd4bf'" onmouseout="this.style.borderColor='#30363d';this.style.color='#8b949e'">&#8592; All Tools</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="case-sidebar">
+    <div class="side-lbl">Cases</div>
+    <div id="case-list"></div>
+  </div>
+
+  <div class="center">
+    <div class="case-desc" id="case-desc"></div>
+
+    <div class="editor-wrap">
+      <div class="editor-bar">
+        <span class="bar-lbl">SQL Query Editor</span>
+        <div class="bar-acts">
+          <span class="shortcut">Ctrl+Enter</span>
+          <button class="btn-sec" onclick="clearEditor()">Clear</button>
+          <button class="btn-run" onclick="runQuery()">▶ Run</button>
+        </div>
+      </div>
+      <textarea id="editor" placeholder="-- Write your SQL query here&#10;-- Ctrl+Enter to run&#10;-- Start with: SELECT * FROM patient LIMIT 5;"></textarea>
+    </div>
+
+    <div class="results-wrap">
+      <div class="results-bar">
+        <span class="res-lbl">Results</span>
+        <span id="res-count"></span>
+      </div>
+      <div id="res-container">
+        <div class="res-placeholder"><span>🔍</span>Run a query to see results</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="schema-panel">
+    <div class="schema-lbl">Schema Reference</div>
+    <div class="quick-wrap">
+      <div class="quick-lbl">Quick explore →</div>
+      <button class="quick-btn" onclick="fillQuery('SELECT * FROM patient LIMIT 5;')">SELECT * FROM patient</button>
+      <button class="quick-btn" onclick="fillQuery('SELECT * FROM encounter LIMIT 5;')">SELECT * FROM encounter</button>
+      <button class="quick-btn" onclick="fillQuery('SELECT * FROM flowsheet LIMIT 5;')">SELECT * FROM flowsheet</button>
+      <button class="quick-btn" onclick="fillQuery('SELECT * FROM orders LIMIT 5;')">SELECT * FROM orders</button>
+      <button class="quick-btn" onclick="fillQuery('SELECT * FROM mar LIMIT 5;')">SELECT * FROM mar</button>
+      <button class="quick-btn" onclick="fillQuery('SELECT * FROM lab_result LIMIT 5;')">SELECT * FROM lab_result</button>
+      <button class="quick-btn" onclick="fillQuery('SELECT * FROM diagnosis LIMIT 5;')">SELECT * FROM diagnosis</button>
+    </div>
+    <div id="schema-tables"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+<script>
+const CASES = [
+  {
+    id:1, title:"Night Census Report", level:"intern", levelLabel:"Intern",
+    story:"It's 22:00 on a Tuesday. The charge nurse on the ICU floor calls you — she needs a census for tonight's shift handoff and the unit secretary just went home. She needs to know exactly who is in her unit right now.",
+    obj:"<strong>Your mission:</strong> Find all patients who are <em>currently admitted</em> to the ICU. Active admissions have no discharge date. Return the patient name, MRN, CSN, and admit date.",
+    hints:[
+      "💡 Hint 1: You need to JOIN the <code>patient</code> and <code>encounter</code> tables. They share a <code>pat_id</code> column.",
+      "💡 Hint 2: The <code>encounter</code> table has a <code>discharge_date</code> column. Active admissions have <strong>NULL</strong> in this column. Use <code>WHERE discharge_date IS NULL</code>.",
+      "💡 Hint 3: Full solution:<br><code>SELECT p.full_name, p.mrn, e.csn, e.admit_date<br>FROM patient p<br>JOIN encounter e ON p.pat_id = e.pat_id<br>WHERE e.department = 'ICU'<br>AND e.discharge_date IS NULL</code>"
+    ],
+    validate(rows){
+      if(!rows||rows.length!==4)return false;
+      const v=rows.flatMap(r=>Object.values(r).map(x=>String(x??'')));
+      return['1001','1002','1003','1004'].every(x=>v.includes(x))||
+             ['James Mitchell','Robert Torres','Linda Park','Thomas Anderson'].every(n=>v.some(x=>x.includes(n.split(' ')[0])));
+    }
+  },
+  {
+    id:2, title:"Sepsis Screening Audit", level:"resident", levelLabel:"Resident",
+    story:"Your quality improvement team is running a retrospective sepsis audit. One key SIRS trigger is both an elevated heart rate AND fever occurring during the same hospital encounter. You need to identify patients who met both criteria — these may be cases where early sepsis was missed.",
+    obj:"<strong>Your mission:</strong> Find all <em>unique</em> patients who had BOTH a Heart Rate over 100 bpm AND a Temperature over 38.0°C documented in the <code>flowsheet</code> table during the same encounter. Do NOT include patients who only met one criterion.",
+    hints:[
+      "💡 Hint 1: The <code>flowsheet</code> table has <code>measure_name</code> (e.g. 'Heart Rate', 'Temperature') and <code>value</code> columns. You need encounters where both appear.",
+      "💡 Hint 2: JOIN the flowsheet table to itself on the same <code>csn</code> — one alias for Heart Rate, one for Temperature. Use <code>DISTINCT</code> to avoid duplicates.",
+      "💡 Hint 3: Full solution:<br><code>SELECT DISTINCT p.pat_id, p.full_name<br>FROM patient p<br>JOIN flowsheet hr ON p.pat_id = hr.pat_id<br>JOIN flowsheet tmp ON hr.csn = tmp.csn<br>WHERE hr.measure_name = 'Heart Rate' AND hr.value > 100<br>AND tmp.measure_name = 'Temperature' AND tmp.value > 38.0</code>"
+    ],
+    validate(rows){
+      if(!rows||rows.length!==4)return false;
+      const v=rows.flatMap(r=>Object.values(r).map(x=>String(x??'')));
+      return['James Mitchell','Robert Torres','Maria Santos','Patricia Lee'].every(n=>v.some(x=>x.includes(n.split(' ')[0])));
+    }
+  },
+  {
+    id:3, title:"Pharmacy Antibiotic Audit", level:"attending", levelLabel:"Attending",
+    story:"Pharmacy is running an antibiotic stewardship audit. Vancomycin — a critical IV antibiotic for MRSA — is sometimes ordered but never documented as administered in the MAR (Medication Administration Record). Each missed dose is a potential patient safety event that must be reviewed.",
+    obj:"<strong>Your mission:</strong> Find all patients who had a <em>Vancomycin</em> order placed in the <code>orders</code> table but have NO corresponding administration record in the <code>mar</code> table. Return the patient name, order_id, and the ordering provider.",
+    hints:[
+      "💡 Hint 1: You need orders for Vancomycin with no matching MAR row. The <code>orders</code> and <code>mar</code> tables link via <code>order_id</code>.",
+      "💡 Hint 2: A <strong>LEFT JOIN</strong> between orders and mar will include orders even when no MAR exists. Then filter <code>WHERE mar.mar_id IS NULL</code> to find the unmatched ones.",
+      "💡 Hint 3: Full solution:<br><code>SELECT p.full_name, o.order_id, o.ordered_by<br>FROM orders o<br>JOIN patient p ON o.pat_id = p.pat_id<br>LEFT JOIN mar m ON o.order_id = m.order_id<br>WHERE o.order_name = 'Vancomycin'<br>AND m.mar_id IS NULL</code>"
+    ],
+    validate(rows){
+      if(!rows||rows.length!==2)return false;
+      const v=rows.flatMap(r=>Object.values(r).map(x=>String(x??'')));
+      return['2002','2004'].every(x=>v.includes(x))||
+             ['Robert Torres','Thomas Anderson'].every(n=>v.some(x=>x.includes(n.split(' ')[0])));
+    }
+  },
+  {
+    id:4, title:"30-Day Readmission Review", level:"fellowship", levelLabel:"Fellowship",
+    story:"CMS penalizes hospitals for excessive 30-day readmissions. Your CFO needs a list of patients who were discharged and then readmitted within 30 calendar days. This query is the foundation of every hospital's readmission reduction program — get it wrong and the organization gets penalized.",
+    obj:"<strong>Your mission:</strong> Find patients who were discharged from one encounter and had a new admission within 30 days of that discharge. Return the patient name, original discharge date, readmission date, and the number of days between them. Use <code>julianday()</code> for date math.",
+    hints:[
+      "💡 Hint 1: JOIN the <code>encounter</code> table to <strong>itself</strong> — one alias for the original discharge encounter, one for the readmission. Link them on the same <code>pat_id</code> but different <code>csn</code>.",
+      "💡 Hint 2: Filter: <code>e1.discharge_date IS NOT NULL</code>, <code>e2.admit_date > e1.discharge_date</code>, and <code>julianday(e2.admit_date) - julianday(e1.discharge_date) &lt;= 30</code>.",
+      "💡 Hint 3: Full solution:<br><code>SELECT p.full_name, e1.discharge_date as discharged, e2.admit_date as readmitted,<br>CAST(julianday(e2.admit_date) - julianday(e1.discharge_date) AS INT) as days_apart<br>FROM encounter e1<br>JOIN encounter e2 ON e1.pat_id = e2.pat_id AND e1.csn != e2.csn<br>JOIN patient p ON e1.pat_id = p.pat_id<br>WHERE e1.discharge_date IS NOT NULL<br>AND e2.admit_date > e1.discharge_date<br>AND julianday(e2.admit_date) - julianday(e1.discharge_date) &lt;= 30</code>"
+    ],
+    validate(rows){
+      if(!rows||rows.length!==2)return false;
+      const v=rows.flatMap(r=>Object.values(r).map(x=>String(x??'')));
+      return['William Brown','Patricia Lee'].every(n=>v.some(x=>x.includes(n.split(' ')[0])));
+    }
+  }
+];
+
+const SCHEMA=[
+  {name:'patient',cols:[{n:'pat_id',t:'INTEGER',pk:1},{n:'mrn',t:'TEXT'},{n:'full_name',t:'TEXT'},{n:'date_of_birth',t:'TEXT'},{n:'sex',t:'TEXT'},{n:'blood_type',t:'TEXT'}]},
+  {name:'encounter',cols:[{n:'csn',t:'INTEGER',pk:1},{n:'pat_id',t:'INTEGER',fk:1},{n:'department',t:'TEXT'},{n:'encounter_type',t:'TEXT'},{n:'admit_date',t:'TEXT'},{n:'discharge_date',t:'TEXT'},{n:'attending',t:'TEXT'},{n:'admit_diagnosis',t:'TEXT'},{n:'discharge_disposition',t:'TEXT'}]},
+  {name:'flowsheet',cols:[{n:'fsd_id',t:'INTEGER',pk:1},{n:'csn',t:'INTEGER',fk:1},{n:'pat_id',t:'INTEGER',fk:1},{n:'measure_name',t:'TEXT'},{n:'value',t:'REAL'},{n:'units',t:'TEXT'},{n:'recorded_time',t:'TEXT'},{n:'recorded_by',t:'TEXT'}]},
+  {name:'orders',cols:[{n:'order_id',t:'INTEGER',pk:1},{n:'csn',t:'INTEGER',fk:1},{n:'pat_id',t:'INTEGER',fk:1},{n:'order_name',t:'TEXT'},{n:'order_type',t:'TEXT'},{n:'ordered_by',t:'TEXT'},{n:'order_time',t:'TEXT'},{n:'status',t:'TEXT'},{n:'priority',t:'TEXT'}]},
+  {name:'mar',cols:[{n:'mar_id',t:'INTEGER',pk:1},{n:'order_id',t:'INTEGER',fk:1},{n:'csn',t:'INTEGER',fk:1},{n:'pat_id',t:'INTEGER',fk:1},{n:'medication',t:'TEXT'},{n:'dose',t:'TEXT'},{n:'route',t:'TEXT'},{n:'given_time',t:'TEXT'},{n:'given_by',t:'TEXT'}]},
+  {name:'lab_result',cols:[{n:'result_id',t:'INTEGER',pk:1},{n:'csn',t:'INTEGER',fk:1},{n:'pat_id',t:'INTEGER',fk:1},{n:'test_name',t:'TEXT'},{n:'result_value',t:'REAL'},{n:'units',t:'TEXT'},{n:'normal_low',t:'REAL'},{n:'normal_high',t:'REAL'},{n:'result_time',t:'TEXT'},{n:'critical_flag',t:'INTEGER'}]},
+  {name:'diagnosis',cols:[{n:'dx_id',t:'INTEGER',pk:1},{n:'csn',t:'INTEGER',fk:1},{n:'pat_id',t:'INTEGER',fk:1},{n:'icd_code',t:'TEXT'},{n:'dx_name',t:'TEXT'},{n:'dx_type',t:'TEXT'}]}
+];
+
+const DB_SQL=`
+CREATE TABLE patient(pat_id INTEGER PRIMARY KEY,mrn TEXT,full_name TEXT,date_of_birth TEXT,sex TEXT,blood_type TEXT);
+CREATE TABLE encounter(csn INTEGER PRIMARY KEY,pat_id INTEGER,department TEXT,encounter_type TEXT,admit_date TEXT,discharge_date TEXT,attending TEXT,admit_diagnosis TEXT,discharge_disposition TEXT);
+CREATE TABLE flowsheet(fsd_id INTEGER PRIMARY KEY,csn INTEGER,pat_id INTEGER,measure_name TEXT,value REAL,units TEXT,recorded_time TEXT,recorded_by TEXT);
+CREATE TABLE orders(order_id INTEGER PRIMARY KEY,csn INTEGER,pat_id INTEGER,order_name TEXT,order_type TEXT,ordered_by TEXT,order_time TEXT,status TEXT,priority TEXT);
+CREATE TABLE mar(mar_id INTEGER PRIMARY KEY,order_id INTEGER,csn INTEGER,pat_id INTEGER,medication TEXT,dose TEXT,route TEXT,given_time TEXT,given_by TEXT);
+CREATE TABLE lab_result(result_id INTEGER PRIMARY KEY,csn INTEGER,pat_id INTEGER,test_name TEXT,result_value REAL,units TEXT,normal_low REAL,normal_high REAL,result_time TEXT,critical_flag INTEGER);
+CREATE TABLE diagnosis(dx_id INTEGER PRIMARY KEY,csn INTEGER,pat_id INTEGER,icd_code TEXT,dx_name TEXT,dx_type TEXT);
+
+INSERT INTO patient VALUES
+(1,'MRN-001','James Mitchell','1965-03-15','M','A+'),
+(2,'MRN-002','Sarah Chen','1978-09-22','F','O-'),
+(3,'MRN-003','Robert Torres','1942-07-08','M','B+'),
+(4,'MRN-004','Linda Park','1955-12-30','F','AB+'),
+(5,'MRN-005','David Kim','1990-04-17','M','O+'),
+(6,'MRN-006','Maria Santos','1969-11-05','F','A-'),
+(7,'MRN-007','William Brown','1950-06-28','M','B-'),
+(8,'MRN-008','Jennifer Walsh','1983-02-14','F','O+'),
+(9,'MRN-009','Thomas Anderson','1937-08-19','M','A+'),
+(10,'MRN-010','Patricia Lee','1961-05-07','F','O-'),
+(11,'MRN-011','Charles Davis','1975-10-23','M','AB-'),
+(12,'MRN-012','Nancy Wilson','1988-07-31','F','A+'),
+(13,'MRN-013','Mark Johnson','1952-01-16','M','B+'),
+(14,'MRN-014','Susan Martinez','1945-03-09','F','O+'),
+(15,'MRN-015','Kevin Thompson','1971-08-25','M','A-');
+
+INSERT INTO encounter VALUES
+(1001,1,'ICU','Inpatient','2024-03-10 14:22:00',NULL,'Dr. Rivera','Respiratory Failure',NULL),
+(1002,3,'ICU','Inpatient','2024-03-12 09:15:00',NULL,'Dr. Rivera','Septic Shock',NULL),
+(1003,4,'ICU','Inpatient','2024-03-14 22:45:00',NULL,'Dr. Patel','Post-op Monitoring',NULL),
+(1004,9,'ICU','Inpatient','2024-03-13 11:30:00',NULL,'Dr. Patel','ARDS',NULL),
+(1005,2,'Med/Surg','Inpatient','2024-03-11 16:00:00',NULL,'Dr. Thompson','Pneumonia',NULL),
+(1006,5,'Emergency','Emergency','2024-03-15 03:20:00',NULL,'Dr. Walsh','Chest Pain',NULL),
+(1007,6,'Cardiology','Inpatient','2024-03-13 10:00:00',NULL,'Dr. Chen','Atrial Fibrillation',NULL),
+(1008,7,'Med/Surg','Inpatient','2024-02-20 09:00:00','2024-02-25 11:30:00','Dr. Thompson','UTI','Home'),
+(1009,8,'Emergency','Emergency','2024-03-01 14:00:00','2024-03-01 19:45:00','Dr. Walsh','Laceration','Home'),
+(1010,10,'Med/Surg','Inpatient','2024-02-15 08:00:00','2024-02-22 10:00:00','Dr. Thompson','Cellulitis','Home'),
+(1011,11,'ICU','Inpatient','2024-02-10 12:00:00','2024-02-20 14:00:00','Dr. Rivera','Sepsis','SNF'),
+(1012,12,'Cardiology','Inpatient','2024-03-05 15:00:00','2024-03-10 12:00:00','Dr. Chen','NSTEMI','Home'),
+(1013,13,'Med/Surg','Inpatient','2024-02-28 10:00:00','2024-03-07 09:00:00','Dr. Thompson','COPD Exacerbation','Home'),
+(1014,14,'Emergency','Emergency','2024-03-08 11:00:00','2024-03-08 16:30:00','Dr. Walsh','Abdominal Pain','Home'),
+(1015,15,'Med/Surg','Inpatient','2024-02-25 14:00:00','2024-03-02 10:00:00','Dr. Thompson','Pneumonia','Home'),
+(1016,7,'Med/Surg','Inpatient','2024-03-10 08:00:00','2024-03-15 11:00:00','Dr. Thompson','Recurrent UTI','Home'),
+(1017,10,'Med/Surg','Inpatient','2024-03-09 15:00:00','2024-03-14 10:00:00','Dr. Thompson','Wound Infection','Home'),
+(1018,13,'Med/Surg','Inpatient','2024-04-10 09:00:00','2024-04-15 11:00:00','Dr. Thompson','Hip Fracture','SNF');
+
+INSERT INTO flowsheet VALUES
+(1,1001,1,'Heart Rate',112,'bpm','2024-03-10 15:00:00','Nurse Kim'),
+(2,1001,1,'Blood Pressure Systolic',145,'mmHg','2024-03-10 15:00:00','Nurse Kim'),
+(3,1001,1,'Temperature',38.6,'°C','2024-03-10 15:00:00','Nurse Kim'),
+(4,1001,1,'SpO2',91,'%','2024-03-10 15:00:00','Nurse Kim'),
+(5,1001,1,'Respiratory Rate',24,'br/min','2024-03-10 15:00:00','Nurse Kim'),
+(6,1001,1,'Heart Rate',118,'bpm','2024-03-10 19:00:00','Nurse Lee'),
+(7,1001,1,'Temperature',38.9,'°C','2024-03-10 19:00:00','Nurse Lee'),
+(8,1005,2,'Heart Rate',105,'bpm','2024-03-11 17:00:00','Nurse Park'),
+(9,1005,2,'Temperature',37.2,'°C','2024-03-11 17:00:00','Nurse Park'),
+(10,1005,2,'Blood Pressure Systolic',132,'mmHg','2024-03-11 17:00:00','Nurse Park'),
+(11,1002,3,'Heart Rate',124,'bpm','2024-03-12 10:00:00','Nurse Kim'),
+(12,1002,3,'Temperature',39.1,'°C','2024-03-12 10:00:00','Nurse Kim'),
+(13,1002,3,'Blood Pressure Systolic',88,'mmHg','2024-03-12 10:00:00','Nurse Kim'),
+(14,1002,3,'SpO2',94,'%','2024-03-12 10:00:00','Nurse Kim'),
+(15,1002,3,'Respiratory Rate',28,'br/min','2024-03-12 10:00:00','Nurse Kim'),
+(16,1003,4,'Heart Rate',88,'bpm','2024-03-14 23:00:00','Nurse Lee'),
+(17,1003,4,'Temperature',37.8,'°C','2024-03-14 23:00:00','Nurse Lee'),
+(18,1003,4,'Blood Pressure Systolic',118,'mmHg','2024-03-14 23:00:00','Nurse Lee'),
+(19,1006,5,'Heart Rate',96,'bpm','2024-03-15 04:00:00','Nurse Walsh'),
+(20,1006,5,'Temperature',37.0,'°C','2024-03-15 04:00:00','Nurse Walsh'),
+(21,1007,6,'Heart Rate',108,'bpm','2024-03-13 11:00:00','Nurse Torres'),
+(22,1007,6,'Temperature',38.3,'°C','2024-03-13 11:00:00','Nurse Torres'),
+(23,1007,6,'Blood Pressure Systolic',142,'mmHg','2024-03-13 11:00:00','Nurse Torres'),
+(24,1008,7,'Heart Rate',82,'bpm','2024-02-21 08:00:00','Nurse Brown'),
+(25,1008,7,'Temperature',37.1,'°C','2024-02-21 08:00:00','Nurse Brown'),
+(26,1004,9,'Heart Rate',94,'bpm','2024-03-13 12:00:00','Nurse Kim'),
+(27,1004,9,'Temperature',37.4,'°C','2024-03-13 12:00:00','Nurse Kim'),
+(28,1004,9,'Blood Pressure Systolic',110,'mmHg','2024-03-13 12:00:00','Nurse Kim'),
+(29,1010,10,'Heart Rate',118,'bpm','2024-02-16 08:00:00','Nurse Park'),
+(30,1010,10,'Temperature',38.8,'°C','2024-02-16 08:00:00','Nurse Park'),
+(31,1010,10,'Blood Pressure Systolic',128,'mmHg','2024-02-16 08:00:00','Nurse Park'),
+(32,1011,11,'Heart Rate',78,'bpm','2024-02-11 10:00:00','Nurse Kim'),
+(33,1011,11,'Temperature',38.5,'°C','2024-02-11 10:00:00','Nurse Kim'),
+(34,1011,11,'Blood Pressure Systolic',102,'mmHg','2024-02-11 10:00:00','Nurse Kim'),
+(35,1012,12,'Heart Rate',76,'bpm','2024-03-06 09:00:00','Nurse Torres'),
+(36,1012,12,'Temperature',36.8,'°C','2024-03-06 09:00:00','Nurse Torres'),
+(37,1013,13,'Heart Rate',80,'bpm','2024-03-01 09:00:00','Nurse Brown'),
+(38,1013,13,'Temperature',37.0,'°C','2024-03-01 09:00:00','Nurse Brown'),
+(39,1015,15,'Heart Rate',90,'bpm','2024-02-26 09:00:00','Nurse Park'),
+(40,1015,15,'Temperature',37.5,'°C','2024-02-26 09:00:00','Nurse Park');
+
+INSERT INTO orders VALUES
+(2001,1001,1,'Vancomycin','Medication','Dr. Rivera','2024-03-10 16:00:00','Active','Routine'),
+(2002,1002,3,'Vancomycin','Medication','Dr. Rivera','2024-03-12 10:30:00','Active','Routine'),
+(2003,1008,7,'Vancomycin','Medication','Dr. Thompson','2024-02-21 10:00:00','Completed','Routine'),
+(2004,1004,9,'Vancomycin','Medication','Dr. Patel','2024-03-13 13:00:00','Active','STAT'),
+(2005,1011,11,'Vancomycin','Medication','Dr. Rivera','2024-02-11 08:00:00','Completed','Routine'),
+(2006,1001,1,'Piperacillin-Tazobactam','Medication','Dr. Rivera','2024-03-10 16:00:00','Active','Routine'),
+(2007,1002,3,'Norepinephrine','Medication','Dr. Rivera','2024-03-12 11:00:00','Active','STAT'),
+(2008,1003,4,'Morphine','Medication','Dr. Patel','2024-03-14 23:30:00','Active','PRN'),
+(2009,1005,2,'Ceftriaxone','Medication','Dr. Thompson','2024-03-11 17:00:00','Active','Routine'),
+(2010,1007,6,'Metoprolol','Medication','Dr. Chen','2024-03-13 11:00:00','Active','Routine'),
+(2011,1010,10,'Cephalexin','Medication','Dr. Thompson','2024-02-16 09:00:00','Completed','Routine'),
+(2012,1001,1,'CBC with Differential','Lab','Dr. Rivera','2024-03-10 14:30:00','Resulted','STAT'),
+(2013,1002,3,'Lactate','Lab','Dr. Rivera','2024-03-12 09:30:00','Resulted','STAT'),
+(2014,1004,9,'ABG','Lab','Dr. Patel','2024-03-13 12:00:00','Resulted','STAT'),
+(2015,1012,12,'Troponin','Lab','Dr. Chen','2024-03-05 16:00:00','Resulted','STAT');
+
+INSERT INTO mar VALUES
+(3001,2001,1001,1,'Vancomycin','1g','IV','2024-03-10 20:00:00','Nurse Kim'),
+(3002,2001,1001,1,'Vancomycin','1g','IV','2024-03-11 04:00:00','Nurse Lee'),
+(3003,2003,1008,7,'Vancomycin','1g','IV','2024-02-21 14:00:00','Nurse Brown'),
+(3004,2003,1008,7,'Vancomycin','1g','IV','2024-02-21 22:00:00','Nurse Brown'),
+(3005,2005,1011,11,'Vancomycin','1g','IV','2024-02-11 12:00:00','Nurse Kim'),
+(3006,2005,1011,11,'Vancomycin','1g','IV','2024-02-11 20:00:00','Nurse Kim'),
+(3007,2006,1001,1,'Piperacillin-Tazobactam','3.375g','IV','2024-03-10 18:00:00','Nurse Kim'),
+(3008,2007,1002,3,'Norepinephrine','4mcg/min','IV','2024-03-12 11:30:00','Nurse Kim'),
+(3009,2009,1005,2,'Ceftriaxone','1g','IV','2024-03-11 20:00:00','Nurse Park'),
+(3010,2010,1007,6,'Metoprolol','25mg','PO','2024-03-13 12:00:00','Nurse Torres'),
+(3011,2011,1010,10,'Cephalexin','500mg','PO','2024-02-16 10:00:00','Nurse Park');
+
+INSERT INTO lab_result VALUES
+(4001,1001,1,'WBC',18.4,'K/uL',4.5,11.0,'2024-03-10 15:30:00',1),
+(4002,1001,1,'Hemoglobin',9.2,'g/dL',12.0,17.5,'2024-03-10 15:30:00',0),
+(4003,1001,1,'Lactate',4.2,'mmol/L',0.5,2.2,'2024-03-10 15:30:00',1),
+(4004,1002,3,'WBC',22.1,'K/uL',4.5,11.0,'2024-03-12 10:00:00',1),
+(4005,1002,3,'Lactate',6.8,'mmol/L',0.5,2.2,'2024-03-12 10:00:00',1),
+(4006,1002,3,'Creatinine',3.2,'mg/dL',0.6,1.2,'2024-03-12 10:00:00',1),
+(4007,1004,9,'PO2',55,'mmHg',80.0,100.0,'2024-03-13 12:30:00',1),
+(4008,1004,9,'pH',7.28,'',7.35,7.45,'2024-03-13 12:30:00',1),
+(4009,1005,2,'WBC',14.2,'K/uL',4.5,11.0,'2024-03-11 17:30:00',0),
+(4010,1007,6,'Troponin',0.08,'ng/mL',0.0,0.04,'2024-03-13 11:30:00',0),
+(4011,1010,10,'WBC',16.8,'K/uL',4.5,11.0,'2024-02-15 09:00:00',0),
+(4012,1012,12,'Troponin',2.4,'ng/mL',0.0,0.04,'2024-03-05 16:30:00',1),
+(4013,1015,15,'WBC',12.1,'K/uL',4.5,11.0,'2024-02-25 15:00:00',0);
+
+INSERT INTO diagnosis VALUES
+(5001,1001,1,'J96.01','Acute respiratory failure with hypoxia','Primary'),
+(5002,1001,1,'J18.9','Pneumonia, unspecified','Secondary'),
+(5003,1002,3,'A41.9','Septic shock','Primary'),
+(5004,1002,3,'N17.9','Acute kidney injury','Secondary'),
+(5005,1003,4,'Z48.89','Post-operative monitoring','Primary'),
+(5006,1004,9,'J80','ARDS','Primary'),
+(5007,1005,2,'J18.9','Pneumonia, unspecified','Primary'),
+(5008,1007,6,'I48.91','Atrial fibrillation, unspecified','Primary'),
+(5009,1008,7,'N39.0','Urinary tract infection','Primary'),
+(5010,1010,10,'L03.115','Cellulitis of right lower limb','Primary'),
+(5011,1011,11,'A41.9','Sepsis, unspecified','Primary'),
+(5012,1012,12,'I21.4','NSTEMI','Primary'),
+(5013,1013,13,'J44.1','COPD exacerbation','Primary');
+`;
+
+let db=null, curCase=0, solved=new Set(), hints=[0,0,0,0];
+
+async function init(){
+  try{
+    const SQL=await initSqlJs({locateFile:f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`});
+    db=new SQL.Database();
+    db.run(DB_SQL);
+    document.getElementById('loading').style.display='none';
+    renderCases();
+    renderSchema();
+    loadCase(0);
+    document.getElementById('editor').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();runQuery();}});
+  }catch(e){
+    document.getElementById('loading').innerHTML=`<div style="color:#ff7b72;font-size:14px">Failed to load: ${e.message}</div>`;
+  }
+}
+
+function renderCases(){
+  const el=document.getElementById('case-list');
+  el.innerHTML=CASES.map((c,i)=>`
+    <div class="case-btn ${i===curCase?'active':''} ${solved.has(i)?'solved':''}" onclick="loadCase(${i})">
+      ${solved.has(i)?'<span class="case-check">✓</span>':''}
+      <div class="case-num">Case ${c.id}</div>
+      <div class="case-name">${c.title}</div>
+      <span class="lvl-tag lvl-${c.level}">${c.levelLabel}</span>
+    </div>
+  `).join('');
+  const s=solved.size;
+  const badge=document.getElementById('solved-badge');
+  badge.textContent=`${s} / ${CASES.length}`;
+  badge.className=s===CASES.length?'badge win':'badge';
+}
+
+function loadCase(i){
+  curCase=i;
+  const c=CASES[i];
+  const hc=hints[i]||0;
+  document.getElementById('case-desc').innerHTML=`
+    <div class="desc-hdr">
+      <div class="desc-title">📋 Case ${c.id}: ${c.title} <span style="font-size:11px;font-weight:400;margin-left:8px"><span class="lvl-tag lvl-${c.level}">${c.levelLabel}</span></span></div>
+      <button class="hint-btn" onclick="showHint(${i})" id="hbtn-${i}" ${hc>=c.hints.length?'disabled':''}>
+        💡 Hint ${hc>=c.hints.length?'(all used)':`(${hc}/${c.hints.length})`}
+      </button>
+    </div>
+    <p class="desc-story">${c.story}</p>
+    <div class="desc-obj">${c.obj}</div>
+    <div class="hints-wrap" id="hw-${i}">
+      ${c.hints.map((h,hi)=>`<div class="hint-card ${hi<hc?'on':''}" id="h-${i}-${hi}">${h}</div>`).join('')}
+    </div>
+  `;
+  renderCases();
+  clearRes();
+}
+
+function showHint(i){
+  const c=CASES[i], hc=hints[i]||0;
+  if(hc<c.hints.length){
+    document.getElementById(`h-${i}-${hc}`).classList.add('on');
+    hints[i]=(hc+1);
+    const btn=document.getElementById(`hbtn-${i}`);
+    if(btn){
+      const nc=hints[i];
+      btn.textContent=nc>=c.hints.length?'💡 Hint (all used)':`💡 Hint (${nc}/${c.hints.length})`;
+      if(nc>=c.hints.length)btn.disabled=true;
+    }
+  }
+}
+
+function runQuery(){
+  const sql=document.getElementById('editor').value.trim();
+  if(!sql||!db)return;
+  const rc=document.getElementById('res-container'),cnt=document.getElementById('res-count');
+  try{
+    const res=db.exec(sql);
+    if(!res||!res.length){rc.innerHTML='<div class="res-placeholder"><span>✓</span>Query executed — no rows returned</div>';cnt.textContent='0 rows';return;}
+    const{columns,values}=res[0];
+    const rows=values.map(row=>{const o={};columns.forEach((c,i)=>o[c]=row[i]);return o;});
+    cnt.textContent=`${rows.length} row${rows.length!==1?'s':''}`;
+    const isSolved=!solved.has(curCase)&&CASES[curCase].validate(rows);
+    rc.innerHTML=`<table class="res-table">
+      <thead><tr>${columns.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(row=>`<tr class="${isSolved?'solved-row':''}">${columns.map(c=>`<td title="${row[c]??''}">${row[c]!=null?row[c]:'<span class="null-val">NULL</span>'}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+    if(isSolved){
+      solved.add(curCase);
+      const c=CASES[curCase];
+      document.getElementById('toast-t').textContent=`Case ${c.id} Solved! 🏆`;
+      document.getElementById('toast-s').textContent=`"${c.title}" — correct results returned.`;
+      const t=document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),4000);
+      renderCases();
+    }
+  }catch(e){
+    rc.innerHTML=`<div class="err-box">⚠ SQL Error: ${e.message}</div>`;
+    cnt.textContent='Error';
+  }
+}
+
+function fillQuery(q){document.getElementById('editor').value=q;document.getElementById('editor').focus();}
+function clearEditor(){document.getElementById('editor').value='';}
+function clearRes(){document.getElementById('res-container').innerHTML='<div class="res-placeholder"><span>🔍</span>Run a query to see results</div>';document.getElementById('res-count').textContent='';}
+
+function renderSchema(){
+  const el=document.getElementById('schema-tables');
+  el.innerHTML=SCHEMA.map((t,ti)=>`
+    <div class="tbl-grp">
+      <div class="tbl-hdr" onclick="toggleT(${ti})">
+        <span class="tbl-name">${t.name}</span>
+        <span class="tbl-tog" id="tt-${ti}">▶</span>
+      </div>
+      <div class="tbl-cols" id="tc-${ti}">
+        ${t.cols.map(c=>`<div class="col-row"><span class="col-n">${c.n}</span>${c.pk?'<span class="pk">PK</span>':''}${c.fk?'<span class="fk">FK</span>':''}<span class="col-t">${c.t}</span></div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  toggleT(0);toggleT(1);
+}
+
+function toggleT(i){
+  const c=document.getElementById(`tc-${i}`),t=document.getElementById(`tt-${i}`);
+  c.classList.toggle('open');t.classList.toggle('open');
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI in Healthcare: Value vs. Hype — Project Map</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --fail-primary: #d73a4a;
+    --fail-light: #ffdce0;
+    --fail-mid: #3d1219;
+    --work-primary: #2ea043;
+    --work-light: #ccffd8;
+    --work-mid: #0d2e18;
+    --nuance-primary: #f0883e;
+    --nuance-light: #ffd8a8;
+    --nuance-mid: #2e1a00;
+    --thesis-primary: #58a6ff;
+    --thesis-light: #cae8ff;
+    --thesis-mid: #0d2044;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* BACK BAR */
+  .hu-back-bar {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(13,17,23,.97); border-bottom: 1px solid #30363d;
+    padding: 0 24px; height: 40px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    backdrop-filter: blur(8px);
+  }
+  .hu-back-link {
+    color: #4ECDC4; text-decoration: none; display: flex; align-items: center; gap: 5px;
+    font-weight: 500; transition: color .15s;
+  }
+  .hu-back-link:hover { color: #fff; }
+  .hu-back-sep { color: #30363d; }
+  .hu-back-page { color: #8b949e; font-size: 12px; }
+  .hu-back-tools {
+    margin-left: auto; color: #8b949e; text-decoration: none; font-size: 12px;
+    padding: 3px 10px; border: 1px solid #30363d; border-radius: 6px; transition: all .15s;
+  }
+  .hu-back-tools:hover { border-color: #4ECDC4; color: #4ECDC4; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 48px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(88,166,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--thesis-primary);
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 4vw, 42px);
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .header h1 em {
+    font-style: italic;
+    color: var(--thesis-primary);
+  }
+  .header-sub {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  /* THESIS BAR */
+  .thesis-bar {
+    background: var(--thesis-mid);
+    border: 1px solid rgba(88,166,255,0.3);
+    border-left: 4px solid var(--thesis-primary);
+    margin: 32px 48px 0;
+    padding: 16px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--thesis-light);
+    max-width: 900px;
+  }
+  .thesis-bar strong {
+    color: var(--thesis-primary);
+    font-weight: 600;
+  }
+
+  /* NAV TABS */
+  .nav {
+    display: flex;
+    gap: 4px;
+    padding: 24px 48px 0;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .nav-tab {
+    padding: 10px 18px;
+    border-radius: 6px 6px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    color: var(--muted);
+    background: transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    position: relative;
+    bottom: -1px;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface); }
+  .nav-tab.active {
+    color: var(--text);
+    background: var(--surface);
+    border-color: var(--border);
+    border-bottom-color: var(--surface);
+  }
+  .nav-tab .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* MAIN CONTENT */
+  .main { padding: 32px 48px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* UMBRELLA GRID */
+  .umbrella-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .umbrella-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .umbrella-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .umbrella-header {
+    padding: 20px 22px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .umbrella-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .umbrella-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .umbrella-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .umbrella-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 22px;
+  }
+
+  .cases-list { padding: 16px 22px 20px; }
+  .case-item {
+    padding: 12px 14px;
+    border-radius: 7px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .case-item:last-child { margin-bottom: 0; }
+  .case-item:hover { border-color: var(--border); }
+  .case-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .case-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .case-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* FAIL colors */
+  .fail .umbrella-header { background: var(--fail-mid); border-bottom: 1px solid rgba(215,58,74,0.2); }
+  .fail .umbrella-icon { background: rgba(215,58,74,0.15); }
+  .fail .umbrella-title { color: #ff7b7b; }
+  .fail .case-item:hover { background: var(--fail-mid); }
+  .fail .case-tag { background: rgba(215,58,74,0.2); color: #ff7b7b; }
+
+  /* WORK colors */
+  .work .umbrella-header { background: var(--work-mid); border-bottom: 1px solid rgba(46,160,67,0.2); }
+  .work .umbrella-icon { background: rgba(46,160,67,0.15); }
+  .work .umbrella-title { color: #56d364; }
+  .work .case-item:hover { background: var(--work-mid); }
+  .work .case-tag { background: rgba(46,160,67,0.2); color: #56d364; }
+
+  /* NUANCE colors */
+  .nuance .umbrella-header { background: var(--nuance-mid); border-bottom: 1px solid rgba(240,136,62,0.2); }
+  .nuance .umbrella-icon { background: rgba(240,136,62,0.15); }
+  .nuance .umbrella-title { color: #f0a060; }
+  .nuance .case-item:hover { background: var(--nuance-mid); }
+  .nuance .case-tag { background: rgba(240,136,62,0.2); color: #f0a060; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  }
+  .modal-header {
+    padding: 24px 26px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 1;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    line-height: 1.2;
+    flex: 1;
+  }
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--muted); }
+  .modal-body { padding: 22px 26px 26px; }
+
+  .modal-section { margin-bottom: 20px; }
+  .modal-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .modal-section p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c9d1d9;
+  }
+
+  .cause-effect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .ce-box {
+    padding: 14px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .ce-box .ce-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .ce-box ul { list-style: none; padding: 0; }
+  .ce-box ul li { padding: 2px 0; display: flex; gap: 7px; }
+  .ce-box ul li::before { content: '→'; opacity: 0.5; flex-shrink: 0; }
+
+  .cause-box { background: rgba(215,58,74,0.08); border: 1px solid rgba(215,58,74,0.2); }
+  .cause-box .ce-label { color: #ff7b7b; }
+  .effect-box { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.2); }
+  .effect-box .ce-label { color: var(--thesis-primary); }
+
+  .lesson-box {
+    background: rgba(240,136,62,0.08);
+    border: 1px solid rgba(240,136,62,0.2);
+    border-left: 3px solid var(--nuance-primary);
+    padding: 14px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--nuance-light);
+    margin-bottom: 20px;
+  }
+  .lesson-box strong { color: var(--nuance-primary); }
+
+  .stat-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .stat-pill strong { color: var(--thesis-primary); }
+
+  .source-line {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* TALK OUTLINE VIEW */
+  .outline-section { margin-bottom: 28px; }
+  .outline-section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .outline-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--thesis-mid);
+    border: 1px solid var(--thesis-primary);
+    color: var(--thesis-primary);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    flex-shrink: 0;
+  }
+  .outline-time {
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .outline-points { list-style: none; padding: 0; }
+  .outline-points li {
+    font-size: 13px;
+    color: #c9d1d9;
+    line-height: 1.6;
+    padding: 5px 0 5px 20px;
+    position: relative;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+  }
+  .outline-points li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+    font-size: 10px;
+    top: 7px;
+  }
+  .outline-points li:last-child { border-bottom: none; }
+
+  /* REFS VIEW */
+  .ref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .ref-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .ref-type {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .ref-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .ref-detail {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 700px) {
+    .header, .nav, .main { padding-left: 20px; padding-right: 20px; }
+    .thesis-bar { margin-left: 20px; margin-right: 20px; }
+    .cause-effect-grid { grid-template-columns: 1fr; }
+    .umbrella-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hu-back-bar">
+  <a class="hu-back-link" href="/">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    Healthcare Uncharted
+  </a>
+  <span class="hu-back-sep">|</span>
+  <span class="hu-back-page">AI Healthcare Map</span>
+  <a class="hu-back-tools" href="/tools/">All Tools</a>
+</div>
+
+<div class="header">
+  <div class="header-eyebrow">AZ AMA Society — CME Talk Project</div>
+  <h1>AI in Healthcare:<br><em>Value vs. Hype</em></h1>
+  <p class="header-sub">A visual project map connecting real-world cases to causes, effects, and talk narrative. Click any case to explore the full cause & effect breakdown.</p>
+</div>
+
+<div class="thesis-bar">
+  <strong>Core Thesis:</strong> AI in healthcare isn't primarily a technology problem — it's a <strong>workflow, user experience, and governance problem</strong>. The tools that succeed are built around how doctors and patients actually behave. The tools that fail are built around what vendors imagined they would do.
+</div>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="showView('cases')" id="tab-cases">
+    <span class="dot" style="background:#58a6ff"></span> Case Map
+  </div>
+  <div class="nav-tab" onclick="showView('outline')" id="tab-outline">
+    <span class="dot" style="background:#2ea043"></span> Talk Outline
+  </div>
+  <div class="nav-tab" onclick="showView('refs')" id="tab-refs">
+    <span class="dot" style="background:#f0883e"></span> References
+  </div>
+  <div class="nav-tab" onclick="showView('viz')" id="tab-viz">
+    <span class="dot" style="background:#bc8cff"></span> Visualization
+  </div>
+  <div class="nav-tab" onclick="showView('vendors')" id="tab-vendors">
+    <span class="dot" style="background:#39d353"></span> Vendors &amp; Products
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- CASE MAP VIEW -->
+  <div class="view active" id="view-cases">
+    <div class="umbrella-grid">
+
+      <!-- UMBRELLA 1: When AI Fails -->
+      <div class="umbrella-card fail">
+        <div class="umbrella-header">
+          <div class="umbrella-icon">❌</div>
+          <div>
+            <div class="umbrella-title">When AI Fails</div>
+            <div class="umbrella-subtitle">Cautionary cases where AI caused harm, confusion, or was quietly abandoned</div>
+          </div>
+        </div>
+        <div class="umbrella-divider"></div>
+        <div class="cases-list">
+          <div class="case-item" onclick="openModal('watson')">
+            <div class="case-name">IBM Watson for Oncology <span class="case-tag">Abandoned</span></div>
+            <div class="case-desc">Billions spent, unsafe recommendations, ultimately shut down in 2023. The canonical AI overpromise story.</div>
+          </div>
+          <div class="case-item" onclick="openModal('radiology-override')">
+            <div class="case-name">Radiology AI Override Effect <span class="case-tag">UX Failure</span></div>
+            <div class="case-desc">When AI was wrong, doctors who saw it missed diagnoses they would have caught alone — a hidden danger.</div>
+          </div>
+          <div class="case-item" onclick="openModal('llm-diagnosis')">
+            <div class="case-name">LLM Diagnostic Reasoning RCT <span class="case-tag">No Effect</span></div>
+            <div class="case-desc">JAMA randomized trial: physicians with an LLM assistant showed no improvement in diagnostic accuracy.</div>
+          </div>
+          <div class="case-item" onclick="openModal('radiologist-shortage')">
+            <div class="case-name">The Radiologist Shortage Paradox <span class="case-tag">Unintended</span></div>
+            <div class="case-desc">AI hype caused a drop in radiology applicants — potentially creating the very shortage the AI was supposed to solve.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UMBRELLA 2: When AI Works -->
+      <div class="umbrella-card work">
+        <div class="umbrella-header">
+          <div class="umbrella-icon">✅</div>
+          <div>
+            <div class="umbrella-title">When AI Works</div>
+            <div class="umbrella-subtitle">Cases with measurable, documented outcomes — the practical blueprint</div>
+          </div>
+        </div>
+        <div class="umbrella-divider"></div>
+        <div class="cases-list">
+          <div class="case-item" onclick="openModal('ambient-scribe')">
+            <div class="case-name">Ambient AI Scribing <span class="case-tag">Breakout Hit</span></div>
+            <div class="case-desc">Burnout dropped 13 pts across 263 physicians in 30 days. Healthcare AI's first true breakout product category.</div>
+          </div>
+          <div class="case-item" onclick="openModal('sepsis-alert')">
+            <div class="case-name">Cleveland Clinic Sepsis AI <span class="case-tag">Clinical Win</span></div>
+            <div class="case-desc">10x reduction in false positives, 46% more sepsis cases identified. Clear workflow-integrated success.</div>
+          </div>
+          <div class="case-item" onclick="openModal('prior-auth')">
+            <div class="case-name">Prior Authorization Automation <span class="case-tag">Ops Win</span></div>
+            <div class="case-desc">60% of requests processed in under 2 hours vs. zero via phone/fax. Estimated 5x ROI.</div>
+          </div>
+          <div class="case-item" onclick="openModal('billing-coding')">
+            <div class="case-name">AI Billing & Coding <span class="case-tag">Fast Growing</span></div>
+            <div class="case-desc">Fastest-growing AI adoption category 2023→2024. Reduced claim denials, improved charge capture accuracy.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UMBRELLA 3: The Nuanced Middle -->
+      <div class="umbrella-card nuance">
+        <div class="umbrella-header">
+          <div class="umbrella-icon">⚖️</div>
+          <div>
+            <div class="umbrella-title">The Nuanced Middle</div>
+            <div class="umbrella-subtitle">Cases that reveal the real variables — UX, trust, and patient experience</div>
+          </div>
+        </div>
+        <div class="umbrella-divider"></div>
+        <div class="cases-list">
+          <div class="case-item" onclick="openModal('patient-trust')">
+            <div class="case-name">Patient AI Acceptance Gap <span class="case-tag">Experience</span></div>
+            <div class="case-desc">Patients must want to engage with AI tools — scheduling, insurance, portals only work when trust exists first.</div>
+          </div>
+          <div class="case-item" onclick="openModal('physician-design')">
+            <div class="case-name">Physicians Excluded from AI Design <span class="case-tag">Governance</span></div>
+            <div class="case-desc">70% of physicians want to be involved from design through integration — yet most AI is built without them.</div>
+          </div>
+          <div class="case-item" onclick="openModal('radiology-ux-fix')">
+            <div class="case-name">Radiology Override: The UX Fix <span class="case-tag">UX Insight</span></div>
+            <div class="case-desc">The same AI that caused diagnostic errors performed better when presentation was redesigned — same model, different interface.</div>
+          </div>
+          <div class="case-item" onclick="openModal('adoption-gap')">
+            <div class="case-name">The 100% Adoption / 53% Success Gap <span class="case-tag">Survey Data</span></div>
+            <div class="case-desc">Every large health system uses ambient AI — but only 53% report high success. Adoption ≠ value.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TALK OUTLINE VIEW -->
+  <div class="view" id="view-outline">
+    <div class="outline-section">
+      <div class="outline-section-title">
+        <div class="outline-num">1</div>
+        The Hype Calibration
+        <span class="outline-time">— 10 min</span>
+      </div>
+      <ul class="outline-points">
+        <li>Where AI stands <em>today</em> vs. the headlines — ground the room in reality first</li>
+        <li>Physician AI use rose from 38% → 66% in one year — but <em>what</em> are they using it for?</li>
+        <li>IBM Watson: the canonical cautionary tale — billions spent, unsafe recommendations, shut down in 2023</li>
+        <li>Frame the thesis: AI fails not because the models are bad — it fails because it's disconnected from <strong>workflow and human experience</strong></li>
+      </ul>
+    </div>
+    <div class="outline-section">
+      <div class="outline-section-title">
+        <div class="outline-num">2</div>
+        Two Experience Problems Nobody Talks About
+        <span class="outline-time">— 12 min</span>
+      </div>
+      <ul class="outline-points">
+        <li><strong>Clinician UX Problem:</strong> 70% of physicians want to be involved from design to integration — yet are routinely excluded</li>
+        <li><strong>Patient Experience Problem:</strong> Patients must <em>want</em> to engage with AI-enabled services — trust precedes adoption</li>
+        <li>Radiology override case: wrong AI + poor presentation = worse outcomes than no AI — and the UX fix that solved it</li>
+        <li>JAMA LLM diagnostic RCT: no improvement in reasoning — because the interface didn't fit the clinical workflow</li>
+      </ul>
+    </div>
+    <div class="outline-section">
+      <div class="outline-section-title">
+        <div class="outline-num">3</div>
+        Where AI Actually Works Right Now
+        <span class="outline-time">— 15 min</span>
+      </div>
+      <ul class="outline-points">
+        <li>Ambient scribing: burnout dropped 13 points in 30 days — 15 to 60 min/day saved per physician</li>
+        <li>Cleveland Clinic sepsis AI: 10x fewer false positives, 46% more cases caught</li>
+        <li>Prior auth automation: 60% of requests processed in under 2 hours, 5x ROI</li>
+        <li>Billing & coding: fastest growing AI category, measurable claim denial reduction</li>
+        <li>Common thread: all solve a <strong>specific, bounded problem</strong> with clean data and human oversight built in</li>
+      </ul>
+    </div>
+    <div class="outline-section">
+      <div class="outline-section-title">
+        <div class="outline-num">4</div>
+        Where to Pump the Brakes
+        <span class="outline-time">— 8 min</span>
+      </div>
+      <ul class="outline-points">
+        <li>Autonomous diagnosis without human oversight — risk amplification, not replacement</li>
+        <li>Generative AI in direct patient-facing clinical decisions — hallucination risk is non-trivial</li>
+        <li>Tools built on poor, biased, or single-system data (the Watson lesson repeated)</li>
+        <li>The radiologist shortage paradox: hype caused the problem AI was meant to solve</li>
+      </ul>
+    </div>
+    <div class="outline-section">
+      <div class="outline-section-title">
+        <div class="outline-num">5</div>
+        The 5-Question Framework
+        <span class="outline-time">— 10 min</span>
+      </div>
+      <ul class="outline-points">
+        <li>1. Does this solve a <em>real, specific</em> problem in my workflow?</li>
+        <li>2. Who designed the user experience — and did clinicians have a voice?</li>
+        <li>3. What does the underlying data look like? Is it yours, or someone else's?</li>
+        <li>4. What does "human oversight" actually mean in this product?</li>
+        <li>5. Will my patients want to use this — and will it build or erode their trust?</li>
+      </ul>
+    </div>
+    <div class="outline-section">
+      <div class="outline-section-title">
+        <div class="outline-num">6</div>
+        Your Role as AI Steward
+        <span class="outline-time">— 5 min</span>
+      </div>
+      <ul class="outline-points">
+        <li>Physicians need to become the "captain of the AI ship" — defining workflows and success metrics</li>
+        <li>AMA Center for Digital Health resources available today</li>
+        <li>Call to action: lead from within your practice, don't wait for vendors to lead for you</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- REFERENCES VIEW -->
+  <div class="view" id="view-refs">
+    <div class="ref-grid">
+      <div class="ref-card">
+        <div class="ref-type" style="color:#58a6ff">Survey / Policy</div>
+        <div class="ref-title">AMA Physician AI Sentiment Survey 2024</div>
+        <div class="ref-detail">Physician adoption rose from 38% to 66% in one year. 75% believe AI could help with efficiency; 54% with burnout. Source: ama-assn.org</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#56d364">Clinical Study</div>
+        <div class="ref-title">JAMA Network Open — Ambient Scribe Study</div>
+        <div class="ref-detail">263 physicians, 6 health systems, 30-day study. Burnout 51.9% → 38.8%. Improved after-hours documentation and patient attention. (Duggan et al., 2025)</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#ff7b7b">RCT / Warning</div>
+        <div class="ref-title">JAMA — LLM Diagnostic Reasoning RCT</div>
+        <div class="ref-detail">Randomized trial: physicians given LLM assistant showed no significant improvement in diagnostic accuracy. Workflow mismatch identified as key factor.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#ff7b7b">Case Study</div>
+        <div class="ref-title">IBM Watson Health — Failure Analysis</div>
+        <div class="ref-detail">Marketed as cancer treatment AI; produced unsafe recommendations. Discontinued 2023 after billions invested. Could not contextualize individual patient data.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#56d364">Health System</div>
+        <div class="ref-title">Cleveland Clinic Sepsis AI</div>
+        <div class="ref-detail">EHR-embedded alert system. 10x reduction in false positives. 46% increase in sepsis cases identified. Workflow-integrated design cited as key to success.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#56d364">Operational</div>
+        <div class="ref-title">Prior Authorization AI — Industry Data</div>
+        <div class="ref-detail">60% of requests processed in under 2 hours (vs. 0% via fax/phone). Estimated 5x ROI. Highest near-term operational value category.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#f0a060">Survey</div>
+        <div class="ref-title">Large Health System AI Adoption Survey 2024</div>
+        <div class="ref-detail">43 large US health systems. Ambient notes: 100% adoption activity, only 53% high success. Radiology AI: 19% high success rate.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#f0a060">UX Research</div>
+        <div class="ref-title">Radiology AI Override Effect Study</div>
+        <div class="ref-detail">When AI was wrong, radiologist false negatives jumped from 2.7% to 26–33%. Effect reduced when AI result was hidden or region of interest was visually highlighted.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#58a6ff">Market Report</div>
+        <div class="ref-title">Ambient Scribing Market — 2025</div>
+        <div class="ref-detail">$600M in 2025. First AI category to reach true breakout in healthcare. Only category with 100% large health system adoption.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#58a6ff">AMA / Policy</div>
+        <div class="ref-title">JAMA Summit Report: AI in Health Care, Today and Tomorrow (2025)</div>
+        <div class="ref-detail">Comprehensive overview of AI state of play. Emphasizes governance, physician involvement, and evidence standards for adoption. Key policy reference.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#f0a060">Unintended Consequences</div>
+        <div class="ref-title">Radiology Shortage & AI Hype (2018–present)</div>
+        <div class="ref-detail">2018 AI hype caused significant drop in radiology residency applications — potentially contributing to current radiologist shortage. A cautionary systems-thinking case.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-type" style="color:#56d364">Operational</div>
+        <div class="ref-title">AI Billing &amp; Coding — Health System Data</div>
+        <div class="ref-detail">Fastest-growing AI use case 2023→2024. Measurable reductions in claim denials. High ROI, bounded problem domain, clean data — a model use case.</div>
+      </div>
+      <div class="ref-card" style="border-left:3px solid #ff7b7b">
+        <div class="ref-type" style="color:#ff7b7b">⚠️ Needs Verification</div>
+        <div class="ref-title">Radiology AI Override — Exact Stats (2.7%→26–33%)</div>
+        <div class="ref-detail">Directionally supported by automation-bias literature but a single definitive peer-reviewed source for these exact numbers should be pinpointed before CME citation. Flag for follow-up.</div>
+      </div>
+      <div class="ref-card" style="border-left:3px solid #56d364">
+        <div class="ref-type" style="color:#56d364">✅ Corrected Attribution</div>
+        <div class="ref-title">Ambient Scribe Burnout Study — Olson et al., JAMA Network Open (Oct 2025)</div>
+        <div class="ref-detail">263 physicians, 6 health systems. DOI: 10.1001/jamanetworkopen.2025.34976. Separate from Duggan et al. (Feb 2025, 46 participants). The Olson study is the headline number to cite.</div>
+      </div>
+      <div class="ref-card" style="border-left:3px solid #56d364">
+        <div class="ref-type" style="color:#56d364">✅ Confirmed Source</div>
+        <div class="ref-title">Cleveland Clinic Sepsis AI — Partner: Bayesian Health (Sept 2025)</div>
+        <div class="ref-detail">Cleveland Clinic Fairview Hospital. 3,330+ patients. Source: Cleveland Clinic newsroom, Sept 23 2025. Partner confirmed as Bayesian Health, not a generic vendor.</div>
+      </div>
+      <div class="ref-card" style="border-left:3px solid #56d364">
+        <div class="ref-type" style="color:#56d364">✅ Confirmed Source</div>
+        <div class="ref-title">JAMA LLM Diagnostic RCT — Goh et al., JAMA Network Open (Oct 2024)</div>
+        <div class="ref-detail">Stanford. GPT-4. DOI: 10.1001/jamanetworkopen.2024.40969. LLM alone scored 92% vs. 76% for physician+LLM and 74% for physician alone — but the difference was not statistically significant.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISUALIZATION VIEW -->
+  <div class="view" id="view-viz">
+
+    <!-- TWO-LANE DIAGRAM -->
+    <div style="margin-bottom:10px;">
+      <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:4px;">Healthcare Operations: The Two-Lane Model</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;max-width:760px;margin-bottom:16px;">AI doesn't affect both lanes equally. Click any node to see where AI is being applied, what's working, and what the risks are. Technology (EHR/data infrastructure) is the connective tissue between every department on both sides.</div>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;align-items:center;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">AI Readiness:</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#56d364"><span style="width:11px;height:11px;border-radius:50%;background:#56d364;display:inline-block;"></span>High — works now</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#f0a060"><span style="width:11px;height:11px;border-radius:50%;background:#f0a060;display:inline-block;"></span>Medium — mixed results</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#ff7b7b"><span style="width:11px;height:11px;border-radius:50%;background:#ff7b7b;display:inline-block;"></span>Caution — overhyped/risky</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#58a6ff"><span style="width:11px;height:11px;border-radius:50%;background:#58a6ff;display:inline-block;"></span>Emerging — watch this space</div>
+    </div>
+
+    <!-- THE DIAGRAM -->
+    <div style="position:relative;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);margin-bottom:28px;">
+
+      <!-- Column headers -->
+      <div style="display:grid;grid-template-columns:1fr 180px 1fr;background:var(--surface2);border-bottom:1px solid var(--border);">
+        <div style="padding:14px 20px;text-align:center;">
+          <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#58a6ff;">Business Lane</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Operations · Finance · Population Health</div>
+        </div>
+        <div style="padding:14px 10px;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);">
+          <div style="font-family:'DM Serif Display',serif;font-size:15px;color:#bc8cff;">Technology</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">EHR · Data · Interoperability</div>
+        </div>
+        <div style="padding:14px 20px;text-align:center;">
+          <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#56d364;">Clinical Lane</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Care · Treatment · Medicine</div>
+        </div>
+      </div>
+
+      <!-- Main diagram body -->
+      <div style="display:grid;grid-template-columns:1fr 180px 1fr;min-height:520px;">
+
+        <!-- BUSINESS LANE nodes -->
+        <div style="padding:20px;display:flex;flex-direction:column;gap:12px;" id="biz-lane">
+        </div>
+
+        <!-- TECH SPINE -->
+        <div style="border-left:1px solid var(--border);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:10px;align-items:center;background:rgba(188,140,255,0.04);" id="tech-spine">
+        </div>
+
+        <!-- CLINICAL LANE nodes -->
+        <div style="padding:20px;display:flex;flex-direction:column;gap:12px;" id="clin-lane">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Node detail panel -->
+    <div id="node-detail" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:28px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div>
+          <div id="nd-label" style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;"></div>
+          <div id="nd-title" style="font-family:'DM Serif Display',serif;font-size:22px;"></div>
+        </div>
+        <button onclick="document.getElementById('node-detail').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;width:30px;height:30px;border-radius:6px;font-size:14px;">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Primary Focus</div>
+          <div id="nd-focus" style="font-size:13px;color:#c9d1d9;line-height:1.6;"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">AI Applications Here</div>
+          <div id="nd-ai" style="font-size:13px;color:#c9d1d9;line-height:1.6;"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">What's Working</div>
+          <div id="nd-working" style="font-size:13px;line-height:1.6;"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Caution / Watch For</div>
+          <div id="nd-caution" style="font-size:13px;line-height:1.6;"></div>
+        </div>
+      </div>
+      <div id="nd-links" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Connects To</div>
+        <div id="nd-links-content" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
+      </div>
+    </div>
+
+    <!-- ROOT CAUSES SECTION -->
+    <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">Shared Root Causes &amp; Success Factors</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:28px;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid #ff7b7b;border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ff7b7b;margin-bottom:8px;">Root Cause #1</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Disconnected from Workflow</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Watson, LLM RCT, and Radiology Override all failed because AI wasn't embedded in the natural clinical process. Physicians had to leave their workflow to interact with the tool.</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
+          <span style="background:rgba(215,58,74,0.15);color:#ff7b7b;font-size:10px;padding:2px 8px;border-radius:20px;">Watson</span>
+          <span style="background:rgba(215,58,74,0.15);color:#ff7b7b;font-size:10px;padding:2px 8px;border-radius:20px;">LLM RCT</span>
+          <span style="background:rgba(215,58,74,0.15);color:#ff7b7b;font-size:10px;padding:2px 8px;border-radius:20px;">Radiology Override</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid #f0a060;border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f0a060;margin-bottom:8px;">Root Cause #2</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Poor Interface Design (UX)</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">The radiology override was caused by how results were presented, not by a bad model. The same AI performed meaningfully better with a redesigned interface. UX is clinical infrastructure.</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
+          <span style="background:rgba(240,136,62,0.15);color:#f0a060;font-size:10px;padding:2px 8px;border-radius:20px;">Radiology UX Fix</span>
+          <span style="background:rgba(240,136,62,0.15);color:#f0a060;font-size:10px;padding:2px 8px;border-radius:20px;">Physician Exclusion</span>
+          <span style="background:rgba(240,136,62,0.15);color:#f0a060;font-size:10px;padding:2px 8px;border-radius:20px;">Adoption Gap</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid #ff7b7b;border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ff7b7b;margin-bottom:8px;">Root Cause #3</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Bad or Biased Training Data</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Watson was trained on synthetic cases from one US cancer center, then deployed globally. No valid data foundation = unreliable outputs at any scale. Garbage in, garbage out — at $4B cost.</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
+          <span style="background:rgba(215,58,74,0.15);color:#ff7b7b;font-size:10px;padding:2px 8px;border-radius:20px;">Watson</span>
+          <span style="background:rgba(215,58,74,0.15);color:#ff7b7b;font-size:10px;padding:2px 8px;border-radius:20px;">Autonomous Dx Risk</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid #56d364;border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#56d364;margin-bottom:8px;">Success Factor #1</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">One Bounded Problem</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Every working AI solves one well-defined, measurable problem with clean data. Ambient scribing = documentation. Sepsis AI = one alert type. Prior auth = one workflow step. No AI succeeds by solving everything.</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
+          <span style="background:rgba(46,160,67,0.15);color:#56d364;font-size:10px;padding:2px 8px;border-radius:20px;">Ambient Scribe</span>
+          <span style="background:rgba(46,160,67,0.15);color:#56d364;font-size:10px;padding:2px 8px;border-radius:20px;">Sepsis AI</span>
+          <span style="background:rgba(46,160,67,0.15);color:#56d364;font-size:10px;padding:2px 8px;border-radius:20px;">Prior Auth</span>
+          <span style="background:rgba(46,160,67,0.15);color:#56d364;font-size:10px;padding:2px 8px;border-radius:20px;">Billing AI</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid #56d364;border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#56d364;margin-bottom:8px;">Success Factor #2</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Human Always in the Loop</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Every working AI keeps the physician as final decision-maker. Sepsis AI flags — doctors act. Ambient scribe writes — doctors approve. This isn't a limitation; it's the design principle.</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
+          <span style="background:rgba(46,160,67,0.15);color:#56d364;font-size:10px;padding:2px 8px;border-radius:20px;">All success cases</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid #58a6ff;border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#58a6ff;margin-bottom:8px;">The Wildcard</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Trust — Clinician &amp; Patient</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Cleveland Clinic's 10x false positive reduction didn't just catch more sepsis — it made nurses trust the alerts enough to act on them. Accurate AI without clinician trust delivers zero value.</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
+          <span style="background:rgba(88,166,255,0.15);color:#58a6ff;font-size:10px;padding:2px 8px;border-radius:20px;">Sepsis AI</span>
+          <span style="background:rgba(88,166,255,0.15);color:#58a6ff;font-size:10px;padding:2px 8px;border-radius:20px;">Patient Trust Gap</span>
+          <span style="background:rgba(88,166,255,0.15);color:#58a6ff;font-size:10px;padding:2px 8px;border-radius:20px;">Radiology UX</span>
+        </div>
+      </div>
+    </div>
+    <!-- Timeline bar -->
+    <div style="font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">AI in Healthcare — Timeline of Key Events</div>
+    <div style="position:relative;padding:8px 0 8px 24px;border-left:2px solid var(--border);">
+      <div id="timeline-items"></div>
+    </div>
+  </div>
+
+  <!-- VENDORS & PRODUCTS VIEW -->
+  <div class="view" id="view-vendors">
+    <div style="margin-bottom:20px;font-size:13px;color:var(--muted);line-height:1.6;max-width:750px;">
+      Current and historical AI healthcare products by category, with market entry dates and status. Organized to mirror the talk's framework — what works operationally, what is mixed, and what failed.
+    </div>
+    <div id="vendor-sections"></div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const cases = {
+  watson: {
+    title: "IBM Watson for Oncology",
+    umbrella: "When AI Fails",
+    color: "#ff7b7b",
+    summary: "IBM Watson was marketed as a system that could keep up with all medical knowledge, providing real-time cancer treatment support. It consumed billions in investment, produced unsafe and incorrect treatment recommendations, and was quietly shut down in 2023.",
+    causes: ["Trained on curated case studies, not real-world patient data", "US-centric training applied to international patients", "Could not read or contextualize actual physician notes", "No genuine workflow integration — physicians had to use a separate system", "Overpromised by executives and marketing to hospitals"],
+    effects: ["Unsafe treatment recommendations surfaced in internal documents", "Physician rejection — described as 'not ready for clinical practice'", "Hospitals quietly discontinued use rather than publicizing failure", "$billions written off when Watson Health was sold and dissolved in 2023", "Became the defining cautionary tale for AI in healthcare"],
+    lesson: "The AI didn't fail because the underlying models were incompetent — it failed because it was disconnected from real workflow, real data, and the actual clinical context of individual patients. This is your thesis in one case study.",
+    stats: ["Billions invested by IBM", "Shut down: 2023", "Deployed at major cancer centers worldwide", "Produced recommendations labeled 'unsafe' internally"],
+    source: "Multiple investigative reports; STAT News; IBM investor disclosures"
+  },
+  'radiology-override': {
+    title: "The Radiology AI Override Effect",
+    umbrella: "When AI Fails",
+    color: "#ff7b7b",
+    summary: "A multi-reader study revealed a dangerous hidden risk: when AI gave incorrect results, radiologists who saw the AI output had dramatically higher false negative rates than radiologists working without AI assistance — meaning the AI made them worse, not better.",
+    causes: ["AI errors presented with same visual confidence as correct results", "Physicians anchored to the AI output before forming their own judgment", "No UX mechanism to signal AI uncertainty or encourage independent review", "Study showed automation bias is stronger than most physicians believe"],
+    effects: ["False negative rates jumped from 2.7% to 26–33% when AI was wrong", "Diagnoses that would have been caught by an unaided physician were missed", "Effect was reduced when the AI result was hidden from view until after review", "Effect was also reduced when AI visually highlighted the region of interest"],
+    lesson: "The same AI, with a redesigned interface, performed significantly better. This is not an AI problem — it's a user experience and implementation problem. The tool, the presentation, and the workflow are inseparable.",
+    stats: ["False negatives: 2.7% (no AI) → 26–33% (AI wrong)", "Effect reduced by hiding result until after independent read", "Effect reduced by visual highlighting of AI region of interest"],
+    source: "Multi-reader radiology AI study; cited in multiple JAMA and Radiology journal reviews"
+  },
+  'llm-diagnosis': {
+    title: "JAMA RCT: LLM Diagnostic Reasoning",
+    umbrella: "When AI Fails",
+    color: "#ff7b7b",
+    summary: "A randomized controlled trial published in JAMA tested whether providing physicians with access to a large language model assistant improved their diagnostic reasoning on clinical cases. The result: no significant improvement.",
+    causes: ["LLM interface not designed for clinical diagnostic workflow", "Physicians unsure when or how to trust AI suggestions", "No structured guidance on integrating AI output into reasoning process", "Cases may not have represented where LLMs add genuine value"],
+    effects: ["No measurable improvement in diagnostic accuracy across the cohort", "Raises serious questions about AI in high-stakes clinical decisions", "Illustrates that even sophisticated AI requires careful workflow integration to add value", "Cited widely as a counter-narrative to AI diagnostic hype"],
+    lesson: "This is the data point that will get the attention of physicians in your audience — it's from JAMA, it's rigorous, and it challenges the AI-will-revolutionize-diagnosis narrative. It also perfectly sets up your UX and implementation framework.",
+    stats: ["Design: Randomized controlled trial", "Published in JAMA", "Result: No significant improvement in diagnostic reasoning"],
+    source: "JAMA randomized clinical trial, 2024–2025"
+  },
+  'radiologist-shortage': {
+    title: "The Radiologist Shortage Paradox",
+    umbrella: "When AI Fails",
+    color: "#ff7b7b",
+    summary: "In 2018, prominent AI researchers confidently predicted that AI would replace radiologists within a decade. This prediction — amplified across media — caused a measurable drop in radiology residency applications. The result may be a real radiologist shortage at the very moment AI-assisted radiology requires skilled human oversight.",
+    causes: ["High-profile AI researchers made definitive public predictions about radiologist replacement", "Media amplified the 'AI will replace doctors' narrative without nuance", "Medical students rationally responded to what appeared to be declining career prospects", "No one in the AI community corrected the record for years"],
+    effects: ["Measurable drop in radiology residency applications following 2018 predictions", "Potential near-term radiologist shortage emerging", "Irony: AI-assisted radiology requires more skilled radiologists, not fewer", "A warning about how AI narrative shapes real-world clinical infrastructure"],
+    lesson: "The hype itself had consequences independent of whether the AI ever worked. This is your most powerful argument for why the physician community — not vendors — needs to lead the conversation about what AI can actually do.",
+    stats: ["Hype peak: 2016–2018", "Radiology application drops documented post-2018", "Radiologist shortage projections: 2025 onward"],
+    source: "Reported in 2018 press; analyzed in subsequent JAMA and radiology workforce studies"
+  },
+  'ambient-scribe': {
+    title: "Ambient AI Scribing",
+    umbrella: "When AI Works",
+    color: "#56d364",
+    summary: "Ambient AI scribing — where AI listens to patient-physician conversations and generates clinical documentation — is healthcare AI's first genuine breakout success. A rigorous JAMA Network Open study across six health systems documented significant, measurable improvements in burnout and documentation burden.",
+    causes: ["Solved a specific, universally-hated problem: after-hours documentation", "Fit naturally into existing clinical workflow — no behavior change required", "Physicians were involved in piloting and refining the tools", "Output is reviewed and approved by the physician — human oversight built in", "Clean, bounded task: transcription + structuring, not diagnosis"],
+    effects: ["Burnout dropped from 51.9% to 38.8% across 263 physicians in 30 days", "Physicians saved 15 to 60 minutes per day in documentation time", "Improved patient interaction — physicians made more eye contact, felt more present", "Nearly 90% of health professionals reported a better experience", "$600M market in 2025 — fastest-growing healthcare AI category"],
+    lesson: "Ambient scribing is your best 'what good looks like' example. It's not flashy — it's a transcription tool — but it solved a real problem, fit an existing workflow, kept humans in control, and delivered measurable outcomes. That's the blueprint.",
+    stats: ["263 physicians, 6 health systems", "Burnout: 51.9% → 38.8% in 30 days", "$600M market (2025)", "100% large health system adoption rate"],
+    source: "JAMA Network Open, Duggan et al., 2025; Ambient scribing market reports 2025"
+  },
+  'sepsis-alert': {
+    title: "Cleveland Clinic Sepsis AI",
+    umbrella: "When AI Works",
+    color: "#56d364",
+    summary: "Cleveland Clinic implemented an EHR-embedded AI alert system for early sepsis detection. Rather than replacing clinical judgment, the system filtered noise for the clinical team — presenting actionable, high-confidence alerts that fit naturally into the existing nursing and physician workflow.",
+    causes: ["Narrowly defined clinical problem with clear signal in the data", "Embedded directly in the EHR — no separate login or system switch", "Designed with nurses and physicians, not for them", "Human decision-making remained central — AI flagged, humans acted", "Validated on local patient population data before deployment"],
+    effects: ["10x reduction in false positive alerts — staff began trusting the system", "46% increase in sepsis cases identified and treated early", "Reduced alarm fatigue — a major cause of nurse burnout", "Became a model for EHR-integrated AI in critical care settings"],
+    lesson: "The 10x false positive reduction is the number to remember — it shows that AI isn't just about catching more cases, it's about building the trust that makes clinical teams willing to act on the alerts they do receive. Trust is the product.",
+    stats: ["10x reduction in false positives", "46% more sepsis cases identified", "EHR-embedded, no workflow disruption", "Cleveland Clinic system-wide deployment"],
+    source: "Cleveland Clinic published outcomes data; cited in JAMA Summit Report 2025"
+  },
+  'prior-auth': {
+    title: "Prior Authorization Automation",
+    umbrella: "When AI Works",
+    color: "#56d364",
+    summary: "Prior authorization is one of the most universally despised administrative burdens in healthcare — a time-consuming, fax-and-phone-based process that delays care and consumes physician and staff time. AI automation of prior auth requests represents one of the clearest operational wins in healthcare AI today.",
+    causes: ["Highly structured, rule-based process — ideal for AI automation", "Existing process was painfully manual with no technical barrier to improvement", "Insurance criteria are largely codified and consistent — clean training data", "Direct ROI calculation is straightforward and compelling to practice administrators"],
+    effects: ["60% of prior auth requests processed in under 2 hours", "Comparison: 0% processed in under 2 hours via traditional fax/phone", "Estimated 5x return on investment", "Staff time reallocated from administrative tasks to patient-facing care"],
+    lesson: "This is your best operational example for a physician audience. They feel prior auth pain personally. When you show them 60% of requests in under 2 hours, you don't have to sell AI — you just have to not oversell it. Let the number do the work.",
+    stats: ["60% of requests: under 2 hours", "Traditional method: 0% under 2 hours", "Estimated ROI: 5x", "Highest near-term operational value category"],
+    source: "Healthcare AI operational reports 2024; cited in AMA digital health resources"
+  },
+  'billing-coding': {
+    title: "AI Billing & Coding Automation",
+    umbrella: "When AI Works",
+    color: "#56d364",
+    summary: "AI-assisted billing and coding — automatically suggesting or assigning procedure and diagnosis codes from clinical documentation — has emerged as the fastest-growing AI adoption category from 2023 to 2024, with health systems reporting meaningful reductions in claim denials.",
+    causes: ["Billing codes are highly structured, finite, and rule-based — ideal AI territory", "Error rates in manual coding are well-documented and costly", "Direct financial feedback loop makes measuring success easy", "Doesn't require physician behavior change — works on existing documentation"],
+    effects: ["Fastest-growing AI use case in healthcare, 2023 → 2024", "Measurable reductions in claim denials across adopting health systems", "Improved charge capture accuracy — revenue cycle impact is quantifiable", "Staff shifted from code assignment to exception handling and quality review"],
+    lesson: "Billing and coding AI works because it meets all the criteria: bounded problem, clean structured data, human oversight retained, clear ROI. This is the pattern for identifying which AI proposals deserve a 'yes.'",
+    stats: ["Fastest-growing category 2023→2024", "Measured claim denial reductions", "Revenue cycle ROI quantifiable and rapid"],
+    source: "AMA physician AI survey 2024; health system revenue cycle reports"
+  },
+  'patient-trust': {
+    title: "The Patient AI Acceptance Gap",
+    umbrella: "The Nuanced Middle",
+    color: "#f0a060",
+    summary: "A dimension often missing from healthcare AI discussions is the patient side of the equation. AI-enabled scheduling systems, insurance chatbots, patient portal automation, and even AI-generated care summaries only work if patients are willing to engage with them — and trust is the prerequisite, not the byproduct.",
+    causes: ["61% of Americans want more control over how AI is used in their lives", "Low trust in corporate and regulatory oversight of AI", "Patients often don't know when they are interacting with AI vs. a human", "Negative media coverage of AI errors creates generalized skepticism", "AI tools often designed without patient input or usability testing"],
+    effects: ["Low engagement rates on AI-enabled patient communication tools", "Patients route around AI scheduling to call the front desk anyway", "Insurance AI chatbots create frustration, not efficiency, when patients don't trust them", "Practices that deployed AI without communication strategies saw backlash"],
+    lesson: "For physicians: even if you implement AI perfectly on the clinical and operational side, your patients are the other half of the equation. Deployment without a patient communication and trust-building strategy is incomplete implementation.",
+    stats: ["61% of Americans want more control over AI in their lives", "Majority concerned about lack of regulation", "Low engagement rates on AI patient tools in early deployments"],
+    source: "Pew Research Center AI public opinion surveys, 2023–2024; AMA patient experience data"
+  },
+  'physician-design': {
+    title: "Physicians Excluded from AI Design",
+    umbrella: "The Nuanced Middle",
+    color: "#f0a060",
+    summary: "Survey data from the AMA reveals a structural problem in healthcare AI deployment: the majority of physicians want to be meaningfully involved in AI design, piloting, and integration — yet most AI tools are built by technology companies without clinical co-design.",
+    causes: ["Technology companies move faster than hospital governance allows", "Procurement decisions often made by administrators, not clinical staff", "No standard framework for physician involvement in AI procurement", "Financial incentives for vendors to sell to administrators who control budgets"],
+    effects: ["AI tools that don't fit clinical reality get abandoned after deployment", "Physician resistance — not to AI itself, but to AI they weren't consulted on", "Wasted implementation budgets and staff training time", "Missed opportunity: physician involvement improves tool design significantly"],
+    lesson: "This is your governance call-to-action. The solution isn't for physicians to slow down AI — it's for them to get in the room where AI decisions are made. If you're not at the procurement table, someone else is defining your workflow.",
+    stats: ["70% of physicians want involvement from design through integration", "Most health system AI procurement: administrator-led", "Physician co-design linked to higher adoption success rates"],
+    source: "AMA Physician AI Sentiment Survey 2024; AMA Center for Digital Health"
+  },
+  'radiology-ux-fix': {
+    title: "Radiology Override: The UX Fix",
+    umbrella: "The Nuanced Middle",
+    color: "#f0a060",
+    summary: "The same study that documented the dangerous AI override effect also revealed something hopeful: the problem was not the AI model itself — it was the interface. When researchers changed how the AI communicated its findings, clinical performance improved significantly without changing the underlying model.",
+    causes: ["Original interface presented AI findings with uniform confidence regardless of certainty", "No visual cue to encourage independent review before seeing AI result", "Presentation mimicked a second-reader report — triggering automation bias"],
+    effects: ["When AI result was hidden until after independent read: override effect reduced", "When AI highlighted region of interest visually (rather than stating diagnosis): performance improved", "Same AI model, better interface, meaningfully better clinical outcomes", "Proved that implementation design matters as much as AI model quality"],
+    lesson: "This is perhaps your most elegant case for a physician audience: the AI didn't get smarter — the interface got better. User experience design in healthcare AI is not cosmetic. It is clinical. How a tool presents information determines whether clinicians use it safely.",
+    stats: ["False negatives reduced when AI hid result until after independent read", "Further reduced when AI used visual region highlighting vs. stated diagnosis", "Zero changes to the underlying AI model between conditions"],
+    source: "Multi-reader radiology AI UX study; reviewed in Radiology and JAMA imaging literature"
+  },
+  'adoption-gap': {
+    title: "The 100% Adoption / 53% Success Gap",
+    umbrella: "The Nuanced Middle",
+    color: "#f0a060",
+    summary: "A 2024 survey of 43 large US health systems revealed a striking paradox: ambient AI scribing had 100% adoption activity — every single system was using or piloting it. Yet only 53% reported high success. Radiology AI, another high-profile category, had only a 19% high-success rate.",
+    causes: ["Adoption driven by vendor pressure and executive enthusiasm, not clinical readiness", "Implementation without adequate workflow redesign or change management", "Success metrics often undefined at deployment — making 'success' hard to measure", "Training and support infrastructure insufficient for scale"],
+    effects: ["Many health systems paying for AI tools that aren't delivering value", "Physician frustration and fatigue with AI pilots that fail", "Budget pressure to show ROI leading to premature scale-up", "Real risk of backlash that slows adoption of genuinely valuable tools"],
+    lesson: "Adoption and value are not the same thing. Every large health system is using ambient AI — but nearly half aren't getting the outcomes they hoped for. This is the most important number for your '5 questions before you say yes' framework.",
+    stats: ["Ambient notes: 100% health system adoption, 53% high success", "Radiology AI: 19% high success rate", "43 large US health systems surveyed", "Survey year: 2024"],
+    source: "Large health system AI adoption survey, 2024; referenced in JAMA Summit Report 2025"
+  }
+};
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+function openModal(id) {
+  const c = cases[id];
+  document.getElementById('modal-title').textContent = c.title;
+  document.getElementById('modal-title').style.color = c.color;
+
+  const statsHtml = c.stats.map(s => `<span class="stat-pill">${s}</span>`).join('');
+  const causesHtml = c.causes.map(x => `<li>${x}</li>`).join('');
+  const effectsHtml = c.effects.map(x => `<li>${x}</li>`).join('');
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-label">Summary</div>
+      <p>${c.summary}</p>
+    </div>
+    <div class="stat-pills" style="margin-bottom:20px">${statsHtml}</div>
+    <div class="cause-effect-grid">
+      <div class="ce-box cause-box">
+        <div class="ce-label">Root Causes</div>
+        <ul>${causesHtml}</ul>
+      </div>
+      <div class="ce-box effect-box">
+        <div class="ce-label">Effects & Outcomes</div>
+        <ul>${effectsHtml}</ul>
+      </div>
+    </div>
+    <div class="lesson-box"><strong>Talk Lesson:</strong> ${c.lesson}</div>
+    <div class="modal-section">
+      <div class="modal-section-label">Source</div>
+      <p class="source-line">${c.source}</p>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── VENDOR DATA ──────────────────────────────────────────────────────────────
+const vendorData = {
+  "Ambient Scribing — Healthcare AI's First Breakout Category": {
+    color: "#56d364", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.25)",
+    note: "$600M market in 2025 (+2.4x YoY). 100% large health system adoption activity.",
+    vendors: [
+      { name:"Nuance DAX Copilot", owner:"Microsoft (acq. 2021, $19.7B)", entry:"2019", status:"Market Leader", share:"33% market share", detail:"Deepest Epic/Cerner integration. Used in 77% of US hospitals historically. $600–800/provider/month enterprise pricing.", badge:"🏆 Incumbent", badgeColor:"#58a6ff" },
+      { name:"Abridge", owner:"Independent (Series E, $5.3B valuation)", entry:"2018", status:"Fastest Growing", share:"30% market share", detail:"LLM-native, real-time notes. Deep Epic mobile integration (Haiku/Canto). Expanding into prior auth. Used in JAMA burnout study (Olson et al., 2025).", badge:"🚀 Unicorn", badgeColor:"#56d364" },
+      { name:"Ambience Healthcare", owner:"Independent (unicorn 2025)", entry:"2020", status:"Enterprise Focus", share:"13% market share", detail:"Revenue integrity + coding emphasis alongside documentation. Hardware ambient microphone option. Enterprise-only pricing.", badge:"💼 Enterprise", badgeColor:"#f0a060" },
+      { name:"Nabla", owner:"Independent (Paris-based)", entry:"2021", status:"Growing", share:"Mid-market", detail:"Notes in under 20 seconds. Multilingual (25+ languages). Used in Kaiser Permanente Northern California NEJM study. ~$120/month pricing.", badge:"🌍 Global", badgeColor:"#bc8cff" },
+      { name:"Suki AI", owner:"Independent", entry:"2017", status:"Established", share:"Mid-market", detail:"Voice commands + ambient. ICD-10/HCC suggestions, order staging. ~$400–600/month range.", badge:"🎙️ Voice-First", badgeColor:"#58a6ff" },
+      { name:"Freed AI", owner:"Independent", entry:"2022", status:"Growing", share:"SMB/solo practices", detail:"Consumer-friendly pricing (~$99/month). Simple record-and-review workflow. Copy-paste to EHR. Popular with independent practices.", badge:"💰 Value", badgeColor:"#56d364" },
+      { name:"DeepScribe", owner:"Independent", entry:"2019", status:"Specialty Focus", share:"Specialty practices", detail:"Specialty-tailored notes with E/M coding. ~$750/month. API integrations with Athena, eClinicalWorks, Epic.", badge:"🔬 Specialty", badgeColor:"#f0a060" },
+      { name:"Epic Native Scribe", owner:"Epic Systems", entry:"2026 (planned)", status:"Incoming Disruptor", share:"TBD", detail:"Announced Aug 2025 for wider 2026 release. Records via Haiku/Canto + Microsoft Dragon AI + Epic Cosmos DB. Could reshape the entire market.", badge:"⚡ Coming", badgeColor:"#ff7b7b" }
+    ]
+  },
+  "Clinical Decision Support — Alerts, Predictions & Diagnostics": {
+    color: "#58a6ff", bg: "rgba(88,166,255,0.08)", border: "rgba(88,166,255,0.25)",
+    note: "Most successful when narrowly scoped to one clinical problem with EHR-embedded alerts.",
+    vendors: [
+      { name:"Bayesian Health Sepsis AI", owner:"Bayesian Health (Cleveland Clinic partner)", entry:"2022", status:"Validated Success", share:"Expanding to Ohio + Florida", detail:"10x fewer false positives, 46% more sepsis cases, 7x earlier antibiotic alerts. Pilot: 3,330+ patients at Cleveland Clinic Fairview (2024–25). Being expanded system-wide.", badge:"✅ Proven", badgeColor:"#56d364" },
+      { name:"Epic Deterioration Index", owner:"Epic Systems (built-in)", entry:"2019", status:"Widely Deployed", share:"Epic health systems", detail:"Embedded sepsis/deterioration alert in Epic EHR. Risk score based on vitals, labs, notes. Widely deployed but alarm fatigue concerns documented.", badge:"🏥 Built-in", badgeColor:"#58a6ff" },
+      { name:"Hippocratic AI", owner:"Independent ($1.64B valuation)", entry:"2023", status:"Emerging", share:"Early deployment", detail:"AI agents for patient outreach, care navigation, and staffing gap coverage. $141M Series B (2025). Healthcare-specific LLM agents — not autonomous clinical diagnosis.", badge:"🤖 Agent AI", badgeColor:"#bc8cff" },
+      { name:"OpenEvidence", owner:"Independent ($3.5B valuation)", entry:"2023", status:"Growing", share:"Clinical reference", detail:"AI-powered clinical search and evidence synthesis for clinicians. $210M raised. Acts as a real-time medical literature assistant during encounters.", badge:"📚 Evidence", badgeColor:"#58a6ff" }
+    ]
+  },
+  "Revenue Cycle & Operations — Billing, Coding, Prior Auth": {
+    color: "#f0a060", bg: "rgba(240,136,62,0.08)", border: "rgba(240,136,62,0.25)",
+    note: "Fastest growing AI category 2023→2024. Strongest ROI. Bounded problems, structured data, measurable outcomes.",
+    vendors: [
+      { name:"Waystar AI (Claim Accuracy)", owner:"Waystar (public, NYSE: WAY)", entry:"2021", status:"Established", share:"Large health systems", detail:"AI-driven claim submission, denial prevention, prior auth automation. Publicly traded RCM platform. Prior auth: 60%+ of requests processed in under 2 hours.", badge:"💵 RCM Leader", badgeColor:"#f0a060" },
+      { name:"Olive AI", owner:"Acquired/Restructured", entry:"2020", status:"Cautionary", share:"Declined", detail:"Raised $850M, valued at $4B, then collapsed in 2023. Attempted to automate too many hospital workflows simultaneously. A cautionary tale in operational AI.", badge:"⚠️ Cautionary", badgeColor:"#ff7b7b" },
+      { name:"Abridge Prior Auth (in dev)", owner:"Abridge / Highmark Health", entry:"2025 (pilot)", status:"Emerging", share:"Pilot phase", detail:"Abridge partnering with Highmark Health to build real-time prior authorization at point of care — embedded in the scribe workflow. Represents convergence of documentation + RCM AI.", badge:"🔗 Convergence", badgeColor:"#56d364" },
+      { name:"Cohere Health", owner:"Independent", entry:"2019", status:"Growing", share:"Payer + provider", detail:"Prior authorization AI. Automated clinical review. Focuses on reducing administrative burden on both provider and payer sides.", badge:"🔄 Prior Auth", badgeColor:"#f0a060" }
+    ]
+  },
+  "Radiology & Imaging AI — High Potential, Mixed Success": {
+    color: "#bc8cff", bg: "rgba(188,140,255,0.08)", border: "rgba(188,140,255,0.25)",
+    note: "Only 19% high-success rate at large health systems (2024 survey). FDA has cleared 1,000+ AI imaging devices as of 2025.",
+    vendors: [
+      { name:"Aidoc", owner:"Independent", entry:"2016", status:"Market Leader", share:"700+ sites globally", detail:"Radiology workflow AI. Flags incidental findings (pulmonary embolism, hemorrhage) for radiologist review. FDA-cleared for multiple indications. Embedded in PACS workflow.", badge:"📸 Radiology", badgeColor:"#bc8cff" },
+      { name:"Rad AI (Impressions)", owner:"Independent", entry:"2018", status:"Growing", share:"Mid-market radiology", detail:"Automates the Impressions section of radiology reports using prior reports and structured data. Reduces radiologist time on routine documentation.", badge:"📝 Reporting", badgeColor:"#bc8cff" },
+      { name:"Enlitic", owner:"Independent", entry:"2014", status:"Established", share:"Enterprise radiology", detail:"One of the first radiology AI companies. Image analysis, data standardization, workflow tools. Long track record but mixed clinical outcomes data.", badge:"🔬 Pioneer", badgeColor:"#58a6ff" },
+      { name:"Google Health AI Mammography", owner:"Google / DeepMind", entry:"2020", status:"Research + limited deploy", share:"Select partners", detail:"AI-supported mammography screening. MASAI trial showed AI-supported screening detected more cancers than standard double reading. 'Second reader' model — keeps radiologist central.", badge:"🔍 Second Reader", badgeColor:"#56d364" }
+    ]
+  },
+  "Legacy & Cautionary — The Hype Cycle in Product Form": {
+    color: "#ff7b7b", bg: "rgba(215,58,74,0.08)", border: "rgba(215,58,74,0.25)",
+    note: "Products that illustrate why AI fails. Essential context for the talk's opening 10 minutes.",
+    vendors: [
+      { name:"IBM Watson for Oncology", owner:"IBM (sold Watson Health assets 2023)", entry:"2013", status:"Discontinued 2023", share:"Was in 230 hospitals", detail:"$4B+ investment. Trained on MSKCC synthetic cases. Produced 'unsafe and incorrect' treatment recommendations (internal IBM docs, 2017). Never corrected publicly. Shut down 2023.", badge:"❌ Discontinued", badgeColor:"#ff7b7b" },
+      { name:"Olive AI", owner:"Restructured/sold off", entry:"2020", status:"Collapsed 2023", share:"Was in 900 hospitals", detail:"Raised $850M at $4B valuation. Attempted to automate too many hospital workflows at once. Laid off hundreds, sold divisions. A second cautionary tale in operational AI overreach.", badge:"❌ Collapsed", badgeColor:"#ff7b7b" },
+      { name:"IBM Watson for Drug Discovery", owner:"IBM (discontinued)", entry:"2015", status:"Discontinued", share:"Research partners", detail:"Companion to Watson Oncology. Failed to identify novel drug candidates at scale. Highlights that AI's failures in healthcare were systemic to the Watson architecture, not isolated.", badge:"❌ Discontinued", badgeColor:"#ff7b7b" }
+    ]
+  }
+};
+
+// ── TIMELINE DATA ────────────────────────────────────────────────────────────
+const timelineEvents = [
+  {
+    year:"2013", color:"#ff7b7b",
+    text:"IBM Watson for Oncology launched — the AI revolution in cancer care is promised.",
+    ref:"IBM Press Release / MD Anderson Cancer Center partnership announcement",
+    link:"https://www.mdanderson.org/newsroom/md-anderson-and-ibm-collaborate-to-accelerate-cancer-research-and-the-fight-against-cancer.h00-158727526.html"
+  },
+  {
+    year:"2016–18", color:"#ff7b7b",
+    text:"AI researchers publicly predict radiologists will be replaced within a decade — residency applicant numbers measurably decline.",
+    ref:"Hinton G. (2016) — widely covered; workforce impact analysis: Nath et al., JACR 2020",
+    link:"https://pubs.rsna.org/doi/10.1148/radiol.2021203349"
+  },
+  {
+    year:"2017", color:"#ff7b7b",
+    text:"Internal IBM documents reveal Watson for Oncology producing 'unsafe and incorrect' cancer treatment recommendations.",
+    ref:"Ross & Swetlitz — STAT News investigative report, September 5, 2017",
+    link:"https://www.statnews.com/2017/09/05/watson-ibm-cancer/"
+  },
+  {
+    year:"2019", color:"#56d364",
+    text:"Nuance DAX ambient scribe launches — documentation AI begins quietly solving a real, well-defined clinical problem.",
+    ref:"Nuance Communications product announcement; Microsoft (post-acquisition) DAX overview",
+    link:"https://www.nuance.com/healthcare/ambient-clinical-intelligence.html"
+  },
+  {
+    year:"2021", color:"#58a6ff",
+    text:"Microsoft acquires Nuance Communications for $19.7B — the largest healthcare AI acquisition in history signals Big Tech's commitment.",
+    ref:"Microsoft press release, April 12, 2021",
+    link:"https://news.microsoft.com/2021/04/12/microsoft-accelerates-industry-cloud-strategy-for-healthcare-with-the-acquisition-of-nuance-communications/"
+  },
+  {
+    year:"2022", color:"#56d364",
+    text:"Abridge raises Series B; Ambience Healthcare raises $70M — ambient scribing becomes a defined, competitive product category.",
+    ref:"Abridge Series B announcement; Ambience Healthcare Series B, 2022",
+    link:"https://www.abridge.com/blog/abridge-series-b"
+  },
+  {
+    year:"2023", color:"#ff7b7b",
+    text:"IBM discontinues Watson Health (assets sold). Olive AI collapses from $4B valuation. The first AI hype cycle in healthcare formally ends.",
+    ref:"IBM Watson Health sale: Francisco Partners (Jan 2023); Olive AI restructuring: STAT News, Oct 2023",
+    link:"https://www.statnews.com/2023/10/31/olive-ai-healthcare-automation-startup-shutting-down/"
+  },
+  {
+    year:"Oct 2024", color:"#f0a060",
+    text:"JAMA Network Open publishes landmark RCT (Goh et al., Stanford): physicians with LLM access show no significant improvement in diagnostic accuracy.",
+    ref:"Goh E, et al. — JAMA Network Open. 2024;7(10):e2440969. DOI: 10.1001/jamanetworkopen.2024.40969",
+    link:"https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2824770"
+  },
+  {
+    year:"2025", color:"#56d364",
+    text:"Ambient scribing reaches $600M market — healthcare AI's first genuine breakout product category with 100% large health system adoption.",
+    ref:"Bessemer Venture Partners Healthcare AI Report, 2025; KLAS Research ambient AI adoption data",
+    link:"https://www.klasresearch.com/report/ambient-documentation-2025/2561"
+  },
+  {
+    year:"Sept 2025", color:"#56d364",
+    text:"Cleveland Clinic announces expansion of Bayesian Health sepsis AI: 10x fewer false positives, 46% more cases identified, 7x earlier antibiotic alerts.",
+    ref:"Cleveland Clinic Newsroom, September 23, 2025 — Bayesian Health partnership outcomes",
+    link:"https://newsroom.clevelandclinic.org/2025/09/23/cleveland-clinic-expands-ai-driven-sepsis-detection-program/"
+  },
+  {
+    year:"Oct 2025", color:"#56d364",
+    text:"JAMA Network Open (Olson et al.): 263-physician, 6-health-system study confirms ambient scribing reduces burnout 51.9%→38.8% in 30 days.",
+    ref:"Olson A, et al. — JAMA Network Open. 2025. DOI: 10.1001/jamanetworkopen.2025.34976",
+    link:"https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2836271"
+  },
+  {
+    year:"2026", color:"#58a6ff",
+    text:"Epic Systems announces native AI ambient scribe for wider release — potential market consolidation as the dominant EHR enters the category.",
+    ref:"Epic Systems announcement, August 2025; covered by Healthcare IT News and KLAS Research",
+    link:"https://www.healthcareitnews.com/news/epic-launching-its-own-ambient-ai-documentation-tool"
+  }
+];
+
+// ── RENDER VENDORS ───────────────────────────────────────────────────────────
+function renderVendors() {
+  const container = document.getElementById('vendor-sections');
+  if (!container) return;
+  let html = '';
+  for (const [category, data] of Object.entries(vendorData)) {
+    const cards = data.vendors.map(v => `
+      <div style="background:${data.bg};border:1px solid ${data.border};border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="font-size:14px;font-weight:700;color:#e6edf3;line-height:1.2;">${v.name}</div>
+          <span style="background:rgba(0,0,0,0.3);color:${v.badgeColor};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">${v.badge}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);">${v.owner}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="background:var(--surface2);border:1px solid var(--border);font-size:10px;color:#c9d1d9;padding:2px 8px;border-radius:20px;">📅 Since ${v.entry}</span>
+          <span style="background:var(--surface2);border:1px solid var(--border);font-size:10px;color:#c9d1d9;padding:2px 8px;border-radius:20px;">${v.status}</span>
+          ${v.share ? `<span style="background:var(--surface2);border:1px solid var(--border);font-size:10px;color:${data.color};padding:2px 8px;border-radius:20px;">${v.share}</span>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--border);padding-top:8px;">${v.detail}</div>
+      </div>`).join('');
+
+    html += `
+      <div style="margin-bottom:32px;">
+        <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="background:${data.bg};border:1px solid ${data.border};color:${data.color};font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;font-family:'DM Sans',sans-serif;">${category.split('—')[0].trim()}</span>
+          <span style="font-size:15px;color:var(--muted);font-family:'DM Sans',sans-serif;">${category.split('—')[1] ? '— ' + category.split('—')[1].trim() : ''}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">${data.note}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">${cards}</div>
+      </div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ── RENDER TIMELINE ──────────────────────────────────────────────────────────
+function renderTimeline() {
+  const container = document.getElementById('timeline-items');
+  if (!container) return;
+  container.innerHTML = timelineEvents.map(e => `
+    <div style="display:flex;gap:14px;margin-bottom:16px;position:relative;">
+      <div style="position:absolute;left:-29px;top:4px;width:12px;height:12px;border-radius:50%;background:${e.color};border:2px solid var(--bg);flex-shrink:0;"></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${e.color};border-radius:6px;padding:12px 14px;flex:1;">
+        <div style="font-size:11px;font-weight:700;color:${e.color};margin-bottom:4px;">${e.year}</div>
+        <div style="font-size:13px;color:#c9d1d9;line-height:1.5;margin-bottom:8px;">${e.text}</div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--muted);line-height:1.4;font-style:italic;flex:1;">📄 ${e.ref}</div>
+          ${e.link ? `<a href="${e.link}" target="_blank" rel="noopener noreferrer"
+            style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+                   color:${e.color};text-decoration:none;white-space:nowrap;flex-shrink:0;
+                   background:${e.color}18;border:1px solid ${e.color}44;
+                   padding:3px 10px;border-radius:20px;transition:all .15s;"
+            onmouseenter="this.style.background='${e.color}30'"
+            onmouseleave="this.style.background='${e.color}18'">
+            View Source ↗
+          </a>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── TWO-LANE DIAGRAM DATA ─────────────────────────────────────────────────────
+const bizNodes = [
+  {
+    id:'leadership', label:'Business', title:'Leadership & Strategy',
+    color:'#58a6ff', readiness:'emerging',
+    focus:'Strategic planning, resource allocation, governance, quality improvement, regulatory compliance.',
+    ai:'Executive dashboards with AI-generated insights; predictive operational modeling; AI governance frameworks; board-level risk summaries.',
+    working:'AI-generated operational KPI summaries save analyst hours. Predictive staffing models at large health systems show early promise.',
+    caution:'AI strategic recommendations without clinical input have led to misaligned priorities. Governance structures often lag deployment.',
+    connects:['IS/Technology','Population Health','Billing & Revenue']
+  },
+  {
+    id:'pophealth', label:'Business', title:'Population Health',
+    color:'#56d364', readiness:'high',
+    focus:'Risk stratification, chronic disease management, preventive outreach, care gap identification across large patient panels.',
+    ai:'AI risk scores for readmission, ED utilization, chronic condition escalation; automated outreach scheduling; care gap alerts embedded in EHR.',
+    working:'Epic Cosmos-powered risk stratification. Payer-facing AI for HCC coding. Risk score models well-validated in large cohorts.',
+    caution:'Bias in training data can systematically underserve minority populations. Scores must be validated on local patient populations, not just national datasets.',
+    connects:['IS/Technology','Registration','MDs','RNs']
+  },
+  {
+    id:'billing', label:'Business', title:'Billing & Revenue Cycle',
+    color:'#56d364', readiness:'high',
+    focus:'Charge capture, coding accuracy, claim submission, denial management, prior authorization, payer contract optimization.',
+    ai:'AI-assisted ICD-10/CPT coding from clinical notes; prior auth automation (60% processed in under 2hrs); denial prediction and prevention; underpayment detection.',
+    working:'Fastest-growing AI adoption category 2023→2024. Waystar, Cohere, and Abridge (in dev) showing measurable claim denial reduction and 5x ROI on prior auth.',
+    caution:'Olive AI raised $850M and collapsed in 2023 trying to automate too much at once. Narrowly-scoped tools succeed; "automate everything" platforms fail.',
+    connects:['IS/Technology','Registration','Leadership & Strategy']
+  },
+  {
+    id:'registration', label:'Business', title:'Registration & Scheduling',
+    color:'#f0a060', readiness:'medium',
+    focus:'Patient intake, appointment scheduling, insurance verification, eligibility checks, referral management.',
+    ai:'AI-powered scheduling assistants and chatbots; automated insurance eligibility verification; intelligent slot-filling algorithms; referral routing.',
+    working:'Insurance eligibility AI nearly fully automated at large health systems. Scheduling AI reduces no-show rates by 10–30% where well-implemented.',
+    caution:'Patient trust is the hidden variable. 61% of Americans want more control over AI in their lives — chatbot scheduling tools see low adoption without trust-building strategy.',
+    connects:['IS/Technology','Billing & Revenue','Population Health']
+  },
+  {
+    id:'supplychain', label:'Business', title:'Supply Chain',
+    color:'#58a6ff', readiness:'emerging',
+    focus:'Medical supply inventory, equipment maintenance scheduling, vendor management, demand forecasting.',
+    ai:'Predictive inventory replenishment; AI-driven demand forecasting tied to census data; equipment failure prediction (IoT-integrated).',
+    working:'Demand forecasting AI proven in manufacturing; healthcare adoption accelerating post-COVID. Early results show 10–20% reduction in supply waste.',
+    caution:'Healthcare supply chain data is notoriously fragmented across systems. AI models require clean, standardized data that many health systems lack.',
+    connects:['IS/Technology','Facilities','Leadership & Strategy']
+  },
+  {
+    id:'facilities', label:'Business', title:'Facilities & Operations',
+    color:'#58a6ff', readiness:'emerging',
+    focus:'Physical plant management, patient flow optimization, environmental services, capital planning, energy management.',
+    ai:'AI bed management and patient flow; predictive equipment maintenance; energy optimization; OR scheduling optimization.',
+    working:'AI bed management (e.g., GE Healthcare Command Center) showing measurable throughput improvements. OR block scheduling AI reduces turnover time.',
+    caution:'Patient flow AI requires EHR + ADT data integration that many facilities teams don\'t control. Cross-departmental data access is often the bottleneck.',
+    connects:['IS/Technology','Leadership & Strategy','Registration']
+  }
+];
+
+const clinNodes = [
+  {
+    id:'mds', label:'Clinical', title:'Physicians (MDs/DOs)',
+    color:'#f0a060', readiness:'medium',
+    focus:'Diagnosis, treatment planning, prescribing, patient relationships, clinical decision-making, documentation, care coordination.',
+    ai:'Ambient AI scribing (primary win); AI-assisted differential diagnosis (mixed); clinical decision support alerts; LLM-powered literature review at point of care.',
+    working:'Ambient scribing: burnout 51.9%→38.8% in 30 days (Olson et al., JAMA 2025). 15–60 min/day saved on documentation. Sepsis alerts (Bayesian Health) well-received.',
+    caution:'JAMA RCT (Goh, 2024): LLM as diagnostic aid showed NO significant improvement. Automation bias in radiology caused missed diagnoses. Physicians must remain the final decision-maker.',
+    connects:['IS/Technology','RNs','Pharmacy (RX)','Imaging']
+  },
+  {
+    id:'rns', label:'Clinical', title:'Nursing (RNs)',
+    color:'#56d364', readiness:'high',
+    focus:'Patient monitoring, medication administration, care coordination, patient education, deterioration surveillance, documentation.',
+    ai:'Deterioration/sepsis alert systems; AI-driven fall risk scoring; smart IV pump integration; AI-assisted shift handoff documentation.',
+    working:'Cleveland Clinic sepsis AI (Bayesian Health): 10x fewer false positives rebuilt nurse trust in alerts — increasing action rates. Falls AI showing prevention improvements at select systems.',
+    caution:'Alarm fatigue is the #1 enemy of clinical AI for nurses. Any AI that increases alert volume without increasing alert precision will be ignored or turned off.',
+    connects:['IS/Technology','MDs/DOs','Pharmacy (RX)','Imaging']
+  },
+  {
+    id:'rts', label:'Clinical', title:'Respiratory Therapy (RTs)',
+    color:'#58a6ff', readiness:'emerging',
+    focus:'Ventilator management, pulmonary treatments, airway management, respiratory assessment, critical care support, weaning protocols.',
+    ai:'Ventilator weaning protocol AI; smart ventilator integration with EHR; automated therapy documentation; predictive extubation timing.',
+    working:'Smart ventilators with embedded AI guidance (Hamilton, Dräger) showing protocol compliance improvements. Automated RT documentation reducing charting burden.',
+    caution:'RT AI is early-stage — most tools are protocol-based rather than truly adaptive. Sparse, siloed RT data makes training robust models difficult. Your domain.',
+    connects:['IS/Technology','MDs/DOs','RNs','Imaging']
+  },
+  {
+    id:'imaging', label:'Clinical', title:'Imaging & Radiology',
+    color:'#f0a060', readiness:'medium',
+    focus:'Medical image interpretation, diagnostic reporting, image-guided procedures, PACS management, incidental finding tracking.',
+    ai:'AI-assisted image detection (PE, hemorrhage, pneumothorax); automated report section generation; worklist prioritization; incidental finding flagging.',
+    working:'Aidoc PE/hemorrhage flagging: measurable turnaround improvement. Google DeepMind mammography AI (MASAI trial): detected more cancers than double-reading standard.',
+    caution:'Only 19% high-success rate at large health systems (2024 survey). The override effect: when AI is wrong, radiologist false negatives jump significantly. UX design is critical.',
+    connects:['IS/Technology','MDs/DOs','RNs','Pharmacy (RX)']
+  },
+  {
+    id:'pharmacy', label:'Clinical', title:'Pharmacy (RX)',
+    color:'#56d364', readiness:'high',
+    focus:'Medication dispensing, drug interaction checking, formulary management, clinical pharmacy consultation, medication reconciliation.',
+    ai:'AI drug-drug interaction detection; automated prior auth for specialty medications; smart formulary recommendations; medication reconciliation at transitions of care.',
+    working:'AI drug interaction checking is mature and widely deployed. Automated prior auth for specialty pharmacy reducing delays by 40–60% at large PBMs.',
+    caution:'AI formulary recommendations can create payer-aligned bias if not carefully governed. Physicians should understand when an AI recommendation reflects clinical vs. financial optimization.',
+    connects:['IS/Technology','MDs/DOs','RNs','Billing & Revenue']
+  },
+  {
+    id:'tech', label:'Clinical', title:'Clinical Lab & Diagnostics',
+    color:'#58a6ff', readiness:'emerging',
+    focus:'Laboratory testing, pathology, point-of-care diagnostics, test result interpretation, lab workflow management.',
+    ai:'AI-assisted pathology slide reading; automated critical value notification; predictive test ordering (reducing unnecessary labs); AI in genomics and precision medicine.',
+    working:'AI pathology (Paige.AI, PathAI): FDA-cleared for prostate cancer detection. Significant accuracy gains in specific, well-validated diagnostic tasks.',
+    caution:'Precision medicine AI is powerful but requires genomic data infrastructure most health systems don\'t yet have. Beware vendors overpromising on readiness.',
+    connects:['IS/Technology','MDs/DOs','Imaging','Pharmacy (RX)']
+  }
+];
+
+const techNodes = [
+  { title:'EHR / Epic / Cerner', detail:'Central data hub. Every AI in both lanes depends on EHR data quality and integration depth.' },
+  { title:'Interoperability (FHIR)', detail:'The plumbing that allows AI to move data between systems. Without it, AI stays siloed.' },
+  { title:'Clinical Data Warehouse', detail:'Aggregated patient data that trains and runs AI models. Quality in = quality out.' },
+  { title:'AI/ML Infrastructure', detail:'The compute layer: cloud platforms (Azure, AWS, Google Cloud) running AI models at health system scale.' },
+  { title:'Patient-Facing Apps', detail:'Portals, scheduling apps, telehealth — the patient experience layer. AI here requires patient trust.' }
+];
+
+const readinessColors = { high:'#56d364', medium:'#f0a060', caution:'#ff7b7b', emerging:'#58a6ff' };
+const readinessLabels = { high:'✅ High Readiness', medium:'⚠️ Mixed Results', caution:'🚨 Caution', emerging:'🔭 Emerging' };
+
+function buildLane(nodes, containerId, align) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = nodes.map(n => {
+    const rc = readinessColors[n.readiness];
+    return `
+    <div onclick="showNodeDetail('${n.id}')"
+      style="background:var(--surface2);border:1px solid var(--border);border-${align}:3px solid ${rc};
+             border-radius:8px;padding:13px 15px;cursor:pointer;transition:all .15s;position:relative;"
+      onmouseenter="this.style.borderColor='${rc}';this.style.transform='translateX(${align==='left'?'-':''}'+'3px)'"
+      onmouseleave="this.style.borderColor='var(--border)';this.style.borderLeftColor='${rc}';this.style.borderRightColor='${rc}';this.style.transform='translateX(0)'">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="font-size:14px;font-weight:700;color:#e6edf3;">${n.title}</div>
+        <span style="font-size:9px;font-weight:700;color:${rc};white-space:nowrap;flex-shrink:0;padding:2px 7px;border-radius:20px;background:${rc}22;border:1px solid ${rc}44;">${readinessLabels[n.readiness]}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;">${n.focus.substring(0,90)}…</div>
+    </div>`;
+  }).join('');
+}
+
+function buildTechSpine() {
+  const container = document.getElementById('tech-spine');
+  if (!container) return;
+  container.innerHTML = `
+    <div style="width:100%;text-align:center;margin-bottom:6px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#bc8cff;margin-bottom:10px;">Connective Layer</div>
+    </div>` +
+    techNodes.map(t => `
+    <div style="background:rgba(188,140,255,0.08);border:1px solid rgba(188,140,255,0.25);border-radius:7px;
+                padding:9px 10px;width:100%;cursor:default;"
+         title="${t.detail}">
+      <div style="font-size:11px;font-weight:600;color:#d2b4ff;text-align:center;line-height:1.3;">${t.title}</div>
+    </div>
+    <div style="width:2px;height:10px;background:rgba(188,140,255,0.2);margin:0 auto;"></div>`
+  ).join('') +
+  `<div style="font-size:9px;color:rgba(188,140,255,0.5);text-align:center;margin-top:4px;line-height:1.4;">← links both lanes →</div>`;
+}
+
+function showNodeDetail(id) {
+  const node = [...bizNodes, ...clinNodes].find(n => n.id === id);
+  if (!node) return;
+  const rc = readinessColors[node.readiness];
+  document.getElementById('nd-label').textContent = node.label + ' Lane — ' + readinessLabels[node.readiness];
+  document.getElementById('nd-label').style.color = rc;
+  document.getElementById('nd-title').textContent = node.title;
+  document.getElementById('nd-title').style.color = rc;
+  document.getElementById('nd-focus').textContent = node.focus;
+  document.getElementById('nd-ai').textContent = node.ai;
+  document.getElementById('nd-working').innerHTML = `<span style="color:#56d364">${node.working}</span>`;
+  document.getElementById('nd-caution').innerHTML = `<span style="color:#f0a060">${node.caution}</span>`;
+  document.getElementById('nd-links-content').innerHTML = node.connects.map(c =>
+    `<span style="background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);color:#58a6ff;font-size:11px;padding:3px 10px;border-radius:20px;">${c}</span>`
+  ).join('');
+  const panel = document.getElementById('node-detail');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Initialize diagram
+buildLane(bizNodes, 'biz-lane', 'right');
+buildTechSpine();
+buildLane(clinNodes, 'clin-lane', 'left');
+renderVendors();
+renderTimeline();
+</script>
+</body>
+</html>
