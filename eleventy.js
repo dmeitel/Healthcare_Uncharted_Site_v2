@@ -4,6 +4,7 @@ module.exports = function(eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy({"src/tools/ai-healthcare-map":    "tools/ai-healthcare-map"});
   eleventyConfig.addPassthroughCopy({"src/tools/clinical-sql-mystery": "tools/clinical-sql-mystery"});
+  eleventyConfig.addPassthroughCopy("src/downloads");
 
   return {
     dir: {
