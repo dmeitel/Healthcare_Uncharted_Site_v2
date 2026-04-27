@@ -19,8 +19,8 @@ module.exports = {
 
   // ── NAV CTA ─────────────────────────────────────────────────────────────────
   navCta: {
-    label: 'AI Healthcare Map \u2192',
-    url:   '/tools/ai-healthcare-map/'
+    label: 'Healthcare Iceberg Map \u2192',
+    url:   '/lab/'
   },
 
   // ── SOURCE POLICY ───────────────────────────────────────────────────────────

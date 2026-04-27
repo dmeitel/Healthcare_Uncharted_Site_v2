@@ -16,19 +16,22 @@ navPage: tools
 .tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
 .tool-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; display:flex; flex-direction:column; transition:all .2s; text-decoration:none; }
 .tool-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 10px 40px rgba(0,0,0,.4); }
+.tc-band { height:3px; flex-shrink:0; }
+.tc-band-teal   { background:linear-gradient(90deg,var(--teal),#5ee8c0); }
+.tc-band-blue   { background:linear-gradient(90deg,#2478d4,#6aabff); }
+.tc-band-amber  { background:linear-gradient(90deg,var(--amber),#f0c050); }
+.tc-band-purple { background:linear-gradient(90deg,#7c6fcd,#a99ee8); }
 .tc-head { padding:22px 22px 18px; border-bottom:1px solid var(--border); flex:1; }
 .tc-badge { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:3px 10px; border-radius:8px; margin-bottom:14px; font-family:var(--mono); }
 .badge-interactive { background:rgba(78,205,196,.12); color:var(--teal); }
 .badge-learn       { background:rgba(36,120,212,.18); color:#6aabff; }
 .badge-lab         { background:rgba(232,168,56,.12); color:var(--amber); }
 .badge-reference   { background:rgba(124,111,205,.15); color:#a99ee8; }
-.badge-coming      { background:rgba(74,106,138,.1); color:var(--t3); }
 .tc-type-mark { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:13px; font-weight:800; margin-bottom:12px; }
 .mark-teal   { background:rgba(78,205,196,.15); color:var(--teal); }
 .mark-blue   { background:rgba(36,120,212,.15); color:#6aabff; }
 .mark-amber  { background:rgba(232,168,56,.12); color:var(--amber); }
 .mark-purple { background:rgba(124,111,205,.12); color:#a99ee8; }
-.mark-muted  { background:rgba(74,106,138,.12); color:var(--t3); }
 .tc-title { font-size:16px; font-weight:600; color:var(--t1); margin-bottom:6px; }
 .tc-desc  { font-size:13px; color:var(--t2); line-height:1.6; }
 .tc-foot { padding:14px 22px; display:flex; align-items:center; justify-content:space-between; }
@@ -36,17 +39,6 @@ navPage: tools
 .tc-tag  { font-size:10px; padding:2px 8px; border-radius:8px; background:var(--raised); color:var(--t3); border:1px solid var(--border); }
 .tc-arrow { color:var(--t3); font-size:13px; font-weight:600; transition:all .15s; flex-shrink:0; }
 .tool-card:hover .tc-arrow { transform:translateX(4px); color:var(--teal); }
-.tc-locked { font-size:11px; color:var(--t3); font-family:var(--mono); }
-
-.lab-notice { background:rgba(232,168,56,.06); border:1px solid rgba(232,168,56,.2); border-left:3px solid var(--amber); border-radius:0 10px 10px 0; padding:14px 20px; display:flex; align-items:center; gap:16px; margin-bottom:32px; }
-.ln-marker { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; color:var(--amber); flex-shrink:0; }
-.ln-text { font-size:13px; color:var(--t2); }
-.ln-text strong { color:var(--amber); }
-.ln-link { font-size:12px; color:var(--amber); font-weight:600; flex-shrink:0; padding:5px 14px; border:1px solid rgba(232,168,56,.3); border-radius:8px; transition:all .15s; margin-left:auto; text-decoration:none; }
-.ln-link:hover { background:rgba(232,168,56,.12); color:var(--amber); }
-
-.divider-label { font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--t3); display:flex; align-items:center; gap:12px; margin:48px 0 24px; }
-.divider-label::after { content:''; flex:1; height:1px; background:var(--border); }
 </style>
 
 <div class="page-hero">
@@ -60,17 +52,11 @@ navPage: tools
 <section class="section tools-section">
   <div class="section-inner">
 
-    <div class="lab-notice">
-      <span class="ln-marker">LAB</span>
-      <div class="ln-text"><strong>Lab section active</strong> &mdash; Some tools are in active development and locked while under construction. Visit the Lab to see what&rsquo;s coming.</div>
-      <a class="ln-link" href="/lab/">Visit the Lab &rarr;</a>
-    </div>
-
-    <div class="divider-label">Live Tools</div>
     <div class="tools-grid">
       {% for tool in tools %}
         {% if tool.status == 'live' %}
         <a class="tool-card" href="{{ tool.url }}" id="{{ tool.id }}">
+          <div class="tc-band {{ tool.bandClass }}"></div>
           <div class="tc-head">
             <span class="tc-badge {{ tool.badgeClass }}">{{ tool.badge }}</span>
             <div class="tc-type-mark {{ tool.markClass }}">{{ tool.mark }}</div>
@@ -84,30 +70,6 @@ navPage: tools
               {% endfor %}
             </div>
             <span class="tc-arrow">&rarr;</span>
-          </div>
-        </a>
-        {% endif %}
-      {% endfor %}
-    </div>
-
-    <div class="divider-label">In Development &mdash; Lab</div>
-    <div class="tools-grid">
-      {% for tool in tools %}
-        {% if tool.status == 'lab' %}
-        <a class="tool-card" href="{{ tool.url }}" id="{{ tool.id }}">
-          <div class="tc-head">
-            <span class="tc-badge {{ tool.badgeClass }}">{{ tool.badge }}</span>
-            <div class="tc-type-mark {{ tool.markClass }}">{{ tool.mark }}</div>
-            <div class="tc-title">{{ tool.title }}</div>
-            <div class="tc-desc">{{ tool.desc }}</div>
-          </div>
-          <div class="tc-foot">
-            <div class="tc-tags">
-              {% for tag in tool.tags %}
-                <span class="tc-tag">{{ tag }}</span>
-              {% endfor %}
-            </div>
-            <span class="tc-locked">In Lab &mdash; locked</span>
           </div>
         </a>
         {% endif %}

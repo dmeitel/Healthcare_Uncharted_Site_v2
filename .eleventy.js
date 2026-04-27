@@ -2,8 +2,9 @@ module.exports = function(eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy("src/assets");
 
-  eleventyConfig.addPassthroughCopy({"src/tools/clinical-sql-mystery": "tools/clinical-sql-mystery"});
-  eleventyConfig.addPassthroughCopy({"src/tools/ai-healthcare-map": "tools/ai-healthcare-map"});
+eleventyConfig.addPassthroughCopy({"src/learn/oxygen-payment-cuts": "learn/oxygen-payment-cuts"});
+  eleventyConfig.addPassthroughCopy({"src/learn/home-respiratory-timeline": "learn/home-respiratory-timeline"});
+  eleventyConfig.addPassthroughCopy({"src/learn/4ps-framework": "learn/4ps-framework"});
   eleventyConfig.addPassthroughCopy("src/downloads");
 
   // ── COLLECTIONS ──────────────────────────────────────────────────────────

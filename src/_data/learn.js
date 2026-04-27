@@ -104,6 +104,23 @@ module.exports = {
   talks: [
 
     {
+      id:         'arma-2026',
+      conference: 'ArMA Annual Meeting 2026',
+      date:       'May 2, 2026',
+      location:   'Phoenix, AZ',
+      title:      'AI in Healthcare: Value vs. Hype',
+      desc:       'A practical framework for evaluating AI tools in clinical and operational settings — the 5-question evaluation model, case studies on the Epic Sepsis Model and Optum algorithm, and what actually delivers ROI. Includes CME credit.',
+      url:        '/learn/talks/arma-2026/',
+      cme:        '1.0 AMA PRA Category 1',
+      downloads: {
+        slides:    '/downloads/2026_ArMA_Annual_Meeting_AI_in_Healthcare_Slides.pdf',
+        takeHome:  '/downloads/2026_ArMA_AI-Healthcare-Take-Home.pdf'
+      },
+      ps:       ['p2a', 'p2b', 'p3', 'p4'],
+      labNode:  'arma-2026-talk'
+    },
+
+    {
       id:         'msrc-2026',
       conference: 'MSRC Conference 2026',
       date:       'April 10, 2026',

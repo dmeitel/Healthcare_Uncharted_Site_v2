@@ -1,25 +1,9 @@
----
-layout: false
-title: Clinical SQL Mystery
-description: Learn healthcare data models by solving real clinical mysteries with SQL queries.
-section: tool
-category: clinical
-tags: [sql, ehr, epic, beginner-friendly, interactive]
-framework_4p: [provider, patient]
-map_node: sql-mystery
-map_connections: [ehr-data-model, clinical-events]
-featured: true
-date: 2025-11-15
-status: published
-read_time: "45 min"
-has_interactive: true
----
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clinical SQL Mystery</title>
+<title>Clinical SQL Mystery — Healthcare Uncharted</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -33,8 +17,8 @@ has_interactive: true
   --red-dim:#3b1a1a;--red-text:#ff7b72;
   --teal:#0d9488;--teal-dim:#0d2b28;--teal-text:#2dd4bf;
 }
-html,body{height:100%;overflow:hidden}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
+html{height:100%}
+body{min-height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
 
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
@@ -61,7 +45,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .badge.win{background:var(--green-dim);border-color:var(--green);color:var(--green-text)}
 
 /* LAYOUT */
-.layout{display:grid;grid-template-columns:196px 1fr 252px;flex:1;overflow:hidden;min-height:0}
+.layout{display:grid;grid-template-columns:196px 1fr 252px;height:calc(100vh - 112px);overflow:hidden}
 
 /* CASE SIDEBAR */
 .case-sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:12px 0}
@@ -107,6 +91,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .btn-sec:hover{border-color:var(--text2);color:var(--text)}
 .shortcut{font-size:10px;color:var(--text3);padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px}
 textarea#editor{width:100%;background:var(--bg);border:none;color:#a8d8a8;font-family:'JetBrains Mono','Fira Code',monospace;font-size:12.5px;padding:14px 16px;resize:none;outline:none;height:120px;line-height:1.65;caret-color:#58a6ff}
+textarea#editor:focus{outline:2px solid #4ECDC4;outline-offset:-2px}
 textarea#editor::placeholder{color:var(--text3)}
 
 /* RESULTS */
@@ -146,9 +131,103 @@ textarea#editor::placeholder{color:var(--text3)}
 .col-t{font-size:10px;color:var(--text3)}
 .pk{font-size:9px;background:#1a2e1a;color:var(--green-text);padding:1px 5px;border-radius:3px;font-weight:600}
 .fk{font-size:9px;background:var(--blue-dim);color:var(--blue-text);padding:1px 5px;border-radius:3px;font-weight:600}
+
+/* ===== Site nav ===== */
+nav {
+  position:sticky; top:0; z-index:200;
+  background:#0a0f1a;
+  border-bottom:1px solid #1a2d48;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px; height:58px;
+  font-family:'DM Sans',system-ui,sans-serif;
+}
+.nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.nav-logo-img { width:34px; height:34px; border-radius:9px; object-fit:contain; }
+.nav-wordmark { font-family:'Syne','DM Sans',system-ui,sans-serif; font-size:15px; font-weight:700; color:#e8f4ff; }
+.nav-wordmark span { color:#4ECDC4; }
+.nav-links { display:flex; align-items:center; gap:2px; }
+.nav-link { padding:5px 13px; border-radius:7px; font-size:13px; font-weight:500; color:#8ab0cc; transition:all .15s; text-decoration:none; display:inline-block; }
+.nav-link:hover { color:#e8f4ff; background:rgba(255,255,255,0.06); }
+.nav-link.active { color:#4ECDC4; }
+.nav-pill { padding:7px 16px; background:#1B5FA8; color:#fff; border-radius:8px; font-size:13px; font-weight:600; transition:all .15s; margin-left:6px; text-decoration:none; display:inline-block; }
+.nav-pill:hover { background:#2970c0; color:#fff; }
+.nav-ham { display:none; background:none; border:none; cursor:pointer; color:#8ab0cc; font-size:22px; padding:4px; }
+.nav-theme-btn { padding:5px 13px; border-radius:7px; font-size:13px; font-weight:500; color:#8ab0cc; background:none; border:1px solid #1a2d48; transition:all .15s; margin-left:4px; cursor:pointer; }
+.nav-theme-btn:hover { color:#e8f4ff; background:rgba(255,255,255,0.06); }
+[data-theme="light"] nav { background:#f6f9fc; border-bottom-color:#CBD5E0; }
+[data-theme="light"] .nav-wordmark { color:#001117; }
+[data-theme="light"] .nav-wordmark span { color:#117575; }
+[data-theme="light"] .nav-link { color:#2A4060; }
+[data-theme="light"] .nav-link:hover { color:#001117; background:rgba(0,0,0,0.05); }
+[data-theme="light"] .nav-link.active { color:#117575; }
+[data-theme="light"] .nav-theme-btn { color:#2A4060; border-color:#CBD5E0; }
+[data-theme="light"] .nav-theme-btn:hover { color:#001117; background:rgba(0,0,0,0.05); }
+[data-theme="light"] .nav-ham { color:#2A4060; }
+@media (max-width:640px) {
+  .nav-links { display:none; }
+  .nav-links.open { display:flex; flex-direction:column; position:absolute; top:58px; left:0; right:0; background:rgba(10,15,26,.98); border-bottom:1px solid #1a2d48; padding:10px 0; z-index:199; }
+  .nav-ham { display:flex; align-items:center; }
+  .layout { height:calc(100vh - 112px); }
+}
+
+/* ===== Site footer ===== */
+footer {
+  background:#0f1825; border-top:1px solid #1a2d48;
+  padding:48px 28px 36px;
+  font-family:'DM Sans',system-ui,sans-serif;
+  flex-shrink:0;
+}
+.footer-inner { max-width:1100px; margin:0 auto; }
+.footer-top { display:grid; grid-template-columns:1.2fr 1fr; gap:40px; padding-bottom:36px; border-bottom:1px solid #1a2d48; margin-bottom:24px; }
+.footer-logo-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.footer-logo-img { height:48px; width:auto; object-fit:contain; }
+.footer-tagline { font-size:12px; color:#5A7898; line-height:1.7; }
+.footer-col-title { font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#5A7898; margin-bottom:14px; }
+.footer-nav-list { display:flex; flex-direction:column; gap:10px; }
+.footer-nav-link { font-size:13px; color:#8ab0cc; text-decoration:none; transition:color .15s; display:block; }
+.footer-nav-link:hover { color:#4ECDC4; }
+.footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.footer-copy { font-size:12px; color:#5A7898; }
+.footer-live { display:flex; align-items:center; gap:7px; font-size:11px; color:#5A7898; }
+.live-dot { width:6px; height:6px; border-radius:50%; background:#2D9B6F; animation:blink-dot 3s ease infinite; }
+.content-policy { border-top:1px solid #1a2d48; margin-top:24px; padding-top:20px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start; }
+.cp-marker { font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#5A7898; padding-top:1px; white-space:nowrap; }
+.cp-text { font-size:11px; color:#5A7898; line-height:1.7; }
+.cp-text a { color:#5A7898; text-decoration:none; border-bottom:1px dotted rgba(90,120,152,0.5); }
+[data-theme="light"] footer { background:#FFFFFF; border-top-color:#CBD5E0; }
+[data-theme="light"] .footer-top { border-bottom-color:#CBD5E0; }
+[data-theme="light"] .footer-tagline,[data-theme="light"] .footer-col-title,[data-theme="light"] .footer-copy,[data-theme="light"] .footer-live,[data-theme="light"] .cp-marker,[data-theme="light"] .cp-text { color:#4A5568; }
+[data-theme="light"] .footer-nav-link { color:#2A4060; }
+[data-theme="light"] .footer-nav-link:hover { color:#117575; }
+[data-theme="light"] .content-policy { border-top-color:#CBD5E0; }
+[data-theme="light"] .cp-text a { color:#4A5568; }
+@keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+@media (max-width:640px) {
+  .footer-top { grid-template-columns:1fr; gap:28px; }
+  .footer-bottom { flex-direction:column; align-items:flex-start; }
+  .content-policy { grid-template-columns:1fr; }
+}
+/* ===== /Site nav and footer ===== */
 </style>
+<script>if(localStorage.getItem('hu-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else if(localStorage.getItem('hu-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');}</script>
 </head>
 <body>
+
+<nav>
+  <a class="nav-brand" href="/">
+    <img src="/assets/images/Icon.png" alt="Healthcare Uncharted" class="nav-logo-img">
+    <span class="nav-wordmark">Healthcare <span>Uncharted</span></span>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="/">Home</a>
+    <a class="nav-link active" href="/tools/">Tools</a>
+    <a class="nav-link" href="/learn/">Learn</a>
+    <a class="nav-link" href="/about/">About</a>
+    <a class="nav-pill" href="/lab/">Map &rarr;</a>
+    <button class="nav-theme-btn" id="themeToggle">Light</button>
+  </div>
+  <button class="nav-ham" id="navHam" aria-label="Menu">&#9776;</button>
+</nav>
 
 <div id="loading"><div class="spin"></div><div class="load-text">Initializing clinical database...</div></div>
 
@@ -191,7 +270,7 @@ textarea#editor::placeholder{color:var(--text3)}
           <button class="btn-run" onclick="runQuery()">▶ Run</button>
         </div>
       </div>
-      <textarea id="editor" placeholder="-- Write your SQL query here&#10;-- Ctrl+Enter to run&#10;-- Start with: SELECT * FROM patient LIMIT 5;"></textarea>
+      <textarea id="editor" aria-label="SQL query editor" placeholder="-- Write your SQL query here&#10;-- Ctrl+Enter to run&#10;-- Start with: SELECT * FROM patient LIMIT 5;"></textarea>
     </div>
 
     <div class="results-wrap">
@@ -573,6 +652,73 @@ function toggleT(i){
 }
 
 init();
+</script>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo-row">
+          <img src="/assets/images/logotransparency.png" alt="Healthcare Uncharted" class="footer-logo-img">
+        </div>
+        <div class="footer-tagline">A living resource for clinical informatics, healthcare data architecture, and the real story behind the systems that run modern medicine.<br><br>Built by David Eitel, RRT, MHA, MSRT, RRT-ACCS</div>
+      </div>
+      <div>
+        <div class="footer-col-title">Explore</div>
+        <div class="footer-nav-list">
+          <a class="footer-nav-link" href="/tools/">Tools</a>
+          <a class="footer-nav-link" href="/learn/">Learn</a>
+          <a class="footer-nav-link" href="/lab/">Map</a>
+          <a class="footer-nav-link" href="/about/">About</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">&copy; 2026 Healthcare Uncharted &middot; David Eitel &middot; Educational use &mdash; not clinical advice</div>
+      <div class="footer-live"><span class="live-dot"></span> Active development</div>
+    </div>
+    <div class="content-policy">
+      <span class="cp-marker">Source Policy</span>
+      <div class="cp-text">
+        All vendor-specific terminology, technical specifications, and system references on this site are derived from publicly available documentation &mdash; including
+        <a href="https://fhir.epic.com/" target="_blank" rel="noopener">fhir.epic.com</a>,
+        <a href="https://fhir.cerner.com/" target="_blank" rel="noopener">fhir.cerner.com</a>,
+        <a href="https://hl7.org/fhir/R4/" target="_blank" rel="noopener">HL7 FHIR R4</a>,
+        <a href="https://www.healthit.gov/" target="_blank" rel="noopener">ONC HealthIT.gov</a>, and
+        <a href="https://www.hhs.gov/" target="_blank" rel="noopener">HHS.gov</a>.
+        Each factual claim is linked to its source. This site does not reproduce proprietary materials, internal vendor training content, or licensed documentation.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const ham = document.getElementById('navHam');
+const navLinks = document.getElementById('navLinks');
+if (ham) {
+  ham.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+    ham.innerHTML = navLinks.classList.contains('open') ? '&#10005;' : '&#9776;';
+  });
+}
+</script>
+<script>
+const themeToggle = document.getElementById('themeToggle');
+function syncToggleLabel() {
+  themeToggle.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? 'Dark' : 'Light';
+}
+syncToggleLabel();
+themeToggle.addEventListener('click', () => {
+  const goingLight = document.documentElement.getAttribute('data-theme') !== 'light';
+  if (goingLight) {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('hu-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('hu-theme', 'dark');
+  }
+  syncToggleLabel();
+});
 </script>
 </body>
 </html>

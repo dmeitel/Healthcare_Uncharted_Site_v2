@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Erosion of Home Oxygen Reimbursement — Healthcare Uncharted</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0E0F;
+    --surface: #161618;
+    --surface2: #1E1E21;
+    --border: rgba(255,255,255,0.07);
+    --hover-tint: rgba(255,255,255,0.02);
+    --hover-tint-strong: rgba(255,255,255,0.03);
+    --red: #E8433A;
+    --red-dim: rgba(232,67,58,0.15);
+    --red-glow: rgba(232,67,58,0.4);
+    --amber: #F5A623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --teal: #2AB8B8;
+    --teal-dim: rgba(42,184,184,0.12);
+    --cream: #F0ECE3;
+    --cream-soft: rgba(240,236,227,0.8);
+    --dim: #7A7A85;
+    --dimmer: #3A3A42;
+
+    /* HU brand tokens — work across both color schemes */
+    --hu-blue: #1B5FA8;
+    --hu-teal: #4ECDC4;
+    --hu-canvas: #001117;
+    --hu-surface: #131c2e;
+    --hu-text-primary: #FFFFFF;
+    --hu-text-secondary: #C8D8E8;
+    --hu-text-muted: #5A7898;
+    --hu-line: #1c2d47;
+    --hu-accent: #4ECDC4;
+    --hu-accent-bg: rgba(78,205,196,0.08);
+    --hu-accent-border: rgba(78,205,196,0.3);
+    --hu-accent-border-strong: rgba(78,205,196,0.4);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #FAF7F0;
+      --surface: #FFFFFF;
+      --surface2: #F4F0E5;
+      --border: rgba(14,14,15,0.10);
+      --hover-tint: rgba(14,14,15,0.025);
+      --hover-tint-strong: rgba(14,14,15,0.04);
+      --red: #B33024;
+      --red-dim: rgba(179,48,36,0.10);
+      --red-glow: rgba(179,48,36,0.18);
+      --amber: #B8761A;
+      --amber-dim: rgba(184,118,26,0.12);
+      --teal: #117575;
+      --teal-dim: rgba(17,117,117,0.12);
+      --cream: #1F1F22;
+      --cream-soft: rgba(31,31,34,0.78);
+      --dim: #6A6A75;
+      --dimmer: #B8B8C2;
+
+      /* HU tokens flipped for light mode */
+      --hu-canvas: #FFFFFF;
+      --hu-surface: #F6F9FC;
+      --hu-text-primary: #001117;
+      --hu-text-secondary: #2A4060;
+      --hu-text-muted: #6B8299;
+      --hu-line: #E1E8EE;
+      --hu-accent: #117575;
+      --hu-accent-bg: rgba(17,117,117,0.08);
+      --hu-accent-border: rgba(17,117,117,0.35);
+      --hu-accent-border-strong: rgba(17,117,117,0.5);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    padding: 60px 60px 40px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(232,67,58,0.04) 0%, transparent 100%);
+  }
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 16px;
+  }
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 7vw, 96px);
+    line-height: 0.92;
+    letter-spacing: 1px;
+    color: var(--cream);
+    max-width: 800px;
+  }
+  .page-title span {
+    color: var(--red);
+    display: block;
+  }
+  .page-subtitle {
+    margin-top: 20px;
+    font-size: 15px;
+    color: var(--dim);
+    max-width: 580px;
+    line-height: 1.7;
+    font-style: italic;
+    font-weight: 400;
+  }
+  .header-stat {
+    position: absolute;
+    right: 60px;
+    top: 60px;
+    text-align: right;
+  }
+  .header-stat .big-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    line-height: 1;
+    color: var(--red);
+    text-shadow: 0 0 60px var(--red-glow);
+  }
+  .header-stat .big-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── MAIN CHART AREA ── */
+  .chart-wrapper {
+    padding: 48px 60px 48px 60px;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  /* ── WATERFALL CHART ── */
+  .waterfall {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* Y-axis grid lines */
+  .grid-lines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .grid-line {
+    position: absolute;
+    left: 140px;
+    right: 0;
+    height: 1px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+  }
+  .grid-line::before {
+    content: attr(data-label);
+    position: absolute;
+    left: -135px;
+    width: 120px;
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.5px;
+  }
+
+  /* Bar rows */
+  .bar-rows {
+    position: relative;
+    margin-left: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    height: 72px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 2px;
+  }
+  .bar-row:hover { background: var(--hover-tint); }
+  .bar-row.active { background: var(--hover-tint-strong); }
+
+  /* The actual bar */
+  .bar-track {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 32px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+    transition: filter 0.2s;
+  }
+  .bar-track.is-baseline {
+    background: rgba(42,184,184,0.15);
+    border: 1px solid rgba(42,184,184,0.35);
+  }
+  .bar-track.is-cut {
+    background: linear-gradient(90deg, rgba(232,67,58,0.7), rgba(232,67,58,0.45));
+    border: 1px solid rgba(232,67,58,0.5);
+    border-left: 3px solid var(--red);
+  }
+  .bar-track.is-cumulative {
+    background: rgba(245,166,35,0.08);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-right: 3px solid var(--amber);
+  }
+
+  .bar-row:hover .bar-track { filter: brightness(1.2); }
+  .bar-row.active .bar-track { filter: brightness(1.3); }
+
+  /* Connector line between bars */
+  .connector {
+    position: absolute;
+    right: 0;
+    top: 82px;
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(180deg, rgba(232,67,58,0.4), transparent);
+    pointer-events: none;
+  }
+
+  /* Year label on left */
+  .bar-year {
+    position: absolute;
+    left: -135px;
+    width: 120px;
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--amber);
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+  }
+  .bar-year small {
+    display: block;
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Dollar label on the right of bar */
+  .bar-label-right {
+    position: absolute;
+    left: calc(100% + 10px);
+    white-space: nowrap;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    max-width: 140px;
+    overflow: hidden;
+  }
+  .bar-dollar {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .bar-track.is-baseline ~ .bar-label-right .bar-dollar { color: var(--teal); }
+  .bar-track.is-cut ~ .bar-label-right .bar-dollar { color: var(--red); }
+  .bar-track.is-cumulative ~ .bar-label-right .bar-dollar { color: var(--amber); }
+
+  /* Event text hidden — detail is in the right panel */
+  .bar-event { display: none; }
+
+  /* ── TWO-COLUMN LAYOUT ── */
+  .chart-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    align-items: start;
+    border-top: 1px solid var(--border);
+  }
+  .chart-col {
+    min-width: 0;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  /* ── RIGHT DETAIL PANEL ── */
+  .detail-side {
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .detail-side-scroll {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--dimmer) transparent;
+  }
+  .detail-side-nav {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .panel-nav-btn {
+    flex: 1;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid var(--dimmer);
+    color: var(--dim);
+    padding: 8px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .panel-nav-btn:hover:not(:disabled) { color: var(--cream); border-color: var(--dim); }
+  .panel-nav-btn:disabled { opacity: 0.25; cursor: default; }
+
+  .detail-placeholder {
+    height: 100%;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    gap: 14px;
+    color: var(--dimmer);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1.7;
+  }
+  .detail-placeholder-icon { font-size: 28px; color: var(--dimmer); }
+
+  #detailContent { padding: 28px 24px; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .panel-year {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--red);
+    margin-bottom: 2px;
+  }
+  .panel-year.is-baseline { color: var(--teal); }
+  .panel-year.is-cumulative { color: var(--amber); }
+  .panel-type-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-bottom: 14px;
+  }
+  .panel-type-tag.is-baseline { background: rgba(42,184,184,0.12); color: var(--teal); border: 1px solid rgba(42,184,184,0.3); }
+  .panel-type-tag.is-cut { background: rgba(232,67,58,0.10); color: var(--red); border: 1px solid rgba(232,67,58,0.25); }
+  .panel-type-tag.is-cumulative { background: rgba(245,166,35,0.10); color: var(--amber); border: 1px solid rgba(245,166,35,0.25); }
+  .panel-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .panel-rate-line {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .panel-rate-line.is-cut { color: var(--red); }
+  .panel-rate-line.is-baseline { color: var(--teal); }
+  .panel-rate-line.is-cumulative { color: var(--amber); }
+  .panel-rate-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+  .panel-divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .panel-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+  .panel-section-label.amber { color: var(--amber); }
+  .panel-legislation {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    line-height: 1.55;
+    margin-bottom: 18px;
+    letter-spacing: 0.3px;
+  }
+  .panel-text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--cream-soft);
+    margin-bottom: 16px;
+  }
+  .panel-sources {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--dimmer);
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    margin: 40px 60px 0;
+    padding: 28px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--red);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    position: relative;
+    z-index: 1;
+  }
+  .summary-item { }
+  .summary-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    line-height: 1;
+    color: var(--red);
+  }
+  .summary-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  /* ── FOOTNOTE ── */
+  .footnote {
+    margin: 24px 60px 60px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--dimmer);
+    letter-spacing: 0.5px;
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 28px;
+    margin: 0 60px 32px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .legend-swatch {
+    width: 24px;
+    height: 10px;
+    border-radius: 1px;
+  }
+  .swatch-baseline { background: rgba(42,184,184,0.3); border: 1px solid var(--teal); }
+  .swatch-cut { background: rgba(232,67,58,0.5); border: 1px solid var(--red); }
+  .swatch-result { background: rgba(245,166,35,0.2); border: 1px solid var(--amber); }
+
+  /* click hint */
+  .click-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--dimmer);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 0 60px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .click-hint::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1px;
+    background: var(--dimmer);
+  }
+
+  @media (max-width: 900px) {
+    .page-header { padding: 36px 24px 28px; }
+    .header-stat { position: static; text-align: left; margin-top: 20px; }
+    .header-stat .big-num { font-size: 56px; }
+    .chart-wrapper { padding: 32px 24px; }
+    .bar-rows { margin-left: 80px; }
+    .bar-year { left: -75px; width: 62px; font-size: 10px; }
+    .grid-line { left: 80px; }
+    .grid-line::before { left: -75px; width: 62px; font-size: 9px; }
+    .bar-event { display: none; }
+    .summary-strip { grid-template-columns: repeat(2,1fr); margin: 24px; }
+    .legend { margin: 0 24px 24px; flex-wrap: wrap; gap: 14px; }
+    .click-hint { margin: 0 24px 16px; }
+    .chart-layout { grid-template-columns: 1fr; }
+    .detail-side { position: static; height: auto; max-height: 60vh; }
+    .bar-event { display: none; }
+    .footnote { margin: 16px 24px 40px; }
+  }
+
+  /* ===== Site nav ===== */
+  nav {
+    position:sticky; top:0; z-index:200;
+    background:#0a0f1a;
+    border-bottom:1px solid #1a2d48;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 28px; height:58px;
+    font-family:'DM Sans',system-ui,sans-serif;
+  }
+  .nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .nav-logo-img { width:34px; height:34px; border-radius:9px; object-fit:contain; }
+  .nav-wordmark { font-family:'Syne','DM Sans',system-ui,sans-serif; font-size:15px; font-weight:700; color:#e8f4ff; }
+  .nav-wordmark span { color:#4ECDC4; }
+  .nav-links { display:flex; align-items:center; gap:2px; }
+  .nav-link { padding:5px 13px; border-radius:7px; font-size:13px; font-weight:500; color:#8ab0cc; transition:all .15s; text-decoration:none; display:inline-block; }
+  .nav-link:hover { color:#e8f4ff; background:rgba(255,255,255,0.06); }
+  .nav-link.active { color:#4ECDC4; }
+  .nav-pill { padding:7px 16px; background:#1B5FA8; color:#fff; border-radius:8px; font-size:13px; font-weight:600; transition:all .15s; margin-left:6px; text-decoration:none; display:inline-block; }
+  .nav-pill:hover { background:#2970c0; color:#fff; }
+  .nav-ham { display:none; background:none; border:none; cursor:pointer; color:#8ab0cc; font-size:22px; padding:4px; }
+  .nav-theme-btn { padding:5px 13px; border-radius:7px; font-size:13px; font-weight:500; color:#8ab0cc; background:none; border:1px solid #1a2d48; transition:all .15s; margin-left:4px; cursor:pointer; }
+  .nav-theme-btn:hover { color:#e8f4ff; background:rgba(255,255,255,0.06); }
+  [data-theme="light"] nav { background:#f6f9fc; border-bottom-color:#CBD5E0; }
+  [data-theme="light"] .nav-wordmark { color:#001117; }
+  [data-theme="light"] .nav-wordmark span { color:#117575; }
+  [data-theme="light"] .nav-link { color:#2A4060; }
+  [data-theme="light"] .nav-link:hover { color:#001117; background:rgba(0,0,0,0.05); }
+  [data-theme="light"] .nav-link.active { color:#117575; }
+  [data-theme="light"] .nav-theme-btn { color:#2A4060; border-color:#CBD5E0; }
+  [data-theme="light"] .nav-theme-btn:hover { color:#001117; background:rgba(0,0,0,0.05); }
+  [data-theme="light"] .nav-ham { color:#2A4060; }
+  [data-theme="dark"] nav { background:#0a0f1a !important; border-bottom-color:#1a2d48 !important; }
+  [data-theme="dark"] .nav-wordmark { color:#e8f4ff !important; }
+  [data-theme="dark"] .nav-link { color:#8ab0cc !important; }
+  [data-theme="dark"] .nav-link.active { color:#4ECDC4 !important; }
+  @media (max-width:640px) {
+    .nav-links { display:none; }
+    .nav-links.open { display:flex; flex-direction:column; position:absolute; top:58px; left:0; right:0; background:rgba(10,15,26,.98); border-bottom:1px solid #1a2d48; padding:10px 0; z-index:199; }
+    .nav-ham { display:flex; align-items:center; }
+  }
+
+  .hu-guest-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--hu-accent-bg);
+    border: 1px solid var(--hu-accent-border);
+    color: var(--hu-accent);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+    padding: 5px 12px; border-radius: 20px;
+    margin-top: 18px;
+  }
+
+  .hu-bio {
+    background: var(--hu-surface);
+    border-top: 2px solid var(--hu-blue);
+    padding: 48px 32px;
+    margin-top: 48px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .hu-bio-inner {
+    max-width: 800px; margin: 0 auto;
+    display: grid; grid-template-columns: 88px 1fr; gap: 28px; align-items: start;
+  }
+  .hu-bio-avatar {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .hu-bio-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: top center;
+    border-radius: 50%;
+  }
+  .hu-bio-eyebrow {
+    font-size: 11px; color: var(--hu-accent); font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .hu-bio-name {
+    font-size: 20px; font-weight: 600; color: var(--hu-text-primary);
+    margin-bottom: 4px; line-height: 1.3;
+  }
+  .hu-bio-role {
+    font-size: 13px; color: var(--hu-accent); margin-bottom: 16px; font-weight: 500;
+  }
+  .hu-bio-text {
+    font-size: 14px; line-height: 1.75; color: var(--hu-text-secondary); margin: 0 0 18px;
+  }
+  .hu-bio-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--hu-accent); text-decoration: none; font-weight: 500;
+    border: 1px solid var(--hu-accent-border-strong);
+    padding: 8px 14px; border-radius: 6px;
+  }
+
+  /* ===== Site footer ===== */
+  footer {
+    background:#0f1825; border-top:1px solid #1a2d48;
+    padding:48px 28px 36px;
+    font-family:'DM Sans',system-ui,sans-serif;
+  }
+  .footer-inner { max-width:1100px; margin:0 auto; }
+  .footer-top { display:grid; grid-template-columns:1.2fr 1fr; gap:40px; padding-bottom:36px; border-bottom:1px solid #1a2d48; margin-bottom:24px; }
+  .footer-logo-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .footer-logo-img { height:48px; width:auto; object-fit:contain; }
+  .footer-tagline { font-size:12px; color:#4a6a8a; line-height:1.7; }
+  .footer-col-title { font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#4a6a8a; margin-bottom:14px; }
+  .footer-nav-list { display:flex; flex-direction:column; gap:10px; }
+  .footer-nav-link { font-size:13px; color:#8ab0cc; text-decoration:none; transition:color .15s; display:block; }
+  .footer-nav-link:hover { color:#4ECDC4; }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+  .footer-copy { font-size:12px; color:#4a6a8a; }
+  .footer-live { display:flex; align-items:center; gap:7px; font-size:11px; color:#4a6a8a; }
+  .live-dot { width:6px; height:6px; border-radius:50%; background:#2D9B6F; animation:blink-dot 3s ease infinite; }
+  .content-policy { border-top:1px solid #1a2d48; margin-top:24px; padding-top:20px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start; }
+  .cp-marker { font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#4a6a8a; padding-top:1px; white-space:nowrap; }
+  .cp-text { font-size:11px; color:#4a6a8a; line-height:1.7; }
+  .cp-text a { color:#4a6a8a; text-decoration:none; border-bottom:1px dotted rgba(74,106,138,0.5); }
+  [data-theme="light"] footer { background:#FFFFFF; border-top-color:#CBD5E0; }
+  [data-theme="light"] .footer-top { border-bottom-color:#CBD5E0; }
+  [data-theme="light"] .footer-tagline,[data-theme="light"] .footer-col-title,[data-theme="light"] .footer-copy,[data-theme="light"] .footer-live,[data-theme="light"] .cp-marker,[data-theme="light"] .cp-text { color:#4A5568; }
+  [data-theme="light"] .footer-nav-link { color:#2A4060; }
+  [data-theme="light"] .footer-nav-link:hover { color:#117575; }
+  [data-theme="light"] .content-policy { border-top-color:#CBD5E0; }
+  [data-theme="light"] .cp-text a { color:#4A5568; }
+  [data-theme="dark"] footer { background:#0f1825 !important; border-top-color:#1a2d48 !important; }
+  [data-theme="dark"] .footer-top { border-bottom-color:#1a2d48 !important; }
+  [data-theme="dark"] .footer-tagline,[data-theme="dark"] .footer-col-title,[data-theme="dark"] .footer-copy,[data-theme="dark"] .footer-live,[data-theme="dark"] .cp-marker,[data-theme="dark"] .cp-text { color:#4a6a8a !important; }
+  [data-theme="dark"] .footer-nav-link { color:#8ab0cc !important; }
+  [data-theme="dark"] .content-policy { border-top-color:#1a2d48 !important; }
+  @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+  @media (max-width:640px) {
+    .footer-top { grid-template-columns:1fr; gap:28px; }
+    .footer-bottom { flex-direction:column; align-items:flex-start; }
+    .content-policy { grid-template-columns:1fr; }
+  }
+  /* ===== /Site nav and footer ===== */
+</style>
+<script>if(localStorage.getItem('hu-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else if(localStorage.getItem('hu-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');}</script>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">
+    <img src="/assets/images/Icon.png" alt="Healthcare Uncharted" class="nav-logo-img">
+    <span class="nav-wordmark">Healthcare <span>Uncharted</span></span>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="/">Home</a>
+    <a class="nav-link" href="/tools/">Tools</a>
+    <a class="nav-link active" href="/learn/">Learn</a>
+    <a class="nav-link" href="/about/">About</a>
+    <a class="nav-pill" href="/lab/">Lab &rarr;</a>
+    <button class="nav-theme-btn" id="themeToggle">Light</button>
+  </div>
+  <button class="nav-ham" id="navHam" aria-label="Menu">&#9776;</button>
+</nav>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="eyebrow">Medicare Reimbursement Analysis · Home Oxygen Therapy · 1989–2025</div>
+  <h1 class="page-title">
+    Decades of<br>
+    <span>Deliberate Erosion</span>
+  </h1>
+  <p class="page-subtitle">How successive oxygen-specific legislation — the BBA, MMA, DRA, MIPPA, and competitive bidding — dismantled the financial foundation of home respiratory therapy, cutting Medicare oxygen reimbursement by over 75% and eliminating the economic model that funded RT clinical services in the home.</p>
+  <div class="hu-guest-pill">
+    Guest Contributor · Chrysalis Ashton, MSRC, RRT
+  </div>
+  <div class="header-stat">
+    <div class="big-num">−76%</div>
+    <div class="big-label">Cumulative rate reduction<br>from 1989 baseline to CBP floor</div>
+  </div>
+</div>
+
+<!-- CHART LAYOUT -->
+<div class="chart-layout">
+  <div class="chart-col">
+    <div style="padding-top:32px;"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch swatch-baseline"></div>Baseline / Reference Rate</div>
+      <div class="legend-item"><div class="legend-swatch swatch-cut"></div>Legislative Cut</div>
+      <div class="legend-item"><div class="legend-swatch swatch-result"></div>Resulting Rate</div>
+    </div>
+    <div class="click-hint">← Click a row to see what changed</div>
+    <!-- CHART -->
+    <div class="chart-wrapper">
+      <div class="waterfall" id="waterfall">
+        <div class="grid-lines" id="gridLines"></div>
+        <div class="bar-rows" id="barRows"></div>
+      </div>
+    </div>
+  </div>
+  <div class="detail-side" id="detailSide">
+    <div class="detail-side-scroll" id="detailSideScroll">
+      <div class="detail-placeholder" id="detailPlaceholder">
+        <div class="detail-placeholder-icon">◈</div>
+        <div>Select a row to explore<br>each legislative event</div>
+      </div>
+      <div id="detailContent" style="display:none"></div>
+    </div>
+    <div class="detail-side-nav">
+      <button class="panel-nav-btn" id="prevBtn" onclick="navigatePanel(-1)" disabled>← Previous</button>
+      <button class="panel-nav-btn" id="nextBtn" onclick="navigatePanel(1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY STRIP -->
+<div class="summary-strip">
+  <div class="summary-item">
+    <div class="summary-num">$320</div>
+    <div class="summary-label">1989 baseline<br>monthly rate</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-num">$77</div>
+    <div class="summary-label">CBP floor rate<br>(lowest recorded)</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-num">7</div>
+    <div class="summary-label">Oxygen-specific<br>legislative cuts since 1989</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-num">&gt;3,500</div>
+    <div class="summary-label">DME companies<br>closed since cuts began</div>
+  </div>
+</div>
+
+<div class="footnote">
+  Sources: GAO HEHS-97-120R (1997) · OIG OEI-03-91-00711 (1991) · OIG OEI-09-03-00160 (2004) · OIG OEI-09-04-00420 (2005) · GAO-11-56 (2011) · GAO-15-63 (2014) · CMS Federal Register Nov. 2006 (71 FR 65884) · Lewarski JS (2023) · AARC Kaufman Survey (2011) · Dobson DaVanzo Survey (2017) ·
+  Note: Monthly rates shown represent the approximate national average Medicare allowable for home oxygen therapy (stationary concentrator E1390 plus portable contents), the primary proxy for total oxygen reimbursement. All events shown are oxygen-specific legislative or regulatory actions. Actual rates varied by state and modality. BBA = Balanced Budget Act. MMA = Medicare Modernization Act. DRA = Deficit Reduction Act. MIPPA = Medicare Improvements for Patients and Providers Act. CBP = Competitive Bidding Program.
+</div>
+
+<!-- ===== Healthcare Uncharted: About the author ===== -->
+<div class="hu-bio">
+  <div class="hu-bio-inner">
+    <div class="hu-bio-avatar"><img src="/assets/images/chrysalis_ashton.jpg" alt="Chrysalis Ashton"></div>
+    <div>
+      <div class="hu-bio-eyebrow">About the author</div>
+      <div class="hu-bio-name">Chrysalis Ashton, MSRC, RRT</div>
+      <div class="hu-bio-role">Respiratory Therapist · Post-Acute Care Advocate</div>
+      <p class="hu-bio-text">Chrysalis Ashton, MSRC, RRT, is a respiratory therapist with 13 years of experience and a dedicated advocate for the post-acute care profession. After beginning her career in acute care, she found her passion for home care and DME, where she has served in several roles, including Clinical Director and Compliance Officer. Chrysalis actively advances the respiratory profession by coordinating partnerships with RT education programs, mentoring future clinicians, and volunteering as an AARC Delegate and home care chair-elect for her state respiratory society. She is a graduate of the AARC's inaugural Emerging Leaders Program (2024). Chrysalis regularly volunteers with several advocacy organizations, such as the COPD Foundation, where she is a State Captain, and AAHomecare, where she participates in several committees and work groups.</p>
+      <a class="hu-bio-link" href="https://www.linkedin.com/in/chrysalis-ashton-msrc-rrt-23a033bb" target="_blank" rel="noopener noreferrer">Connect on LinkedIn →</a>
+    </div>
+  </div>
+</div>
+<!-- ===== /Healthcare Uncharted: About the author ===== -->
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo-row">
+          <img src="/assets/images/logotransparency.png" alt="Healthcare Uncharted" class="footer-logo-img">
+        </div>
+        <div class="footer-tagline">A living resource for clinical informatics, healthcare data architecture, and the real story behind the systems that run modern medicine.<br><br>Built by David Eitel, RRT, MHA, MSRT, RRT-ACCS</div>
+      </div>
+      <div>
+        <div class="footer-col-title">Explore</div>
+        <div class="footer-nav-list">
+          <a class="footer-nav-link" href="/tools/">Tools</a>
+          <a class="footer-nav-link" href="/learn/">Learn</a>
+          <a class="footer-nav-link" href="/lab/">Map</a>
+          <a class="footer-nav-link" href="/about/">About</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">&copy; 2026 Healthcare Uncharted &middot; David Eitel &middot; Educational use &mdash; not clinical advice</div>
+      <div class="footer-live"><span class="live-dot"></span> Active development</div>
+    </div>
+    <div class="content-policy">
+      <span class="cp-marker">Source Policy</span>
+      <div class="cp-text">
+        All vendor-specific terminology, technical specifications, and system references on this site are derived from publicly available documentation &mdash; including
+        <a href="https://fhir.epic.com/" target="_blank" rel="noopener">fhir.epic.com</a>,
+        <a href="https://fhir.cerner.com/" target="_blank" rel="noopener">fhir.cerner.com</a>,
+        <a href="https://hl7.org/fhir/R4/" target="_blank" rel="noopener">HL7 FHIR R4</a>,
+        <a href="https://www.healthit.gov/" target="_blank" rel="noopener">ONC HealthIT.gov</a>, and
+        <a href="https://www.hhs.gov/" target="_blank" rel="noopener">HHS.gov</a>.
+        Each factual claim is linked to its source. This site does not reproduce proprietary materials, internal vendor training content, or licensed documentation.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+// All dollar values represent approximate national average monthly Medicare
+// allowable for stationary home oxygen concentrator (E1390 equivalent),
+// a consistent proxy for the overall home oxygen payment level.
+
+const EVENTS = [
+  {
+    year: "1989",
+    label: "OBRA Fee\nSchedule",
+    type: "baseline",
+    rate: 320,
+    cutPct: null,
+    cutDollar: null,
+    title: "OBRA 1987 — DME Fee Schedule Takes Effect",
+    legislation: "Omnibus Budget Reconciliation Act of 1987 (OBRA), effective January 1989",
+    detail: "In 1989, Medicare implemented the first formal DME fee schedule for home oxygen, based on average state payments from 1986. The modality-neutral payment structure meant gaseous cylinders, liquid oxygen, and concentrators all received the same monthly rate — making the lower-cost concentrator financially equivalent to more expensive delivery systems. GAO confirmed the national average monthly rate inclusive of stationary equipment and portable contents was approximately $320/month.",
+    impact: "At $320/month, providers operated with enough margin to send a respiratory therapist for a monthly clinical visit and still generate a reasonable return on the equipment rental. This \"hidden safety net\" of RT care — funded by oxygen equipment revenue — was the economic foundation of home respiratory therapy through the late 1980s and 1990s.",
+    sources: "GAO HEHS-97-120R (1997); OIG OEI-03-91-00711 (1991); CMS Federal Register; Lewarski (2023)"
+  },
+  {
+    year: "1997",
+    label: "BBA\n−30%",
+    type: "cut",
+    rate: 224,
+    cutPct: 30,
+    cutDollar: 96,
+    title: "Balanced Budget Act — 30% Cut to Home Oxygen",
+    legislation: "Balanced Budget Act of 1997 (BBA), Pub. L. 105-33",
+    detail: "Congress delivered the first major direct cut to home oxygen reimbursement as part of the broader BBA deficit reduction package. The monthly oxygen allowable dropped approximately 30%, from ~$320 to ~$224. The BBA also created Medicare Advantage (Part C), allowing private MA plans to negotiate rates independently — often below traditional Medicare — further compressing effective reimbursement in those markets.",
+    impact: "This single cut eliminated roughly one-third of the margin that had been funding RT clinical visits. Many providers began scaling back monthly visit frequency and reducing clinical staff for the first time. The cross-subsidy model supporting home RT services began to fracture.",
+    sources: "GAO HEHS-97-120R (1997); Lewarski (2023); CMS Federal Register"
+  },
+  {
+    year: "2005",
+    label: "MMA Rate\nReduction",
+    type: "cut",
+    rate: 196,
+    cutPct: 13,
+    cutDollar: 28,
+    title: "MMA 2003 — FEHB-Based Rate Reduction, Effective April 2005",
+    legislation: "Medicare Prescription Drug, Improvement, and Modernization Act of 2003 (MMA), Pub. L. 108-173",
+    detail: "The MMA required CMS to reduce home oxygen payment rates to align with median Federal Employees Health Benefits (FEHB) program rates, as determined by OIG survey data. OIG found FEHB and Medicare+Choice plans paid 10–23% less than Medicare fee schedule rates for identical oxygen equipment. CMS implemented the reductions in April 2005, setting new state-by-state fee schedule amounts for oxygen concentrators (E1390) in the range of $194–$200/month nationally. The GAO (GAO-11-56) confirmed that oxygen payment rates were cut twice between 1997 and 2009 — by the MMA and the DRA.",
+    impact: "The MMA cut closed the gap between Medicare and private-payer rates but eliminated the remaining margin that had sustained even periodic RT clinical visits for oxygen patients. Providers increasingly reduced or eliminated routine clinical follow-up, shifting to a pure delivery model.",
+    sources: "OIG OEI-09-03-00160 (2004); OIG OEI-09-04-00420 (2005); GAO-11-56 (2011); MMA Pub. L. 108-173"
+  },
+  {
+    year: "2009",
+    label: "DRA 36-Month\nRental Cap",
+    type: "cut",
+    rate: 155,
+    cutPct: 21,
+    cutDollar: 41,
+    title: "Deficit Reduction Act — 36-Month Oxygen Rental Cap",
+    legislation: "Deficit Reduction Act of 2005 (DRA), Pub. L. 109-171; provisions effective January 2009",
+    detail: "The DRA capped Medicare rental payments for home oxygen equipment at 36 months. After 36 monthly payments, title to the equipment transferred to the patient and all Medicare payments ceased — even though the vast majority of oxygen patients require the therapy for life. CMS projected a $500 million reduction in home oxygen reimbursement. The effective lifetime-averaged monthly rate collapsed, as the revenue stream funding ongoing service now terminated entirely. Liquid oxygen — which requires continuous delivery service and cannot be \"owned\" by a patient the same way a concentrator can — was particularly devastated, as the capped model provided no mechanism to compensate ongoing LOX delivery after month 36.",
+    impact: "The 36-month cap was the structural blow that ended the ongoing RT clinical visit model for long-term oxygen patients. After month 36, providers had zero revenue yet retained service obligations in the eyes of patients and prescribers. Liquid oxygen became economically nonviable across most of the country, beginning a rapid market exit that the SOAR Act seeks to reverse.",
+    sources: "DRA Pub. L. 109-171; CMS Federal Register Nov. 2006 (71 FR 65884); GAO-11-56 (2011); Lewarski (2023)"
+  },
+  {
+    year: "2009",
+    label: "MIPPA\n−9.5%",
+    type: "cut",
+    rate: 140,
+    cutPct: 9.5,
+    cutDollar: 15,
+    title: "MIPPA — 9.5% Across-the-Board HME Reduction",
+    legislation: "Medicare Improvements for Patients and Providers Act of 2008 (MIPPA), Pub. L. 110-275",
+    detail: "MIPPA imposed an immediate 9.5% reduction in Medicare reimbursement for home medical equipment nationwide, including oxygen — equivalent to $3–4 billion in total HME reimbursement over five years. The cut was a budget offset, not driven by any evidence of overpayment specific to oxygen. It took effect simultaneously with the DRA rental cap, compounding the financial shock to oxygen providers in a single year. MIPPA also mandated the National Competitive Bidding program — the mechanism that would ultimately drive oxygen rates to their historic floor.",
+    impact: "Applied on top of the DRA rental cap in the same year, MIPPA's 9.5% reduction pushed many oxygen providers below the break-even threshold for maintaining any clinical RT staffing. The dual 2009 shock accelerated the staffing reductions that the AARC Kaufman Survey would document in 2011.",
+    sources: "MIPPA Pub. L. 110-275; Lewarski (2023); AARC Kaufman Survey (2011); CMS.gov"
+  },
+  {
+    year: "2011",
+    label: "CBP Round 1\n−32%",
+    type: "cut",
+    rate: 95,
+    cutPct: 32,
+    cutDollar: 45,
+    title: "Competitive Bidding Round 1 Rebid — 32% Reduction in 9 CBAs",
+    legislation: "CMS Competitive Bidding Program Round 1 Rebid, effective January 1, 2011",
+    detail: "The National Competitive Bidding program's first fully implemented round launched in 9 metropolitan CBAs on January 1, 2011, producing a 32% reduction in HME payments. Oxygen stationary concentrator rates fell to approximately $77–95/month in CBA markets — the lowest in the history of the Medicare oxygen benefit. The AARC Kaufman Survey (September 2011) documented the immediate workforce impact: 61% of companies in Round 1 markets decreased their RT staff; 61% decreased patient visit frequency; 33% reduced the number of modalities their RTs visited.",
+    impact: "CBP Round 1 was the point at which the economics of home RT clinical services conclusively collapsed. At $77–95/month, no provider could absorb the cost of a clinical RT visit. The Kaufman Survey data provided the first quantified, direct evidence that reimbursement policy caused RT workforce reductions and reduced patient access to clinical oversight.",
+    sources: "Lewarski (2023); AARC Kaufman Survey (Sept. 2011); CMS CBP Round 1 Rebid results; GAO-15-63"
+  },
+  {
+    year: "2013",
+    label: "CBP Round 2\n−45%",
+    type: "cut",
+    rate: 77,
+    cutPct: 19,
+    cutDollar: 18,
+    title: "Competitive Bidding Round 2 — Rates Hit $77/Month Floor, 100 CBAs",
+    legislation: "CMS Competitive Bidding Program Round 2, effective July 1, 2013",
+    detail: "CBP Round 2 expanded competitive bidding to 100 metropolitan areas, producing a 45% reduction ($12.84 billion over 3 years) in select HME payments. In CBA markets, oxygen stationary rates bottomed at approximately $77/month — a 76% reduction from the 1989 baseline in nominal dollars, and far steeper in inflation-adjusted terms. By 2017, documented consequences included: 52% of Medicare beneficiaries reporting problems accessing DME (Dobson DaVanzo); 89% of case managers reporting DME access delays; the national DME supplier count declining ~35% over 8 years; and most U.S. markets losing liquid oxygen suppliers entirely.",
+    impact: "At $77/month, providing a home oxygen concentrator with any meaningful clinical service attached was mathematically impossible. The liquid oxygen market effectively collapsed — with many states eventually having zero LOX suppliers. The \"hidden safety net\" of RT clinical visits that had prevented hospitalizations for decades was eliminated, setting the stage for the SOAR Act.",
+    sources: "Lewarski (2023); Dobson DaVanzo Survey (2017); CMS CBP Round 2 results; Jacobs et al., Ann ATS (2018); GAO-15-63"
+  },
+  {
+    year: "2024",
+    label: "Gap Period\n(Post-CBP)",
+    type: "cumulative",
+    rate: 105,
+    cutPct: null,
+    cutDollar: null,
+    title: "Current Gap Period — Post-CBP Blended Rates",
+    legislation: "All CBP contracts expired December 31, 2023; CMS gap-period rate methodology per 42 CFR 414.210(g)",
+    detail: "All Round 2021 CBP contracts expired on December 31, 2023, initiating the current gap period. CMS adjusts rates using a blended methodology based on prior CBP single payment amounts, increased by the projected CPI-U change. Effective rates have recovered modestly above the $77 CBP floor but remain far below the 1989 baseline — and well below what is needed to support clinical RT involvement with oxygen patients. The SOAR Act (S. 1406 / H.R. 2902), reintroduced in April 2025, would permanently remove oxygen from competitive bidding, fix the liquid oxygen payment structure, and — for the first time in Medicare history — create a statutory add-on payment for respiratory therapist services in the home oxygen setting.",
+    impact: "The current rate environment, while slightly improved from the CBP floor, remains structurally inadequate. Without the SOAR Act or equivalent reform, oxygen returns to Round 2028 competitive bidding, threatening another round of rate compression and supplier market exit — particularly for liquid oxygen.",
+    sources: "CMS DMEPOS CBP gap-period updates (2024); 42 CFR 414.210(g); AARC SOAR Act advocacy materials; Sen. Cassidy press release, April 2025"
+  }
+];
+
+// ─── CHART RENDERING ────────────────────────────────────────────────────────
+const MAX_RATE = 360;
+const CHART_HEIGHT_PER_ROW = 72;
+
+function pct(val) {
+  return (val / MAX_RATE * 100).toFixed(2) + '%';
+}
+
+function renderChart() {
+  const barRowsEl = document.getElementById('barRows');
+  const gridLinesEl = document.getElementById('gridLines');
+  const chartHeight = EVENTS.length * CHART_HEIGHT_PER_ROW;
+
+  // Grid lines at $0, $100, $200, $300, $320
+  const gridAmounts = [0, 100, 200, 320];
+  gridLinesEl.style.height = chartHeight + 'px';
+
+  gridAmounts.forEach(amt => {
+    const line = document.createElement('div');
+    line.className = 'grid-line';
+    line.style.top = (chartHeight - (amt / MAX_RATE * chartHeight)) + 'px';
+    line.setAttribute('data-label', '$' + amt + '/mo');
+    gridLinesEl.appendChild(line);
+  });
+
+  // Bars
+  EVENTS.forEach((ev, i) => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.dataset.idx = i;
+
+    // Year label
+    const yearEl = document.createElement('div');
+    yearEl.className = 'bar-year';
+    const lines = ev.label.split('\n');
+    yearEl.innerHTML = `<strong>${ev.year}</strong>` + (lines[1] ? `<small>${lines[1]}</small>` : '');
+    row.appendChild(yearEl);
+
+    // The bar
+    const track = document.createElement('div');
+    track.className = `bar-track is-${ev.type}`;
+    track.style.width = pct(ev.rate);
+
+    // For cut bars, show the reduction as a strikethrough segment
+    if (ev.type === 'cut' && ev.cutDollar) {
+      const prevRate = EVENTS[i - 1].rate;
+      track.style.width = pct(prevRate);
+      track.style.background = 'none';
+      track.style.border = 'none';
+      track.style.overflow = 'visible';
+
+      // Remaining (new lower) rate
+      const remaining = document.createElement('div');
+      remaining.style.cssText = `
+        position:absolute; left:0; top:0; bottom:0;
+        width:${(ev.rate / prevRate * 100).toFixed(2)}%;
+        background:linear-gradient(90deg, rgba(245,166,35,0.15), rgba(245,166,35,0.08));
+        border:1px solid rgba(245,166,35,0.25);
+        border-right:none;
+        border-radius:2px 0 0 2px;
+      `;
+      track.appendChild(remaining);
+
+      // Cut segment (red)
+      const cutSeg = document.createElement('div');
+      const cutWidth = (ev.cutDollar / prevRate * 100).toFixed(2);
+      cutSeg.style.cssText = `
+        position:absolute;
+        right:0; top:0; bottom:0;
+        width:${cutWidth}%;
+        background:linear-gradient(90deg, rgba(232,67,58,0.15), rgba(232,67,58,0.5));
+        border:1px solid rgba(232,67,58,0.5);
+        border-left:3px solid var(--red);
+        border-radius:0 2px 2px 0;
+        display:flex; align-items:center; justify-content:center;
+        overflow:hidden;
+      `;
+      // Scissors / cut label inside
+      const cutLabel = document.createElement('span');
+      cutLabel.style.cssText = `
+        font-family:'DM Mono',monospace;
+        font-size:10px;
+        color:var(--red);
+        letter-spacing:1px;
+        white-space:nowrap;
+        padding:0 6px;
+      `;
+      cutLabel.textContent = `−${ev.cutPct}%`;
+      cutSeg.appendChild(cutLabel);
+      track.appendChild(cutSeg);
+
+    } else {
+      // baseline or cumulative — solid bar
+      track.style.width = pct(ev.rate);
+    }
+
+    row.appendChild(track);
+
+    // Label to the right
+    const labelRight = document.createElement('div');
+    labelRight.className = 'bar-label-right';
+
+    let barWidth = ev.type === 'cut' ? pct(EVENTS[i-1] ? EVENTS[i-1].rate : ev.rate) : pct(ev.rate);
+
+    const dollar = document.createElement('div');
+    dollar.className = 'bar-dollar';
+    dollar.textContent = ev.type === 'cut'
+      ? `$${ev.rate} /mo`
+      : ev.type === 'baseline'
+        ? `$${ev.rate} /mo`
+        : `~$${ev.rate} /mo`;
+
+    const eventLabel = document.createElement('div');
+    eventLabel.className = 'bar-event';
+    eventLabel.textContent = ev.title;
+
+    labelRight.appendChild(dollar);
+    labelRight.appendChild(eventLabel);
+
+    // Position label after the bar
+    labelRight.style.left = `calc(${ev.type === 'cut' ? pct(EVENTS[i-1]?.rate || ev.rate) : pct(ev.rate)} + 12px)`;
+    row.appendChild(labelRight);
+
+    // Click handler
+    row.addEventListener('click', () => toggleDetail(i, row));
+
+    barRowsEl.appendChild(row);
+  });
+}
+
+// ─── DETAIL PANEL ────────────────────────────────────────────────────────────
+let activeIdx = null;
+
+function toggleDetail(idx, row) {
+  activeIdx = idx;
+
+  document.querySelectorAll('.bar-row').forEach(r => r.classList.remove('active'));
+  row.classList.add('active');
+
+  const ev = EVENTS[idx];
+  const prevRate = idx > 0 ? EVENTS[idx - 1].rate : null;
+
+  let rateLine = '', rateSub = '', typeLabel = '';
+  if (ev.type === 'baseline') {
+    rateLine = `$${ev.rate}/mo`;
+    rateSub = 'Fee schedule baseline established';
+    typeLabel = 'Baseline';
+  } else if (ev.type === 'cut') {
+    rateLine = `−${ev.cutPct}% &nbsp;/&nbsp; −$${ev.cutDollar}/mo`;
+    rateSub = `$${prevRate} → $${ev.rate} per month`;
+    typeLabel = 'Legislative Cut';
+  } else {
+    rateLine = `~$${ev.rate}/mo`;
+    rateSub = 'Current approximate rate';
+    typeLabel = 'Current Period';
+  }
+
+  document.getElementById('detailPlaceholder').style.display = 'none';
+
+  const content = document.getElementById('detailContent');
+  content.style.display = 'block';
+  content.innerHTML = `
+    <div class="panel-year is-${ev.type}">${ev.year}</div>
+    <div class="panel-type-tag is-${ev.type}">${typeLabel}</div>
+    <div class="panel-title">${ev.title}</div>
+    <div class="panel-rate-line is-${ev.type}">${rateLine}</div>
+    <div class="panel-rate-sub">${rateSub}</div>
+    <div class="panel-divider"></div>
+    <div class="panel-section-label">Legislation / Action</div>
+    <div class="panel-legislation">${ev.legislation}</div>
+    <div class="panel-section-label">What Happened</div>
+    <div class="panel-text">${ev.detail}</div>
+    <div class="panel-divider"></div>
+    <div class="panel-section-label amber">Clinical Consequence</div>
+    <div class="panel-text">${ev.impact}</div>
+    <div class="panel-sources">Sources: ${ev.sources}</div>
+  `;
+
+  document.getElementById('detailSideScroll').scrollTop = 0;
+
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === EVENTS.length - 1;
+}
+
+function navigatePanel(dir) {
+  const newIdx = activeIdx + dir;
+  if (newIdx < 0 || newIdx >= EVENTS.length) return;
+  const rows = document.querySelectorAll('.bar-row');
+  toggleDetail(newIdx, rows[newIdx]);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+renderChart();
+
+// Auto-open first row after brief delay
+setTimeout(() => {
+  const firstRow = document.querySelector('.bar-row');
+  if (firstRow) toggleDetail(0, firstRow);
+}, 600);
+</script>
+<script>
+const ham = document.getElementById('navHam');
+const navLinks = document.getElementById('navLinks');
+if (ham) {
+  ham.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+    ham.innerHTML = navLinks.classList.contains('open') ? '&#10005;' : '&#9776;';
+  });
+}
+</script>
+<script>
+const themeToggle = document.getElementById('themeToggle');
+function syncToggleLabel() {
+  themeToggle.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? 'Dark' : 'Light';
+}
+syncToggleLabel();
+themeToggle.addEventListener('click', () => {
+  const goingLight = document.documentElement.getAttribute('data-theme') !== 'light';
+  if (goingLight) {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('hu-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('hu-theme', 'dark');
+  }
+  syncToggleLabel();
+});
+</script>
+</body>
+</html>
