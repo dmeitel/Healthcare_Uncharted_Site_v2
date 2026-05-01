@@ -57,6 +57,20 @@ eleventyConfig.addPassthroughCopy({"src/learn/oxygen-payment-cuts": "learn/oxyge
     });
   });
 
+  // ── LEARN MODULES collection ─────────────────────────────────────────
+  // Counts standalone learn pages (passthrough copies — no frontmatter)
+  // by matching their output URL pattern. Excludes the index and talks.
+  eleventyConfig.addCollection("learnModules", function(collection) {
+    return collection.getAll().filter(item => {
+      if (!item.url) return false;
+      return (
+        item.url.includes("/learn/") &&
+        !item.url.includes("/talks/") &&
+        item.url !== "/learn/"
+      );
+    });
+  });
+
   // ── FILTERS ──────────────────────────────────────────────────────────
   eleventyConfig.addFilter("json", function(value) {
     return JSON.stringify(value);
