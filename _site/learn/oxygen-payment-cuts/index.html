@@ -159,14 +159,14 @@
     padding: 48px 60px 48px 60px;
     position: relative;
     z-index: 1;
-    overflow: hidden;
+    overflow: visible;
   }
 
   /* ── WATERFALL CHART ── */
   .waterfall {
     position: relative;
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
   }
 
   /* Y-axis grid lines */
@@ -184,17 +184,7 @@
     display: flex;
     align-items: center;
   }
-  .grid-line::before {
-    content: attr(data-label);
-    position: absolute;
-    left: -135px;
-    width: 120px;
-    text-align: right;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--dim);
-    letter-spacing: 0.5px;
-  }
+  .grid-line::before { display: none; }
 
   /* Bar rows */
   .bar-rows {
@@ -271,6 +261,10 @@
     color: var(--amber);
     letter-spacing: 0.5px;
     line-height: 1.2;
+    background: var(--bg);
+    padding: 2px 3px;
+    border-radius: 2px;
+    z-index: 1;
   }
   .bar-year small {
     display: block;
@@ -315,13 +309,14 @@
     min-width: 0;
     border-right: 1px solid var(--border);
     overflow: hidden;
+    padding-right: 80px;
   }
 
   /* ── RIGHT DETAIL PANEL ── */
   .detail-side {
     position: sticky;
-    top: 58px;
-    height: calc(100vh - 58px);
+    top: 64px;
+    height: calc(100vh - 64px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -492,6 +487,58 @@
     line-height: 1.5;
   }
 
+  /* ── RATE CONTEXT BOX ── */
+  .rate-context {
+    margin: 20px 60px 0;
+    padding: 14px 18px;
+    background: var(--amber-dim);
+    border: 1px solid rgba(245,166,35,0.25);
+    border-left: 3px solid rgba(245,166,35,0.5);
+    border-radius: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .rate-context-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    opacity: 0.7;
+    margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rate-context-label::before {
+    content: 'ⓘ';
+    font-size: 11px;
+  }
+  .rate-context-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    opacity: 0.8;
+    line-height: 1.75;
+    letter-spacing: 0.2px;
+  }
+  .rate-context-source {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--amber);
+    opacity: 0.5;
+    margin-top: 10px;
+    letter-spacing: 0.3px;
+    line-height: 1.6;
+  }
+  .rate-context-source a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(245,166,35,0.4);
+    transition: opacity 0.15s;
+  }
+  .rate-context-source a:hover { opacity: 0.8; }
+
   /* ── FOOTNOTE ── */
   .footnote {
     margin: 24px 60px 60px;
@@ -534,6 +581,89 @@
   .swatch-cut { background: rgba(232,67,58,0.5); border: 1px solid var(--red); }
   .swatch-result { background: rgba(245,166,35,0.2); border: 1px solid var(--amber); }
 
+  /* ── INFLATION TOGGLE ── */
+  .inflation-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 20px 60px 0;
+    flex-wrap: wrap;
+  }
+  .inflation-row-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-right: 4px;
+  }
+  .infl-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 2px;
+    background: none;
+    border: 1px solid var(--dimmer);
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .infl-btn:hover { color: var(--cream); border-color: var(--dim); }
+  .infl-btn.active {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border-color: rgba(245,166,35,0.4);
+  }
+  .infl-note {
+    display: none;
+    margin: 8px 60px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--amber);
+    opacity: 0.8;
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+  }
+  .infl-note.visible { display: block; }
+
+  /* ── X-AXIS ── */
+  .x-axis {
+    position: relative;
+    margin-left: 140px;
+    border-top: 1px solid var(--border);
+    padding-top: 5px;
+    padding-bottom: 10px;
+  }
+  .x-tick {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .x-tick-mark {
+    width: 1px;
+    height: 5px;
+    background: var(--dimmer);
+  }
+  .x-tick-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+  .v-grid-line {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+
   /* click hint */
   .click-hint {
     font-family: 'DM Mono', monospace;
@@ -562,15 +692,19 @@
     .bar-rows { margin-left: 80px; }
     .bar-year { left: -75px; width: 62px; font-size: 10px; }
     .grid-line { left: 80px; }
-    .grid-line::before { left: -75px; width: 62px; font-size: 9px; }
+    .grid-line::before { display: none; }
     .bar-event { display: none; }
     .summary-strip { grid-template-columns: repeat(2,1fr); margin: 24px; }
     .legend { margin: 0 24px 24px; flex-wrap: wrap; gap: 14px; }
+    .inflation-row { margin: 14px 24px 0; }
+    .infl-note { margin: 6px 24px 0; }
+    .x-axis { margin-left: 80px; }
     .click-hint { margin: 0 24px 16px; }
     .chart-layout { grid-template-columns: 1fr; }
     .detail-side { position: static; height: auto; max-height: 60vh; }
     .bar-event { display: none; }
     .footnote { margin: 16px 24px 40px; }
+    .rate-context { margin: 14px 24px 0; }
   }
 
   /* ===== Site nav ===== */
@@ -579,7 +713,7 @@
     background:#0a0f1a;
     border-bottom:1px solid #1a2d48;
     display:flex; align-items:center; justify-content:space-between;
-    padding:0 28px; height:58px;
+    padding:0 28px; height:64px;
     font-family:'DM Sans',system-ui,sans-serif;
   }
   .nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
@@ -593,8 +727,8 @@
   .nav-pill { padding:7px 16px; background:#1B5FA8; color:#fff; border-radius:8px; font-size:13px; font-weight:600; transition:all .15s; margin-left:6px; text-decoration:none; display:inline-block; }
   .nav-pill:hover { background:#2970c0; color:#fff; }
   .nav-ham { display:none; background:none; border:none; cursor:pointer; color:#8ab0cc; font-size:22px; padding:4px; }
-  .nav-theme-btn { padding:5px 13px; border-radius:7px; font-size:13px; font-weight:500; color:#8ab0cc; background:none; border:1px solid #1a2d48; transition:all .15s; margin-left:4px; cursor:pointer; }
-  .nav-theme-btn:hover { color:#e8f4ff; background:rgba(255,255,255,0.06); }
+  .nav-theme-btn { padding:5px 10px; border-radius:7px; font-size:16px; font-weight:600; line-height:1; color:#8ab0cc; background:none; border:1px solid #1a2d48; transition:all .15s; margin-left:4px; cursor:pointer; }
+  .nav-theme-btn:hover { color:#4ECDC4; border-color:rgba(78,205,196,.5); background:rgba(78,205,196,.07); }
   [data-theme="light"] nav { background:#f6f9fc; border-bottom-color:#CBD5E0; }
   [data-theme="light"] .nav-wordmark { color:#001117; }
   [data-theme="light"] .nav-wordmark span { color:#117575; }
@@ -610,7 +744,7 @@
   [data-theme="dark"] .nav-link.active { color:#4ECDC4 !important; }
   @media (max-width:640px) {
     .nav-links { display:none; }
-    .nav-links.open { display:flex; flex-direction:column; position:absolute; top:58px; left:0; right:0; background:rgba(10,15,26,.98); border-bottom:1px solid #1a2d48; padding:10px 0; z-index:199; }
+    .nav-links.open { display:flex; flex-direction:column; position:absolute; top:64px; left:0; right:0; background:rgba(10,15,26,.98); border-bottom:1px solid #1a2d48; padding:10px 0; z-index:199; }
     .nav-ham { display:flex; align-items:center; }
   }
 
@@ -726,7 +860,7 @@
     <a class="nav-link active" href="/learn/">Learn</a>
     <a class="nav-link" href="/about/">About</a>
     <a class="nav-pill" href="/lab/">Lab &rarr;</a>
-    <button class="nav-theme-btn" id="themeToggle">Light</button>
+    <button class="nav-theme-btn" id="themeToggle" aria-label="Toggle light / dark mode" title="Toggle light / dark mode">☀</button>
   </div>
   <button class="nav-ham" id="navHam" aria-label="Menu">&#9776;</button>
 </nav>
@@ -743,8 +877,8 @@
     Guest Contributor · Chrysalis Ashton, MSRC, RRT
   </div>
   <div class="header-stat">
-    <div class="big-num">−76%</div>
-    <div class="big-label">Cumulative rate reduction<br>from 1989 baseline to CBP floor</div>
+    <div class="big-num" id="headerStatNum">−76%</div>
+    <div class="big-label" id="headerStatLabel">Cumulative rate reduction<br>from 1989 baseline to CBP floor</div>
   </div>
 </div>
 
@@ -763,8 +897,16 @@
       <div class="waterfall" id="waterfall">
         <div class="grid-lines" id="gridLines"></div>
         <div class="bar-rows" id="barRows"></div>
+        <div class="x-axis" id="xAxis"></div>
       </div>
     </div>
+    <div class="inflation-row">
+      <span class="inflation-row-label">Show rates in:</span>
+      <button class="infl-btn active" id="inflNominal">As Reported</button>
+      <button class="infl-btn" id="inflAdj">In Today's Money</button>
+    </div>
+    <div class="infl-note visible" id="inflNoteNominal">Dollar amounts shown are what providers were actually paid in that year — not adjusted for inflation.</div>
+    <div class="infl-note" id="inflNote">All values converted to 2024 dollars using CPI-U — this reflects 2024 purchasing power specifically, not the current calendar year.</div>
   </div>
   <div class="detail-side" id="detailSide">
     <div class="detail-side-scroll" id="detailSideScroll">
@@ -781,15 +923,32 @@
   </div>
 </div>
 
+<!-- ===== Context: Provider Payment vs. Patient Cost ===== -->
+<div class="rate-context">
+  <div class="rate-context-label">Provider Payment &ne; Patient Cost</div>
+  <div class="rate-context-text">
+    The rates on this chart represent what Medicare pays the oxygen equipment supplier — the provider's reimbursement from the payer. This is not the same as what a patient pays out of pocket. Under Medicare Part B, patients are generally responsible for 20% coinsurance of the Medicare-approved amount after meeting their annual deductible, with the remaining 80% going to the provider. Patients with Medigap, Medicaid, or employer supplemental coverage may pay significantly less or nothing at all. Conversely, patients in Medicare Advantage plans may face different contracted rates and cost-sharing structures entirely. Reported cuts to provider reimbursement do not translate directly into equivalent changes in patient bills — and the dollar amounts shown here reflect the payer-to-provider transaction only.
+  </div>
+  <div class="rate-context-source">
+    Sources &middot;
+    <a href="https://www.medicare.gov/coverage/oxygen-equipment-accessories" target="_blank" rel="noopener">Medicare.gov: Oxygen Equipment &amp; Accessories</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://www.kff.org/medicare/what-to-know-about-how-medicare-pays-physicians/" target="_blank" rel="noopener">KFF: How Medicare Pays Physicians</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://www.cms.gov/medicare/payment/fee-schedules" target="_blank" rel="noopener">CMS: Fee Schedules — General Information</a>
+  </div>
+</div>
+<!-- ===== /Context ===== -->
+
 <!-- SUMMARY STRIP -->
 <div class="summary-strip">
   <div class="summary-item">
-    <div class="summary-num">$320</div>
-    <div class="summary-label">1989 baseline<br>monthly rate</div>
+    <div class="summary-num" id="summaryBaselineNum">$320</div>
+    <div class="summary-label" id="summaryBaselineLabel">1989 baseline<br>monthly rate</div>
   </div>
   <div class="summary-item">
-    <div class="summary-num">$77</div>
-    <div class="summary-label">CBP floor rate<br>(lowest recorded)</div>
+    <div class="summary-num" id="summaryCBPNum">$77</div>
+    <div class="summary-label" id="summaryCBPLabel">CBP floor rate<br>(lowest recorded)</div>
   </div>
   <div class="summary-item">
     <div class="summary-num">7</div>
@@ -972,62 +1131,86 @@ const EVENTS = [
   }
 ];
 
+// ─── INFLATION ADJUSTMENT ─────────────────────────────────────────────────
+// CPI-U annual averages (BLS, base 1982-84=100). 2024 = 314.2
+const CPI_TABLE = { 1989:124.0, 1997:160.5, 2005:195.3, 2009:214.5, 2011:224.9, 2013:232.9, 2024:314.2 };
+const CPI_2024 = 314.2;
+EVENTS.forEach((ev, i) => {
+  const mult = CPI_2024 / CPI_TABLE[parseInt(ev.year)];
+  ev.adjRate = Math.round(ev.rate * mult);
+  if (ev.type === 'cut' && i > 0) {
+    const prevAdj = EVENTS[i - 1].adjRate;
+    ev.adjCutDollar = Math.round(prevAdj - ev.adjRate);
+    ev.adjCutPct    = Math.round((ev.adjCutDollar / prevAdj) * 1000) / 10;
+  }
+});
+
+let showInflation = false;
+
 // ─── CHART RENDERING ────────────────────────────────────────────────────────
-const MAX_RATE = 360;
 const CHART_HEIGHT_PER_ROW = 72;
 
-function pct(val) {
-  return (val / MAX_RATE * 100).toFixed(2) + '%';
-}
-
 function renderChart() {
-  const barRowsEl = document.getElementById('barRows');
+  const barRowsEl  = document.getElementById('barRows');
   const gridLinesEl = document.getElementById('gridLines');
+  barRowsEl.innerHTML  = '';
+  gridLinesEl.innerHTML = '';
+
+  const MAX_RATE    = showInflation ? 900 : 360;
+  const gridAmounts = showInflation ? [0, 200, 400, 600, 811] : [0, 100, 200, 320];
   const chartHeight = EVENTS.length * CHART_HEIGHT_PER_ROW;
 
-  // Grid lines at $0, $100, $200, $300, $320
-  const gridAmounts = [0, 100, 200, 320];
-  gridLinesEl.style.height = chartHeight + 'px';
+  function pct(val) { return (val / MAX_RATE * 100).toFixed(2) + '%'; }
 
+  // Grid lines (horizontal decorative) + vertical guides at each tick
+  gridLinesEl.style.height = chartHeight + 'px';
   gridAmounts.forEach(amt => {
     const line = document.createElement('div');
     line.className = 'grid-line';
     line.style.top = (chartHeight - (amt / MAX_RATE * chartHeight)) + 'px';
     line.setAttribute('data-label', '$' + amt + '/mo');
     gridLinesEl.appendChild(line);
+
+    if (amt > 0) {
+      const vLine = document.createElement('div');
+      vLine.className = 'v-grid-line';
+      const frac = amt / MAX_RATE;
+      vLine.style.left = `calc(140px + ${frac.toFixed(4)} * (100% - 140px))`;
+      vLine.style.height = chartHeight + 'px';
+      gridLinesEl.appendChild(vLine);
+    }
   });
 
   // Bars
   EVENTS.forEach((ev, i) => {
+    const rate      = showInflation ? ev.adjRate      : ev.rate;
+    const prevRate  = i > 0 ? (showInflation ? EVENTS[i-1].adjRate : EVENTS[i-1].rate) : null;
+    const cutDollar = showInflation ? ev.adjCutDollar  : ev.cutDollar;
+    const cutPct    = showInflation ? ev.adjCutPct     : ev.cutPct;
+
     const row = document.createElement('div');
     row.className = 'bar-row';
     row.dataset.idx = i;
 
-    // Year label
     const yearEl = document.createElement('div');
     yearEl.className = 'bar-year';
     const lines = ev.label.split('\n');
     yearEl.innerHTML = `<strong>${ev.year}</strong>` + (lines[1] ? `<small>${lines[1]}</small>` : '');
     row.appendChild(yearEl);
 
-    // The bar
     const track = document.createElement('div');
     track.className = `bar-track is-${ev.type}`;
-    track.style.width = pct(ev.rate);
 
-    // For cut bars, show the reduction as a strikethrough segment
-    if (ev.type === 'cut' && ev.cutDollar) {
-      const prevRate = EVENTS[i - 1].rate;
+    if (ev.type === 'cut' && cutDollar) {
       track.style.width = pct(prevRate);
       track.style.background = 'none';
       track.style.border = 'none';
       track.style.overflow = 'visible';
 
-      // Remaining (new lower) rate
       const remaining = document.createElement('div');
       remaining.style.cssText = `
         position:absolute; left:0; top:0; bottom:0;
-        width:${(ev.rate / prevRate * 100).toFixed(2)}%;
+        width:${(rate / prevRate * 100).toFixed(2)}%;
         background:linear-gradient(90deg, rgba(245,166,35,0.15), rgba(245,166,35,0.08));
         border:1px solid rgba(245,166,35,0.25);
         border-right:none;
@@ -1035,9 +1218,8 @@ function renderChart() {
       `;
       track.appendChild(remaining);
 
-      // Cut segment (red)
       const cutSeg = document.createElement('div');
-      const cutWidth = (ev.cutDollar / prevRate * 100).toFixed(2);
+      const cutWidth = (cutDollar / prevRate * 100).toFixed(2);
       cutSeg.style.cssText = `
         position:absolute;
         right:0; top:0; bottom:0;
@@ -1049,7 +1231,6 @@ function renderChart() {
         display:flex; align-items:center; justify-content:center;
         overflow:hidden;
       `;
-      // Scissors / cut label inside
       const cutLabel = document.createElement('span');
       cutLabel.style.cssText = `
         font-family:'DM Mono',monospace;
@@ -1059,30 +1240,21 @@ function renderChart() {
         white-space:nowrap;
         padding:0 6px;
       `;
-      cutLabel.textContent = `−${ev.cutPct}%`;
+      cutLabel.textContent = `−${cutPct}%`;
       cutSeg.appendChild(cutLabel);
       track.appendChild(cutSeg);
-
     } else {
-      // baseline or cumulative — solid bar
-      track.style.width = pct(ev.rate);
+      track.style.width = pct(rate);
     }
 
     row.appendChild(track);
 
-    // Label to the right
     const labelRight = document.createElement('div');
     labelRight.className = 'bar-label-right';
 
-    let barWidth = ev.type === 'cut' ? pct(EVENTS[i-1] ? EVENTS[i-1].rate : ev.rate) : pct(ev.rate);
-
     const dollar = document.createElement('div');
     dollar.className = 'bar-dollar';
-    dollar.textContent = ev.type === 'cut'
-      ? `$${ev.rate} /mo`
-      : ev.type === 'baseline'
-        ? `$${ev.rate} /mo`
-        : `~$${ev.rate} /mo`;
+    dollar.textContent = ev.type === 'cumulative' ? `~$${rate}/mo` : `$${rate}/mo`;
 
     const eventLabel = document.createElement('div');
     eventLabel.className = 'bar-event';
@@ -1090,15 +1262,37 @@ function renderChart() {
 
     labelRight.appendChild(dollar);
     labelRight.appendChild(eventLabel);
-
-    // Position label after the bar
-    labelRight.style.left = `calc(${ev.type === 'cut' ? pct(EVENTS[i-1]?.rate || ev.rate) : pct(ev.rate)} + 12px)`;
+    labelRight.style.left = `calc(${ev.type === 'cut' ? pct(prevRate) : pct(rate)} + 12px)`;
     row.appendChild(labelRight);
 
-    // Click handler
     row.addEventListener('click', () => toggleDetail(i, row));
-
     barRowsEl.appendChild(row);
+  });
+
+  renderXAxis();
+}
+
+function renderXAxis() {
+  const xAxisEl = document.getElementById('xAxis');
+  if (!xAxisEl) return;
+  xAxisEl.innerHTML = '';
+  const ticks   = showInflation ? [0, 200, 400, 600, 811] : [0, 100, 200, 320];
+  const maxRate = showInflation ? 900 : 360;
+  ticks.forEach((amt, i) => {
+    const tick = document.createElement('div');
+    tick.className = 'x-tick';
+    tick.style.left = (amt / maxRate * 100).toFixed(2) + '%';
+    if (i === 0)                   tick.style.transform = 'translateX(0)';
+    else if (i === ticks.length-1) tick.style.transform = 'translateX(-100%)';
+    else                           tick.style.transform = 'translateX(-50%)';
+    const mark  = document.createElement('div');
+    mark.className = 'x-tick-mark';
+    const label = document.createElement('div');
+    label.className = 'x-tick-label';
+    label.textContent = '$' + amt + '/mo';
+    tick.appendChild(mark);
+    tick.appendChild(label);
+    xAxisEl.appendChild(tick);
   });
 }
 
@@ -1111,21 +1305,29 @@ function toggleDetail(idx, row) {
   document.querySelectorAll('.bar-row').forEach(r => r.classList.remove('active'));
   row.classList.add('active');
 
-  const ev = EVENTS[idx];
-  const prevRate = idx > 0 ? EVENTS[idx - 1].rate : null;
+  const ev        = EVENTS[idx];
+  const rate      = showInflation ? ev.adjRate      : ev.rate;
+  const prevRate  = idx > 0 ? (showInflation ? EVENTS[idx-1].adjRate : EVENTS[idx-1].rate) : null;
+  const cutDollar = showInflation ? ev.adjCutDollar  : ev.cutDollar;
+  const cutPct    = showInflation ? ev.adjCutPct     : ev.cutPct;
+  const infl      = showInflation ? ' <span style="font-size:13px;opacity:0.6">(2024 $)</span>' : '';
 
   let rateLine = '', rateSub = '', typeLabel = '';
   if (ev.type === 'baseline') {
-    rateLine = `$${ev.rate}/mo`;
-    rateSub = 'Fee schedule baseline established';
+    rateLine = `$${rate}/mo${infl}`;
+    rateSub  = showInflation
+      ? `Nominal ${ev.year} rate was $${ev.rate}/mo — equivalent to $${ev.adjRate} in today's dollars`
+      : 'Fee schedule baseline established';
     typeLabel = 'Baseline';
   } else if (ev.type === 'cut') {
-    rateLine = `−${ev.cutPct}% &nbsp;/&nbsp; −$${ev.cutDollar}/mo`;
-    rateSub = `$${prevRate} → $${ev.rate} per month`;
+    rateLine = `−${cutPct}%&nbsp;/&nbsp;−$${cutDollar}/mo${infl}`;
+    rateSub  = `$${prevRate} → $${rate} per month` + (showInflation ? ' (2024 $)' : '');
     typeLabel = 'Legislative Cut';
   } else {
-    rateLine = `~$${ev.rate}/mo`;
-    rateSub = 'Current approximate rate';
+    rateLine = `~$${rate}/mo${infl}`;
+    rateSub  = showInflation
+      ? 'Current rate · already expressed in 2024 dollars'
+      : 'Current approximate rate';
     typeLabel = 'Current Period';
   }
 
@@ -1163,6 +1365,38 @@ function navigatePanel(dir) {
   toggleDetail(newIdx, rows[newIdx]);
 }
 
+// ─── INFLATION SYNC ──────────────────────────────────────────────────────────
+function syncInflationUI() {
+  document.getElementById('inflNominal').classList.toggle('active',      !showInflation);
+  document.getElementById('inflAdj').classList.toggle('active',           showInflation);
+  document.getElementById('inflNoteNominal').classList.toggle('visible', !showInflation);
+  document.getElementById('inflNote').classList.toggle('visible',          showInflation);
+
+  document.getElementById('headerStatNum').textContent   = showInflation ? '−87%' : '−76%';
+  document.getElementById('headerStatLabel').innerHTML   = showInflation
+    ? 'Real purchasing power lost<br>1989 baseline to 2024 (CPI-U)'
+    : 'Cumulative rate reduction<br>from 1989 baseline to CBP floor';
+
+  document.getElementById('summaryBaselineNum').textContent  = showInflation ? '$811' : '$320';
+  document.getElementById('summaryBaselineLabel').innerHTML  = showInflation
+    ? '1989 baseline<br>in 2024 dollars'
+    : '1989 baseline<br>monthly rate';
+  document.getElementById('summaryCBPNum').textContent  = showInflation ? '$104' : '$77';
+  document.getElementById('summaryCBPLabel').innerHTML  = showInflation
+    ? 'CBP floor rate<br>(2024 dollars)'
+    : 'CBP floor rate<br>(lowest recorded)';
+}
+
+function applyToggle(inflate) {
+  showInflation = inflate;
+  renderChart();
+  syncInflationUI();
+  if (activeIdx !== null) {
+    const rows = document.querySelectorAll('.bar-row');
+    if (rows[activeIdx]) toggleDetail(activeIdx, rows[activeIdx]);
+  }
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 renderChart();
 
@@ -1171,6 +1405,9 @@ setTimeout(() => {
   const firstRow = document.querySelector('.bar-row');
   if (firstRow) toggleDetail(0, firstRow);
 }, 600);
+
+document.getElementById('inflNominal').addEventListener('click', () => { if (showInflation)  applyToggle(false); });
+document.getElementById('inflAdj').addEventListener('click',     () => { if (!showInflation) applyToggle(true);  });
 </script>
 <script>
 const ham = document.getElementById('navHam');
@@ -1185,7 +1422,7 @@ if (ham) {
 <script>
 const themeToggle = document.getElementById('themeToggle');
 function syncToggleLabel() {
-  themeToggle.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? 'Dark' : 'Light';
+  themeToggle.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☽' : '☀';
 }
 syncToggleLabel();
 themeToggle.addEventListener('click', () => {

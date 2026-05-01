@@ -3,6 +3,23 @@ module.exports = [
   // ── LIVE TOOLS ──────────────────────────────────────────────────────────────
 
   {
+    id:          'american-4ps-map',
+    status:      'live',
+    featured:    true,
+    title:       'U.S. Healthcare Multi-Lens Map',
+    desc:        'Explore U.S. state-level healthcare data through five perspectives — patient, clinical, operations, payer, and policy — on a single interactive map.',
+    url:         '/tools/American-4Ps-Map/',
+    badge:       'Interactive',
+    badgeClass:  'badge-interactive',
+    bandClass:   'tc-band-blue',
+    mark:        'MAP',
+    markClass:   'mark-blue',
+    tags:        ['State Map', '5 Lenses', 'Interactive'],
+    ps:          ['p1', 'p2a', 'p2b', 'p3', 'p4'],
+    labNode:     'american-4ps-map'
+  },
+
+  {
     id:          'healthcare-iceberg-map',
     status:      'live',
     featured:    true,

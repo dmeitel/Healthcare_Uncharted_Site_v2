@@ -58,6 +58,10 @@ eleventyConfig.addPassthroughCopy({"src/learn/oxygen-payment-cuts": "learn/oxyge
   });
 
   // ── FILTERS ──────────────────────────────────────────────────────────
+  eleventyConfig.addFilter("json", function(value) {
+    return JSON.stringify(value);
+  });
+
   eleventyConfig.addFilter("dateFilter", function(date) {
     if (!date) return "";
     const d = new Date(date);
