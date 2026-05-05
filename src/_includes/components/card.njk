@@ -1,0 +1,63 @@
+{% macro card(type, title, summary, url, tags, date, read_time) %}
+{% set typeColors = {
+  "interactive": "#4ECDC4",
+  "learn":       "#6aabff",
+  "talk":        "#5DBF87",
+  "lab":         "#E8A838",
+  "reference":   "#a99ee8",
+  "rounds":      "#7B92AB"
+} %}
+{% set typeBadges = {
+  "interactive": "Tool",
+  "learn":       "Learn",
+  "talk":        "Talk",
+  "lab":         "Lab",
+  "reference":   "Reference",
+  "rounds":      "Rounds"
+} %}
+{% set typeColor = typeColors[type] or "#4ECDC4" %}
+{% set badgeText = typeBadges[type] or type %}
+
+<a href="{{ url }}" class="card card--{{ type }}" style="--type-color: {{ typeColor }}">
+  <div class="card-bg">
+    {% if type == "interactive" %}{% include "motifs/network.njk" %}
+    {% elif type == "learn" %}{% include "motifs/radiating.njk" %}
+    {% elif type == "talk" %}{% include "motifs/oscilloscope.njk" %}
+    {% elif type == "lab" %}{% include "motifs/ecg.njk" %}
+    {% elif type == "reference" %}{% include "motifs/compass-rose.njk" %}
+    {% elif type == "rounds" %}{% include "motifs/newsprint.njk" %}
+    {% endif %}
+  </div>
+  <div class="card-content">
+    <div class="card-badge">{{ badgeText }}</div>
+    <div class="card-mark">
+      {% if type == "interactive" %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+      {% elif type == "learn" %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+      {% elif type == "talk" %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+      {% elif type == "lab" %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 19.8a1 1 0 0 0 .895 1.45h12.77a1 1 0 0 0 .894-1.45l-5.07-9.376A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>
+      {% elif type == "reference" %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+      {% elif type == "rounds" %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+      {% endif %}
+    </div>
+    <h3 class="card-title">{{ title }}</h3>
+    {% if type == "rounds" and (date or read_time) %}
+    <p class="card-meta">{{ date | dateFilter }}{% if read_time %} · {{ read_time }} min read{% endif %}</p>
+    {% endif %}
+    <p class="card-desc">{{ summary }}</p>
+    {% if tags and tags.length %}
+    <div class="card-tags">
+      {% for tag in tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    <div class="card-arrow">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+  </div>
+</a>
+{% endmacro %}
