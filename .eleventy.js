@@ -1,11 +1,8 @@
 module.exports = function(eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy("src/assets");
-
-eleventyConfig.addPassthroughCopy({"src/learn/oxygen-payment-cuts": "learn/oxygen-payment-cuts"});
-  eleventyConfig.addPassthroughCopy({"src/learn/home-respiratory-timeline": "learn/home-respiratory-timeline"});
-  eleventyConfig.addPassthroughCopy({"src/learn/4ps-framework": "learn/4ps-framework"});
   eleventyConfig.addPassthroughCopy("src/downloads");
+  eleventyConfig.addPassthroughCopy("src/robots.txt");
 
   // ── COLLECTIONS ──────────────────────────────────────────────────────────
   // Define named collections for site architecture (avoiding data-file shadowing)
@@ -40,6 +37,13 @@ eleventyConfig.addPassthroughCopy({"src/learn/oxygen-payment-cuts": "learn/oxyge
         const bDate = b.data.date ? new Date(b.data.date) : new Date(0);
         return bDate - aDate;
       });
+  });
+
+  eleventyConfig.addCollection("roundsPages", function(collection) {
+    return collection
+      .getAll()
+      .filter(item => item.data.section === "rounds" && item.data.status === "published")
+      .sort((a, b) => new Date(b.data.date) - new Date(a.data.date));
   });
 
   eleventyConfig.addCollection("featuredPages", function(collection) {
@@ -81,6 +85,11 @@ eleventyConfig.addPassthroughCopy({"src/learn/oxygen-payment-cuts": "learn/oxyge
     const d = new Date(date);
     const options = { year: "numeric", month: "short", day: "numeric" };
     return d.toLocaleDateString("en-US", options);
+  });
+
+  eleventyConfig.addFilter("dateISO", function(date) {
+    if (!date) return "";
+    return new Date(date).toISOString().split("T")[0];
   });
 
   return {

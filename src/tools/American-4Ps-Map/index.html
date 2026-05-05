@@ -1050,10 +1050,10 @@ body {
   .metric-list { max-height: 180px; overflow-y: auto; }
   .metric-item { padding: 7px 10px; font-size: 13px; }
 
-  /* ── Map: fixed height proportional to screen ── */
+  /* ── Map: tall enough to tap states accurately ── */
   .map-canvas {
-    min-height: 240px;
-    height: min(55vw, 320px);
+    min-height: 280px;
+    height: clamp(280px, 75vw, 380px);
     flex-shrink: 0;
   }
   .map-header { padding: 8px 12px 6px; }
@@ -1124,6 +1124,7 @@ body {
         <a class="topbar-nav-link" href="/">Home</a>
         <a class="topbar-nav-link" href="/tools/">Tools</a>
         <a class="topbar-nav-link" href="/learn/">Learn</a>
+        <a class="topbar-nav-link" href="/rounds/">Rounds</a>
         <a class="topbar-nav-link" href="/about/">About</a>
       </nav>
       <button class="theme-toggle-btn" id="themeToggleBtn" data-tip="Toggle light / dark mode" aria-label="Toggle theme">☀</button>
@@ -1260,7 +1261,7 @@ body {
           <a class="source-cite-link" id="sourceCiteLink" href="#" target="_blank" rel="noopener noreferrer">—</a>
           <span class="source-cite-dot">·</span>
           <span class="source-cite-date" id="sourceCiteDate"></span>
-          <button class="caveat-btn" id="caveatToggle" data-tip="Show a note about data limitations or methodology for this metric." style="display:none;">⚠</button>
+          <button class="caveat-btn" id="caveatToggle" data-tip="Show a note about data limitations or methodology for this metric." style="display:none;"><i data-lucide="triangle-alert" width="14" height="14" aria-hidden="true"></i></button>
         </div>
         <div class="caveat-txt" id="caveatText" style="display:none;"></div>
       </div>
@@ -1474,6 +1475,12 @@ body {
 </div><!-- /tutorial-overlay -->
 
 <script>
+// ===== TOUCH DETECTION =====
+// Uses the CSS hover media query — more reliable than touch event sniffing.
+// On touch-only devices (hover: none), we suppress position-tracked hover
+// tooltips that get stuck after a tap and suppress mouseover data-tip popups.
+const isTouch = () => window.matchMedia('(hover: none)').matches;
+
 // ===== FIPS → STATE ABBR =====
 const FIPS_TO_ABBR = {
   '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE',
@@ -2170,6 +2177,7 @@ function drawMap() {
       return abbr ? STATE_NAMES[abbr] : null;
     })
     .on('mousemove', function(event, d) {
+      if (isTouch()) return;
       const fips = String(d.id).padStart(2, '0');
       const abbr = FIPS_TO_ABBR[fips];
       if (!abbr) return;
@@ -2284,10 +2292,20 @@ function renderMetrics() {
       renderAll();
       updateHash();
     });
-    // Info icon hover handlers
+    // Info icon: hover on desktop, tap-to-toggle on touch
     const icon = div.querySelector('.metric-info-icon');
-    icon.addEventListener('mouseenter', (e) => showMetricExplainer(e.target, m, lens.color));
-    icon.addEventListener('mouseleave', hideMetricExplainer);
+    icon.addEventListener('mouseenter', (e) => { if (!isTouch()) showMetricExplainer(e.target, m, lens.color); });
+    icon.addEventListener('mouseleave', () => { if (!isTouch()) hideMetricExplainer(); });
+    icon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const el = getExplainerEl();
+      if (el.classList.contains('visible')) {
+        hideMetricExplainer();
+      } else {
+        showMetricExplainer(e.currentTarget, m, lens.color);
+        if (isTouch()) setTimeout(hideMetricExplainer, 5000);
+      }
+    });
     list.appendChild(div);
   });
 }
@@ -2323,7 +2341,13 @@ function showMetricExplainer(iconEl, metric, color) {
     </div>
     ${metric.caveat ? `<div class="me-caveat">${metric.caveat}</div>` : ''}
   `;
-  // Position to the right of the icon, but flip to left if not enough space
+  // On narrow screens, anchor to bottom of viewport (above bottom bar)
+  if (window.innerWidth <= 680) {
+    el.style.cssText = 'position:fixed;left:12px;right:12px;width:auto;bottom:70px;top:auto;';
+    el.classList.add('visible');
+    return;
+  }
+  // Desktop: position to the right of the icon, flip left if needed
   const rect = iconEl.getBoundingClientRect();
   const elW = 320;
   const margin = 12;
@@ -2334,6 +2358,9 @@ function showMetricExplainer(iconEl, metric, color) {
   if (top < 10) top = 10;
   el.style.left = left + 'px';
   el.style.top = top + 'px';
+  el.style.right = 'auto';
+  el.style.width = '320px';
+  el.style.bottom = 'auto';
   el.classList.add('visible');
 }
 function hideMetricExplainer() {
@@ -2934,8 +2961,17 @@ function refreshSourcesPopover() {
     `<div class="sources-popover-title">${activeLens.charAt(0).toUpperCase() + activeLens.slice(1)} Lens · Data Sources</div>` +
     `<div class="sources-popover-body">${src}</div>`;
 }
-sourcesBtn.addEventListener('mouseenter', () => { refreshSourcesPopover(); sourcesPopover.classList.add('visible'); });
-sourcesBtn.addEventListener('mouseleave', () => sourcesPopover.classList.remove('visible'));
+sourcesBtn.addEventListener('mouseenter', () => { if (!isTouch()) { refreshSourcesPopover(); sourcesPopover.classList.add('visible'); } });
+sourcesBtn.addEventListener('mouseleave', () => { if (!isTouch()) sourcesPopover.classList.remove('visible'); });
+sourcesBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  refreshSourcesPopover();
+  sourcesPopover.classList.toggle('visible');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.attribution')) sourcesPopover.classList.remove('visible');
+  if (!e.target.closest('.metric-info-icon') && !e.target.closest('.metric-explainer')) hideMetricExplainer();
+});
 
 document.querySelectorAll('[data-mode]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -3001,6 +3037,7 @@ document.querySelectorAll('[data-mapmode]').forEach(btn => {
   const tip = document.getElementById('gtip');
   let cur = null;
   document.addEventListener('mouseover', e => {
+    if (isTouch()) return;
     const el = e.target.closest('[data-tip]');
     if (!el || el === cur) return;
     cur = el;
@@ -3035,5 +3072,7 @@ loadMap();
 updateHash();
 </script>
 
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>
