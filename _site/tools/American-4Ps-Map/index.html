@@ -16,7 +16,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {
   --hu-dark: #0d1117;
@@ -43,6 +43,7 @@
   --lens-payer: #2D9B6F;
   --lens-policy: #DF5752;
   --lens-economics: #8B5CF6;
+  --lens-baseline: #0EA5E9;
 
   --c1: #DF5752;
   --c2: #E8A838;
@@ -52,7 +53,7 @@
 
   --font: 'DM Sans', 'Trebuchet MS', system-ui, sans-serif;
   --mono: 'IBM Plex Mono', 'Courier New', monospace;
-  --display: 'Trebuchet MS', 'DM Sans', sans-serif;
+  --display: 'Outfit', 'Trebuchet MS', sans-serif;
 }
 
 [data-theme="light"] {
@@ -76,10 +77,10 @@ body {
   color: var(--hu-text-1);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  font-size: 15px;
+  font-size: 16px;
 }
 
-.app { display: grid; grid-template-rows: 64px 1fr 56px; height: 100vh; }
+.app { display: grid; grid-template-rows: 64px auto 1fr 56px; height: 100vh; }
 
 .topbar {
   background: color-mix(in srgb, var(--hu-dark) 96%, transparent);
@@ -112,6 +113,13 @@ body {
   text-decoration: none; transition: all 0.15s;
 }
 .topbar-nav-link:hover { color: var(--hu-text-1); background: var(--hu-raised); }
+.topbar-nav-pill {
+  padding: 6px 14px; border-radius: 8px; margin-left: 6px;
+  background: var(--hu-blue); color: #fff;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none; transition: background 0.15s;
+}
+.topbar-nav-pill:hover { background: #2970c0; color: #fff; }
 .preview-badge {
   font-family: var(--mono); font-size: 10px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase;
@@ -122,6 +130,15 @@ body {
 }
 
 /* ── Tutorial button & modal ──────────────────────────────────────── */
+/* ── Colorblind-safe quintile scale ── */
+body[data-colorblind="true"] {
+  --c1: #d45500;
+  --c2: #f5a42a;
+  --c3: #888888;
+  --c4: #7b9fd4;
+  --c5: #2166ac;
+}
+
 .tutorial-btn, .theme-toggle-btn {
   display: flex; align-items: center; gap: 5px;
   padding: 5px 12px; border-radius: 7px;
@@ -209,14 +226,194 @@ body {
 .usa-map-btn:hover { border-color: var(--hu-teal); color: var(--hu-teal); }
 .usa-map-btn.active { border-color: var(--hu-teal); color: var(--hu-teal); }
 
-.main { display: grid; grid-template-columns: 300px 1fr 340px; overflow: hidden; }
+.main { display: grid; grid-template-columns: 340px 1fr 340px; overflow: hidden; }
+
+/* ── Data cards ──────────────────────────────────────────────────── */
+.data-card {
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border);
+  border-radius: 10px;
+  margin: 10px 12px;
+  overflow: hidden;
+}
+.data-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 9px;
+  border-bottom: 1px solid var(--hu-border);
+  background: rgba(255,255,255,0.025);
+}
+.data-card-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hu-text-3);
+}
+.data-card-actions { display: flex; align-items: center; gap: 4px; }
+.data-card-body { padding: 12px 14px; }
+.data-card-footer {
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--hu-border);
+  background: rgba(0,0,0,0.12);
+}
+
+/* ── Card-style ranking tabs ─────────────────────────────────────── */
+.card-tab {
+  padding: 4px 10px;
+  background: transparent; border: 1px solid var(--hu-border);
+  border-radius: 4px;
+  font-size: 11px; font-weight: 500; color: var(--hu-text-3);
+  cursor: pointer; font-family: var(--font); transition: all 0.12s;
+}
+.card-tab:hover { color: var(--hu-text-2); border-color: var(--hu-border-2); }
+.card-tab.active { background: var(--hu-surface); color: var(--hu-text-1); border-color: var(--hu-border-2); }
+
+/* ── Colorblind toggle (legend) ──────────────────────────────────── */
+.cb-legend-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--hu-text-3); font-size: 13px; line-height: 1;
+  padding: 2px 3px; border-radius: 3px;
+  transition: color 0.15s;
+  margin-left: 6px; flex-shrink: 0;
+}
+.cb-legend-btn:hover { color: var(--hu-text-1); }
+.cb-legend-btn.active { color: var(--hu-teal); }
+
+/* ── Floating state card ─────────────────────────────────────────── */
+.state-float-card {
+  position: absolute; z-index: 50;
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border-2);
+  border-radius: 10px; padding: 12px 14px;
+  min-width: 160px; max-width: 210px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  pointer-events: none;
+  animation: sfc-in 0.15s ease;
+}
+@keyframes sfc-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sfc-state { font-size: 12px; font-weight: 600; color: var(--hu-text-2); margin-bottom: 5px; }
+.sfc-value { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.sfc-band  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--hu-text-2); margin-bottom: 5px; }
+.sfc-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sfc-vs    { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); margin-bottom: 2px; }
+
+/* Float card — System Outlook section */
+.sfc-sep { height: 1px; background: var(--hu-border); margin: 8px 0 6px; }
+.sfc-outlook-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; pointer-events: auto;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--hu-text-3); padding: 1px 0;
+  transition: color 0.12s;
+}
+.sfc-outlook-toggle:hover { color: var(--hu-text-2); }
+.sfc-chev { font-size: 12px; transition: transform 0.15s; display: inline-block; }
+.sfc-outlook-toggle.open .sfc-chev { transform: rotate(90deg); }
+.sfc-outlook-body { margin-top: 7px; }
+.sfc-sys-tier {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; margin-bottom: 6px;
+}
+.sfc-sys-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.sfc-lens-row { display: flex; gap: 3px; }
+.sfc-lens-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+.sfc-lens-bar-track { width: 100%; height: 3px; background: var(--hu-border); border-radius: 2px; overflow: hidden; }
+.sfc-lens-bar-fill  { height: 100%; border-radius: 2px; }
+.sfc-lens-abbr { font-family: var(--mono); font-size: 8px; color: var(--hu-text-3); letter-spacing: 0.04em; }
 
 .left-panel {
   background: var(--hu-surface);
   border-right: 1px solid var(--hu-border);
-  overflow-y: auto;
   display: flex; flex-direction: column;
+  overflow: hidden;
 }
+.left-panel .metrics-section {
+  flex: 1 1 0; min-height: 0;
+  max-height: none; border-top: 1px solid var(--hu-border-2);
+}
+.left-stat-block {
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+.left-stat-block .data-card-body { padding: 10px 14px 6px; }
+.left-stat-block .detail-state { font-size: 20px; }
+.left-stat-block .detail-stats { padding: 0; border-bottom: none; }
+.left-stat-block .stat-row { padding: 8px 14px; }
+.left-stat-block .source-cite { padding: 0; border-bottom: none; }
+.left-stat-block .compare-hint { padding: 8px 14px; font-size: 11px; color: var(--hu-text-3); font-family: var(--mono); border-top: 1px solid var(--hu-border); }
+.left-stat-block .compare-panel { padding: 10px 14px 12px; border-top: 1px solid var(--hu-border); }
+
+/* ── Lens strip ─────────────────────────────────────────────────── */
+.lens-strip {
+  background: var(--hu-surface);
+  border-bottom: 1px solid var(--hu-border);
+  display: flex; align-items: stretch;
+  flex-shrink: 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+.lens-strip::-webkit-scrollbar { display: none; }
+.lens-strip-inner {
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 2px; min-width: max-content;
+}
+.ls-group-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--hu-text-3); padding: 0 8px 0 4px; white-space: nowrap;
+}
+.ls-divider { width: 1px; background: var(--hu-border); margin: 8px 12px; align-self: stretch; }
+.lens-strip-guide {
+  margin-left: auto; flex-shrink: 0;
+  display: flex; align-items: center; padding: 0 16px;
+  position: sticky; right: 0;
+  background: var(--hu-surface);
+  border-left: 1px solid var(--hu-border);
+}
+.lens-strip .lens-btn {
+  flex-direction: row; padding: 12px 12px 10px 8px; gap: 8px;
+  border-radius: 0; border: none; border-bottom: 2px solid transparent;
+  background: transparent;
+}
+.lens-strip .lens-btn:hover { background: var(--hu-raised); border-bottom-color: var(--hu-border-2); }
+.lens-strip .lens-btn.active { background: transparent; border-bottom-width: 2px; }
+.lens-strip .lens-btn[data-lens="patient"].active    { border-bottom-color: var(--lens-patient); }
+.lens-strip .lens-btn[data-lens="clinical"].active   { border-bottom-color: var(--lens-clinical); }
+.lens-strip .lens-btn[data-lens="operations"].active { border-bottom-color: var(--lens-operations); }
+.lens-strip .lens-btn[data-lens="payer"].active      { border-bottom-color: var(--lens-payer); }
+.lens-strip .lens-btn[data-lens="policy"].active     { border-bottom-color: var(--lens-policy); }
+.lens-strip .lens-btn[data-lens="baseline"].active   { border-bottom-color: var(--lens-baseline); }
+.lens-strip .lens-name { font-size: 13px; }
+.lens-strip .lens-bar-wrap { display: none; }
+
+/* ── Overview bar ──────────────────────────────────────────────── */
+.overview-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--hu-border);
+  background: var(--hu-surface);
+  overflow: hidden;
+}
+.overview-bar-cell {
+  padding: 10px 16px 10px;
+  overflow: hidden;
+}
+.overview-bar-cell + .overview-bar-cell {
+  border-left: 1px solid var(--hu-border);
+}
+/* Compact overrides for cards when inside overview bar */
+.overview-bar .system-outlook-card {
+  margin: 0; padding: 0; background: none; border: none; border-radius: 0;
+}
+.overview-bar .sys-header { margin-bottom: 5px; }
+.overview-bar .sys-meta { margin-bottom: 6px; }
+.overview-bar .sys-lens-grid { grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.overview-bar .outlook-card {
+  margin: 0; padding: 0; background: none; border: none; border-radius: 0;
+}
+.overview-bar .outlook-header { margin-bottom: 5px; }
+
 .panel-section { padding: 20px 20px 16px; border-bottom: 1px solid var(--hu-border); }
 .panel-section:last-child { border-bottom: none; }
 .panel-label {
@@ -249,27 +446,64 @@ body {
 .lens-icon.payer { background: rgba(45, 155, 111, 0.18); color: var(--lens-payer); }
 .lens-icon.policy { background: rgba(223, 87, 82, 0.18); color: var(--lens-policy); }
 .lens-icon.economics { background: rgba(139, 92, 246, 0.18); color: var(--lens-economics); }
+.lens-icon.baseline { background: rgba(14, 165, 233, 0.18); color: var(--lens-baseline); }
+.lens-divider { height: 1px; background: var(--hu-border); margin: 8px 4px 6px; }
+.lens-group-label { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hu-text-3); padding: 2px 4px 4px; }
 .lens-name { font-size: 13px; font-weight: 600; color: var(--hu-text-2); flex: 1; }
 .lens-bar-wrap { width: 44px; height: 3px; background: var(--hu-border); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
 .lens-bar-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 0.35s ease, background 0.35s ease; }
 
-.metric-list { display: flex; flex-direction: column; gap: 2px; }
+.metric-list { display: flex; flex-direction: column; gap: 3px; }
 .metric-item {
-  padding: 10px 12px; border-radius: 6px; cursor: pointer;
-  font-size: 14px; color: var(--hu-text-2);
-  display: flex; align-items: center; justify-content: space-between;
-  border: 1px solid transparent; transition: all 0.12s;
+  padding: 7px 10px 7px 9px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; color: var(--hu-text-2);
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  transition: all 0.12s;
 }
 .metric-item:hover { background: var(--hu-raised); color: var(--hu-text-1); }
-.metric-item.active { background: var(--hu-raised); border-color: var(--hu-border-2); color: var(--hu-text-1); }
-.metric-item.active::before {
-  content: ''; display: inline-block;
-  width: 4px; height: 16px;
-  background: var(--accent-color, var(--hu-teal));
-  border-radius: 2px; margin-right: 10px; margin-left: -6px;
+.metric-item.active {
+  background: var(--hu-raised);
+  border-color: var(--hu-border-2);
+  border-left-color: var(--accent-color, var(--hu-teal));
+  color: var(--hu-text-1);
 }
 .metric-unit { font-family: var(--mono); font-size: 11px; color: var(--hu-text-3); }
-.metric-dir-label { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); white-space: nowrap; flex-shrink: 0; }
+.metric-dir-label { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+
+.metric-group-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px 5px; cursor: pointer; user-select: none;
+  border-radius: 5px; transition: background 0.12s; margin-top: 2px;
+}
+.metric-group-header:first-child { margin-top: 0; }
+.metric-group-header:hover { background: var(--hu-raised); }
+.metric-group-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--hu-text-3); flex: 1;
+}
+.metric-group-count {
+  font-family: var(--mono); font-size: 9px; color: var(--hu-text-3);
+  background: var(--hu-raised); border: 1px solid var(--hu-border);
+  border-radius: 3px; padding: 1px 5px; line-height: 1.5;
+}
+.metric-group-arrow {
+  font-size: 10px; color: var(--hu-text-3);
+  transition: transform 0.15s; line-height: 1; flex-shrink: 0;
+  transform: rotate(90deg); /* default: expanded = arrow points down */
+}
+.metric-group-header.collapsed .metric-group-arrow { transform: rotate(0deg); } /* collapsed = arrow points right */
+.metric-show-more {
+  width: 100%; text-align: left;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--hu-text-3); background: none; border: none;
+  padding: 4px 10px 6px 38px; cursor: pointer; border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+.metric-show-more:hover { color: var(--hu-text-2); background: var(--hu-raised); }
 
 .source-note { font-size: 12px; color: var(--hu-text-3); line-height: 1.5; font-family: var(--mono); }
 .source-note strong { color: var(--hu-text-2); font-weight: 500; }
@@ -280,20 +514,103 @@ body {
   display: flex; flex-direction: column;
 }
 .map-header {
-  padding: 18px 28px 12px; border-bottom: 1px solid var(--hu-border);
+  padding: 14px 24px 12px;
+  border-bottom: 2px solid var(--hu-border-2);
+  background: var(--hu-raised);
   display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
 }
-.map-title-block { min-width: 0; }
+.map-title-block { min-width: 0; flex: 1; }
 .map-eyebrow {
   font-family: var(--mono); font-size: 10px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--accent-color, var(--hu-teal)); margin-bottom: 4px;
 }
+.map-h1-row { display: flex; align-items: center; gap: 7px; }
 .map-h1 {
-  font-family: var(--display); font-size: 20px; font-weight: 700;
+  font-family: var(--display); font-size: 18px; font-weight: 700;
   color: var(--hu-text-1); letter-spacing: -0.01em;
 }
-.map-h1-sub { font-size: 13px; color: var(--hu-text-3); margin-top: 2px; }
+.map-h1-sub { font-size: 12px; color: var(--hu-text-3); margin-top: 2px; }
+.map-h1-info { width: 18px; height: 18px; font-size: 11px; flex-shrink: 0; }
+.map-h1-info:hover { background: var(--accent-color, var(--hu-teal)); color: var(--hu-dark); }
+
+/* ── Map header outlook chips ────────────────────────────────────── */
+.map-outlook-chips {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.map-outlook-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; color: var(--hu-text-3);
+  background: var(--hu-surface); border: 1px solid var(--hu-border);
+  border-radius: 6px; padding: 6px 12px; white-space: nowrap;
+  cursor: default; transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.map-outlook-chip:hover { border-color: var(--hu-border-2); background: var(--hu-raised); }
+.moc-prefix {
+  color: var(--hu-text-3); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; font-weight: 600;
+}
+.moc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.moc-label { font-weight: 700; font-size: 11px; }
+.moc-sep { width: 1px; height: 20px; background: var(--hu-border); margin: 0 2px; }
+
+/* ── Outlook hover popover ───────────────────────────────────────── */
+.moc-popover {
+  position: fixed; z-index: 500;
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border-2);
+  border-radius: 10px; padding: 14px 16px;
+  min-width: 230px; max-width: 280px;
+  box-shadow: 0 10px 32px rgba(0,0,0,0.55);
+  pointer-events: none;
+  opacity: 0; transition: opacity 0.15s;
+}
+.moc-popover.visible { opacity: 1; }
+.moc-pop-eyebrow {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hu-text-3); margin-bottom: 8px;
+}
+.moc-pop-tier {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 8px;
+}
+.moc-pop-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.moc-pop-tier-label {
+  font-family: var(--display); font-size: 18px; font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.moc-pop-bar-track {
+  height: 4px; background: var(--hu-border); border-radius: 2px;
+  overflow: hidden; margin-bottom: 8px;
+}
+.moc-pop-bar-fill { height: 100%; border-radius: 2px; }
+.moc-pop-meta {
+  font-family: var(--mono); font-size: 10px; color: var(--hu-text-3);
+  margin-bottom: 10px;
+}
+.moc-pop-lens-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hu-border);
+}
+.moc-pop-lens-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.moc-pop-lens-icon {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 10px; color: #fff;
+  font-family: var(--display);
+}
+.moc-pop-bar-track-sm {
+  width: 100%; height: 3px; background: var(--hu-border);
+  border-radius: 2px; overflow: hidden;
+}
+.moc-pop-bar-fill-sm { height: 100%; border-radius: 2px; }
+.moc-pop-lens-name {
+  font-family: var(--mono); font-size: 8px; color: var(--hu-text-3);
+  text-align: center; white-space: nowrap;
+}
 
 .view-toggle { display: none; }
 
@@ -393,26 +710,32 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.map-tooltip {
-  position: absolute; pointer-events: none;
-  background: var(--hu-raised);
-  border: 1px solid var(--hu-border-2);
-  border-radius: 6px; padding: 8px 12px;
-  font-size: 12px; color: var(--hu-text-1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  opacity: 0; transition: opacity 0.1s;
-  z-index: 100; white-space: nowrap;
-}
-.map-tooltip.visible { opacity: 1; }
-.tt-state { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-.tt-val { font-family: var(--mono); font-size: 12px; color: var(--hu-text-2); }
 
 .right-panel {
   background: var(--hu-surface);
   border-left: 1px solid var(--hu-border);
-  overflow-y: auto;
+  overflow: hidden;
   display: flex; flex-direction: column;
 }
+.sheet-handle { display: none; }
+.metrics-section {
+  flex: 0 0 auto; max-height: 44%;
+  overflow-y: auto; border-bottom: 2px solid var(--hu-border);
+  display: flex; flex-direction: column;
+}
+.metrics-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px 6px;
+  position: sticky; top: 0; background: var(--hu-surface); z-index: 2;
+  border-bottom: 1px solid var(--hu-border);
+}
+.metrics-section-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--hu-text-3);
+}
+.metrics-section .metric-list { padding: 6px 10px 8px; }
+.metrics-section .outlook-card { margin: 6px 10px 0; }
+.data-section { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; padding-bottom: 8px; }
 .detail-header { padding: 20px; border-bottom: 1px solid var(--hu-border); }
 .detail-eyebrow {
   font-family: var(--mono); font-size: 10px;
@@ -433,6 +756,8 @@ body {
 .stat-row:last-child { border-bottom: none; }
 .stat-label { font-size: 13px; color: var(--hu-text-2); }
 .stat-value { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--hu-text-1); }
+.stat-value-group { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.pop-context { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--hu-text-1); letter-spacing: 0.03em; white-space: nowrap; }
 .stat-vs { font-size: 12px; color: var(--hu-text-3); margin-left: 6px; }
 .stat-vs.up { color: var(--hu-amber); }
 .stat-vs.down { color: var(--hu-teal); }
@@ -549,14 +874,14 @@ body {
   font-family: var(--mono);
   font-size: 9px;
   font-weight: 600;
-  margin-right: 6px;
   cursor: help;
   flex-shrink: 0;
   transition: all 0.12s;
 }
 .metric-item:hover .metric-info-icon { background: var(--accent-color, var(--hu-teal)); color: var(--hu-dark); }
-.metric-item-label { display: flex; align-items: center; flex: 1; min-width: 0; }
-.metric-item-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.metric-item-label { display: flex; align-items: flex-start; flex: 1; min-width: 0; gap: 6px; }
+.metric-item-text { white-space: normal; overflow: visible; line-height: 1.35; }
+.metric-info-icon { margin-top: 1px; }
 
 .metric-explainer {
   position: fixed;
@@ -936,7 +1261,9 @@ body {
     height: auto; min-height: 100vh;
   }
 
-  /* 2-column grid: left panel + map canvas; right panel spans full width below */
+  .overview-bar { display: none; }
+
+  /* tablet: stack left panel + map side by side, right panel below */
   .main {
     display: grid;
     grid-template-columns: 260px 1fr;
@@ -945,33 +1272,17 @@ body {
     flex: 1;
   }
 
-  /* Left panel: column 1, row 1 */
-  .left-panel {
-    grid-column: 1;
-    grid-row: 1;
-    border-right: 1px solid var(--hu-border);
-    overflow-y: auto;
-    max-height: calc(100vh - 64px - 56px);
-  }
+  .left-panel { grid-column: 1; grid-row: 1 / 3; border-right: 1px solid var(--hu-border); border-bottom: none; }
+  .map-canvas { grid-column: 2; grid-row: 1; }
 
-  /* Map canvas: column 2, row 1 */
-  .map-canvas {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  /* Right panel: spans both columns, row 2 */
   .right-panel {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    border-left: none;
-    border-top: 1px solid var(--hu-border);
-    overflow: visible;
-    height: auto;
+    grid-column: 2; grid-row: 2;
+    border-left: none; border-top: 1px solid var(--hu-border);
+    overflow: visible; height: auto; max-height: none;
+    display: flex; flex-direction: column;
   }
+  .data-section { overflow: visible; }
 
-  /* Compact left panel slightly */
-  .panel-section { padding: 14px 14px 12px; }
   .metric-item { padding: 7px 10px; font-size: 13px; }
 
   /* Bottom bar */
@@ -999,45 +1310,37 @@ body {
   .topbar-center { display: none; }
   .topbar { padding: 0 14px; }
 
-  /* ── Main: stack panels vertically ── */
-  .main {
+  /* ── Lens strip: compact on mobile ── */
+  .lens-strip-inner { padding: 0 12px; }
+  .ls-group-label { display: none; }
+  .ls-divider { margin: 6px 8px; }
+  .lens-strip .lens-btn { padding: 8px 10px 6px 7px; gap: 6px; }
+  .lens-strip .lens-name { font-size: 12px; }
+
+  /* ── Main: single column ── */
+  .main { display: flex; flex-direction: column; overflow: visible; flex: 1; }
+  .left-panel { display: none; }
+
+  /* ── Right panel: slide-up sheet (holds metrics + data on mobile) ── */
+  .right-panel {
     display: flex; flex-direction: column;
-    overflow: visible; flex: 1;
+    border-left: none; border-top: 1px solid var(--hu-border);
+    overflow: hidden; height: auto; max-height: none;
   }
-
-  /* ── Left panel: compact lens row + short metric list ── */
-  .left-panel {
-    border-right: none;
-    border-bottom: 1px solid var(--hu-border);
-    overflow: visible;
+  .sheet-handle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--hu-border);
+    background: var(--hu-surface); flex-shrink: 0;
   }
-  .panel-section { padding: 8px 12px; }
-  .panel-label { display: none; }
+  .sheet-handle-label { font-size: 12px; font-family: var(--mono); color: var(--hu-text-2); }
+  .sheet-handle-chevron { font-size: 13px; color: var(--hu-text-3); transition: transform 0.2s; }
+  .right-panel.sheet-open .sheet-handle-chevron { transform: rotate(180deg); }
+  .data-section { display: none; overflow: visible; }
+  .right-panel.sheet-open .data-section { display: flex; flex-direction: column; }
   #systemOutlookCard, #outlookCard { display: none !important; }
-
-  /* Lens buttons → horizontal scroll row */
-  .lens-list {
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 4px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: 2px;
-  }
-  .lens-list::-webkit-scrollbar { display: none; }
-  .lens-btn {
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 5px 10px;
-    min-width: 50px;
-    flex-shrink: 0;
-  }
-  .lens-name { font-size: 10px; white-space: nowrap; }
-  .lens-bar-wrap { width: 36px; }
+  .overview-bar { display: none; }
 
   /* Metric list: constrained height */
-  .metric-list { max-height: 180px; overflow-y: auto; }
   .metric-item { padding: 7px 10px; font-size: 13px; }
 
   /* ── Map: tall enough to tap states accurately ── */
@@ -1116,55 +1419,138 @@ body {
         <a class="topbar-nav-link" href="/learn/">Learn</a>
         <a class="topbar-nav-link" href="/rounds/">Rounds</a>
         <a class="topbar-nav-link" href="/about/">About</a>
+        <a class="topbar-nav-pill" href="/lab/">Map &rarr;</a>
       </nav>
       <button class="theme-toggle-btn" id="themeToggleBtn" data-tip="Toggle light / dark mode" aria-label="Toggle theme">☀</button>
-      <button class="tutorial-btn" id="tutorialBtn">? Guide</button>
     </div>
   </header>
+
+  <div class="lens-strip">
+    <div class="lens-strip-inner">
+      <span class="ls-group-label">4Ps</span>
+      <button class="lens-btn active" data-lens="patient" data-tip="<strong>Patient Lens</strong><br>Population health status, chronic disease burden, demographics, and health outcomes.">
+        <div class="lens-icon patient">P</div>
+        <div class="lens-name">Patient</div>
+      </button>
+      <button class="lens-btn" data-lens="clinical" data-tip="<strong>Clinical Lens</strong><br>Healthcare workforce supply, provider access, and care delivery quality.">
+        <div class="lens-icon clinical">C</div>
+        <div class="lens-name">Clinical</div>
+      </button>
+      <button class="lens-btn" data-lens="operations" data-tip="<strong>Operations Lens</strong><br>Hospital capacity, bed availability, facilities, and system infrastructure.">
+        <div class="lens-icon operations">O</div>
+        <div class="lens-name">Operations</div>
+      </button>
+      <button class="lens-btn" data-lens="payer" data-tip="<strong>Payer Lens</strong><br>Insurance coverage rates, enrollment, payer mix, and uninsured burden.">
+        <div class="lens-icon payer">$</div>
+        <div class="lens-name">Payer</div>
+      </button>
+      <button class="lens-btn" data-lens="policy" data-tip="<strong>Policy Lens</strong><br>State laws, Medicaid decisions, regulations, and the healthcare policy environment.">
+        <div class="lens-icon policy">L</div>
+        <div class="lens-name">Policy</div>
+      </button>
+      <div class="ls-divider"></div>
+      <span class="ls-group-label">Context</span>
+      <button class="lens-btn" data-lens="baseline" data-tip="<strong>Baseline Lens</strong><br>Economic conditions and state demographics: income, employment, housing, and Census population data by age, race, and origin.">
+        <div class="lens-icon baseline">B</div>
+        <div class="lens-name">Baseline</div>
+      </button>
+    </div>
+    <div class="lens-strip-guide">
+      <button class="tutorial-btn" id="tutorialBtn">? Guide</button>
+    </div>
+  </div>
 
   <main class="main">
 
     <aside class="left-panel">
-      <div class="panel-section">
-        <div class="panel-label">Perspective</div>
-        <div id="systemOutlookCard" class="system-outlook-card" style="display:none"></div>
-        <div class="lens-list" id="lensList">
-          <button class="lens-btn active" data-lens="patient" data-tip="<strong>Patient Lens</strong><br>Population health status, chronic disease burden, demographics, and health outcomes.">
-            <div class="lens-icon patient">P</div>
-            <div class="lens-name">Patient</div>
-            <div class="lens-bar-wrap"><div class="lens-bar-fill"></div></div>
-          </button>
-          <button class="lens-btn" data-lens="clinical" data-tip="<strong>Clinical Lens</strong><br>Healthcare workforce supply, provider access, and care delivery quality.">
-            <div class="lens-icon clinical">C</div>
-            <div class="lens-name">Provider Clinical</div>
-            <div class="lens-bar-wrap"><div class="lens-bar-fill"></div></div>
-          </button>
-          <button class="lens-btn" data-lens="operations" data-tip="<strong>Operations Lens</strong><br>Hospital capacity, bed availability, facilities, and system infrastructure.">
-            <div class="lens-icon operations">O</div>
-            <div class="lens-name">Provider Operations</div>
-            <div class="lens-bar-wrap"><div class="lens-bar-fill"></div></div>
-          </button>
-          <button class="lens-btn" data-lens="payer" data-tip="<strong>Payer Lens</strong><br>Insurance coverage rates, enrollment, payer mix, and uninsured burden.">
-            <div class="lens-icon payer">$</div>
-            <div class="lens-name">Payer</div>
-            <div class="lens-bar-wrap"><div class="lens-bar-fill"></div></div>
-          </button>
-          <button class="lens-btn" data-lens="policy" data-tip="<strong>Policy Lens</strong><br>State laws, Medicaid decisions, regulations, and the healthcare policy environment.">
-            <div class="lens-icon policy">L</div>
-            <div class="lens-name">Policy</div>
-            <div class="lens-bar-wrap"><div class="lens-bar-fill"></div></div>
-          </button>
-          <button class="lens-btn" data-lens="economics" data-tip="<strong>Economics Lens</strong><br>Income levels, employment, housing costs, and economic factors that shape health access.">
-            <div class="lens-icon economics">E</div>
-            <div class="lens-name">Economics</div>
-            <div class="lens-bar-wrap"><div class="lens-bar-fill"></div></div>
-          </button>
-        </div>
-      </div>
 
-      <div class="panel-section">
-        <div class="panel-label">Metric</div>
-        <div id="outlookCard" class="outlook-card" style="display:none"></div>
+      <!-- metric value context for selected state -->
+      <div class="left-stat-block">
+
+        <div class="data-card">
+
+          <div class="data-card-header">
+            <span class="data-card-title" id="detailEyebrow">National View</span>
+          </div>
+
+          <div class="data-card-body">
+            <div class="detail-state" id="selStateName">United States</div>
+            <div class="detail-meta" id="selStateMeta">National aggregate · all 50 states + DC</div>
+          </div>
+
+          <div class="detail-stats" id="detailStats">
+            <div class="stat-row">
+              <span class="stat-label" id="selCurrLabel">National average</span>
+              <div class="stat-value-group">
+                <span class="stat-value" id="selCurrVal">—</span>
+                <span class="pop-context" id="popContext" style="display:none;"></span>
+              </div>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label" id="selNatAvgLabel">State range</span>
+              <span class="stat-value" id="selNatAvg">—</span>
+            </div>
+            <div class="stat-row stat-row--rank">
+              <span class="stat-label" id="selRankLabel" data-tip="<strong>Standing</strong><br>How many states perform better on this metric, direction-adjusted. <strong>Top 20%</strong> = among the best-performing states nationally. <strong>Bottom 20%</strong> = among the lowest-performing states nationally.">Standing</span>
+              <div class="rank-display">
+                <span class="rank-count" id="selRank">—</span>
+                <div class="rank-band" id="selRankBand" style="display:none;">
+                  <span class="rank-dot" id="selRankDot"></span>
+                  <span class="rank-band-label" id="selBandLabel"></span>
+                </div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label" data-tip="The year this metric's underlying data was collected or reported. May differ from the selected map year if recent data isn't yet available.">Data year</span>
+              <span class="stat-value" id="selDataYear">—</span>
+            </div>
+          </div>
+
+          <div class="compare-hint" id="compareHint" style="display:none;">Click another state on the map to compare</div>
+
+          <div class="compare-panel" id="comparePanel" style="display:none;">
+            <div class="compare-header">
+              <span class="compare-title">Comparing States</span>
+              <button class="compare-clear-btn" id="compareClear" data-tip="Clear the comparison and return to single-state view.">✕ Clear</button>
+            </div>
+            <div class="compare-metric" id="compareMetricLabel"></div>
+            <div class="compare-cols">
+              <div class="compare-col">
+                <div class="compare-col-state" id="compareNameA"></div>
+                <div class="compare-col-val" id="compareValA">—</div>
+                <div class="compare-col-band" id="compareBandA"></div>
+              </div>
+              <div class="compare-vs">vs</div>
+              <div class="compare-col compare-col-b">
+                <div class="compare-col-state" id="compareNameB"></div>
+                <div class="compare-col-val" id="compareValB">—</div>
+                <div class="compare-col-band" id="compareBandB"></div>
+              </div>
+            </div>
+            <div class="compare-winner" id="compareWinner" style="display:none;"></div>
+          </div>
+
+          <div class="data-card-footer">
+            <div class="source-cite" id="sourceCite">
+              <div class="source-cite-row">
+                <span class="source-cite-label">Source</span>
+                <a class="source-cite-link" id="sourceCiteLink" href="#" target="_blank" rel="noopener noreferrer">—</a>
+                <span class="source-cite-dot">·</span>
+                <span class="source-cite-date" id="sourceCiteDate"></span>
+                <button class="caveat-btn" id="caveatToggle" data-tip="Show a note about data limitations or methodology for this metric." style="display:none;"><i data-lucide="triangle-alert" width="14" height="14" aria-hidden="true"></i></button>
+              </div>
+              <div class="caveat-txt" id="caveatText" style="display:none;"></div>
+            </div>
+          </div>
+
+        </div><!-- /data-card -->
+      </div><!-- /left-stat-block -->
+
+      <!-- metric picker -->
+      <div class="metrics-section" id="metricsSection">
+        <div class="metrics-section-header">
+          <span class="metrics-section-label">Metric</span>
+        </div>
         <div class="metric-list" id="metricList"></div>
       </div>
 
@@ -1174,8 +1560,24 @@ body {
       <div class="map-header">
         <div class="map-title-block">
           <div class="map-eyebrow" id="mapEyebrow">Patient Lens</div>
-          <h1 class="map-h1" id="mapH1">Adults reporting fair or poor health</h1>
+          <div class="map-h1-row">
+            <h1 class="map-h1" id="mapH1">Adults reporting fair or poor health</h1>
+            <button class="metric-info-icon map-h1-info" id="mapMetricInfoBtn" title="About this metric">i</button>
+          </div>
           <div class="map-h1-sub" id="mapH1Sub">Age-adjusted prevalence, % of adult population</div>
+        </div>
+        <div class="map-outlook-chips" id="mapOutlookChips" style="display:none">
+          <div class="map-outlook-chip" id="mocLens" style="display:none">
+            <span class="moc-prefix" id="mocLensPrefix"></span>
+            <span class="moc-dot" id="mocLensDot"></span>
+            <span class="moc-label" id="mocLensLabel"></span>
+          </div>
+          <div class="moc-sep" id="mocSep" style="display:none"></div>
+          <div class="map-outlook-chip" id="mocSystem" style="display:none">
+            <span class="moc-prefix">System</span>
+            <span class="moc-dot" id="mocSysDot"></span>
+            <span class="moc-label" id="mocSysLabel"></span>
+          </div>
         </div>
       </div>
 
@@ -1185,98 +1587,75 @@ body {
           <div class="spinner"></div>
           <div>Loading map data</div>
         </div>
-        <div class="map-tooltip" id="mapTooltip"></div>
+        <div class="state-float-card" id="stateFloatCard" style="display:none">
+          <div class="sfc-state" id="sfcState"></div>
+          <div class="sfc-value" id="sfcValue"></div>
+          <div class="sfc-band">
+            <span class="sfc-dot" id="sfcDot"></span>
+            <span id="sfcBandLabel"></span>
+          </div>
+          <div class="sfc-vs" id="sfcVs"></div>
+          <div class="sfc-sep"></div>
+          <div class="sfc-outlook-toggle" id="sfcOutlookToggle">
+            <span>System Outlook</span>
+            <span class="sfc-chev" id="sfcChev">›</span>
+          </div>
+          <div class="sfc-outlook-body" id="sfcOutlookBody" style="display:none">
+            <div class="sfc-sys-tier" id="sfcSysTier"></div>
+            <div class="sfc-lens-row" id="sfcLensRow"></div>
+          </div>
+        </div>
       </div>
     </section>
 
     <aside class="right-panel">
-      <div class="detail-header">
-        <div class="detail-eyebrow" id="detailEyebrow">National View</div>
-        <div class="detail-state" id="selStateName">United States</div>
-        <div class="detail-meta" id="selStateMeta">National aggregate · all 50 states + DC</div>
+
+      <!-- mobile slide-up handle -->
+      <div class="sheet-handle" id="sheetHandle">
+        <span class="sheet-handle-label" id="sheetHandleLabel">State Data</span>
+        <span class="sheet-handle-chevron">&#8679;</span>
       </div>
 
-      <div class="detail-stats" id="detailStats">
-        <div class="stat-row">
-          <span class="stat-label" id="selCurrLabel">National average</span>
-          <span class="stat-value" id="selCurrVal">—</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label" id="selNatAvgLabel">State range</span>
-          <span class="stat-value" id="selNatAvg">—</span>
-        </div>
-        <div class="stat-row stat-row--rank">
-          <span class="stat-label" id="selRankLabel" data-tip="<strong>Standing</strong><br>How many states do better or worse on this metric, adjusted for the direction where higher is better or worse. The color band shows overall performance tier.">Standing</span>
-          <div class="rank-display">
-            <span class="rank-count" id="selRank">—</span>
-            <div class="rank-band" id="selRankBand" style="display:none;">
-              <span class="rank-dot" id="selRankDot"></span>
-              <span class="rank-band-label" id="selBandLabel"></span>
+      <!-- analysis section: rankings, trends, entities -->
+      <div class="data-section">
+
+        <!-- Rankings card -->
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">State Rankings</span>
+            <div class="data-card-actions">
+              <button class="card-tab active" data-tip="States with the highest raw values on this metric.">Highest</button>
+              <button class="card-tab" data-tip="States with the lowest raw values on this metric.">Lowest</button>
+              <button class="card-tab" data-tip="<strong>Movers</strong><br>States with the largest year-over-year change — biggest improvers and biggest decliners.">Movers</button>
             </div>
           </div>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label" data-tip="The year this metric's underlying data was collected or reported. May differ from the selected map year if recent data isn't yet available.">Data year</span>
-          <span class="stat-value" id="selDataYear">—</span>
-        </div>
-      </div>
-
-      <div class="compare-hint" id="compareHint" style="display:none;">Click another state on the map to compare</div>
-
-      <div class="compare-panel" id="comparePanel" style="display:none;">
-        <div class="compare-header">
-          <span class="compare-title">Comparing States</span>
-          <button class="compare-clear-btn" id="compareClear" data-tip="Clear the comparison and return to single-state view.">✕ Clear</button>
-        </div>
-        <div class="compare-metric" id="compareMetricLabel"></div>
-        <div class="compare-cols">
-          <div class="compare-col">
-            <div class="compare-col-state" id="compareNameA"></div>
-            <div class="compare-col-val" id="compareValA">—</div>
-            <div class="compare-col-band" id="compareBandA"></div>
-          </div>
-          <div class="compare-vs">vs</div>
-          <div class="compare-col compare-col-b">
-            <div class="compare-col-state" id="compareNameB"></div>
-            <div class="compare-col-val" id="compareValB">—</div>
-            <div class="compare-col-band" id="compareBandB"></div>
+          <div class="data-card-body" style="padding: 8px 6px;">
+            <div class="rank-list" id="rankList"></div>
           </div>
         </div>
-        <div class="compare-winner" id="compareWinner" style="display:none;"></div>
-      </div>
 
-      <div class="source-cite" id="sourceCite">
-        <div class="source-cite-row">
-          <span class="source-cite-label">Source</span>
-          <a class="source-cite-link" id="sourceCiteLink" href="#" target="_blank" rel="noopener noreferrer">—</a>
-          <span class="source-cite-dot">·</span>
-          <span class="source-cite-date" id="sourceCiteDate"></span>
-          <button class="caveat-btn" id="caveatToggle" data-tip="Show a note about data limitations or methodology for this metric." style="display:none;"><i data-lucide="triangle-alert" width="14" height="14" aria-hidden="true"></i></button>
+        <!-- Trend card -->
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" data-tip="Estimated trend line for this metric from 2018–2024. Dashed = interpolated from the nearest real data year.">Trend · 2018–2024</span>
+          </div>
+          <div class="data-card-body" style="padding: 10px 12px 8px;">
+            <svg class="trend-chart-svg" id="trendChart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
+          </div>
         </div>
-        <div class="caveat-txt" id="caveatText" style="display:none;"></div>
-      </div>
 
-      <div class="ranking-section">
-        <div class="ranking-tabs">
-          <button class="ranking-tab active" data-tip="States with the highest raw values on this metric.">Highest</button>
-          <button class="ranking-tab" data-tip="States with the lowest raw values on this metric.">Lowest</button>
-          <button class="ranking-tab" data-tip="<strong>Movers</strong><br>States with the largest year-over-year change — biggest improvers and biggest decliners.">Movers</button>
+        <!-- Entity / lens detail card -->
+        <div class="data-card" id="entitySection" style="display:none;">
+          <div class="data-card-header">
+            <span class="data-card-title" id="entitySectionTitle">Largest provider groups</span>
+            <span class="lds-badge"></span>
+          </div>
+          <div class="data-card-body" style="padding: 10px 6px;">
+            <div class="entity-list" id="entityList"></div>
+          </div>
         </div>
-        <div class="rank-list" id="rankList"></div>
-      </div>
 
-      <div class="chart-placeholder">
-        <div class="chart-title" data-tip="Estimated trend line for this metric from 2018–2024. Dashed = interpolated from the nearest real data year.">Trend over time · all available years</div>
-        <svg class="trend-chart-svg" id="trendChart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
-      </div>
-
-      <div class="lens-detail-section" id="entitySection" style="display:none;">
-        <div class="lds-title">
-          <span id="entitySectionTitle">Largest provider groups</span>
-          <span class="lds-badge"></span>
-        </div>
-        <div class="entity-list" id="entityList"></div>
-      </div>
+      </div><!-- /data-section -->
     </aside>
 
   </main>
@@ -1292,6 +1671,7 @@ body {
         <div class="legend-step s5"></div>
       </div>
       <span class="legend-anno">worse → better</span>
+      <button class="cb-legend-btn" id="cbToggleBtn" data-tip="Toggle colorblind-friendly scale (orange/blue)" aria-label="Colorblind mode">◑</button>
     </div>
 
     <div class="time-control">
@@ -1321,6 +1701,15 @@ body {
     </div>
   </footer>
 
+</div>
+
+<!-- Outlook hover popover -->
+<div class="moc-popover" id="mocPopover"></div>
+
+<!-- Hidden containers — keep outlook card IDs alive for JS render functions -->
+<div id="overviewBar" style="display:none">
+  <div id="outlookCard" class="outlook-card" style="display:none"></div>
+  <div id="systemOutlookCard" class="system-outlook-card" style="display:none"></div>
 </div>
 
 <!-- Tooltip + Tutorial — must be before <script> so IIFEs can find them -->
@@ -1369,7 +1758,7 @@ body {
             <li><strong>Operations</strong> — hospital capacity &amp; infrastructure</li>
             <li><strong>Payer</strong> — coverage rates &amp; insurance mix</li>
             <li><strong>Policy</strong> — state laws &amp; Medicaid decisions</li>
-            <li><strong>Economics</strong> — income, jobs &amp; cost of living</li>
+            <li><strong>Baseline</strong> — economic conditions &amp; Census demographics</li>
           </ul>
           The bar on each lens button shows its outlook score for the selected state.
         </div>
@@ -1426,7 +1815,7 @@ body {
 
       <div class="tut-card">
         <div class="tut-card-head"><div class="tut-icon" style="background:#E8A838;color:#0a0f1a">O</div><div class="tut-card-title">Overall System Outlook</div></div>
-        <div class="tut-card-body">An aggregate score across all 6 lenses rating the state's healthcare system from <strong style="color:#ef4444">Weak</strong> to <strong style="color:#22c55e">Strong</strong>.
+        <div class="tut-card-body">An aggregate score across all 6 lenses rating the state's healthcare system from <strong style="color:#DF5752">Challenged</strong> to <strong style="color:#2D9B6F">Strong</strong>.
           <ul>
             <li>Requires at least 3 lenses with sufficient data</li>
             <li>The bar on each lens button shows that lens's individual score</li>
@@ -1497,9 +1886,26 @@ const STATE_NAMES = {
 };
 
 // ===== STATE DATA — injected from src/_data/stateData.json at build time =====
-const STATE_DATA = {"_readme":"State-level metric values. Keys: lens → metric index (string) → state abbreviation. Update values here; rendering code in American-4Ps-Map/index.html reads this at build time.","patient":{"0":{"AL":23,"AK":17.5,"AZ":16.5,"AR":21.9,"CA":15,"CO":13,"CT":12.2,"DE":17,"DC":16,"FL":16.8,"GA":19.4,"HI":12,"ID":16.5,"IL":15.8,"IN":19,"IA":14,"KS":16.5,"KY":23.1,"LA":20.8,"ME":15.8,"MD":15.4,"MA":12.5,"MI":18.2,"MN":11.4,"MS":24.2,"MO":18.8,"MT":16,"NE":13.8,"NV":17.2,"NH":13.4,"NJ":15.2,"NM":20.2,"NY":15.2,"NC":18.5,"ND":13.2,"OH":18.4,"OK":21.5,"OR":16.5,"PA":16,"RI":15.6,"SC":19.8,"SD":16.8,"TN":21,"TX":19.2,"UT":13,"VT":14.9,"VA":14.8,"WA":14.5,"WV":25.8,"WI":14.2,"WY":16.2},"1":{"AL":13.5,"AK":8.5,"AZ":10.2,"AR":13,"CA":9.5,"CO":8.1,"CT":8.8,"DE":11,"DC":9.2,"FL":11.2,"GA":11.8,"HI":10.5,"ID":9,"IL":10.5,"IN":11.8,"IA":9.5,"KS":10.2,"KY":13.2,"LA":14.5,"ME":9.8,"MD":10.2,"MA":8.5,"MI":11.5,"MN":8.8,"MS":14.7,"MO":12,"MT":7.9,"NE":9.2,"NV":10.8,"NH":7.9,"NJ":9.8,"NM":11.5,"NY":9.5,"NC":11.5,"ND":9,"OH":12.2,"OK":13,"OR":9.2,"PA":11,"RI":9.5,"SC":13,"SD":10.5,"TN":13.5,"TX":12,"UT":8.2,"VT":7.7,"VA":10.5,"WA":9,"WV":15,"WI":9.5,"WY":9.2},"2":{"AL":8.2,"AK":6.5,"AZ":6,"AR":8.6,"CA":5.2,"CO":4.8,"CT":5.9,"DE":7,"DC":4.5,"FL":6.8,"GA":7.1,"HI":4.8,"ID":6.3,"IL":7,"IN":7.9,"IA":6.5,"KS":6.7,"KY":9.2,"LA":7.7,"ME":6.5,"MD":5.7,"MA":5.8,"MI":7.4,"MN":6,"MS":8.2,"MO":7.8,"MT":6.2,"NE":6.5,"NV":6.2,"NH":6.2,"NJ":5.8,"NM":6.2,"NY":5.9,"NC":7.3,"ND":6.1,"OH":7.7,"OK":8.4,"OR":5.7,"PA":7.5,"RI":6.2,"SC":7.2,"SD":6.2,"TN":8.8,"TX":6.8,"UT":4.5,"VT":6.3,"VA":5.9,"WA":5.8,"WV":9.7,"WI":6.4,"WY":6.3},"3":{"AL":38.5,"AK":31.9,"AZ":30.5,"AR":37.6,"CA":25.3,"CO":22,"CT":28.7,"DE":29.7,"DC":22,"FL":27.1,"GA":32.2,"HI":28.6,"ID":28.5,"IL":28.4,"IN":34.8,"IA":31.2,"KS":37.6,"KY":37.2,"LA":39.2,"ME":33.2,"MD":32.7,"MA":27,"MI":36.1,"MN":32.3,"MS":40.4,"MO":34.6,"MT":31,"NE":37.6,"NV":34.2,"NH":31.1,"NJ":27.7,"NM":34.5,"NY":29.5,"NC":34.5,"ND":36.8,"OH":36.9,"OK":36.8,"OR":33.5,"PA":34.2,"RI":31.1,"SC":34.6,"SD":37,"TN":37.8,"TX":35.6,"UT":31,"VT":29,"VA":32.3,"WA":31.5,"WV":41.4,"WI":37.4,"WY":32.5},"4":{"AL":39.3,"AK":35.8,"AZ":39,"AR":38.5,"CA":37.9,"CO":37.7,"CT":41.1,"DE":41.6,"DC":34.9,"FL":42.6,"GA":37.6,"HI":40.9,"ID":37.3,"IL":39,"IN":38.1,"IA":38.6,"KS":37.4,"KY":39.1,"LA":38,"ME":44.8,"MD":39.4,"MA":40,"MI":40.2,"MN":38.8,"MS":38.6,"MO":39,"MT":40.4,"NE":37.2,"NV":39.1,"NH":43.3,"NJ":40.1,"NM":39.4,"NY":39.8,"NC":39.1,"ND":35.9,"OH":39.7,"OK":37,"OR":40.4,"PA":40.9,"RI":40.6,"SC":40.2,"SD":38,"TN":38.9,"TX":35.6,"UT":32,"VT":43.1,"VA":39,"WA":38.3,"WV":42.7,"WI":40.2,"WY":39.1},"5":{"AL":177.9,"AK":148,"AZ":149.5,"AR":174.8,"CA":142.8,"CO":140.5,"CT":140.5,"DE":168,"DC":148.5,"FL":156.8,"GA":158,"HI":141.5,"ID":152,"IL":156.5,"IN":174,"IA":152.5,"KS":155,"KY":191.2,"LA":172.5,"ME":162.5,"MD":154,"MA":141.2,"MI":163.2,"MN":148.8,"MS":181.3,"MO":168.2,"MT":158.5,"NE":151.5,"NV":162.5,"NH":155.8,"NJ":150.2,"NM":143.5,"NY":153.8,"NC":160.5,"ND":158.2,"OH":171.5,"OK":169.8,"OR":151.2,"PA":168.5,"RI":153.5,"SC":164.8,"SD":155.8,"TN":178.2,"TX":150.8,"UT":131.8,"VT":150.8,"VA":155.2,"WA":148.5,"WV":188.5,"WI":150.2,"WY":158},"6":{"AL":73.2,"AK":75.5,"AZ":76.8,"AR":73.8,"CA":79.2,"CO":78.8,"CT":79.1,"DE":76.5,"DC":76,"FL":78.5,"GA":75,"HI":80,"ID":78.2,"IL":77.5,"IN":75.8,"IA":78,"KS":77.2,"KY":73.6,"LA":73.1,"ME":77,"MD":77.8,"MA":79.8,"MI":75.8,"MN":79,"MS":72.6,"MO":74.8,"MT":77.5,"NE":78.2,"NV":75.5,"NH":79.3,"NJ":79.2,"NM":74.5,"NY":79,"NC":75.8,"ND":78.5,"OH":74.8,"OK":73.5,"OR":78.2,"PA":76.8,"RI":78.5,"SC":74.2,"SD":77.8,"TN":73.9,"TX":77,"UT":79.5,"VT":79,"VA":77.5,"WA":79.3,"WV":72.2,"WI":78.5,"WY":77.2},"7":{"AL":75,"AK":74.5,"AZ":74.2,"AR":75.2,"CA":77.5,"CO":77.5,"CT":83.5,"DE":81.8,"DC":87.5,"FL":76,"GA":76.2,"HI":79,"ID":74.5,"IL":77.8,"IN":77.8,"IA":79,"KS":76.2,"KY":75.2,"LA":74.5,"ME":79.8,"MD":82.5,"MA":85.2,"MI":78.2,"MN":79.5,"MS":74.8,"MO":75.8,"MT":77.8,"NE":78.8,"NV":73.5,"NH":80.2,"NJ":83,"NM":75,"NY":82.8,"NC":76.8,"ND":78.5,"OH":78.5,"OK":74.2,"OR":78.5,"PA":80.5,"RI":84.1,"SC":76.5,"SD":77.5,"TN":75.5,"TX":73.2,"UT":76,"VT":80.5,"VA":77,"WA":78.2,"WV":74.5,"WI":79.2,"WY":73.8}},"clinical":{"0":{"AL":69.5,"AK":64.5,"AZ":65.5,"AR":68.5,"CA":83.5,"CO":89.5,"CT":109.5,"DE":87.5,"DC":196.5,"FL":75,"GA":65.5,"HI":82.5,"ID":60.5,"IL":80.5,"IN":73.5,"IA":86.5,"KS":78.5,"KY":68,"LA":67.5,"ME":85,"MD":116,"MA":168.5,"MI":77.5,"MN":93.5,"MS":63.5,"MO":73,"MT":82,"NE":95.2,"NV":56.5,"NH":100.2,"NJ":83,"NM":68,"NY":105,"NC":72.5,"ND":90.5,"OH":79.2,"OK":66,"OR":92.8,"PA":81.5,"RI":98.5,"SC":70,"SD":88.5,"TN":70.5,"TX":58.5,"UT":85.5,"VT":133,"VA":78.5,"WA":91.5,"WV":67,"WI":88,"WY":72},"1":{"AL":105,"AK":89.5,"AZ":102.5,"AR":100.5,"CA":125,"CO":132.5,"CT":178,"DE":110.5,"DC":285,"FL":122.5,"GA":110,"HI":95.5,"ID":82.5,"IL":140,"IN":115,"IA":100.5,"KS":95.5,"KY":98.5,"LA":96.5,"ME":96.5,"MD":182.5,"MA":225,"MI":120.5,"MN":145.5,"MS":90.5,"MO":95.5,"MT":88,"NE":98.5,"NV":85.5,"NH":105,"NJ":148.5,"NM":88.5,"NY":205.5,"NC":130,"ND":90,"OH":142.5,"OK":93.5,"OR":138.5,"PA":152.5,"RI":165,"SC":103.5,"SD":85,"TN":112.5,"TX":108.5,"UT":100.5,"VT":102.5,"VA":118.5,"WA":135.5,"WV":91.5,"WI":128.5,"WY":82},"2":{"AL":28,"AK":38.5,"AZ":38,"AR":30.2,"CA":18.5,"CO":39.8,"CT":42.5,"DE":29.2,"DC":25.5,"FL":27,"GA":26.5,"HI":30,"ID":40.5,"IL":35.5,"IN":32,"IA":45.8,"KS":41.2,"KY":30.8,"LA":28.5,"ME":59.5,"MD":33.5,"MA":41.8,"MI":34.5,"MN":48.2,"MS":27.5,"MO":35,"MT":55.2,"NE":44.5,"NV":29.5,"NH":52.5,"NJ":32.8,"NM":37.5,"NY":32.5,"NC":34,"ND":46.8,"OH":36,"OK":29,"OR":50.5,"PA":36.5,"RI":43,"SC":31.5,"SD":47.5,"TN":31,"TX":22.5,"UT":37,"VT":54.8,"VA":33.8,"WA":39.2,"WV":30.5,"WI":43.5,"WY":48.8},"3":{"AL":128,"AK":42,"AZ":108,"AR":115,"CA":382,"CO":122,"CT":21,"DE":18,"DC":8,"FL":262,"GA":185,"HI":15,"ID":58,"IL":198,"IN":138,"IA":92,"KS":88,"KY":120,"LA":112,"ME":35,"MD":88,"MA":58,"MI":165,"MN":98,"MS":110,"MO":142,"MT":55,"NE":75,"NV":68,"NH":25,"NJ":85,"NM":95,"NY":243,"NC":175,"ND":42,"OH":212,"OK":118,"OR":70,"PA":203,"RI":19,"SC":132,"SD":48,"TN":158,"TX":540,"UT":62,"VT":22,"VA":152,"WA":148,"WV":72,"WI":105,"WY":38},"4":{"AL":33.2,"AK":47.5,"AZ":21.5,"AR":40.5,"CA":14.8,"CO":17.8,"CT":9.5,"DE":13.2,"DC":8.5,"FL":19.5,"GA":30.8,"HI":11.2,"ID":26.5,"IL":18.8,"IN":27.8,"IA":23.5,"KS":24.8,"KY":37.8,"LA":31.2,"ME":14.5,"MD":12.8,"MA":8.8,"MI":20.2,"MN":21.8,"MS":51.8,"MO":25.5,"MT":38.5,"NE":22.8,"NV":25.8,"NH":12.5,"NJ":11.8,"NM":49.5,"NY":16.5,"NC":28.5,"ND":35.8,"OH":20.8,"OK":34.5,"OR":22.5,"PA":20.5,"RI":11.5,"SC":30.2,"SD":36.5,"TN":32.5,"TX":31.8,"UT":15.5,"VT":12.2,"VA":19.2,"WA":18.5,"WV":42.8,"WI":16.2,"WY":33.8},"5":{"AL":12.8,"AK":25,"AZ":17.8,"AR":15.8,"CA":12,"CO":18.8,"CT":13.5,"DE":13,"DC":14.5,"FL":12.8,"GA":13.8,"HI":14.2,"ID":22.2,"IL":15,"IN":15,"IA":21,"KS":21.5,"KY":15.2,"LA":12.2,"ME":18.5,"MD":13.8,"MA":14.8,"MI":13.2,"MN":20.2,"MS":16.5,"MO":16.8,"MT":25.8,"NE":22.8,"NV":15.5,"NH":19.2,"NJ":12.2,"NM":17.5,"NY":13.5,"NC":14.2,"ND":27.5,"OH":14.8,"OK":12.5,"OR":20.5,"PA":13.5,"RI":14.2,"SC":14,"SD":23.5,"TN":15.5,"TX":13,"UT":18.2,"VT":19.5,"VA":14.5,"WA":19.8,"WV":16.2,"WI":17.2,"WY":24.2},"6":{"AL":6.5,"AK":2.5,"AZ":4.5,"AR":4.8,"CA":8.2,"CO":5,"CT":14.2,"DE":8.8,"DC":185.5,"FL":9.8,"GA":7.2,"HI":4.5,"ID":2.8,"IL":12.8,"IN":9.2,"IA":6,"KS":5.5,"KY":5.5,"LA":10.5,"ME":6.8,"MD":16.2,"MA":20.5,"MI":9.5,"MN":6.2,"MS":3.8,"MO":10.8,"MT":2.2,"NE":5.8,"NV":4.2,"NH":5.5,"NJ":9,"NM":3.5,"NY":23.8,"NC":11,"ND":3.5,"OH":13.5,"OK":4.5,"OR":7.8,"PA":14.5,"RI":12.5,"SC":6.8,"SD":3.2,"TN":11.5,"TX":8.8,"UT":4.8,"VT":10.2,"VA":7.5,"WA":8.5,"WV":4.2,"WI":5.2,"WY":1.5},"7":{"AL":970,"AK":850,"AZ":790,"AR":1020,"CA":750,"CO":870,"CT":1050,"DE":1030,"DC":1200,"FL":840,"GA":790,"HI":810,"ID":900,"IL":960,"IN":1040,"IA":1140,"KS":1080,"KY":1100,"LA":1010,"ME":1120,"MD":940,"MA":1200,"MI":1030,"MN":1150,"MS":950,"MO":1090,"MT":1010,"NE":1120,"NV":770,"NH":1080,"NJ":950,"NM":880,"NY":1090,"NC":920,"ND":1160,"OH":1110,"OK":960,"OR":970,"PA":1180,"RI":1100,"SC":940,"SD":1170,"TN":1000,"TX":790,"UT":780,"VT":1050,"VA":940,"WA":940,"WV":1150,"WI":1090,"WY":940},"8":{"AL":48,"AK":28,"AZ":36,"AR":52,"CA":32,"CO":36,"CT":44,"DE":40,"DC":38,"FL":40,"GA":36,"HI":28,"ID":34,"IL":42,"IN":48,"IA":44,"KS":42,"KY":55,"LA":48,"ME":38,"MD":40,"MA":42,"MI":45,"MN":40,"MS":52,"MO":46,"MT":32,"NE":40,"NV":30,"NH":40,"NJ":38,"NM":32,"NY":42,"NC":44,"ND":36,"OH":48,"OK":48,"OR":36,"PA":48,"RI":42,"SC":44,"SD":40,"TN":50,"TX":38,"UT":30,"VT":34,"VA":40,"WA":36,"WV":58,"WI":42,"WY":30}},"operations":{"0":{"AL":2.75,"AK":1.76,"AZ":1.88,"AR":2.46,"CA":1.93,"CO":1.49,"CT":2.28,"DE":2.08,"DC":3.05,"FL":2.5,"GA":2.06,"HI":1.73,"ID":1.35,"IL":2.13,"IN":2.19,"IA":1.84,"KS":2.13,"KY":2.79,"LA":3.05,"ME":1.98,"MD":1.66,"MA":2.15,"MI":2.12,"MN":1.79,"MS":3.03,"MO":2.67,"MT":1.86,"NE":2.15,"NV":1.97,"NH":1.71,"NJ":2.14,"NM":1.77,"NY":2.82,"NC":2.2,"ND":2.29,"OH":2.27,"OK":2.42,"OR":1.49,"PA":2.59,"RI":2.2,"SC":2.15,"SD":2.97,"TN":2.57,"TX":1.97,"UT":1.42,"VT":0.71,"VA":1.91,"WA":1.36,"WV":3.07,"WI":1.78,"WY":2.07},"1":{"AL":81,"AK":11,"AZ":84,"AR":50,"CA":332,"CO":60,"CT":33,"DE":8,"DC":7,"FL":225,"GA":110,"HI":14,"ID":18,"IL":133,"IN":101,"IA":37,"KS":54,"KY":73,"LA":109,"ME":16,"MD":49,"MA":69,"MI":101,"MN":54,"MS":65,"MO":78,"MT":14,"NE":28,"NV":32,"NH":14,"NJ":75,"NM":33,"NY":179,"NC":111,"ND":9,"OH":143,"OK":89,"OR":35,"PA":176,"RI":11,"SC":67,"SD":22,"TN":96,"TX":371,"UT":37,"VT":7,"VA":87,"WA":60,"WV":35,"WI":84,"WY":13},"2":{"AL":4,"AK":13,"AZ":14,"AR":29,"CA":34,"CO":29,"CT":0,"DE":0,"DC":0,"FL":13,"GA":30,"HI":9,"ID":27,"IL":51,"IN":35,"IA":82,"KS":84,"KY":28,"LA":27,"ME":16,"MD":0,"MA":3,"MI":36,"MN":79,"MS":32,"MO":36,"MT":48,"NE":64,"NV":11,"NH":13,"NJ":0,"NM":9,"NY":18,"NC":21,"ND":36,"OH":33,"OK":29,"OR":25,"PA":13,"RI":0,"SC":5,"SD":38,"TN":16,"TX":79,"UT":11,"VT":8,"VA":7,"WA":39,"WV":20,"WI":58,"WY":16},"3":{"AL":32.7,"AK":9.1,"AZ":42.9,"AR":22,"CA":18.1,"CO":20,"CT":6.1,"DE":12.5,"DC":14.3,"FL":48,"GA":25.5,"HI":14.3,"ID":16.7,"IL":15,"IN":18.8,"IA":10.8,"KS":14.8,"KY":20.5,"LA":40.4,"ME":6.3,"MD":8.2,"MA":5.8,"MI":13.9,"MN":7.4,"MS":21.5,"MO":17.9,"MT":14.3,"NE":10.7,"NV":53.1,"NH":7.1,"NJ":10.7,"NM":42.4,"NY":8.9,"NC":18,"ND":11.1,"OH":13.3,"OK":40.4,"OR":8.6,"PA":9.1,"RI":9.1,"SC":29.9,"SD":9.1,"TN":40.6,"TX":51.8,"UT":32.4,"VT":0,"VA":17.2,"WA":10,"WV":8.6,"WI":7.1,"WY":15.4},"4":{"AL":47,"AK":35,"AZ":45,"AR":46,"CA":65,"CO":44,"CT":71,"DE":48,"DC":122,"FL":60,"GA":56,"HI":48,"ID":36,"IL":68,"IN":48,"IA":40,"KS":42,"KY":48,"LA":46,"ME":40,"MD":83,"MA":77,"MI":47,"MN":42,"MS":45,"MO":46,"MT":28,"NE":40,"NV":62,"NH":42,"NJ":74,"NM":45,"NY":89,"NC":53,"ND":34,"OH":52,"OK":44,"OR":45,"PA":51,"RI":62,"SC":50,"SD":32,"TN":48,"TX":58,"UT":42,"VT":38,"VA":49,"WA":54,"WV":44,"WI":41,"WY":30},"5":{"AL":2.58,"AK":2.92,"AZ":2.6,"AR":2.68,"CA":2.52,"CO":2.95,"CT":2.75,"DE":2.7,"DC":2.02,"FL":2.48,"GA":2.6,"HI":2.72,"ID":3.1,"IL":2.72,"IN":2.85,"IA":3.25,"KS":3.12,"KY":2.65,"LA":2.45,"ME":3.08,"MD":2.55,"MA":2.78,"MI":2.78,"MN":3.18,"MS":2.42,"MO":2.76,"MT":3.28,"NE":3.35,"NV":2.25,"NH":3.05,"NJ":2.38,"NM":2.58,"NY":2.45,"NC":2.7,"ND":3.45,"OH":2.82,"OK":2.5,"OR":2.98,"PA":2.8,"RI":2.65,"SC":2.62,"SD":3.52,"TN":2.74,"TX":2.42,"UT":3,"VT":3.02,"VA":2.88,"WA":2.9,"WV":2.48,"WI":3.15,"WY":3.38},"6":{"AL":15.2,"AK":13.7,"AZ":14.3,"AR":14.9,"CA":14.2,"CO":14,"CT":14.5,"DE":14.5,"DC":17,"FL":15,"GA":14.7,"HI":14,"ID":13.3,"IL":15,"IN":14.8,"IA":14,"KS":14.2,"KY":15.2,"LA":15,"ME":14.5,"MD":15.5,"MA":15.3,"MI":14.7,"MN":13.9,"MS":15.5,"MO":14.5,"MT":13.5,"NE":14,"NV":15,"NH":14.2,"NJ":15.8,"NM":14.5,"NY":16.5,"NC":14.7,"ND":14,"OH":14.6,"OK":14.8,"OR":14,"PA":14.5,"RI":14.5,"SC":14.8,"SD":13.8,"TN":15,"TX":14.5,"UT":13.7,"VT":14,"VA":14.3,"WA":13.7,"WV":15,"WI":14,"WY":13.8}},"payer":{"0":{"AL":8.2,"AK":11,"AZ":10.3,"AR":9.4,"CA":5.9,"CO":7.9,"CT":5.8,"DE":6.9,"DC":4.5,"FL":10.9,"GA":12,"HI":3.5,"ID":9.2,"IL":6.9,"IN":8.5,"IA":5.4,"KS":8.5,"KY":6.8,"LA":7.7,"ME":5.5,"MD":6.3,"MA":2.8,"MI":5.1,"MN":5.1,"MS":9.7,"MO":7.7,"MT":8.8,"NE":7.1,"NV":11.4,"NH":4.5,"NJ":7.7,"NM":10.1,"NY":5,"NC":8.6,"ND":6.1,"OH":6.7,"OK":11.5,"OR":5.2,"PA":5.8,"RI":4.6,"SC":9,"SD":8.1,"TN":9.7,"TX":16.7,"UT":8.3,"VT":4.2,"VA":6.9,"WA":6.5,"WV":5.8,"WI":5.3,"WY":10.3},"1":{"AL":18.3,"AK":33.8,"AZ":25.2,"AR":26.1,"CA":34.1,"CO":19.8,"CT":25.1,"DE":23.3,"DC":36.8,"FL":16,"GA":17,"HI":28.2,"ID":15.3,"IL":25.3,"IN":25.2,"IA":20.8,"KS":13.8,"KY":29.9,"LA":32.7,"ME":24.3,"MD":24.1,"MA":23,"MI":23.2,"MN":19.7,"MS":20.3,"MO":20,"MT":18.8,"NE":16.7,"NV":23,"NH":13,"NJ":18.3,"NM":35.2,"NY":33.1,"NC":24.6,"ND":13,"OH":24.1,"OK":23.7,"OR":30.5,"PA":23.5,"RI":27.4,"SC":18.4,"SD":15.2,"TN":19.5,"TX":13,"UT":9.5,"VT":24.3,"VA":20.2,"WA":22.7,"WV":28.7,"WI":19.8,"WY":10.6},"2":{"AL":21,"AK":15,"AZ":20,"AR":22,"CA":17,"CO":17,"CT":20,"DE":23,"DC":12,"FL":22,"GA":17,"HI":21,"ID":19,"IL":19,"IN":19,"IA":21,"KS":19,"KY":21,"LA":20,"ME":26,"MD":18,"MA":20,"MI":22,"MN":19,"MS":21,"MO":21,"MT":22,"NE":19,"NV":18,"NH":24,"NJ":18,"NM":21,"NY":19,"NC":20,"ND":18,"OH":21,"OK":19,"OR":22,"PA":22,"RI":21,"SC":21,"SD":21,"TN":20,"TX":15,"UT":13,"VT":25,"VA":19,"WA":19,"WV":25,"WI":21,"WY":21},"3":{"AL":222000,"AK":26000,"AZ":378000,"AR":162000,"CA":1612000,"CO":155000,"CT":158000,"DE":42000,"DC":25000,"FL":3922000,"GA":754000,"HI":22000,"ID":88000,"IL":398000,"IN":225000,"IA":118000,"KS":105000,"KY":208000,"LA":195000,"ME":58000,"MD":202000,"MA":52000,"MI":325000,"MN":182000,"MS":142000,"MO":268000,"MT":48000,"NE":85000,"NV":112000,"NH":55000,"NJ":285000,"NM":98000,"NY":215000,"NC":806000,"ND":25000,"OH":385000,"OK":175000,"OR":148000,"PA":521000,"RI":45000,"SC":342000,"SD":38000,"TN":278000,"TX":2516000,"UT":95000,"VT":25000,"VA":432000,"WA":168000,"WV":62000,"WI":108000,"WY":35000},"4":{"AL":50.8,"AK":54.2,"AZ":50.2,"AR":50.5,"CA":56.8,"CO":58.2,"CT":62.2,"DE":52,"DC":48.5,"FL":51.2,"GA":53.5,"HI":59.8,"ID":52.5,"IL":56.5,"IN":54,"IA":59.2,"KS":58.8,"KY":52.2,"LA":49.2,"ME":53,"MD":60.2,"MA":63.5,"MI":55.5,"MN":62.8,"MS":47.5,"MO":55.2,"MT":51,"NE":59.5,"NV":49.5,"NH":61.8,"NJ":64.1,"NM":48.8,"NY":56.8,"NC":52.8,"ND":58.5,"OH":55.8,"OK":49.8,"OR":57.5,"PA":56.2,"RI":55.5,"SC":51.5,"SD":54.5,"TN":51.8,"TX":53.2,"UT":65.2,"VT":52.5,"VA":60.5,"WA":57.8,"WV":48.2,"WI":62.5,"WY":54.8},"5":{"AL":575,"AK":1070,"AZ":528,"AR":494,"CA":611,"CO":508,"CT":665,"DE":578,"DC":573,"FL":647,"GA":658,"HI":527,"ID":487,"IL":579,"IN":438,"IA":493,"KS":623,"KY":556,"LA":628,"ME":619,"MD":412,"MA":647,"MI":529,"MN":452,"MS":541,"MO":614,"MT":616,"NE":725,"NV":533,"NH":368,"NJ":584,"NM":608,"NY":1134,"NC":639,"ND":571,"OH":533,"OK":583,"OR":621,"PA":605,"RI":477,"SC":538,"SD":640,"TN":556,"TX":586,"UT":645,"VT":1157,"VA":523,"WA":528,"WV":952,"WI":603,"WY":884}},"policy":{"0":{"AL":0,"AK":1,"AZ":1,"AR":1,"CA":1,"CO":1,"CT":1,"DE":1,"DC":1,"FL":0,"GA":0,"HI":1,"ID":1,"IL":1,"IN":1,"IA":1,"KS":0,"KY":1,"LA":1,"ME":1,"MD":1,"MA":1,"MI":1,"MN":1,"MS":0,"MO":1,"MT":1,"NE":1,"NV":1,"NH":1,"NJ":1,"NM":1,"NY":1,"NC":1,"ND":1,"OH":1,"OK":1,"OR":1,"PA":1,"RI":1,"SC":0,"SD":1,"TN":0,"TX":0,"UT":1,"VT":1,"VA":1,"WA":1,"WV":1,"WI":0,"WY":0},"1":{"AL":10,"AK":8,"AZ":0,"AR":4,"CA":0,"CO":0,"CT":9,"DE":5,"DC":6,"FL":3,"GA":5,"HI":9,"ID":0,"IL":7,"IN":4,"IA":5,"KS":0,"KY":6,"LA":5,"ME":7,"MD":8,"MA":7,"MI":6,"MN":0,"MS":8,"MO":5,"MT":2,"NE":2,"NV":1,"NH":0,"NJ":6,"NM":0,"NY":9,"NC":6,"ND":0,"OH":2,"OK":3,"OR":5,"PA":0,"RI":5,"SC":6,"SD":0,"TN":8,"TX":0,"UT":0,"VT":7,"VA":6,"WA":6,"WV":12,"WI":0,"WY":0},"2":{"AL":2,"AK":3,"AZ":3,"AR":2,"CA":1,"CO":3,"CT":3,"DE":3,"DC":3,"FL":1,"GA":1,"HI":3,"ID":3,"IL":2,"IN":2,"IA":3,"KS":3,"KY":2,"LA":2,"ME":3,"MD":3,"MA":3,"MI":1,"MN":3,"MS":2,"MO":1,"MT":3,"NE":3,"NV":3,"NH":3,"NJ":2,"NM":3,"NY":3,"NC":1,"ND":3,"OH":2,"OK":1,"OR":3,"PA":2,"RI":3,"SC":1,"SD":3,"TN":1,"TX":1,"UT":3,"VT":3,"VA":1,"WA":3,"WV":2,"WI":2,"WY":3},"3":{"AL":1,"AK":1,"AZ":2,"AR":2,"CA":5,"CO":4,"CT":4,"DE":2,"DC":2,"FL":2,"GA":1,"HI":1,"ID":1,"IL":4,"IN":1,"IA":1,"KS":1,"KY":2,"LA":2,"ME":4,"MD":4,"MA":5,"MI":2,"MN":4,"MS":1,"MO":2,"MT":2,"NE":1,"NV":2,"NH":2,"NJ":4,"NM":2,"NY":5,"NC":2,"ND":1,"OH":2,"OK":2,"OR":4,"PA":2,"RI":2,"SC":1,"SD":1,"TN":1,"TX":2,"UT":1,"VT":4,"VA":2,"WA":4,"WV":1,"WI":2,"WY":0},"4":{"AL":0,"AK":0,"AZ":1,"AR":1,"CA":1,"CO":1,"CT":1,"DE":1,"DC":0,"FL":0,"GA":1,"HI":1,"ID":0,"IL":1,"IN":0,"IA":1,"KS":0,"KY":1,"LA":1,"ME":0,"MD":1,"MA":1,"MI":0,"MN":1,"MS":0,"MO":0,"MT":0,"NE":1,"NV":1,"NH":1,"NJ":1,"NM":1,"NY":0,"NC":0,"ND":0,"OH":0,"OK":0,"OR":1,"PA":0,"RI":0,"SC":0,"SD":0,"TN":0,"TX":0,"UT":0,"VT":0,"VA":1,"WA":1,"WV":0,"WI":0,"WY":0},"5":{"AL":2,"AK":2,"AZ":2,"AR":2,"CA":3,"CO":3,"CT":2,"DE":2,"DC":1,"FL":2,"GA":2,"HI":2,"ID":2,"IL":3,"IN":2,"IA":2,"KS":2,"KY":2,"LA":2,"ME":3,"MD":2,"MA":3,"MI":3,"MN":3,"MS":2,"MO":2,"MT":3,"NE":2,"NV":2,"NH":2,"NJ":2,"NM":3,"NY":3,"NC":2,"ND":2,"OH":2,"OK":2,"OR":3,"PA":2,"RI":2,"SC":2,"SD":2,"TN":2,"TX":2,"UT":2,"VT":3,"VA":2,"WA":3,"WV":3,"WI":2,"WY":2}},"economics":{"0":{"AL":57,"AK":82,"AZ":72,"AR":59,"CA":84,"CO":87,"CT":90,"DE":80,"DC":101,"FL":67,"GA":71,"HI":88,"ID":70,"IL":75,"IN":67,"IA":72,"KS":68,"KY":60,"LA":62,"ME":69,"MD":100,"MA":96,"MI":68,"MN":84,"MS":54,"MO":66,"MT":68,"NE":72,"NV":70,"NH":90,"NJ":97,"NM":62,"NY":80,"NC":69,"ND":75,"OH":67,"OK":61,"OR":78,"PA":72,"RI":79,"SC":63,"SD":69,"TN":65,"TX":73,"UT":84,"VT":75,"VA":88,"WA":91,"WV":58,"WI":73,"WY":73},"1":{"AL":3,"AK":4.8,"AZ":3.8,"AR":3.3,"CA":5.3,"CO":3.5,"CT":3.9,"DE":3.7,"DC":4.5,"FL":3.2,"GA":3.4,"HI":2.8,"ID":2.8,"IL":4.5,"IN":3.5,"IA":2.7,"KS":2.8,"KY":4.3,"LA":4,"ME":2.7,"MD":2.9,"MA":3.2,"MI":4.2,"MN":2.9,"MS":3.8,"MO":3.2,"MT":2.8,"NE":2.4,"NV":5.4,"NH":2.5,"NJ":4.4,"NM":4.2,"NY":4.4,"NC":3.4,"ND":2,"OH":3.8,"OK":3.3,"OR":4.2,"PA":3.5,"RI":4,"SC":3.4,"SD":2.3,"TN":3.4,"TX":4,"UT":3.1,"VT":2.6,"VA":2.9,"WA":4.2,"WV":4.6,"WI":2.8,"WY":3.3},"2":{"AL":28,"AK":27,"AZ":35,"AR":26,"CA":44,"CO":37,"CT":37,"DE":33,"DC":45,"FL":43,"GA":35,"HI":47,"ID":35,"IL":33,"IN":27,"IA":25,"KS":26,"KY":27,"LA":31,"ME":33,"MD":35,"MA":42,"MI":31,"MN":29,"MS":27,"MO":28,"MT":32,"NE":27,"NV":41,"NH":34,"NJ":42,"NM":32,"NY":47,"NC":34,"ND":23,"OH":30,"OK":27,"OR":40,"PA":32,"RI":41,"SC":32,"SD":25,"TN":31,"TX":34,"UT":33,"VT":33,"VA":33,"WA":39,"WV":26,"WI":28,"WY":27},"3":{"AL":14.5,"AK":12,"AZ":14,"AR":14.5,"CA":12.5,"CO":10.5,"CT":10,"DE":11.5,"DC":13.5,"FL":13,"GA":13.5,"HI":11,"ID":11.5,"IL":11,"IN":11.5,"IA":9.5,"KS":10,"KY":13,"LA":15,"ME":12.5,"MD":9.5,"MA":9.5,"MI":12.5,"MN":9,"MS":16.5,"MO":12,"MT":11,"NE":9.5,"NV":12,"NH":9,"NJ":10,"NM":14.5,"NY":12.5,"NC":13,"ND":9,"OH":12,"OK":14,"OR":13,"PA":11.5,"RI":11,"SC":13.5,"SD":10,"TN":13.5,"TX":14,"UT":9.5,"VT":10.5,"VA":10,"WA":11.5,"WV":14.5,"WI":10,"WY":10.5},"4":{"AL":90,"AK":124,"AZ":103,"AR":88,"CA":143,"CO":106,"CT":113,"DE":104,"DC":158,"FL":103,"GA":95,"HI":193,"ID":102,"IL":95,"IN":92,"IA":90,"KS":88,"KY":90,"LA":93,"ME":109,"MD":117,"MA":131,"MI":93,"MN":104,"MS":84,"MO":88,"MT":103,"NE":92,"NV":106,"NH":112,"NJ":122,"NM":95,"NY":126,"NC":95,"ND":99,"OH":92,"OK":87,"OR":112,"PA":101,"RI":115,"SC":95,"SD":95,"TN":93,"TX":95,"UT":103,"VT":116,"VA":105,"WA":115,"WV":89,"WI":97,"WY":100}}};
+const STATE_DATA = {"_readme":"State-level metric values. Keys: lens → metric index (string) → state abbreviation. Update values here; rendering code in American-4Ps-Map/index.html reads this at build time.","patient":{"0":{"AL":23,"AK":17.5,"AZ":16.5,"AR":21.9,"CA":15,"CO":13,"CT":12.2,"DE":17,"DC":16,"FL":16.8,"GA":19.4,"HI":12,"ID":16.5,"IL":15.8,"IN":19,"IA":14,"KS":16.5,"KY":23.1,"LA":20.8,"ME":15.8,"MD":15.4,"MA":12.5,"MI":18.2,"MN":11.4,"MS":24.2,"MO":18.8,"MT":16,"NE":13.8,"NV":17.2,"NH":13.4,"NJ":15.2,"NM":20.2,"NY":15.2,"NC":18.5,"ND":13.2,"OH":18.4,"OK":21.5,"OR":16.5,"PA":16,"RI":15.6,"SC":19.8,"SD":16.8,"TN":21,"TX":19.2,"UT":13,"VT":14.9,"VA":14.8,"WA":14.5,"WV":25.8,"WI":14.2,"WY":16.2},"1":{"AL":13.5,"AK":8.5,"AZ":10.2,"AR":13,"CA":9.5,"CO":8.1,"CT":8.8,"DE":11,"DC":9.2,"FL":11.2,"GA":11.8,"HI":10.5,"ID":9,"IL":10.5,"IN":11.8,"IA":9.5,"KS":10.2,"KY":13.2,"LA":14.5,"ME":9.8,"MD":10.2,"MA":8.5,"MI":11.5,"MN":8.8,"MS":14.7,"MO":12,"MT":7.9,"NE":9.2,"NV":10.8,"NH":7.9,"NJ":9.8,"NM":11.5,"NY":9.5,"NC":11.5,"ND":9,"OH":12.2,"OK":13,"OR":9.2,"PA":11,"RI":9.5,"SC":13,"SD":10.5,"TN":13.5,"TX":12,"UT":8.2,"VT":7.7,"VA":10.5,"WA":9,"WV":15,"WI":9.5,"WY":9.2},"2":{"AL":8.2,"AK":6.5,"AZ":6,"AR":8.6,"CA":5.2,"CO":4.8,"CT":5.9,"DE":7,"DC":4.5,"FL":6.8,"GA":7.1,"HI":4.8,"ID":6.3,"IL":7,"IN":7.9,"IA":6.5,"KS":6.7,"KY":9.2,"LA":7.7,"ME":6.5,"MD":5.7,"MA":5.8,"MI":7.4,"MN":6,"MS":8.2,"MO":7.8,"MT":6.2,"NE":6.5,"NV":6.2,"NH":6.2,"NJ":5.8,"NM":6.2,"NY":5.9,"NC":7.3,"ND":6.1,"OH":7.7,"OK":8.4,"OR":5.7,"PA":7.5,"RI":6.2,"SC":7.2,"SD":6.2,"TN":8.8,"TX":6.8,"UT":4.5,"VT":6.3,"VA":5.9,"WA":5.8,"WV":9.7,"WI":6.4,"WY":6.3},"3":{"AL":38.5,"AK":31.9,"AZ":30.5,"AR":37.6,"CA":25.3,"CO":22,"CT":28.7,"DE":29.7,"DC":22,"FL":27.1,"GA":32.2,"HI":28.6,"ID":28.5,"IL":28.4,"IN":34.8,"IA":31.2,"KS":37.6,"KY":37.2,"LA":39.2,"ME":33.2,"MD":32.7,"MA":27,"MI":36.1,"MN":32.3,"MS":40.4,"MO":34.6,"MT":31,"NE":37.6,"NV":34.2,"NH":31.1,"NJ":27.7,"NM":34.5,"NY":29.5,"NC":34.5,"ND":36.8,"OH":36.9,"OK":36.8,"OR":33.5,"PA":34.2,"RI":31.1,"SC":34.6,"SD":37,"TN":37.8,"TX":35.6,"UT":31,"VT":29,"VA":32.3,"WA":31.5,"WV":41.4,"WI":37.4,"WY":32.5},"4":{"AL":39.3,"AK":35.8,"AZ":39,"AR":38.5,"CA":37.9,"CO":37.7,"CT":41.1,"DE":41.6,"DC":34.9,"FL":42.6,"GA":37.6,"HI":40.9,"ID":37.3,"IL":39,"IN":38.1,"IA":38.6,"KS":37.4,"KY":39.1,"LA":38,"ME":44.8,"MD":39.4,"MA":40,"MI":40.2,"MN":38.8,"MS":38.6,"MO":39,"MT":40.4,"NE":37.2,"NV":39.1,"NH":43.3,"NJ":40.1,"NM":39.4,"NY":39.8,"NC":39.1,"ND":35.9,"OH":39.7,"OK":37,"OR":40.4,"PA":40.9,"RI":40.6,"SC":40.2,"SD":38,"TN":38.9,"TX":35.6,"UT":32,"VT":43.1,"VA":39,"WA":38.3,"WV":42.7,"WI":40.2,"WY":39.1},"5":{"AL":177.9,"AK":148,"AZ":149.5,"AR":174.8,"CA":142.8,"CO":140.5,"CT":140.5,"DE":168,"DC":148.5,"FL":156.8,"GA":158,"HI":141.5,"ID":152,"IL":156.5,"IN":174,"IA":152.5,"KS":155,"KY":191.2,"LA":172.5,"ME":162.5,"MD":154,"MA":141.2,"MI":163.2,"MN":148.8,"MS":181.3,"MO":168.2,"MT":158.5,"NE":151.5,"NV":162.5,"NH":155.8,"NJ":150.2,"NM":143.5,"NY":153.8,"NC":160.5,"ND":158.2,"OH":171.5,"OK":169.8,"OR":151.2,"PA":168.5,"RI":153.5,"SC":164.8,"SD":155.8,"TN":178.2,"TX":150.8,"UT":131.8,"VT":150.8,"VA":155.2,"WA":148.5,"WV":188.5,"WI":150.2,"WY":158},"6":{"AL":73.2,"AK":75.5,"AZ":76.8,"AR":73.8,"CA":79.2,"CO":78.8,"CT":79.1,"DE":76.5,"DC":76,"FL":78.5,"GA":75,"HI":80,"ID":78.2,"IL":77.5,"IN":75.8,"IA":78,"KS":77.2,"KY":73.6,"LA":73.1,"ME":77,"MD":77.8,"MA":79.8,"MI":75.8,"MN":79,"MS":72.6,"MO":74.8,"MT":77.5,"NE":78.2,"NV":75.5,"NH":79.3,"NJ":79.2,"NM":74.5,"NY":79,"NC":75.8,"ND":78.5,"OH":74.8,"OK":73.5,"OR":78.2,"PA":76.8,"RI":78.5,"SC":74.2,"SD":77.8,"TN":73.9,"TX":77,"UT":79.5,"VT":79,"VA":77.5,"WA":79.3,"WV":72.2,"WI":78.5,"WY":77.2},"7":{"AL":75,"AK":74.5,"AZ":74.2,"AR":75.2,"CA":77.5,"CO":77.5,"CT":83.5,"DE":81.8,"DC":87.5,"FL":76,"GA":76.2,"HI":79,"ID":74.5,"IL":77.8,"IN":77.8,"IA":79,"KS":76.2,"KY":75.2,"LA":74.5,"ME":79.8,"MD":82.5,"MA":85.2,"MI":78.2,"MN":79.5,"MS":74.8,"MO":75.8,"MT":77.8,"NE":78.8,"NV":73.5,"NH":80.2,"NJ":83,"NM":75,"NY":82.8,"NC":76.8,"ND":78.5,"OH":78.5,"OK":74.2,"OR":78.5,"PA":80.5,"RI":84.1,"SC":76.5,"SD":77.5,"TN":75.5,"TX":73.2,"UT":76,"VT":80.5,"VA":77,"WA":78.2,"WV":74.5,"WI":79.2,"WY":73.8}},"clinical":{"0":{"AL":69.5,"AK":64.5,"AZ":65.5,"AR":68.5,"CA":83.5,"CO":89.5,"CT":109.5,"DE":87.5,"DC":196.5,"FL":75,"GA":65.5,"HI":82.5,"ID":60.5,"IL":80.5,"IN":73.5,"IA":86.5,"KS":78.5,"KY":68,"LA":67.5,"ME":85,"MD":116,"MA":168.5,"MI":77.5,"MN":93.5,"MS":63.5,"MO":73,"MT":82,"NE":95.2,"NV":56.5,"NH":100.2,"NJ":83,"NM":68,"NY":105,"NC":72.5,"ND":90.5,"OH":79.2,"OK":66,"OR":92.8,"PA":81.5,"RI":98.5,"SC":70,"SD":88.5,"TN":70.5,"TX":58.5,"UT":85.5,"VT":133,"VA":78.5,"WA":91.5,"WV":67,"WI":88,"WY":72},"1":{"AL":105,"AK":89.5,"AZ":102.5,"AR":100.5,"CA":125,"CO":132.5,"CT":178,"DE":110.5,"DC":285,"FL":122.5,"GA":110,"HI":95.5,"ID":82.5,"IL":140,"IN":115,"IA":100.5,"KS":95.5,"KY":98.5,"LA":96.5,"ME":96.5,"MD":182.5,"MA":225,"MI":120.5,"MN":145.5,"MS":90.5,"MO":95.5,"MT":88,"NE":98.5,"NV":85.5,"NH":105,"NJ":148.5,"NM":88.5,"NY":205.5,"NC":130,"ND":90,"OH":142.5,"OK":93.5,"OR":138.5,"PA":152.5,"RI":165,"SC":103.5,"SD":85,"TN":112.5,"TX":108.5,"UT":100.5,"VT":102.5,"VA":118.5,"WA":135.5,"WV":91.5,"WI":128.5,"WY":82},"2":{"AL":28,"AK":38.5,"AZ":38,"AR":30.2,"CA":18.5,"CO":39.8,"CT":42.5,"DE":29.2,"DC":25.5,"FL":27,"GA":26.5,"HI":30,"ID":40.5,"IL":35.5,"IN":32,"IA":45.8,"KS":41.2,"KY":30.8,"LA":28.5,"ME":59.5,"MD":33.5,"MA":41.8,"MI":34.5,"MN":48.2,"MS":27.5,"MO":35,"MT":55.2,"NE":44.5,"NV":29.5,"NH":52.5,"NJ":32.8,"NM":37.5,"NY":32.5,"NC":34,"ND":46.8,"OH":36,"OK":29,"OR":50.5,"PA":36.5,"RI":43,"SC":31.5,"SD":47.5,"TN":31,"TX":22.5,"UT":37,"VT":54.8,"VA":33.8,"WA":39.2,"WV":30.5,"WI":43.5,"WY":48.8},"3":{"AL":128,"AK":42,"AZ":108,"AR":115,"CA":382,"CO":122,"CT":21,"DE":18,"DC":8,"FL":262,"GA":185,"HI":15,"ID":58,"IL":198,"IN":138,"IA":92,"KS":88,"KY":120,"LA":112,"ME":35,"MD":88,"MA":58,"MI":165,"MN":98,"MS":110,"MO":142,"MT":55,"NE":75,"NV":68,"NH":25,"NJ":85,"NM":95,"NY":243,"NC":175,"ND":42,"OH":212,"OK":118,"OR":70,"PA":203,"RI":19,"SC":132,"SD":48,"TN":158,"TX":540,"UT":62,"VT":22,"VA":152,"WA":148,"WV":72,"WI":105,"WY":38},"4":{"AL":33.2,"AK":47.5,"AZ":21.5,"AR":40.5,"CA":14.8,"CO":17.8,"CT":9.5,"DE":13.2,"DC":8.5,"FL":19.5,"GA":30.8,"HI":11.2,"ID":26.5,"IL":18.8,"IN":27.8,"IA":23.5,"KS":24.8,"KY":37.8,"LA":31.2,"ME":14.5,"MD":12.8,"MA":8.8,"MI":20.2,"MN":21.8,"MS":51.8,"MO":25.5,"MT":38.5,"NE":22.8,"NV":25.8,"NH":12.5,"NJ":11.8,"NM":49.5,"NY":16.5,"NC":28.5,"ND":35.8,"OH":20.8,"OK":34.5,"OR":22.5,"PA":20.5,"RI":11.5,"SC":30.2,"SD":36.5,"TN":32.5,"TX":31.8,"UT":15.5,"VT":12.2,"VA":19.2,"WA":18.5,"WV":42.8,"WI":16.2,"WY":33.8},"5":{"AL":12.8,"AK":25,"AZ":17.8,"AR":15.8,"CA":12,"CO":18.8,"CT":13.5,"DE":13,"DC":14.5,"FL":12.8,"GA":13.8,"HI":14.2,"ID":22.2,"IL":15,"IN":15,"IA":21,"KS":21.5,"KY":15.2,"LA":12.2,"ME":18.5,"MD":13.8,"MA":14.8,"MI":13.2,"MN":20.2,"MS":16.5,"MO":16.8,"MT":25.8,"NE":22.8,"NV":15.5,"NH":19.2,"NJ":12.2,"NM":17.5,"NY":13.5,"NC":14.2,"ND":27.5,"OH":14.8,"OK":12.5,"OR":20.5,"PA":13.5,"RI":14.2,"SC":14,"SD":23.5,"TN":15.5,"TX":13,"UT":18.2,"VT":19.5,"VA":14.5,"WA":19.8,"WV":16.2,"WI":17.2,"WY":24.2},"6":{"AL":6.5,"AK":2.5,"AZ":4.5,"AR":4.8,"CA":8.2,"CO":5,"CT":14.2,"DE":8.8,"DC":185.5,"FL":9.8,"GA":7.2,"HI":4.5,"ID":2.8,"IL":12.8,"IN":9.2,"IA":6,"KS":5.5,"KY":5.5,"LA":10.5,"ME":6.8,"MD":16.2,"MA":20.5,"MI":9.5,"MN":6.2,"MS":3.8,"MO":10.8,"MT":2.2,"NE":5.8,"NV":4.2,"NH":5.5,"NJ":9,"NM":3.5,"NY":23.8,"NC":11,"ND":3.5,"OH":13.5,"OK":4.5,"OR":7.8,"PA":14.5,"RI":12.5,"SC":6.8,"SD":3.2,"TN":11.5,"TX":8.8,"UT":4.8,"VT":10.2,"VA":7.5,"WA":8.5,"WV":4.2,"WI":5.2,"WY":1.5},"7":{"AL":970,"AK":850,"AZ":790,"AR":1020,"CA":750,"CO":870,"CT":1050,"DE":1030,"DC":1200,"FL":840,"GA":790,"HI":810,"ID":900,"IL":960,"IN":1040,"IA":1140,"KS":1080,"KY":1100,"LA":1010,"ME":1120,"MD":940,"MA":1200,"MI":1030,"MN":1150,"MS":950,"MO":1090,"MT":1010,"NE":1120,"NV":770,"NH":1080,"NJ":950,"NM":880,"NY":1090,"NC":920,"ND":1160,"OH":1110,"OK":960,"OR":970,"PA":1180,"RI":1100,"SC":940,"SD":1170,"TN":1000,"TX":790,"UT":780,"VT":1050,"VA":940,"WA":940,"WV":1150,"WI":1090,"WY":940},"8":{"AL":48,"AK":28,"AZ":36,"AR":52,"CA":32,"CO":36,"CT":44,"DE":40,"DC":38,"FL":40,"GA":36,"HI":28,"ID":34,"IL":42,"IN":48,"IA":44,"KS":42,"KY":55,"LA":48,"ME":38,"MD":40,"MA":42,"MI":45,"MN":40,"MS":52,"MO":46,"MT":32,"NE":40,"NV":30,"NH":40,"NJ":38,"NM":32,"NY":42,"NC":44,"ND":36,"OH":48,"OK":48,"OR":36,"PA":48,"RI":42,"SC":44,"SD":40,"TN":50,"TX":38,"UT":30,"VT":34,"VA":40,"WA":36,"WV":58,"WI":42,"WY":30}},"operations":{"0":{"AL":2.75,"AK":1.76,"AZ":1.88,"AR":2.46,"CA":1.93,"CO":1.49,"CT":2.28,"DE":2.08,"DC":3.05,"FL":2.5,"GA":2.06,"HI":1.73,"ID":1.35,"IL":2.13,"IN":2.19,"IA":1.84,"KS":2.13,"KY":2.79,"LA":3.05,"ME":1.98,"MD":1.66,"MA":2.15,"MI":2.12,"MN":1.79,"MS":3.03,"MO":2.67,"MT":1.86,"NE":2.15,"NV":1.97,"NH":1.71,"NJ":2.14,"NM":1.77,"NY":2.82,"NC":2.2,"ND":2.29,"OH":2.27,"OK":2.42,"OR":1.49,"PA":2.59,"RI":2.2,"SC":2.15,"SD":2.97,"TN":2.57,"TX":1.97,"UT":1.42,"VT":0.71,"VA":1.91,"WA":1.36,"WV":3.07,"WI":1.78,"WY":2.07},"1":{"AL":81,"AK":11,"AZ":84,"AR":50,"CA":332,"CO":60,"CT":33,"DE":8,"DC":7,"FL":225,"GA":110,"HI":14,"ID":18,"IL":133,"IN":101,"IA":37,"KS":54,"KY":73,"LA":109,"ME":16,"MD":49,"MA":69,"MI":101,"MN":54,"MS":65,"MO":78,"MT":14,"NE":28,"NV":32,"NH":14,"NJ":75,"NM":33,"NY":179,"NC":111,"ND":9,"OH":143,"OK":89,"OR":35,"PA":176,"RI":11,"SC":67,"SD":22,"TN":96,"TX":371,"UT":37,"VT":7,"VA":87,"WA":60,"WV":35,"WI":84,"WY":13},"2":{"AL":4,"AK":13,"AZ":14,"AR":29,"CA":34,"CO":29,"CT":0,"DE":0,"DC":0,"FL":13,"GA":30,"HI":9,"ID":27,"IL":51,"IN":35,"IA":82,"KS":84,"KY":28,"LA":27,"ME":16,"MD":0,"MA":3,"MI":36,"MN":79,"MS":32,"MO":36,"MT":48,"NE":64,"NV":11,"NH":13,"NJ":0,"NM":9,"NY":18,"NC":21,"ND":36,"OH":33,"OK":29,"OR":25,"PA":13,"RI":0,"SC":5,"SD":38,"TN":16,"TX":79,"UT":11,"VT":8,"VA":7,"WA":39,"WV":20,"WI":58,"WY":16},"3":{"AL":32.7,"AK":9.1,"AZ":42.9,"AR":22,"CA":18.1,"CO":20,"CT":6.1,"DE":12.5,"DC":14.3,"FL":48,"GA":25.5,"HI":14.3,"ID":16.7,"IL":15,"IN":18.8,"IA":10.8,"KS":14.8,"KY":20.5,"LA":40.4,"ME":6.3,"MD":8.2,"MA":5.8,"MI":13.9,"MN":7.4,"MS":21.5,"MO":17.9,"MT":14.3,"NE":10.7,"NV":53.1,"NH":7.1,"NJ":10.7,"NM":42.4,"NY":8.9,"NC":18,"ND":11.1,"OH":13.3,"OK":40.4,"OR":8.6,"PA":9.1,"RI":9.1,"SC":29.9,"SD":9.1,"TN":40.6,"TX":51.8,"UT":32.4,"VT":0,"VA":17.2,"WA":10,"WV":8.6,"WI":7.1,"WY":15.4},"4":{"AL":47,"AK":35,"AZ":45,"AR":46,"CA":65,"CO":44,"CT":71,"DE":48,"DC":122,"FL":60,"GA":56,"HI":48,"ID":36,"IL":68,"IN":48,"IA":40,"KS":42,"KY":48,"LA":46,"ME":40,"MD":83,"MA":77,"MI":47,"MN":42,"MS":45,"MO":46,"MT":28,"NE":40,"NV":62,"NH":42,"NJ":74,"NM":45,"NY":89,"NC":53,"ND":34,"OH":52,"OK":44,"OR":45,"PA":51,"RI":62,"SC":50,"SD":32,"TN":48,"TX":58,"UT":42,"VT":38,"VA":49,"WA":54,"WV":44,"WI":41,"WY":30},"5":{"AL":2.58,"AK":2.92,"AZ":2.6,"AR":2.68,"CA":2.52,"CO":2.95,"CT":2.75,"DE":2.7,"DC":2.02,"FL":2.48,"GA":2.6,"HI":2.72,"ID":3.1,"IL":2.72,"IN":2.85,"IA":3.25,"KS":3.12,"KY":2.65,"LA":2.45,"ME":3.08,"MD":2.55,"MA":2.78,"MI":2.78,"MN":3.18,"MS":2.42,"MO":2.76,"MT":3.28,"NE":3.35,"NV":2.25,"NH":3.05,"NJ":2.38,"NM":2.58,"NY":2.45,"NC":2.7,"ND":3.45,"OH":2.82,"OK":2.5,"OR":2.98,"PA":2.8,"RI":2.65,"SC":2.62,"SD":3.52,"TN":2.74,"TX":2.42,"UT":3,"VT":3.02,"VA":2.88,"WA":2.9,"WV":2.48,"WI":3.15,"WY":3.38},"6":{"AL":15.2,"AK":13.7,"AZ":14.3,"AR":14.9,"CA":14.2,"CO":14,"CT":14.5,"DE":14.5,"DC":17,"FL":15,"GA":14.7,"HI":14,"ID":13.3,"IL":15,"IN":14.8,"IA":14,"KS":14.2,"KY":15.2,"LA":15,"ME":14.5,"MD":15.5,"MA":15.3,"MI":14.7,"MN":13.9,"MS":15.5,"MO":14.5,"MT":13.5,"NE":14,"NV":15,"NH":14.2,"NJ":15.8,"NM":14.5,"NY":16.5,"NC":14.7,"ND":14,"OH":14.6,"OK":14.8,"OR":14,"PA":14.5,"RI":14.5,"SC":14.8,"SD":13.8,"TN":15,"TX":14.5,"UT":13.7,"VT":14,"VA":14.3,"WA":13.7,"WV":15,"WI":14,"WY":13.8}},"payer":{"0":{"AL":8.2,"AK":11,"AZ":10.3,"AR":9.4,"CA":5.9,"CO":7.9,"CT":5.8,"DE":6.9,"DC":4.5,"FL":10.9,"GA":12,"HI":3.5,"ID":9.2,"IL":6.9,"IN":8.5,"IA":5.4,"KS":8.5,"KY":6.8,"LA":7.7,"ME":5.5,"MD":6.3,"MA":2.8,"MI":5.1,"MN":5.1,"MS":9.7,"MO":7.7,"MT":8.8,"NE":7.1,"NV":11.4,"NH":4.5,"NJ":7.7,"NM":10.1,"NY":5,"NC":8.6,"ND":6.1,"OH":6.7,"OK":11.5,"OR":5.2,"PA":5.8,"RI":4.6,"SC":9,"SD":8.1,"TN":9.7,"TX":16.7,"UT":8.3,"VT":4.2,"VA":6.9,"WA":6.5,"WV":5.8,"WI":5.3,"WY":10.3},"1":{"AL":18.3,"AK":33.8,"AZ":25.2,"AR":26.1,"CA":34.1,"CO":19.8,"CT":25.1,"DE":23.3,"DC":36.8,"FL":16,"GA":17,"HI":28.2,"ID":15.3,"IL":25.3,"IN":25.2,"IA":20.8,"KS":13.8,"KY":29.9,"LA":32.7,"ME":24.3,"MD":24.1,"MA":23,"MI":23.2,"MN":19.7,"MS":20.3,"MO":20,"MT":18.8,"NE":16.7,"NV":23,"NH":13,"NJ":18.3,"NM":35.2,"NY":33.1,"NC":24.6,"ND":13,"OH":24.1,"OK":23.7,"OR":30.5,"PA":23.5,"RI":27.4,"SC":18.4,"SD":15.2,"TN":19.5,"TX":13,"UT":9.5,"VT":24.3,"VA":20.2,"WA":22.7,"WV":28.7,"WI":19.8,"WY":10.6},"2":{"AL":21,"AK":15,"AZ":20,"AR":22,"CA":17,"CO":17,"CT":20,"DE":23,"DC":12,"FL":22,"GA":17,"HI":21,"ID":19,"IL":19,"IN":19,"IA":21,"KS":19,"KY":21,"LA":20,"ME":26,"MD":18,"MA":20,"MI":22,"MN":19,"MS":21,"MO":21,"MT":22,"NE":19,"NV":18,"NH":24,"NJ":18,"NM":21,"NY":19,"NC":20,"ND":18,"OH":21,"OK":19,"OR":22,"PA":22,"RI":21,"SC":21,"SD":21,"TN":20,"TX":15,"UT":13,"VT":25,"VA":19,"WA":19,"WV":25,"WI":21,"WY":21},"3":{"AL":222000,"AK":26000,"AZ":378000,"AR":162000,"CA":1612000,"CO":155000,"CT":158000,"DE":42000,"DC":25000,"FL":3922000,"GA":754000,"HI":22000,"ID":88000,"IL":398000,"IN":225000,"IA":118000,"KS":105000,"KY":208000,"LA":195000,"ME":58000,"MD":202000,"MA":52000,"MI":325000,"MN":182000,"MS":142000,"MO":268000,"MT":48000,"NE":85000,"NV":112000,"NH":55000,"NJ":285000,"NM":98000,"NY":215000,"NC":806000,"ND":25000,"OH":385000,"OK":175000,"OR":148000,"PA":521000,"RI":45000,"SC":342000,"SD":38000,"TN":278000,"TX":2516000,"UT":95000,"VT":25000,"VA":432000,"WA":168000,"WV":62000,"WI":108000,"WY":35000},"4":{"AL":50.8,"AK":54.2,"AZ":50.2,"AR":50.5,"CA":56.8,"CO":58.2,"CT":62.2,"DE":52,"DC":48.5,"FL":51.2,"GA":53.5,"HI":59.8,"ID":52.5,"IL":56.5,"IN":54,"IA":59.2,"KS":58.8,"KY":52.2,"LA":49.2,"ME":53,"MD":60.2,"MA":63.5,"MI":55.5,"MN":62.8,"MS":47.5,"MO":55.2,"MT":51,"NE":59.5,"NV":49.5,"NH":61.8,"NJ":64.1,"NM":48.8,"NY":56.8,"NC":52.8,"ND":58.5,"OH":55.8,"OK":49.8,"OR":57.5,"PA":56.2,"RI":55.5,"SC":51.5,"SD":54.5,"TN":51.8,"TX":53.2,"UT":65.2,"VT":52.5,"VA":60.5,"WA":57.8,"WV":48.2,"WI":62.5,"WY":54.8},"5":{"AL":575,"AK":1070,"AZ":528,"AR":494,"CA":611,"CO":508,"CT":665,"DE":578,"DC":573,"FL":647,"GA":658,"HI":527,"ID":487,"IL":579,"IN":438,"IA":493,"KS":623,"KY":556,"LA":628,"ME":619,"MD":412,"MA":647,"MI":529,"MN":452,"MS":541,"MO":614,"MT":616,"NE":725,"NV":533,"NH":368,"NJ":584,"NM":608,"NY":1134,"NC":639,"ND":571,"OH":533,"OK":583,"OR":621,"PA":605,"RI":477,"SC":538,"SD":640,"TN":556,"TX":586,"UT":645,"VT":1157,"VA":523,"WA":528,"WV":952,"WI":603,"WY":884}},"policy":{"0":{"AL":0,"AK":1,"AZ":1,"AR":1,"CA":1,"CO":1,"CT":1,"DE":1,"DC":1,"FL":0,"GA":0,"HI":1,"ID":1,"IL":1,"IN":1,"IA":1,"KS":0,"KY":1,"LA":1,"ME":1,"MD":1,"MA":1,"MI":1,"MN":1,"MS":0,"MO":1,"MT":1,"NE":1,"NV":1,"NH":1,"NJ":1,"NM":1,"NY":1,"NC":1,"ND":1,"OH":1,"OK":1,"OR":1,"PA":1,"RI":1,"SC":0,"SD":1,"TN":0,"TX":0,"UT":1,"VT":1,"VA":1,"WA":1,"WV":1,"WI":0,"WY":0},"1":{"AL":10,"AK":8,"AZ":0,"AR":4,"CA":0,"CO":0,"CT":9,"DE":5,"DC":6,"FL":3,"GA":5,"HI":9,"ID":0,"IL":7,"IN":4,"IA":5,"KS":0,"KY":6,"LA":5,"ME":7,"MD":8,"MA":7,"MI":6,"MN":0,"MS":8,"MO":5,"MT":2,"NE":2,"NV":1,"NH":0,"NJ":6,"NM":0,"NY":9,"NC":6,"ND":0,"OH":2,"OK":3,"OR":5,"PA":0,"RI":5,"SC":6,"SD":0,"TN":8,"TX":0,"UT":0,"VT":7,"VA":6,"WA":6,"WV":12,"WI":0,"WY":0},"2":{"AL":2,"AK":3,"AZ":3,"AR":2,"CA":1,"CO":3,"CT":3,"DE":3,"DC":3,"FL":1,"GA":1,"HI":3,"ID":3,"IL":2,"IN":2,"IA":3,"KS":3,"KY":2,"LA":2,"ME":3,"MD":3,"MA":3,"MI":1,"MN":3,"MS":2,"MO":1,"MT":3,"NE":3,"NV":3,"NH":3,"NJ":2,"NM":3,"NY":3,"NC":1,"ND":3,"OH":2,"OK":1,"OR":3,"PA":2,"RI":3,"SC":1,"SD":3,"TN":1,"TX":1,"UT":3,"VT":3,"VA":1,"WA":3,"WV":2,"WI":2,"WY":3},"3":{"AL":1,"AK":1,"AZ":2,"AR":2,"CA":5,"CO":4,"CT":4,"DE":2,"DC":2,"FL":2,"GA":1,"HI":1,"ID":1,"IL":4,"IN":1,"IA":1,"KS":1,"KY":2,"LA":2,"ME":4,"MD":4,"MA":5,"MI":2,"MN":4,"MS":1,"MO":2,"MT":2,"NE":1,"NV":2,"NH":2,"NJ":4,"NM":2,"NY":5,"NC":2,"ND":1,"OH":2,"OK":2,"OR":4,"PA":2,"RI":2,"SC":1,"SD":1,"TN":1,"TX":2,"UT":1,"VT":4,"VA":2,"WA":4,"WV":1,"WI":2,"WY":0},"4":{"AL":0,"AK":0,"AZ":1,"AR":1,"CA":1,"CO":1,"CT":1,"DE":1,"DC":0,"FL":0,"GA":1,"HI":1,"ID":0,"IL":1,"IN":0,"IA":1,"KS":0,"KY":1,"LA":1,"ME":0,"MD":1,"MA":1,"MI":0,"MN":1,"MS":0,"MO":0,"MT":0,"NE":1,"NV":1,"NH":1,"NJ":1,"NM":1,"NY":0,"NC":0,"ND":0,"OH":0,"OK":0,"OR":1,"PA":0,"RI":0,"SC":0,"SD":0,"TN":0,"TX":0,"UT":0,"VT":0,"VA":1,"WA":1,"WV":0,"WI":0,"WY":0},"5":{"AL":2,"AK":2,"AZ":2,"AR":2,"CA":3,"CO":3,"CT":2,"DE":2,"DC":1,"FL":2,"GA":2,"HI":2,"ID":2,"IL":3,"IN":2,"IA":2,"KS":2,"KY":2,"LA":2,"ME":3,"MD":2,"MA":3,"MI":3,"MN":3,"MS":2,"MO":2,"MT":3,"NE":2,"NV":2,"NH":2,"NJ":2,"NM":3,"NY":3,"NC":2,"ND":2,"OH":2,"OK":2,"OR":3,"PA":2,"RI":2,"SC":2,"SD":2,"TN":2,"TX":2,"UT":2,"VT":3,"VA":2,"WA":3,"WV":3,"WI":2,"WY":2}},"baseline":{"0":{"AL":57,"AK":82,"AZ":72,"AR":59,"CA":84,"CO":87,"CT":90,"DE":80,"DC":101,"FL":67,"GA":71,"HI":88,"ID":70,"IL":75,"IN":67,"IA":72,"KS":68,"KY":60,"LA":62,"ME":69,"MD":100,"MA":96,"MI":68,"MN":84,"MS":54,"MO":66,"MT":68,"NE":72,"NV":70,"NH":90,"NJ":97,"NM":62,"NY":80,"NC":69,"ND":75,"OH":67,"OK":61,"OR":78,"PA":72,"RI":79,"SC":63,"SD":69,"TN":65,"TX":73,"UT":84,"VT":75,"VA":88,"WA":91,"WV":58,"WI":73,"WY":73},"1":{"AL":3,"AK":4.8,"AZ":3.8,"AR":3.3,"CA":5.3,"CO":3.5,"CT":3.9,"DE":3.7,"DC":4.5,"FL":3.2,"GA":3.4,"HI":2.8,"ID":2.8,"IL":4.5,"IN":3.5,"IA":2.7,"KS":2.8,"KY":4.3,"LA":4,"ME":2.7,"MD":2.9,"MA":3.2,"MI":4.2,"MN":2.9,"MS":3.8,"MO":3.2,"MT":2.8,"NE":2.4,"NV":5.4,"NH":2.5,"NJ":4.4,"NM":4.2,"NY":4.4,"NC":3.4,"ND":2,"OH":3.8,"OK":3.3,"OR":4.2,"PA":3.5,"RI":4,"SC":3.4,"SD":2.3,"TN":3.4,"TX":4,"UT":3.1,"VT":2.6,"VA":2.9,"WA":4.2,"WV":4.6,"WI":2.8,"WY":3.3},"2":{"AL":28,"AK":27,"AZ":35,"AR":26,"CA":44,"CO":37,"CT":37,"DE":33,"DC":45,"FL":43,"GA":35,"HI":47,"ID":35,"IL":33,"IN":27,"IA":25,"KS":26,"KY":27,"LA":31,"ME":33,"MD":35,"MA":42,"MI":31,"MN":29,"MS":27,"MO":28,"MT":32,"NE":27,"NV":41,"NH":34,"NJ":42,"NM":32,"NY":47,"NC":34,"ND":23,"OH":30,"OK":27,"OR":40,"PA":32,"RI":41,"SC":32,"SD":25,"TN":31,"TX":34,"UT":33,"VT":33,"VA":33,"WA":39,"WV":26,"WI":28,"WY":27},"3":{"AL":14.5,"AK":12,"AZ":14,"AR":14.5,"CA":12.5,"CO":10.5,"CT":10,"DE":11.5,"DC":13.5,"FL":13,"GA":13.5,"HI":11,"ID":11.5,"IL":11,"IN":11.5,"IA":9.5,"KS":10,"KY":13,"LA":15,"ME":12.5,"MD":9.5,"MA":9.5,"MI":12.5,"MN":9,"MS":16.5,"MO":12,"MT":11,"NE":9.5,"NV":12,"NH":9,"NJ":10,"NM":14.5,"NY":12.5,"NC":13,"ND":9,"OH":12,"OK":14,"OR":13,"PA":11.5,"RI":11,"SC":13.5,"SD":10,"TN":13.5,"TX":14,"UT":9.5,"VT":10.5,"VA":10,"WA":11.5,"WV":14.5,"WI":10,"WY":10.5},"4":{"AL":90,"AK":124,"AZ":103,"AR":88,"CA":143,"CO":106,"CT":113,"DE":104,"DC":158,"FL":103,"GA":95,"HI":193,"ID":102,"IL":95,"IN":92,"IA":90,"KS":88,"KY":90,"LA":93,"ME":109,"MD":117,"MA":131,"MI":93,"MN":104,"MS":84,"MO":88,"MT":103,"NE":92,"NV":106,"NH":112,"NJ":122,"NM":95,"NY":126,"NC":95,"ND":99,"OH":92,"OK":87,"OR":112,"PA":101,"RI":115,"SC":95,"SD":95,"TN":93,"TX":95,"UT":103,"VT":116,"VA":105,"WA":115,"WV":89,"WI":97,"WY":100},"5":{"AL":18.3,"AK":12.2,"AZ":18.9,"AR":17.9,"CA":15.2,"CO":15.3,"CT":17.8,"DE":20,"DC":13,"FL":21.8,"GA":14.3,"HI":21,"ID":17.2,"IL":16.8,"IN":16.8,"IA":17.8,"KS":16.7,"KY":17.5,"LA":16.4,"ME":22,"MD":16,"MA":17.9,"MI":18.1,"MN":16.6,"MS":16.5,"MO":18.2,"MT":19.6,"NE":16.7,"NV":16.5,"NH":20.2,"NJ":17.3,"NM":18.2,"NY":17.2,"NC":16.9,"ND":16.3,"OH":18.2,"OK":16.5,"OR":18.4,"PA":19.2,"RI":18.6,"SC":18.9,"SD":17.8,"TN":17.5,"TX":12.9,"UT":11.6,"VT":21.7,"VA":16.2,"WA":15.4,"WV":21.6,"WI":18.2,"WY":18.1},"6":{"AL":22,"AK":24.3,"AZ":23.5,"AR":22.8,"CA":22.2,"CO":22.1,"CT":20.6,"DE":21.7,"DC":17.7,"FL":19.6,"GA":23.6,"HI":20.5,"ID":25.4,"IL":22.2,"IN":23.2,"IA":23.1,"KS":24.1,"KY":22.4,"LA":22.9,"ME":18.2,"MD":22.3,"MA":19.7,"MI":21.8,"MN":22.9,"MS":23.2,"MO":22.3,"MT":21.6,"NE":24.4,"NV":22.6,"NH":19,"NJ":21.7,"NM":23,"NY":21.1,"NC":22.3,"ND":23,"OH":22,"OK":23.9,"OR":20.7,"PA":21,"RI":20.4,"SC":21.8,"SD":24.2,"TN":22,"TX":25.5,"UT":29.8,"VT":17.6,"VA":22,"WA":21.7,"WV":18.9,"WI":22,"WY":22.5},"7":{"AL":4.6,"AK":7.5,"AZ":32.4,"AR":8.8,"CA":39.5,"CO":22.2,"CT":17.4,"DE":9.7,"DC":11.3,"FL":26.2,"GA":10.5,"HI":10.4,"ID":13,"IL":17.7,"IN":8,"IA":6.3,"KS":12.3,"KY":4.4,"LA":5.6,"ME":1.7,"MD":11.2,"MA":13.2,"MI":5.5,"MN":5.9,"MS":3.5,"MO":4.4,"MT":4,"NE":11.7,"NV":29.4,"NH":4.1,"NJ":22,"NM":50.1,"NY":19.2,"NC":10.5,"ND":3.8,"OH":4,"OK":11,"OR":13.9,"PA":7.8,"RI":15.9,"SC":6,"SD":4.3,"TN":5.6,"TX":40.2,"UT":14.2,"VT":2,"VA":10,"WA":13.4,"WV":1.7,"WI":7.6,"WY":10.1},"8":{"AL":27,"AK":3.9,"AZ":4.6,"AR":15.7,"CA":6.5,"CO":4.2,"CT":12.1,"DE":22.9,"DC":44.5,"FL":17,"GA":33,"HI":2.3,"ID":0.8,"IL":14.7,"IN":9.8,"IA":4.1,"KS":6.2,"KY":8.7,"LA":33.4,"ME":1.7,"MD":31.1,"MA":9,"MI":14.2,"MN":7,"MS":37.9,"MO":11.9,"MT":0.5,"NE":4.8,"NV":10.5,"NH":1.9,"NJ":14.5,"NM":2.5,"NY":17.5,"NC":22.3,"ND":2.4,"OH":13,"OK":7.9,"OR":2.1,"PA":12.3,"RI":8.4,"SC":27.1,"SD":2.1,"TN":17,"TX":13,"UT":1.3,"VT":1.5,"VA":20.1,"WA":4.3,"WV":3.7,"WI":6.7,"WY":1},"9":{"AL":64.7,"AK":60.8,"AZ":54.1,"AR":72,"CA":37.2,"CO":66.8,"CT":63.9,"DE":59.2,"DC":36.1,"FL":50.5,"GA":50.6,"HI":24.5,"ID":79.8,"IL":60.8,"IN":79.5,"IA":84.4,"KS":76.7,"KY":85.3,"LA":57.2,"ME":93.5,"MD":52,"MA":71.8,"MI":74.9,"MN":79,"MS":56.7,"MO":79.1,"MT":86.5,"NE":77.4,"NV":48.3,"NH":88.5,"NJ":55.3,"NM":36.8,"NY":57.5,"NC":62.8,"ND":84,"OH":76.9,"OK":63.5,"OR":74,"PA":75.6,"RI":69.7,"SC":63.6,"SD":83.5,"TN":74.8,"TX":41.7,"UT":76.5,"VT":92.9,"VA":60.5,"WA":66.5,"WV":89.5,"WI":81.6,"WY":83.7},"10":{"AL":1.5,"AK":6,"AZ":4.8,"AR":1.5,"CA":15.6,"CO":3.5,"CT":5,"DE":4.2,"DC":4.5,"FL":3.1,"GA":4.5,"HI":37.8,"ID":1.5,"IL":6,"IN":2.5,"IA":2.5,"KS":3,"KY":1.8,"LA":1.8,"ME":1.2,"MD":6.8,"MA":7,"MI":3.2,"MN":5,"MS":1,"MO":2.2,"MT":0.8,"NE":3,"NV":9,"NH":2.8,"NJ":9.8,"NM":1.5,"NY":8.8,"NC":3.2,"ND":1.5,"OH":2.5,"OK":2.3,"OR":4.8,"PA":3.6,"RI":3.7,"SC":1.8,"SD":1.2,"TN":1.8,"TX":5.2,"UT":2.5,"VT":1.8,"VA":6.8,"WA":9.2,"WV":0.8,"WI":3,"WY":0.8},"11":{"AL":3.6,"AK":7.1,"AZ":13.5,"AR":4.8,"CA":26.8,"CO":9.7,"CT":15,"DE":9.4,"DC":14.5,"FL":20.2,"GA":10.2,"HI":18.2,"ID":5.8,"IL":13.9,"IN":5.2,"IA":5.2,"KS":7.4,"KY":3.8,"LA":4.2,"ME":3.8,"MD":15,"MA":16.2,"MI":6.5,"MN":8.5,"MS":2.5,"MO":4.2,"MT":2.2,"NE":7.2,"NV":19.5,"NH":7,"NJ":22.8,"NM":10,"NY":23.1,"NC":8,"ND":3.8,"OH":4.5,"OK":5.8,"OR":9.5,"PA":6.5,"RI":14,"SC":5,"SD":3,"TN":5,"TX":17,"UT":8.2,"VT":5,"VA":13.5,"WA":14.5,"WV":1.8,"WI":4.8,"WY":3.2},"12":{"AL":59,"AK":66,"AZ":89.8,"AR":57.1,"CA":95,"CO":86.2,"CT":87.7,"DE":83.3,"DC":100,"FL":91.2,"GA":75.1,"HI":91.9,"ID":70.6,"IL":88.5,"IN":72.4,"IA":64,"KS":74.2,"KY":58.5,"LA":73.2,"ME":38.7,"MD":87.2,"MA":91.4,"MI":74.6,"MN":73.3,"MS":50.5,"MO":70.4,"MT":55.9,"NE":76,"NV":94.2,"NH":60.3,"NJ":94.7,"NM":77.4,"NY":87.9,"NC":66.1,"ND":59.9,"OH":77.9,"OK":67.2,"OR":81.5,"PA":78.7,"RI":90.7,"SC":66.3,"SD":56.6,"TN":66.4,"TX":84.7,"UT":90.6,"VT":38.9,"VA":75.5,"WA":84,"WV":48.7,"WI":70.2,"WY":64.8}},"economics":{"0":{"AL":57,"AK":82,"AZ":72,"AR":59,"CA":84,"CO":87,"CT":90,"DE":80,"DC":101,"FL":67,"GA":71,"HI":88,"ID":70,"IL":75,"IN":67,"IA":72,"KS":68,"KY":60,"LA":62,"ME":69,"MD":100,"MA":96,"MI":68,"MN":84,"MS":54,"MO":66,"MT":68,"NE":72,"NV":70,"NH":90,"NJ":97,"NM":62,"NY":80,"NC":69,"ND":75,"OH":67,"OK":61,"OR":78,"PA":72,"RI":79,"SC":63,"SD":69,"TN":65,"TX":73,"UT":84,"VT":75,"VA":88,"WA":91,"WV":58,"WI":73,"WY":73},"1":{"AL":3,"AK":4.8,"AZ":3.8,"AR":3.3,"CA":5.3,"CO":3.5,"CT":3.9,"DE":3.7,"DC":4.5,"FL":3.2,"GA":3.4,"HI":2.8,"ID":2.8,"IL":4.5,"IN":3.5,"IA":2.7,"KS":2.8,"KY":4.3,"LA":4,"ME":2.7,"MD":2.9,"MA":3.2,"MI":4.2,"MN":2.9,"MS":3.8,"MO":3.2,"MT":2.8,"NE":2.4,"NV":5.4,"NH":2.5,"NJ":4.4,"NM":4.2,"NY":4.4,"NC":3.4,"ND":2,"OH":3.8,"OK":3.3,"OR":4.2,"PA":3.5,"RI":4,"SC":3.4,"SD":2.3,"TN":3.4,"TX":4,"UT":3.1,"VT":2.6,"VA":2.9,"WA":4.2,"WV":4.6,"WI":2.8,"WY":3.3},"2":{"AL":28,"AK":27,"AZ":35,"AR":26,"CA":44,"CO":37,"CT":37,"DE":33,"DC":45,"FL":43,"GA":35,"HI":47,"ID":35,"IL":33,"IN":27,"IA":25,"KS":26,"KY":27,"LA":31,"ME":33,"MD":35,"MA":42,"MI":31,"MN":29,"MS":27,"MO":28,"MT":32,"NE":27,"NV":41,"NH":34,"NJ":42,"NM":32,"NY":47,"NC":34,"ND":23,"OH":30,"OK":27,"OR":40,"PA":32,"RI":41,"SC":32,"SD":25,"TN":31,"TX":34,"UT":33,"VT":33,"VA":33,"WA":39,"WV":26,"WI":28,"WY":27},"3":{"AL":14.5,"AK":12,"AZ":14,"AR":14.5,"CA":12.5,"CO":10.5,"CT":10,"DE":11.5,"DC":13.5,"FL":13,"GA":13.5,"HI":11,"ID":11.5,"IL":11,"IN":11.5,"IA":9.5,"KS":10,"KY":13,"LA":15,"ME":12.5,"MD":9.5,"MA":9.5,"MI":12.5,"MN":9,"MS":16.5,"MO":12,"MT":11,"NE":9.5,"NV":12,"NH":9,"NJ":10,"NM":14.5,"NY":12.5,"NC":13,"ND":9,"OH":12,"OK":14,"OR":13,"PA":11.5,"RI":11,"SC":13.5,"SD":10,"TN":13.5,"TX":14,"UT":9.5,"VT":10.5,"VA":10,"WA":11.5,"WV":14.5,"WI":10,"WY":10.5},"4":{"AL":90,"AK":124,"AZ":103,"AR":88,"CA":143,"CO":106,"CT":113,"DE":104,"DC":158,"FL":103,"GA":95,"HI":193,"ID":102,"IL":95,"IN":92,"IA":90,"KS":88,"KY":90,"LA":93,"ME":109,"MD":117,"MA":131,"MI":93,"MN":104,"MS":84,"MO":88,"MT":103,"NE":92,"NV":106,"NH":112,"NJ":122,"NM":95,"NY":126,"NC":95,"ND":99,"OH":92,"OK":87,"OR":112,"PA":101,"RI":115,"SC":95,"SD":95,"TN":93,"TX":95,"UT":103,"VT":116,"VA":105,"WA":115,"WV":89,"WI":97,"WY":100}}};
 
-const DATA_YEARS = {"_readme":"Data currency year for each metric. Keys: lens → metric index (string) → year. Update when new data is loaded.","patient":{"0":2022,"1":2023,"2":2022,"3":2024,"4":2024,"5":2021,"6":2022,"7":2022},"clinical":{"0":2022,"1":2022,"2":2023,"3":2024,"4":2024,"5":2022,"6":2023,"7":2022,"8":2022},"operations":{"0":2024,"1":2024,"2":2024,"3":2023,"4":2023,"5":2024,"6":2023},"payer":{"0":2024,"1":2024,"2":2023,"3":2024,"4":2022,"5":2025},"policy":{"0":2025,"1":2025,"2":2024,"3":2025,"4":2026,"5":2025},"economics":{"0":2023,"1":2024,"2":2023,"3":2023,"4":2024}};
+const DATA_YEARS = {"_readme":"Data currency year for each metric. Keys: lens → metric index (string) → year. Update when new data is loaded.","patient":{"0":2022,"1":2023,"2":2022,"3":2024,"4":2024,"5":2021,"6":2022,"7":2022},"clinical":{"0":2022,"1":2022,"2":2023,"3":2024,"4":2024,"5":2022,"6":2023,"7":2022,"8":2022},"operations":{"0":2024,"1":2024,"2":2024,"3":2023,"4":2023,"5":2024,"6":2023},"payer":{"0":2024,"1":2024,"2":2023,"3":2024,"4":2022,"5":2025},"policy":{"0":2025,"1":2025,"2":2024,"3":2025,"4":2026,"5":2025},"economics":{"0":2023,"1":2024,"2":2023,"3":2023,"4":2024},"baseline":{"0":2023,"1":2024,"2":2023,"3":2023,"4":2024,"5":2022,"6":2022,"7":2022,"8":2022,"9":2022,"10":2022,"11":2022,"12":2020}};
+
+// State population estimates (2023 ACS 1-year, in thousands)
+const STATE_POP = {
+  AL:5074, AK:733,  AZ:7431, AR:3045, CA:39029, CO:5877, CT:3605, DE:1031,
+  DC:678,  FL:22757,GA:10908,HI:1435, ID:1964,  IL:12516,IN:6862, IA:3208,
+  KS:2940, KY:4526, LA:4574, ME:1404, MD:6177,  MA:7001, MI:10034,MN:5737,
+  MS:2940, MO:6196, MT:1132, NE:1983, NV:3194,  NH:1402, NJ:9290, NM:2115,
+  NY:19677,NC:10698,ND:783,  OH:11780,OK:4020,  OR:4240, PA:12972,RI:1093,
+  SC:5373, SD:924,  TN:7126, TX:30503,UT:3418,  VT:647,  VA:8715, WA:7812,
+  WV:1770, WI:5910, WY:581
+};
+
+function fmtPop(thousands) {
+  if (thousands >= 10000) return Math.round(thousands / 1000) + 'm';
+  if (thousands >= 1000)  return (thousands / 1000).toFixed(1) + 'm';
+  return Math.round(thousands) + 'k';
+}
 
 // ===== TREND CONFIGURATION =====
 const ALL_YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
@@ -1541,11 +1947,26 @@ const TREND_CONFIG = {
     5: {type:'pct', rate:0.040}     // premiums: rising
   },
   economics: {
-    0: {type:'abs', rate:2.5},      // median income: ~$2.5k/yr growth
-    1: {type:'abs', rate:-0.08},    // unemployment: slowly falling (pre-COVID trend)
-    2: {type:'abs', rate:0.4},      // housing burden: rising ~0.4pp/yr
-    3: {type:'abs', rate:-0.15},    // food insecurity: slowly improving
-    4: {type:'abs', rate:1.2}       // cost of living: rising ~1.2 pts/yr
+    0: {type:'abs', rate:2.5},
+    1: {type:'abs', rate:-0.08},
+    2: {type:'abs', rate:0.4},
+    3: {type:'abs', rate:-0.15},
+    4: {type:'abs', rate:1.2}
+  },
+  baseline: {
+    0: {type:'abs', rate:2.5},      // median income
+    1: {type:'abs', rate:-0.08},    // unemployment
+    2: {type:'abs', rate:0.4},      // housing burden
+    3: {type:'abs', rate:-0.15},    // food insecurity
+    4: {type:'abs', rate:1.2},      // cost of living
+    5: {type:'abs', rate:0.12},     // pct 65+: aging population
+    6: {type:'abs', rate:-0.10},    // pct under 18: declining birth rates
+    7: {type:'abs', rate:0.15},     // pct Hispanic: growing share
+    8: {type:'abs', rate:0.05},     // pct Black: modest growth
+    9: {type:'abs', rate:-0.25},    // pct White non-Hispanic: declining share
+    10: {type:'abs', rate:0.10},    // pct Asian/PI: growing share
+    11: {type:'abs', rate:0.10},    // pct foreign-born: growing
+    12: {type:'abs', rate:0.15}     // pct urban: slow urbanization
   }
 };
 
@@ -1752,7 +2173,16 @@ function getQuintile(lens, idx, code) {
       const entries = Object.entries(d).filter(([,v]) => v !== null).sort((a,b) => a[1]-b[1]);
       const n = entries.length;
       const r = {};
-      entries.forEach(([c],i) => { r[c] = Math.min(5, Math.ceil((i+1)/n*5)); });
+      // Group tied values so equal values always land in the same quintile
+      let i = 0;
+      while (i < n) {
+        let j = i;
+        while (j < n && entries[j][1] === entries[i][1]) j++;
+        const midPos = (i + j - 1) / 2;
+        const q = Math.min(5, Math.ceil((midPos + 1) / n * 5));
+        for (let k2 = i; k2 < j; k2++) r[entries[k2][0]] = q;
+        i = j;
+      }
       _qCache[k] = r;
     }
   }
@@ -1776,7 +2206,7 @@ function fmtVal(val, unit) {
   return v + ' ' + unit;
 }
 
-const METRICS = {"_readme":"Metric definitions per lens. Add sourceUrl and retrievedDate when updating values in stateData.json. The rendering code reads this at build time.","patient":{"color":"#4ECDC4","source":"CDC PLACES 2022–2023 · CDC WONDER 2021 · Census ACS 2024","items":[{"name":"Adults reporting fair or poor health","sub":"Age-adjusted prevalence, % of adult population","unit":"%","dir":-1,"defn":"Percentage of adults age 18+ who self-reported their general health as fair or poor on the BRFSS survey.","method":"CDC PLACES uses small-area estimation methodology applied to BRFSS responses, age-adjusted to the 2000 US standard population.","source":"CDC PLACES, derived from BRFSS","updated":"Annual, ~2 year lag","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01","caveat":"Self-reported. Cultural and linguistic differences in how people describe health may affect cross-state comparison."},{"name":"Diabetes prevalence","sub":"Diagnosed, age 18+","unit":"%","dir":-1,"defn":"Adults age 18+ ever told by a doctor that they have diabetes (excludes gestational diabetes and prediabetes).","method":"BRFSS self-reported, small-area estimation via CDC PLACES.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01","caveat":"Excludes undiagnosed diabetes. Actual prevalence is estimated to be ~15-20% higher than diagnosed rate."},{"name":"Coronary heart disease prevalence","sub":"Self-reported diagnosed","unit":"%","dir":-1,"defn":"Adults age 18+ ever told by a doctor they had coronary heart disease, angina, or had a heart attack.","method":"BRFSS self-reported, small-area estimation via CDC PLACES.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01"},{"name":"Obesity prevalence","sub":"BMI 30 or higher, age 18+","unit":"%","dir":-1,"defn":"Adults with BMI 30 or higher calculated from self-reported height and weight.","method":"BRFSS, small-area estimation via CDC PLACES.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://www.cdc.gov/brfss/annual_data/annual_data.htm","retrievedDate":"2025-01","caveat":"Self-reported height/weight typically underestimates BMI by 1-2 points compared to measured."},{"name":"Median age","sub":"Population age structure","unit":"yrs","dir":0,"defn":"Median age of the total resident population.","method":"American Community Survey 5-year estimates.","source":"US Census Bureau ACS","updated":"Annual (rolling 5-year average)","sourceUrl":"https://data.census.gov/table/ACSDP5Y2023.DP05","retrievedDate":"2025-02"},{"name":"Cancer mortality rate","sub":"Per 100,000, age-adjusted","unit":"/100k","dir":-1,"defn":"Deaths from malignant neoplasms (all cancers combined) per 100,000 population.","method":"Age-adjusted to the 2000 US standard population using NCHS death certificate data.","source":"CDC WONDER, NCHS","updated":"Annual, ~2 year lag","sourceUrl":"https://wonder.cdc.gov/cancer.html","retrievedDate":"2025-01"},{"name":"Life expectancy at birth","sub":"Years","unit":"yrs","dir":1,"defn":"Average number of years a newborn would be expected to live if current age-specific mortality rates were to continue.","method":"Period life table calculations from NCHS mortality data.","source":"CDC NCHS","updated":"Annual, ~2 year lag","sourceUrl":"https://www.cdc.gov/nchs/products/databriefs/db492.htm","retrievedDate":"2025-01"},{"name":"Routine checkup in past year","sub":"Adults, self-reported","unit":"%","dir":1,"defn":"Adults age 18+ reporting a routine checkup with a doctor in the past 12 months.","method":"BRFSS self-reported, CDC PLACES small-area estimation.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01"}]},"clinical":{"color":"#1B5FA8","source":"HRSA AHRF 2022 · AANP 2023 · ACGME 2023 · HRSA HPSA 2024 · BLS OEWS 2022","items":[{"name":"Primary care physicians per 100k","sub":"Active patient care","unit":"/100k","dir":1,"defn":"Active patient-care MDs and DOs in family medicine, general internal medicine, general pediatrics, and OB/GYN, per 100,000 population.","method":"HRSA Area Health Resources File, derived from AMA Physician Masterfile.","source":"HRSA AHRF","updated":"Annual","sourceUrl":"https://data.hrsa.gov/data/download","retrievedDate":"2025-01","caveat":"Counts physician location of practice, not patient population served. Border-area distortions are common."},{"name":"Specialists per 100k","sub":"All specialties combined","unit":"/100k","dir":1,"defn":"Active patient-care physicians in non-primary-care specialties per 100,000 population.","method":"HRSA AHRF derived from AMA Physician Masterfile.","source":"HRSA AHRF","updated":"Annual","sourceUrl":"https://data.hrsa.gov/data/download","retrievedDate":"2025-01"},{"name":"Nurse practitioners per 100k","sub":"Active license","unit":"/100k","dir":1,"defn":"Actively licensed nurse practitioners per 100,000 population.","method":"Aggregated from state nursing boards and HRSA workforce data.","source":"HRSA / state boards","updated":"Annual","sourceUrl":"https://data.hrsa.gov/topics/health-workforce/ahrf","retrievedDate":"2025-01","caveat":"Licensure does not equal active practice. Some NPs hold licenses in multiple states."},{"name":"Health Professional Shortage Areas","sub":"HRSA designated, count","unit":"HPSAs","dir":-1,"defn":"Federal HRSA designations indicating geographic areas, populations, or facilities with shortages of primary care, dental, or mental health providers.","method":"HRSA designation criteria based on provider-to-population ratios and other factors.","source":"HRSA","updated":"Continuously, snapshot annually","sourceUrl":"https://data.hrsa.gov/topics/health-workforce/shortage-areas","retrievedDate":"2025-01"},{"name":"Population in HPSAs","sub":"Share living in shortage area","unit":"%","dir":-1,"defn":"Percentage of state population living within a designated HPSA.","method":"Population estimates within HPSA boundaries from HRSA.","source":"HRSA","updated":"Annual","sourceUrl":"https://data.hrsa.gov/topics/health-workforce/shortage-areas","retrievedDate":"2025-01"},{"name":"Telehealth adoption","sub":"Share of visits via telehealth","unit":"%","dir":1,"defn":"Share of outpatient visits delivered via telehealth modalities (video, audio-only, etc.).","method":"Various sources including hospital surveys and payer claims data.","source":"Mixed: AHA, payer reports","updated":"Variable","sourceUrl":"https://www.aha.org/system/files/media/file/2023/04/telehealth-fact-sheet.pdf","retrievedDate":"2025-01","caveat":"Methodology varies widely. Cross-state comparisons should be interpreted with caution."},{"name":"Active medical residents","sub":"GME positions per capita","unit":"/100k","dir":1,"defn":"ACGME-accredited residency positions filled per 100,000 population.","method":"ACGME annual data combined with state population.","source":"ACGME, AAMC","updated":"Annual","sourceUrl":"https://www.acgme.org/data-collections/","retrievedDate":"2025-01"},{"name":"Registered nurses per 100k","sub":"Active employment, all settings","unit":"/100k","dir":1,"defn":"Registered nurses (RN) employed per 100,000 population, across all care settings including hospitals, clinics, home health, and community nursing.","method":"Bureau of Labor Statistics Occupational Employment and Wage Statistics (OEWS), SOC 29-1141, divided by Census state population estimate.","source":"BLS OEWS","updated":"Annual","sourceUrl":"https://www.bls.gov/oes/current/oes291141.htm","retrievedDate":"2025-01"},{"name":"Respiratory therapists per 100k","sub":"Active employment, CRT + RRT","unit":"/100k","dir":1,"defn":"Respiratory therapists employed per 100,000 population, including both Certified Respiratory Therapists (CRT) and Registered Respiratory Therapists (RRT).","method":"Bureau of Labor Statistics OEWS, SOC 29-1126. Includes all employed RTs regardless of credential level.","source":"BLS OEWS","updated":"Annual","sourceUrl":"https://www.bls.gov/oes/current/oes291126.htm","retrievedDate":"2025-01","caveat":"BLS employment counts do not distinguish CRT from RRT credential holders. States with high COPD burden typically show higher RT density."}]},"operations":{"color":"#E8A838","source":"AHA Annual Survey 2024 · CMS Care Compare 2023–2024","items":[{"name":"Hospital beds per 1,000 population","sub":"Staffed beds","unit":"/1k","dir":1,"defn":"Staffed acute care hospital beds per 1,000 population. Excludes long-term care, psychiatric, and rehabilitation beds.","method":"AHA Annual Survey of Hospitals.","source":"AHA Annual Survey","updated":"Annual","sourceUrl":"https://www.aha.org/statistics/fast-facts-us-hospitals","retrievedDate":"2025-02"},{"name":"Hospital count","sub":"All registered acute care","unit":"#","dir":0,"defn":"Total number of registered short-term acute care hospitals.","method":"AHA registration database, cross-referenced with CMS.","source":"AHA, CMS","updated":"Annual","sourceUrl":"https://www.aha.org/statistics/fast-facts-us-hospitals","retrievedDate":"2025-02"},{"name":"Critical access hospitals","sub":"Rural designation","unit":"#","dir":0,"defn":"Number of hospitals with CMS Critical Access Hospital designation (max 25 beds, located 35+ miles from nearest hospital).","method":"CMS designation registry.","source":"CMS","updated":"Continuously","sourceUrl":"https://www.cms.gov/Medicare/Provider-Enrollment-and-Certification/CertificationandComplianc/CAHs","retrievedDate":"2025-02"},{"name":"For-profit hospital share","sub":"Of all hospitals","unit":"%","dir":-1,"defn":"Investor-owned hospitals as a percentage of all registered acute care hospitals in the state.","method":"AHA Annual Survey ownership classification.","source":"AHA","updated":"Annual","sourceUrl":"https://www.aha.org/statistics/fast-facts-us-hospitals","retrievedDate":"2025-02"},{"name":"Median ED wait (admit decision)","sub":"CMS Care Compare","unit":"min","dir":-1,"defn":"Median minutes from ED arrival to decision to admit, for admitted patients.","method":"CMS Hospital Inpatient Quality Reporting.","source":"CMS Care Compare","updated":"Quarterly","sourceUrl":"https://www.medicare.gov/care-compare/","retrievedDate":"2025-01","caveat":"State average masks wide variation between facilities. ED wait time is a small slice of the total ED experience."},{"name":"CMS hospital star rating (avg)","sub":"Overall quality, 1 to 5","unit":"star","dir":1,"defn":"Average of CMS Overall Hospital Quality Star Ratings across hospitals in the state.","method":"CMS rating methodology aggregating mortality, safety, readmission, patient experience, and timely effective care measures.","source":"CMS Care Compare","updated":"Quarterly","sourceUrl":"https://www.medicare.gov/care-compare/","retrievedDate":"2025-01","caveat":"Methodology revised significantly in 2021. Pre-2021 vs post-2021 comparisons not advisable."},{"name":"30-day all-cause readmission","sub":"Risk-adjusted, Medicare","unit":"%","dir":-1,"defn":"Risk-adjusted rate of unplanned readmissions within 30 days of discharge for Medicare beneficiaries.","method":"CMS hospital-wide readmission measure, risk-adjusted.","source":"CMS","updated":"Annual","sourceUrl":"https://www.medicare.gov/care-compare/","retrievedDate":"2025-01"}]},"payer":{"color":"#2D9B6F","source":"Census SAHIE 2024 · CMS Enrollment 2023–2024 · CMS Marketplace OEP 2024","items":[{"name":"Uninsured rate","sub":"Under age 65","unit":"%","dir":-1,"defn":"Percentage of population under age 65 without health insurance coverage at time of survey.","method":"Census Small Area Health Insurance Estimates (SAHIE), modeled from ACS, Medicaid enrollment, and IRS data.","source":"Census SAHIE","updated":"Annual, ~2 year lag","sourceUrl":"https://www.census.gov/programs-surveys/sahie/data.html","retrievedDate":"2025-02"},{"name":"Medicaid enrollment","sub":"Share of population","unit":"%","dir":1,"defn":"Total Medicaid and CHIP enrollees as a share of state population.","method":"CMS monthly enrollment reports, averaged for the year.","source":"CMS Medicaid Enrollment","updated":"Monthly","sourceUrl":"https://www.medicaid.gov/medicaid/program-information/medicaid-and-chip-enrollment-data/report-highlights/index.html","retrievedDate":"2025-02","caveat":"Post-2023 Medicaid unwinding has affected enrollment significantly. Trend interpretation requires context."},{"name":"Medicare enrollment","sub":"Share of population","unit":"%","dir":0,"defn":"Total Medicare beneficiaries (Parts A, B, C, D combined unique) as share of state population.","method":"CMS Medicare Enrollment Dashboard.","source":"CMS","updated":"Quarterly","sourceUrl":"https://www.cms.gov/research-statistics-data-and-systems/statistics-trends-and-reports/mcradvpartdenroldata","retrievedDate":"2025-01"},{"name":"Marketplace enrollment","sub":"ACA exchange plans","unit":"#","dir":1,"defn":"Total ACA Marketplace plan enrollees (federal and state-based exchanges).","method":"CMS Open Enrollment Period reports.","source":"CMS Marketplace","updated":"Annual after open enrollment","sourceUrl":"https://www.cms.gov/cciio/resources/data-resources/marketplace-puf","retrievedDate":"2025-02"},{"name":"Employer-sponsored coverage","sub":"Share with ESI","unit":"%","dir":1,"defn":"Population reporting employer-sponsored insurance as their primary coverage.","method":"American Community Survey 1-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSHIC1Y2022.HIC03","retrievedDate":"2025-01"},{"name":"Avg marketplace premium","sub":"Benchmark silver plan","unit":"$","dir":-1,"defn":"Average monthly premium for the second-lowest-cost silver plan (the benchmark plan), 40-year-old non-smoker, before subsidies.","method":"CMS Marketplace plan and rate filing data.","source":"CMS","updated":"Annual","sourceUrl":"https://www.cms.gov/cciio/resources/data-resources/marketplace-puf","retrievedDate":"2025-02","caveat":"Pre-subsidy. Most enrollees pay significantly less after Advance Premium Tax Credits."}]},"policy":{"color":"#DF5752","source":"KFF 2025 · NCSL 2025 · AANP 2024 · CCHP 2026 · NRHA 2025","items":[{"name":"Medicaid expansion status","sub":"Adopted under ACA","unit":"Y/N","dir":1,"defn":"Whether the state has adopted ACA Medicaid expansion (eligibility up to 138% of Federal Poverty Level for adults).","method":"KFF tracker of state implementation status.","source":"KFF","updated":"Continuously","sourceUrl":"https://www.kff.org/medicaid/issue-brief/status-of-state-medicaid-expansion-decisions-interactive-map/","retrievedDate":"2025-03"},{"name":"Certificate of Need scope","sub":"Service categories regulated","unit":"#","dir":0,"defn":"Number of distinct healthcare service categories (e.g., new hospital beds, MRI machines, ASCs) that require state Certificate of Need approval.","method":"NCSL and AHPA tracking of state CON laws.","source":"NCSL, AHPA","updated":"Annual","sourceUrl":"https://www.ncsl.org/health/certificate-of-need-state-laws","retrievedDate":"2025-03","caveat":"Scope alone does not capture how restrictive enforcement is in practice."},{"name":"NP scope of practice","sub":"Full / reduced / restricted","unit":"tier","dir":1,"defn":"AANP classification: Full (NPs can practice independently), Reduced (must collaborate with physician), Restricted (must be supervised by physician).","method":"American Association of Nurse Practitioners annual policy review.","source":"AANP","updated":"Annual","sourceUrl":"https://www.aanp.org/advocacy/state/state-practice-environment","retrievedDate":"2025-02"},{"name":"Drug price legislation","sub":"Active state laws, count","unit":"#","dir":1,"defn":"Number of state laws on drug pricing (transparency, price caps, PBM regulation, etc.) currently in effect.","method":"NCSL state legislation database.","source":"NCSL","updated":"Continuously","sourceUrl":"https://www.ncsl.org/health/prescription-drug-state-legislation","retrievedDate":"2025-03"},{"name":"Telehealth parity laws","sub":"Payment + coverage parity","unit":"Y/N","dir":1,"defn":"Whether state requires private payers to cover and reimburse telehealth visits at parity with in-person visits.","method":"Center for Connected Health Policy state policy tracker.","source":"CCHP","updated":"Continuously","sourceUrl":"https://telehealthpolicy.us/resources/state-telehealth-laws-and-reimbursement-policies/","retrievedDate":"2025-03"},{"name":"Rural health initiatives","sub":"Active state programs","unit":"#","dir":1,"defn":"Number of distinct active state-level rural health programs (loan repayment, telehealth grants, rural hospital stabilization, etc.).","method":"National Rural Health Association state policy compilation.","source":"NRHA","updated":"Annual","sourceUrl":"https://www.ruralhealthweb.org/advocate/state-rural-health-associations","retrievedDate":"2025-02"}]},"economics":{"color":"#8B5CF6","source":"Census ACS 2023 · BLS 2024 · USDA MTMG 2023 · MERIC 2024","items":[{"name":"Median household income","sub":"All households, inflation-adjusted","unit":"$k","dir":1,"defn":"Median annual household income in thousands of dollars, adjusted for inflation. A key driver of healthcare access — lower-income households delay care, skip prescriptions, and face higher effective cost burdens.","method":"U.S. Census Bureau American Community Survey 1-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP1Y2023.DP03","retrievedDate":"2025-02"},{"name":"Unemployment rate","sub":"Annual average, civilian labor force","unit":"%","dir":-1,"defn":"Percentage of the civilian labor force actively seeking but unable to find work. Job loss typically means loss of employer-sponsored insurance and income, directly increasing uninsured rates and deferred care.","method":"Bureau of Labor Statistics Local Area Unemployment Statistics (LAUS) program.","source":"BLS","updated":"Annual","sourceUrl":"https://www.bls.gov/lau/rdscnp16.htm","retrievedDate":"2025-03"},{"name":"Housing cost burden","sub":"% households spending >30% of income on housing","unit":"%","dir":-1,"defn":"Share of households spending more than 30% of gross income on housing costs (rent or mortgage + utilities). High housing burden is a leading predictor of food insecurity, unmet medical needs, and mental health strain.","method":"Census ACS estimate of cost-burdened households.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP1Y2023.DP04","retrievedDate":"2025-02"},{"name":"Food insecurity rate","sub":"Households lacking consistent food access","unit":"%","dir":-1,"defn":"Percentage of households that lacked reliable access to enough food at some point during the year. Food insecurity is independently associated with worse diabetes management, higher hospitalization, and increased chronic disease burden.","method":"USDA Map the Meal Gap county-level estimates aggregated to state.","source":"USDA MTMG","updated":"Annual","sourceUrl":"https://map.feedingamerica.org/","retrievedDate":"2025-02"},{"name":"Cost of living index","sub":"Relative to U.S. average (100)","unit":"idx","dir":-1,"defn":"Composite index of prices for groceries, housing, utilities, transportation, and healthcare relative to the national average. States above 100 are more expensive; high cost of living compresses real purchasing power even at similar income levels.","method":"MERIC (Missouri Economic Research and Information Center) composite index.","source":"MERIC","updated":"Annual","sourceUrl":"https://meric.mo.gov/data/cost-living-data-series","retrievedDate":"2025-02","caveat":"Index methodology and basket weights vary slightly by release year."}]}};
+const METRICS = {"_readme":"Metric definitions per lens. Add sourceUrl and retrievedDate when updating values in stateData.json. The rendering code reads this at build time.","patient":{"color":"#4ECDC4","source":"CDC PLACES 2022–2023 · CDC WONDER 2021 · Census ACS 2024","items":[{"name":"Adults reporting fair or poor health","sub":"Age-adjusted prevalence, % of adult population","unit":"%","dir":-1,"defn":"Percentage of adults age 18+ who self-reported their general health as fair or poor on the BRFSS survey.","method":"CDC PLACES uses small-area estimation methodology applied to BRFSS responses, age-adjusted to the 2000 US standard population.","source":"CDC PLACES, derived from BRFSS","updated":"Annual, ~2 year lag","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01","caveat":"Self-reported. Cultural and linguistic differences in how people describe health may affect cross-state comparison."},{"name":"Diabetes prevalence","sub":"Diagnosed, age 18+","unit":"%","dir":-1,"defn":"Adults age 18+ ever told by a doctor that they have diabetes (excludes gestational diabetes and prediabetes).","method":"BRFSS self-reported, small-area estimation via CDC PLACES.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01","caveat":"Excludes undiagnosed diabetes. Actual prevalence is estimated to be ~15-20% higher than diagnosed rate."},{"name":"Coronary heart disease prevalence","sub":"Self-reported diagnosed","unit":"%","dir":-1,"defn":"Adults age 18+ ever told by a doctor they had coronary heart disease, angina, or had a heart attack.","method":"BRFSS self-reported, small-area estimation via CDC PLACES.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01"},{"name":"Obesity prevalence","sub":"BMI 30 or higher, age 18+","unit":"%","dir":-1,"defn":"Adults with BMI 30 or higher calculated from self-reported height and weight.","method":"BRFSS, small-area estimation via CDC PLACES.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://www.cdc.gov/brfss/annual_data/annual_data.htm","retrievedDate":"2025-01","caveat":"Self-reported height/weight typically underestimates BMI by 1-2 points compared to measured."},{"name":"Median age","sub":"Population age structure","unit":"yrs","dir":0,"defn":"Median age of the total resident population.","method":"American Community Survey 5-year estimates.","source":"US Census Bureau ACS","updated":"Annual (rolling 5-year average)","sourceUrl":"https://data.census.gov/table/ACSDP5Y2023.DP05","retrievedDate":"2025-02"},{"name":"Cancer mortality rate","sub":"Per 100,000, age-adjusted","unit":"/100k","dir":-1,"defn":"Deaths from malignant neoplasms (all cancers combined) per 100,000 population.","method":"Age-adjusted to the 2000 US standard population using NCHS death certificate data.","source":"CDC WONDER, NCHS","updated":"Annual, ~2 year lag","sourceUrl":"https://wonder.cdc.gov/cancer.html","retrievedDate":"2025-01"},{"name":"Life expectancy at birth","sub":"Years","unit":"yrs","dir":1,"defn":"Average number of years a newborn would be expected to live if current age-specific mortality rates were to continue.","method":"Period life table calculations from NCHS mortality data.","source":"CDC NCHS","updated":"Annual, ~2 year lag","sourceUrl":"https://www.cdc.gov/nchs/products/databriefs/db492.htm","retrievedDate":"2025-01"},{"name":"Routine checkup in past year","sub":"Adults, self-reported","unit":"%","dir":1,"defn":"Adults age 18+ reporting a routine checkup with a doctor in the past 12 months.","method":"BRFSS self-reported, CDC PLACES small-area estimation.","source":"CDC PLACES / BRFSS","updated":"Annual","sourceUrl":"https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q","retrievedDate":"2025-01"}]},"clinical":{"color":"#1B5FA8","source":"HRSA AHRF 2022 · AANP 2023 · ACGME 2023 · HRSA HPSA 2024 · BLS OEWS 2022","items":[{"name":"Primary care physicians per 100k","sub":"Active patient care","unit":"/100k","dir":1,"defn":"Active patient-care MDs and DOs in family medicine, general internal medicine, general pediatrics, and OB/GYN, per 100,000 population.","method":"HRSA Area Health Resources File, derived from AMA Physician Masterfile.","source":"HRSA AHRF","updated":"Annual","sourceUrl":"https://data.hrsa.gov/data/download","retrievedDate":"2025-01","caveat":"Counts physician location of practice, not patient population served. Border-area distortions are common."},{"name":"Specialists per 100k","sub":"All specialties combined","unit":"/100k","dir":1,"defn":"Active patient-care physicians in non-primary-care specialties per 100,000 population.","method":"HRSA AHRF derived from AMA Physician Masterfile.","source":"HRSA AHRF","updated":"Annual","sourceUrl":"https://data.hrsa.gov/data/download","retrievedDate":"2025-01"},{"name":"Nurse practitioners per 100k","sub":"Active license","unit":"/100k","dir":1,"defn":"Actively licensed nurse practitioners per 100,000 population.","method":"Aggregated from state nursing boards and HRSA workforce data.","source":"HRSA / state boards","updated":"Annual","sourceUrl":"https://data.hrsa.gov/topics/health-workforce/ahrf","retrievedDate":"2025-01","caveat":"Licensure does not equal active practice. Some NPs hold licenses in multiple states."},{"name":"Health Professional Shortage Areas","sub":"HRSA designated, count","unit":"HPSAs","dir":-1,"defn":"Federal HRSA designations indicating geographic areas, populations, or facilities with shortages of primary care, dental, or mental health providers.","method":"HRSA designation criteria based on provider-to-population ratios and other factors.","source":"HRSA","updated":"Continuously, snapshot annually","sourceUrl":"https://data.hrsa.gov/topics/health-workforce/shortage-areas","retrievedDate":"2025-01"},{"name":"Population in HPSAs","sub":"Share living in shortage area","unit":"%","dir":-1,"defn":"Percentage of state population living within a designated HPSA.","method":"Population estimates within HPSA boundaries from HRSA.","source":"HRSA","updated":"Annual","sourceUrl":"https://data.hrsa.gov/topics/health-workforce/shortage-areas","retrievedDate":"2025-01"},{"name":"Telehealth adoption","sub":"Share of visits via telehealth","unit":"%","dir":1,"defn":"Share of outpatient visits delivered via telehealth modalities (video, audio-only, etc.).","method":"Various sources including hospital surveys and payer claims data.","source":"Mixed: AHA, payer reports","updated":"Variable","sourceUrl":"https://www.aha.org/system/files/media/file/2023/04/telehealth-fact-sheet.pdf","retrievedDate":"2025-01","caveat":"Methodology varies widely. Cross-state comparisons should be interpreted with caution."},{"name":"Active medical residents","sub":"GME positions per capita","unit":"/100k","dir":1,"defn":"ACGME-accredited residency positions filled per 100,000 population.","method":"ACGME annual data combined with state population.","source":"ACGME, AAMC","updated":"Annual","sourceUrl":"https://www.acgme.org/data-collections/","retrievedDate":"2025-01"},{"name":"Registered nurses per 100k","sub":"Active employment, all settings","unit":"/100k","dir":1,"defn":"Registered nurses (RN) employed per 100,000 population, across all care settings including hospitals, clinics, home health, and community nursing.","method":"Bureau of Labor Statistics Occupational Employment and Wage Statistics (OEWS), SOC 29-1141, divided by Census state population estimate.","source":"BLS OEWS","updated":"Annual","sourceUrl":"https://www.bls.gov/oes/current/oes291141.htm","retrievedDate":"2025-01"},{"name":"Respiratory therapists per 100k","sub":"Active employment, CRT + RRT","unit":"/100k","dir":1,"defn":"Respiratory therapists employed per 100,000 population, including both Certified Respiratory Therapists (CRT) and Registered Respiratory Therapists (RRT).","method":"Bureau of Labor Statistics OEWS, SOC 29-1126. Includes all employed RTs regardless of credential level.","source":"BLS OEWS","updated":"Annual","sourceUrl":"https://www.bls.gov/oes/current/oes291126.htm","retrievedDate":"2025-01","caveat":"BLS employment counts do not distinguish CRT from RRT credential holders. States with high COPD burden typically show higher RT density."}]},"operations":{"color":"#E8A838","source":"AHA Annual Survey 2024 · CMS Care Compare 2023–2024","items":[{"name":"Hospital beds per 1,000 population","sub":"Staffed beds","unit":"/1k","dir":1,"defn":"Staffed acute care hospital beds per 1,000 population. Excludes long-term care, psychiatric, and rehabilitation beds.","method":"AHA Annual Survey of Hospitals.","source":"AHA Annual Survey","updated":"Annual","sourceUrl":"https://www.aha.org/statistics/fast-facts-us-hospitals","retrievedDate":"2025-02"},{"name":"Hospital count","sub":"All registered acute care","unit":"#","dir":0,"defn":"Total number of registered short-term acute care hospitals.","method":"AHA registration database, cross-referenced with CMS.","source":"AHA, CMS","updated":"Annual","sourceUrl":"https://www.aha.org/statistics/fast-facts-us-hospitals","retrievedDate":"2025-02"},{"name":"Critical access hospitals","sub":"Rural designation","unit":"#","dir":0,"defn":"Number of hospitals with CMS Critical Access Hospital designation (max 25 beds, located 35+ miles from nearest hospital).","method":"CMS designation registry.","source":"CMS","updated":"Continuously","sourceUrl":"https://www.cms.gov/Medicare/Provider-Enrollment-and-Certification/CertificationandComplianc/CAHs","retrievedDate":"2025-02"},{"name":"For-profit hospital share","sub":"Of all hospitals","unit":"%","dir":-1,"defn":"Investor-owned hospitals as a percentage of all registered acute care hospitals in the state.","method":"AHA Annual Survey ownership classification.","source":"AHA","updated":"Annual","sourceUrl":"https://www.aha.org/statistics/fast-facts-us-hospitals","retrievedDate":"2025-02"},{"name":"Median ED wait (admit decision)","sub":"CMS Care Compare","unit":"min","dir":-1,"defn":"Median minutes from ED arrival to decision to admit, for admitted patients.","method":"CMS Hospital Inpatient Quality Reporting.","source":"CMS Care Compare","updated":"Quarterly","sourceUrl":"https://www.medicare.gov/care-compare/","retrievedDate":"2025-01","caveat":"State average masks wide variation between facilities. ED wait time is a small slice of the total ED experience."},{"name":"CMS hospital star rating (avg)","sub":"Overall quality, 1 to 5","unit":"star","dir":1,"defn":"Average of CMS Overall Hospital Quality Star Ratings across hospitals in the state.","method":"CMS rating methodology aggregating mortality, safety, readmission, patient experience, and timely effective care measures.","source":"CMS Care Compare","updated":"Quarterly","sourceUrl":"https://www.medicare.gov/care-compare/","retrievedDate":"2025-01","caveat":"Methodology revised significantly in 2021. Pre-2021 vs post-2021 comparisons not advisable."},{"name":"30-day all-cause readmission","sub":"Risk-adjusted, Medicare","unit":"%","dir":-1,"defn":"Risk-adjusted rate of unplanned readmissions within 30 days of discharge for Medicare beneficiaries.","method":"CMS hospital-wide readmission measure, risk-adjusted.","source":"CMS","updated":"Annual","sourceUrl":"https://www.medicare.gov/care-compare/","retrievedDate":"2025-01"}]},"payer":{"color":"#2D9B6F","source":"Census SAHIE 2024 · CMS Enrollment 2023–2024 · CMS Marketplace OEP 2024","items":[{"name":"Uninsured rate","sub":"Under age 65","unit":"%","dir":-1,"defn":"Percentage of population under age 65 without health insurance coverage at time of survey.","method":"Census Small Area Health Insurance Estimates (SAHIE), modeled from ACS, Medicaid enrollment, and IRS data.","source":"Census SAHIE","updated":"Annual, ~2 year lag","sourceUrl":"https://www.census.gov/programs-surveys/sahie/data.html","retrievedDate":"2025-02"},{"name":"Medicaid enrollment","sub":"Share of population","unit":"%","dir":1,"defn":"Total Medicaid and CHIP enrollees as a share of state population.","method":"CMS monthly enrollment reports, averaged for the year.","source":"CMS Medicaid Enrollment","updated":"Monthly","sourceUrl":"https://www.medicaid.gov/medicaid/program-information/medicaid-and-chip-enrollment-data/report-highlights/index.html","retrievedDate":"2025-02","caveat":"Post-2023 Medicaid unwinding has affected enrollment significantly. Trend interpretation requires context."},{"name":"Medicare enrollment","sub":"Share of population","unit":"%","dir":0,"defn":"Total Medicare beneficiaries (Parts A, B, C, D combined unique) as share of state population.","method":"CMS Medicare Enrollment Dashboard.","source":"CMS","updated":"Quarterly","sourceUrl":"https://www.cms.gov/research-statistics-data-and-systems/statistics-trends-and-reports/mcradvpartdenroldata","retrievedDate":"2025-01"},{"name":"Marketplace enrollment","sub":"ACA exchange plans","unit":"#","dir":1,"defn":"Total ACA Marketplace plan enrollees (federal and state-based exchanges).","method":"CMS Open Enrollment Period reports.","source":"CMS Marketplace","updated":"Annual after open enrollment","sourceUrl":"https://www.cms.gov/cciio/resources/data-resources/marketplace-puf","retrievedDate":"2025-02"},{"name":"Employer-sponsored coverage","sub":"Share with ESI","unit":"%","dir":1,"defn":"Population reporting employer-sponsored insurance as their primary coverage.","method":"American Community Survey 1-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSHIC1Y2022.HIC03","retrievedDate":"2025-01"},{"name":"Avg marketplace premium","sub":"Benchmark silver plan","unit":"$","dir":-1,"defn":"Average monthly premium for the second-lowest-cost silver plan (the benchmark plan), 40-year-old non-smoker, before subsidies.","method":"CMS Marketplace plan and rate filing data.","source":"CMS","updated":"Annual","sourceUrl":"https://www.cms.gov/cciio/resources/data-resources/marketplace-puf","retrievedDate":"2025-02","caveat":"Pre-subsidy. Most enrollees pay significantly less after Advance Premium Tax Credits."}]},"policy":{"color":"#DF5752","source":"KFF 2025 · NCSL 2025 · AANP 2024 · CCHP 2026 · NRHA 2025","items":[{"name":"Medicaid expansion status","sub":"Adopted under ACA","unit":"Y/N","dir":1,"defn":"Whether the state has adopted ACA Medicaid expansion (eligibility up to 138% of Federal Poverty Level for adults).","method":"KFF tracker of state implementation status.","source":"KFF","updated":"Continuously","sourceUrl":"https://www.kff.org/medicaid/issue-brief/status-of-state-medicaid-expansion-decisions-interactive-map/","retrievedDate":"2025-03"},{"name":"Certificate of Need scope","sub":"Service categories regulated","unit":"#","dir":0,"defn":"Number of distinct healthcare service categories (e.g., new hospital beds, MRI machines, ASCs) that require state Certificate of Need approval.","method":"NCSL and AHPA tracking of state CON laws.","source":"NCSL, AHPA","updated":"Annual","sourceUrl":"https://www.ncsl.org/health/certificate-of-need-state-laws","retrievedDate":"2025-03","caveat":"Scope alone does not capture how restrictive enforcement is in practice."},{"name":"NP scope of practice","sub":"Full / reduced / restricted","unit":"tier","dir":1,"defn":"AANP classification: Full (NPs can practice independently), Reduced (must collaborate with physician), Restricted (must be supervised by physician).","method":"American Association of Nurse Practitioners annual policy review.","source":"AANP","updated":"Annual","sourceUrl":"https://www.aanp.org/advocacy/state/state-practice-environment","retrievedDate":"2025-02"},{"name":"Drug price legislation","sub":"Active state laws, count","unit":"#","dir":1,"defn":"Number of state laws on drug pricing (transparency, price caps, PBM regulation, etc.) currently in effect.","method":"NCSL state legislation database.","source":"NCSL","updated":"Continuously","sourceUrl":"https://www.ncsl.org/health/prescription-drug-state-legislation","retrievedDate":"2025-03"},{"name":"Telehealth parity laws","sub":"Payment + coverage parity","unit":"Y/N","dir":1,"defn":"Whether state requires private payers to cover and reimburse telehealth visits at parity with in-person visits.","method":"Center for Connected Health Policy state policy tracker.","source":"CCHP","updated":"Continuously","sourceUrl":"https://telehealthpolicy.us/resources/state-telehealth-laws-and-reimbursement-policies/","retrievedDate":"2025-03"},{"name":"Rural health initiatives","sub":"Active state programs","unit":"#","dir":1,"defn":"Number of distinct active state-level rural health programs (loan repayment, telehealth grants, rural hospital stabilization, etc.).","method":"National Rural Health Association state policy compilation.","source":"NRHA","updated":"Annual","sourceUrl":"https://www.ruralhealthweb.org/advocate/state-rural-health-associations","retrievedDate":"2025-02"}]},"baseline":{"color":"#0EA5E9","source":"Census ACS 2023 · BLS 2024 · USDA MTMG 2023 · MERIC 2024 · Census 2020/2022","items":[{"name":"Median household income","sub":"All households, inflation-adjusted","unit":"$k","dir":1,"defn":"Median annual household income in thousands of dollars, adjusted for inflation.","method":"U.S. Census Bureau American Community Survey 1-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP1Y2023.DP03","retrievedDate":"2025-02"},{"name":"Unemployment rate","sub":"Annual average, civilian labor force","unit":"%","dir":-1,"defn":"Percentage of the civilian labor force actively seeking but unable to find work.","method":"Bureau of Labor Statistics Local Area Unemployment Statistics (LAUS) program.","source":"BLS","updated":"Annual","sourceUrl":"https://www.bls.gov/lau/rdscnp16.htm","retrievedDate":"2025-03"},{"name":"Housing cost burden","sub":"% households spending >30% of income on housing","unit":"%","dir":-1,"defn":"Share of households spending more than 30% of gross income on housing costs.","method":"Census ACS estimate of cost-burdened households.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP1Y2023.DP04","retrievedDate":"2025-02"},{"name":"Food insecurity rate","sub":"Households lacking consistent food access","unit":"%","dir":-1,"defn":"Percentage of households that lacked reliable access to enough food at some point during the year.","method":"USDA Map the Meal Gap county-level estimates aggregated to state.","source":"USDA MTMG","updated":"Annual","sourceUrl":"https://map.feedingamerica.org/","retrievedDate":"2025-02"},{"name":"Cost of living index","sub":"Relative to U.S. average (100)","unit":"idx","dir":-1,"defn":"Composite index of prices for groceries, housing, utilities, transportation, and healthcare relative to the national average.","method":"MERIC composite index.","source":"MERIC","updated":"Annual","sourceUrl":"https://meric.mo.gov/data/cost-living-data-series","retrievedDate":"2025-02","caveat":"Index methodology and basket weights vary slightly by release year."},{"name":"Population 65 and older","sub":"Share of total population","unit":"%","dir":0,"defn":"Percentage of the total resident population aged 65 and older. A higher share indicates greater demand for Medicare services, long-term care, and age-related chronic disease management.","method":"American Community Survey 5-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP5Y2022.DP05","retrievedDate":"2025-02"},{"name":"Population under 18","sub":"Share of total population","unit":"%","dir":0,"defn":"Percentage of the total resident population under age 18. Shapes demand for pediatric care, CHIP enrollment, and school-based health services.","method":"American Community Survey 5-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP5Y2022.DP05","retrievedDate":"2025-02"},{"name":"Hispanic or Latino","sub":"Share of total population","unit":"%","dir":0,"defn":"Percentage of residents identifying as Hispanic or Latino of any race. Relevant to language access, cultural competency requirements, and uninsured rate patterns.","method":"Census ACS 5-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP5Y2022.DP05","retrievedDate":"2025-02","caveat":"Hispanic/Latino is an ethnicity category, not a racial category; individuals may identify as any race."},{"name":"Black or African American","sub":"Share of total population","unit":"%","dir":0,"defn":"Percentage of residents identifying as Black or African American alone or in combination. Relevant to health equity analysis, maternal mortality disparities, and chronic disease burden patterns.","method":"Census ACS 5-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP5Y2022.DP05","retrievedDate":"2025-02"},{"name":"Non-Hispanic White","sub":"Share of total population","unit":"%","dir":0,"defn":"Percentage of residents identifying as White alone, not Hispanic or Latino.","method":"Census ACS 5-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP5Y2022.DP05","retrievedDate":"2025-02"},{"name":"Asian or Pacific Islander","sub":"Share of total population","unit":"%","dir":0,"defn":"Percentage of residents identifying as Asian alone or Native Hawaiian and Other Pacific Islander alone or in combination.","method":"Census ACS 5-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP5Y2022.DP05","retrievedDate":"2025-02"},{"name":"Foreign-born population","sub":"Share of total population","unit":"%","dir":0,"defn":"Percentage of residents born outside the United States. Shapes demand for interpreter services, differential insurance access, and utilization patterns for recent immigrants.","method":"Census ACS 1-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP1Y2022.DP02","retrievedDate":"2025-02"},{"name":"Urban population share","sub":"% living in urban areas","unit":"%","dir":0,"defn":"Percentage of the population living in Census-defined urbanized areas or urban clusters. A key structural driver of healthcare access, with rural populations facing provider shortages and longer travel distances.","method":"2020 Decennial Census urban/rural classification.","source":"Census 2020","updated":"Decennial","sourceUrl":"https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.html","retrievedDate":"2025-02"}]},"economics":{"color":"#8B5CF6","source":"Census ACS 2023 · BLS 2024 · USDA MTMG 2023 · MERIC 2024","items":[{"name":"Median household income","sub":"All households, inflation-adjusted","unit":"$k","dir":1,"defn":"Median annual household income in thousands of dollars, adjusted for inflation. A key driver of healthcare access — lower-income households delay care, skip prescriptions, and face higher effective cost burdens.","method":"U.S. Census Bureau American Community Survey 1-year estimates.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP1Y2023.DP03","retrievedDate":"2025-02"},{"name":"Unemployment rate","sub":"Annual average, civilian labor force","unit":"%","dir":-1,"defn":"Percentage of the civilian labor force actively seeking but unable to find work. Job loss typically means loss of employer-sponsored insurance and income, directly increasing uninsured rates and deferred care.","method":"Bureau of Labor Statistics Local Area Unemployment Statistics (LAUS) program.","source":"BLS","updated":"Annual","sourceUrl":"https://www.bls.gov/lau/rdscnp16.htm","retrievedDate":"2025-03"},{"name":"Housing cost burden","sub":"% households spending >30% of income on housing","unit":"%","dir":-1,"defn":"Share of households spending more than 30% of gross income on housing costs (rent or mortgage + utilities). High housing burden is a leading predictor of food insecurity, unmet medical needs, and mental health strain.","method":"Census ACS estimate of cost-burdened households.","source":"Census ACS","updated":"Annual","sourceUrl":"https://data.census.gov/table/ACSDP1Y2023.DP04","retrievedDate":"2025-02"},{"name":"Food insecurity rate","sub":"Households lacking consistent food access","unit":"%","dir":-1,"defn":"Percentage of households that lacked reliable access to enough food at some point during the year. Food insecurity is independently associated with worse diabetes management, higher hospitalization, and increased chronic disease burden.","method":"USDA Map the Meal Gap county-level estimates aggregated to state.","source":"USDA MTMG","updated":"Annual","sourceUrl":"https://map.feedingamerica.org/","retrievedDate":"2025-02"},{"name":"Cost of living index","sub":"Relative to U.S. average (100)","unit":"idx","dir":-1,"defn":"Composite index of prices for groceries, housing, utilities, transportation, and healthcare relative to the national average. States above 100 are more expensive; high cost of living compresses real purchasing power even at similar income levels.","method":"MERIC (Missouri Economic Research and Information Center) composite index.","source":"MERIC","updated":"Annual","sourceUrl":"https://meric.mo.gov/data/cost-living-data-series","retrievedDate":"2025-02","caveat":"Index methodology and basket weights vary slightly by release year."}]}};
 
 let activeLens = 'patient';
 let activeMetricIdx = 1;
@@ -1849,6 +2279,16 @@ const OUTLOOK_CONFIG = {
   economics: {
     label: 'Economic Health',
     metrics: [
+      { idx: 0, invert: false },
+      { idx: 1, invert: true  },
+      { idx: 2, invert: true  },
+      { idx: 3, invert: true  },
+      { idx: 4, invert: true  },
+    ]
+  },
+  baseline: {
+    label: 'Economic Conditions',
+    metrics: [
       { idx: 0, invert: false },  // median income → high = good
       { idx: 1, invert: true  },  // unemployment → high = bad
       { idx: 2, invert: true  },  // housing burden → high = bad
@@ -1861,7 +2301,7 @@ const OUTLOOK_CONFIG = {
 const OUTLOOK_TIERS = [
   { min: 4.2, label: 'Strong',        color: '#2D9B6F' },
   { min: 3.4, label: 'Above Average', color: '#4ECDC4' },
-  { min: 2.6, label: 'Average',       color: '#5a7898' },
+  { min: 2.6, label: 'Average',       color: '#7FAED0' },
   { min: 1.8, label: 'Below Average', color: '#E8A838' },
   { min: 0,   label: 'Challenged',    color: '#DF5752' },
 ];
@@ -1880,6 +2320,32 @@ function computeOutlookScore(lens, code, yearIdx) {
 
 function getOutlookTier(score) {
   return OUTLOOK_TIERS.find(t => score >= t.min) || OUTLOOK_TIERS[OUTLOOK_TIERS.length - 1];
+}
+
+let _mocLensCache = null;
+let _mocSysCache  = null;
+let _mapHeaderMetricRef = null;
+
+function syncMapOutlookChips() {
+  const chips  = document.getElementById('mapOutlookChips');
+  const lens   = document.getElementById('mocLens');
+  const sys    = document.getElementById('mocSystem');
+  const sep    = document.getElementById('mocSep');
+  if (!chips) return;
+  const lv = lens && lens.style.display !== 'none';
+  const sv = sys  && sys.style.display  !== 'none';
+  chips.style.display = (lv || sv) ? '' : 'none';
+  if (sep) sep.style.display = (lv && sv) ? '' : 'none';
+}
+
+function syncOverviewBar() {
+  const bar = document.getElementById('overviewBar');
+  if (!bar) return;
+  const outlook = document.getElementById('outlookCard');
+  const system  = document.getElementById('systemOutlookCard');
+  const visible = (outlook && outlook.style.display !== 'none') ||
+                  (system  && system.style.display  !== 'none');
+  bar.style.display = visible ? '' : 'none';
 }
 
 function renderOutlook() {
@@ -1911,7 +2377,12 @@ function renderOutlook() {
     scopeText = 'National average';
   }
 
-  if (!result) { card.style.display = 'none'; return; }
+  if (!result) {
+    card.style.display = 'none';
+    const mocLens = document.getElementById('mocLens');
+    if (mocLens) { mocLens.style.display = 'none'; syncMapOutlookChips(); }
+    return;
+  }
 
   card.style.display = '';
   const tier = getOutlookTier(result.score);
@@ -1938,6 +2409,19 @@ function renderOutlook() {
     metricOutlookCollapsed = !metricOutlookCollapsed;
     card.classList.toggle('card-collapsed', metricOutlookCollapsed);
   });
+  syncOverviewBar();
+
+  // Cache for popover and update lens chip
+  _mocLensCache = { cfg, tier, result, scopeText, rankText, pct };
+  const mocLens = document.getElementById('mocLens');
+  if (mocLens) {
+    document.getElementById('mocLensPrefix').textContent = cfg.label;
+    document.getElementById('mocLensDot').style.background = tier.color;
+    const lbl = document.getElementById('mocLensLabel');
+    lbl.textContent = tier.label; lbl.style.color = tier.color;
+    mocLens.style.display = '';
+    syncMapOutlookChips();
+  }
 }
 
 const SYSTEM_LENSES = [
@@ -1946,8 +2430,47 @@ const SYSTEM_LENSES = [
   { key: 'operations', letter: 'O', shortName: 'Ops',      color: '#E8A838', bgColor: 'rgba(232,168,56,0.18)' },
   { key: 'payer',      letter: '$', shortName: 'Payer',    color: '#2D9B6F', bgColor: 'rgba(45,155,111,0.18)' },
   { key: 'policy',     letter: 'L', shortName: 'Policy',   color: '#DF5752', bgColor: 'rgba(223,87,82,0.18)' },
-  { key: 'economics',  letter: 'E', shortName: 'Econ',     color: '#8B5CF6', bgColor: 'rgba(139,92,246,0.18)' },
+  { key: 'baseline',   letter: 'B', shortName: 'Baseline', color: '#0EA5E9', bgColor: 'rgba(14,165,233,0.18)' },
 ];
+
+const METRIC_GROUPS = {
+  patient:    [
+    { label: 'Health Status',  indices: [0,1,2,3,5,6] },
+    { label: 'Access & Age',   indices: [4,7] }
+  ],
+  clinical:   [
+    { label: 'Physicians & Staff', indices: [0,1,2,6,7,8] },
+    { label: 'Access',             indices: [3,4,5] }
+  ],
+  operations: [
+    { label: 'Capacity', indices: [0,1,2,3] },
+    { label: 'Quality',  indices: [4,5,6] }
+  ],
+  payer:      [
+    { label: 'Coverage', indices: [0,1,2,3,4] },
+    { label: 'Cost',     indices: [5] }
+  ],
+  policy:     [
+    { label: 'State Policy', indices: [0,1,2,3,4,5] }
+  ],
+  baseline:   [
+    { label: 'Economics',    indices: [0,1,2,3,4] },
+    { label: 'Demographics', indices: [5,6,7,8,9,10,11,12] }
+  ]
+};
+
+const FEATURED_COUNT = 3; // metrics shown before "show more"
+
+// Track collapse/expand state per lens+group: key = "lens|groupIndex"
+const metricGroupState = {};
+function getGroupKey(lens, gi) { return `${lens}|${gi}`; }
+function isGroupCollapsed(lens, gi) {
+  const k = getGroupKey(lens, gi);
+  if (k in metricGroupState) return metricGroupState[k];
+  const groups = METRIC_GROUPS[lens] || [];
+  const activeGroup = groups.findIndex(g => g.indices.includes(activeMetricIdx));
+  return gi !== activeGroup;
+}
 
 function renderSystemOutlook() {
   const card = document.getElementById('systemOutlookCard');
@@ -1969,7 +2492,12 @@ function renderSystemOutlook() {
     return { lens: l, score: r.score };
   }).filter(Boolean);
 
-  if (lensResults.length < 3) { card.style.display = 'none'; return; }
+  if (lensResults.length < 3) {
+    card.style.display = 'none';
+    const mocSys = document.getElementById('mocSystem');
+    if (mocSys) { mocSys.style.display = 'none'; syncMapOutlookChips(); }
+    return;
+  }
 
   const overallScore = lensResults.reduce((a, b) => a + b.score, 0) / lensResults.length;
   const tier = getOutlookTier(overallScore);
@@ -2004,7 +2532,7 @@ function renderSystemOutlook() {
   card.style.display = '';
   card.innerHTML = `
     <div class="card-header-row">
-      <div class="sys-header" style="margin-bottom:0" data-tip="<strong>Overall System Outlook</strong><br>An aggregate score across all 6 lenses, rating this state's healthcare system from Weak to Strong. The bar on each lens button shows that lens's individual score.">Overall System Outlook</div>
+      <div class="sys-header" style="margin-bottom:0" data-tip="<strong>Overall System Outlook</strong><br>An aggregate score across all 6 lenses, rating this state's healthcare system from Challenged to Strong. The bar on each lens button shows that lens's individual score.">Overall System Outlook</div>
       <button class="card-toggle-btn" aria-label="Toggle outlook">▾</button>
     </div>
     <div class="card-body">
@@ -2020,6 +2548,18 @@ function renderSystemOutlook() {
     sysOutlookCollapsed = !sysOutlookCollapsed;
     card.classList.toggle('card-collapsed', sysOutlookCollapsed);
   });
+  syncOverviewBar();
+
+  // Cache for popover and update system chip
+  _mocSysCache = { tier, pct, scopeText, rankText, lensResults };
+  const mocSystem = document.getElementById('mocSystem');
+  if (mocSystem) {
+    document.getElementById('mocSysDot').style.background = tier.color;
+    const lbl = document.getElementById('mocSysLabel');
+    lbl.textContent = tier.label; lbl.style.color = tier.color;
+    mocSystem.style.display = '';
+    syncMapOutlookChips();
+  }
 }
 
 // Year-aware value: uses generateTrend() to extrapolate back in time
@@ -2053,7 +2593,7 @@ function getNatAvgForYear(lens, idx, yearIdx) {
 }
 
 const svg = d3.select('#mapSvg');
-const tooltip = document.getElementById('mapTooltip');
+let _sfcLastAbbr = null;
 
 async function loadMap() {
   try {
@@ -2128,7 +2668,7 @@ function drawMap() {
     if (sliderMode === 'change' && selectedYearIdx === 0) {
       legendAnno.textContent = 'no prior year';
     } else {
-      legendAnno.textContent = sliderMode === 'change' ? 'declined → improved' : 'worse → better';
+      legendAnno.textContent = sliderMode === 'change' ? 'declined → improved' : activeLens === 'baseline' ? 'lower · higher' : 'worse → better';
     }
   }
   refreshTimeLabel();
@@ -2171,62 +2711,29 @@ function drawMap() {
       const fips = String(d.id).padStart(2, '0');
       const abbr = FIPS_TO_ABBR[fips];
       if (!abbr) return;
-      tooltip.classList.add('visible');
-      const metric = METRICS[activeLens].items[activeMetricIdx];
-      const val = getValForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
-      let valLine;
-      if (sliderMode === 'change' && selectedYearIdx > 0) {
-        const prev = getValForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx - 1);
-        const dir = metric?.dir ?? -1;
-        if (val !== null && prev !== null) {
-          const rawDelta = val - prev;
-          const signedDelta = rawDelta * dir;
-          const sign = rawDelta >= 0 ? '+' : '';
-          const color = signedDelta > 0 ? '#22c55e' : signedDelta < 0 ? '#ef4444' : 'var(--hu-text-3)';
-          valLine = `${ALL_YEARS[selectedYearIdx - 1]}→${ALL_YEARS[selectedYearIdx]}: <span style="color:var(--hu-text-1)">${fmtVal(val, metric.unit)}</span> <span style="color:${color}">(${sign}${fmtVal(rawDelta, metric.unit)})</span>`;
-        } else {
-          valLine = '<span style="color:var(--hu-text-3);font-style:italic">No change data</span>';
-        }
-      } else {
-        const yearLabel = ALL_YEARS[selectedYearIdx];
-        const isEst = selectedYearIdx < ALL_YEARS.length - 1 && generateTrend(activeLens, activeMetricIdx, abbr);
-        valLine = val === null
-          ? '<span style="color:var(--hu-text-3);font-style:italic">No data available</span>'
-          : `${yearLabel}${isEst ? ' (est.)' : ''}: <span style="color:var(--hu-text-1)">${fmtVal(val, metric.unit)}</span>`;
-      }
-      tooltip.innerHTML = `
-        <div class="tt-state">${STATE_NAMES[abbr]}</div>
-        <div class="tt-val">${metric.name}</div>
-        <div class="tt-val">${valLine}</div>
-      `;
-      const rect = svgEl.getBoundingClientRect();
-      const ttW = tooltip.offsetWidth  || 200;
-      const ttH = tooltip.offsetHeight || 70;
-      const gap = 14;
-      let tx = event.clientX - rect.left + gap;
-      let ty = event.clientY - rect.top  + gap;
-      // flip horizontally if tooltip would overflow the right edge
-      if (tx + ttW > rect.width  - 8) tx = event.clientX - rect.left - ttW - gap;
-      // flip vertically if tooltip would overflow the bottom edge
-      if (ty + ttH > rect.height - 8) ty = event.clientY - rect.top  - ttH - gap;
-      // hard-clamp so it never goes negative
-      tx = Math.max(4, tx);
-      ty = Math.max(4, ty);
-      tooltip.style.left = tx + 'px';
-      tooltip.style.top  = ty + 'px';
+      // If hovering the already-selected (pinned) state, leave the card where it is
+      if (abbr === selectedState) return;
+      showStateFloatCard(abbr, event.clientX, event.clientY, false);
     })
-    .on('mouseleave', () => tooltip.classList.remove('visible'))
+    .on('mouseleave', () => {
+      // Restore pinned card for selected state; otherwise hide
+      if (selectedState && _lastMapClick && _lastMapClick.abbr === selectedState) {
+        showStateFloatCard(selectedState, _lastMapClick.clientX, _lastMapClick.clientY, false);
+      } else {
+        hideStateFloatCard();
+      }
+    })
     .on('click', function(event, d) {
       const fips = String(d.id).padStart(2, '0');
       const abbr = FIPS_TO_ABBR[fips];
       if (!abbr) return;
       if (mapMode === 'explore') {
-        if (abbr === selectedState) selectNation();
-        else selectState(abbr);
+        if (abbr === selectedState) { selectNation(); hideStateFloatCard(); }
+        else window._onMapClick(abbr, event.clientX, event.clientY);
       } else {
         // compare mode
         if (!selectedState) {
-          selectState(abbr);
+          window._onMapClick(abbr, event.clientX, event.clientY);
         } else if (abbr === selectedState) {
           compareState = null;
           selectNation();
@@ -2259,44 +2766,114 @@ function drawMap() {
     });
 }
 
+function makeMetricItem(m, i, lensColor) {
+  const div = document.createElement('div');
+  div.className = 'metric-item' + (i === activeMetricIdx ? ' active' : '');
+  div.style.setProperty('--accent-color', lensColor);
+  const dirLabel = m.dir === 1 ? '↑ better' : m.dir === -1 ? '↓ better' : '';
+  div.innerHTML = `
+    <div class="metric-item-label">
+      <span class="metric-info-icon" data-metric-idx="${i}">i</span>
+      <span class="metric-item-text">${m.name}</span>
+    </div>
+    ${dirLabel ? `<span class="metric-dir-label">${dirLabel}</span>` : ''}
+  `;
+  div.addEventListener('click', (e) => {
+    if (e.target.classList.contains('metric-info-icon')) return;
+    activeMetricIdx = i;
+    renderAll();
+    updateHash();
+  });
+  const icon = div.querySelector('.metric-info-icon');
+  icon.addEventListener('mouseenter', (e) => { if (!isTouch()) showMetricExplainer(e.target, m, lensColor); });
+  icon.addEventListener('mouseleave', () => { if (!isTouch()) hideMetricExplainer(); });
+  icon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const el = getExplainerEl();
+    if (el.classList.contains('visible')) {
+      hideMetricExplainer();
+    } else {
+      showMetricExplainer(e.currentTarget, m, lensColor);
+      if (isTouch()) setTimeout(hideMetricExplainer, 5000);
+    }
+  });
+  return div;
+}
+
 function renderMetrics() {
   const list = document.getElementById('metricList');
-  const lens = METRICS[activeLens];
+  const lensData = METRICS[activeLens];
+  const groups = METRIC_GROUPS[activeLens] || [];
   list.innerHTML = '';
-  lens.items.forEach((m, i) => {
-    const div = document.createElement('div');
-    div.className = 'metric-item' + (i === activeMetricIdx ? ' active' : '');
-    div.style.setProperty('--accent-color', lens.color);
-    const dirLabel = m.dir === 1 ? '↑ better' : m.dir === -1 ? '↓ better' : '';
-    div.innerHTML = `
-      <div class="metric-item-label">
-        <span class="metric-info-icon" data-metric-idx="${i}">i</span>
-        <span class="metric-item-text">${m.name}</span>
-      </div>
-      <span class="metric-dir-label">${dirLabel}</span>
-    `;
-    div.addEventListener('click', (e) => {
-      // Don't switch metric if clicking the info icon (it has its own handler)
-      if (e.target.classList.contains('metric-info-icon')) return;
-      activeMetricIdx = i;
-      renderAll();
-      updateHash();
-    });
-    // Info icon: hover on desktop, tap-to-toggle on touch
-    const icon = div.querySelector('.metric-info-icon');
-    icon.addEventListener('mouseenter', (e) => { if (!isTouch()) showMetricExplainer(e.target, m, lens.color); });
-    icon.addEventListener('mouseleave', () => { if (!isTouch()) hideMetricExplainer(); });
-    icon.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const el = getExplainerEl();
-      if (el.classList.contains('visible')) {
-        hideMetricExplainer();
-      } else {
-        showMetricExplainer(e.currentTarget, m, lens.color);
-        if (isTouch()) setTimeout(hideMetricExplainer, 5000);
+
+  // No groups defined — flat render
+  if (!groups.length) {
+    lensData.items.forEach((m, i) => list.appendChild(makeMetricItem(m, i, lensData.color)));
+    return;
+  }
+
+  // Always ensure the group containing the active metric is expanded
+  groups.forEach((group, gi) => {
+    const validIndices = group.indices.filter(i => i < lensData.items.length);
+    if (validIndices.includes(activeMetricIdx)) {
+      metricGroupState[getGroupKey(activeLens, gi)] = false;
+      // Also show more if the active metric is in the extra set
+      if (validIndices.indexOf(activeMetricIdx) >= FEATURED_COUNT) {
+        metricGroupState[`${activeLens}|${gi}|more`] = true;
       }
+    }
+  });
+
+  groups.forEach((group, gi) => {
+    // ── Group header ──────────────────────────────────────────────
+    const collapsed = isGroupCollapsed(activeLens, gi);
+    const validIndices = group.indices.filter(i => i < lensData.items.length);
+    const header = document.createElement('div');
+    header.className = 'metric-group-header' + (collapsed ? ' collapsed' : '');
+    header.innerHTML = `
+      <span class="metric-group-label">${group.label}</span>
+      <span class="metric-group-count">${validIndices.length}</span>
+      <span class="metric-group-arrow">›</span>
+    `;
+    header.addEventListener('click', () => {
+      const k = getGroupKey(activeLens, gi);
+      metricGroupState[k] = !isGroupCollapsed(activeLens, gi);
+      renderMetrics();
     });
-    list.appendChild(div);
+    list.appendChild(header);
+
+    if (collapsed) return; // nothing more to render for this group
+
+    // ── Featured metrics (first FEATURED_COUNT) ───────────────────
+    const featured = validIndices.slice(0, FEATURED_COUNT);
+    const extra    = validIndices.slice(FEATURED_COUNT);
+    const showMoreKey = `${activeLens}|${gi}|more`;
+    const showingMore = !!metricGroupState[showMoreKey];
+
+    featured.forEach(i => list.appendChild(makeMetricItem(lensData.items[i], i, lensData.color)));
+
+    if (extra.length) {
+      if (showingMore) {
+        extra.forEach(i => list.appendChild(makeMetricItem(lensData.items[i], i, lensData.color)));
+        const lessBtn = document.createElement('div');
+        lessBtn.className = 'metric-show-more';
+        lessBtn.textContent = '↑ show less';
+        lessBtn.addEventListener('click', () => {
+          metricGroupState[showMoreKey] = false;
+          renderMetrics();
+        });
+        list.appendChild(lessBtn);
+      } else {
+        const moreBtn = document.createElement('div');
+        moreBtn.className = 'metric-show-more';
+        moreBtn.textContent = `+ ${extra.length} more`;
+        moreBtn.addEventListener('click', () => {
+          metricGroupState[showMoreKey] = true;
+          renderMetrics();
+        });
+        list.appendChild(moreBtn);
+      }
+    }
   });
 }
 
@@ -2373,6 +2950,7 @@ function renderHeader() {
   document.getElementById('mapH1').textContent = metric.name;
   document.getElementById('mapH1Sub').textContent = metric.sub;
   document.documentElement.style.setProperty('--accent-color', lens.color);
+  _mapHeaderMetricRef = { metric, color: lens.color };
 }
 
 function renderRanking() {
@@ -2511,6 +3089,7 @@ function updateStatPanel() {
     const attrib = document.getElementById('attribYear');
     if (attrib) attrib.textContent = String(displayYear);
     document.getElementById('selRankBand').style.display = 'none';
+    document.getElementById('popContext').style.display = 'none';
     return;
   }
 
@@ -2557,11 +3136,11 @@ function updateStatPanel() {
         : `${statesBetter} of ${n} states have a ${dirWord} value`;
     const ratio = statesBetter / n;
     let color, band;
-    if      (ratio < 0.20) { color = '#22c55e'; band = 'Strong'; }
+    if      (ratio < 0.20) { color = '#22c55e'; band = 'Top 20%'; }
     else if (ratio < 0.40) { color = '#84cc16'; band = 'Above avg'; }
     else if (ratio < 0.60) { color = '#E8A838'; band = 'Average'; }
     else if (ratio < 0.80) { color = '#f97316'; band = 'Below avg'; }
-    else                   { color = '#ef4444'; band = 'Weak'; }
+    else                   { color = '#ef4444'; band = 'Bottom 20%'; }
     dotEl.style.background   = color;
     bandLbl.style.color      = color;
     bandLbl.textContent      = band;
@@ -2569,6 +3148,28 @@ function updateStatPanel() {
   } else {
     document.getElementById('selRank').textContent = 'No data';
     bandEl.style.display = 'none';
+  }
+
+  // ── Population context ──
+  const popEl = document.getElementById('popContext');
+  const statePop = STATE_POP[selectedState];
+  const isDemoPct = activeLens === 'baseline' && activeMetricIdx >= 5 && metric.unit === '%';
+  const isPerCap  = metric.unit === '/100k' || metric.unit === '/1k';
+  if (statePop && val !== null && isDemoPct) {
+    const count = statePop * (val / 100);   // thousands × pct → thousands
+    popEl.textContent = '≈ ' + fmtPop(count) + ' people';
+    popEl.style.display = 'inline';
+  } else if (statePop && val !== null && isPerCap) {
+    // statePop is in thousands; convert rate to absolute count (also in thousands for fmtPop)
+    // /1k:   absK = val × statePop / 1000   (beds/1k × Mk people → k beds)
+    // /100k: absK = val × statePop / 100000 × 1000 = val × statePop / 100
+    const absK = metric.unit === '/1k'
+      ? (val * statePop) / 1000
+      : (val * statePop) / 100000 * 1000;
+    popEl.textContent = 'pop. ' + fmtPop(statePop) + ' · ≈ ' + fmtPop(absK) + ' total';
+    popEl.style.display = 'inline';
+  } else {
+    popEl.style.display = 'none';
   }
 }
 
@@ -2587,6 +3188,9 @@ function selectState(code) {
   renderEntityPanel();
   renderTrendChart();
   updateHash();
+  if (window.innerWidth <= 680) {
+    document.querySelector('.right-panel').classList.add('sheet-open');
+  }
 }
 
 function selectNation() {
@@ -2617,11 +3221,11 @@ function getBandForState(code) {
   const n = allRanked.length;
   const statesBetter = dir === 1 ? rankFromTop - 1 : n - rankFromTop;
   const ratio = statesBetter / n;
-  if      (ratio < 0.20) return { color: '#22c55e', band: 'Strong' };
+  if      (ratio < 0.20) return { color: '#22c55e', band: 'Top 20%' };
   else if (ratio < 0.40) return { color: '#84cc16', band: 'Above avg' };
   else if (ratio < 0.60) return { color: '#E8A838', band: 'Average' };
   else if (ratio < 0.80) return { color: '#f97316', band: 'Below avg' };
-  else                   return { color: '#ef4444', band: 'Weak' };
+  else                   return { color: '#ef4444', band: 'Bottom 20%' };
 }
 
 function updateComparePanel() {
@@ -2759,7 +3363,7 @@ function renderTrendChart() {
   }
 
   // D3 sparkline
-  const ml = 30, mr = 12, mt = 16, mb = 18;
+  const ml = 46, mr = 12, mt = 16, mb = 18;
   const W = 320 - ml - mr;
   const H = 100 - mt - mb;
 
@@ -2819,13 +3423,20 @@ function renderTrendChart() {
       .attr('fill','var(--hu-text-3)').attr('font-size','9').attr('font-family','IBM Plex Mono, monospace').text(yr);
   });
 
-  // Y axis min/max hints
+  // Y axis min/max hints — compact format to fit within left margin
+  function fmtAxisLabel(v, unit) {
+    const r = Math.round(v * 10) / 10;
+    if (unit === '$k') return r + 'k';
+    if (unit === '$') return v >= 1000 ? '$' + Math.round(v / 1000) + 'k' : '$' + Math.round(v);
+    if (unit === '%') return r + '%';
+    return String(r);
+  }
   g.append('text').attr('x', -4).attr('y', 0).attr('text-anchor','end').attr('dominant-baseline','hanging')
     .attr('fill','var(--hu-text-3)').attr('font-size','8').attr('font-family','IBM Plex Mono, monospace')
-    .text(fmtVal(yMax, metric.unit));
+    .text(fmtAxisLabel(yMax, metric.unit));
   g.append('text').attr('x', -4).attr('y', H).attr('text-anchor','end').attr('dominant-baseline','auto')
     .attr('fill','var(--hu-text-3)').attr('font-size','8').attr('font-family','IBM Plex Mono, monospace')
-    .text(fmtVal(yMin, metric.unit));
+    .text(fmtAxisLabel(yMin, metric.unit));
 
   // Header label
   svg.append('text').attr('x', ml).attr('y', 10).attr('fill', lens.color)
@@ -2882,7 +3493,11 @@ function parseHash() {
   }
 }
 
-document.getElementById('usaBtn').addEventListener('click', selectNation);
+document.getElementById('usaBtn').addEventListener('click', () => { selectNation(); hideStateFloatCard(); });
+
+document.getElementById('sheetHandle').addEventListener('click', () => {
+  document.querySelector('.right-panel').classList.toggle('sheet-open');
+});
 
 document.querySelectorAll('.lens-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -2895,9 +3510,9 @@ document.querySelectorAll('.lens-btn').forEach(btn => {
   });
 });
 
-document.querySelectorAll('.ranking-tab').forEach(tab => {
+document.querySelectorAll('.card-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.ranking-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.card-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     rankMode = tab.textContent.trim().toLowerCase();
     renderRanking();
@@ -3022,6 +3637,116 @@ document.querySelectorAll('[data-mapmode]').forEach(btn => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 })();
 
+// ── Outlook chip hover popovers ───────────────────────────────────────────────
+(function() {
+  const pop = document.getElementById('mocPopover');
+  if (!pop) return;
+
+  function showPop(chip, html) {
+    pop.innerHTML = html;
+    pop.classList.add('visible');
+    const cr = chip.getBoundingClientRect();
+    let left = cr.left;
+    let top  = cr.bottom + 8;
+    // clamp right edge
+    const pw = 280;
+    if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+    pop.style.left = Math.max(4, left) + 'px';
+    pop.style.top  = top + 'px';
+  }
+  function hidePop() { pop.classList.remove('visible'); }
+
+  const LENS_ICONS = {
+    patient:'P', clinical:'C', operations:'O', payer:'$', policy:'L', baseline:'B'
+  };
+  const LENS_COLORS = {
+    patient:'var(--lens-patient)', clinical:'var(--lens-clinical)',
+    operations:'var(--lens-operations)', payer:'var(--lens-payer)',
+    policy:'var(--lens-policy)', baseline:'var(--lens-baseline)'
+  };
+
+  const mocLens = document.getElementById('mocLens');
+  if (mocLens) {
+    mocLens.addEventListener('mouseenter', () => {
+      if (!_mocLensCache) return;
+      const { cfg, tier, result, scopeText, rankText, pct } = _mocLensCache;
+      showPop(mocLens, `
+        <div class="moc-pop-eyebrow">${cfg.label} · Overall Outlook</div>
+        <div class="moc-pop-tier">
+          <div class="moc-pop-dot" style="background:${tier.color}"></div>
+          <span class="moc-pop-tier-label" style="color:${tier.color}">${tier.label}</span>
+        </div>
+        <div class="moc-pop-bar-track">
+          <div class="moc-pop-bar-fill" style="width:${pct}%;background:${tier.color}"></div>
+        </div>
+        <div class="moc-pop-meta">${scopeText}${rankText} · ${result.count} indicators</div>
+      `);
+    });
+    mocLens.addEventListener('mouseleave', hidePop);
+  }
+
+  const mocSystem = document.getElementById('mocSystem');
+  if (mocSystem) {
+    mocSystem.addEventListener('mouseenter', () => {
+      if (!_mocSysCache) return;
+      const { tier, pct, scopeText, rankText, lensResults } = _mocSysCache;
+      const lensGrid = lensResults.map(({ lens, score }) => {
+        const lt  = getOutlookTier(score);
+        const lp  = Math.round((score - 1) / 4 * 100);
+        const col = LENS_COLORS[lens.key] || 'var(--hu-teal)';
+        return `<div class="moc-pop-lens-cell">
+          <div class="moc-pop-lens-icon" style="background:${col}">${LENS_ICONS[lens.key] || '?'}</div>
+          <div class="moc-pop-bar-track-sm"><div class="moc-pop-bar-fill-sm" style="width:${lp}%;background:${lt.color}"></div></div>
+          <span class="moc-pop-lens-name">${lens.label}</span>
+        </div>`;
+      }).join('');
+      showPop(mocSystem, `
+        <div class="moc-pop-eyebrow">Overall System Outlook</div>
+        <div class="moc-pop-tier">
+          <div class="moc-pop-dot" style="background:${tier.color}"></div>
+          <span class="moc-pop-tier-label" style="color:${tier.color}">${tier.label}</span>
+        </div>
+        <div class="moc-pop-bar-track">
+          <div class="moc-pop-bar-fill" style="width:${pct}%;background:${tier.color}"></div>
+        </div>
+        <div class="moc-pop-meta">${scopeText}${rankText} · 6 perspectives</div>
+        <div class="moc-pop-lens-grid">${lensGrid}</div>
+      `);
+    });
+    mocSystem.addEventListener('mouseleave', hidePop);
+  }
+})();
+
+// ── Map header metric info button ────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('mapMetricInfoBtn');
+  if (!btn) return;
+  btn.addEventListener('mouseenter', () => {
+    if (!isTouch() && _mapHeaderMetricRef)
+      showMetricExplainer(btn, _mapHeaderMetricRef.metric, _mapHeaderMetricRef.color);
+  });
+  btn.addEventListener('mouseleave', () => { if (!isTouch()) hideMetricExplainer(); });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!_mapHeaderMetricRef) return;
+    const el = getExplainerEl();
+    if (el.classList.contains('visible')) hideMetricExplainer();
+    else {
+      showMetricExplainer(btn, _mapHeaderMetricRef.metric, _mapHeaderMetricRef.color);
+      if (isTouch()) setTimeout(hideMetricExplainer, 5000);
+    }
+  });
+})();
+
+// ── Float card outlook toggle ─────────────────────────────────────────────────
+document.getElementById('sfcOutlookToggle').addEventListener('click', () => {
+  const body = document.getElementById('sfcOutlookBody');
+  const tog  = document.getElementById('sfcOutlookToggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  tog.classList.toggle('open', !open);
+});
+
 // ── Global hover tooltip engine ──────────────────────────────────────────────
 (function() {
   const tip = document.getElementById('gtip');
@@ -3060,6 +3785,154 @@ renderEntityPanel();
 updateStatPanel();
 loadMap();
 updateHash();
+
+
+// ── Colorblind mode ────────────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('cbToggleBtn');
+  const KEY = 'hu-colorblind';
+  if (localStorage.getItem(KEY) === 'true') {
+    document.body.dataset.colorblind = 'true';
+    btn.classList.add('active');
+  }
+  btn.addEventListener('click', () => {
+    const on = document.body.dataset.colorblind === 'true';
+    document.body.dataset.colorblind = String(!on);
+    localStorage.setItem(KEY, String(!on));
+    btn.classList.toggle('active', !on);
+    btn.setAttribute('data-tip', on
+      ? 'Toggle colorblind-friendly color scale (orange → blue)'
+      : 'Colorblind mode ON — click to disable');
+    drawMap();
+  });
+})();
+
+// ── Floating state card ────────────────────────────────────────────────
+const BAND_LABELS = ['Bottom 20%','Below avg','Average','Above avg','Top 20%'];
+const Q_COLORS    = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)'];
+
+function showStateFloatCard(abbr, clientX, clientY, forceAnimate = true) {
+  const card = document.getElementById('stateFloatCard');
+  if (!card) return;
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+  const val    = getValForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
+  const q      = getQuintile(activeLens, activeMetricIdx, abbr);
+  const natAvg = getNatAvg(activeLens, activeMetricIdx);
+
+  const qColor = q ? Q_COLORS[q - 1] : 'var(--hu-text-3)';
+  const qLabel = q ? BAND_LABELS[q - 1] : 'No data';
+
+  document.getElementById('sfcState').textContent = STATE_NAMES[abbr];
+  const valEl = document.getElementById('sfcValue');
+  valEl.textContent = val !== null ? fmtVal(val, metric.unit) : '—';
+  valEl.style.color = qColor;
+  document.getElementById('sfcDot').style.background = qColor;
+  document.getElementById('sfcBandLabel').textContent = qLabel;
+
+  const vsEl = document.getElementById('sfcVs');
+  if (val !== null && natAvg !== null) {
+    const diff = Math.round((val - natAvg) * 10) / 10;
+    const sign = diff > 0 ? '+' : '';
+    vsEl.textContent = sign + fmtVal(diff, metric.unit) + ' vs. national avg';
+  } else {
+    vsEl.textContent = '';
+  }
+
+  // Position near cursor, clamped inside map-stage
+  card.style.display = 'block';
+  const stage = document.querySelector('.map-stage');
+  const rect  = stage.getBoundingClientRect();
+  const cw = card.offsetWidth  || 180;
+  const ch = card.offsetHeight || 110;
+  let x = clientX - rect.left + 18;
+  let y = clientY - rect.top  - 14;
+  if (x + cw > rect.width  - 6) x = clientX - rect.left - cw - 18;
+  if (y + ch > rect.height - 6) y = clientY - rect.top  - ch - 18;
+  card.style.left = Math.max(4, x) + 'px';
+  card.style.top  = Math.max(4, y) + 'px';
+
+  // Only re-trigger animation when state changes or explicitly forced
+  const doAnimate = forceAnimate || abbr !== _sfcLastAbbr;
+  const stateChanged = abbr !== _sfcLastAbbr;
+  _sfcLastAbbr = abbr;
+  if (doAnimate) {
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = '';
+  }
+
+  // Collapse outlook section when showing a new state
+  if (stateChanged) {
+    const body = document.getElementById('sfcOutlookBody');
+    const tog  = document.getElementById('sfcOutlookToggle');
+    if (body) body.style.display = 'none';
+    if (tog)  tog.classList.remove('open');
+  }
+
+  // Populate System Outlook mini section
+  const sfcSysTier = document.getElementById('sfcSysTier');
+  const sfcLensRow = document.getElementById('sfcLensRow');
+  if (sfcSysTier && sfcLensRow) {
+    const lensKeys  = ['patient','clinical','operations','payer','policy','baseline'];
+    const lensLabel = { patient:'Pt', clinical:'Cl', operations:'Op', payer:'Pa', policy:'Po', baseline:'Bl' };
+    const lensResults = lensKeys.map(k => {
+      const r = computeOutlookScore(k, abbr, selectedYearIdx);
+      return r ? { key: k, score: r.score } : null;
+    }).filter(Boolean);
+
+    const togEl = document.getElementById('sfcOutlookToggle');
+    if (lensResults.length >= 2) {
+      const overallScore = lensResults.reduce((a, b) => a + b.score, 0) / lensResults.length;
+      const tier = getOutlookTier(overallScore);
+      sfcSysTier.innerHTML = `<span class="sfc-sys-dot" style="background:${tier.color}"></span><span style="color:${tier.color}">${tier.label}</span>`;
+      sfcLensRow.innerHTML = lensKeys.map(k => {
+        const r = lensResults.find(l => l.key === k);
+        const pct = r ? Math.round((r.score - 1) / 4 * 100) : 0;
+        const color = r ? getOutlookTier(r.score).color : 'var(--hu-border)';
+        return `<div class="sfc-lens-cell"><div class="sfc-lens-bar-track"><div class="sfc-lens-bar-fill" style="width:${pct}%;background:${color}"></div></div><span class="sfc-lens-abbr">${lensLabel[k]}</span></div>`;
+      }).join('');
+      if (togEl) togEl.style.display = '';
+    } else {
+      if (togEl) togEl.style.display = 'none';
+    }
+  }
+}
+
+function hideStateFloatCard() {
+  _sfcLastAbbr = null;
+  const card = document.getElementById('stateFloatCard');
+  if (card) card.style.display = 'none';
+}
+
+// Patch map click handler to show float card with position
+// We capture the last SVG click coords and hook into selectState
+let _lastMapClick = null;
+const _origSelectState = selectState;
+// Override selectState to update float card when called from map
+// (position won't be available from non-map calls, so we check _lastMapClick)
+window._onMapClick = function(abbr, clientX, clientY) {
+  _lastMapClick = { abbr, clientX, clientY };
+  selectState(abbr);
+  showStateFloatCard(abbr, clientX, clientY);
+};
+const _origSelectNation = selectNation;
+// Hide card when deselecting
+const _wrappedSelectNation = function() {
+  _origSelectNation();
+  hideStateFloatCard();
+};
+
+// Update float card when metric/lens changes while a state is selected
+{
+  const _origRenderAll = renderAll;
+  renderAll = function() {
+    _origRenderAll();
+    if (selectedState && _lastMapClick && _lastMapClick.abbr === selectedState) {
+      showStateFloatCard(selectedState, _lastMapClick.clientX, _lastMapClick.clientY);
+    }
+  };
+}
+
 </script>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
