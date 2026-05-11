@@ -1419,6 +1419,15 @@ function scaleWrap(){
   const vw=window.innerWidth;
   const wrap=document.getElementById('wrap');
   const scaler=document.querySelector('.lab-scaler');
+  // On mobile, pinch-zoom handles navigation — skip the downscale
+  if(vw<=768){
+    wrap.style.width='';
+    wrap.style.height='';
+    wrap.style.transform='';
+    wrap.style.transformOrigin='';
+    if(scaler)scaler.style.height='';
+    return;
+  }
   if(vw<MIN){
     const s=(vw-20)/MIN;
     wrap.style.width=MIN+'px';
@@ -1495,6 +1504,7 @@ window.addEventListener('resize',()=>{
 
   function makePinchZoom(outer, inner, minS, maxS) {
     let ox = 0, oy = 0, s = 1;
+    let initOx = 0, initOy = 0;
     let t0 = null;
     let p0mx = 0, p0my = 0, p0ox = 0, p0oy = 0, p0s = 1;
     const resetBtn = outer.querySelector('.pz-reset-btn');
@@ -1504,8 +1514,16 @@ window.addEventListener('resize',()=>{
 
     function apply() {
       inner.style.transform = `translate(${ox}px,${oy}px) scale(${s})`;
-      if (resetBtn) resetBtn.style.display = (Math.abs(s-1)>0.02||Math.abs(ox)>1||Math.abs(oy)>1) ? 'flex' : 'none';
+      const atInit = Math.abs(s-1)<0.02 && Math.abs(ox-initOx)<2 && Math.abs(oy-initOy)<2;
+      if (resetBtn) resetBtn.style.display = atInit ? 'none' : 'flex';
     }
+
+    // Auto-center horizontally after content renders
+    requestAnimationFrame(() => {
+      initOx = Math.min(0, (outer.clientWidth - inner.offsetWidth) / 2);
+      ox = initOx;
+      apply();
+    });
 
     function mid(e) {
       const r = outer.getBoundingClientRect();
@@ -1546,7 +1564,7 @@ window.addEventListener('resize',()=>{
     outer.addEventListener('touchend',    () => { t0 = null; });
     outer.addEventListener('touchcancel', () => { t0 = null; });
 
-    if (resetBtn) resetBtn.addEventListener('click', () => { ox=0; oy=0; s=1; apply(); });
+    if (resetBtn) resetBtn.addEventListener('click', () => { ox=initOx; oy=initOy; s=1; apply(); });
 
     if (hint) {
       hint.style.display = 'flex';
