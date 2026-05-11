@@ -931,6 +931,38 @@ footer { position: relative; z-index: 10; }
   /* Show handle and tap hint on mobile */
   .hm-panel-handle { display: block; }
   .hm-mobile-hint { display: flex; }
+
+  /* Pinch-zoom: lock scroll, allow transform, left-align content */
+  .hm-building-scroll {
+    overflow: hidden;
+    touch-action: none;
+    justify-content: flex-start;
+  }
+}
+
+/* ── Pinch-zoom UI ───────────────────────────────────────── */
+.pz-reset-btn {
+  position: absolute; bottom: 14px; left: 50%;
+  transform: translateX(-50%); z-index: 90;
+  display: none; align-items: center; gap: 6px;
+  background: rgba(8,20,44,0.9); border: 1px solid rgba(78,205,196,0.55);
+  color: rgba(78,205,196,0.92); padding: 7px 18px;
+  border-radius: 20px; font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  cursor: pointer; white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+.pz-hint {
+  position: absolute; bottom: 50px; left: 50%;
+  transform: translateX(-50%); z-index: 90;
+  pointer-events: none; display: none;
+  white-space: nowrap;
+  background: rgba(8,20,44,0.85); border: 1px solid rgba(78,205,196,0.3);
+  border-radius: 16px; padding: 5px 14px;
+  font-size: 10px; letter-spacing: .04em;
+  color: rgba(78,205,196,0.82);
+  font-family: 'IBM Plex Mono', monospace;
+  transition: opacity 0.8s ease;
 }
 </style>
 <div class="hm-subbar">
@@ -1032,6 +1064,8 @@ footer { position: relative; z-index: 10; }
 
   <!-- Building scroll container -->
   <div class="hm-building-scroll">
+    <button class="pz-reset-btn" id="hmPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
+    <div class="pz-hint" id="hmPzHint">Pinch to zoom &middot; drag to pan</div>
     <div class="hm-campus-col">
     <div class="hm-campus-wrap">
 
@@ -2831,4 +2865,77 @@ function positionTooltip(e) {
 document.addEventListener('mousemove', e => {
   if (tooltip.classList.contains('visible')) positionTooltip(e);
 });
+
+// ── Pinch / pan on mobile ──────────────────────────────────
+function makePinchZoom(outer, inner, minS, maxS) {
+  let ox = 0, oy = 0, s = 1;
+  let t0 = null;
+  let p0mx = 0, p0my = 0, p0ox = 0, p0oy = 0, p0s = 1;
+  const resetBtn = outer.querySelector('.pz-reset-btn');
+  const hint     = outer.querySelector('.pz-hint');
+
+  inner.style.transformOrigin = '0 0';
+
+  function apply() {
+    inner.style.transform = `translate(${ox}px,${oy}px) scale(${s})`;
+    if (resetBtn) resetBtn.style.display = (Math.abs(s - 1) > 0.02 || Math.abs(ox) > 1 || Math.abs(oy) > 1) ? 'flex' : 'none';
+  }
+
+  function mid(e) {
+    const r = outer.getBoundingClientRect();
+    if (e.touches.length < 2) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top, d: 0 };
+    const x1 = e.touches[0].clientX - r.left, y1 = e.touches[0].clientY - r.top;
+    const x2 = e.touches[1].clientX - r.left, y2 = e.touches[1].clientY - r.top;
+    return { x: (x1 + x2) / 2, y: (y1 + y2) / 2, d: Math.hypot(x2 - x1, y2 - y1) };
+  }
+
+  outer.addEventListener('touchstart', e => {
+    if (e.touches.length >= 2) {
+      e.preventDefault();
+      const m = mid(e);
+      t0 = { x: m.x, y: m.y, d: m.d, pan: false };
+      p0mx = m.x; p0my = m.y; p0ox = ox; p0oy = oy; p0s = s;
+    } else if (s > 1.02) {
+      e.preventDefault();
+      t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox, oy, pan: true };
+    }
+  }, { passive: false });
+
+  outer.addEventListener('touchmove', e => {
+    if (!t0) return;
+    e.preventDefault();
+    if (t0.pan) {
+      ox = t0.ox + (e.touches[0].clientX - t0.x);
+      oy = t0.oy + (e.touches[0].clientY - t0.y);
+    } else if (e.touches.length >= 2) {
+      const m = mid(e);
+      const ns = Math.min(maxS, Math.max(minS, p0s * m.d / t0.d));
+      ox = m.x - (p0mx - p0ox) * ns / p0s;
+      oy = m.y - (p0my - p0oy) * ns / p0s;
+      s = ns;
+    }
+    apply();
+  }, { passive: false });
+
+  outer.addEventListener('touchend',   () => { t0 = null; });
+  outer.addEventListener('touchcancel', () => { t0 = null; });
+
+  if (resetBtn) resetBtn.addEventListener('click', () => { ox = 0; oy = 0; s = 1; apply(); });
+
+  if (hint && window.innerWidth <= 1024) {
+    hint.style.display = 'flex';
+    setTimeout(() => {
+      hint.style.opacity = '0';
+      setTimeout(() => { hint.style.display = 'none'; hint.style.opacity = '1'; }, 800);
+    }, 2500);
+  }
+}
+
+if (window.innerWidth < 768) {
+  makePinchZoom(
+    document.querySelector('.hm-building-scroll'),
+    document.querySelector('.hm-campus-col'),
+    0.3, 2.5
+  );
+}
 </script>

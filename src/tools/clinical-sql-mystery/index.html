@@ -146,6 +146,67 @@ textarea#editor::placeholder{color:var(--text3)}
 .pk{font-size:9px;background:#1a2e1a;color:var(--green-text);padding:1px 5px;border-radius:3px;font-weight:600}
 .fk{font-size:9px;background:var(--blue-dim);color:var(--blue-text);padding:1px 5px;border-radius:3px;font-weight:600}
 
+/* Mobile panel controls — hidden by default, activated at 640px */
+.mob-bar { display:none; }
+.mob-panel-hdr { display:none; }
+
+@media (max-width:640px) {
+  /* Collapse 3-col grid to editor-only */
+  .layout { grid-template-columns:1fr; height:calc(100vh - 118px); }
+
+  /* Sidebars become fixed full-screen overlays that slide in */
+  .case-sidebar {
+    position:fixed; top:118px; left:0; right:0; bottom:0; z-index:150;
+    border-right:none;
+    transform:translateX(-100%);
+    transition:transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  .schema-panel {
+    position:fixed; top:118px; left:0; right:0; bottom:0; z-index:150;
+    border-left:none;
+    transform:translateX(100%);
+    transition:transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  .case-sidebar.mob-open, .schema-panel.mob-open { transform:translateX(0); }
+
+  /* Mobile toggle bar above the editor */
+  .mob-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 14px; background:var(--surface);
+    border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .mob-btn {
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text2); padding:8px 16px; border-radius:6px;
+    font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer;
+    transition:all .12s; min-height:40px;
+  }
+  .mob-btn.active, .mob-btn:hover { border-color:var(--blue-text); color:var(--blue-text); }
+  .mob-bar-label { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; }
+
+  /* Panel header with close button */
+  .mob-panel-hdr {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; border-bottom:2px solid var(--blue-text);
+    position:sticky; top:0; background:var(--surface); z-index:1;
+    flex-shrink:0;
+  }
+  .mob-panel-title { font-size:13px; font-weight:600; color:var(--text); }
+  .mob-panel-close {
+    background:none; border:1px solid var(--border2); color:var(--text2);
+    padding:7px 14px; border-radius:6px; font-size:12px;
+    font-family:'DM Sans',sans-serif; cursor:pointer; min-height:36px;
+  }
+  .mob-panel-close:hover { border-color:var(--text2); color:var(--text); }
+
+  /* Larger tap targets */
+  .case-btn { padding:14px 16px; }
+  .btn-run { padding:10px 20px; font-size:14px; min-height:44px; }
+  .btn-sec { padding:9px 14px; font-size:13px; min-height:40px; }
+  .hint-btn { padding:8px 14px; font-size:13px; min-height:40px; }
+  textarea#editor { height:150px; font-size:14px; }
+}
+
 /* ===== Site nav ===== */
 nav {
   position:sticky; top:0; z-index:200;
@@ -249,11 +310,20 @@ footer {
 <div class="layout">
 
   <div class="case-sidebar">
+    <div class="mob-panel-hdr">
+      <span class="mob-panel-title">Cases</span>
+      <button class="mob-panel-close" onclick="mobClose()">✕ Close</button>
+    </div>
     <div class="side-lbl">Cases</div>
     <div id="case-list"></div>
   </div>
 
   <div class="center">
+    <div class="mob-bar">
+      <button class="mob-btn" id="mobCasesBtn" onclick="mobPanel('cases')">&#9776; Cases</button>
+      <span class="mob-bar-label">SQL Editor</span>
+      <button class="mob-btn" id="mobSchemaBtn" onclick="mobPanel('schema')">Schema &#9633;</button>
+    </div>
     <div class="case-desc" id="case-desc"></div>
 
     <div class="editor-wrap">
@@ -280,6 +350,10 @@ footer {
   </div>
 
   <div class="schema-panel">
+    <div class="mob-panel-hdr">
+      <span class="mob-panel-title">Schema Reference</span>
+      <button class="mob-panel-close" onclick="mobClose()">✕ Close</button>
+    </div>
     <div class="schema-lbl">Schema Reference</div>
     <div class="quick-wrap">
       <div class="quick-lbl">Quick explore →</div>
@@ -557,6 +631,7 @@ function renderCases(){
 
 function loadCase(i){
   curCase=i;
+  if(window.innerWidth<=640) mobClose();
   const c=CASES[i];
   const hc=hints[i]||0;
   document.getElementById('case-desc').innerHTML=`
@@ -621,8 +696,36 @@ function runQuery(){
   }
 }
 
-function fillQuery(q){document.getElementById('editor').value=q;document.getElementById('editor').focus();}
+function fillQuery(q){
+  document.getElementById('editor').value=q;
+  document.getElementById('editor').focus();
+  if(window.innerWidth<=640) mobClose();
+}
 function clearEditor(){document.getElementById('editor').value='';}
+
+function mobPanel(which){
+  const cases=document.querySelector('.case-sidebar');
+  const schema=document.querySelector('.schema-panel');
+  const casesBtn=document.getElementById('mobCasesBtn');
+  const schemaBtn=document.getElementById('mobSchemaBtn');
+  if(which==='cases'){
+    const open=cases.classList.toggle('mob-open');
+    schema.classList.remove('mob-open');
+    casesBtn.classList.toggle('active',open);
+    schemaBtn.classList.remove('active');
+  } else {
+    const open=schema.classList.toggle('mob-open');
+    cases.classList.remove('mob-open');
+    schemaBtn.classList.toggle('active',open);
+    casesBtn.classList.remove('active');
+  }
+}
+function mobClose(){
+  document.querySelector('.case-sidebar').classList.remove('mob-open');
+  document.querySelector('.schema-panel').classList.remove('mob-open');
+  document.getElementById('mobCasesBtn').classList.remove('active');
+  document.getElementById('mobSchemaBtn').classList.remove('active');
+}
 function clearRes(){document.getElementById('res-container').innerHTML='<div class="res-placeholder"><span>🔍</span>Run a query to see results</div>';document.getElementById('res-count').textContent='';}
 
 function renderSchema(){
