@@ -2874,6 +2874,7 @@ function makePinchZoom(outer, inner, minS, maxS, autoCenter) {
   let initOx = 0, initOy = 0;
   let t0 = null;
   let p0mx = 0, p0my = 0, p0ox = 0, p0oy = 0, p0s = 1;
+  const THRESH = 6;
   const resetBtn = outer.querySelector('.pz-reset-btn');
   const hint     = outer.querySelector('.pz-hint');
 
@@ -2886,7 +2887,6 @@ function makePinchZoom(outer, inner, minS, maxS, autoCenter) {
   }
 
   if (autoCenter) {
-    // Center the content in the viewport at scale=1 (wait for layout)
     requestAnimationFrame(() => {
       initOx = Math.min(0, (outer.clientWidth  - inner.offsetWidth)  / 2);
       initOy = Math.min(0, (outer.clientHeight - inner.offsetHeight) / 2);
@@ -2907,31 +2907,45 @@ function makePinchZoom(outer, inner, minS, maxS, autoCenter) {
     if (e.touches.length >= 2) {
       e.preventDefault();
       const m = mid(e);
-      t0 = { x: m.x, y: m.y, d: m.d, pan: false };
+      t0 = { type: 'pinch', d: m.d };
       p0mx = m.x; p0my = m.y; p0ox = ox; p0oy = oy; p0s = s;
-    } else if (s > 1.02) {
-      e.preventDefault();
-      t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox, oy, pan: true };
+    } else {
+      // Always allow pan — threshold distinguishes tap from drag
+      t0 = { type: 'maybe', x: e.touches[0].clientX, y: e.touches[0].clientY, ox, oy };
     }
   }, { passive: false });
 
   outer.addEventListener('touchmove', e => {
     if (!t0) return;
-    e.preventDefault();
-    if (t0.pan) {
-      ox = t0.ox + (e.touches[0].clientX - t0.x);
-      oy = t0.oy + (e.touches[0].clientY - t0.y);
-    } else if (e.touches.length >= 2) {
+    if (e.touches.length >= 2 && t0.type !== 'pinch') {
+      // Fingers added mid-gesture — start pinch
+      e.preventDefault();
+      const m = mid(e);
+      t0 = { type: 'pinch', d: m.d };
+      p0mx = m.x; p0my = m.y; p0ox = ox; p0oy = oy; p0s = s;
+      return;
+    }
+    if (t0.type === 'pinch') {
+      e.preventDefault();
       const m = mid(e);
       const ns = Math.min(maxS, Math.max(minS, p0s * m.d / t0.d));
       ox = m.x - (p0mx - p0ox) * ns / p0s;
       oy = m.y - (p0my - p0oy) * ns / p0s;
       s = ns;
+      apply();
+      return;
     }
+    const dx = e.touches[0].clientX - t0.x;
+    const dy = e.touches[0].clientY - t0.y;
+    if (t0.type === 'maybe' && Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
+    t0.type = 'pan';
+    e.preventDefault();
+    ox = t0.ox + dx;
+    oy = t0.oy + dy;
     apply();
   }, { passive: false });
 
-  outer.addEventListener('touchend',   () => { t0 = null; });
+  outer.addEventListener('touchend',    () => { t0 = null; });
   outer.addEventListener('touchcancel', () => { t0 = null; });
 
   if (resetBtn) resetBtn.addEventListener('click', () => { ox = initOx; oy = initOy; s = 1; apply(); });

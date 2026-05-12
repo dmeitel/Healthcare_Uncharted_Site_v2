@@ -1362,10 +1362,19 @@ body[data-colorblind="true"] {
     height: clamp(280px, 75vw, 380px);
     flex-shrink: 0;
   }
-  .map-header { padding: 8px 12px 6px; }
+  .map-header {
+    padding: 8px 12px 6px;
+    flex-wrap: wrap; gap: 4px;
+  }
   .map-eyebrow { font-size: 9px; }
-  .map-h1 { font-size: 13px; }
+  .map-h1 {
+    font-size: 13px;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
   .map-h1-sub { font-size: 11px; display: none; }
+  /* Stack chips below title, hide on very narrow screens */
+  .map-outlook-chips { display: none !important; }
+  .map-h1-info { display: none; }
 
   /* ── Right panel: natural height, no fixed scroll ── */
   .right-panel {
@@ -4000,31 +4009,46 @@ function makePinchZoom(outer, inner, minS, maxS) {
     return { x: (x1 + x2) / 2, y: (y1 + y2) / 2, d: Math.hypot(x2 - x1, y2 - y1) };
   }
 
+  const THRESH = 8;
+
   outer.addEventListener('touchstart', e => {
     if (e.touches.length >= 2) {
       e.preventDefault();
       const m = mid(e);
-      t0 = { x: m.x, y: m.y, d: m.d, pan: false };
+      t0 = { type: 'pinch', d: m.d };
       p0mx = m.x; p0my = m.y; p0ox = ox; p0oy = oy; p0s = s;
     } else if (s > 1.02) {
-      e.preventDefault();
-      t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox, oy, pan: true };
+      // Only pan when zoomed — preserve tap-to-select-state at normal scale
+      t0 = { type: 'maybe', x: e.touches[0].clientX, y: e.touches[0].clientY, ox, oy };
     }
   }, { passive: false });
 
   outer.addEventListener('touchmove', e => {
     if (!t0) return;
-    e.preventDefault();
-    if (t0.pan) {
-      ox = t0.ox + (e.touches[0].clientX - t0.x);
-      oy = t0.oy + (e.touches[0].clientY - t0.y);
-    } else if (e.touches.length >= 2) {
+    if (e.touches.length >= 2 && t0.type !== 'pinch') {
+      e.preventDefault();
+      const m = mid(e);
+      t0 = { type: 'pinch', d: m.d };
+      p0mx = m.x; p0my = m.y; p0ox = ox; p0oy = oy; p0s = s;
+      return;
+    }
+    if (t0.type === 'pinch') {
+      e.preventDefault();
       const m = mid(e);
       const ns = Math.min(maxS, Math.max(minS, p0s * m.d / t0.d));
       ox = m.x - (p0mx - p0ox) * ns / p0s;
       oy = m.y - (p0my - p0oy) * ns / p0s;
       s = ns;
+      apply();
+      return;
     }
+    const dx = e.touches[0].clientX - t0.x;
+    const dy = e.touches[0].clientY - t0.y;
+    if (t0.type === 'maybe' && Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
+    t0.type = 'pan';
+    e.preventDefault();
+    ox = t0.ox + dx;
+    oy = t0.oy + dy;
     apply();
   }, { passive: false });
 
