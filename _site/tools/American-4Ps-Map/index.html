@@ -718,6 +718,9 @@ body[data-colorblind="true"] {
   display: flex; flex-direction: column;
 }
 .sheet-handle { display: none; }
+.metrics-sheet-handle { display: none; }
+.metrics-mob-section { display: none; }
+.mob-legend { display: none; }
 .metrics-section {
   flex: 0 0 auto; max-height: 44%;
   overflow-y: auto; border-bottom: 2px solid var(--hu-border);
@@ -1409,6 +1412,27 @@ body[data-colorblind="true"] {
 
   /* ── Pinch-zoom: lock map scroll on mobile ── */
   .map-stage { touch-action: none; }
+
+  /* ── Mobile metric handle ── */
+  .metrics-sheet-handle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--hu-border);
+    background: var(--hu-surface); flex-shrink: 0;
+  }
+  .right-panel.metrics-open .metrics-sheet-handle .sheet-handle-chevron { transform: rotate(180deg); }
+  .metrics-mob-section { display: none; max-height: 45vh; overflow-y: auto; border-bottom: 1px solid var(--hu-border); }
+  .right-panel.metrics-open .metrics-mob-section { display: block; }
+
+  /* ── Mobile color legend ── */
+  .mob-legend {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px 4px; flex-shrink: 0;
+    border-bottom: 1px solid var(--hu-border);
+    background: var(--hu-surface);
+  }
+  .mob-legend-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hu-text-3); }
+  .mob-legend .legend-step { width: 22px; height: 12px; }
+  .mob-legend .legend-anno { font-size: 10px; color: var(--hu-text-3); font-family: var(--mono); }
 }
 
 /* ── Pinch-zoom UI (shared) ─────────────────────────────── */
@@ -1620,6 +1644,19 @@ body[data-colorblind="true"] {
         </div>
       </div>
 
+      <!-- mobile color legend strip -->
+      <div class="mob-legend" id="mobLegend">
+        <span class="mob-legend-label">Scale</span>
+        <div class="legend-scale">
+          <div class="legend-step s1"></div>
+          <div class="legend-step s2"></div>
+          <div class="legend-step s3"></div>
+          <div class="legend-step s4"></div>
+          <div class="legend-step s5"></div>
+        </div>
+        <span class="legend-anno mob-legend-anno" id="mobLegendAnno">worse → better</span>
+      </div>
+
       <div class="map-stage">
         <button class="pz-reset-btn" id="mapPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
         <div class="pz-hint" id="mapPzHint">Pinch to zoom &middot; drag to pan</div>
@@ -1650,6 +1687,15 @@ body[data-colorblind="true"] {
     </section>
 
     <aside class="right-panel">
+
+      <!-- mobile metric picker handle + section -->
+      <div class="metrics-sheet-handle" id="metricsSheetHandle">
+        <span class="sheet-handle-label">Metric</span>
+        <span class="sheet-handle-chevron">&#8679;</span>
+      </div>
+      <div class="metrics-mob-section" id="metricsMobSection">
+        <div class="metric-list" id="metricListMob"></div>
+      </div>
 
       <!-- mobile slide-up handle -->
       <div class="sheet-handle" id="sheetHandle">
@@ -2704,14 +2750,12 @@ function drawMap() {
     .attr('stroke', isLight ? '#C8D5E4' : '#2e3d54').attr('stroke-width', 2);
 
   // Update legend and time label to reflect current mode
-  const legendAnno = document.querySelector('.legend-anno');
-  if (legendAnno) {
-    if (sliderMode === 'change' && selectedYearIdx === 0) {
-      legendAnno.textContent = 'no prior year';
-    } else {
-      legendAnno.textContent = sliderMode === 'change' ? 'declined → improved' : activeLens === 'baseline' ? 'lower · higher' : 'worse → better';
-    }
-  }
+  const legendAnnoText = (sliderMode === 'change' && selectedYearIdx === 0)
+    ? 'no prior year'
+    : sliderMode === 'change' ? 'declined → improved'
+    : activeLens === 'baseline' ? 'lower · higher'
+    : 'worse → better';
+  document.querySelectorAll('.legend-anno').forEach(el => { el.textContent = legendAnnoText; });
   refreshTimeLabel();
 
   const pad = 20;
@@ -2841,24 +2885,20 @@ function makeMetricItem(m, i, lensColor) {
   return div;
 }
 
-function renderMetrics() {
-  const list = document.getElementById('metricList');
+function renderMetricsInto(list) {
   const lensData = METRICS[activeLens];
   const groups = METRIC_GROUPS[activeLens] || [];
   list.innerHTML = '';
 
-  // No groups defined — flat render
   if (!groups.length) {
     lensData.items.forEach((m, i) => list.appendChild(makeMetricItem(m, i, lensData.color)));
     return;
   }
 
-  // Always ensure the group containing the active metric is expanded
   groups.forEach((group, gi) => {
     const validIndices = group.indices.filter(i => i < lensData.items.length);
     if (validIndices.includes(activeMetricIdx)) {
       metricGroupState[getGroupKey(activeLens, gi)] = false;
-      // Also show more if the active metric is in the extra set
       if (validIndices.indexOf(activeMetricIdx) >= FEATURED_COUNT) {
         metricGroupState[`${activeLens}|${gi}|more`] = true;
       }
@@ -2866,7 +2906,6 @@ function renderMetrics() {
   });
 
   groups.forEach((group, gi) => {
-    // ── Group header ──────────────────────────────────────────────
     const collapsed = isGroupCollapsed(activeLens, gi);
     const validIndices = group.indices.filter(i => i < lensData.items.length);
     const header = document.createElement('div');
@@ -2883,9 +2922,8 @@ function renderMetrics() {
     });
     list.appendChild(header);
 
-    if (collapsed) return; // nothing more to render for this group
+    if (collapsed) return;
 
-    // ── Featured metrics (first FEATURED_COUNT) ───────────────────
     const featured = validIndices.slice(0, FEATURED_COUNT);
     const extra    = validIndices.slice(FEATURED_COUNT);
     const showMoreKey = `${activeLens}|${gi}|more`;
@@ -2916,6 +2954,12 @@ function renderMetrics() {
       }
     }
   });
+}
+
+function renderMetrics() {
+  renderMetricsInto(document.getElementById('metricList'));
+  const mobList = document.getElementById('metricListMob');
+  if (mobList) renderMetricsInto(mobList);
 }
 
 // ===== METRIC EXPLAINER TOOLTIP =====
@@ -3538,6 +3582,10 @@ document.getElementById('usaBtn').addEventListener('click', () => { selectNation
 
 document.getElementById('sheetHandle').addEventListener('click', () => {
   document.querySelector('.right-panel').classList.toggle('sheet-open');
+});
+
+document.getElementById('metricsSheetHandle').addEventListener('click', () => {
+  document.querySelector('.right-panel').classList.toggle('metrics-open');
 });
 
 document.querySelectorAll('.lens-btn').forEach(btn => {
