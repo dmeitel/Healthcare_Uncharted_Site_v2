@@ -27,7 +27,7 @@ module.exports = [
     featured:    true,
     title:       'The Healthcare Iceberg Map',
     desc:        'An interactive map of the full U.S. healthcare system. All 8 layers visible at once, from patient experience to the policy and financial forces underneath.',
-    url:         '/lab/',
+    url:         '/tools/healthcare-iceberg-map/',
     type:        'interactive',
     badge:       'Interactive',
     badgeClass:  'badge-interactive',

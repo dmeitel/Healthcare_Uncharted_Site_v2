@@ -13,14 +13,14 @@ module.exports = {
     { label: 'Home',  url: '/',        id: 'home'  },
     { label: 'Tools', url: '/tools/',  id: 'tools' },
     { label: 'Learn', url: '/learn/',  id: 'learn' },
-    { label: 'Lab',   url: '/lab/',    id: 'lab'   },
+    { label: 'Atlas', url: '/atlas/',  id: 'atlas' },
     { label: 'About', url: '/about/',  id: 'about' }
   ],
 
   // ── NAV CTA ─────────────────────────────────────────────────────────────────
   navCta: {
     label: 'Healthcare Iceberg Map \u2192',
-    url:   '/lab/'
+    url:   '/atlas/'
   },
 
   // ── SOURCE POLICY ───────────────────────────────────────────────────────────

@@ -1,0 +1,2237 @@
+---
+layout: base.njk
+title: Healthcare Atlas
+description: The Healthcare Uncharted Atlas — a Foxhole-style hex territory map of the U.S. healthcare system.
+no_footer: true
+navPage: atlas
+permalink: /atlas/
+---
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+<style>
+#atlas-shell {
+  background: #06100a;
+  height: calc(100vh - 64px);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+  font-family: 'DM Sans', sans-serif;
+}
+#atlas-tb {
+  height: 52px; background: rgba(3,7,6,0.99);
+  border-bottom: 2px solid rgba(78,205,196,0.2);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 10px; flex-shrink: 0; z-index: 20;
+}
+.atlas-logo {
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(78,205,196,0.95); flex-shrink: 0;
+}
+.atlas-sep { width: 1px; height: 22px; background: rgba(78,205,196,0.15); flex-shrink: 0; }
+#atlas-bc { display: flex; align-items: center; flex: 1; overflow: hidden; }
+.abc-item { font-size: 13px; color: rgba(140,180,215,0.50); cursor: pointer; padding: 4px 7px; white-space: nowrap; transition: color .12s; flex-shrink: 0; }
+.abc-item:hover { color: #E2EEF4; }
+.abc-item.active { color: #9B8FE0; font-weight: 600; }
+.abc-sep { font-size: 13px; color: rgba(78,205,196,0.25); margin: 0 2px; flex-shrink: 0; }
+#atlas-controls { display: flex; gap: 5px; flex-shrink: 0; }
+.atlas-btn {
+  width: 32px; height: 32px;
+  background: rgba(78,205,196,0.04); border: 1px solid rgba(78,205,196,0.18);
+  color: rgba(78,205,196,0.60); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all .12s; font-family: inherit;
+}
+.atlas-btn:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.50); color: #4ECDC4; }
+#atlas-canvas { flex: 1; position: relative; overflow: hidden; }
+#atlas-svg { width: 100%; height: 100%; display: block; cursor: grab; }
+#atlas-svg:active { cursor: grabbing; }
+
+#atlas-legend {
+  position: absolute; top: 16px; left: 16px; z-index: 10;
+  display: flex; flex-direction: column;
+  background: rgba(3,8,6,0.94); border: 1px solid rgba(78,205,196,0.18);
+  min-width: 158px; box-shadow: 0 4px 24px rgba(0,0,0,0.55);
+}
+.leg-hdr {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(78,205,196,0.65); padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(78,205,196,0.12);
+}
+.leg-section { padding: 9px 14px 8px; }
+.leg-section + .leg-section { border-top: 1px solid rgba(78,205,196,0.08); padding-top: 10px; }
+.leg-sec-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(78,205,196,0.35); margin-bottom: 8px;
+}
+.leg-row { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+.leg-row:last-child { margin-bottom: 0; }
+.leg-line {
+  width: 22px; height: 1px; flex-shrink: 0;
+  background: repeating-linear-gradient(90deg, currentColor 0, currentColor 4px, transparent 4px, transparent 8px);
+  opacity: 0.75;
+}
+.leg-dot { width: 7px; height: 7px; border-radius: 1px; flex-shrink: 0; opacity: 0.75; }
+.leg-lbl { font-family: 'DM Sans', sans-serif; font-size: 11.5px; color: rgba(140,180,215,0.65); }
+
+/* ── BOTTOM HUD ────────────────────────────────────────────────────────── */
+#atlas-hud {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 30;
+  background: rgba(2,6,4,0.98); border-top: 2px solid rgba(78,205,196,0.22);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+  transform: translateY(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; overflow: hidden;
+  min-height: 148px;
+}
+#atlas-hud.open { transform: translateY(0); }
+#hud-grip {
+  width: 100%; height: 12px; flex-shrink: 0; cursor: ns-resize;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid rgba(78,205,196,0.10);
+  background: rgba(78,205,196,0.025);
+  user-select: none; -webkit-user-select: none;
+}
+#hud-grip::after {
+  content: ''; display: block; width: 44px; height: 3px;
+  background: rgba(78,205,196,0.20); border-radius: 2px; transition: background .15s;
+}
+#hud-grip:hover::after { background: rgba(78,205,196,0.50); }
+#hud-inner {
+  flex: 1; display: grid;
+  grid-template-columns: 220px 1fr auto;
+  align-items: stretch; min-height: 136px; overflow: hidden;
+}
+#hud-id {
+  padding: 14px 16px 14px 20px;
+  border-right: 1px solid rgba(78,205,196,0.10);
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+}
+.hud-badge {
+  display: inline-flex; align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--hz, #4ECDC4); border: 1px solid var(--hz, #4ECDC4);
+  padding: 3px 10px; width: fit-content; opacity: 0.90;
+}
+.hud-ktype {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(140,180,215,0.48);
+}
+#hud-title {
+  font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700;
+  color: #E2EEF4; line-height: 1.18;
+}
+#hud-body {
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: stretch;
+}
+#hud-desc-col {
+  padding: 14px 24px; border-right: 1px solid rgba(78,205,196,0.10);
+  display: flex; align-items: flex-start; overflow-y: auto;
+}
+#hud-desc-col::-webkit-scrollbar { width: 3px; }
+#hud-desc-col::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.16); border-radius: 2px; }
+#hud-desc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px; color: rgba(140,180,215,0.80); line-height: 1.70;
+}
+#hud-links-col {
+  padding: 14px 16px; display: none; flex-direction: column;
+  gap: 5px; justify-content: center; min-width: 170px;
+}
+#hud-links-col.has-links { display: flex; }
+.hud-lhdr {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(78,205,196,0.52); margin-bottom: 6px;
+}
+.hud-link {
+  display: flex; align-items: center; gap: 9px; padding: 7px 11px;
+  background: rgba(78,205,196,0.04); border: 1px solid rgba(78,205,196,0.12);
+  color: rgba(140,180,215,0.85); font-family: 'DM Sans', sans-serif;
+  font-size: 12px; text-decoration: none; transition: all .12s;
+}
+.hud-link:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.32); color: #E2EEF4; }
+#hud-close {
+  align-self: flex-start; margin: 10px 10px 0 0;
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: rgba(78,205,196,0.06); border: 1px solid rgba(78,205,196,0.20);
+  color: rgba(78,205,196,0.55); cursor: pointer; font-size: 17px;
+  display: flex; align-items: center; justify-content: center; transition: all .12s;
+}
+#hud-close:hover { background: rgba(78,205,196,0.14); border-color: rgba(78,205,196,0.45); color: #4ECDC4; }
+#atlas-hint {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: rgba(3,8,6,0.82); border: 1px solid rgba(78,205,196,0.1);
+  padding: 6px 16px; font-size: 11px; color: rgba(140,180,215,0.42);
+  letter-spacing: 0.06em; pointer-events: none; white-space: nowrap;
+  z-index: 10; transition: opacity .4s; font-family: 'DM Sans', sans-serif;
+}
+/* Filter toggle buttons */
+.atlas-flt-wrap { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.atlas-flt {
+  height: 28px; padding: 0 13px;
+  background: transparent; border: 1px solid rgba(78,205,196,0.14);
+  color: rgba(140,180,215,0.40); cursor: pointer;
+  font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase;
+  font-family: 'IBM Plex Mono', monospace; transition: all .15s; white-space: nowrap;
+}
+.atlas-flt:hover { border-color: rgba(78,205,196,0.32); color: rgba(140,180,215,0.70); background: rgba(78,205,196,0.04); }
+.atlas-flt.on { border-color: rgba(78,205,196,0.55); color: rgba(78,205,196,0.92); background: rgba(78,205,196,0.08); }
+
+/* ── HELP PANEL ──────────────────────────────────────────────────────────── */
+#atlas-help {
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 40;
+  width: 320px; background: rgba(2,6,4,0.99);
+  border-left: 2px solid rgba(78,205,196,0.22);
+  box-shadow: -6px 0 32px rgba(0,0,0,0.6);
+  transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#atlas-help.open { transform: translateX(0); }
+#help-hdr {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(78,205,196,0.12);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+#help-hdr-title {
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: rgba(78,205,196,0.92);
+}
+#help-close {
+  width: 26px; height: 26px; background: rgba(78,205,196,0.06);
+  border: 1px solid rgba(78,205,196,0.18); color: rgba(78,205,196,0.55);
+  cursor: pointer; font-size: 15px; display: flex; align-items: center;
+  justify-content: center; transition: all .12s;
+}
+#help-close:hover { background: rgba(78,205,196,0.14); color: #4ECDC4; }
+#help-body { flex: 1; overflow-y: auto; padding: 18px; }
+#help-body::-webkit-scrollbar { width: 3px; }
+#help-body::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.15); }
+.help-section { margin-bottom: 22px; }
+.help-section:last-child { margin-bottom: 0; }
+.help-section-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(78,205,196,0.55); margin-bottom: 10px;
+  padding-bottom: 6px; border-bottom: 1px solid rgba(78,205,196,0.10);
+}
+.help-item {
+  display: flex; gap: 10px; margin-bottom: 9px; align-items: flex-start;
+}
+.help-item:last-child { margin-bottom: 0; }
+.help-icon {
+  font-size: 13px; flex-shrink: 0; width: 20px; text-align: center;
+  color: rgba(78,205,196,0.70); margin-top: 1px;
+}
+.help-text {
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  color: rgba(140,180,215,0.78); line-height: 1.55;
+}
+.help-text strong { color: rgba(200,220,240,0.90); font-weight: 600; }
+
+@media (max-width: 768px) {
+  #atlas-legend { display: none; }
+  .atlas-flt-wrap { display: none; }
+  .atlas-logo { font-size: 12px; }
+  #hud-inner { grid-template-columns: 1fr; }
+  #hud-id { border-right: none; border-bottom: 1px solid rgba(78,205,196,0.10); }
+  #hud-desc-col { border-right: none; }
+  #hud-links-col.has-links { min-width: unset; }
+  #atlas-help { width: 100%; }
+}
+
+/* ── LIGHT MODE ──────────────────────────────────────────────────────────── */
+[data-theme='light'] #atlas-shell { background: #eaf0eb; }
+[data-theme='light'] #atlas-tb { background: rgba(255,255,255,0.97); border-bottom-color: rgba(27,95,168,0.15); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+[data-theme='light'] .atlas-logo { color: #1B5FA8; }
+[data-theme='light'] .atlas-sep { background: rgba(27,95,168,0.15); }
+[data-theme='light'] .abc-item { color: rgba(15,30,50,0.50); }
+[data-theme='light'] .abc-item:hover { color: #0d1117; }
+[data-theme='light'] .abc-item.active { color: #1B5FA8; }
+[data-theme='light'] .abc-sep { color: rgba(27,95,168,0.28); }
+[data-theme='light'] .atlas-btn { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.60); }
+[data-theme='light'] .atlas-btn:hover { background: rgba(27,95,168,0.12); border-color: rgba(27,95,168,0.45); color: #1B5FA8; }
+[data-theme='light'] .atlas-flt { border-color: rgba(27,95,168,0.14); color: rgba(15,30,50,0.40); }
+[data-theme='light'] .atlas-flt:hover { border-color: rgba(27,95,168,0.35); color: rgba(15,30,50,0.72); background: rgba(27,95,168,0.04); }
+[data-theme='light'] .atlas-flt.on { border-color: rgba(27,95,168,0.50); color: #1B5FA8; background: rgba(27,95,168,0.08); }
+[data-theme='light'] #atlas-legend { background: rgba(255,255,255,0.97); border-color: rgba(27,95,168,0.15); box-shadow: 0 4px 20px rgba(0,0,0,0.10); }
+[data-theme='light'] .leg-hdr { color: rgba(27,95,168,0.70); border-bottom-color: rgba(27,95,168,0.12); }
+[data-theme='light'] .leg-sec-label { color: rgba(15,30,50,0.38); }
+[data-theme='light'] .leg-lbl { color: rgba(15,30,50,0.72); }
+[data-theme='light'] .leg-section + .leg-section { border-top-color: rgba(27,95,168,0.08); }
+[data-theme='light'] #atlas-hud { background: rgba(249,252,250,0.99); border-top-color: rgba(27,95,168,0.18); box-shadow: 0 -4px 20px rgba(0,0,0,0.08); }
+[data-theme='light'] #hud-grip { background: rgba(27,95,168,0.025); border-bottom-color: rgba(27,95,168,0.10); }
+[data-theme='light'] #hud-grip::after { background: rgba(27,95,168,0.20); }
+[data-theme='light'] #hud-grip:hover::after { background: rgba(27,95,168,0.45); }
+[data-theme='light'] #hud-id { border-right-color: rgba(27,95,168,0.10); }
+[data-theme='light'] .hud-ktype { color: rgba(15,30,50,0.45); }
+[data-theme='light'] #hud-title { color: #0d1117; }
+[data-theme='light'] #hud-desc-col { border-right-color: rgba(27,95,168,0.10); }
+[data-theme='light'] #hud-desc { color: rgba(15,30,50,0.78); }
+[data-theme='light'] .hud-lhdr { color: rgba(27,95,168,0.58); }
+[data-theme='light'] .hud-link { background: rgba(27,95,168,0.04); border-color: rgba(27,95,168,0.12); color: rgba(15,30,50,0.80); }
+[data-theme='light'] .hud-link:hover { background: rgba(27,95,168,0.10); border-color: rgba(27,95,168,0.32); color: #0d1117; }
+[data-theme='light'] #hud-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.55); }
+[data-theme='light'] #hud-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
+[data-theme='light'] #atlas-hint { background: rgba(255,255,255,0.90); border-color: rgba(27,95,168,0.12); color: rgba(15,30,50,0.48); }
+[data-theme='light'] #conn-tooltip { background: rgba(255,255,255,0.99); border-color: rgba(27,95,168,0.25); box-shadow: 0 4px 18px rgba(0,0,0,0.12); }
+[data-theme='light'] .ctt-label { color: rgba(27,95,168,0.82); }
+[data-theme='light'] .ctt-desc { color: rgba(15,30,50,0.75); }
+[data-theme='light'] #atlas-help { background: rgba(249,252,250,0.99); border-left-color: rgba(27,95,168,0.18); box-shadow: -6px 0 32px rgba(0,0,0,0.10); }
+[data-theme='light'] #help-hdr { border-bottom-color: rgba(27,95,168,0.12); }
+[data-theme='light'] #help-hdr-title { color: #1B5FA8; }
+[data-theme='light'] #help-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.55); }
+[data-theme='light'] #help-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
+[data-theme='light'] .help-section-title { color: rgba(27,95,168,0.58); border-bottom-color: rgba(27,95,168,0.10); }
+[data-theme='light'] .help-icon { color: rgba(27,95,168,0.72); }
+[data-theme='light'] .help-text { color: rgba(15,30,50,0.78); }
+[data-theme='light'] .help-text strong { color: #0d1117; }
+[data-theme='light'] .hub-moat-tile { fill: #eaf0eb; fill-opacity: 1; }
+[data-theme='light'] .hub-moat-border { stroke: #1B5FA8; stroke-opacity: 0.18; }
+[data-theme='light'] .hub-glow-ring { stroke: #1B5FA8; stroke-opacity: 0.10; }
+[data-theme='light'] .hub-tint { fill: #1B5FA8; fill-opacity: 0.05; }
+[data-theme='light'] .hub-label-text { fill: #1B5FA8; fill-opacity: 1; }
+[data-theme='light'] .az-lbl text { fill: #1a2a3a; fill-opacity: 0.82; }
+
+/* ── ROUTE FLOW ANIMATION ───────────────────────────────────────────────── */
+@keyframes routeFlow {
+  to { stroke-dashoffset: -27; }
+}
+
+/* ── CONNECTION TOOLTIP ──────────────────────────────────────────────────── */
+#conn-tooltip {
+  position: absolute; pointer-events: none; display: none;
+  background: rgba(3,8,6,0.97); border: 1px solid rgba(78,205,196,0.30);
+  padding: 8px 13px; max-width: 260px; z-index: 25;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+}
+.ctt-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(78,205,196,0.80); margin-bottom: 5px;
+}
+.ctt-desc {
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  color: rgba(140,180,215,0.78); line-height: 1.58;
+}
+</style>
+
+<div id="atlas-shell">
+  <div id="atlas-tb">
+    <span class="atlas-logo">Healthcare Atlas</span>
+    <div class="atlas-sep"></div>
+    <div id="atlas-bc"><span class="abc-item active" id="bc-ov">Overview</span></div>
+    <div class="atlas-sep"></div>
+    <div class="atlas-flt-wrap">
+      <button class="atlas-flt on" id="af-labels">Zone Labels</button>
+      <button class="atlas-flt on" id="af-routes">Routes</button>
+      <button class="atlas-flt" id="af-tools">Tool Nodes</button>
+    </div>
+    <div class="atlas-sep"></div>
+    <div id="atlas-controls">
+      <button class="atlas-btn" id="a-zi">+</button>
+      <button class="atlas-btn" id="a-zo">−</button>
+      <button class="atlas-btn" id="a-rst" style="font-size:14px">⊙</button>
+      <button class="atlas-btn" id="a-help" style="font-size:13px" title="How to use">?</button>
+    </div>
+  </div>
+  <div id="atlas-canvas">
+    <svg id="atlas-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="atlas-hint">Scroll to zoom · Drag to pan · Click any hex to explore</div>
+    <div id="conn-tooltip"><div class="ctt-label" id="ctt-label"></div><div class="ctt-desc" id="ctt-desc"></div></div>
+    <div id="atlas-legend">
+      <div class="leg-hdr">Map Key</div>
+      <div class="leg-section">
+        <div class="leg-sec-label">Connections</div>
+        <div class="leg-row"><div class="leg-line" style="color:#4ECDC4"></div><span class="leg-lbl">Clinical</span></div>
+        <div class="leg-row"><div class="leg-line" style="color:#E8A838"></div><span class="leg-lbl">Financial</span></div>
+        <div class="leg-row"><div class="leg-line" style="color:#8B5CF6"></div><span class="leg-lbl">Regulatory</span></div>
+        <div class="leg-row"><div class="leg-line" style="color:#5DBF87"></div><span class="leg-lbl">Population</span></div>
+      </div>
+      <div class="leg-section">
+        <div class="leg-sec-label">Zones</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#FF6B6B"></div><span class="leg-lbl">Med Science</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#6aabff"></div><span class="leg-lbl">Provider</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#4ECDC4"></div><span class="leg-lbl">Patient</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#0EA5E9"></div><span class="leg-lbl">Tech/Eco</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#8B5CF6"></div><span class="leg-lbl">Policy</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#5DBF87"></div><span class="leg-lbl">Pub Health</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#E8A838"></div><span class="leg-lbl">Payer</span></div>
+      </div>
+      <div class="leg-section">
+        <div class="leg-sec-label">Nodes</div>
+        <div class="leg-row">
+          <svg width="16" height="16" viewBox="-8 -8 16 16" style="flex-shrink:0;opacity:0.75">
+            <polyline points="-2.5,-2.5 0,-6 2.5,-2.5" fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="-2.5,2.5 0,6 2.5,2.5"   fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="2.5,-2.5 6,0 2.5,2.5"   fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="-2.5,-2.5 -6,0 -2.5,2.5" fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="leg-lbl">Expandable</span>
+        </div>
+        <div class="leg-row">
+          <svg width="16" height="16" viewBox="-8 -8 16 16" style="flex-shrink:0;opacity:0.75">
+            <path d="M-3.5,-3.5 L3.5,3.5 M3.5,-3.5 L-3.5,3.5" fill="none" stroke="rgba(140,180,215,0.5)" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span class="leg-lbl">◆ Landmark</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="atlas-hud">
+    <div id="hud-grip"></div>
+    <div id="hud-inner">
+      <div id="hud-id">
+        <div class="hud-badge" id="h-badge"></div>
+        <div class="hud-ktype" id="h-type"></div>
+        <div id="hud-title" id="h-title"></div>
+      </div>
+      <div id="hud-body">
+        <div id="hud-desc-col"><div id="hud-desc"></div></div>
+        <div id="hud-links-col">
+          <div class="hud-lhdr">Connected</div>
+          <div id="hud-links"></div>
+        </div>
+      </div>
+      <button id="hud-close">×</button>
+    </div>
+  </div>
+  <div id="atlas-help">
+    <div id="help-hdr">
+      <span id="help-hdr-title">How to Use</span>
+      <button id="help-close">×</button>
+    </div>
+    <div id="help-body">
+      <div class="help-section">
+        <div class="help-section-title">Navigation</div>
+        <div class="help-item"><span class="help-icon">⊕</span><span class="help-text"><strong>Scroll</strong> to zoom in or out on the map.</span></div>
+        <div class="help-item"><span class="help-icon">✥</span><span class="help-text"><strong>Drag</strong> to pan across the map canvas.</span></div>
+        <div class="help-item"><span class="help-icon">⊙</span><span class="help-text">The <strong>reset button</strong> in the toolbar snaps back to the full overview.</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Exploring Nodes</div>
+        <div class="help-item"><span class="help-icon">◆</span><span class="help-text"><strong>Click any hex</strong> to open its detail card at the bottom of the screen.</span></div>
+        <div class="help-item"><span class="help-icon">⤢</span><span class="help-text"><strong>Landmark nodes</strong> expand into sub-nodes when selected — look for the diamond markers.</span></div>
+        <div class="help-item"><span class="help-icon">↕</span><span class="help-text"><strong>Drag the grip bar</strong> on the detail card to resize the panel.</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Connections</div>
+        <div class="help-item"><span class="help-icon">—</span><span class="help-text"><strong>Hover any route line</strong> to see the relationship between two zones.</span></div>
+        <div class="help-item"><span class="help-icon">◉</span><span class="help-text">Route colors indicate type: <strong>teal</strong> = clinical, <strong>gold</strong> = financial, <strong>purple</strong> = regulatory, <strong>green</strong> = population.</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Toolbar Filters</div>
+        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Zone Labels</strong> toggles the zone name overlays on the map.</span></div>
+        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Routes</strong> shows or hides all connection lines between zones.</span></div>
+        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Tool Nodes</strong> highlights hexes that link to interactive tools on this site.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ── HEX GEOMETRY — single global pointy-top grid ──────────────────────────────
+// Hub at (0,0). Zones ring the hub clockwise: MedSci N, Provider NE, Patient SE,
+// PubHealth S, HealthTech SW, Policy W, Payer NW. Ring-1 moat is genuinely empty.
+const s   = 40;
+const sq3 = Math.sqrt(3);
+const OX  = 1100, OY = 950;   // pixel origin = MedSci center
+
+function hPx(q, r) {
+  return [OX + sq3*s*q + sq3*s/2*r,  OY + 1.5*s*r];
+}
+function hPath(cx, cy, r) {
+  r = r || s;
+  let d = '';
+  for (let i = 0; i < 6; i++) {
+    const a = Math.PI/3*i - Math.PI/2;
+    d += (i===0?'M':'L') + (cx + r*Math.cos(a)).toFixed(1) + ',' + (cy + r*Math.sin(a)).toFixed(1);
+  }
+  return d + 'Z';
+}
+
+// ── ZONE DATA ──────────────────────────────────────────────────────────────────
+// displayLabel: short name rendered on overview map (Foxhole-style territory name)
+// All cells in one global axial coordinate system — borders share cells correctly
+// Clockwise from top: MedSci(N) → Provider(NE) → Patient(SE) → PubHealth(S)
+//                   → HealthTech(SW) → Policy(W) → Payer(NW)
+// Hub at (0,0). Ring-1 moat {(1,0),(-1,0),(0,1),(0,-1),(1,-1),(-1,1)} is empty.
+const ZONE_DEFS = [
+
+  // ── MEDICAL SCIENCE — north ───────────────────────────────────────────────
+  // Pathophys landmark at (2,−4) = pixel directly north of hub.
+  // Ring-1/ring-2 of pathophys kept clear of other-zone cells — no ZONE_EXPAND needed.
+  {
+    id:'medsci', label:'Medical Science', displayLabel:'Medical Science', abbr:'SCI', color:'#FF6B6B',
+    desc:'The clinical and scientific foundation everything else sits on. Pathophysiology, pharmacology, diagnostics, evidence, and the AI/data layer reshaping all of it.',
+    cells:[
+      {q:2,  r:-4, type:'landmark', label:'Patho-\nphysiology',    nodeId:'pathophys',
+        desc:'How disease processes work at the cellular, organ, and system level. Understand this and the rest makes sense.',
+        links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'}]},
+      {q:1,  r:-4, type:'node',    label:'Pharma-\ncology',        nodeId:'pharma',
+        desc:'Drug mechanisms, interactions, dosing principles. Most common clinical intervention. Highest error frequency. Polypharmacy in the elderly is its own crisis.',
+        links:[]},
+      {q:3,  r:-4, type:'node',    label:'Diagnostics\n& Lab',     nodeId:'diagnostics',
+        desc:'Lab values, imaging interpretation, diagnostic pathways. The input driving most clinical decision-making downstream.',
+        links:[{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
+      {q:2,  r:-5, type:'node',    label:'Clinical\nEvidence',     nodeId:'evidence',
+        desc:'RCTs, systematic reviews, clinical practice guidelines, EBM frameworks. 17-year average research-to-bedside lag.',
+        links:[]},
+      {q:1,  r:-5, type:'node',    label:'Genomics &\nPrecision',  nodeId:'genomics',
+        desc:'Pharmacogenomics, germline/somatic testing, polygenic risk scores. Moving toward individualized treatment. Still mostly in oncology and rare disease.',
+        links:[]},
+      {q:3,  r:-5, type:'node',    label:'NLP &\nClinical Text',   nodeId:'nlp',
+        desc:'Natural language processing on clinical notes, discharge summaries, radiology reports. The model sees what the note says, not what happened.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:4,  r:-5, type:'node',    label:'Predictive\nAnalytics',  nodeId:'predictive',
+        desc:'Sepsis prediction, readmission risk, no-show models. Most clinical AI in production is here. Calibration drift and alert fatigue are the primary failure modes.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:1,  r:-6, type:'node',    label:'Medical\nDevices',       nodeId:'med-devices',
+        desc:'FDA-regulated hardware. Ventilators, infusion pumps, monitors, implantables. Supply chain fragility was exposed in 2020. Cybersecurity risk is underestimated.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:3,  r:-6, type:'node',    label:'Wearables\n& RPM',       nodeId:'rpm',
+        desc:'Remote patient monitoring. CGMs, cardiac monitors, SpO2 wearables. The data is real. Clinical workflow integration is not. Alert fatigue is the chokepoint.',
+        links:[]},
+      {q:2,  r:-7, type:'node',    label:'FHIR &\nInterop',        nodeId:'fhir',
+        desc:'HL7 FHIR R4. The standard making EHR data moveable. SMART on FHIR apps, patient-facing APIs, and the 21st Century Cures mandate behind it.',
+        links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'},{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
+      {q:0,  r:-5, type:'node',    label:'Data\nWarehousing',      nodeId:'data-warehouse',
+        desc:'Epic Caboodle, Clarity, enterprise data warehouses. The analytics layer above the EHR. SQL queries, dashboards, and the analysts keeping it running.',
+        links:[{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
+      {q:3,  r:-3, type:'node',    label:'Clinical\nTrials',       nodeId:'trials',
+        desc:'Phase I–IV trial structure. IRB oversight, informed consent, sponsor/CRO relationships. The pipeline from bench to bedside. Most trials fail.',
+        links:[]},
+      {q:1,  r:-3, type:'node', label:'Tissue\nRemodeling',   nodeId:'tissue-remodel',
+        desc:'Repair, fibrosis, and maladaptive remodeling after injury. Wound healing, scar formation, cardiac and pulmonary fibrosis. When the repair process becomes the disease.',
+        links:[]},
+      {q:2,  r:-3, type:'node', label:'Organ System\nPhysiology', nodeId:'organ-physio',
+        desc:'Normal function of the major organ systems — cardiac output, pulmonary mechanics, renal filtration, hepatic metabolism. The baseline everything pathophysiology departs from.',
+        links:[]},
+      {q:0,  r:-3, type:'node', label:'Biomarker\nScience',   nodeId:'biomarkers',
+        desc:'Troponin, BNP, CRP, HbA1c, PSA. Measurable signals that reflect underlying disease state. The translation layer between lab and diagnosis. Sensitivity vs. specificity is where clinical judgment lives.',
+        links:[]},
+      {q:3,  r:-2, type:'node', label:'Clinical\nCorrelation', nodeId:'clin-correlation',
+        desc:'The translation from mechanism to bedside finding. Pathophysiology explains the why; clinical correlation explains what you see, hear, and measure when it happens in a real patient.',
+        links:[]},
+      {q:1,  r:-7, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:2,  r:-2, type:'node', label:'Research\nInfrastructure', nodeId:'research-infra',
+        desc:'IRBs, clinical research coordinators, grant structures, and the institutional apparatus that supports scientific investigation inside health systems.',
+        links:[]},
+      {q:0,  r:-2, type:'node', label:'Translational\nResearch',  nodeId:'translational',
+        desc:'The bench-to-bedside pipeline. Taking basic science findings and moving them into clinical trials, then clinical practice. The gap here is where most discoveries stall.',
+        links:[]},
+      {q:1,  r:-2, type:'node', label:'Biostatistics\n& Methods',  nodeId:'biostatistics',
+        desc:'Study design, sample size, regression, survival analysis. The methodological layer everything else depends on. Misunderstood and underresourced in most health systems.',
+        links:[]},
+    ]
+  },
+
+  // ── PROVIDER & CARE DELIVERY — northeast ──────────────────────────────────
+  {
+    id:'provider', label:'Provider & Care Delivery', displayLabel:'Provider', abbr:'PRV', color:'#6aabff',
+    desc:'Organizations and professionals that deliver care. Hospitals, clinics, specialists, post-acute. Largest employer sector in the country.',
+    cells:[
+      {q:3,  r:0,  type:'node',    label:'Ambulatory\nClinics',    nodeId:'ambulatory',
+        desc:'Outpatient clinic visits. Highest volume of all care settings. Where chronic disease management lives between hospitalizations.',
+        links:[]},
+      {q:4,  r:0,  type:'node',    label:'Radiology\n& Imaging',   nodeId:'radiology',
+        desc:'Diagnostic imaging: CT, MRI, X-ray, interventional. High capital cost, high throughput pressure. Teleradiology expanding coverage gaps.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:5,  r:0,  type:'node',    label:'Physician\nWorkforce',   nodeId:'physicians',
+        desc:'MDs, DOs, APPs. Burnout, compensation models, geographic maldistribution, and the NP/PA workforce shift reshaping care delivery.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:3,  r:-1, type:'node',    label:'Nursing\nWorkforce',     nodeId:'nursing',
+        desc:'Largest healthcare workforce. Staffing ratios, agency nurses, float pools, retention crises. Outcome quality tracks directly to nurse staffing levels.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:4,  r:-1, type:'node',    label:'Respiratory\nTherapy',   nodeId:'resp-therapy',
+        desc:'Airway management, ventilator management, pulmonary diagnostics. Critical in ICU and ED. Understaffed, underseen, undervalued in most health systems.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:5,  r:-1, type:'landmark', label:'Acute Care\nHospital',  nodeId:'acute',
+        desc:'Inpatient and ED services. Every specialty, every floor, every workflow. The most operationally complex environment in healthcare.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'},{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'}]},
+      {q:6,  r:-1, type:'node',    label:'Emergency\nDept',        nodeId:'ed',
+        desc:'EMTALA-required care for all. 24/7 operations, highest acuity. Where the gaps in primary care show up at 2 AM.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:7,  r:-1, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:4,  r:-2, type:'node',    label:'ICU /\nCritical Care',   nodeId:'icu',
+        desc:'Intensive care unit. Highest nurse-to-patient ratio, highest cost per day. Ventilators, pressors, continuous monitoring.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:5,  r:-2, type:'node',    label:'Med-Surg\nFloor',        nodeId:'med-surg',
+        desc:'General inpatient units. Highest volume. Nurse-to-patient ratios matter here more than anywhere else — too high and outcomes drop.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:6,  r:-2, type:'node',    label:'Operating\nRoom',        nodeId:'or',
+        desc:'Surgical services. Block scheduling, case volume, turnaround time. Highest revenue per hour of any hospital space.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:7,  r:-2, type:'node',    label:'Pharmacy\nServices',     nodeId:'pharmacy',
+        desc:'Medication dispensing, pharmacist review, formulary management. Automation vs. clinical judgment tension is live.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:5,  r:-3, type:'node',    label:'Lab &\nPathology',       nodeId:'lab-path',
+        desc:'Clinical laboratory: CBC, BMP, cultures, pathology. Most clinical decisions start here. Turnaround time drives throughput across the hospital.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:6,  r:-3, type:'landmark', label:'Clinical\nInformatics', nodeId:'informatics',
+        desc:'EHR systems, CDSS, interoperability, data integrity. The nervous system of the provider organization. Where clinical practice and data infrastructure collide.',
+        links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'},{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'},{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:7,  r:-3, type:'node',    label:'EHR\nSystems',          nodeId:'ehr',
+        desc:'Epic, Cerner, MEDITECH. The $10B+ software category that runs care delivery. Meaningful Use drove adoption. Interoperability is still the unsolved problem.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'},{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
+      {q:6,  r:-4, type:'node',    label:'CDSS &\nAI Tools',      nodeId:'cdss',
+        desc:'Clinical Decision Support and AI diagnostics. Alert fatigue, black-box concerns, and the workflow integration problem that kills adoption.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:4,  r:-3, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:4,  r:-4, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:5,  r:-4, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:5,  r:-5, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:2,  r: 0, type:'node', label:'Allied\nHealth', nodeId:'allied-health',
+        desc:'Physical therapy, occupational therapy, speech-language pathology, respiratory therapy, pharmacy. The disciplines that don\'t fit neatly into nursing or physician categories but are essential for most recovery.',
+        links:[]},
+      {q:2,  r:-1, type:'node', label:'Post-Acute\nCare', nodeId:'post-acute',
+        desc:'Skilled nursing facilities, inpatient rehab, home health, long-term acute care. Where patients go after the hospital when they\'re not ready to go home. SNF reimbursement politics directly set staffing levels.',
+        links:[]},
+    ]
+  },
+
+  // ── PATIENT EXPERIENCE — southeast ────────────────────────────────────────
+  {
+    id:'patient', label:'Patient Experience', displayLabel:'Patient', abbr:'PAT', color:'#4ECDC4',
+    desc:'Every interaction a person has with the healthcare system — from first symptom to final bill. Access, encounter, chronic disease, and the financial aftermath.',
+    cells:[
+      {q:1,  r:1,  type:'node',    label:'Patient\nFinancials',    nodeId:'pt-fin',
+        desc:'What the patient actually pays, understands, and disputes. Medical debt, surprise bills, EOBs in a language nobody taught them to read.',
+        links:[]},
+      {q:2,  r:1,  type:'node',    label:'Prior\nAuthorization',   nodeId:'prior-auth',
+        desc:'Payer-required approval before services. Denies care, delays treatment, and consumes clinical hours that should go to patients.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:3,  r:1,  type:'node',    label:'Medical\nDebt',          nodeId:'med-debt',
+        desc:'$220B in outstanding medical debt in the U.S. Primary driver of personal bankruptcy. Concentrated in states without Medicaid expansion.',
+        links:[]},
+      {q:4,  r:1,  type:'terrain', label:'', nodeId:null, desc:''},
+      {q:1,  r:2,  type:'node',    label:'Telehealth',             nodeId:'telehealth',
+        desc:'Remote care delivery. Expanded dramatically post-2020. Reduces geographic barriers but introduces access and equity gaps around broadband.',
+        links:[]},
+      {q:2,  r:2,  type:'node',    label:'Insurance\nStatus',      nodeId:'insurance',
+        desc:'Whether a patient has coverage, and what type, determines almost everything before a clinician even walks in.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:3,  r:2,  type:'landmark', label:'Access &\nNavigation',  nodeId:'access',
+        desc:'How patients find, enter, and move through the system. Insurance status, geography, and cost all filter who gets in the door.',
+        links:[]},
+      {q:4,  r:2,  type:'node',    label:'ED\nAccess',             nodeId:'ed-access',
+        desc:'Emergency department as primary care for the uninsured. EMTALA guarantees stabilization — not ongoing care.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:5,  r:2,  type:'terrain', label:'', nodeId:null, desc:''},
+      {q:1,  r:3,  type:'node',    label:'Primary\nCare',          nodeId:'primary-care',
+        desc:'First point of contact. Preventive care, chronic disease management, gatekeeper role. Shortage in most of rural America.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:2,  r:3,  type:'node',    label:'Clinical\nEncounter',    nodeId:'encounter',
+        desc:'The actual meeting between patient and clinician. ED visit, primary care, specialist, telehealth. Each generates data, billing, and downstream decisions.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:3,  r:3,  type:'node',    label:'Specialty\nReferral',    nodeId:'specialty-ref',
+        desc:'The handoff from primary to specialty care. Authorization delays, wait times, and information gaps define this transition.',
+        links:[]},
+      {q:4,  r:3,  type:'node',    label:'Inpatient\nAdmission',   nodeId:'inpatient',
+        desc:'Admission to a hospital bed. DRG-based payment, length-of-stay targets, and discharge planning begin immediately.',
+        links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
+      {q:0,  r:2,  type:'node', label:'Patient\nSafety', nodeId:'pt-safety',
+        desc:'Medication errors, falls, pressure injuries, never events, wrong-site surgery. Culture of safety vs. culture of blame. The data is underreported and the interventions are underfunded.',
+        links:[]},
+      {q:2,  r:4,  type:'node',    label:'Chronic\nDisease Mgmt',  nodeId:'chronic',
+        desc:'Ongoing management of conditions that do not resolve. Diabetes, COPD, CHF, CKD. The majority of healthcare costs live here.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:3,  r:4,  type:'node',    label:'Care\nTransitions',      nodeId:'care-transitions',
+        desc:'Hospital to home, home to SNF, SNF back to hospital. Where errors, falls, and readmissions cluster. Every handoff is a risk.',
+        links:[]},
+      {q:4,  r:4,  type:'terrain', label:'', nodeId:null, desc:''},
+    ]
+  },
+
+  // ── PUBLIC HEALTH — south ──────────────────────────────────────────────────
+  {
+    id:'pubhealth', label:'Public Health', displayLabel:'Public Health', abbr:'PH', color:'#5DBF87',
+    desc:'Health at the population level. Epidemiology, prevention, social determinants, and the infrastructure that keeps the system from being overwhelmed when it fails.',
+    cells:[
+      {q:-1, r:3,  type:'node',    label:'Prevention\n& Screening', nodeId:'prevention',
+        desc:'Vaccines, cancer screenings, preventive care visits. USPSTF recommendations. Best evidence base in medicine. Worst reimbursement in medicine.',
+        links:[]},
+      {q:0,  r:3,  type:'landmark', label:'Population\nHealth',    nodeId:'pop-health',
+        desc:'Managing health outcomes at the community level. Risk stratification, quality metrics, and value-based care programs anchored in population data.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-2, r:4,  type:'node',    label:'Rural Health\nAccess',    nodeId:'rural',
+        desc:'Hospital closures, specialist deserts, telehealth gaps. Rural Americans face worse outcomes across almost every condition tracked.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-1, r:4,  type:'node',    label:'Health\nEquity',          nodeId:'equity',
+        desc:'Disparities in outcomes by race, income, geography, and language. Structural racism embedded in insurance design, care delivery, and data collection.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:0,  r:4,  type:'landmark', label:'Social\nDeterminants',  nodeId:'sdoh',
+        desc:'Housing, food security, transportation, employment, education. Upstream drivers of 80% of health outcomes. The healthcare system addresses about 20%.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:1,  r:4,  type:'node',    label:'Epidemiology\n& Surveil', nodeId:'epidemiology',
+        desc:'Disease tracking, outbreak investigation, notifiable conditions. COVID-19 exposed the depth of underinvestment in this infrastructure.',
+        links:[]},
+      {q:-2, r:5,  type:'node',    label:'Housing &\nHomelessness', nodeId:'housing',
+        desc:'Unstable housing is among the strongest predictors of poor health outcomes, high ED utilization, and uncontrolled chronic disease.',
+        links:[]},
+      {q:-1, r:5,  type:'node',    label:'Food\nInsecurity',        nodeId:'food',
+        desc:'~34 million Americans food insecure. Direct driver of diabetes control, childhood development, and hospital readmission rates.',
+        links:[]},
+      {q:0,  r:5,  type:'node',    label:'Emergency\nPreparedness', nodeId:'emerg-prep',
+        desc:'Disaster response, surge capacity, SNS, public health emergency declarations. The stress test that exposes every gap in normal operations.',
+        links:[]},
+      {q:1,  r:5,  type:'node',    label:'Behavioral\nHealth',      nodeId:'behavioral',
+        desc:'Mental health and substance use. Most underfunded, highest-stigma sector. Emergency mental health presentations are a proxy for system failure.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-1, r:6,  type:'node',    label:'Environmental\nHealth',   nodeId:'enviro',
+        desc:'Air quality, water safety, occupational exposures. Climate change is the next major public health infrastructure stress.',
+        links:[]},
+      {q:0,  r:6,  type:'node',    label:'Chronic Disease\nPrev',   nodeId:'chronic-prev',
+        desc:'Cardiovascular disease, diabetes, obesity, COPD prevention. Where clinical evidence is strongest and system investment is weakest.',
+        links:[]},
+      {q:1,  r:6,  type:'terrain', label:'', nodeId:null, desc:''},
+      {q:0,  r:7,  type:'terrain', label:'', nodeId:null, desc:''},
+      {q:-1, r:2,  type:'node', label:'Community\nHealth', nodeId:'community-health',
+        desc:'FQHCs, CHCs, school-based health, mobile clinics, and the community health worker model. The healthcare layer closest to where people actually live. Chronically underfunded and over-relied upon.',
+        links:[]},
+    ]
+  },
+
+  // ── HEALTH TECH ECOSYSTEM — southwest ─────────────────────────────────────
+  {
+    id:'techeco', label:'Health Tech Ecosystem', displayLabel:'Health Tech', abbr:'TECH', color:'#0EA5E9',
+    desc:'The vendor, startup, and technology infrastructure layer. EHR giants, HIEs, digital health, and the investment capital that flows through all of it.',
+    cells:[
+      {q:-3, r:3,  type:'node',    label:'Health Info\nExchange',  nodeId:'hie',
+        desc:'Regional and national HIEs. CommonWell, Carequality, TEFCA network. The plumbing trying to move patient data across organizational boundaries.',
+        links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'}]},
+      {q:-4, r:3,  type:'node',    label:'Telehealth\nPlatforms',  nodeId:'telehealth-plat',
+        desc:'Teladoc, Amwell, Wheel. The pandemic-driven infrastructure that expanded rapidly then contracted. Now integrating into health system workflows.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-5, r:3,  type:'node',    label:'AI Vendor\nLandscape',   nodeId:'ai-vendors',
+        desc:'Nuance (ambient docs), Olive, Waymark, Cohere Health. Concentrated in administrative automation. Clinical AI still in early deployment.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-3, r:4,  type:'node',    label:'RCM\nVendors',           nodeId:'rcm-vendors',
+        desc:'Change Healthcare, Optum360, Waystar. Change Healthcare ransomware (2024) exposed catastrophic concentration risk in the billing infrastructure.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-4, r:4,  type:'node',    label:'Imaging &\nPACS',        nodeId:'pacs',
+        desc:'Sectra, Philips, GE, Hologic. Picture Archiving and Communication Systems. Cloud PACS migration is the current infrastructure shift.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-5, r:4,  type:'node',    label:'Interop\nMiddleware',    nodeId:'interop-mid',
+        desc:'Rhapsody, Mirth Connect, Azure Health Data Services. The translation layer between HL7 v2, FHIR, X12, and proprietary formats. Invisible, critical.',
+        links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'}]},
+      {q:-3, r:5,  type:'landmark', label:'Vendor\nDirectory',     nodeId:'vendor-dir',
+        desc:'Major healthcare technology vendors across EHR, RCM, imaging, analytics, AI, and infrastructure. What they do, who they serve, and where they fit.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-4, r:5,  type:'node',    label:'Epic\nSystems',          nodeId:'epic',
+        desc:'Largest EHR vendor. ~35% of U.S. hospital market. MyChart, Healthy Planet, Cosmos research network. Integrated, expensive, dominant.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-5, r:5,  type:'node',    label:'Oracle Cerner /\nMEDITECH', nodeId:'cerner',
+        desc:'Second-tier EHR vendors. Oracle acquired Cerner in 2022. Government and community hospital market. Integration challenges post-acquisition.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-3, r:6,  type:'node',    label:'Digital Health\nStartups', nodeId:'digital-health',
+        desc:'The $20B+ annual VC investment in healthcare technology. Most companies address the patient-consumer layer. Most fail in clinical workflow integration.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-4, r:6,  type:'node',    label:'Cybersecurity\n& HIPAA',  nodeId:'cyber',
+        desc:'Healthcare is the #1 target for ransomware. Medical device security, EHR access controls, breach notification. Most organizations are years behind.',
+        links:[]},
+      {q:-5, r:6,  type:'node',    label:'Cloud &\nInfrastructure', nodeId:'cloud',
+        desc:'AWS, Azure, GCP in healthcare. HIPAA BAAs, de-identification, lift-and-shift vs. cloud-native. The modernization wave most legacy health systems are mid-crossing.',
+        links:[]},
+      {q:-4, r:7,  type:'node',    label:'Pharma\nBenefits PBM',   nodeId:'pbm-tech',
+        desc:'PBM technology layer: Express Scripts, CVS Caremark, OptumRx platforms. Formulary management, rebate reconciliation, prior auth automation.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-6, r:4,  type:'terrain', label:'', nodeId:null, desc:''},
+    ]
+  },
+
+  // ── POLICY & REGULATION — west ─────────────────────────────────────────────
+  {
+    id:'policy', label:'Policy & Regulation', displayLabel:'Policy', abbr:'POL', color:'#8B5CF6',
+    desc:'Laws, regulations, and agencies that set the rules. Federal legislation, state variation, CMS rulemaking, accreditation — the architecture everything else must conform to.',
+    cells:[
+      {q:-2, r:0,  type:'landmark', label:'Federal\nLegislation',  nodeId:'fed-law',
+        desc:'ACA, HIPAA, HITECH, No Surprises Act, 21st Century Cures. The statutory skeleton the industry operates within.',
+        links:[]},
+      {q:-3, r:0,  type:'node',    label:'State\nRegulations',      nodeId:'state-law',
+        desc:'Scope of practice, certificate of need, Medicaid expansion decisions. Where the real variation in care delivery originates. Fifty different healthcare systems.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-4, r:0,  type:'node',    label:'CMS &\nFed Agencies',     nodeId:'cms',
+        desc:'CMS, ONC, FDA, CDC, AHRQ, HRSA. They write, interpret, and enforce the rules providers operate under daily. Rulemaking cycles are the industry calendar.',
+        links:[]},
+      {q:-5, r:0,  type:'node',    label:'Accreditation\nBodies',   nodeId:'accreditation',
+        desc:'Joint Commission, DNV, NCQA, URAC. Third-party accreditation functioning as a de facto conditions-of-participation proxy. Annual survey cycles.',
+        links:[]},
+      {q:-2, r:1,  type:'node',    label:'ACA &\nCoverage Law',     nodeId:'aca',
+        desc:'Affordable Care Act. Exchanges, Medicaid expansion, essential health benefits, MLR requirements, preexisting condition protections. Still contested.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-3, r:1,  type:'node',    label:'HIPAA &\nPrivacy',        nodeId:'hipaa',
+        desc:'Privacy Rule, Security Rule, Breach Notification. Governs PHI use and disclosure. Most providers are perpetually out of full technical compliance.',
+        links:[]},
+      {q:-4, r:1,  type:'node',    label:'Quality\nMeasurement',    nodeId:'quality-meas',
+        desc:'HEDIS, CAHPS, Core Measures, CMS Star Ratings. The metrics that define public accountability and tie to reimbursement in value-based contracts.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-5, r:1,  type:'node',    label:'ONC &\nInterop Rules',    nodeId:'onc',
+        desc:'Office of the National Coordinator for Health IT. TEFCA, information blocking rules, FHIR mandates. Trying to make data move where patients go.',
+        links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'}]},
+      {q:-2, r:2,  type:'node',    label:'Information\nBlocking',   nodeId:'info-blocking',
+        desc:'21st Century Cures Act provisions. Prohibits practices interfering with access, exchange, or use of EHI. ONC enforcement started 2023.',
+        links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'}]},
+      {q:-3, r:2,  type:'node',    label:'Certificate\nof Need',    nodeId:'con',
+        desc:'State laws requiring regulatory approval before adding hospital beds, major equipment, or services. Market restriction tool. Present in 35 states.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-4, r:2,  type:'node',    label:'FDA &\nMed Devices',      nodeId:'fda',
+        desc:'510(k) clearance, PMA approval, AI/ML software as a medical device. Regulatory pathway determines who enters the market and how fast.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-5, r:2,  type:'landmark', label:'Scope of\nPractice',    nodeId:'scope',
+        desc:'Who can do what. NPs, PAs, respiratory therapists, pharmacists — all operating under state-determined practice boundaries. The primary access lever.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-6, r:2,  type:'node',    label:'RCIC / RRT\nLicensure',   nodeId:'rcic',
+        desc:'Respiratory Care Interstate Compact. Multistate licensure for RRTs. State scope-of-practice variation is still the primary workforce bottleneck.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-4, r:-1, type:'terrain', label:'', nodeId:null, desc:''},
+    ]
+  },
+
+  // ── PAYER & PAYMENT — northwest ────────────────────────────────────────────
+  {
+    id:'payer', label:'Payer & Payment', displayLabel:'Payer', abbr:'PAY', color:'#E8A838',
+    desc:'Who pays for care and how. Government programs and commercial insurers set reimbursement rates that shape everything upstream.',
+    cells:[
+      {q:-1, r:-1, type:'landmark', label:'Medicare',               nodeId:'medicare',
+        desc:'Federal insurance for adults 65+. Sets reimbursement benchmarks the entire market anchors to. DRG inpatient, fee-for-service outpatient, growing value-based programs.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-2, r:-1, type:'node',    label:'Medicare\nAdvantage',     nodeId:'medicare-adv',
+        desc:'Private Medicare plans. Now covers over 50% of Medicare enrollees. Higher rates, tighter networks, more prior auth than traditional Medicare.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-3, r:-1, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:-1, r:-2, type:'landmark', label:'Medicaid',               nodeId:'medicaid',
+        desc:'Joint federal-state program for low-income individuals. Significant rate and eligibility variation across states. Largest payer by covered lives.',
+        links:[{label:'Multi-Lens Map', url:'/tools/American-4Ps-Map/', icon:'🗺'}]},
+      {q:-2, r:-2, type:'node',    label:'Commercial\nInsurance',   nodeId:'commercial',
+        desc:'Employer-sponsored and individual market plans. Higher reimbursement than government payers. More administrative complexity. Narrow networks, high-deductible plans.',
+        links:[]},
+      {q:-3, r:-2, type:'node',    label:'Self-Pay &\nUninsured',   nodeId:'selfpay',
+        desc:'Patients without coverage or facing high deductibles. Highest financial risk, lowest negotiating power. Charity care and financial assistance vary widely.',
+        links:[]},
+      {q:0,  r:-3, type:'node',    label:'Value-Based\nContracts',  nodeId:'vbc',
+        desc:'ACOs, bundled payments, PCMH. Paying for outcomes vs. volume. Still a small fraction of total payments. Administrative burden is significant for providers.',
+        links:[]},
+      {q:-1, r:-3, type:'node',    label:'Medicaid\nManaged Care',  nodeId:'medicaid-mc',
+        desc:'States contracting with private MCOs to manage Medicaid populations. Capitated rates shift risk. Quality outcomes mixed vs. fee-for-service.',
+        links:[]},
+      {q:-2, r:-3, type:'node',    label:'Utilization\nManagement', nodeId:'utilmgmt',
+        desc:'Prior authorization, concurrent review, discharge planning. The administrative layer controlling access to services. Growing primary driver of physician burnout.',
+        links:[]},
+      {q:-3, r:-3, type:'node',    label:'DRG &\nReimbursement',    nodeId:'drg',
+        desc:'Diagnosis-Related Groups. One price for the inpatient episode regardless of length of stay after a threshold. Drives discharge pressure.',
+        links:[{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
+      {q:0,  r:-4, type:'terrain', label:'', nodeId:null, desc:''},
+      {q:-2, r:-4, type:'node',    label:'Revenue\nCycle Mgmt',     nodeId:'rcm',
+        desc:'Charge capture, coding, billing, collections. The financial operations layer every provider organization lives and dies by.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-3, r:-4, type:'node',    label:'Claims\nProcessing',      nodeId:'claims',
+        desc:'The $400B administrative infrastructure behind every clinical encounter. Clearinghouses, denial management, remittance advice, and the overhead it consumes.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-1, r:-5, type:'node',    label:'Coding &\nCDI',           nodeId:'coding',
+        desc:'ICD-10, CPT, HCC coding. Clinical Documentation Improvement. Accurate coding = accurate reimbursement. Undercoding loses money. Overcoding is fraud.',
+        links:[{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
+      {q:-2, r:-5, type:'node',    label:'Pharmacy\nBenefits PBM',  nodeId:'pbm',
+        desc:'PBMs: Express Scripts, CVS Caremark, OptumRx. Control formularies, negotiate rebates, operate in the gap between drug manufacturers and patients.',
+        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-1, r:-6, type:'terrain', label:'', nodeId:null, desc:''},
+    ]
+  },
+
+];
+
+// ── CONNECTIONS ───────────────────────────────────────────────────────────────
+// Hub-to-ring (6) + ring adjacencies (6) = 12 routes.
+// Routes trace actual hex edge midpoints along zone boundaries.
+const CONNECTIONS = [
+  // ── Zone-to-zone routes ───────────────────────────────────────────────────
+  {from:'medsci',    to:'provider',  type:'clinical',
+   label:'Clinical Evidence Pipeline',
+   desc:'Research findings, diagnostic science, and pharmacology flow directly into clinical protocols and provider decision-making. Pathophysiology is the foundation; clinical informatics is the delivery system.'},
+  {from:'medsci',    to:'patient',   type:'clinical',
+   label:'Patient Education Foundation',
+   desc:'Pathophysiology, genomics, and medical research underpin what patients understand about their conditions. The knowledge gap between lab science and patient comprehension is where health literacy lives.'},
+  {from:'medsci',    to:'payer',     type:'financial',
+   label:'Evidence-Based Coverage',
+   desc:'Clinical research and outcomes data drive formulary decisions, coverage policies, and reimbursement frameworks. FDA approval triggers payer coverage determination — usually with a 6-12 month lag.'},
+  {from:'medsci',    to:'pubhealth', type:'population',
+   label:'Population Health Science',
+   desc:'Epidemiology, genomics, and clinical data feed into surveillance, screening programs, and preventive health policy. The distance from bench to public health recommendation is measured in years.'},
+  {from:'medsci',    to:'policy',    type:'regulatory',
+   label:'Research-Informed Regulation',
+   desc:'FDA approval pathways, clinical trial standards, and evidence requirements shaped by medical and pharmaceutical science. PDUFA dates, breakthrough designations, and accelerated approval are the pressure valves.'},
+  {from:'medsci',    to:'techeco',   type:'clinical',
+   label:'Health Tech Foundation',
+   desc:'Diagnostic AI, genomic sequencing, and clinical data infrastructure built on the science of disease measurement and detection. The quality of the science determines the quality of the model.'},
+  {from:'patient',   to:'provider',  type:'clinical',
+   label:'Care Relationship',
+   desc:'The core clinical encounter: patient symptoms, preferences, and history meeting provider assessment, diagnosis, and treatment. Every encounter generates a data point, a bill, and a downstream decision.'},
+  {from:'patient',   to:'payer',     type:'financial',
+   label:'Coverage Interface',
+   desc:'Patients navigate the financial architecture through premiums, deductibles, prior authorizations, and the appeals process. Most patients do not understand their benefits until they get the bill.'},
+  {from:'patient',   to:'pubhealth', type:'population',
+   label:'Individual to Population',
+   desc:'Individual care encounters roll up into population-level health data. What happens at the bedside informs what the epidemiologist tracks. The connection runs both directions through disease surveillance.'},
+  {from:'patient',   to:'techeco',   type:'clinical',
+   label:'Digital Health Access',
+   desc:'Patient portals, telehealth, wearables, and digital therapeutics — where patients interact with health technology directly. Access and health literacy determine who actually uses it.'},
+  {from:'patient',   to:'policy',    type:'regulatory',
+   label:'Patient Protections',
+   desc:'No Surprises Act, balance billing protections, ACA preexisting condition rules, EMTALA. Federal and state law defines the floor of patient rights. Enforcement is uneven.'},
+  {from:'provider',  to:'techeco',   type:'clinical',
+   label:'Clinical Systems Integration',
+   desc:'EHRs, CDSS, and telehealth built around clinical workflows. Providers are the primary users and the primary source of friction. Epic\'s install base is why interoperability is still a problem.'},
+  {from:'provider',  to:'payer',     type:'financial',
+   label:'Reimbursement Architecture',
+   desc:'Every clinical service becomes a claim. DRG rates, fee schedules, and value-based contracts define what providers get paid — and therefore what services exist. Prior auth is the friction in both directions.'},
+  {from:'provider',  to:'pubhealth', type:'population',
+   label:'Community Health Integration',
+   desc:'Hospitals serving high-need populations, CHNAs, HRSA-funded FQHCs, and quality reporting that flows into public health surveillance. The provider is where the population-level data gets captured.'},
+  {from:'provider',  to:'policy',    type:'regulatory',
+   label:'Compliance & Credentialing',
+   desc:'CMS Conditions of Participation, Joint Commission standards, state licensure, Medicare enrollment. The regulatory overlay every provider organization must maintain to stay in business.'},
+  {from:'techeco',   to:'policy',    type:'regulatory',
+   label:'Tech Regulation Frontier',
+   desc:'FDA oversight of AI/ML as a medical device, ONC interoperability mandates, and CMS reimbursement for digital health services. Regulation is 2-3 years behind the technology deployment curve.'},
+  {from:'techeco',   to:'payer',     type:'financial',
+   label:'Claims Infrastructure',
+   desc:'Clearinghouses, RCM platforms, prior auth automation, and the real-time eligibility systems payers and providers both depend on. Change Healthcare 2024 showed how single-point failures bring this down.'},
+  {from:'techeco',   to:'pubhealth', type:'population',
+   label:'Population Analytics Layer',
+   desc:'HIEs, public health surveillance platforms, and population health technology that sits between individual EHR data and the epidemiologist\'s dashboard. Data quality here determines public health response quality.'},
+  {from:'policy',    to:'pubhealth', type:'regulatory',
+   label:'Public Health Infrastructure',
+   desc:'Federal and state health policy determines funding for surveillance, vaccination programs, and population health interventions. Title X, CDC funding, and the ACA prevention fund are the levers.'},
+  {from:'policy',    to:'payer',     type:'regulatory',
+   label:'Insurance Market Rules',
+   desc:'MLR requirements, essential health benefits, rate review, Medicaid expansion — the regulatory architecture that defines what insurance is and how it operates. States have wide latitude within the federal floor.'},
+  {from:'pubhealth', to:'payer',     type:'population',
+   label:'Risk Pool Dynamics',
+   desc:'Population health data shapes actuarial modeling, risk stratification, and premium setting for both public and private payers. A healthy population costs less to insure. The gap between that fact and policy is enormous.'},
+];
+const CONN_COL = {clinical:'#4ECDC4', financial:'#E8A838', regulatory:'#8B5CF6', population:'#5DBF87'};
+
+// ── PATHOPHYSIOLOGY EXPANSION DATA ───────────────────────────────────────────
+// 12 sub-hexes that animate outward from the pathophysiology landmark on selection.
+// Ring 1 = 6 major body systems (dq,dr = immediate neighbors)
+// Ring 2 = 6 cross-cutting mechanisms (distance-2 axial positions, straight-axis directions)
+const PATHOPHYS_SUBS = [
+  {dq:+1,dr: 0,label:'Cardio-\nvascular',     nodeId:'path-cardio',
+   desc:'Atherosclerosis, heart failure (systolic vs diastolic), arrhythmias, hypertensive disease, cardiomyopathy. Leading cause of death in the U.S. Most clinical AI deployments target cardiovascular risk prediction.'},
+  {dq:-1,dr: 0,label:'Renal\nPathology',       nodeId:'path-renal',
+   desc:'Acute kidney injury, CKD progression, glomerulonephritis, nephrotic syndrome, tubular disease. CKD affects 15% of U.S. adults. Cardiorenal syndrome is the prototype cross-organ disease cascade.'},
+  {dq:+1,dr:-1,label:'Pulmonary\nPathology',   nodeId:'path-pulm',
+   desc:'COPD, asthma, ARDS, pneumonia, pulmonary fibrosis, pulmonary embolism, pulmonary hypertension. Ventilatory failure is the final common pathway of critical illness. Respiratory mechanics determine who survives the ICU.'},
+  {dq:-1,dr:+1,label:'GI &\nHepatic',          nodeId:'path-gi',
+   desc:'IBD (Crohn\'s, UC), cirrhosis and portal hypertension, hepatitis (viral, alcoholic, NASH), pancreatitis, peptic ulcer disease. Gut microbiome dysbiosis is emerging as a mechanistic driver across most GI pathology.'},
+  {dq: 0,dr:-1,label:'Neuro-\nlogical',         nodeId:'path-neuro',
+   desc:'Ischemic and hemorrhagic stroke, TBI, dementia, neurodegeneration (Parkinson\'s, ALS), epilepsy, MS, peripheral neuropathy. CNS mechanisms: ischemia, excitotoxicity, protein aggregation, neuroinflammation.'},
+  {dq: 0,dr:+1,label:'Endocrine &\nMetabolic', nodeId:'path-endo',
+   desc:'Type 1 and 2 diabetes, thyroid disease, adrenal disorders (Cushing\'s, Addison\'s), metabolic syndrome. Insulin resistance is the unifying mechanism for the most prevalent chronic disease cluster.'},
+  {dq:+2,dr: 0,label:'Hematology',              nodeId:'path-heme',
+   desc:'Anemia (iron deficiency, hemolytic, aplastic), coagulopathy, thrombophilia, bone marrow failure. DIC is the prototype coagulation catastrophe. Iron deficiency anemia is the most prevalent nutritional deficiency worldwide.'},
+  {dq:-2,dr: 0,label:'Infectious\nDisease',     nodeId:'path-infx',
+   desc:'Bacterial, viral, fungal, parasitic disease mechanisms. Sepsis — dysregulated host response to infection — is the primary driver of ICU mortality. Antimicrobial resistance is the structural long-game threat.'},
+  {dq:+2,dr:-2,label:'Musculo-\nskeletal',       nodeId:'path-msk',
+   desc:'Rheumatoid arthritis (autoimmune synovitis), osteoarthritis (degenerative cartilage), crystal arthropathy, osteoporosis. RA is autoimmune. OA is degenerative. A critical mechanism distinction for treatment.'},
+  {dq:+1,dr:-2,label:'Inflammation\n& Immunity',nodeId:'path-immune',
+   desc:'Acute and chronic inflammation, hypersensitivity (Type I-IV), autoimmunity. TNF-alpha, IL-6, NF-kB — the molecular language of most chronic disease. Target of the most successful drug class of the past 30 years.'},
+  {dq: 0,dr:-2,label:'Neoplasia &\nOncology',   nodeId:'path-onco',
+   desc:'Hallmarks of cancer: sustained proliferation, evading apoptosis, genomic instability, angiogenesis, invasion, immune evasion. The Hanahan-Weinberg framework applies to every solid tumor and hematologic malignancy.'},
+  {dq:-1,dr:-1,label:'Cell &\nMolecular',       nodeId:'path-cell',
+   desc:'Cell injury (hypoxia, free radicals, toxins), adaptation (hypertrophy, atrophy, hyperplasia, metaplasia), apoptosis vs necrosis, DNA damage, epigenetics. The base layer. All pathology traces back to what happens at the cell.'},
+];
+
+// ── PIXEL DISPLACEMENT HELPER ────────────────────────────────────────────────
+function hDelta(dq, dr) {
+  return [sq3*s*dq + sq3*s/2*dr, 1.5*s*dr];
+}
+
+// ── PROCEDURAL HEX DISPLACEMENT ──────────────────────────────────────────────
+// Given a push direction (dq,dr), find the nearest hex unit vector in that direction.
+const HEX_DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+function closestHexDir(dq, dr) {
+  const x1=dq, y1=-dq-dr, z1=dr;
+  let best=HEX_DIRS[0], bestDot=-Infinity;
+  HEX_DIRS.forEach(([q,r]) => {
+    const dot = x1*q + y1*(-q-r) + z1*r;
+    if (dot > bestDot) { bestDot=dot; best=[q,r]; }
+  });
+  return best;
+}
+
+// Cascade-push any real cell at (q,r) one hex step in direction (pushDq,pushDr), recursively.
+function pushChain(q, r, pushDq, pushDr, vGrid, displacements) {
+  const key = `${q},${r}`;
+  const cell = vGrid.get(key);
+  if (!cell || !cell.nodeId || cell.type==='terrain' || cell.type==='sub' || cell.type==='landmark' || cell.type==='hub') return;
+  const [dq, dr] = closestHexDir(pushDq, pushDr);
+  const nq=q+dq, nr=r+dr;
+  pushChain(nq, nr, pushDq, pushDr, vGrid, displacements);
+  if (vGrid.has(`${nq},${nr}`)) return; // cascade blocked by landmark/hub; leave cell in place
+  vGrid.delete(key);
+  vGrid.set(`${nq},${nr}`, cell);
+  if (displacements.has(cell.nodeId)) {
+    const d = displacements.get(cell.nodeId);
+    d.toQ=nq; d.toR=nr;
+  } else {
+    displacements.set(cell.nodeId, {fromQ:q, fromR:r, toQ:nq, toR:nr});
+  }
+}
+
+// Compute which cells need to move and their pixel offsets, purely from GRID_MAP + sub definitions.
+// Returns Map<nodeId, [pixelDx, pixelDy]>
+function computeProceduralPushes(lq, lr, subs) {
+  const vGrid = new Map();
+  GRID_MAP.forEach((v,k) => { if (v.type!=='terrain') vGrid.set(k,{...v}); });
+  const displacements = new Map();
+  const sorted = [...subs].sort((a,b) => {
+    const da=(Math.abs(a.dq)+Math.abs(a.dr)+Math.abs(a.dq+a.dr))/2;
+    const db=(Math.abs(b.dq)+Math.abs(b.dr)+Math.abs(b.dq+b.dr))/2;
+    return da-db;
+  });
+  sorted.forEach(sub => {
+    const tq=lq+sub.dq, tr=lr+sub.dr;
+    pushChain(tq, tr, sub.dq, sub.dr, vGrid, displacements);
+    vGrid.set(`${tq},${tr}`, {type:'sub', nodeId:sub.nodeId, zoneId:'_expand'});
+  });
+  const result = new Map();
+  displacements.forEach(({fromQ,fromR,toQ,toR}, nodeId) => {
+    const [fx,fy]=hPx(fromQ,fromR);
+    const [tx,ty]=hPx(toQ,toR);
+    result.set(nodeId, [tx-fx, ty-fy]);
+  });
+  return result;
+}
+
+// ── GENERALIZED LANDMARK EXPANSION ENGINE ────────────────────────────────────
+// expandedSet tracks which landmark nodeIds are currently expanded.
+// EXPANSION_REGISTRY maps nodeId → {overlay, subGroups, baseX, baseY, lq, lr, subs, activePushes}.
+// expandExpansion / collapseExpansion handle any registered landmark.
+// initExpansion(cfg) builds the overlay SVG and registers the entry — call after zone cells rendered.
+const EXPANSION_REGISTRY = {};
+const expandedSet = new Set();
+
+function expandExpansion(nodeId) {
+  if (expandedSet.has(nodeId)) return;
+  const reg = EXPANSION_REGISTRY[nodeId];
+  if (!reg) return;
+  expandedSet.add(nodeId);
+  if (expandedSet.size === 1) {
+    d3.select('#conn-g').transition().duration(180).attr('opacity', 0);
+    d3.select('#hub-spokes').transition().duration(180).attr('opacity', 0);
+  }
+  const pushes = computeProceduralPushes(reg.lq, reg.lr, reg.subs);
+  reg.activePushes = pushes;
+  pushes.forEach(([dx,dy], nid) => {
+    d3.selectAll(`.az-node-cell[data-nodeid="${nid}"]`)
+      .transition().delay(80).duration(440).ease(d3.easeBackOut.overshoot(1.05))
+      .attr('transform', `translate(${dx},${dy})`);
+  });
+  reg.overlay.attr('pointer-events', 'all');
+  reg.subGroups.forEach(({sg, tx, ty}, i) => {
+    sg.attr('pointer-events', 'all')
+      .transition().delay(320 + i*35).duration(400)
+      .ease(d3.easeBackOut.overshoot(1.05))
+      .attr('transform', `translate(${tx},${ty})`)
+      .attr('opacity', 1);
+  });
+  const btn = document.getElementById(`af-expand-${nodeId}`);
+  if (btn) btn.classList.add('on');
+  if (typeof updateExpandIndicator === 'function') updateExpandIndicator(nodeId);
+  if (typeof window.updateRoutes === 'function') window.updateRoutes();
+}
+
+function collapseExpansion(nodeId) {
+  if (!expandedSet.has(nodeId)) return;
+  const reg = EXPANSION_REGISTRY[nodeId];
+  if (!reg) return;
+  expandedSet.delete(nodeId);
+  reg.overlay.attr('pointer-events', 'none');
+  if (reg.activePushes) {
+    reg.activePushes.forEach((_, nid) => {
+      const stillNeeded = [...expandedSet].some(id => EXPANSION_REGISTRY[id]?.activePushes?.has(nid));
+      if (!stillNeeded) {
+        d3.selectAll(`.az-node-cell[data-nodeid="${nid}"]`)
+          .transition().duration(420).ease(d3.easeCubicInOut)
+          .attr('transform', null);
+      }
+    });
+    reg.activePushes = null;
+  }
+  reg.subGroups.forEach(({sg}, i) => {
+    sg.attr('pointer-events', 'none')
+      .transition().delay(i*25).duration(280)
+      .ease(d3.easeCubicIn)
+      .attr('transform', `translate(${reg.baseX},${reg.baseY})`)
+      .attr('opacity', 0);
+  });
+  if (expandedSet.size === 0) {
+    const currentK = d3.zoomTransform(svgEl).k;
+    const connOp = routesOn ? (currentK<0.50?0:currentK<0.78?(currentK-0.50)/0.28:1) : 0;
+    d3.select('#conn-g').transition().delay(300).duration(380).attr('opacity', connOp);
+    d3.select('#hub-spokes').transition().delay(300).duration(380).attr('opacity', 1);
+  }
+  const btn = document.getElementById(`af-expand-${nodeId}`);
+  if (btn) btn.classList.remove('on');
+  if (typeof updateExpandIndicator === 'function') updateExpandIndicator(nodeId);
+  if (typeof window.updateRoutes === 'function') window.updateRoutes();
+}
+
+function initExpansion(cfg) {
+  const zone = ZONE_DEFS.find(z => z.id === cfg.zoneId);
+  const cell = zone.cells.find(c => c.nodeId === cfg.nodeId);
+  const baseX = cell.wx, baseY = cell.wy;
+  const col = zone.color;
+
+  const overlay = g.append('g')
+    .attr('id', `expand-overlay-${cfg.nodeId}`)
+    .attr('pointer-events', 'none');
+  overlay.append('rect')
+    .attr('x',-6000).attr('y',-6000).attr('width',12000).attr('height',12000)
+    .attr('fill','rgba(6,16,10,0)').attr('pointer-events','none');
+
+  const subGroups = [];
+  cfg.subs.forEach((sub, i) => {
+    const [tx, ty] = hPx(cell.q + sub.dq, cell.r + sub.dr);
+    const hexDist   = (Math.abs(sub.dq)+Math.abs(sub.dr)+Math.abs(sub.dq+sub.dr))/2;
+    const isRing2   = hexDist > 1;
+
+    const sg = overlay.append('g')
+      .attr('class', `exp-sub exp-${cfg.nodeId}-sub`)
+      .attr('transform', `translate(${baseX},${baseY})`)
+      .attr('opacity', 0)
+      .attr('data-nodeid', sub.nodeId);
+
+    if (isRing2) {
+      sg.append('path').attr('d', hPath(0,0,s+5))
+        .attr('fill','none').attr('stroke',col)
+        .attr('stroke-width',0.7).attr('stroke-opacity',0.12)
+        .attr('stroke-dasharray','3 4').attr('pointer-events','none');
+    }
+
+    const hexBody = sg.append('path').attr('class','sub-body')
+      .attr('d', hPath(0,0,s-1.8))
+      .attr('fill',col).attr('fill-opacity', isRing2?0.18:0.26)
+      .attr('stroke',col).attr('stroke-width', isRing2?1.0:1.4)
+      .attr('stroke-opacity', isRing2?0.60:0.82)
+      .attr('cursor','pointer')
+      .attr('filter','url(#n-glow)');
+
+    sg.append('path').attr('d', hPath(0,0,s-9))
+      .attr('fill','none').attr('stroke',col)
+      .attr('stroke-width',0.6).attr('stroke-opacity',0.20)
+      .attr('pointer-events','none');
+
+    const lines = sub.label.split('\n');
+    const lblG  = sg.append('g').attr('pointer-events','none');
+    lines.forEach((ln, li) => {
+      lblG.append('text')
+        .attr('x',0).attr('y', -2 + li*11 - (lines.length-1)*5.5)
+        .attr('text-anchor','middle')
+        .attr('font-family','DM Sans, sans-serif')
+        .attr('font-size', isRing2?'7px':'7.5px')
+        .attr('font-weight','500')
+        .attr('fill','#E2EEF4').attr('fill-opacity',0.92)
+        .text(ln);
+    });
+
+    sg.append('circle').attr('cx',0).attr('cy',s-6)
+      .attr('r',2).attr('fill',col).attr('fill-opacity',0.55)
+      .attr('pointer-events','none');
+
+    hexBody.on('mouseenter', function(){
+      d3.select(this).attr('fill-opacity',0.42).attr('stroke-opacity',1.0);
+    });
+    hexBody.on('mouseleave', function(){
+      d3.select(this).attr('fill-opacity', isRing2?0.18:0.26).attr('stroke-opacity', isRing2?0.60:0.82);
+    });
+    hexBody.on('click', ev => {
+      ev.stopPropagation();
+      document.getElementById('h-badge').textContent = `${zone.abbr} · ${cell.label.replace('\n',' ')}`;
+      document.getElementById('h-badge').style.setProperty('--hz', col);
+      document.getElementById('h-type').textContent = isRing2 ? '◆ Deep Node' : '◆ Sub-Topic';
+      document.getElementById('hud-title').textContent = sub.label.replace('\n',' ');
+      document.getElementById('hud-desc').textContent  = sub.desc;
+      document.getElementById('hud-links').innerHTML   = '';
+      document.getElementById('hud-links-col').classList.remove('has-links');
+      document.getElementById('atlas-hud').classList.add('open');
+    });
+
+    subGroups.push({sg, tx, ty});
+  });
+
+  EXPANSION_REGISTRY[cfg.nodeId] = {overlay, subGroups, baseX, baseY, lq: cell.q, lr: cell.r, subs: cfg.subs, activePushes: null};
+}
+
+// ── EXPANSION CONFIGS ────────────────────────────────────────────────────────
+// Pathophysiology — MedSci zone (2,−4). Ring-1/ring-2 clear; 4 medsci cells push.
+const EXPAND_PATHOPHYS = {
+  zoneId: 'medsci', nodeId: 'pathophys',
+  subs: PATHOPHYS_SUBS,
+};
+
+// Clinical Informatics — Provider zone (6,−3). Sub-nodes fan NE; ehr/cdss push outward.
+const EXPAND_INFORMATICS = {
+  zoneId: 'provider', nodeId: 'informatics',
+  subs: [
+    {dq: 1, dr: 0,  nodeId:'info-ehr',  label:'EHR\nBuild',
+     desc:'Epic, Oracle Cerner, MEDITECH implementation. Build environments, upgrade cycles, and optimization sprints. The single largest IT investment in most health systems.'},
+    {dq: 0, dr:-1,  nodeId:'info-cdss', label:'CDSS &\nAlerts',
+     desc:'Best Practice Advisories, order sets, clinical rules. Alert fatigue is the primary failure mode. Most BPAs are acknowledged without action within 12 months of deployment.'},
+    {dq: 1, dr:-1,  nodeId:'info-gov',  label:'Data\nGovernance',
+     desc:'Data stewardship, master data management, data quality programs. Unglamorous but foundational. Bad governance means no analytics output is trustworthy.'},
+    {dq:-1, dr:-1,  nodeId:'info-bi',   label:'BI &\nReporting',
+     desc:'Tableau, Power BI, Qlik connected to Clarity or Caboodle. Operational dashboards, quality metrics, financial analytics. The layer clinical leaders actually see and act on.'},
+    {dq: 0, dr:-2,  nodeId:'info-ai',   label:'Clinical\nAI',
+     desc:'Model deployment inside EHR workflows. Sepsis alerts, readmission risk, imaging AI overlays. Integration into existing workflow is consistently harder than building the model.'},
+    {dq: 1, dr:-2,  nodeId:'info-api',  label:'Interop\n& APIs',
+     desc:'FHIR R4 APIs, HL7 v2 interfaces, Direct secure messaging. The connective tissue between systems that were never designed to talk to each other.'},
+  ],
+};
+
+// Medicare — Payer zone (−1,−1). Fans into payer territory; adv/commercial/medicaid-mc push W.
+const EXPAND_MEDICARE = {
+  zoneId: 'payer', nodeId: 'medicare',
+  subs: [
+    {dq:-1, dr: 0,  nodeId:'mcare-c',    label:'Part C\nAdvantage',
+     desc:'Medicare Advantage. Private plans now covering over 50% of Medicare enrollees. Capitated payment, tighter networks, more prior auth, and the star ratings game.'},
+    {dq: 1, dr:-1,  nodeId:'mcare-a',    label:'Part A\nHospital',
+     desc:'Inpatient hospitalization, skilled nursing facility, hospice, and some home health. Premium-free for most. DRG-based hospital payment. SNF benefit has a hard stop at day 100.'},
+    {dq:-2, dr: 0,  nodeId:'mcare-b',    label:'Part B\nMedical',
+     desc:'Outpatient services, physician visits, DME, preventive care. Standard premium $174.70/month (2024). IRMAA income surcharges apply above set thresholds.'},
+    {dq:-1, dr:-1,  nodeId:'mcare-d',    label:'Part D\nDrugs',
+     desc:'Prescription drug benefit. PDP or MA-PD. Formulary tiers, prior auth requirements, and coverage gap mechanics drive most out-of-pocket exposure for beneficiaries.'},
+    {dq: 0, dr:-2,  nodeId:'mcare-irmaa',label:'IRMAA &\nPremiums',
+     desc:'Income-Related Monthly Adjustment Amount. Higher earners pay more for Parts B and D. Hard cliff effects at income thresholds. A planning variable for high earners near retirement.'},
+    {dq:-2, dr:-1,  nodeId:'mcare-vbc',  label:'Value-Based\nMedicare',
+     desc:'ACO REACH, MSSP, BPCI Advanced. Medicare\'s shift from fee-for-service toward shared savings and accountability. Still a minority of total Medicare spending, but growing every contract year.'},
+  ],
+};
+
+
+// Access & Navigation — Patient zone (3,2). Sub-nodes fan east and southeast
+// (away from hub at 0,0). Ring-2 subs stay in patient territory.
+const EXPAND_ACCESS = {
+  zoneId: 'patient', nodeId: 'access',
+  subs: [
+    {dq:+1,dr: 0, nodeId:'acc-eligibility', label:'Real-Time\nEligibility',
+     desc:'270/271 transactions. Insurance eligibility verification at point of care. Copay estimation, benefit tier lookup. The moment a patient registers is where coverage uncertainty starts.'},
+    {dq: 0,dr:+1, nodeId:'acc-referral',    label:'Referral\nPathways',
+     desc:'PCP-to-specialist handoff. Warm handoffs, fax-based referrals, e-referral platforms. Wait times averaging 26 days for specialist appointments in urban areas, longer in rural. The handoff where patients get lost.'},
+    {dq:+1,dr:+1, nodeId:'acc-transport',   label:'Transportation\nBarriers',
+     desc:'3.6 million missed or delayed appointments annually due to lack of transportation. NEMT — non-emergency medical transport — is a Medicaid-covered benefit that most eligible patients do not know to request.'},
+    {dq:+2,dr: 0, nodeId:'acc-sdoh-screen', label:'SDOH\nScreening',
+     desc:'PRAPARE, AHC-HRSN, Hunger Vital Sign. Standardized social needs screening at the point of access. The data collected here feeds community health worker referrals and population health programs — when systems actually connect.'},
+    {dq:+1,dr:+2, nodeId:'acc-navigator',   label:'Patient\nNavigators',
+     desc:'Community health workers, patient navigators, care coordinators. The human layer between patients and the system. Evidence-based for reducing disparities. Chronically underfunded and often the first cut in budget cycles.'},
+    {dq:+2,dr:+1, nodeId:'acc-wayfinding',  label:'Health\nLiteracy',
+     desc:'How patients find the right care, understand their options, and make decisions in a system not designed for them. Low health literacy affects ~36% of U.S. adults. Discharge instructions written at 10th grade. Most patients read at 6th.'},
+  ],
+};
+
+// Population Health — PubHealth zone (0,3). Sub-nodes fan south and west.
+// Ring-1 around pop-health is mostly occupied — pushes prevention and community-health;
+// ring-2 subs fan into open pubhealth territory.
+const EXPAND_POP_HEALTH = {
+  zoneId: 'pubhealth', nodeId: 'pop-health',
+  subs: [
+    {dq:-1,dr: 0, nodeId:'ph-risk',     label:'Risk\nStratification',
+     desc:'Claims, lab, and ADT data combined to score patient risk. HCC risk adjustment, Milliman, Johns Hopkins ACG. The foundation of value-based care program design. Garbage data = wrong high-risk cohorts.'},
+    {dq: 0,dr:+1, nodeId:'ph-chronic',  label:'Chronic Disease\nPrograms',
+     desc:'Disease management programs for diabetes, COPD, CHF, CKD. Care gap closure, targeted outreach, pharmacist consults. Where population health intersects with actual clinical touch points.'},
+    {dq:-1,dr:+1, nodeId:'ph-quality',  label:'Quality\nMeasurement',
+     desc:'HEDIS, CMS Star Ratings, eCQMs, CAHPS. Standardized measures that tie to value-based contract performance, public reporting, and regulatory compliance. The score on the board providers actually manage to.'},
+    {dq:+1,dr: 0, nodeId:'ph-engage',   label:'Community\nEngagement',
+     desc:'CHNAs, community benefit spending, hospital-community partnerships, and the public health workforce that bridges clinical and community settings. The difference between a health system and a healthcare system.'},
+    {dq: 0,dr:+2, nodeId:'ph-analytics',label:'Population\nAnalytics',
+     desc:'Healthy Planet, Arcadia, Lightbeam, HealthEC. The platforms that aggregate multi-source data into actionable population views. As good as the data quality feeding them — which is often not great.'},
+    {dq:-2,dr:+1, nodeId:'ph-equity',   label:'Equity\nMeasurement',
+     desc:'Race and ethnicity-stratified quality data, disparity dashboards, and social determinants measurement. The OMB standard for race/ethnicity data collection is changing in 2025 for the first time since 1997.'},
+  ],
+};
+
+// Federal Legislation — Policy zone (-2,0). Sub-nodes fan west and northwest.
+// Expands into policy territory further from hub.
+const EXPAND_FED_LAW = {
+  zoneId: 'policy', nodeId: 'fed-law',
+  subs: [
+    {dq:-1,dr: 0, nodeId:'law-hipaa2',  label:'HIPAA\nSecurity Rule',
+     desc:'Administrative, physical, and technical safeguards. Required risk analysis every year. Most healthcare organizations have outdated assessments or none at all. OCR enforcement has recovered $135M+ in penalties since 2008.'},
+    {dq: 0,dr:-1, nodeId:'law-hitech',  label:'HITECH\nAct',
+     desc:'2009 legislation that expanded HIPAA, created Meaningful Use, and authorized $27B in EHR adoption incentives. The single biggest structural intervention in health IT history. Set the current interoperability mess in motion.'},
+    {dq:-1,dr:-1, nodeId:'law-cures',   label:'21st Century\nCures Act',
+     desc:'2016. Mandated open APIs, information blocking prohibitions, and standardized access to patient data. ONC rules implementing it took effect 2022-2023. Still being litigated at the vendor and provider level.'},
+    {dq:-1,dr:+1, nodeId:'law-nsa',     label:'No Surprises\nAct',
+     desc:'2022. Banned out-of-network surprise bills for emergency care, air ambulance, and non-emergency care at in-network facilities. Independent dispute resolution process backlogged within months of launch.'},
+    {dq:-2,dr: 0, nodeId:'law-aca2',    label:'ACA\nMandates',
+     desc:'Employer mandate, individual mandate (reduced to zero), essential health benefits, guaranteed issue. The architecture of the non-Medicare/Medicaid insurance market. Actively contested in federal courts since passage.'},
+    {dq:-2,dr:+1, nodeId:'law-cms-rule',label:'CMS Annual\nRulemaking',
+     desc:'IPPS, OPPS, PFS, MA final rules — published every fall, effective January 1. The rate-setting and policy vehicle that reshapes reimbursement, quality programs, and coverage every year. 2,000+ pages most cycles.'},
+  ],
+};
+
+// Scope of Practice — Policy zone (-5,2). Sub-nodes fan west and northwest.
+// Deep in policy territory — ring-2 subs push into open map edge area.
+const EXPAND_SCOPE = {
+  zoneId: 'policy', nodeId: 'scope',
+  subs: [
+    {dq:-1,dr: 0, nodeId:'scp-np',      label:'NP Full\nPractice',
+     desc:'27 states + DC grant full practice authority to nurse practitioners — independent prescribing, diagnosing, treating without physician collaboration agreements. Remaining states: reduced or restricted practice. The single biggest addressable lever for primary care access.'},
+    {dq: 0,dr:-1, nodeId:'scp-pa',      label:'PA\nAutonomy',
+     desc:'Physician Assistants in most states operate under physician supervision, though the definition varies widely. The PA profession officially transitioned to "physician associate" in 2021. Practice agreements, formulary authority, and independent prescribing all vary by state.'},
+    {dq:-1,dr:-1, nodeId:'scp-rrt',     label:'RRT\nAdvanced\nPractice',
+     desc:'Respiratory therapists can initiate ventilator protocols, perform bronchoscopies, and run rapid response teams in some states. Protocol-driven practice is evidence-based and reduces cost. Scope still limited by state licensure boards in most jurisdictions.'},
+    {dq:+1,dr:-1, nodeId:'scp-pharm',   label:'Pharmacist\nPrescribing',
+     desc:'30+ states allow pharmacists to prescribe under collaborative practice agreements, statewide protocols, or independent authority for defined conditions. Statins, hormonal contraceptives, naloxone — expanding list. Access impact is real in rural pharmacy deserts.'},
+    {dq:-2,dr: 0, nodeId:'scp-compact', label:'Interstate\nCompacts',
+     desc:'Nurse Licensure Compact (NLC): 41 states. Physician Interstate Compact (IMLC). RCIC for respiratory therapists. Compact membership enables telehealth, travel practice, and disaster response across state lines without relicensure. Coverage still spotty.'},
+    {dq:-1,dr:+1, nodeId:'scp-barriers',label:'Regulatory\nBarriers',
+     desc:'Legacy physician-only regulations, hospital credentialing bylaws, and medical board composition all preserve the status quo. CON laws, supervision requirements, and insurance credentialing gaps block expanded scope even where state law allows it.'},
+  ],
+};
+
+// ── SVG SETUP ─────────────────────────────────────────────────────────────────
+const svgEl = document.getElementById('atlas-svg');
+const svg   = d3.select('#atlas-svg');
+const defs  = svg.append('defs');
+
+// Fine dot pattern
+const dp = defs.append('pattern').attr('id','bg-dot').attr('width',40).attr('height',40).attr('patternUnits','userSpaceOnUse');
+dp.append('circle').attr('cx',0).attr('cy',0).attr('r',0.5).attr('fill','rgba(78,205,196,0.06)');
+dp.append('circle').attr('cx',20).attr('cy',20).attr('r',0.5).attr('fill','rgba(78,205,196,0.04)');
+
+// Drop shadow for zone name labels
+const tsf = defs.append('filter').attr('id','txt-shadow').attr('x','-20%').attr('y','-20%').attr('width','140%').attr('height','140%');
+tsf.append('feDropShadow').attr('dx',0).attr('dy',1.5).attr('stdDeviation',3).attr('flood-color','#000').attr('flood-opacity',0.75);
+
+// Glow filters
+const nf = defs.append('filter').attr('id','n-glow').attr('x','-80%').attr('y','-80%').attr('width','260%').attr('height','260%');
+nf.append('feGaussianBlur').attr('stdDeviation','5').attr('result','blur');
+const nm = nf.append('feMerge'); nm.append('feMergeNode').attr('in','blur'); nm.append('feMergeNode').attr('in','SourceGraphic');
+
+const hf = defs.append('filter').attr('id','hub-glow').attr('x','-100%').attr('y','-100%').attr('width','300%').attr('height','300%');
+hf.append('feGaussianBlur').attr('stdDeviation','10').attr('result','blur');
+const hm = hf.append('feMerge'); hm.append('feMergeNode').attr('in','blur'); hm.append('feMergeNode').attr('in','SourceGraphic');
+
+// Lighter border glow for regular content nodes (non-landmark, non-frontier)
+const bgf = defs.append('filter').attr('id','hex-glow').attr('x','-60%').attr('y','-60%').attr('width','220%').attr('height','220%');
+bgf.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','blur');
+const bgm = bgf.append('feMerge'); bgm.append('feMergeNode').attr('in','blur'); bgm.append('feMergeNode').attr('in','SourceGraphic');
+
+// ── CANVAS ────────────────────────────────────────────────────────────────────
+const isLight   = ()=> document.documentElement.getAttribute('data-theme')==='light';
+const svgBgColor = ()=> isLight() ? '#eaf0eb' : '#06100a';
+const hubFill    = ()=> isLight() ? '#f2f6f3' : '#06100a';
+const hubStroke  = ()=> isLight() ? '#1B5FA8' : '#4ECDC4';
+svg.append('rect').attr('id','svg-bg').attr('width','100%').attr('height','100%').attr('fill', svgBgColor());
+new MutationObserver(()=>{
+  d3.select('#svg-bg').attr('fill', svgBgColor());
+  d3.select('#hub-body').attr('fill', hubFill()).attr('stroke', hubStroke());
+}).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+const g = svg.append('g').attr('id','atlas-g');
+g.append('rect').attr('x',-1000).attr('y',-1000).attr('width',5000).attr('height',5000).attr('fill','url(#bg-dot)');
+
+// Ghost hex grid — same axial formula as zone tiles (OX/OY origin, s=40)
+// so ghost hexes align exactly with all zone/terrain cells
+const ghostG = g.append('g').attr('opacity',0.045);
+for (let r = -22; r < 30; r++) {
+  for (let q = -26; q < 26; q++) {
+    const [gx,gy] = [OX + sq3*s*q + sq3*s/2*r, OY + 1.5*s*r];
+    ghostG.append('path').attr('d',hPath(gx,gy,s-0.5))
+      .attr('fill','none').attr('stroke','#4ECDC4').attr('stroke-width',0.35);
+  }
+}
+
+// ── AUTO-FILL TERRAIN ─────────────────────────────────────────────────────────
+// Scan every hex within ring 9. Any unoccupied hex gets assigned as terrain to
+// the nearest zone (by pixel distance to zone centroid). Eliminates all gaps.
+(function autoFill() {
+  const MAX_R = 9;
+  const occupied = new Set();
+  ZONE_DEFS.forEach(z => z.cells.forEach(c => occupied.add(`${c.q},${c.r}`)));
+
+  const centroids = ZONE_DEFS.map(z => {
+    const n = z.cells.filter(c => c.type !== 'terrain');
+    const ql = n.reduce((s,c)=>s+c.q,0)/n.length;
+    const rl = n.reduce((s,c)=>s+c.r,0)/n.length;
+    const [cx,cy] = hPx(ql,rl);
+    return {zone:z, cx, cy};
+  });
+
+  function hd(q,r){ return (Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2; }
+
+  for (let q=-MAX_R; q<=MAX_R; q++) {
+    for (let r=-MAX_R; r<=MAX_R; r++) {
+      const d = hd(q,r);
+      if (d < 2 || d > MAX_R) continue;
+      const key = `${q},${r}`;
+      if (occupied.has(key)) continue;
+      const [px,py] = hPx(q,r);
+      let best=centroids[0], bestD=Infinity;
+      centroids.forEach(c => {
+        const dist = (px-c.cx)**2 + (py-c.cy)**2;
+        if (dist < bestD) { bestD=dist; best=c; }
+      });
+      best.zone.cells.push({q,r,type:'terrain',label:'',nodeId:null,desc:''});
+      occupied.add(key);
+    }
+  }
+})();
+
+// ── GRID MAP ─────────────────────────────────────────────────────────────────
+// Single source of truth for every occupied hex. Built after autoFill so it
+// includes both hand-placed cells and auto-filled terrain. Used by expansion
+// system and route pathfinder to verify positions before placing anything.
+const GRID_MAP = new Map();
+ZONE_DEFS.forEach(zone => {
+  zone.cells.forEach(cell => {
+    GRID_MAP.set(`${cell.q},${cell.r}`, {zoneId: zone.id, nodeId: cell.nodeId, type: cell.type});
+  });
+});
+function gridGet(q, r)      { return GRID_MAP.get(`${q},${r}`); }
+function gridOccupied(q, r) { return GRID_MAP.has(`${q},${r}`); }
+
+// ── COMPUTE PIXEL POSITIONS ───────────────────────────────────────────────────
+ZONE_DEFS.forEach(zone => {
+  zone.cells.forEach(cell => {
+    const [wx,wy] = hPx(cell.q, cell.r);
+    cell.wx = wx; cell.wy = wy;
+  });
+  const nc = zone.cells.filter(c=>c.type!=='terrain');
+  zone.cx = nc.reduce((a,c)=>a+c.wx,0)/nc.length;
+  zone.cy = nc.reduce((a,c)=>a+c.wy,0)/nc.length;
+  zone.topY = Math.min(...nc.map(c=>c.wy));
+});
+
+// ── HUB SPOKES (behind everything) ───────────────────────────────────────────
+// Thin dashed lines from hub center to each zone centroid — give the map its
+// radial structure and make the center feel like a crossroads
+const spokeG = g.append('g').attr('id','hub-spokes').attr('pointer-events','none');
+ZONE_DEFS.forEach(z => {
+  spokeG.append('line')
+    .attr('x1',OX).attr('y1',OY).attr('x2',z.cx).attr('y2',z.cy)
+    .attr('stroke',z.color).attr('stroke-width',0.7)
+    .attr('stroke-opacity',0.10).attr('stroke-dasharray','4 7');
+});
+
+
+// ── FRONTIER HEXES (unified map silhouette) ───────────────────────────────────
+// Expand all zone cells outward 2 rings. Ring 1 fills inter-zone gaps and creates
+// the inner border; Ring 2 creates a fading outer edge so the map reads as one shape.
+{
+  const ND = [[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
+  const zSet = new Set();
+  ZONE_DEFS.forEach(z => z.cells.forEach(c => zSet.add(`${c.q},${c.r}`)));
+
+  const ring1 = new Set();
+  zSet.forEach(key => {
+    const [q,r] = key.split(',').map(Number);
+    ND.forEach(([dq,dr]) => {
+      const nk = `${q+dq},${r+dr}`;
+      if (!zSet.has(nk)) ring1.add(nk);
+    });
+  });
+
+  const ring2 = new Set();
+  ring1.forEach(key => {
+    const [q,r] = key.split(',').map(Number);
+    ND.forEach(([dq,dr]) => {
+      const nk = `${q+dq},${r+dr}`;
+      if (!zSet.has(nk) && !ring1.has(nk)) ring2.add(nk);
+    });
+  });
+
+  const ftG = g.append('g').attr('id','frontier-g').attr('pointer-events','none');
+  ring2.forEach(key => {
+    const [q,r] = key.split(',').map(Number);
+    const [fx,fy] = hPx(q,r);
+    ftG.append('path').attr('d',hPath(fx,fy,s-2))
+      .attr('fill','#060e07').attr('fill-opacity',0.30)
+      .attr('stroke','rgba(78,205,196,0.04)').attr('stroke-width',0.4);
+  });
+  ring1.forEach(key => {
+    const [q,r] = key.split(',').map(Number);
+    const [fx,fy] = hPx(q,r);
+    ftG.append('path').attr('d',hPath(fx,fy,s-2))
+      .attr('fill','#08130a').attr('fill-opacity',0.50)
+      .attr('stroke','rgba(78,205,196,0.07)').attr('stroke-width',0.5);
+  });
+}
+
+// ── CONNECTION ROUTES ─────────────────────────────────────────────────────────
+// True vertex-graph routing: routes travel vertex-to-vertex along hex edges,
+// exactly like Catan roads — they hug hex corners, never cross cell interiors.
+// A* on the vertex graph prefers zone-boundary edges (cost 0.7) over interior
+// edges (1.8) and penalises the moat (5). Routes re-draw when hexes move.
+{
+  const ZONE_LM = {
+    medsci:'pathophys', provider:'informatics', patient:'access',
+    pubhealth:'pop-health', techeco:'vendor-dir', policy:'fed-law', payer:'medicare',
+  };
+
+  // Pixel position of hex (q,r), accounting for any active expansion push delta
+  function effectivePx(q, r) {
+    const cell = GRID_MAP.get(`${q},${r}`);
+    if (cell && cell.nodeId) {
+      for (const reg of Object.values(EXPANSION_REGISTRY)) {
+        if (reg.activePushes && reg.activePushes.has(cell.nodeId)) {
+          const [dx,dy] = reg.activePushes.get(cell.nodeId);
+          const [bx,by] = hPx(q,r);
+          return [bx+dx, by+dy];
+        }
+      }
+    }
+    return hPx(q,r);
+  }
+
+  // Pixel position of vertex vi (0-5, clockwise from upper-right) of hex (q,r)
+  // vi=0 upper-right, 1 top, 2 upper-left, 3 lower-left, 4 bottom, 5 lower-right
+  function hexVtx(q, r, vi, eff) {
+    const [cx,cy] = eff ? effectivePx(q,r) : hPx(q,r);
+    const rad = -(30 + 60*vi) * Math.PI / 180;
+    return [cx + s*Math.cos(rad), cy + s*Math.sin(rad)];
+  }
+
+  // Stable integer key for a vertex pixel position
+  function vk(vx, vy) { return `${Math.round(vx)},${Math.round(vy)}`; }
+
+  // Build vertex→hexes map from all grid cells (static grid positions only)
+  // Each entry: vertex_key → [{q,r,vi}] listing which hex+vertex-index share that point
+  const vtxMap = new Map();
+  GRID_MAP.forEach((_, ck) => {
+    const [q,r] = ck.split(',').map(Number);
+    for (let vi=0; vi<6; vi++) {
+      const [vx,vy] = hexVtx(q,r,vi,false);
+      const k = vk(vx,vy);
+      if (!vtxMap.has(k)) vtxMap.set(k,[]);
+      vtxMap.get(k).push({q,r,vi});
+    }
+  });
+
+  // All vertex-graph neighbours of vertex key vk0
+  // Returns Map<neighbour_key, canonical {q,r,vi} for that neighbour>
+  function vtxNeighbours(vk0) {
+    const out = new Map();
+    for (const {q,r,vi} of (vtxMap.get(vk0)||[])) {
+      for (const dv of [1,5]) {
+        const nvi = (vi+dv)%6;
+        const [nx,ny] = hexVtx(q,r,nvi,false);
+        const nk = vk(nx,ny);
+        if (nk !== vk0 && !out.has(nk)) out.set(nk, {q,r,vi:nvi});
+      }
+    }
+    return out;
+  }
+
+  function hexD(q1,r1,q2,r2) {
+    return (Math.abs(q1-q2)+Math.abs(r1-r2)+Math.abs((q1+r1)-(q2+r2)))/2;
+  }
+
+  // Edge traversal cost between adjacent vertex keys vka → vkb
+  function edgeCost(vka, vkb) {
+    const ha = vtxMap.get(vka)||[], hb = vtxMap.get(vkb)||[];
+    const shared = ha.filter(a => hb.some(b => b.q===a.q && b.r===a.r));
+    for (const {q,r} of shared) {
+      const d = hexD(q,r,0,0);
+      if (d===0) return 80;  // hub — avoid hard
+      if (d===1) return 5;   // moat — expensive
+    }
+    if (shared.length === 0) return 2;
+    if (shared.length === 1) return 1.2; // map-edge boundary
+    const zones = [...new Set(shared.map(h=>(GRID_MAP.get(`${h.q},${h.r}`)||{}).zoneId).filter(Boolean))];
+    return zones.length > 1 ? 0.7 : 1.8; // zone boundary cheap, interior expensive
+  }
+
+  // Vertex-graph A*. Returns array of canonical {q,r,vi} tuples, or null.
+  function vtxAstar(startQ, startR, endQ, endR) {
+    const [ecx,ecy] = hPx(endQ,endR), [scx,scy] = hPx(startQ,startR);
+    let svk,svInfo,evk,evInfo,svd=Infinity,evd=Infinity;
+    for (let vi=0;vi<6;vi++) {
+      const [vx,vy]=hexVtx(startQ,startR,vi,false);
+      const d=(vx-ecx)**2+(vy-ecy)**2;
+      if(d<svd){svd=d;svk=vk(vx,vy);svInfo={q:startQ,r:startR,vi};}
+    }
+    for (let vi=0;vi<6;vi++) {
+      const [vx,vy]=hexVtx(endQ,endR,vi,false);
+      const d=(vx-scx)**2+(vy-scy)**2;
+      if(d<evd){evd=d;evk=vk(vx,vy);evInfo={q:endQ,r:endR,vi};}
+    }
+    if (svk===evk) return [svInfo];
+    const [epx,epy] = hexVtx(evInfo.q,evInfo.r,evInfo.vi,false);
+    const open=new Map(), gScore=new Map(), cameFrom=new Map(), nodeInfo=new Map();
+    gScore.set(svk,0); open.set(svk,{f:0}); nodeInfo.set(svk,svInfo);
+    let iter=0;
+    while (open.size>0 && iter++<8000) {
+      let ck=null,mf=Infinity;
+      open.forEach((n,k)=>{ if(n.f<mf){mf=n.f;ck=k;} });
+      if (ck===evk) {
+        const path=[evInfo]; let k=evk;
+        while (cameFrom.has(k)) { k=cameFrom.get(k); path.unshift(nodeInfo.get(k)); }
+        return path;
+      }
+      open.delete(ck);
+      vtxNeighbours(ck).forEach((nInfo,nk)=>{
+        const cost=edgeCost(ck,nk);
+        const tg=(gScore.get(ck)||0)+cost;
+        if (!gScore.has(nk)||tg<gScore.get(nk)) {
+          gScore.set(nk,tg); cameFrom.set(nk,ck); nodeInfo.set(nk,nInfo);
+          const [nx,ny]=hexVtx(nInfo.q,nInfo.r,nInfo.vi,false);
+          open.set(nk,{f:tg+Math.sqrt((nx-epx)**2+(ny-epy)**2)/s});
+        }
+      });
+    }
+    return null;
+  }
+
+  // SVG path string from canonical vertex sequence (uses effective positions when eff=true)
+  function buildVtxPath(canonical, eff) {
+    if (!canonical||canonical.length<1) return null;
+    // Start and end at the landmark hex centre so the route visually originates there
+    const first=canonical[0], last=canonical[canonical.length-1];
+    const sc = eff ? effectivePx(first.q,first.r) : hPx(first.q,first.r);
+    const ec = eff ? effectivePx(last.q,last.r)   : hPx(last.q,last.r);
+    const pts = [sc, ...canonical.map(({q,r,vi})=>hexVtx(q,r,vi,eff)), ec];
+    let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for (let i=1;i<pts.length;i++) d += ` L${pts[i][0].toFixed(1)},${pts[i][1].toFixed(1)}`;
+    return d;
+  }
+
+  const connTip  = document.getElementById('conn-tooltip');
+  const tipLabel = document.getElementById('ctt-label');
+  const tipDesc  = document.getElementById('ctt-desc');
+  const canvasEl = document.getElementById('atlas-canvas');
+
+  const connG=g.append('g').attr('id','conn-g').attr('opacity',0);
+  const builtRoutes=[];
+
+  CONNECTIONS.forEach((conn,ci)=>{
+    const fz=ZONE_DEFS.find(z=>z.id===conn.from),tz=ZONE_DEFS.find(z=>z.id===conn.to);
+    if(!fz||!tz) return;
+    const col=CONN_COL[conn.type]||'#4ECDC4';
+
+    const fcell=fz.cells.find(c=>c.nodeId===ZONE_LM[conn.from])||
+      fz.cells.filter(c=>c.type!=='terrain').reduce((b,c)=>
+        ((c.wx-fz.cx)**2+(c.wy-fz.cy)**2)<((b.wx-fz.cx)**2+(b.wy-fz.cy)**2)?c:b);
+    const tcell=tz.cells.find(c=>c.nodeId===ZONE_LM[conn.to])||
+      tz.cells.filter(c=>c.type!=='terrain').reduce((b,c)=>
+        ((c.wx-tz.cx)**2+(c.wy-tz.cy)**2)<((b.wx-tz.cx)**2+(b.wy-tz.cy)**2)?c:b);
+
+    const canonical = vtxAstar(fcell.q,fcell.r,tcell.q,tcell.r);
+    const pathD = canonical ? buildVtxPath(canonical,false)
+      : `M${fz.cx.toFixed(1)},${fz.cy.toFixed(1)} L${tz.cx.toFixed(1)},${tz.cy.toFixed(1)}`;
+
+    const rg=connG.append('g').attr('class','route-group')
+      .attr('data-from',conn.from).attr('data-to',conn.to);
+
+    const rGlow=rg.append('path').attr('class','r-glow').attr('d',pathD).attr('fill','none')
+      .attr('stroke',col).attr('stroke-width',10).attr('stroke-opacity',0.025)
+      .attr('pointer-events','none');
+    const rBody=rg.append('path').attr('class','r-body').attr('d',pathD).attr('fill','none')
+      .attr('stroke',col).attr('stroke-width',2).attr('stroke-opacity',0.14)
+      .attr('stroke-linecap','round').attr('stroke-linejoin','round')
+      .attr('pointer-events','none');
+    const fp=rg.append('path').attr('class','r-flow').attr('d',pathD).attr('fill','none')
+      .attr('stroke',col).attr('stroke-width',1.2).attr('stroke-opacity',0.36)
+      .attr('stroke-dasharray','5 22').attr('stroke-linecap','round')
+      .attr('pointer-events','none');
+    const fe=fp.node();
+    if(fe) fe.style.animation=`routeFlow 3s linear ${(-ci*0.42).toFixed(2)}s infinite`;
+
+    const hit=rg.append('path').attr('d',pathD).attr('fill','none')
+      .attr('stroke','transparent').attr('stroke-width',16).attr('cursor','pointer');
+    hit.on('mouseover',()=>{
+      if(activeRouteConn===conn) return;
+      tipLabel.textContent=conn.label||''; tipDesc.textContent=conn.desc||''; connTip.style.display='block';
+    });
+    hit.on('mousemove',ev=>{
+      const rect=canvasEl.getBoundingClientRect();
+      let tx=ev.clientX-rect.left+14,ty=ev.clientY-rect.top-connTip.offsetHeight-8;
+      if(tx+268>rect.width) tx=ev.clientX-rect.left-268;
+      if(ty<0) ty=ev.clientY-rect.top+14;
+      connTip.style.left=tx+'px'; connTip.style.top=ty+'px';
+    });
+    hit.on('mouseout',()=>{ connTip.style.display='none'; });
+    hit.on('click', ev=>{
+      ev.stopPropagation();
+      connTip.style.display='none';
+      if(activeRouteConn===conn){ window._deselectRoute(); return; }
+      if(typeof deselectNode==='function') deselectNode();
+      window._selectRoute(conn, col);
+    });
+
+    builtRoutes.push({conn, rg, col, fp, canonical, layers:[rGlow,rBody,fp,hit]});
+  });
+
+  // ── Route selection ───────────────────────────────────────────────────────
+  let activeRouteConn = null;
+
+  function applyRouteVis(sel) {
+    builtRoutes.forEach(({conn, rg, fp}) => {
+      const on = conn === sel;
+      const dim = sel && !on;
+      rg.select('.r-body').transition().duration(160)
+        .attr('stroke-width', on ? 4.5 : 2)
+        .attr('stroke-opacity', on ? 0.92 : dim ? 0.06 : 0.14);
+      rg.select('.r-glow').transition().duration(160)
+        .attr('stroke-width', on ? 26 : 10)
+        .attr('stroke-opacity', on ? 0.18 : dim ? 0.01 : 0.025);
+      fp.transition().duration(160)
+        .attr('stroke-width', on ? 2.2 : 1.2)
+        .attr('stroke-opacity', on ? 0.98 : dim ? 0.08 : 0.36);
+    });
+  }
+
+  window._selectRoute = function(conn, col) {
+    activeRouteConn = conn;
+    applyRouteVis(conn);
+    const badge = document.getElementById('h-badge');
+    badge.textContent = conn.type.toUpperCase() + ' · ROUTE';
+    badge.style.setProperty('--hz', col);
+    document.getElementById('h-type').textContent = '↔ Connection';
+    document.getElementById('hud-title').textContent = conn.label || '';
+    document.getElementById('hud-desc').textContent = conn.desc || '';
+    document.getElementById('hud-links').innerHTML = '';
+    document.getElementById('hud-links-col').classList.remove('has-links');
+    document.getElementById('atlas-hud').classList.add('open');
+  };
+
+  window._deselectRoute = function() {
+    if (!activeRouteConn) return;
+    activeRouteConn = null;
+    applyRouteVis(null);
+    document.getElementById('atlas-hud').classList.remove('open');
+  };
+
+  // Redraw all routes using current (possibly pushed) hex positions — call after expand/collapse
+  window.updateRoutes=function(){
+    builtRoutes.forEach(({canonical,layers})=>{
+      if (!canonical) return;
+      const newD=buildVtxPath(canonical,true);
+      layers.forEach(p=>p.transition().duration(420).ease(d3.easeCubicInOut).attr('d',newD));
+    });
+  };
+
+  window._hlRoutes=function(zoneId){
+    builtRoutes.forEach(({conn,rg,fp})=>{
+      const on=conn.from===zoneId||conn.to===zoneId;
+      rg.select('.r-body').transition().duration(200).attr('stroke-width',2).attr('stroke-opacity',on?0.52:0.07);
+      rg.select('.r-glow').transition().duration(200).attr('stroke-width',10).attr('stroke-opacity',on?0.09:0.01);
+      fp.transition().duration(200).attr('stroke-width',1.2).attr('stroke-opacity',on?0.80:0.12);
+    });
+  };
+  window._clrRoutes=function(){
+    builtRoutes.forEach(({rg,fp})=>{
+      rg.select('.r-body').transition().duration(250).attr('stroke-width',2).attr('stroke-opacity',0.14);
+      rg.select('.r-glow').transition().duration(250).attr('stroke-width',10).attr('stroke-opacity',0.025);
+      fp.transition().duration(250).attr('stroke-width',1.2).attr('stroke-opacity',0.36);
+    });
+  };
+}
+
+// ── ZONE TERRITORIES ──────────────────────────────────────────────────────────
+const zonesG = g.append('g');
+let activeZone=null, activeNode=null;
+
+ZONE_DEFS.forEach(zone => {
+  const zg = zonesG.append('g').attr('class','az').attr('data-id',zone.id);
+
+  zone.cells.forEach(cell => {
+    const cx=cell.wx, cy=cell.wy;
+    const isTerrain = cell.type==='terrain';
+    const isLM      = cell.type==='landmark';
+
+    if (isTerrain) {
+      zg.append('path').attr('d',hPath(cx,cy,s-2))
+        .attr('fill',zone.color).attr('fill-opacity',0.05)
+        .attr('stroke',zone.color).attr('stroke-width',0.6).attr('stroke-opacity',0.12)
+        .attr('pointer-events','none');
+      return;
+    }
+
+    const cg = zg.append('g').attr('class','az-node-cell')
+      .attr('data-nodeid',cell.nodeId).attr('data-zoneid',zone.id)
+      .attr('data-wx',cell.wx).attr('data-wy',cell.wy);
+
+    // Landmark pulse ring
+    if (isLM) {
+      cg.append('path').attr('d',hPath(cx,cy,s+6))
+        .attr('fill','none').attr('stroke',zone.color)
+        .attr('stroke-width',2.5).attr('stroke-opacity',0.18)
+        .attr('pointer-events','none').attr('filter','url(#n-glow)');
+    }
+
+    // Status: auto-derived from content completeness
+    const isLive     = !!(cell.links && cell.links.length > 0);
+    const isFrontier = !isLM && (!cell.desc || cell.desc.length < 20);
+    const fillOp  = isLM ? 0.18 : isFrontier ? 0.04 : 0.10;
+    const strkOp  = isLM ? 0.78 : isFrontier ? 0.15 : 0.46;
+
+    // Main hex
+    const hexBody = cg.append('path').attr('class','hex-body')
+      .attr('d',hPath(cx,cy,s-1.8))
+      .attr('fill',zone.color).attr('fill-opacity',fillOp)
+      .attr('stroke',zone.color).attr('stroke-width',isLM?2.2:1.2)
+      .attr('stroke-opacity',strkOp)
+      .attr('cursor','pointer');
+    if (!isFrontier) hexBody.attr('filter','url(#hex-glow)');
+
+    // Inner ring (adds visual depth, looks like Foxhole double-border)
+    cg.append('path').attr('d',hPath(cx,cy,s-9))
+      .attr('fill','none').attr('stroke',zone.color)
+      .attr('stroke-width',0.6).attr('stroke-opacity',isLM?0.22:isFrontier?0.10:0.20)
+      .attr('pointer-events','none');
+
+    // Node labels — revealed by LOD
+    const lines = (cell.label||'').split('\n').filter(Boolean);
+    const lbG = cg.append('g').attr('class','az-lbl').attr('opacity',0).attr('pointer-events','none');
+    lines.forEach((ln,li)=>{
+      lbG.append('text')
+        .attr('x',cx).attr('y',cy-2+li*11-(lines.length-1)*5.5)
+        .attr('text-anchor','middle')
+        .attr('font-family',isLM?'Outfit, sans-serif':'DM Sans, sans-serif')
+        .attr('font-size',isLM?'9.5px':'7.5px')
+        .attr('font-weight',isLM?'700':'400')
+        .attr('fill',isLM?'#E2EEF4':'#B8D4C8')
+        .attr('fill-opacity',isLM?0.94:0.80)
+        .text(ln);
+    });
+    if (isLM) {
+      lbG.append('circle').attr('cx',cx).attr('cy',cy+(s-6))
+        .attr('r',2.5).attr('fill',zone.color).attr('fill-opacity',0.70);
+    }
+
+    // Live status dot — always-on indicator for nodes with connected tools/content
+    if (isLive && !isLM) {
+      cg.append('circle').attr('class','status-dot')
+        .attr('cx', cx).attr('cy', cy + (s-6))
+        .attr('r', 2.4).attr('fill', zone.color).attr('fill-opacity', 0.72)
+        .attr('pointer-events','none');
+    }
+
+    hexBody.on('click', ev=>{ev.stopPropagation(); selectNode(zone,cell);});
+    hexBody.on('dblclick', ev=>{ev.stopPropagation(); selectNode(zone,cell); zoomToCell(cell);});
+    hexBody.on('mouseenter', function(){ d3.select(this).attr('fill-opacity',isLM?0.32:0.20).attr('stroke-opacity',isLM?0.95:0.65); });
+    hexBody.on('mouseleave', function(){
+      if (!activeNode||activeNode.nodeId!==cell.nodeId)
+        d3.select(this).attr('fill-opacity',fillOp).attr('stroke-opacity',strkOp);
+    });
+  });
+
+  // ── ZONE NAME — Foxhole-style: large, clean, no pill box, fades out on zoom-in
+  const nlG = zg.append('g').attr('class','az-zone-label').attr('pointer-events','none')
+    .attr('data-cx',zone.cx).attr('data-cy',zone.topY - 16).attr('data-zoneid',zone.id);
+
+  // Anchor just above the zone's northernmost hex — keeps MedSci label above the hub
+  const labelY = zone.topY - 16;
+  nlG.append('text')
+    .attr('x',zone.cx).attr('y',labelY)
+    .attr('text-anchor','middle')
+    .attr('font-family','Outfit, sans-serif')
+    .attr('font-size','18px').attr('font-weight','900')
+    .attr('letter-spacing','0.05em')
+    .attr('fill',zone.color).attr('fill-opacity',0.92)
+    .attr('filter','url(#txt-shadow)')
+    .text(zone.displayLabel.toUpperCase());
+
+  // Thin underline rule below zone name
+  const tw = zone.displayLabel.length * 9;   // rough char-width estimate
+  nlG.append('line')
+    .attr('x1',zone.cx-tw/2).attr('y1',labelY+5)
+    .attr('x2',zone.cx+tw/2).attr('y2',labelY+5)
+    .attr('stroke',zone.color).attr('stroke-width',0.8).attr('stroke-opacity',0.35);
+});
+
+// ── HUB CENTER MARKER ─────────────────────────────────────────────────────────
+// Prominent focal point at the geographic center. Rendered last → always on top.
+// Clicking it resets to overview. Visually tells you "this is the center of everything."
+const hubG = g.append('g').attr('id','hub-center');
+
+// Moat ring: blank opaque tiles at ring-1 positions create a visible buffer
+// between the hub and all zone territories. Zone cells underneath are covered.
+[[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]].forEach(([dq,dr]) => {
+  const [bx,by] = hPx(dq, dr);
+  hubG.append('path').attr('d', hPath(bx, by, s+1.5))
+    .attr('class','hub-moat-tile')
+    .attr('fill','#06100a').attr('fill-opacity',0.90)
+    .attr('pointer-events','none');
+  hubG.append('path').attr('d', hPath(bx, by, s-1.5))
+    .attr('class','hub-moat-border')
+    .attr('fill','none')
+    .attr('stroke','#4ECDC4').attr('stroke-width',0.8).attr('stroke-opacity',0.25)
+    .attr('stroke-dasharray','4 6')
+    .attr('pointer-events','none');
+});
+
+// Outer glow rings (concentric, purely decorative)
+[s+24, s+15].forEach((r,i) => {
+  hubG.append('path').attr('d',hPath(OX,OY,r))
+    .attr('class','hub-glow-ring')
+    .attr('fill','none').attr('stroke','#4ECDC4')
+    .attr('stroke-width',1.0).attr('stroke-opacity',i===0?0.10:0.18)
+    .attr('pointer-events','none');
+});
+
+// Hub body hex
+const hubBody = hubG.append('path').attr('d',hPath(OX,OY,s+9))
+  .attr('id','hub-body')
+  .attr('fill', hubFill()).attr('stroke', hubStroke())
+  .attr('stroke-width',2.5).attr('stroke-opacity',0.88)
+  .attr('filter','url(#hub-glow)').attr('cursor','pointer');
+
+// Hub fill (subtle tint)
+hubG.append('path').attr('d',hPath(OX,OY,s+7))
+  .attr('class','hub-tint')
+  .attr('fill','#4ECDC4').attr('fill-opacity',0.10)
+  .attr('pointer-events','none');
+
+// Hub labels (always visible at all zoom levels)
+const htG = hubG.append('g').attr('pointer-events','none');
+htG.append('text').attr('x',OX).attr('y',OY-10)
+  .attr('class','hub-label-text')
+  .attr('text-anchor','middle').attr('font-family','Outfit, sans-serif')
+  .attr('font-size','13px').attr('font-weight','900').attr('letter-spacing','0.16em')
+  .attr('fill','#4ECDC4').attr('fill-opacity',0.95)
+  .attr('filter','url(#txt-shadow)').text('HU');
+htG.append('text').attr('x',OX).attr('y',OY+5)
+  .attr('class','hub-label-text')
+  .attr('text-anchor','middle').attr('font-family','IBM Plex Mono, monospace')
+  .attr('font-size','6.5px').attr('font-weight','500').attr('letter-spacing','0.18em')
+  .attr('fill','#4ECDC4').attr('fill-opacity',0.62).text('ATLAS');
+
+// Hub interactivity
+hubBody.on('click', ev=>{ev.stopPropagation(); deselectNode(); resetView();});
+hubBody.on('mouseenter', function(){ d3.select(this).attr('stroke-opacity',1).attr('fill','#4ECDC4'); });
+hubBody.on('mouseleave', function(){ d3.select(this).attr('stroke-opacity',0.85).attr('fill', hubFill()).attr('stroke', hubStroke()); });
+
+// Lift zone name labels above hub moat so adjacent zones (Public Health, etc.) aren't obscured
+d3.selectAll('.az-zone-label').each(function(){ g.node().appendChild(this); });
+
+// Routes must render above moat tiles (hub-center drawn before this point).
+// Expansion overlays are created next, so they stay on top of routes.
+d3.select('#conn-g').raise();
+
+// ── LANDMARK EXPANSION OVERLAYS ──────────────────────────────────────────────
+// Build overlay SVGs for all registered landmarks. Must run after zone cells rendered.
+[EXPAND_PATHOPHYS, EXPAND_INFORMATICS, EXPAND_MEDICARE, EXPAND_ACCESS, EXPAND_POP_HEALTH, EXPAND_FED_LAW, EXPAND_SCOPE].forEach(initExpansion);
+
+// ── EXPAND INDICATORS ────────────────────────────────────────────────────────
+// After overlays are built, inject 4-chevron expand arrows into every expandable landmark hex.
+// Arrows point outward (N/S/E/W), rounded ends, zone-colored. Dim when expanded.
+(function addExpandIndicators() {
+  Object.keys(EXPANSION_REGISTRY).forEach(nodeId => {
+    d3.selectAll(`.az-node-cell[data-nodeid="${nodeId}"]`).each(function() {
+      const cg  = d3.select(this);
+      const zid = cg.attr('data-zoneid');
+      const z   = ZONE_DEFS.find(z => z.id === zid);
+      const col = z ? z.color : '#fff';
+
+      const wx = +cg.attr('data-wx');
+      const wy = +cg.attr('data-wy');
+
+      const ig = cg.append('g')
+        .attr('class', 'expand-indicator')
+        .attr('pointer-events', 'none')
+        .attr('transform', `translate(${wx},${wy + 18})`);
+
+      // 4 outward-pointing rounded chevrons
+      [
+        [[-2.5,-2.5],[0,-6.5],[2.5,-2.5]],   // N
+        [[-2.5, 2.5],[0, 6.5],[2.5, 2.5]],   // S
+        [[ 2.5,-2.5],[6.5, 0],[ 2.5, 2.5]],  // E
+        [[-2.5,-2.5],[-6.5,0],[-2.5, 2.5]],  // W
+      ].forEach(pts => {
+        ig.append('polyline')
+          .attr('points', pts.map(p=>p.join(',')).join(' '))
+          .attr('fill', 'none')
+          .attr('stroke', col)
+          .attr('stroke-width', 1.6)
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-linejoin', 'round')
+          .attr('opacity', 0.55);
+      });
+    });
+  });
+})();
+
+// Toggle indicator opacity when expansion state changes
+function updateExpandIndicator(nodeId) {
+  const on = expandedSet.has(nodeId);
+  d3.selectAll(`.az-node-cell[data-nodeid="${nodeId}"] .expand-indicator`)
+    .transition().duration(200)
+    .attr('opacity', on ? 0.2 : 1.0);
+}
+
+// ── LOD ───────────────────────────────────────────────────────────────────────
+// Two LOD tiers: zone names fade OUT as you zoom in; node labels fade IN.
+// zoneLabelsOn flag lets the toolbar filter override LOD visibility.
+let zoneLabelsOn = true;
+let routesOn = true;
+function updateLOD(k) {
+  // Zone names: overview only, fade out as you zoom in
+  const zoneNameOp = zoneLabelsOn ? (k < 0.75 ? 1.0 : k < 1.5 ? 1-(k-0.75)/0.75 : 0) : 0;
+  d3.selectAll('.az-zone-label').transition().duration(160).attr('opacity', zoneNameOp);
+  // Connection routes: invisible at full overview, reveal at medium zoom — toggleable
+  const connOp = routesOn ? (k < 0.50 ? 0 : k < 0.78 ? (k-0.50)/0.28 : 1) : 0;
+  d3.select('#conn-g').transition().duration(140).attr('opacity', connOp);
+  // Node labels: only when zoomed into a territory
+  const nodeLabelOp = k >= 0.90 ? Math.min(1,(k-0.90)/0.45) : 0;
+  d3.selectAll('.az-lbl').transition().duration(110).attr('opacity', nodeLabelOp);
+  hideHint();
+}
+
+// ── ZOOM ──────────────────────────────────────────────────────────────────────
+const zoom = d3.zoom().scaleExtent([0.28, 4.5])
+  .on('zoom', ev => { g.attr('transform',ev.transform); updateLOD(ev.transform.k); });
+svg.call(zoom).on('dblclick.zoom', null);
+svg.on('click', ev=>{ if(ev.target===svgEl) deselectNode(); });
+
+function getInitT() {
+  const vw=svgEl.clientWidth||1300, vh=svgEl.clientHeight||720;
+  // Zones pulled inward to border the ring-1 moat. Map spans ~x:750–1516, y:490–1370.
+  const mapCX=1150, mapCY=950, mapW=1060, mapH=1020;
+  const k = Math.min((vw-80)/mapW, (vh-80)/mapH, 0.70);
+  return d3.zoomIdentity.translate(vw/2-mapCX*k, vh/2-mapCY*k).scale(k);
+}
+
+function zoomToZone(zone) {
+  const vw=svgEl.clientWidth||1300, vh=svgEl.clientHeight||720;
+  const nc=zone.cells.filter(c=>c.type!=='terrain');
+  const xs=nc.map(c=>c.wx), ys=nc.map(c=>c.wy), pad=s*3;
+  const zCX=(Math.min(...xs)+Math.max(...xs))/2, zCY=(Math.min(...ys)+Math.max(...ys))/2;
+  const zW=Math.max(...xs)-Math.min(...xs)+pad*2, zH=Math.max(...ys)-Math.min(...ys)+pad*2;
+  const k=Math.min((vw-60)/zW,(vh-60)/zH,2.6);
+  activeZone=zone; updateBC(zone,null);
+  svg.transition().duration(680).ease(d3.easeCubicInOut)
+    .call(zoom.transform,d3.zoomIdentity.translate(vw/2-zCX*k,vh/2-zCY*k).scale(k));
+}
+
+function zoomToCell(cell) {
+  const vw=svgEl.clientWidth||1300, vh=svgEl.clientHeight||720;
+  // Offset center upward by half the HUD height so the hex lands above the HUD
+  const hudEl=document.getElementById('atlas-hud');
+  const hudH=hudEl.classList.contains('open') ? hudEl.offsetHeight : 0;
+  const cx=vw/2, cy=(vh-hudH)/2;
+  const k=2.2;
+  svg.transition().duration(480).ease(d3.easeCubicInOut)
+    .call(zoom.transform,d3.zoomIdentity.translate(cx-cell.wx*k, cy-cell.wy*k).scale(k));
+}
+
+function resetView() {
+  activeZone=null; activeNode=null;
+  updateHash(null, null);
+  closeHud(); updateBC(null,null);
+  svg.transition().duration(560).ease(d3.easeCubicInOut).call(zoom.transform,getInitT());
+}
+
+// ── BREADCRUMB ────────────────────────────────────────────────────────────────
+function updateBC(zone,node) {
+  const bc=document.getElementById('atlas-bc');
+  let h='<span class="abc-item" id="bc-ov">Overview</span>';
+  if (zone) h+=`<span class="abc-sep">›</span><span class="abc-item${!node?' active':''}" id="bc-z" style="color:${zone.color}">${zone.label}</span>`;
+  if (node) h+=`<span class="abc-sep">›</span><span class="abc-item active">${(node.label||'').replace('\n',' ')}</span>`;
+  if (!zone) h=h.replace('class="abc-item"','class="abc-item active"');
+  bc.innerHTML=h;
+  document.getElementById('bc-ov').addEventListener('click',resetView);
+  const bz=document.getElementById('bc-z');
+  if (bz&&zone) bz.addEventListener('click',()=>zoomToZone(zone));
+}
+
+// ── URL HASH STATE ────────────────────────────────────────────────────────────
+function updateHash(zone, cell) {
+  const h = cell ? `#${zone.id}/${cell.nodeId}` : zone ? `#${zone.id}` : '';
+  history.replaceState(null, '', location.pathname + location.search + h);
+}
+
+function applyHash() {
+  const raw = location.hash.replace('#','');
+  if (!raw) return;
+  const [zid, nid] = raw.split('/');
+  const zone = ZONE_DEFS.find(z => z.id === zid);
+  if (!zone) return;
+  if (nid) {
+    const cell = zone.cells.find(c => c.nodeId === nid);
+    if (cell) { selectNode(zone, cell); zoomToCell(cell); return; }
+  }
+  zoomToZone(zone);
+}
+
+window.addEventListener('hashchange', () => {
+  const raw = location.hash.replace('#','');
+  if (!raw) { resetView(); return; }
+  applyHash();
+});
+
+// ── BOTTOM HUD ────────────────────────────────────────────────────────────────
+function selectNode(zone,cell) {
+  activeNode=cell; activeZone=zone;
+  if (typeof window._deselectRoute === 'function') window._deselectRoute();
+  updateHash(zone, cell);
+  updateBC(zone,cell);
+
+  const badge=document.getElementById('h-badge');
+  badge.textContent=zone.abbr+' · '+zone.label;
+  badge.style.setProperty('--hz',zone.color);
+  document.getElementById('h-type').textContent=cell.type==='landmark'?'★ Landmark':'◆ Node';
+  document.getElementById('hud-title').textContent=(cell.label||'').replace('\n',' ');
+  document.getElementById('hud-desc').textContent=cell.desc||'';
+
+  const linksEl=document.getElementById('hud-links');
+  const linksCol=document.getElementById('hud-links-col');
+  linksEl.innerHTML='';
+  const links=cell.links||[];
+  linksCol.classList.toggle('has-links', links.length>0);
+  links.forEach(lk=>{
+    const a=document.createElement('a');
+    a.className='hud-link'; a.href=lk.url;
+    a.innerHTML=`<span>${lk.icon}</span><span>${lk.label}</span>`;
+    linksEl.appendChild(a);
+  });
+  document.getElementById('atlas-hud').classList.add('open');
+
+  d3.selectAll('.az-node-cell').each(function(){
+    const el=d3.select(this), nid=el.attr('data-nodeid'), zid=el.attr('data-zoneid');
+    const on=nid===cell.nodeId&&zid===zone.id;
+    const z2=ZONE_DEFS.find(z=>z.id===zid), c2=z2&&z2.cells.find(c=>c.nodeId===nid);
+    const op=getCellBaseOpacity(c2);
+    el.select('.hex-body')
+      .attr('fill-opacity',on?0.38:op.fill)
+      .attr('stroke-opacity',on?1.0:op.strk)
+      .attr('filter',on?'url(#n-glow)':null);
+  });
+
+  // Toggle landmark expansion — any registered landmark expands on click, collapses on re-click
+  if (cell.type === 'landmark' && EXPANSION_REGISTRY[cell.nodeId]) {
+    if (expandedSet.has(cell.nodeId)) collapseExpansion(cell.nodeId);
+    else expandExpansion(cell.nodeId);
+  }
+  if (typeof window._hlRoutes === 'function') window._hlRoutes(zone.id);
+}
+
+function getCellBaseOpacity(c2) {
+  const lm = c2&&c2.type==='landmark';
+  const terrain = c2&&c2.type==='terrain';
+  const frontier = !lm && !terrain && (!c2||!c2.desc||c2.desc.length<20);
+  return { fill: lm?0.18:terrain?0.14:frontier?0.07:0.10, strk: lm?0.78:terrain?0.52:frontier?0.22:0.46 };
+}
+
+function deselectNode() {
+  if (!activeNode) return;
+  activeNode=null; closeHud(); updateBC(activeZone,null);
+  d3.selectAll('.az-node-cell').each(function(){
+    const el=d3.select(this), zid=el.attr('data-zoneid'), nid=el.attr('data-nodeid');
+    const z2=ZONE_DEFS.find(z=>z.id===zid), c2=z2&&z2.cells.find(c=>c.nodeId===nid);
+    const op=getCellBaseOpacity(c2);
+    el.select('.hex-body').attr('fill-opacity',op.fill).attr('stroke-opacity',op.strk).attr('filter',null);
+  });
+  if (typeof window._clrRoutes === 'function') window._clrRoutes();
+  if (typeof window._deselectRoute === 'function') window._deselectRoute();
+}
+
+function closeHud() { document.getElementById('atlas-hud').classList.remove('open'); }
+
+// ── CONTROLS ──────────────────────────────────────────────────────────────────
+document.getElementById('a-rst').addEventListener('click',resetView);
+document.getElementById('a-zi').addEventListener('click',()=>svg.transition().duration(230).call(zoom.scaleBy,1.45));
+document.getElementById('a-zo').addEventListener('click',()=>svg.transition().duration(230).call(zoom.scaleBy,0.69));
+document.getElementById('hud-close').addEventListener('click',deselectNode);
+
+document.getElementById('a-help').addEventListener('click', () => {
+  document.getElementById('atlas-help').classList.toggle('open');
+});
+document.getElementById('help-close').addEventListener('click', () => {
+  document.getElementById('atlas-help').classList.remove('open');
+});
+
+// ── HINT ──────────────────────────────────────────────────────────────────────
+let hintGone=false;
+function hideHint(){
+  if (hintGone) return; hintGone=true;
+  const el=document.getElementById('atlas-hint');
+  if (el){el.style.opacity='0'; setTimeout(()=>el.remove(),400);}
+}
+svg.on('wheel.hint',hideHint);
+
+// ── HUD RESIZE ────────────────────────────────────────────────────────────────
+{
+  const hudEl = document.getElementById('atlas-hud');
+  const grip  = document.getElementById('hud-grip');
+  const MIN_H = 64, MAX_H = 420;
+
+  function startResize(e) {
+    e.preventDefault(); e.stopPropagation();
+    const isTouch = !!e.touches;
+    const startY  = isTouch ? e.touches[0].clientY : e.clientY;
+    const startH  = hudEl.offsetHeight;
+
+    function onMove(ev) {
+      const y = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const newH = Math.max(MIN_H, Math.min(MAX_H, startH + (startY - y)));
+      hudEl.style.height = newH + 'px';
+    }
+    function onEnd() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onEnd);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend',  onEnd);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onEnd);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend',  onEnd);
+  }
+
+  grip.addEventListener('mousedown',  startResize);
+  grip.addEventListener('touchstart', startResize, {passive:false});
+}
+
+// ── FILTERS ───────────────────────────────────────────────────────────────────
+document.getElementById('af-labels').addEventListener('click', function(){
+  zoneLabelsOn = !zoneLabelsOn;
+  this.classList.toggle('on', zoneLabelsOn);
+  updateLOD(d3.zoomTransform(svgEl).k);
+});
+
+document.getElementById('af-routes').addEventListener('click', function(){
+  routesOn = !routesOn;
+  this.classList.toggle('on', routesOn);
+  updateLOD(d3.zoomTransform(svgEl).k);
+});
+
+let toolNodesOn = false;
+document.getElementById('af-tools').addEventListener('click', function(){
+  toolNodesOn = !toolNodesOn;
+  this.classList.toggle('on', toolNodesOn);
+  d3.selectAll('.az-node-cell').each(function(){
+    const el=d3.select(this), zid=el.attr('data-zoneid'), nid=el.attr('data-nodeid');
+    const z2=ZONE_DEFS.find(z=>z.id===zid), c2=z2&&z2.cells.find(c=>c.nodeId===nid);
+    const isLM=c2&&c2.type==='landmark';
+    const hasLinks=c2&&c2.links&&c2.links.length>0;
+    if (toolNodesOn) {
+      if (hasLinks) el.select('.hex-body').attr('fill-opacity',isLM?0.38:0.26).attr('stroke-opacity',isLM?0.95:0.72);
+      else el.select('.hex-body').attr('fill-opacity',0.02).attr('stroke-opacity',0.08);
+    } else {
+      el.select('.hex-body').attr('fill-opacity',isLM?0.18:0.08).attr('stroke-opacity',isLM?0.78:0.32);
+    }
+  });
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  const t=getInitT();
+  svg.call(zoom.transform,t);
+  updateLOD(t.k);
+  // Apply deep link if URL has a hash on load
+  if (location.hash) setTimeout(applyHash, 80);
+}));
+
+}());
+</script>

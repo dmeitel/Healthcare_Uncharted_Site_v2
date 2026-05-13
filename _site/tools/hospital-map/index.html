@@ -45,7 +45,7 @@
     <a class="nav-link " href="/learn/">Learn</a>
     <a class="nav-link " href="/rounds/">Rounds</a>
     <a class="nav-link " href="/about/">About</a>
-    <a class="nav-pill" href="/lab/">Map &rarr;</a>
+    <a class="nav-pill" href="/atlas/">Atlas &rarr;</a>
     <button class="nav-theme-btn" id="themeToggle" aria-label="Toggle light / dark mode" title="Toggle light / dark mode">☀</button>
   </div>
   <button class="nav-ham" id="navHam" aria-label="Menu">&#9776;</button>
@@ -2913,7 +2913,7 @@ document.addEventListener('mousemove', e => {
 // ── Pinch / pan on mobile ──────────────────────────────────
 function makePinchZoom(outer, inner, minS, maxS, autoCenter) {
   let ox = 0, oy = 0, s = 1;
-  let initOx = 0, initOy = 0;
+  let initOx = 0, initOy = 0, initS = 1;
   let t0 = null;
   let p0mx = 0, p0my = 0, p0ox = 0, p0oy = 0, p0s = 1;
   const THRESH = 6;
@@ -2924,17 +2924,24 @@ function makePinchZoom(outer, inner, minS, maxS, autoCenter) {
 
   function apply() {
     inner.style.transform = `translate(${ox}px,${oy}px) scale(${s})`;
-    const atInit = Math.abs(s - 1) < 0.02 && Math.abs(ox - initOx) < 2 && Math.abs(oy - initOy) < 2;
+    const atInit = Math.abs(s - initS) < 0.02 && Math.abs(ox - initOx) < 2 && Math.abs(oy - initOy) < 2;
     if (resetBtn) resetBtn.style.display = atInit ? 'none' : 'flex';
   }
 
   if (autoCenter) {
-    requestAnimationFrame(() => {
-      initOx = Math.min(0, (outer.clientWidth  - inner.offsetWidth)  / 2);
-      initOy = Math.min(0, (outer.clientHeight - inner.offsetHeight) / 2);
-      ox = initOx; oy = initOy;
+    // Double-RAF: first frame commits layout, second reads settled dimensions
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const cw = inner.offsetWidth;
+      const ow = outer.clientWidth;
+      if (!cw || !ow) return;
+      // Scale to fit the full building width into the viewport
+      initS = Math.max(minS, Math.min(1, ow / cw));
+      // Center horizontally at the chosen scale; start from the top vertically
+      initOx = (ow - cw * initS) / 2;
+      initOy = 0;
+      s = initS; ox = initOx; oy = initOy;
       apply();
-    });
+    }));
   }
 
   function mid(e) {
@@ -2990,7 +2997,7 @@ function makePinchZoom(outer, inner, minS, maxS, autoCenter) {
   outer.addEventListener('touchend',    () => { t0 = null; });
   outer.addEventListener('touchcancel', () => { t0 = null; });
 
-  if (resetBtn) resetBtn.addEventListener('click', () => { ox = initOx; oy = initOy; s = 1; apply(); });
+  if (resetBtn) resetBtn.addEventListener('click', () => { ox = initOx; oy = initOy; s = initS; apply(); });
 
   if (hint && window.innerWidth <= 1024) {
     hint.style.display = 'flex';
