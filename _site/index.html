@@ -308,8 +308,8 @@
         <div class="eyebrow-line"></div>
         <span>Mapping the system behind modern healthcare.</span>
       </div>
-      <h1>See Every<br>Connection.<br><strong>Chart the System.</strong></h1>
-      <p class="hero-v3-desc">Healthcare is a web of clinical, operational, financial, and technical dependencies. This is the system map. Built for people who need to see more than their own slice.</p>
+      <h1>Healthcare Doesn't<br><strong>Come With a Map.</strong></h1>
+      <p class="hero-v3-desc">So we drew one. Every clinical, operational, financial, and technical connection, in one system map. Built for people who need to see past their own slice.</p>
       <div class="hero-v3-btns">
         <a class="btn-primary" href="/atlas/">Explore the Atlas</a><a class="hero-v3-ghost" href="/learn/">Explore Articles</a>
       </div>
@@ -327,10 +327,6 @@
       <div class="hero-v3-status-row">
         <span class="hero-v3-status-text">Conference Talks</span>
         <span class="hero-v3-status-num">2</span>
-      </div>
-      <div class="hero-v3-status-row">
-        <span class="hero-v3-status-text">Status</span>
-        <span class="hero-v3-status-num">Live</span>
       </div>
     </div>
   </div>
@@ -900,90 +896,287 @@ const SEARCH_DATA = [
   if (nextBtn) nextBtn.addEventListener('click', () => goTo(current + 1));
 })();
 
-// ── NODE NETWORK CANVAS ──────────────────────────────────
+// ── HEX GRID BACKDROP ────────────────────────────────────
+// A faint honeycomb behind the hero, the grid the Atlas is built from.
+// A compass rose sits at the centre, like the Atlas hub. Each page load draws
+// two routes that walk the hex borders between random hexes. Static after
+// that: redraws only on resize and theme change.
 (function () {
   const cv = document.getElementById('hu-network-bg');
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  let nodes = [];
-  let raf;
+  let W = 0, H = 0;
 
-  function isDarkMode() {
-    return document.documentElement.getAttribute('data-theme') !== 'light';
-  }
+  const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
 
-  function resize() {
-    cv.width = cv.offsetWidth;
-    cv.height = cv.offsetHeight;
-    initNodes();
-  }
+  // Route endpoints in fractional coords, rolled once per page load so fresh
+  // routes draw every refresh. One crosses left-to-right, one top-to-bottom.
+  const routes = [
+    { a: [0.08 + Math.random() * 0.30, 0.14 + Math.random() * 0.46],
+      b: [0.62 + Math.random() * 0.30, 0.14 + Math.random() * 0.46] },
+    { a: [0.14 + Math.random() * 0.72, 0.05 + Math.random() * 0.18],
+      b: [0.14 + Math.random() * 0.72, 0.74 + Math.random() * 0.20] }
+  ];
 
-  function initNodes() {
-    nodes = [];
-    for (let i = 0; i < 38; i++) {
-      nodes.push({
-        x: Math.random() * cv.width,
-        y: Math.random() * cv.height,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: (Math.random() - 0.5) * 0.35,
-        r: Math.random() * 2 + 1.5
-      });
+  // Scattered lit hexes: accent nodes in random Atlas zone colors, rolled
+  // fresh each page load. They sit clear of the central compass.
+  const ATLAS_COLORS = ['#FF6B6B','#6aabff','#4ECDC4','#5DBF87','#0EA5E9','#8B5CF6','#E8A838'];
+  const hexToRgb = h =>
+    [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)].join(',');
+  const litHexes = (() => {
+    const n = 4 + Math.floor(Math.random() * 5);            // 4 to 8
+    const out = [];
+    let guard = 0;
+    while (out.length < n && guard++ < 200) {
+      const fx = 0.04 + Math.random() * 0.92;
+      const fy = 0.05 + Math.random() * 0.90;
+      if (Math.abs(fx - 0.5) < 0.11 && Math.abs(fy - 0.5) < 0.26) continue;   // clear the compass
+      out.push({ a: [fx, fy], rgb: hexToRgb(ATLAS_COLORS[(Math.random() * ATLAS_COLORS.length) | 0]) });
     }
+    return out;
+  })();
+
+  function hex(cx, cy, s) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (-90 + 60 * i) * Math.PI / 180;
+      const px = cx + s * Math.cos(a), py = cy + s * Math.sin(a);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.closePath();
   }
 
-  function draw() {
-    const dark = isDarkMode();
-    const bg        = dark ? '#001117' : '#EEF2F7';
-    const nodeColor = dark ? 'rgba(78,205,196,0.22)' : 'rgba(15,118,110,0.22)';
-    const lineColor = dark ? 'rgba(78,205,196,0.07)' : 'rgba(15,118,110,0.08)';
+  // Nearest hex centre to a pixel point, in the pointy-top offset grid.
+  function snap(x, y, colW, rowH) {
+    const row = Math.round(y / rowH);
+    const offset = (row % 2) ? colW / 2 : 0;
+    const col = Math.round((x - offset) / colW);
+    return [col * colW + offset, row * rowH];
+  }
 
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, cv.width, cv.height);
-
-    nodes.forEach(n => {
-      n.x += n.vx; n.y += n.vy;
-      if (n.x < 0 || n.x > cv.width)  n.vx *= -1;
-      if (n.y < 0 || n.y > cv.height) n.vy *= -1;
-    });
-
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dx = nodes[i].x - nodes[j].x;
-        const dy = nodes[i].y - nodes[j].y;
-        const d  = Math.sqrt(dx * dx + dy * dy);
-        if (d < 115) {
-          ctx.beginPath();
-          ctx.strokeStyle = lineColor;
-          ctx.lineWidth = 0.75;
-          ctx.moveTo(nodes[i].x, nodes[i].y);
-          ctx.lineTo(nodes[j].x, nodes[j].y);
-          ctx.stroke();
+  // Vertex graph of the visible honeycomb: every hex corner is a node, every
+  // hex edge a link. Routes walk this graph, so they follow tile borders.
+  function buildGrid(s, colW, rowH) {
+    const verts = new Map();          // key -> {x, y}
+    const adj   = new Map();          // key -> Set(neighbour keys)
+    const key = (x, y) => Math.round(x) + ',' + Math.round(y);
+    const addVert = (x, y) => {
+      const k = key(x, y);
+      if (!verts.has(k)) { verts.set(k, { x, y }); adj.set(k, new Set()); }
+      return k;
+    };
+    for (let row = 0; row * rowH <= H + s; row++) {
+      const cy = row * rowH;
+      const offset = (row % 2) ? colW / 2 : 0;
+      for (let cx = -colW; cx <= W + colW; cx += colW) {
+        const corners = [];
+        for (let i = 0; i < 6; i++) {
+          const a = (-90 + 60 * i) * Math.PI / 180;
+          corners.push(addVert(cx + offset + s * Math.cos(a), cy + s * Math.sin(a)));
+        }
+        for (let i = 0; i < 6; i++) {
+          const u = corners[i], v = corners[(i + 1) % 6];
+          adj.get(u).add(v); adj.get(v).add(u);
         }
       }
     }
+    return { verts, adj, key };
+  }
 
-    nodes.forEach(n => {
+  // Corner of the hex at centre c that sits closest to the point `toward`.
+  function nearestCorner(c, toward, s, grid) {
+    let best = null, bestD = Infinity;
+    for (let i = 0; i < 6; i++) {
+      const a = (-90 + 60 * i) * Math.PI / 180;
+      const x = c[0] + s * Math.cos(a), y = c[1] + s * Math.sin(a);
+      const k = grid.key(x, y);
+      if (!grid.verts.has(k)) continue;
+      const d = Math.hypot(x - toward[0], y - toward[1]);
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    return best;
+  }
+
+  // A* across the vertex graph: the shortest border-following path of edges.
+  function astar(grid, startK, goalK) {
+    if (!startK || !goalK) return null;
+    if (startK === goalK) return [startK];
+    const { verts, adj } = grid;
+    const goal = verts.get(goalK);
+    const h = k => { const p = verts.get(k); return Math.hypot(p.x - goal.x, p.y - goal.y); };
+    const g = new Map([[startK, 0]]);
+    const f = new Map([[startK, h(startK)]]);
+    const came = new Map();
+    const open = new Set([startK]);
+    while (open.size) {
+      let cur = null, curF = Infinity;
+      for (const k of open) { if (f.get(k) < curF) { curF = f.get(k); cur = k; } }
+      if (cur === goalK) {
+        const path = [cur];
+        while (came.has(path[0])) path.unshift(came.get(path[0]));
+        return path;
+      }
+      open.delete(cur);
+      const cp = verts.get(cur);
+      for (const nb of adj.get(cur)) {
+        const np = verts.get(nb);
+        const t = g.get(cur) + Math.hypot(cp.x - np.x, cp.y - np.y);
+        if (t < (g.get(nb) ?? Infinity)) {
+          came.set(nb, cur);
+          g.set(nb, t);
+          f.set(nb, t + h(nb));
+          open.add(nb);
+        }
+      }
+    }
+    return null;
+  }
+
+  // One route across the board, walking hex borders from origin hex to target
+  // hex, with glowing origin and destination hexes. Endpoints snap to the grid.
+  function drawRoute(route, grid, teal, s, colW, rowH) {
+    const ca = snap(route.a[0] * W, route.a[1] * H, colW, rowH);
+    const cb = snap(route.b[0] * W, route.b[1] * H, colW, rowH);
+    const path = astar(grid, nearestCorner(ca, cb, s, grid), nearestCorner(cb, ca, s, grid));
+
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.shadowColor = `rgba(${teal},0.5)`;
+    ctx.shadowBlur = 9;
+
+    if (path && path.length > 1) {
+      ctx.strokeStyle = `rgba(${teal},0.42)`;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-      ctx.fillStyle = nodeColor;
-      ctx.fill();
-    });
+      path.forEach((k, i) => {
+        const p = grid.verts.get(k);
+        i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
+      });
+      ctx.stroke();
+    }
 
-    raf = requestAnimationFrame(draw);
+    [ca, cb].forEach(c => {
+      hex(c[0], c[1], s - 1);
+      ctx.fillStyle = `rgba(${teal},0.16)`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(${teal},0.78)`;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  // One scattered lit hex: an accent node drawn in an Atlas zone color.
+  function drawLitHex(lit, s, colW, rowH) {
+    const c = snap(lit.a[0] * W, lit.a[1] * H, colW, rowH);
+    const rgb = lit.rgb;
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = `rgba(${rgb},0.6)`;
+    ctx.shadowBlur = 12;
+    hex(c[0], c[1], s - 1);
+    ctx.fillStyle = `rgba(${rgb},0.20)`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${rgb},0.85)`;
+    ctx.lineWidth = 1.7;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Compass rose at the centre, the hero's answer to the Atlas hub hex.
+  function drawCompass(cx, cy, teal, bg) {
+    const hubR = 88, longL = 64, shortL = 37, baseR = 13, dW = 11 * Math.PI / 180;
+    ctx.save();
+    hex(cx, cy, hubR);                       // hub hex masks the grid + route behind it
+    ctx.fillStyle = bg;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${teal},0.5)`;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, hubR * 0.6, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${teal},0.18)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.shadowColor = `rgba(${teal},0.55)`;
+    ctx.shadowBlur = 12;
+    for (let i = 0; i < 8; i++) {             // 8 spikes, cardinals long, diagonals short
+      const ang = -Math.PI / 2 + i * Math.PI / 4;
+      const cardinal = (i % 2 === 0);
+      const L = cardinal ? longL : shortL;
+      ctx.beginPath();
+      ctx.moveTo(cx + L * Math.cos(ang), cy + L * Math.sin(ang));
+      ctx.lineTo(cx + baseR * Math.cos(ang + dW), cy + baseR * Math.sin(ang + dW));
+      ctx.lineTo(cx + baseR * Math.cos(ang - dW), cy + baseR * Math.sin(ang - dW));
+      ctx.closePath();
+      ctx.fillStyle = cardinal ? `rgba(${teal},0.5)` : `rgba(${teal},0.26)`;
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.6, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${teal},0.85)`;
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.font = '600 11px "IBM Plex Mono", monospace';
+    ctx.fillStyle = `rgba(${teal},0.62)`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lr = longL + 13;
+    ctx.fillText('N', cx, cy - lr);
+    ctx.fillText('S', cx, cy + lr);
+    ctx.fillText('E', cx + lr, cy);
+    ctx.fillText('W', cx - lr, cy);
+    ctx.restore();
+  }
+
+  function draw() {
+    const dark = isDark();
+    const bg   = dark ? '#001117' : '#EEF2F7';
+    const teal = dark ? '78,205,196' : '15,118,110';
+    const s = 34, colW = Math.sqrt(3) * s, rowH = 1.5 * s;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.lineWidth = 1;
+
+    // Tessellated hex outlines, fading from the top down toward the headline.
+    for (let row = 0; row * rowH <= H + s; row++) {
+      const cy = row * rowH;
+      const offset = (row % 2) ? colW / 2 : 0;
+      const f = Math.max(0, 1 - cy / H);
+      ctx.strokeStyle = `rgba(${teal},${(0.04 + 0.15 * f * f).toFixed(3)})`;
+      for (let cx = -colW; cx <= W + colW; cx += colW) {
+        hex(cx + offset, cy, s - 1);
+        ctx.stroke();
+      }
+    }
+
+    // Routes across the board, walking hex borders like Atlas routes.
+    const grid = buildGrid(s, colW, rowH);
+    routes.forEach(r => drawRoute(r, grid, teal, s, colW, rowH));
+
+    // Scattered lit hexes in random Atlas zone colors.
+    litHexes.forEach(l => drawLitHex(l, s, colW, rowH));
+
+    drawCompass(W / 2, H / 2, teal, bg);
+  }
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    W = cv.offsetWidth; H = cv.offsetHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
   }
 
   window.addEventListener('resize', resize);
   resize();
-  draw();
 
   const themeBtn = document.getElementById('themeToggle');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      cancelAnimationFrame(raf);
-      draw();
-    });
-  }
+  if (themeBtn) themeBtn.addEventListener('click', () => setTimeout(draw, 0));
 })();
 
 // ── SCROLL REVEAL ────────────────────────────────────────

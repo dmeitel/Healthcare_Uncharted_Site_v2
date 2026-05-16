@@ -302,7 +302,8 @@ body[data-colorblind="true"] {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.sfc-state { font-size: 12px; font-weight: 600; color: var(--hu-text-2); margin-bottom: 5px; }
+.sfc-state { font-size: 12px; font-weight: 600; color: var(--hu-text-2); margin-bottom: 2px; }
+.sfc-metric { font-size: 11px; font-weight: 500; color: var(--hu-text-3); line-height: 1.3; margin-bottom: 7px; }
 .sfc-value { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
 .sfc-band  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--hu-text-2); margin-bottom: 5px; }
 .sfc-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -1677,6 +1678,7 @@ body[data-colorblind="true"] {
         </div>
         <div class="state-float-card" id="stateFloatCard" style="display:none">
           <div class="sfc-state" id="sfcState"></div>
+          <div class="sfc-metric" id="sfcMetric"></div>
           <div class="sfc-value" id="sfcValue"></div>
           <div class="sfc-band">
             <span class="sfc-dot" id="sfcDot"></span>
@@ -2712,8 +2714,8 @@ async function loadMap() {
   }
 }
 
-function colorClassForChange(abbr) {
-  if (selectedYearIdx === 0) return 'no-data';
+function changeQuintile(abbr) {
+  if (selectedYearIdx === 0) return null;
   const dir = METRICS[activeLens].items[activeMetricIdx]?.dir ?? -1;
   const deltas = Object.keys(STATE_NAMES)
     .map(c => {
@@ -2725,8 +2727,18 @@ function colorClassForChange(abbr) {
     .filter(d => d !== null)
     .sort((a, b) => a.delta - b.delta);
   const pos = deltas.findIndex(d => d.code === abbr);
-  if (pos === -1) return 'no-data';
-  return 'has-val-' + Math.min(5, Math.ceil((pos + 1) / deltas.length * 5));
+  if (pos === -1) return null;
+  return Math.min(5, Math.ceil((pos + 1) / deltas.length * 5));
+}
+
+// The 1-5 color bucket a state's fill uses on the map, direction- and
+// mode-adjusted. The hover card reads the same value, so card and map agree.
+function displayQuintile(abbr) {
+  if (sliderMode === 'change') return changeQuintile(abbr);
+  const bucket = getQuintileForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
+  if (bucket === null) return null;
+  const dir = METRICS[activeLens].items[activeMetricIdx]?.dir ?? -1;
+  return dir === 1 ? bucket : dir === -1 ? (6 - bucket) : bucket;
 }
 
 function refreshTimeLabel() {
@@ -2773,12 +2785,8 @@ function drawMap() {
     .fitExtent([[pad, pad], [w - pad, h - pad]], { type: 'FeatureCollection', features: usFeatures });
   const path = d3.geoPath(projection);
   function colorClassFor(abbr) {
-    if (sliderMode === 'change') return colorClassForChange(abbr);
-    const bucket = getQuintileForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
-    if (bucket === null) return 'no-data';
-    const dir = METRICS[activeLens].items[activeMetricIdx]?.dir ?? -1;
-    const colorBucket = dir === 1 ? bucket : dir === -1 ? (6 - bucket) : bucket;
-    return 'has-val-' + colorBucket;
+    const q = displayQuintile(abbr);
+    return q === null ? 'no-data' : 'has-val-' + q;
   }
 
   svg.append('g')
@@ -3915,13 +3923,14 @@ function showStateFloatCard(abbr, clientX, clientY, forceAnimate = true) {
   if (!card) return;
   const metric = METRICS[activeLens].items[activeMetricIdx];
   const val    = getValForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
-  const q      = getQuintile(activeLens, activeMetricIdx, abbr);
-  const natAvg = getNatAvg(activeLens, activeMetricIdx);
+  const q      = displayQuintile(abbr);
+  const natAvg = getNatAvgForYear(activeLens, activeMetricIdx, selectedYearIdx);
 
   const qColor = q ? Q_COLORS[q - 1] : 'var(--hu-text-3)';
   const qLabel = q ? BAND_LABELS[q - 1] : 'No data';
 
   document.getElementById('sfcState').textContent = STATE_NAMES[abbr];
+  document.getElementById('sfcMetric').textContent = metric.name;
   const valEl = document.getElementById('sfcValue');
   valEl.textContent = val !== null ? fmtVal(val, metric.unit) : '—';
   valEl.style.color = qColor;
