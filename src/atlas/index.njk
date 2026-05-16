@@ -51,8 +51,8 @@ permalink: /atlas/
 #atlas-legend {
   position: absolute; top: 16px; left: 16px; z-index: 10;
   display: flex; flex-direction: column;
-  background: rgba(3,8,6,0.94); border: 1px solid rgba(78,205,196,0.18);
-  min-width: 158px; box-shadow: 0 4px 24px rgba(0,0,0,0.55);
+  background: #0f1a14; border: 1px solid rgba(78,205,196,0.38);
+  min-width: 158px; box-shadow: 0 6px 30px rgba(0,0,0,0.74);
 }
 .leg-hdr {
   font-family: 'IBM Plex Mono', monospace;
@@ -76,6 +76,33 @@ permalink: /atlas/
 }
 .leg-dot { width: 7px; height: 7px; border-radius: 1px; flex-shrink: 0; opacity: 0.75; }
 .leg-lbl { font-family: 'DM Sans', sans-serif; font-size: 11.5px; color: rgba(140,180,215,0.65); }
+.leg-sec-row { display: flex; align-items: center; justify-content: space-between; }
+#leg-conn-popout {
+  background: transparent; border: 1px solid rgba(78,205,196,0.22);
+  color: rgba(78,205,196,0.6); cursor: pointer; padding: 0;
+  width: 16px; height: 14px; font-size: 10px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; transition: all .12s;
+}
+#leg-conn-popout:hover { color: #4ECDC4; border-color: rgba(78,205,196,0.5); }
+.leg-check { cursor: pointer; }
+.leg-cbx {
+  width: 11px; height: 11px; flex-shrink: 0; position: relative;
+  border: 1px solid rgba(78,205,196,0.4); background: transparent; transition: all .12s;
+}
+.leg-check:hover .leg-cbx { border-color: rgba(78,205,196,0.72); }
+.leg-check.on .leg-cbx { background: #4ECDC4; border-color: #4ECDC4; }
+.leg-check.on .leg-cbx::after {
+  content: ''; position: absolute; left: 3px; top: 0.5px;
+  width: 3px; height: 6px; border: solid rgba(3,8,6,0.95);
+  border-width: 0 1.6px 1.6px 0; transform: rotate(45deg);
+}
+.leg-check:hover .leg-lbl, .leg-check.on .leg-lbl { color: rgba(200,222,235,0.95); }
+[data-theme='light'] #leg-conn-popout { border-color: rgba(27,95,168,0.25); color: rgba(27,95,168,0.6); }
+[data-theme='light'] #leg-conn-popout:hover { color: #1B5FA8; border-color: rgba(27,95,168,0.5); }
+[data-theme='light'] .leg-cbx { border-color: rgba(27,95,168,0.4); }
+[data-theme='light'] .leg-check.on .leg-cbx { background: #1B5FA8; border-color: #1B5FA8; }
+[data-theme='light'] .leg-check.on .leg-cbx::after { border-color: #fff; }
+[data-theme='light'] .leg-check:hover .leg-lbl, [data-theme='light'] .leg-check.on .leg-lbl { color: #0d1117; }
 
 /* ── BOTTOM HUD ────────────────────────────────────────────────────────── */
 #atlas-hud {
@@ -319,6 +346,87 @@ permalink: /atlas/
   font-family: 'DM Sans', sans-serif; font-size: 12px;
   color: rgba(140,180,215,0.78); line-height: 1.58;
 }
+
+/* ── CONNECTIONS PANEL (searchable route list) ────────────────────────────── */
+#atlas-conn {
+  position: absolute; top: 0; left: 0; bottom: 0; z-index: 40;
+  width: 314px; background: rgba(2,6,4,0.99);
+  border-right: 2px solid rgba(78,205,196,0.22);
+  box-shadow: 6px 0 32px rgba(0,0,0,0.6);
+  transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#atlas-conn.open { transform: translateX(0); }
+#conn-hdr {
+  padding: 16px 18px 12px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(78,205,196,0.12);
+  display: flex; align-items: center; justify-content: space-between;
+}
+#conn-hdr-title {
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: rgba(78,205,196,0.92);
+}
+#conn-panel-close {
+  width: 26px; height: 26px; background: rgba(78,205,196,0.06);
+  border: 1px solid rgba(78,205,196,0.18); color: rgba(78,205,196,0.55);
+  cursor: pointer; font-size: 15px; display: flex; align-items: center;
+  justify-content: center; transition: all .12s;
+}
+#conn-panel-close:hover { background: rgba(78,205,196,0.14); color: #4ECDC4; }
+#conn-search {
+  margin: 12px 14px 9px; padding: 8px 11px; flex-shrink: 0;
+  background: rgba(78,205,196,0.06); border: 1px solid rgba(78,205,196,0.18);
+  color: #cfe6e2; font-family: 'DM Sans', sans-serif; font-size: 12.5px; outline: none;
+}
+#conn-search::placeholder { color: rgba(140,180,200,0.4); }
+#conn-search:focus { border-color: rgba(78,205,196,0.42); }
+#conn-filters {
+  display: flex; flex-wrap: wrap; gap: 5px; padding: 0 14px 11px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(78,205,196,0.10);
+}
+.cf-chip {
+  font-family: 'IBM Plex Mono', monospace; font-size: 8.5px;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  padding: 4px 8px; cursor: pointer;
+  background: rgba(78,205,196,0.05); border: 1px solid rgba(78,205,196,0.16);
+  color: rgba(140,180,200,0.62); transition: all .12s;
+}
+.cf-chip.on { background: rgba(78,205,196,0.18); color: #4ECDC4; border-color: rgba(78,205,196,0.40); }
+#conn-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+#conn-list::-webkit-scrollbar { width: 3px; }
+#conn-list::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.15); }
+#conn-empty {
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  color: rgba(140,180,200,0.45); padding: 14px 16px; display: none;
+}
+.conn-row {
+  display: flex; gap: 9px; align-items: center;
+  padding: 8px 14px; cursor: pointer; transition: background .1s;
+}
+.conn-row:hover { background: rgba(78,205,196,0.09); }
+.conn-row.active { background: rgba(78,205,196,0.15); box-shadow: inset 3px 0 0 #4ECDC4; }
+.conn-dot { width: 9px; height: 9px; flex-shrink: 0; border-radius: 2px; }
+.conn-row-text { min-width: 0; }
+.conn-row-label {
+  font-family: 'DM Sans', sans-serif; font-size: 12.5px;
+  color: rgba(200,222,235,0.92); line-height: 1.3;
+}
+.conn-row-zones {
+  font-family: 'IBM Plex Mono', monospace; font-size: 8.5px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: rgba(140,180,200,0.5); margin-top: 2px;
+}
+[data-theme='light'] #atlas-conn { background: rgba(249,252,250,0.99); border-right-color: rgba(27,95,168,0.18); box-shadow: 6px 0 32px rgba(0,0,0,0.10); }
+[data-theme='light'] #conn-hdr { border-bottom-color: rgba(27,95,168,0.12); }
+[data-theme='light'] #conn-hdr-title { color: #1B5FA8; }
+[data-theme='light'] #conn-panel-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.55); }
+[data-theme='light'] #conn-panel-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
+[data-theme='light'] #conn-search { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: #14283c; }
+[data-theme='light'] .cf-chip { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.16); color: rgba(40,70,100,0.7); }
+[data-theme='light'] .cf-chip.on { background: rgba(27,95,168,0.16); color: #1B5FA8; border-color: rgba(27,95,168,0.4); }
+[data-theme='light'] .conn-row:hover { background: rgba(27,95,168,0.08); }
+[data-theme='light'] .conn-row.active { background: rgba(27,95,168,0.13); box-shadow: inset 3px 0 0 #1B5FA8; }
+[data-theme='light'] .conn-row-label { color: rgba(20,40,60,0.9); }
 </style>
 
 <div id="atlas-shell">
@@ -330,6 +438,7 @@ permalink: /atlas/
     <div class="atlas-flt-wrap">
       <button class="atlas-flt on" id="af-labels">Zone Labels</button>
       <button class="atlas-flt on" id="af-routes">Routes</button>
+      <button class="atlas-flt" id="af-expand-all">Expand All</button>
       <button class="atlas-flt" id="af-tools">Tool Nodes</button>
     </div>
     <div class="atlas-sep"></div>
@@ -347,11 +456,14 @@ permalink: /atlas/
     <div id="atlas-legend">
       <div class="leg-hdr">Map Key</div>
       <div class="leg-section">
-        <div class="leg-sec-label">Connections</div>
-        <div class="leg-row"><div class="leg-line" style="color:#4ECDC4"></div><span class="leg-lbl">Clinical</span></div>
-        <div class="leg-row"><div class="leg-line" style="color:#E8A838"></div><span class="leg-lbl">Financial</span></div>
-        <div class="leg-row"><div class="leg-line" style="color:#8B5CF6"></div><span class="leg-lbl">Regulatory</span></div>
-        <div class="leg-row"><div class="leg-line" style="color:#5DBF87"></div><span class="leg-lbl">Population</span></div>
+        <div class="leg-sec-label leg-sec-row">
+          <span>Connections</span>
+          <button id="leg-conn-popout" title="Open connections list">&#8599;</button>
+        </div>
+        <div class="leg-row leg-check" data-type="clinical"><span class="leg-cbx"></span><div class="leg-line" style="color:#4ECDC4"></div><span class="leg-lbl">Clinical</span></div>
+        <div class="leg-row leg-check" data-type="financial"><span class="leg-cbx"></span><div class="leg-line" style="color:#E8A838"></div><span class="leg-lbl">Financial</span></div>
+        <div class="leg-row leg-check" data-type="regulatory"><span class="leg-cbx"></span><div class="leg-line" style="color:#8B5CF6"></div><span class="leg-lbl">Regulatory</span></div>
+        <div class="leg-row leg-check" data-type="population"><span class="leg-cbx"></span><div class="leg-line" style="color:#5DBF87"></div><span class="leg-lbl">Population</span></div>
       </div>
       <div class="leg-section">
         <div class="leg-sec-label">Zones</div>
@@ -401,6 +513,23 @@ permalink: /atlas/
       <button id="hud-close">×</button>
     </div>
   </div>
+  <div id="atlas-conn">
+    <div id="conn-hdr">
+      <span id="conn-hdr-title">Connections</span>
+      <button id="conn-panel-close">×</button>
+    </div>
+    <input id="conn-search" type="text" placeholder="Search connections…" autocomplete="off">
+    <div id="conn-filters">
+      <button class="cf-chip on" data-type="all">All</button>
+      <button class="cf-chip" data-type="clinical">Clinical</button>
+      <button class="cf-chip" data-type="financial">Financial</button>
+      <button class="cf-chip" data-type="regulatory">Regulatory</button>
+      <button class="cf-chip" data-type="population">Population</button>
+    </div>
+    <div id="conn-list"></div>
+    <div id="conn-empty">No connections match.</div>
+  </div>
+
   <div id="atlas-help">
     <div id="help-hdr">
       <span id="help-hdr-title">How to Use</span>
@@ -515,7 +644,7 @@ const ZONE_DEFS = [
       {q:2,  r:-3, type:'node', label:'Organ System\nPhysiology', nodeId:'organ-physio',
         desc:'Normal function of the major organ systems — cardiac output, pulmonary mechanics, renal filtration, hepatic metabolism. The baseline everything pathophysiology departs from.',
         links:[]},
-      {q:0,  r:-3, type:'node', label:'Biomarker\nScience',   nodeId:'biomarkers',
+      {q:4,  r:-6, type:'node', label:'Biomarker\nScience',   nodeId:'biomarkers',
         desc:'Troponin, BNP, CRP, HbA1c, PSA. Measurable signals that reflect underlying disease state. The translation layer between lab and diagnosis. Sensitivity vs. specificity is where clinical judgment lives.',
         links:[]},
       {q:3,  r:-2, type:'node', label:'Clinical\nCorrelation', nodeId:'clin-correlation',
@@ -924,29 +1053,29 @@ const CONN_COL = {clinical:'#4ECDC4', financial:'#E8A838', regulatory:'#8B5CF6',
 // Ring 1 = 6 major body systems (dq,dr = immediate neighbors)
 // Ring 2 = 6 cross-cutting mechanisms (distance-2 axial positions, straight-axis directions)
 const PATHOPHYS_SUBS = [
-  {dq:+1,dr: 0,label:'Cardio-\nvascular',     nodeId:'path-cardio',
+  {label:'Cardio-\nvascular',     nodeId:'path-cardio',
    desc:'Atherosclerosis, heart failure (systolic vs diastolic), arrhythmias, hypertensive disease, cardiomyopathy. Leading cause of death in the U.S. Most clinical AI deployments target cardiovascular risk prediction.'},
-  {dq:-1,dr: 0,label:'Renal\nPathology',       nodeId:'path-renal',
+  {label:'Renal\nPathology',       nodeId:'path-renal',
    desc:'Acute kidney injury, CKD progression, glomerulonephritis, nephrotic syndrome, tubular disease. CKD affects 15% of U.S. adults. Cardiorenal syndrome is the prototype cross-organ disease cascade.'},
-  {dq:+1,dr:-1,label:'Pulmonary\nPathology',   nodeId:'path-pulm',
+  {label:'Pulmonary\nPathology',   nodeId:'path-pulm',
    desc:'COPD, asthma, ARDS, pneumonia, pulmonary fibrosis, pulmonary embolism, pulmonary hypertension. Ventilatory failure is the final common pathway of critical illness. Respiratory mechanics determine who survives the ICU.'},
-  {dq:-1,dr:+1,label:'GI &\nHepatic',          nodeId:'path-gi',
+  {label:'GI &\nHepatic',          nodeId:'path-gi',
    desc:'IBD (Crohn\'s, UC), cirrhosis and portal hypertension, hepatitis (viral, alcoholic, NASH), pancreatitis, peptic ulcer disease. Gut microbiome dysbiosis is emerging as a mechanistic driver across most GI pathology.'},
-  {dq: 0,dr:-1,label:'Neuro-\nlogical',         nodeId:'path-neuro',
+  {label:'Neuro-\nlogical',         nodeId:'path-neuro',
    desc:'Ischemic and hemorrhagic stroke, TBI, dementia, neurodegeneration (Parkinson\'s, ALS), epilepsy, MS, peripheral neuropathy. CNS mechanisms: ischemia, excitotoxicity, protein aggregation, neuroinflammation.'},
-  {dq: 0,dr:+1,label:'Endocrine &\nMetabolic', nodeId:'path-endo',
+  {label:'Endocrine &\nMetabolic', nodeId:'path-endo',
    desc:'Type 1 and 2 diabetes, thyroid disease, adrenal disorders (Cushing\'s, Addison\'s), metabolic syndrome. Insulin resistance is the unifying mechanism for the most prevalent chronic disease cluster.'},
-  {dq:+2,dr: 0,label:'Hematology',              nodeId:'path-heme',
+  {label:'Hematology',              nodeId:'path-heme',
    desc:'Anemia (iron deficiency, hemolytic, aplastic), coagulopathy, thrombophilia, bone marrow failure. DIC is the prototype coagulation catastrophe. Iron deficiency anemia is the most prevalent nutritional deficiency worldwide.'},
-  {dq:-2,dr: 0,label:'Infectious\nDisease',     nodeId:'path-infx',
+  {label:'Infectious\nDisease',     nodeId:'path-infx',
    desc:'Bacterial, viral, fungal, parasitic disease mechanisms. Sepsis — dysregulated host response to infection — is the primary driver of ICU mortality. Antimicrobial resistance is the structural long-game threat.'},
-  {dq:+2,dr:-2,label:'Musculo-\nskeletal',       nodeId:'path-msk',
+  {label:'Musculo-\nskeletal',       nodeId:'path-msk',
    desc:'Rheumatoid arthritis (autoimmune synovitis), osteoarthritis (degenerative cartilage), crystal arthropathy, osteoporosis. RA is autoimmune. OA is degenerative. A critical mechanism distinction for treatment.'},
-  {dq:+1,dr:-2,label:'Inflammation\n& Immunity',nodeId:'path-immune',
+  {label:'Inflammation\n& Immunity',nodeId:'path-immune',
    desc:'Acute and chronic inflammation, hypersensitivity (Type I-IV), autoimmunity. TNF-alpha, IL-6, NF-kB — the molecular language of most chronic disease. Target of the most successful drug class of the past 30 years.'},
-  {dq: 0,dr:-2,label:'Neoplasia &\nOncology',   nodeId:'path-onco',
+  {label:'Neoplasia &\nOncology',   nodeId:'path-onco',
    desc:'Hallmarks of cancer: sustained proliferation, evading apoptosis, genomic instability, angiogenesis, invasion, immune evasion. The Hanahan-Weinberg framework applies to every solid tumor and hematologic malignancy.'},
-  {dq:-1,dr:-1,label:'Cell &\nMolecular',       nodeId:'path-cell',
+  {label:'Cell &\nMolecular',       nodeId:'path-cell',
    desc:'Cell injury (hypoxia, free radicals, toxins), adaptation (hypertrophy, atrophy, hyperplasia, metaplasia), apoptosis vs necrosis, DNA damage, epigenetics. The base layer. All pathology traces back to what happens at the cell.'},
 ];
 
@@ -956,27 +1085,29 @@ function hDelta(dq, dr) {
 }
 
 // ── PROCEDURAL HEX DISPLACEMENT ──────────────────────────────────────────────
-// Given a push direction (dq,dr), find the nearest hex unit vector in that direction.
+// All 6 hex unit directions, sorted by dot-product against push vector at call time.
 const HEX_DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
-function closestHexDir(dq, dr) {
+function sortedHexDirs(dq, dr) {
   const x1=dq, y1=-dq-dr, z1=dr;
-  let best=HEX_DIRS[0], bestDot=-Infinity;
-  HEX_DIRS.forEach(([q,r]) => {
-    const dot = x1*q + y1*(-q-r) + z1*r;
-    if (dot > bestDot) { bestDot=dot; best=[q,r]; }
-  });
-  return best;
+  return HEX_DIRS
+    .map(([q,r]) => ({d:[q,r], dot: x1*q + y1*(-q-r) + z1*r}))
+    .sort((a,b) => b.dot - a.dot)
+    .map(o => o.d);
 }
 
-// Cascade-push any real cell at (q,r) one hex step in direction (pushDq,pushDr), recursively.
-function pushChain(q, r, pushDq, pushDr, vGrid, displacements) {
+// Push cell at (q,r) one step in a single fixed direction (dq,dr), cascading any
+// occupant in the destination first. Pure linear cascade — no direction switching
+// inside. Returns true if the cell was moved OR position was already clear.
+// Mutates vGrid + displacements only on success; partial recursive moves only
+// commit when their inner cascade succeeded, so a return-false leaves no orphans.
+function pushLine(q, r, dq, dr, vGrid, displacements) {
   const key = `${q},${r}`;
   const cell = vGrid.get(key);
-  if (!cell || !cell.nodeId || cell.type==='terrain' || cell.type==='sub' || cell.type==='landmark' || cell.type==='hub') return;
-  const [dq, dr] = closestHexDir(pushDq, pushDr);
+  if (!cell) return true;
+  if (!cell.nodeId || cell.type==='terrain' || cell.type==='sub' || cell.type==='landmark' || cell.type==='hub') return false;
   const nq=q+dq, nr=r+dr;
-  pushChain(nq, nr, pushDq, pushDr, vGrid, displacements);
-  if (vGrid.has(`${nq},${nr}`)) return; // cascade blocked by landmark/hub; leave cell in place
+  if (!pushLine(nq, nr, dq, dr, vGrid, displacements)) return false;
+  if (vGrid.has(`${nq},${nr}`)) return false;
   vGrid.delete(key);
   vGrid.set(`${nq},${nr}`, cell);
   if (displacements.has(cell.nodeId)) {
@@ -985,31 +1116,261 @@ function pushChain(q, r, pushDq, pushDr, vGrid, displacements) {
   } else {
     displacements.set(cell.nodeId, {fromQ:q, fromR:r, toQ:nq, toR:nr});
   }
+  return true;
 }
 
-// Compute which cells need to move and their pixel offsets, purely from GRID_MAP + sub definitions.
-// Returns Map<nodeId, [pixelDx, pixelDy]>
-function computeProceduralPushes(lq, lr, subs) {
-  const vGrid = new Map();
-  GRID_MAP.forEach((v,k) => { if (v.type!=='terrain') vGrid.set(k,{...v}); });
+// Try to clear cell at (q,r) by pushing it. Tries the closest hex direction to
+// (pushDq,pushDr) first, then alternates in dot-product order until one succeeds.
+// Each pushLine attempt is all-or-nothing, so trying another direction after a
+// failure starts from an unchanged vGrid. Returns true if cell is gone or never
+// existed; false if every direction was blocked.
+function pushChain(q, r, pushDq, pushDr, vGrid, displacements) {
+  const key = `${q},${r}`;
+  const cell = vGrid.get(key);
+  if (!cell) return true;
+  if (!cell.nodeId || cell.type==='terrain' || cell.type==='sub' || cell.type==='landmark' || cell.type==='hub') return false;
+  for (const [dq, dr] of sortedHexDirs(pushDq, pushDr)) {
+    if (pushLine(q, r, dq, dr, vGrid, displacements)) return true;
+  }
+  return false;
+}
+
+// Spiral search outward from (lq,lr) for the first hex not in vGrid. Used when
+// a sub's intended target can't be cleared by any push direction.
+function findFallbackHex(lq, lr, vGrid, maxRing) {
+  for (let ring = 1; ring <= (maxRing||6); ring++) {
+    for (let dq = -ring; dq <= ring; dq++) {
+      for (let dr = -ring; dr <= ring; dr++) {
+        const ds = -dq-dr;
+        if (Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds)) !== ring) continue;
+        if (!vGrid.has(`${lq+dq},${lr+dr}`)) return [lq+dq, lr+dr];
+      }
+    }
+  }
+  return null;
+}
+
+// Compute which cells need to move and where each sub-node lands.
+// Builds vGrid from GRID_MAP, then layers in any other currently-active expansions'
+// state (their displaced cells AND their final sub positions, which may include
+// fallbacks) so this expansion's pushChain sees live occupancy.
+// For each sub: try to push the cell at its preferred target out. If every hex
+// direction is blocked, search outward from the landmark for a free fallback hex.
+// Returns:
+//   pixelDeltas   Map<nodeId,[dx,dy]>             pixel offset to apply to pushed cells
+//   displacements Map<nodeId,{fromQ,fromR,toQ,toR}>  cells that moved + where
+//   subTargets    Map<nodeId,{q,r,fallback}>      final hex for each sub
+// Hub center + ring-1 moat hexes. These are visually reserved (drawn as opaque
+// black tiles over whatever terrain sits underneath) and must never host a pushed
+// cell or a fallback sub.
+const MOAT_KEYS = ['0,0','1,0','-1,0','0,1','0,-1','1,-1','-1,1'];
+
+// Auto-layout: given a landmark at (lq,lr) and a list of subs, derive (dq,dr)
+// for any sub that didn't specify one. Subs fan outward from the hub at (0,0)
+// toward and past the landmark — candidates are sorted ring-1 → ring-2 → ring-3,
+// and within each ring by cube-dot alignment with the away-from-hub vector. Any
+// sub that already has dq+dr keeps its manual placement. Landmarks/hub/moat hexes
+// are skipped; everything else (terrain, real cells) is fair game and runtime
+// pushChain handles the displacement.
+function autoLayoutSubs(lq, lr, subs) {
+  const fanX = lq, fanY = -lq-lr, fanZ = lr;
+  const candidates = [];
+  for (let ring = 1; ring <= 3; ring++) {
+    for (let dq = -ring; dq <= ring; dq++) {
+      for (let dr = -ring; dr <= ring; dr++) {
+        const ds = -dq-dr;
+        if (Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds)) !== ring) continue;
+        const tq = lq + dq, tr = lr + dr;
+        const at = GRID_MAP.get(`${tq},${tr}`);
+        if (at && at.type === 'landmark') continue;
+        if (MOAT_KEYS.includes(`${tq},${tr}`)) continue;
+        const align = dq*fanX + (-dq-dr)*fanY + dr*fanZ;
+        candidates.push({dq, dr, ring, align});
+      }
+    }
+  }
+  candidates.sort((a,b) => a.ring - b.ring || b.align - a.align);
+
+  const reserved = new Set();
+  subs.forEach(s => {
+    if (s.dq !== undefined && s.dr !== undefined) reserved.add(`${s.dq},${s.dr}`);
+  });
+
+  let ci = 0;
+  return subs.map(s => {
+    if (s.dq !== undefined && s.dr !== undefined) return s;
+    while (ci < candidates.length) {
+      const c = candidates[ci++];
+      if (reserved.has(`${c.dq},${c.dr}`)) continue;
+      return {...s, dq: c.dq, dr: c.dr};
+    }
+    console.warn(`[atlas] autoLayoutSubs ran out of candidates for ${s.nodeId}`);
+    return {...s, dq: 0, dr: 0};
+  });
+}
+
+// Generate placement candidates around a landmark, sorted ring-1→ring-N, and within
+// each ring by cube-dot alignment with the away-from-hub fan vector. Moat and hub
+// hexes are filtered out so they never appear as candidates.
+function generateCandidates(lq, lr, maxRing) {
+  const fanX = lq, fanY = -lq-lr, fanZ = lr;
+  const cands = [];
+  for (let ring = 1; ring <= maxRing; ring++) {
+    for (let dq = -ring; dq <= ring; dq++) {
+      for (let dr = -ring; dr <= ring; dr++) {
+        const ds = -dq-dr;
+        if (Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds)) !== ring) continue;
+        const tq = lq + dq, tr = lr + dr;
+        if (MOAT_KEYS.includes(`${tq},${tr}`)) continue;
+        const align = dq*fanX + (-dq-dr)*fanY + dr*fanZ;
+        cands.push({q: tq, r: tr, ring, align});
+      }
+    }
+  }
+  cands.sort((a, b) => a.ring - b.ring || b.align - a.align);
+  return cands;
+}
+
+// Find the nearest available terrain hex within a given zone, starting from
+// (sourceQ, sourceR). "Available" = not in `claimed` and not moat/hub/landmark.
+// The zone match keeps displaced cells inside their home zone rather than
+// pushing them into neighbouring zones.
+function findZoneTerrain(zoneId, sourceQ, sourceR, claimed, maxRing) {
+  for (let ring = 1; ring <= (maxRing||8); ring++) {
+    const tier = [];
+    for (let dq = -ring; dq <= ring; dq++) {
+      for (let dr = -ring; dr <= ring; dr++) {
+        const ds = -dq-dr;
+        if (Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds)) !== ring) continue;
+        const tq = sourceQ + dq, tr = sourceR + dr;
+        const k = `${tq},${tr}`;
+        if (claimed.has(k)) continue;
+        if (MOAT_KEYS.includes(k)) continue;
+        const cell = GRID_MAP.get(k);
+        if (!cell || cell.type !== 'terrain') continue;
+        if (cell.zoneId !== zoneId) continue;
+        tier.push({q: tq, r: tr});
+      }
+    }
+    if (tier.length) return tier[0];
+  }
+  return null;
+}
+
+// Final fallback: any unclaimed non-moat hex outward from the landmark.
+function findAnyFreeHex(lq, lr, claimed, maxRing) {
+  for (let ring = 1; ring <= (maxRing||10); ring++) {
+    for (let dq = -ring; dq <= ring; dq++) {
+      for (let dr = -ring; dr <= ring; dr++) {
+        const ds = -dq-dr;
+        if (Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds)) !== ring) continue;
+        const tq = lq + dq, tr = lr + dr;
+        const k = `${tq},${tr}`;
+        if (claimed.has(k)) continue;
+        if (MOAT_KEYS.includes(k)) continue;
+        return {q: tq, r: tr};
+      }
+    }
+  }
+  return null;
+}
+
+// Zone-aware placement. Iterates through the candidate ring list around a
+// landmark and assigns each sub to the first available hex. Empty terrain is
+// preferred — when a candidate is occupied by a same-zone named cell, that
+// cell is relocated to terrain within its own zone, freeing the candidate.
+// Other-zone cells are skipped entirely (subs fan to a later candidate instead
+// of pushing them). Result is guaranteed overlap-free: every claim is checked
+// against the running `claimed` map before being granted.
+function computeProceduralPushes(lq, lr, subs, excludeNodeId, zoneId) {
+  // Build the claimed map and cellPos table from a fresh base + other active expansions.
+  const claimed = new Map();
+  const cellPos = new Map();
+  GRID_MAP.forEach((v, k) => {
+    const [q, r] = k.split(',').map(Number);
+    if (v.type === 'landmark' || v.type === 'hub') {
+      claimed.set(k, {type: 'lock'});
+    } else if (v.type === 'node' && v.nodeId) {
+      cellPos.set(v.nodeId, {q, r, origQ: q, origR: r, zoneId: v.zoneId});
+      claimed.set(k, {type: 'cell', nodeId: v.nodeId});
+    }
+  });
+  MOAT_KEYS.forEach(k => claimed.set(k, {type: 'lock'}));
+
+  expandedSet.forEach(otherId => {
+    if (otherId === excludeNodeId) return;
+    const oReg = EXPANSION_REGISTRY[otherId];
+    if (!oReg) return;
+    if (oReg.lastDisplacements) {
+      oReg.lastDisplacements.forEach(({toQ, toR}, nid) => {
+        const pos = cellPos.get(nid);
+        if (!pos) return;
+        const oldK = `${pos.q},${pos.r}`;
+        if (claimed.get(oldK)?.nodeId === nid) claimed.delete(oldK);
+        pos.q = toQ; pos.r = toR;
+        claimed.set(`${toQ},${toR}`, {type: 'cell', nodeId: nid});
+      });
+    }
+    if (oReg.subTargets) {
+      oReg.subTargets.forEach(({q, r}, nid) => {
+        claimed.set(`${q},${r}`, {type: 'sub', nodeId: nid});
+      });
+    }
+  });
+
   const displacements = new Map();
-  const sorted = [...subs].sort((a,b) => {
-    const da=(Math.abs(a.dq)+Math.abs(a.dr)+Math.abs(a.dq+a.dr))/2;
-    const db=(Math.abs(b.dq)+Math.abs(b.dr)+Math.abs(b.dq+b.dr))/2;
-    return da-db;
+  const subTargets = new Map();
+  const candidates = generateCandidates(lq, lr, 6);
+
+  for (const sub of subs) {
+    let placed = false;
+    for (const cand of candidates) {
+      const k = `${cand.q},${cand.r}`;
+      const occ = claimed.get(k);
+      if (!occ) {
+        subTargets.set(sub.nodeId, {q: cand.q, r: cand.r, fallback: false});
+        claimed.set(k, {type: 'sub', nodeId: sub.nodeId});
+        placed = true;
+        break;
+      }
+      if (occ.type === 'lock' || occ.type === 'sub') continue;
+      if (occ.type === 'cell') {
+        const cellNid = occ.nodeId;
+        const cell = cellPos.get(cellNid);
+        if (!cell || cell.zoneId !== zoneId) continue;
+        const terr = findZoneTerrain(cell.zoneId, cell.origQ, cell.origR, claimed);
+        if (!terr) continue;
+        displacements.set(cellNid, {fromQ: cell.q, fromR: cell.r, toQ: terr.q, toR: terr.r});
+        cell.q = terr.q; cell.r = terr.r;
+        claimed.delete(k);
+        claimed.set(`${terr.q},${terr.r}`, {type: 'cell', nodeId: cellNid});
+        subTargets.set(sub.nodeId, {q: cand.q, r: cand.r, fallback: false});
+        claimed.set(k, {type: 'sub', nodeId: sub.nodeId});
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      const fb = findAnyFreeHex(lq, lr, claimed);
+      if (fb) {
+        subTargets.set(sub.nodeId, {q: fb.q, r: fb.r, fallback: true});
+        claimed.set(`${fb.q},${fb.r}`, {type: 'sub', nodeId: sub.nodeId});
+        console.info(`[atlas] sub ${sub.nodeId} fell back to (${fb.q},${fb.r}) — no in-zone candidate available`);
+      } else {
+        console.warn(`[atlas] no placement for sub ${sub.nodeId}`);
+      }
+    }
+  }
+
+  const pixelDeltas = new Map();
+  displacements.forEach(({toQ, toR}, nodeId) => {
+    const origin = NODE_ORIGIN.get(nodeId);
+    if (!origin) return;
+    const [bx, by] = hPx(origin.q, origin.r);
+    const [tx, ty] = hPx(toQ, toR);
+    pixelDeltas.set(nodeId, [tx - bx, ty - by]);
   });
-  sorted.forEach(sub => {
-    const tq=lq+sub.dq, tr=lr+sub.dr;
-    pushChain(tq, tr, sub.dq, sub.dr, vGrid, displacements);
-    vGrid.set(`${tq},${tr}`, {type:'sub', nodeId:sub.nodeId, zoneId:'_expand'});
-  });
-  const result = new Map();
-  displacements.forEach(({fromQ,fromR,toQ,toR}, nodeId) => {
-    const [fx,fy]=hPx(fromQ,fromR);
-    const [tx,ty]=hPx(toQ,toR);
-    result.set(nodeId, [tx-fx, ty-fy]);
-  });
-  return result;
+  return {pixelDeltas, displacements, subTargets};
 }
 
 // ── GENERALIZED LANDMARK EXPANSION ENGINE ────────────────────────────────────
@@ -1029,20 +1390,34 @@ function expandExpansion(nodeId) {
     d3.select('#conn-g').transition().duration(180).attr('opacity', 0);
     d3.select('#hub-spokes').transition().duration(180).attr('opacity', 0);
   }
-  const pushes = computeProceduralPushes(reg.lq, reg.lr, reg.subs);
-  reg.activePushes = pushes;
-  pushes.forEach(([dx,dy], nid) => {
+  const {pixelDeltas, displacements, subTargets} = computeProceduralPushes(reg.lq, reg.lr, reg.subs, nodeId, reg.zoneId);
+  reg.activePushes = pixelDeltas;
+  reg.lastDisplacements = displacements;
+  reg.subTargets = subTargets;
+  pixelDeltas.forEach(([dx,dy], nid) => {
     d3.selectAll(`.az-node-cell[data-nodeid="${nid}"]`)
       .transition().delay(80).duration(440).ease(d3.easeBackOut.overshoot(1.05))
       .attr('transform', `translate(${dx},${dy})`);
   });
   reg.overlay.attr('pointer-events', 'all');
-  reg.subGroups.forEach(({sg, tx, ty}, i) => {
+  const [lmx, lmy] = hPx(reg.lq, reg.lr);
+  reg.subGroups.forEach(({sg, tx, ty, nodeId: subNid, linker}, i) => {
+    const tgt = subTargets.get(subNid);
+    const [fx, fy] = tgt ? hPx(tgt.q, tgt.r) : [tx, ty];
     sg.attr('pointer-events', 'all')
       .transition().delay(320 + i*35).duration(400)
       .ease(d3.easeBackOut.overshoot(1.05))
-      .attr('transform', `translate(${tx},${ty})`)
+      .attr('transform', `translate(${fx},${fy})`)
       .attr('opacity', 1);
+    if (linker) {
+      if (tgt && tgt.fallback) {
+        linker.attr('x1', lmx).attr('y1', lmy).attr('x2', fx).attr('y2', fy)
+          .transition().delay(320 + i*35).duration(400)
+          .attr('stroke-opacity', 0.45);
+      } else {
+        linker.attr('stroke-opacity', 0);
+      }
+    }
   });
   const btn = document.getElementById(`af-expand-${nodeId}`);
   if (btn) btn.classList.add('on');
@@ -1058,21 +1433,36 @@ function collapseExpansion(nodeId) {
   reg.overlay.attr('pointer-events', 'none');
   if (reg.activePushes) {
     reg.activePushes.forEach((_, nid) => {
-      const stillNeeded = [...expandedSet].some(id => EXPANSION_REGISTRY[id]?.activePushes?.has(nid));
-      if (!stillNeeded) {
-        d3.selectAll(`.az-node-cell[data-nodeid="${nid}"]`)
-          .transition().duration(420).ease(d3.easeCubicInOut)
-          .attr('transform', null);
+      let otherDelta = null;
+      for (const otherId of [...expandedSet].reverse()) {
+        const o = EXPANSION_REGISTRY[otherId];
+        if (o && o.activePushes && o.activePushes.has(nid)) { otherDelta = o.activePushes.get(nid); break; }
       }
+      // Always interpolate to an explicit translate() string. Passing null as the
+      // end attribute can short-circuit d3's transform interpolation, causing cells
+      // to snap to origin instead of animating back. translate(0,0) is the identity
+      // and animates cleanly; the attribute is cleared after the transition ends.
+      const dest = otherDelta
+        ? `translate(${otherDelta[0]},${otherDelta[1]})`
+        : 'translate(0,0)';
+      d3.selectAll(`.az-node-cell[data-nodeid="${nid}"]`)
+        .transition().duration(440).ease(d3.easeCubicInOut)
+        .attr('transform', dest)
+        .on('end', function() {
+          if (!otherDelta) d3.select(this).attr('transform', null);
+        });
     });
     reg.activePushes = null;
+    reg.lastDisplacements = null;
+    reg.subTargets = null;
   }
-  reg.subGroups.forEach(({sg}, i) => {
+  reg.subGroups.forEach(({sg, linker}, i) => {
     sg.attr('pointer-events', 'none')
       .transition().delay(i*25).duration(280)
       .ease(d3.easeCubicIn)
       .attr('transform', `translate(${reg.baseX},${reg.baseY})`)
       .attr('opacity', 0);
+    if (linker) linker.transition().duration(220).attr('stroke-opacity', 0);
   });
   if (expandedSet.size === 0) {
     const currentK = d3.zoomTransform(svgEl).k;
@@ -1092,6 +1482,10 @@ function initExpansion(cfg) {
   const baseX = cell.wx, baseY = cell.wy;
   const col = zone.color;
 
+  // Resolve any subs that didn't declare (dq,dr) using the auto-layout. Manual
+  // placements pass through unchanged so individual subs can still be hand-tuned.
+  cfg.subs = autoLayoutSubs(cell.q, cell.r, cfg.subs);
+
   const overlay = g.append('g')
     .attr('id', `expand-overlay-${cfg.nodeId}`)
     .attr('pointer-events', 'none');
@@ -1099,11 +1493,22 @@ function initExpansion(cfg) {
     .attr('x',-6000).attr('y',-6000).attr('width',12000).attr('height',12000)
     .attr('fill','rgba(6,16,10,0)').attr('pointer-events','none');
 
+  // Linker layer — sits below sub overlays so connector lines for fallback-positioned
+  // subs render beneath the sub hexes. Each sub gets its own line, hidden by default.
+  const linkerLayer = overlay.append('g')
+    .attr('class', `exp-linkers exp-${cfg.nodeId}-linkers`)
+    .attr('pointer-events', 'none');
+
   const subGroups = [];
   cfg.subs.forEach((sub, i) => {
     const [tx, ty] = hPx(cell.q + sub.dq, cell.r + sub.dr);
     const hexDist   = (Math.abs(sub.dq)+Math.abs(sub.dr)+Math.abs(sub.dq+sub.dr))/2;
     const isRing2   = hexDist > 1;
+
+    const linker = linkerLayer.append('line')
+      .attr('stroke', col).attr('stroke-width', 1.4)
+      .attr('stroke-opacity', 0).attr('stroke-dasharray', '4 3')
+      .attr('filter', 'url(#n-glow)');
 
     const sg = overlay.append('g')
       .attr('class', `exp-sub exp-${cfg.nodeId}-sub`)
@@ -1166,10 +1571,10 @@ function initExpansion(cfg) {
       document.getElementById('atlas-hud').classList.add('open');
     });
 
-    subGroups.push({sg, tx, ty});
+    subGroups.push({sg, tx, ty, nodeId: sub.nodeId, linker});
   });
 
-  EXPANSION_REGISTRY[cfg.nodeId] = {overlay, subGroups, baseX, baseY, lq: cell.q, lr: cell.r, subs: cfg.subs, activePushes: null};
+  EXPANSION_REGISTRY[cfg.nodeId] = {overlay, subGroups, baseX, baseY, lq: cell.q, lr: cell.r, zoneId: cfg.zoneId, subs: cfg.subs, activePushes: null};
 }
 
 // ── EXPANSION CONFIGS ────────────────────────────────────────────────────────
@@ -1179,122 +1584,117 @@ const EXPAND_PATHOPHYS = {
   subs: PATHOPHYS_SUBS,
 };
 
-// Clinical Informatics — Provider zone (6,−3). Sub-nodes fan NE; ehr/cdss push outward.
+// Clinical Informatics — Provider zone. Sub-node positions auto-derived.
 const EXPAND_INFORMATICS = {
   zoneId: 'provider', nodeId: 'informatics',
   subs: [
-    {dq: 1, dr: 0,  nodeId:'info-ehr',  label:'EHR\nBuild',
+    {nodeId:'info-ehr',  label:'EHR\nBuild',
      desc:'Epic, Oracle Cerner, MEDITECH implementation. Build environments, upgrade cycles, and optimization sprints. The single largest IT investment in most health systems.'},
-    {dq: 0, dr:-1,  nodeId:'info-cdss', label:'CDSS &\nAlerts',
+    {nodeId:'info-cdss', label:'CDSS &\nAlerts',
      desc:'Best Practice Advisories, order sets, clinical rules. Alert fatigue is the primary failure mode. Most BPAs are acknowledged without action within 12 months of deployment.'},
-    {dq: 1, dr:-1,  nodeId:'info-gov',  label:'Data\nGovernance',
+    {nodeId:'info-gov',  label:'Data\nGovernance',
      desc:'Data stewardship, master data management, data quality programs. Unglamorous but foundational. Bad governance means no analytics output is trustworthy.'},
-    {dq:-1, dr:-1,  nodeId:'info-bi',   label:'BI &\nReporting',
+    {nodeId:'info-bi',   label:'BI &\nReporting',
      desc:'Tableau, Power BI, Qlik connected to Clarity or Caboodle. Operational dashboards, quality metrics, financial analytics. The layer clinical leaders actually see and act on.'},
-    {dq: 0, dr:-2,  nodeId:'info-ai',   label:'Clinical\nAI',
+    {nodeId:'info-ai',   label:'Clinical\nAI',
      desc:'Model deployment inside EHR workflows. Sepsis alerts, readmission risk, imaging AI overlays. Integration into existing workflow is consistently harder than building the model.'},
-    {dq: 1, dr:-2,  nodeId:'info-api',  label:'Interop\n& APIs',
+    {nodeId:'info-api',  label:'Interop\n& APIs',
      desc:'FHIR R4 APIs, HL7 v2 interfaces, Direct secure messaging. The connective tissue between systems that were never designed to talk to each other.'},
   ],
 };
 
-// Medicare — Payer zone (−1,−1). Fans into payer territory; adv/commercial/medicaid-mc push W.
+// Medicare — Payer zone. Sub-node positions auto-derived.
 const EXPAND_MEDICARE = {
   zoneId: 'payer', nodeId: 'medicare',
   subs: [
-    {dq:-1, dr: 0,  nodeId:'mcare-c',    label:'Part C\nAdvantage',
+    {nodeId:'mcare-c',    label:'Part C\nAdvantage',
      desc:'Medicare Advantage. Private plans now covering over 50% of Medicare enrollees. Capitated payment, tighter networks, more prior auth, and the star ratings game.'},
-    {dq: 1, dr:-1,  nodeId:'mcare-a',    label:'Part A\nHospital',
+    {nodeId:'mcare-a',    label:'Part A\nHospital',
      desc:'Inpatient hospitalization, skilled nursing facility, hospice, and some home health. Premium-free for most. DRG-based hospital payment. SNF benefit has a hard stop at day 100.'},
-    {dq:-2, dr: 0,  nodeId:'mcare-b',    label:'Part B\nMedical',
+    {nodeId:'mcare-b',    label:'Part B\nMedical',
      desc:'Outpatient services, physician visits, DME, preventive care. Standard premium $174.70/month (2024). IRMAA income surcharges apply above set thresholds.'},
-    {dq:-1, dr:-1,  nodeId:'mcare-d',    label:'Part D\nDrugs',
+    {nodeId:'mcare-d',    label:'Part D\nDrugs',
      desc:'Prescription drug benefit. PDP or MA-PD. Formulary tiers, prior auth requirements, and coverage gap mechanics drive most out-of-pocket exposure for beneficiaries.'},
-    {dq: 0, dr:-2,  nodeId:'mcare-irmaa',label:'IRMAA &\nPremiums',
+    {nodeId:'mcare-irmaa',label:'IRMAA &\nPremiums',
      desc:'Income-Related Monthly Adjustment Amount. Higher earners pay more for Parts B and D. Hard cliff effects at income thresholds. A planning variable for high earners near retirement.'},
-    {dq:-2, dr:-1,  nodeId:'mcare-vbc',  label:'Value-Based\nMedicare',
+    {nodeId:'mcare-vbc',  label:'Value-Based\nMedicare',
      desc:'ACO REACH, MSSP, BPCI Advanced. Medicare\'s shift from fee-for-service toward shared savings and accountability. Still a minority of total Medicare spending, but growing every contract year.'},
   ],
 };
 
 
-// Access & Navigation — Patient zone (3,2). Sub-nodes fan east and southeast
-// (away from hub at 0,0). Ring-2 subs stay in patient territory.
+// Access & Navigation — Patient zone. Sub-node positions auto-derived.
 const EXPAND_ACCESS = {
   zoneId: 'patient', nodeId: 'access',
   subs: [
-    {dq:+1,dr: 0, nodeId:'acc-eligibility', label:'Real-Time\nEligibility',
+    {nodeId:'acc-eligibility', label:'Real-Time\nEligibility',
      desc:'270/271 transactions. Insurance eligibility verification at point of care. Copay estimation, benefit tier lookup. The moment a patient registers is where coverage uncertainty starts.'},
-    {dq: 0,dr:+1, nodeId:'acc-referral',    label:'Referral\nPathways',
+    {nodeId:'acc-referral',    label:'Referral\nPathways',
      desc:'PCP-to-specialist handoff. Warm handoffs, fax-based referrals, e-referral platforms. Wait times averaging 26 days for specialist appointments in urban areas, longer in rural. The handoff where patients get lost.'},
-    {dq:+1,dr:+1, nodeId:'acc-transport',   label:'Transportation\nBarriers',
+    {nodeId:'acc-transport',   label:'Transportation\nBarriers',
      desc:'3.6 million missed or delayed appointments annually due to lack of transportation. NEMT — non-emergency medical transport — is a Medicaid-covered benefit that most eligible patients do not know to request.'},
-    {dq:+2,dr: 0, nodeId:'acc-sdoh-screen', label:'SDOH\nScreening',
+    {nodeId:'acc-sdoh-screen', label:'SDOH\nScreening',
      desc:'PRAPARE, AHC-HRSN, Hunger Vital Sign. Standardized social needs screening at the point of access. The data collected here feeds community health worker referrals and population health programs — when systems actually connect.'},
-    {dq:+1,dr:+2, nodeId:'acc-navigator',   label:'Patient\nNavigators',
+    {nodeId:'acc-navigator',   label:'Patient\nNavigators',
      desc:'Community health workers, patient navigators, care coordinators. The human layer between patients and the system. Evidence-based for reducing disparities. Chronically underfunded and often the first cut in budget cycles.'},
-    {dq:+2,dr:+1, nodeId:'acc-wayfinding',  label:'Health\nLiteracy',
+    {nodeId:'acc-wayfinding',  label:'Health\nLiteracy',
      desc:'How patients find the right care, understand their options, and make decisions in a system not designed for them. Low health literacy affects ~36% of U.S. adults. Discharge instructions written at 10th grade. Most patients read at 6th.'},
   ],
 };
 
-// Population Health — PubHealth zone (0,3). Sub-nodes fan south and west.
-// Ring-1 around pop-health is mostly occupied — pushes prevention and community-health;
-// ring-2 subs fan into open pubhealth territory.
+// Population Health — PubHealth zone. Sub-node positions auto-derived.
 const EXPAND_POP_HEALTH = {
   zoneId: 'pubhealth', nodeId: 'pop-health',
   subs: [
-    {dq:-1,dr: 0, nodeId:'ph-risk',     label:'Risk\nStratification',
+    {nodeId:'ph-risk',     label:'Risk\nStratification',
      desc:'Claims, lab, and ADT data combined to score patient risk. HCC risk adjustment, Milliman, Johns Hopkins ACG. The foundation of value-based care program design. Garbage data = wrong high-risk cohorts.'},
-    {dq: 0,dr:+1, nodeId:'ph-chronic',  label:'Chronic Disease\nPrograms',
+    {nodeId:'ph-chronic',  label:'Chronic Disease\nPrograms',
      desc:'Disease management programs for diabetes, COPD, CHF, CKD. Care gap closure, targeted outreach, pharmacist consults. Where population health intersects with actual clinical touch points.'},
-    {dq:-1,dr:+1, nodeId:'ph-quality',  label:'Quality\nMeasurement',
+    {nodeId:'ph-quality',  label:'Quality\nMeasurement',
      desc:'HEDIS, CMS Star Ratings, eCQMs, CAHPS. Standardized measures that tie to value-based contract performance, public reporting, and regulatory compliance. The score on the board providers actually manage to.'},
-    {dq:+1,dr: 0, nodeId:'ph-engage',   label:'Community\nEngagement',
+    {nodeId:'ph-engage',   label:'Community\nEngagement',
      desc:'CHNAs, community benefit spending, hospital-community partnerships, and the public health workforce that bridges clinical and community settings. The difference between a health system and a healthcare system.'},
-    {dq: 0,dr:+2, nodeId:'ph-analytics',label:'Population\nAnalytics',
+    {nodeId:'ph-analytics',label:'Population\nAnalytics',
      desc:'Healthy Planet, Arcadia, Lightbeam, HealthEC. The platforms that aggregate multi-source data into actionable population views. As good as the data quality feeding them — which is often not great.'},
-    {dq:-2,dr:+1, nodeId:'ph-equity',   label:'Equity\nMeasurement',
+    {nodeId:'ph-equity',   label:'Equity\nMeasurement',
      desc:'Race and ethnicity-stratified quality data, disparity dashboards, and social determinants measurement. The OMB standard for race/ethnicity data collection is changing in 2025 for the first time since 1997.'},
   ],
 };
 
-// Federal Legislation — Policy zone (-2,0). Sub-nodes fan west and northwest.
-// Expands into policy territory further from hub.
+// Federal Legislation — Policy zone. Sub-node positions auto-derived.
 const EXPAND_FED_LAW = {
   zoneId: 'policy', nodeId: 'fed-law',
   subs: [
-    {dq:-1,dr: 0, nodeId:'law-hipaa2',  label:'HIPAA\nSecurity Rule',
+    {nodeId:'law-hipaa2',  label:'HIPAA\nSecurity Rule',
      desc:'Administrative, physical, and technical safeguards. Required risk analysis every year. Most healthcare organizations have outdated assessments or none at all. OCR enforcement has recovered $135M+ in penalties since 2008.'},
-    {dq: 0,dr:-1, nodeId:'law-hitech',  label:'HITECH\nAct',
+    {nodeId:'law-hitech',  label:'HITECH\nAct',
      desc:'2009 legislation that expanded HIPAA, created Meaningful Use, and authorized $27B in EHR adoption incentives. The single biggest structural intervention in health IT history. Set the current interoperability mess in motion.'},
-    {dq:-1,dr:-1, nodeId:'law-cures',   label:'21st Century\nCures Act',
+    {nodeId:'law-cures',   label:'21st Century\nCures Act',
      desc:'2016. Mandated open APIs, information blocking prohibitions, and standardized access to patient data. ONC rules implementing it took effect 2022-2023. Still being litigated at the vendor and provider level.'},
-    {dq:-1,dr:+1, nodeId:'law-nsa',     label:'No Surprises\nAct',
+    {nodeId:'law-nsa',     label:'No Surprises\nAct',
      desc:'2022. Banned out-of-network surprise bills for emergency care, air ambulance, and non-emergency care at in-network facilities. Independent dispute resolution process backlogged within months of launch.'},
-    {dq:-2,dr: 0, nodeId:'law-aca2',    label:'ACA\nMandates',
+    {nodeId:'law-aca2',    label:'ACA\nMandates',
      desc:'Employer mandate, individual mandate (reduced to zero), essential health benefits, guaranteed issue. The architecture of the non-Medicare/Medicaid insurance market. Actively contested in federal courts since passage.'},
-    {dq:-2,dr:+1, nodeId:'law-cms-rule',label:'CMS Annual\nRulemaking',
+    {nodeId:'law-cms-rule',label:'CMS Annual\nRulemaking',
      desc:'IPPS, OPPS, PFS, MA final rules — published every fall, effective January 1. The rate-setting and policy vehicle that reshapes reimbursement, quality programs, and coverage every year. 2,000+ pages most cycles.'},
   ],
 };
 
-// Scope of Practice — Policy zone (-5,2). Sub-nodes fan west and northwest.
-// Deep in policy territory — ring-2 subs push into open map edge area.
+// Scope of Practice — Policy zone. Sub-node positions auto-derived.
 const EXPAND_SCOPE = {
   zoneId: 'policy', nodeId: 'scope',
   subs: [
-    {dq:-1,dr: 0, nodeId:'scp-np',      label:'NP Full\nPractice',
+    {nodeId:'scp-np',      label:'NP Full\nPractice',
      desc:'27 states + DC grant full practice authority to nurse practitioners — independent prescribing, diagnosing, treating without physician collaboration agreements. Remaining states: reduced or restricted practice. The single biggest addressable lever for primary care access.'},
-    {dq: 0,dr:-1, nodeId:'scp-pa',      label:'PA\nAutonomy',
+    {nodeId:'scp-pa',      label:'PA\nAutonomy',
      desc:'Physician Assistants in most states operate under physician supervision, though the definition varies widely. The PA profession officially transitioned to "physician associate" in 2021. Practice agreements, formulary authority, and independent prescribing all vary by state.'},
-    {dq:-1,dr:-1, nodeId:'scp-rrt',     label:'RRT\nAdvanced\nPractice',
+    {nodeId:'scp-rrt',     label:'RRT\nAdvanced\nPractice',
      desc:'Respiratory therapists can initiate ventilator protocols, perform bronchoscopies, and run rapid response teams in some states. Protocol-driven practice is evidence-based and reduces cost. Scope still limited by state licensure boards in most jurisdictions.'},
-    {dq:+1,dr:-1, nodeId:'scp-pharm',   label:'Pharmacist\nPrescribing',
+    {nodeId:'scp-pharm',   label:'Pharmacist\nPrescribing',
      desc:'30+ states allow pharmacists to prescribe under collaborative practice agreements, statewide protocols, or independent authority for defined conditions. Statins, hormonal contraceptives, naloxone — expanding list. Access impact is real in rural pharmacy deserts.'},
-    {dq:-2,dr: 0, nodeId:'scp-compact', label:'Interstate\nCompacts',
+    {nodeId:'scp-compact', label:'Interstate\nCompacts',
      desc:'Nurse Licensure Compact (NLC): 41 states. Physician Interstate Compact (IMLC). RCIC for respiratory therapists. Compact membership enables telehealth, travel practice, and disaster response across state lines without relicensure. Coverage still spotty.'},
-    {dq:-1,dr:+1, nodeId:'scp-barriers',label:'Regulatory\nBarriers',
+    {nodeId:'scp-barriers',label:'Regulatory\nBarriers',
      desc:'Legacy physician-only regulations, hospital credentialing bylaws, and medical board composition all preserve the status quo. CON laws, supervision requirements, and insurance credentialing gaps block expanded scope even where state law allows it.'},
   ],
 };
@@ -1397,6 +1797,16 @@ ZONE_DEFS.forEach(zone => {
     GRID_MAP.set(`${cell.q},${cell.r}`, {zoneId: zone.id, nodeId: cell.nodeId, type: cell.type});
   });
 });
+// Reverse index: nodeId → original {q,r}. Used so multi-expansion push deltas can
+// be computed against the SVG base position (where the path was drawn) rather than
+// the cell's intermediate position from a prior expansion's displacement.
+const NODE_ORIGIN = new Map();
+GRID_MAP.forEach((v, k) => {
+  if (v.nodeId) {
+    const [q, r] = k.split(',').map(Number);
+    NODE_ORIGIN.set(v.nodeId, {q, r});
+  }
+});
 function gridGet(q, r)      { return GRID_MAP.get(`${q},${r}`); }
 function gridOccupied(q, r) { return GRID_MAP.has(`${q},${r}`); }
 
@@ -1478,27 +1888,29 @@ ZONE_DEFS.forEach(z => {
     pubhealth:'pop-health', techeco:'vendor-dir', policy:'fed-law', payer:'medicare',
   };
 
-  // Pixel position of hex (q,r), accounting for any active expansion push delta
-  function effectivePx(q, r) {
-    const cell = GRID_MAP.get(`${q},${r}`);
-    if (cell && cell.nodeId) {
-      for (const reg of Object.values(EXPANSION_REGISTRY)) {
-        if (reg.activePushes && reg.activePushes.has(cell.nodeId)) {
-          const [dx,dy] = reg.activePushes.get(cell.nodeId);
-          const [bx,by] = hPx(q,r);
-          return [bx+dx, by+dy];
-        }
-      }
-    }
-    return hPx(q,r);
-  }
-
-  // Pixel position of vertex vi (0-5, clockwise from upper-right) of hex (q,r)
+  // Pixel position of vertex vi (0-5, clockwise from upper-right) of hex (q,r).
+  // Routes are anchored to the STATIC hex grid — they never follow displaced cells.
+  // Cells move on top of the grid during expansion; routes stay on the grid and
+  // re-route around the expansion cluster (see routeBlocked / edgeCost). This is
+  // what keeps every route segment a true hex edge instead of a diagonal cut.
   // vi=0 upper-right, 1 top, 2 upper-left, 3 lower-left, 4 bottom, 5 lower-right
-  function hexVtx(q, r, vi, eff) {
-    const [cx,cy] = eff ? effectivePx(q,r) : hPx(q,r);
+  function hexVtx(q, r, vi) {
+    const [cx,cy] = hPx(q,r);
     const rad = -(30 + 60*vi) * Math.PI / 180;
     return [cx + s*Math.cos(rad), cy + s*Math.sin(rad)];
+  }
+
+  // Hexes currently occupied by an active expansion (sub-nodes + displaced cells).
+  // Routes treat these as expensive so they detour around the expansion footprint.
+  const routeBlocked = new Set();
+  function rebuildRouteBlocked() {
+    routeBlocked.clear();
+    expandedSet.forEach(id => {
+      const reg = EXPANSION_REGISTRY[id];
+      if (!reg) return;
+      if (reg.subTargets) reg.subTargets.forEach(({q, r}) => routeBlocked.add(`${q},${r}`));
+      if (reg.lastDisplacements) reg.lastDisplacements.forEach(({toQ, toR}) => routeBlocked.add(`${toQ},${toR}`));
+    });
   }
 
   // Stable integer key for a vertex pixel position
@@ -1536,70 +1948,85 @@ ZONE_DEFS.forEach(z => {
     return (Math.abs(q1-q2)+Math.abs(r1-r2)+Math.abs((q1+r1)-(q2+r2)))/2;
   }
 
-  // Edge traversal cost between adjacent vertex keys vka → vkb
+  // Edge traversal cost between adjacent vertex keys vka → vkb.
+  // Costs are near-uniform (~1.0) so A* minimises edge count — the most direct
+  // route. The interior surcharge is tiny (1.12 vs 1.0), enough only to break
+  // ties toward zone borders among paths of equal length, never to force a
+  // detour. Min cost stays 1.0 so the ~1.0-per-step heuristic is admissible and
+  // A* returns the genuinely shortest path. Hub and moat stay hard barriers.
   function edgeCost(vka, vkb) {
     const ha = vtxMap.get(vka)||[], hb = vtxMap.get(vkb)||[];
     const shared = ha.filter(a => hb.some(b => b.q===a.q && b.r===a.r));
     for (const {q,r} of shared) {
       const d = hexD(q,r,0,0);
       if (d===0) return 80;  // hub — avoid hard
-      if (d===1) return 5;   // moat — expensive
+      if (d===1) return 8;   // moat — firm barrier, never crossed
     }
-    if (shared.length === 0) return 2;
-    if (shared.length === 1) return 1.2; // map-edge boundary
+    // Penalty for edges bordering a hex occupied by an active expansion — makes
+    // routes detour around the expansion footprint rather than cut through it.
+    let blockPen = 0;
+    for (const {q,r} of shared) {
+      if (routeBlocked.has(`${q},${r}`)) blockPen += 14;
+    }
+    if (shared.length === 0) return 1.2 + blockPen;
+    if (shared.length === 1) return 1.0 + blockPen; // map-edge perimeter
     const zones = [...new Set(shared.map(h=>(GRID_MAP.get(`${h.q},${h.r}`)||{}).zoneId).filter(Boolean))];
-    return zones.length > 1 ? 0.7 : 1.8; // zone boundary cheap, interior expensive
+    return (zones.length > 1 ? 1.0 : 1.12) + blockPen; // boundary vs interior — tie-break only
   }
 
-  // Vertex-graph A*. Returns array of canonical {q,r,vi} tuples, or null.
+  // Vertex-graph A*. Multi-source / multi-target: A* may leave from any of the
+  // start landmark's six vertices and TERMINATES at the first vertex of the end
+  // landmark it reaches — so the route connects at whatever corner the most
+  // direct path naturally arrives at, not a pre-chosen one. Returns the canonical
+  // [{q,r,vi}] tuple sequence, or null.
   function vtxAstar(startQ, startR, endQ, endR) {
-    const [ecx,ecy] = hPx(endQ,endR), [scx,scy] = hPx(startQ,startR);
-    let svk,svInfo,evk,evInfo,svd=Infinity,evd=Infinity;
+    const [ecx,ecy] = hPx(endQ,endR);
+    // Heuristic: distance to the end landmark centre, less one hex radius (the
+    // actual target vertex sits ~s closer than the centre). Stays admissible
+    // against the 1.0 minimum edge cost, so A* returns the true shortest path.
+    const h = (vx,vy) => Math.max(0, Math.hypot(vx-ecx, vy-ecy) - s) / s;
+    const endKeys = new Set();
     for (let vi=0;vi<6;vi++) {
-      const [vx,vy]=hexVtx(startQ,startR,vi,false);
-      const d=(vx-ecx)**2+(vy-ecy)**2;
-      if(d<svd){svd=d;svk=vk(vx,vy);svInfo={q:startQ,r:startR,vi};}
+      const [vx,vy]=hexVtx(endQ,endR,vi);
+      endKeys.add(vk(vx,vy));
     }
-    for (let vi=0;vi<6;vi++) {
-      const [vx,vy]=hexVtx(endQ,endR,vi,false);
-      const d=(vx-scx)**2+(vy-scy)**2;
-      if(d<evd){evd=d;evk=vk(vx,vy);evInfo={q:endQ,r:endR,vi};}
-    }
-    if (svk===evk) return [svInfo];
-    const [epx,epy] = hexVtx(evInfo.q,evInfo.r,evInfo.vi,false);
     const open=new Map(), gScore=new Map(), cameFrom=new Map(), nodeInfo=new Map();
-    gScore.set(svk,0); open.set(svk,{f:0}); nodeInfo.set(svk,svInfo);
+    for (let vi=0;vi<6;vi++) {
+      const [vx,vy]=hexVtx(startQ,startR,vi);
+      const k=vk(vx,vy);
+      if (endKeys.has(k)) return [{q:startQ,r:startR,vi}]; // landmarks share a corner
+      gScore.set(k,0);
+      nodeInfo.set(k,{q:startQ,r:startR,vi});
+      open.set(k,{f:h(vx,vy)});
+    }
     let iter=0;
     while (open.size>0 && iter++<8000) {
       let ck=null,mf=Infinity;
       open.forEach((n,k)=>{ if(n.f<mf){mf=n.f;ck=k;} });
-      if (ck===evk) {
-        const path=[evInfo]; let k=evk;
-        while (cameFrom.has(k)) { k=cameFrom.get(k); path.unshift(nodeInfo.get(k)); }
+      if (endKeys.has(ck)) {
+        const path=[]; let k=ck;
+        while (k!==undefined) { path.unshift(nodeInfo.get(k)); k=cameFrom.get(k); }
         return path;
       }
       open.delete(ck);
       vtxNeighbours(ck).forEach((nInfo,nk)=>{
-        const cost=edgeCost(ck,nk);
-        const tg=(gScore.get(ck)||0)+cost;
+        const tg=(gScore.get(ck)||0)+edgeCost(ck,nk);
         if (!gScore.has(nk)||tg<gScore.get(nk)) {
           gScore.set(nk,tg); cameFrom.set(nk,ck); nodeInfo.set(nk,nInfo);
-          const [nx,ny]=hexVtx(nInfo.q,nInfo.r,nInfo.vi,false);
-          open.set(nk,{f:tg+Math.sqrt((nx-epx)**2+(ny-epy)**2)/s});
+          const [nx,ny]=hexVtx(nInfo.q,nInfo.r,nInfo.vi);
+          open.set(nk,{f:tg+h(nx,ny)});
         }
       });
     }
     return null;
   }
 
-  // SVG path string from canonical vertex sequence (uses effective positions when eff=true)
-  function buildVtxPath(canonical, eff) {
+  // SVG path string from a canonical vertex sequence. Path runs vertex-to-vertex
+  // along hex edges and terminates at the entry vertex of each landmark hex (not
+  // the hex centre) so the landmark's centre stays click-clear for expansion.
+  function buildVtxPath(canonical) {
     if (!canonical||canonical.length<1) return null;
-    // Start and end at the landmark hex centre so the route visually originates there
-    const first=canonical[0], last=canonical[canonical.length-1];
-    const sc = eff ? effectivePx(first.q,first.r) : hPx(first.q,first.r);
-    const ec = eff ? effectivePx(last.q,last.r)   : hPx(last.q,last.r);
-    const pts = [sc, ...canonical.map(({q,r,vi})=>hexVtx(q,r,vi,eff)), ec];
+    const pts = canonical.map(({q,r,vi})=>hexVtx(q,r,vi));
     let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
     for (let i=1;i<pts.length;i++) d += ` L${pts[i][0].toFixed(1)},${pts[i][1].toFixed(1)}`;
     return d;
@@ -1626,7 +2053,7 @@ ZONE_DEFS.forEach(z => {
         ((c.wx-tz.cx)**2+(c.wy-tz.cy)**2)<((b.wx-tz.cx)**2+(b.wy-tz.cy)**2)?c:b);
 
     const canonical = vtxAstar(fcell.q,fcell.r,tcell.q,tcell.r);
-    const pathD = canonical ? buildVtxPath(canonical,false)
+    const pathD = canonical ? buildVtxPath(canonical)
       : `M${fz.cx.toFixed(1)},${fz.cy.toFixed(1)} L${tz.cx.toFixed(1)},${tz.cy.toFixed(1)}`;
 
     const rg=connG.append('g').attr('class','route-group')
@@ -1646,20 +2073,46 @@ ZONE_DEFS.forEach(z => {
     const fe=fp.node();
     if(fe) fe.style.animation=`routeFlow 3s linear ${(-ci*0.42).toFixed(2)}s infinite`;
 
+    // Endpoint indicators: small filled circle at each terminating vertex marks
+    // the cell the route attaches to without covering its centre/click target.
+    const endpoints = [
+      rg.append('circle').attr('class','r-endpoint').attr('r',3.2)
+        .attr('fill',col).attr('fill-opacity',0.75)
+        .attr('stroke',col).attr('stroke-width',1.2).attr('stroke-opacity',0.95)
+        .attr('pointer-events','none'),
+      rg.append('circle').attr('class','r-endpoint').attr('r',3.2)
+        .attr('fill',col).attr('fill-opacity',0.75)
+        .attr('stroke',col).attr('stroke-width',1.2).attr('stroke-opacity',0.95)
+        .attr('pointer-events','none'),
+    ];
+    function placeEndpoints(canon, dur) {
+      if (!canon || canon.length < 1) { endpoints.forEach(e=>e.attr('opacity',0)); return; }
+      const a = canon[0], b = canon[canon.length-1];
+      const [ax,ay] = hexVtx(a.q,a.r,a.vi);
+      const [bx,by] = hexVtx(b.q,b.r,b.vi);
+      endpoints[0].attr('opacity',1); endpoints[1].attr('opacity',1);
+      const e0 = dur ? endpoints[0].transition().duration(dur).ease(d3.easeCubicInOut) : endpoints[0];
+      const e1 = dur ? endpoints[1].transition().duration(dur).ease(d3.easeCubicInOut) : endpoints[1];
+      e0.attr('cx',ax).attr('cy',ay);
+      e1.attr('cx',bx).attr('cy',by);
+    }
+    placeEndpoints(canonical);
+
     const hit=rg.append('path').attr('d',pathD).attr('fill','none')
       .attr('stroke','transparent').attr('stroke-width',16).attr('cursor','pointer');
     hit.on('mouseover',()=>{
-      if(activeRouteConn===conn) return;
+      hoverConn=conn; refreshRouteVis();
       tipLabel.textContent=conn.label||''; tipDesc.textContent=conn.desc||''; connTip.style.display='block';
     });
     hit.on('mousemove',ev=>{
+      if(connTip.style.display!=='block') return;
       const rect=canvasEl.getBoundingClientRect();
       let tx=ev.clientX-rect.left+14,ty=ev.clientY-rect.top-connTip.offsetHeight-8;
       if(tx+268>rect.width) tx=ev.clientX-rect.left-268;
       if(ty<0) ty=ev.clientY-rect.top+14;
       connTip.style.left=tx+'px'; connTip.style.top=ty+'px';
     });
-    hit.on('mouseout',()=>{ connTip.style.display='none'; });
+    hit.on('mouseout',()=>{ connTip.style.display='none'; hoverConn=null; refreshRouteVis(); });
     hit.on('click', ev=>{
       ev.stopPropagation();
       connTip.style.display='none';
@@ -1668,31 +2121,97 @@ ZONE_DEFS.forEach(z => {
       window._selectRoute(conn, col);
     });
 
-    builtRoutes.push({conn, rg, col, fp, canonical, layers:[rGlow,rBody,fp,hit]});
+    builtRoutes.push({conn, rg, col, fp, canonical, endpoints, placeEndpoints,
+      fq:fcell.q, fr:fcell.r, tq:tcell.q, tr:tcell.r, layers:[rGlow,rBody,fp,hit]});
   });
 
-  // ── Route selection ───────────────────────────────────────────────────────
+  // ── Route selection & highlighting ─────────────────────────────────────────
+  // Visual state from three inputs: the selected route (HUD), the Map Key type
+  // checkboxes (multi-select), and a hovered/previewed route. A hovered route
+  // ISOLATES — it overrides the type highlight so a single link can be traced
+  // out of the tangle. Glow + body width scale down as more routes light up so
+  // the all-on view never blooms into an indistinct haze. The two endpoint
+  // landmark hexes of the hovered/selected route get a bright ring.
   let activeRouteConn = null;
+  let hoverConn = null;
+  const checkedTypes = new Set();
 
-  function applyRouteVis(sel) {
-    builtRoutes.forEach(({conn, rg, fp}) => {
-      const on = conn === sel;
-      const dim = sel && !on;
-      rg.select('.r-body').transition().duration(160)
-        .attr('stroke-width', on ? 4.5 : 2)
-        .attr('stroke-opacity', on ? 0.92 : dim ? 0.06 : 0.14);
-      rg.select('.r-glow').transition().duration(160)
-        .attr('stroke-width', on ? 26 : 10)
-        .attr('stroke-opacity', on ? 0.18 : dim ? 0.01 : 0.025);
-      fp.transition().duration(160)
-        .attr('stroke-width', on ? 2.2 : 1.2)
-        .attr('stroke-opacity', on ? 0.98 : dim ? 0.08 : 0.36);
-    });
+  // Endpoint highlight rings — repositioned over the two landmark hexes of the
+  // hovered (or, failing that, selected) route. Appended last so they sit on top.
+  const endpointHlG = connG.append('g').attr('id','route-endpt-hl').attr('pointer-events','none');
+  const endpointRings = [0,1].map(() =>
+    endpointHlG.append('path').attr('fill','none').attr('stroke-width',3)
+      .attr('opacity',0).attr('filter','url(#n-glow)'));
+  function routeByConn(conn) { return conn ? builtRoutes.find(b => b.conn === conn) : null; }
+  function updateEndpointHl() {
+    const r = routeByConn(hoverConn) || routeByConn(activeRouteConn);
+    if (!r) { endpointRings.forEach(e => e.transition().duration(140).attr('opacity',0)); return; }
+    const [ax,ay] = hPx(r.fq, r.fr), [bx,by] = hPx(r.tq, r.tr);
+    endpointRings[0].attr('d', hPath(ax,ay,s+3)).attr('stroke', r.col)
+      .transition().duration(140).attr('opacity',0.92);
+    endpointRings[1].attr('d', hPath(bx,by,s+3)).attr('stroke', r.col)
+      .transition().duration(140).attr('opacity',0.92);
   }
+
+  function refreshRouteVis() {
+    const hasTypes = checkedTypes.size > 0;
+    const isolate = !!hoverConn;
+    const anyActive = isolate || !!activeRouteConn || hasTypes;
+    const isOn = conn => isolate
+      ? conn === hoverConn
+      : (conn === activeRouteConn || (hasTypes && checkedTypes.has(conn.type)));
+    let onCount = 0;
+    builtRoutes.forEach(({conn}) => { if (isOn(conn)) onCount++; });
+    // As more routes light up, shrink the glow + body so they stay distinct
+    // colored lines instead of merging into one bright haze.
+    const k = onCount <= 2 ? 1 : Math.max(0.16, 2 / onCount);
+    const glowW = 10 + 16 * k, glowO = 0.03 + 0.15 * k;
+    const bodyW = onCount <= 2 ? 4.5 : 3.2;
+    builtRoutes.forEach(({conn, rg, fp}) => {
+      const on = isOn(conn);
+      const dim = anyActive && !on;
+      rg.select('.r-body').transition().duration(160)
+        .attr('stroke-width', on ? bodyW : 2)
+        .attr('stroke-opacity', on ? 0.94 : dim ? 0.05 : 0.14);
+      rg.select('.r-glow').transition().duration(160)
+        .attr('stroke-width', on ? glowW : 10)
+        .attr('stroke-opacity', on ? glowO : dim ? 0.008 : 0.025);
+      fp.transition().duration(160)
+        .attr('stroke-width', on ? 2.0 : 1.2)
+        .attr('stroke-opacity', on ? 0.96 : dim ? 0.06 : 0.36);
+      rg.selectAll('.r-endpoint').transition().duration(160)
+        .attr('r', on ? 4.3 : 3.2)
+        .attr('fill-opacity', on ? 0.95 : dim ? 0.15 : 0.75)
+        .attr('stroke-opacity', on ? 1 : dim ? 0.22 : 0.95);
+    });
+    updateEndpointHl();
+  }
+
+  // When routes overlap, the hover hit-test lands on whichever route's hit path
+  // is drawn last (topmost). Raise the routes of any checked type (and the
+  // selected route) so the hover resolves to a route relevant to what's
+  // highlighted — e.g. hovering a shared line while "Financial" is on picks the
+  // financial route, not a clinical route sharing the same path.
+  function reorderRoutes() {
+    builtRoutes.forEach(r => {
+      if (checkedTypes.has(r.conn.type) || r.conn === activeRouteConn) r.rg.raise();
+    });
+    endpointHlG.raise();
+  }
+
+  // Toggle a connection type in the Map Key highlight set. Returns new on-state.
+  window._toggleRouteType = function(type) {
+    if (checkedTypes.has(type)) checkedTypes.delete(type);
+    else checkedTypes.add(type);
+    reorderRoutes();
+    refreshRouteVis();
+    return checkedTypes.has(type);
+  };
 
   window._selectRoute = function(conn, col) {
     activeRouteConn = conn;
-    applyRouteVis(conn);
+    reorderRoutes();
+    refreshRouteVis();
     const badge = document.getElementById('h-badge');
     badge.textContent = conn.type.toUpperCase() + ' · ROUTE';
     badge.style.setProperty('--hz', col);
@@ -1702,23 +2221,107 @@ ZONE_DEFS.forEach(z => {
     document.getElementById('hud-links').innerHTML = '';
     document.getElementById('hud-links-col').classList.remove('has-links');
     document.getElementById('atlas-hud').classList.add('open');
+    if (window._syncConnPanel) window._syncConnPanel();
   };
 
   window._deselectRoute = function() {
     if (!activeRouteConn) return;
     activeRouteConn = null;
-    applyRouteVis(null);
+    refreshRouteVis();
     document.getElementById('atlas-hud').classList.remove('open');
+    if (window._syncConnPanel) window._syncConnPanel();
   };
 
-  // Redraw all routes using current (possibly pushed) hex positions — call after expand/collapse
-  window.updateRoutes=function(){
-    builtRoutes.forEach(({canonical,layers})=>{
-      if (!canonical) return;
-      const newD=buildVtxPath(canonical,true);
-      layers.forEach(p=>p.transition().duration(420).ease(d3.easeCubicInOut).attr('d',newD));
+  // Re-route every connection with A* against the current expansion state, then
+  // redraw. Routes stay on the static hex grid (every segment a true hex edge) but
+  // detour around hexes occupied by active expansions via the edgeCost penalty.
+  // Debounced through requestAnimationFrame so a burst of expand/collapse calls
+  // (e.g. Expand All firing 7×) collapses into a single re-route pass.
+  let _routeUpdatePending = false;
+  function doUpdateRoutes() {
+    rebuildRouteBlocked();
+    builtRoutes.forEach(route => {
+      const canon = vtxAstar(route.fq, route.fr, route.tq, route.tr);
+      if (!canon) return;
+      route.canonical = canon;
+      const newD = buildVtxPath(canon);
+      route.layers.forEach(p => p.transition().duration(420).ease(d3.easeCubicInOut).attr('d', newD));
+      route.placeEndpoints(canon, 420);
     });
+  }
+  window.updateRoutes = function() {
+    if (_routeUpdatePending) return;
+    _routeUpdatePending = true;
+    requestAnimationFrame(() => { _routeUpdatePending = false; doUpdateRoutes(); });
   };
+
+  // ── Connections panel ──────────────────────────────────────────────────────
+  // Clicking a route in a tangle is unreliable, so route selection also lives in
+  // a searchable/filterable side drawer. Each row hover-previews its route and
+  // click-selects it. Rows are built once; search + type chips toggle visibility.
+  {
+    const listEl   = document.getElementById('conn-list');
+    const emptyEl  = document.getElementById('conn-empty');
+    const searchEl = document.getElementById('conn-search');
+    const chipsEl  = document.getElementById('conn-filters');
+    let typeFilter = 'all', query = '';
+
+    const ZONE_NAME = {};
+    ZONE_DEFS.forEach(z => { ZONE_NAME[z.id] = z.displayLabel || z.label; });
+
+    const rows = builtRoutes.map(route => {
+      const row = document.createElement('div');
+      row.className = 'conn-row';
+      const dot = document.createElement('span');
+      dot.className = 'conn-dot';
+      dot.style.background = route.col;
+      const txt = document.createElement('div');
+      txt.className = 'conn-row-text';
+      const lab = document.createElement('div');
+      lab.className = 'conn-row-label';
+      lab.textContent = route.conn.label || `${route.conn.from} ↔ ${route.conn.to}`;
+      const zns = document.createElement('div');
+      zns.className = 'conn-row-zones';
+      zns.textContent = `${ZONE_NAME[route.conn.from]||route.conn.from} → ${ZONE_NAME[route.conn.to]||route.conn.to}`;
+      txt.append(lab, zns);
+      row.append(dot, txt);
+      row.addEventListener('mouseenter', () => { hoverConn = route.conn; refreshRouteVis(); });
+      row.addEventListener('mouseleave', () => { hoverConn = null; refreshRouteVis(); });
+      row.addEventListener('click', () => {
+        if (typeof deselectNode === 'function') deselectNode();
+        window._selectRoute(route.conn, route.col);
+      });
+      listEl.appendChild(row);
+      return {route, row, search: `${lab.textContent} ${zns.textContent} ${route.conn.type}`.toLowerCase()};
+    });
+
+    function renderConnList() {
+      let shown = 0;
+      rows.forEach(({route, row, search}) => {
+        const visible = (typeFilter === 'all' || route.conn.type === typeFilter)
+          && (!query || search.includes(query));
+        row.style.display = visible ? 'flex' : 'none';
+        row.classList.toggle('active', route.conn === activeRouteConn);
+        if (visible) shown++;
+      });
+      emptyEl.style.display = shown ? 'none' : 'block';
+    }
+
+    searchEl.addEventListener('input', () => { query = searchEl.value.trim().toLowerCase(); renderConnList(); });
+    chipsEl.querySelectorAll('.cf-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        chipsEl.querySelectorAll('.cf-chip').forEach(c => c.classList.remove('on'));
+        chip.classList.add('on');
+        typeFilter = chip.dataset.type;
+        renderConnList();
+      });
+    });
+
+    // Exposed so map-side selection (direct route click) keeps the panel's
+    // active-row highlight in sync.
+    window._syncConnPanel = renderConnList;
+    renderConnList();
+  }
 
   window._hlRoutes=function(zoneId){
     builtRoutes.forEach(({conn,rg,fp})=>{
@@ -1729,12 +2332,21 @@ ZONE_DEFS.forEach(z => {
     });
   };
   window._clrRoutes=function(){
-    builtRoutes.forEach(({rg,fp})=>{
-      rg.select('.r-body').transition().duration(250).attr('stroke-width',2).attr('stroke-opacity',0.14);
-      rg.select('.r-glow').transition().duration(250).attr('stroke-width',10).attr('stroke-opacity',0.025);
-      fp.transition().duration(250).attr('stroke-width',1.2).attr('stroke-opacity',0.36);
-    });
+    // Return to whatever the legend/selection state dictates rather than a flat ambient.
+    refreshRouteVis();
   };
+
+  // ── Map Key connection checkboxes + popout ─────────────────────────────────
+  document.querySelectorAll('#atlas-legend .leg-check').forEach(rowEl => {
+    rowEl.addEventListener('click', () => {
+      const on = window._toggleRouteType(rowEl.dataset.type);
+      rowEl.classList.toggle('on', on);
+    });
+  });
+  const connPopout = document.getElementById('leg-conn-popout');
+  if (connPopout) connPopout.addEventListener('click', () => {
+    document.getElementById('atlas-conn').classList.toggle('open');
+  });
 }
 
 // ── ZONE TERRITORIES ──────────────────────────────────────────────────────────
@@ -1744,16 +2356,24 @@ let activeZone=null, activeNode=null;
 ZONE_DEFS.forEach(zone => {
   const zg = zonesG.append('g').attr('class','az').attr('data-id',zone.id);
 
+  // Terrain backing for every hex in the zone, including named-cell positions.
+  // This way when a named cell animates away during expansion, the position still
+  // shows a zone-colored hex outline underneath instead of a black hole.
+  zone.cells.forEach(cell => {
+    const cx = cell.wx, cy = cell.wy;
+    zg.append('path').attr('class','zone-bg').attr('d', hPath(cx,cy,s-2))
+      .attr('fill', zone.color).attr('fill-opacity', 0.05)
+      .attr('stroke', zone.color).attr('stroke-width', 0.6).attr('stroke-opacity', 0.12)
+      .attr('pointer-events', 'none');
+  });
+
   zone.cells.forEach(cell => {
     const cx=cell.wx, cy=cell.wy;
     const isTerrain = cell.type==='terrain';
     const isLM      = cell.type==='landmark';
 
     if (isTerrain) {
-      zg.append('path').attr('d',hPath(cx,cy,s-2))
-        .attr('fill',zone.color).attr('fill-opacity',0.05)
-        .attr('stroke',zone.color).attr('stroke-width',0.6).attr('stroke-opacity',0.12)
-        .attr('pointer-events','none');
+      // Backing already drawn above; nothing further to render for terrain.
       return;
     }
 
@@ -2204,6 +2824,22 @@ document.getElementById('af-routes').addEventListener('click', function(){
   routesOn = !routesOn;
   this.classList.toggle('on', routesOn);
   updateLOD(d3.zoomTransform(svgEl).k);
+});
+
+document.getElementById('af-expand-all').addEventListener('click', function(){
+  const allIds = Object.keys(EXPANSION_REGISTRY);
+  const anyOpen = allIds.some(id => expandedSet.has(id));
+  if (anyOpen) {
+    allIds.filter(id => expandedSet.has(id)).forEach(collapseExpansion);
+    this.classList.remove('on');
+  } else {
+    allIds.forEach(expandExpansion);
+    this.classList.add('on');
+  }
+});
+
+document.getElementById('conn-panel-close').addEventListener('click', () => {
+  document.getElementById('atlas-conn').classList.remove('open');
 });
 
 let toolNodesOn = false;
