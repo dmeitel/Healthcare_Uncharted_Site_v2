@@ -1,0 +1,427 @@
+---
+layout: base.njk
+title: "The Patient: How You Become a Data Record"
+description: "From the front desk to discharge: how a hospital turns a person into a patient ID, a string of encounters, and a few hundred linked data points."
+navPage: learn
+editorial: true
+editorial_reason: "Uses an IBM Plex Mono data-tag treatment that pairs plain language with the industry term inline, reinforcing the article's translate-the-jargon premise."
+---
+<style>
+  .pdr {
+    --pdr-bg: #001117; --pdr-surface: #0e1a2a; --pdr-raised: #14223a;
+    --pdr-line: #21344f; --pdr-line-2: #2f4a6a;
+    --pdr-t1: #F4F8FC; --pdr-t2: #B6C9DC; --pdr-t3: #708BA6;
+    --pdr-teal: #4ECDC4; --pdr-teal-soft: rgba(78,205,196,0.12);
+    --pdr-blue: #6AA9F0; --pdr-amber: #E8A838;
+    --pdr-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --pdr-disp: 'Outfit', 'DM Sans', system-ui, sans-serif;
+    --pdr-body: 'DM Sans', system-ui, sans-serif;
+  }
+  html[data-theme="light"] .pdr {
+    --pdr-bg: #F3F7FB; --pdr-surface: #FFFFFF; --pdr-raised: #EAF0F7;
+    --pdr-line: #D5E0EC; --pdr-line-2: #BECEDE;
+    --pdr-t1: #0A1722; --pdr-t2: #33495F; --pdr-t3: #6B829A;
+    --pdr-teal: #117D75; --pdr-teal-soft: rgba(17,125,117,0.10);
+    --pdr-blue: #1B5FA8; --pdr-amber: #9A6A12;
+  }
+
+  .pdr { background: var(--pdr-bg); color: var(--pdr-t2); font-family: var(--pdr-body); }
+  .pdr * { box-sizing: border-box; }
+
+  /* ── Hero ── */
+  .pdr-hero { max-width: 760px; margin: 0 auto; padding: 64px 24px 30px; text-align: center; }
+  .pdr-eyebrow { font-family: var(--pdr-mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--pdr-teal); margin-bottom: 20px; }
+  .pdr-hero h1 { font-family: var(--pdr-disp); font-weight: 800; font-size: clamp(32px, 6vw, 52px); line-height: 1.06; color: var(--pdr-t1); margin: 0 0 18px; letter-spacing: -0.01em; }
+  .pdr-deck { font-size: 18px; line-height: 1.6; color: var(--pdr-t2); margin: 0 auto 22px; max-width: 620px; }
+  .pdr-byline { font-family: var(--pdr-mono); font-size: 12px; color: var(--pdr-t3); letter-spacing: 0.04em; }
+
+  /* ── Body shell ── */
+  .pdr-body { max-width: 720px; margin: 0 auto; padding: 20px 24px 90px; }
+  .pdr-section { margin: 46px 0; }
+  .pdr-section h2 { font-family: var(--pdr-disp); font-weight: 700; font-size: clamp(22px, 3.4vw, 28px); line-height: 1.2; color: var(--pdr-t1); margin: 0 0 6px; }
+  .pdr-section h2::before { content: ''; display: block; width: 38px; height: 3px; background: var(--pdr-teal); border-radius: 2px; margin-bottom: 16px; }
+  .pdr-section p { font-size: 16.5px; line-height: 1.72; margin: 14px 0; }
+  .pdr-lead p { font-size: 19px; line-height: 1.66; color: var(--pdr-t1); }
+
+  /* ── Data-term pairing: plain words + the industry tag ── */
+  .dt-t {
+    display: inline-block; font-family: var(--pdr-mono); font-size: 0.74em; font-weight: 600;
+    letter-spacing: 0.04em; color: var(--pdr-teal); background: var(--pdr-teal-soft);
+    border: 1px solid var(--pdr-line-2); border-radius: 4px; padding: 1px 6px; margin-left: 5px;
+    vertical-align: 1px; white-space: nowrap;
+  }
+
+  /* ── Lifecycle flow strip ── */
+  .pdr-flow-wrap { margin: 32px 0; }
+  .pdr-flow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .flow-step {
+    flex: 1 1 110px; background: var(--pdr-surface); border: 1px solid var(--pdr-line);
+    border-radius: 9px; padding: 12px 12px 13px; position: relative;
+  }
+  .flow-step .fs-n { font-family: var(--pdr-mono); font-size: 10px; color: var(--pdr-teal); letter-spacing: 0.1em; }
+  .flow-step .fs-l { font-family: var(--pdr-disp); font-weight: 700; font-size: 13.5px; color: var(--pdr-t1); margin-top: 3px; }
+  .flow-step .fs-d { font-size: 11.5px; line-height: 1.45; color: var(--pdr-t3); margin-top: 4px; }
+  .pdr-figcap { font-family: var(--pdr-mono); font-size: 12px; line-height: 1.55; color: var(--pdr-t3); margin-top: 12px; }
+  .pdr-figcap b { color: var(--pdr-t2); font-weight: 600; }
+
+  /* ── Figure / SVG visual ── */
+  .pdr-figure { margin: 34px 0; background: var(--pdr-surface); border: 1px solid var(--pdr-line); border-radius: 14px; padding: 22px 20px 18px; }
+  .pdr-figure .fig-kicker { font-family: var(--pdr-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pdr-teal); margin-bottom: 14px; }
+  .pdr-svg { width: 100%; height: auto; display: block; }
+  .pdr-svg .s-box { fill: var(--pdr-raised); stroke: var(--pdr-line-2); stroke-width: 1.5; }
+  .pdr-svg .s-hub { fill: var(--pdr-teal-soft); stroke: var(--pdr-teal); stroke-width: 2; }
+  .pdr-svg .s-link { fill: none; stroke: var(--pdr-line-2); stroke-width: 1.6; }
+  .pdr-svg .s-t1 { fill: var(--pdr-t1); font-family: var(--pdr-disp); font-weight: 700; }
+  .pdr-svg .s-teal { fill: var(--pdr-teal); font-family: var(--pdr-mono); font-weight: 600; }
+  .pdr-svg .s-sub { fill: var(--pdr-t3); font-family: var(--pdr-mono); }
+  .pdr-svg .s-pill { fill: var(--pdr-bg); stroke: var(--pdr-line); stroke-width: 1; }
+
+  /* ── Decoder table ── */
+  .pdr-decoder { margin: 34px 0; border: 1px solid var(--pdr-line); border-radius: 14px; overflow: hidden; }
+  .dec-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr; }
+  .dec-row > div { padding: 12px 14px; border-bottom: 1px solid var(--pdr-line); }
+  .dec-row:last-child > div { border-bottom: none; }
+  .dec-row > div + div { border-left: 1px solid var(--pdr-line); }
+  .dec-head > div { background: var(--pdr-raised); font-family: var(--pdr-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pdr-teal); padding-top: 11px; padding-bottom: 11px; }
+  .dec-plain { color: var(--pdr-t1); font-weight: 600; font-size: 14px; }
+  .dec-tech { font-family: var(--pdr-mono); font-size: 12.5px; color: var(--pdr-teal); }
+  .dec-mean { font-size: 13px; line-height: 1.5; color: var(--pdr-t3); }
+
+  /* ── Callout ── */
+  .pdr-callout { margin: 36px 0; border-left: 3px solid var(--pdr-amber); background: var(--pdr-surface); border-radius: 0 11px 11px 0; padding: 20px 22px; }
+  .pdr-callout .co-k { font-family: var(--pdr-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pdr-amber); margin-bottom: 8px; }
+  .pdr-callout p { margin: 0; font-size: 17px; line-height: 1.6; color: var(--pdr-t1); }
+
+  /* ── EMR patient-lookup mockup ── */
+  .emr-win { border: 1px solid var(--pdr-line-2); border-radius: 10px; overflow: hidden; background: var(--pdr-bg); }
+  .emr-bar { display: flex; align-items: center; gap: 7px; padding: 9px 13px; background: var(--pdr-raised); border-bottom: 1px solid var(--pdr-line); }
+  .emr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pdr-line-2); flex-shrink: 0; }
+  .emr-title { font-family: var(--pdr-disp); font-weight: 700; font-size: 13px; color: var(--pdr-t1); margin-left: 5px; }
+  .emr-sys { margin-left: auto; font-family: var(--pdr-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pdr-t3); }
+  .emr-body { padding: 16px; }
+  .emr-group + .emr-group { margin-top: 15px; }
+  .emr-grouphd { font-family: var(--pdr-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--pdr-teal); margin-bottom: 9px; }
+  .emr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .emr-lbl { font-family: var(--pdr-mono); font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--pdr-t3); margin-bottom: 4px; }
+  .emr-input { font-family: var(--pdr-mono); font-size: 13px; color: var(--pdr-t1); background: var(--pdr-surface); border: 1px solid var(--pdr-line-2); border-radius: 6px; padding: 7px 9px; }
+  .emr-input.emr-empty { color: var(--pdr-t3); }
+  .emr-actions { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+  .emr-hint { font-size: 12.5px; color: var(--pdr-t3); }
+  .emr-btn { margin-left: auto; font-family: var(--pdr-disp); font-weight: 700; font-size: 12.5px; color: var(--pdr-bg); background: var(--pdr-teal); border-radius: 6px; padding: 8px 18px; white-space: nowrap; }
+
+  /* ── HIPAA facets ── */
+  .pdr-facets { margin: 22px 0 8px; }
+  .facet { display: flex; gap: 13px; padding: 14px 0; border-top: 1px solid var(--pdr-line); }
+  .facet:first-child { border-top: none; padding-top: 4px; }
+  .facet-tag { flex-shrink: 0; width: 64px; font-family: var(--pdr-mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.03em; color: var(--pdr-teal); background: var(--pdr-teal-soft); border: 1px solid var(--pdr-line-2); border-radius: 5px; padding: 5px 0; text-align: center; height: fit-content; }
+  .facet-t { font-family: var(--pdr-disp); font-weight: 700; font-size: 15px; color: var(--pdr-t1); margin-bottom: 3px; }
+  .facet-d { font-size: 14.5px; line-height: 1.6; color: var(--pdr-t2); }
+
+  /* ── Sources ── */
+  .pdr-sources { margin: 56px 0 0; border-top: 1px solid var(--pdr-line); padding-top: 26px; }
+  .pdr-sources h2 { font-family: var(--pdr-disp); font-weight: 700; font-size: 18px; color: var(--pdr-t1); margin: 0 0 4px; }
+  .pdr-sources .src-note { font-size: 13px; color: var(--pdr-t3); margin: 0 0 16px; }
+  .src-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--pdr-line); }
+  .src-item:last-child { border-bottom: none; }
+  .src-tag { flex-shrink: 0; width: 52px; font-family: var(--pdr-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pdr-t3); padding-top: 3px; }
+  .src-body strong { display: block; color: var(--pdr-t1); font-size: 13.5px; font-weight: 600; }
+  .src-body a { font-family: var(--pdr-mono); font-size: 11px; color: var(--pdr-teal); text-decoration: none; }
+  .src-body a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .pdr-hero { padding-top: 44px; }
+    .emr-grid { grid-template-columns: 1fr 1fr; }
+    .dec-row { grid-template-columns: 1fr; }
+    .dec-row > div + div { border-left: none; }
+    .dec-head { display: none; }
+    .dec-tech::before { content: 'System term: '; color: var(--pdr-t3); }
+    .dec-mean::before { content: 'Meaning: '; color: var(--pdr-t3); }
+  }
+</style>
+
+<div class="pdr">
+
+  <header class="pdr-hero">
+    <div class="pdr-eyebrow">Article 02 &middot; The Patient</div>
+    <h1>How You Become a Data Record</h1>
+    <p class="pdr-deck">You think you walk into a hospital as a person. The building disagrees. Here is what actually happens to you, in the systems, from the front desk to the parking lot.</p>
+    <div class="pdr-byline">By David Eitel &middot; RRT, MHA, MSRT</div>
+  </header>
+
+  <article class="pdr-body">
+
+    <section class="pdr-section pdr-lead">
+      <p>The hospital does not see a person. It sees a record, then a record of that record, then a few dozen smaller records hanging off both. None of that is sinister. It is just what it takes to keep you straight from the next person who shares your name and your birth month. But almost nobody explains it to the person it is happening to. So here it is, in plain language, with the industry term sitting right next to it.</p>
+    </section>
+
+    <div class="pdr-flow-wrap">
+      <div class="pdr-flow">
+        <div class="flow-step"><div class="fs-n">01</div><div class="fs-l">Register</div><div class="fs-d">The system finds you or creates you.</div></div>
+        <div class="flow-step"><div class="fs-n">02</div><div class="fs-l">Admit</div><div class="fs-d">A visit record opens.</div></div>
+        <div class="flow-step"><div class="fs-n">03</div><div class="fs-l">Care happens</div><div class="fs-d">Orders, results, notes pile up.</div></div>
+        <div class="flow-step"><div class="fs-n">04</div><div class="fs-l">Transfer</div><div class="fs-d">Every move fires a message.</div></div>
+        <div class="flow-step"><div class="fs-n">05</div><div class="fs-l">Discharge</div><div class="fs-d">The visit closes. You do not.</div></div>
+        <div class="flow-step"><div class="fs-n">06</div><div class="fs-l">Code &amp; bill</div><div class="fs-d">The visit becomes money.</div></div>
+        <div class="flow-step"><div class="fs-n">07</div><div class="fs-l">Share &amp; store</div><div class="fs-d">Copies leave the building.</div></div>
+      </div>
+      <div class="pdr-figcap">Seven steps. The <b>same you</b> the whole way through. The rest of this article walks each one and shows what it does to your record.</div>
+    </div>
+
+    <section class="pdr-section">
+      <h2>Registration: the record gets born</h2>
+      <p>You give your name, your birth date, your address. The plain version is <span class="dt">the stuff you hand over at the front desk<span class="dt-t">demographics</span></span>. Simple enough.</p>
+      <p>Here is the part nobody tells you. The system's first job is NOT to make you a record. It is to find the one you already have. It searches the master list of every patient the organization has ever touched, looking for a you-shaped match. That master list is <span class="dt">the index of everyone<span class="dt-t">MPI</span></span>, the Master Patient Index. The search itself, you against your existing record, is <span class="dt">linking you to the right file<span class="dt-t">patient matching</span></span>.</p>
+      <p>If it finds you, it attaches today's visit to your existing ID. If it does not, it mints a new one. That ID is <span class="dt">your patient number<span class="dt-t">MRN</span></span>, the Medical Record Number. It is the closest thing you have to a permanent identity in there. You keep it for life, across every clinic, every floor, every year. Everything else in this article hangs off it.</p>
+    </section>
+
+    <figure class="pdr-figure">
+      <div class="fig-kicker">Patient lookup &middot; how a clerk finds you</div>
+      <div class="emr-win">
+        <div class="emr-bar">
+          <span class="emr-dot"></span><span class="emr-dot"></span><span class="emr-dot"></span>
+          <span class="emr-title">Patient Lookup</span>
+          <span class="emr-sys">Generic EMR</span>
+        </div>
+        <div class="emr-body">
+          <div class="emr-group">
+            <div class="emr-grouphd">Search by who they are</div>
+            <div class="emr-grid">
+              <div class="emr-field"><div class="emr-lbl">Last name</div><div class="emr-input">Rivera</div></div>
+              <div class="emr-field"><div class="emr-lbl">First name</div><div class="emr-input">Maria</div></div>
+              <div class="emr-field"><div class="emr-lbl">Date of birth</div><div class="emr-input">05 / 14 / 1979</div></div>
+              <div class="emr-field"><div class="emr-lbl">Legal sex</div><div class="emr-input">F</div></div>
+              <div class="emr-field"><div class="emr-lbl">SSN &middot; last 4</div><div class="emr-input">&bull;&bull;&bull;&bull;&bull; 6841</div></div>
+              <div class="emr-field"><div class="emr-lbl">Phone</div><div class="emr-input">(&bull;&bull;&bull;) &bull;&bull;&bull; &bull;&bull;&bull;&bull;</div></div>
+            </div>
+          </div>
+          <div class="emr-group">
+            <div class="emr-grouphd">Search by identifier</div>
+            <div class="emr-grid">
+              <div class="emr-field"><div class="emr-lbl">MRN</div><div class="emr-input emr-empty">not entered</div></div>
+              <div class="emr-field"><div class="emr-lbl">Account number</div><div class="emr-input emr-empty">not entered</div></div>
+            </div>
+          </div>
+          <div class="emr-actions">
+            <span class="emr-hint">Two ways in: who you are, or what number you carry.</span>
+            <span class="emr-btn">Search</span>
+          </div>
+        </div>
+      </div>
+      <div class="pdr-figcap">A generic version of the lookup behind every front desk. Type a few of these and the system goes hunting for a match. Get one keystroke wrong here, a transposed birth date, a maiden name, a plain typo, and <b>this is the exact moment a duplicate record is born.</b></div>
+    </figure>
+
+    <section class="pdr-section">
+      <h2>HIPAA starts at the front desk</h2>
+      <p>People think HIPAA is about their diagnoses. It starts earlier than that. The second a clerk types your name into that lookup and it lands next to the fact that you are a patient here, you have created Protected Health Information. The registration data is not the boring part of your record. Under the law, it is the regulated part.</p>
+      <p>Here is what actually attaches to those front-desk fields.</p>
+      <div class="pdr-facets">
+        <div class="facet">
+          <div class="facet-tag">PHI</div>
+          <div class="facet-body">
+            <div class="facet-t">It is Protected Health Information</div>
+            <div class="facet-d">Your name and birth date are not sensitive on their own. Tied to the fact that you are a patient, they become PHI. The demographics carry the same legal protection as the chart.</div>
+          </div>
+        </div>
+        <div class="facet">
+          <div class="facet-tag">18 IDs</div>
+          <div class="facet-body">
+            <div class="facet-t">Most of those fields are named in the rule</div>
+            <div class="facet-d">HIPAA enumerates eighteen kinds of identifier that make health data traceable to a person. Registration collects a stack of them in one screen: name, birth date, address, phone, SSN, MRN, account number. The lookup panel above is close to that list with a Search button on it.</div>
+          </div>
+        </div>
+        <div class="facet">
+          <div class="facet-tag">MIN NEC</div>
+          <div class="facet-body">
+            <div class="facet-t">Minimum necessary</div>
+            <div class="facet-d">A registration clerk needs your demographics to find you and check you in. They do not need your diagnosis history. HIPAA's minimum necessary standard says access stops where the job stops.</div>
+          </div>
+        </div>
+        <div class="facet">
+          <div class="facet-tag">TPO</div>
+          <div class="facet-body">
+            <div class="facet-t">Treatment, payment, operations</div>
+            <div class="facet-d">You do not sign a release every time your registration data moves to the lab or to billing. The Privacy Rule already permits it for treatment, payment, and healthcare operations. Registration is all three at once.</div>
+          </div>
+        </div>
+        <div class="facet">
+          <div class="facet-tag">NPP</div>
+          <div class="facet-body">
+            <div class="facet-t">The one form you actually touched</div>
+            <div class="facet-d">The Notice of Privacy Practices, the page you acknowledged at the desk, is a HIPAA requirement. It is the only part of any of this that most patients ever see, and most people sign it without reading it.</div>
+          </div>
+        </div>
+      </div>
+      <p>None of that is bureaucracy for its own sake. It is the law recognizing that knowing WHO you are, in a medical building, is already sensitive. That happens before anyone writes down WHAT is wrong with you.</p>
+    </section>
+
+    <section class="pdr-section">
+      <h2>One you. Many visits.</h2>
+      <p>Your MRN is permanent. Your visit is not. Every separate interaction with the system gets its own record. The plain word is a visit. The system word is <span class="dt">this specific visit<span class="dt-t">encounter</span></span>. The ER trip last spring, the follow-up two weeks later, the lab draw this morning: one MRN, three encounters.</p>
+      <p>Running right alongside the clinical side is the money side. Each visit also opens a billing record, <span class="dt">the tab for your care<span class="dt-t">account</span></span>. One person. One MRN. A string of encounters. A stack of accounts. You are already not one thing in there, and you have not even seen a doctor yet.</p>
+    </section>
+
+    <figure class="pdr-figure">
+      <div class="fig-kicker">The shape of you in the database</div>
+      <svg class="pdr-svg" viewBox="0 0 720 412" role="img" aria-label="Diagram: one person becomes one permanent MRN, which links to three separate encounter records, each carrying its own cluster of data points.">
+        <path class="s-link" d="M360 70 V104"/>
+        <path class="s-link" d="M360 156 V180 H135 V206"/>
+        <path class="s-link" d="M360 156 V206"/>
+        <path class="s-link" d="M360 156 V180 H585 V206"/>
+        <path class="s-link" d="M135 264 V292"/>
+        <path class="s-link" d="M360 264 V292"/>
+        <path class="s-link" d="M585 264 V292"/>
+
+        <g><rect class="s-box" x="290" y="28" width="140" height="42" rx="9"/>
+          <text class="s-t1" x="360" y="46" text-anchor="middle" font-size="15">YOU</text>
+          <text class="s-sub" x="360" y="61" text-anchor="middle" font-size="9.5">one human being</text></g>
+
+        <g><rect class="s-hub" x="262" y="104" width="196" height="52" rx="10"/>
+          <text class="s-teal" x="360" y="127" text-anchor="middle" font-size="15">MRN</text>
+          <text class="s-sub" x="360" y="143" text-anchor="middle" font-size="9.5">your permanent patient number</text></g>
+
+        <g><rect class="s-box" x="55" y="206" width="160" height="58" rx="9"/>
+          <text class="s-teal" x="135" y="227" text-anchor="middle" font-size="12">ENCOUNTER</text>
+          <text class="s-sub" x="135" y="242" text-anchor="middle" font-size="9">ER visit</text>
+          <text class="s-sub" x="135" y="254" text-anchor="middle" font-size="9">last spring</text></g>
+        <g><rect class="s-box" x="280" y="206" width="160" height="58" rx="9"/>
+          <text class="s-teal" x="360" y="227" text-anchor="middle" font-size="12">ENCOUNTER</text>
+          <text class="s-sub" x="360" y="242" text-anchor="middle" font-size="9">follow-up</text>
+          <text class="s-sub" x="360" y="254" text-anchor="middle" font-size="9">two weeks later</text></g>
+        <g><rect class="s-box" x="505" y="206" width="160" height="58" rx="9"/>
+          <text class="s-teal" x="585" y="227" text-anchor="middle" font-size="12">ENCOUNTER</text>
+          <text class="s-sub" x="585" y="242" text-anchor="middle" font-size="9">lab draw</text>
+          <text class="s-sub" x="585" y="254" text-anchor="middle" font-size="9">this morning</text></g>
+
+        <g><rect class="s-pill" x="48" y="292" width="174" height="92" rx="8"/>
+          <text class="s-sub" x="135" y="312" text-anchor="middle" font-size="9.5">orders</text>
+          <text class="s-sub" x="135" y="328" text-anchor="middle" font-size="9.5">results</text>
+          <text class="s-sub" x="135" y="344" text-anchor="middle" font-size="9.5">notes &middot; vitals</text>
+          <text class="s-sub" x="135" y="368" text-anchor="middle" font-size="9.5">+ account</text></g>
+        <g><rect class="s-pill" x="273" y="292" width="174" height="92" rx="8"/>
+          <text class="s-sub" x="360" y="312" text-anchor="middle" font-size="9.5">orders</text>
+          <text class="s-sub" x="360" y="328" text-anchor="middle" font-size="9.5">results</text>
+          <text class="s-sub" x="360" y="344" text-anchor="middle" font-size="9.5">notes &middot; vitals</text>
+          <text class="s-sub" x="360" y="368" text-anchor="middle" font-size="9.5">+ account</text></g>
+        <g><rect class="s-pill" x="498" y="292" width="174" height="92" rx="8"/>
+          <text class="s-sub" x="585" y="312" text-anchor="middle" font-size="9.5">orders</text>
+          <text class="s-sub" x="585" y="328" text-anchor="middle" font-size="9.5">results</text>
+          <text class="s-sub" x="585" y="344" text-anchor="middle" font-size="9.5">notes &middot; vitals</text>
+          <text class="s-sub" x="585" y="368" text-anchor="middle" font-size="9.5">+ account</text></g>
+      </svg>
+      <div class="pdr-figcap">One human, one MRN, three encounters, and a cluster of timestamped data points under each. Every box below the MRN is a thing the system can query, report, and bill on its own. <b>You are the top box. The system mostly works in the bottom ones.</b></div>
+    </figure>
+
+    <section class="pdr-section">
+      <h2>Everything you do becomes a row</h2>
+      <p>Step inside a single encounter and watch it fill up. The doctor decides something, and that decision becomes <span class="dt">an instruction the system can track<span class="dt-t">order</span></span>: a medication, a lab, an image, a diet. The lab runs and sends back <span class="dt">your numbers<span class="dt-t">results</span></span>. The nurse charts your vitals. Notes get written. Medications get given and recorded.</p>
+      <p>None of it lands as a story. Each piece lands as a discrete, timestamped, structured row with your MRN and that encounter's ID stamped on it. That is the trade. Structure is what lets the system alert, trend, and bill. It is also why the human narrative, the WHY behind the visit, is the one thing the record holds worst.</p>
+    </section>
+
+    <section class="pdr-section">
+      <h2>ADT: the building's heartbeat</h2>
+      <p>Every time you are admitted, moved between units, or sent home, the system fires off a small announcement. The plain version is "the hospital always knows where you are." The industry version is <span class="dt">the admit, discharge, and transfer feed<span class="dt-t">ADT</span></span>.</p>
+      <p>ADT is the heartbeat of the place. It is how the lab knows you exist before your blood arrives, how the pharmacy knows which floor to send the medication to, how billing knows the clock started. You change beds; a message moves. You go home; a message moves. Most of the systems that touch your care never see YOU at all. They just see your ADT.</p>
+    </section>
+
+    <div class="pdr-decoder" role="table" aria-label="A decoder from plain language to industry term">
+      <div class="dec-row dec-head" role="row">
+        <div role="columnheader">What you'd call it</div>
+        <div role="columnheader">What the system calls it</div>
+        <div role="columnheader">What it actually is</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">Your patient number</div>
+        <div class="dec-tech" role="cell">MRN</div>
+        <div class="dec-mean" role="cell">Your one permanent ID, kept for life across every visit.</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">A visit</div>
+        <div class="dec-tech" role="cell">Encounter</div>
+        <div class="dec-mean" role="cell">One specific interaction. You have many; the MRN ties them together.</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">The tab for your care</div>
+        <div class="dec-tech" role="cell">Account</div>
+        <div class="dec-mean" role="cell">The billing record that runs parallel to each encounter.</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">Front-desk info</div>
+        <div class="dec-tech" role="cell">Demographics</div>
+        <div class="dec-mean" role="cell">Name, birth date, address. The data used to match you.</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">The index of everyone</div>
+        <div class="dec-tech" role="cell">MPI</div>
+        <div class="dec-mean" role="cell">The Master Patient Index, the master list every match runs against.</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">The doctor's instructions</div>
+        <div class="dec-tech" role="cell">Orders</div>
+        <div class="dec-mean" role="cell">Each decision turned into a trackable row: a med, a lab, an image.</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">Where you are right now</div>
+        <div class="dec-tech" role="cell">ADT</div>
+        <div class="dec-mean" role="cell">The admit, discharge, transfer feed every other system listens to.</div>
+      </div>
+      <div class="dec-row" role="row">
+        <div class="dec-plain" role="cell">Your record, traveling</div>
+        <div class="dec-tech" role="cell">FHIR / C-CDA</div>
+        <div class="dec-mean" role="cell">The modern standards that carry a copy of you to other systems.</div>
+      </div>
+    </div>
+
+    <section class="pdr-section">
+      <h2>Your record leaves the building</h2>
+      <p>Here is the assumption most people carry: my record is a file, and it sits at my hospital. Neither half is true.</p>
+      <p>Your record is constantly handed between systems through <span class="dt">the plumbing that connects them<span class="dt-t">interfaces</span></span>. A packaged summary of you travels to your other doctors and other hospitals as <span class="dt">a portable summary document<span class="dt-t">C-CDA</span></span>. The modern pipe for moving the pieces on demand is <span class="dt">a shared data standard<span class="dt-t">FHIR</span></span>. A regional <span class="dt">shared record network<span class="dt-t">HIE</span></span> may hold its own copy. Your insurer gets a version. And you have a legal right to your own copy, the HIPAA right of access.</p>
+      <p>So "your record" is not one file in one place. It is many partial copies, in many systems, each synced a little differently, each a little out of date. There is no master original sitting in a drawer. There is just the network.</p>
+    </section>
+
+    <section class="pdr-section">
+      <h2>Where it breaks: two records, one you</h2>
+      <p>All of this rests on one fragile assumption. That the system can always tell it is YOU. It cannot.</p>
+      <p>Mistype a birth date at the desk. Use a nickname one visit and a legal name the next. Get married, change your name, move states. Any of it can make the match miss, and the system quietly does the worst possible thing: it creates a SECOND record. Now you are <span class="dt">two records for one person<span class="dt-t">a duplicate</span></span>, and half your history lives on an MRN nobody is looking at.</p>
+      <p>The reverse is rarer and worse. Two different people get fused into one record, <span class="dt">your chart tangled with a stranger's<span class="dt-t">an overlay</span></span>. Patient matching is not a solved problem. It is an ongoing one, tracked for years by the Office of the National Coordinator as a core patient-safety and interoperability gap.</p>
+    </section>
+
+    <div class="pdr-callout">
+      <div class="co-k">The part that should bother you</div>
+      <p>The system is confident. It will show a clinician your record without ever flagging that it might be the wrong one, or only half of one. The fragile step, matching a human to a file, happens silently, and it happens before anyone in a white coat sees a thing.</p>
+    </div>
+
+    <section class="pdr-section">
+      <h2>Discharge is a status, not an ending</h2>
+      <p>You walk out. The encounter closes. The record does not.</p>
+      <p>It gets coded into billing language, sent to your payer, counted in quality and public-health reporting, copied into the exchanges, and stored. Years from now it is still there, still tied to your MRN, still being matched against the next time you show up. Discharge changes a status field. It does not end anything.</p>
+    </section>
+
+    <section class="pdr-section">
+      <h2>So what are you, in there?</h2>
+      <p>Not a patient. A patient number, a string of encounters, a stack of accounts, and a few hundred timestamped rows, copied into systems you will never log into.</p>
+      <p>Knowing that does not make you cynical. It makes you literate. It means you check the birth date on the wristband. It means you ask whether your other hospital's records actually made it over. It means the next time someone tells you THE COMPUTER HAS YOUR RECORD, you know enough to ask the only question that matters: which one.</p>
+    </section>
+
+    <section class="pdr-sources">
+      <h2>Sources</h2>
+      <p class="src-note">This article uses only vendor-neutral, publicly documented terminology. Industry terms are drawn from open standards and federal guidance, not proprietary EHR documentation.</p>
+      <div class="src-item">
+        <div class="src-tag">ONC</div>
+        <div class="src-body"><strong>Patient matching, patient identity, and health information exchange</strong><a href="https://www.healthit.gov" target="_blank" rel="noopener">healthit.gov &rarr;</a></div>
+      </div>
+      <div class="src-item">
+        <div class="src-tag">HL7</div>
+        <div class="src-body"><strong>FHIR R4: the Patient and Encounter resource definitions</strong><a href="https://hl7.org/fhir/R4/" target="_blank" rel="noopener">hl7.org/fhir/R4/ &rarr;</a></div>
+      </div>
+      <div class="src-item">
+        <div class="src-tag">HL7</div>
+        <div class="src-body"><strong>HL7 International: the messaging standards behind ADT</strong><a href="https://www.hl7.org/about/index.cfm" target="_blank" rel="noopener">hl7.org &rarr;</a></div>
+      </div>
+      <div class="src-item">
+        <div class="src-tag">HHS</div>
+        <div class="src-body"><strong>HIPAA Privacy Rule: protected health information, minimum necessary, and your right of access</strong><a href="https://www.hhs.gov/hipaa/" target="_blank" rel="noopener">hhs.gov/hipaa &rarr;</a></div>
+      </div>
+    </section>
+
+  </article>
+</div>
