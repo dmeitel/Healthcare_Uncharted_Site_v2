@@ -3,6 +3,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy("src/downloads");
   eleventyConfig.addPassthroughCopy("src/robots.txt");
+  eleventyConfig.addPassthroughCopy("src/site.webmanifest");
 
   // ── COLLECTIONS ──────────────────────────────────────────────────────────
   // Define named collections for site architecture (avoiding data-file shadowing)
