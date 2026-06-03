@@ -20,6 +20,20 @@ module.exports = {
   entries: [
 
     {
+      slug:            'ai-promise-vs-bill',
+      title:           'The Promise and the Bill',
+      posted:          '2026-06-03',
+      summary:         'AI was sold as the cure for health care’s cost problem. Medicare’s own billing data tells a different story.',
+      tags:            ['health-ai', 'health-costs', 'medicare', 'reimbursement'],
+      fourPs:          ['payer', 'provider-p2a', 'policy'],
+      readMinutes:     8,
+      featured:        true,
+      status:          'published',
+      map_node:        'rounds-ai-promise-vs-bill',
+      map_connections: ['payer-incentives', 'provider-p2a', 'policy-ai-oversight']
+    },
+
+    {
       slug:            'steward-postmortem',
       title:           'Post-Mortem: Steward Health Care',
       posted:          '2026-05-06',

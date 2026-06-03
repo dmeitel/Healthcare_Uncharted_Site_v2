@@ -94,6 +94,25 @@ module.exports = [
     tags:        ['SQL', 'EHR', 'Beginner-friendly'],
     ps:          ['p2a', 'p2b'],
     labNode:     'sql-mystery'
+  },
+
+  {
+    id:          'healthcare-operators-map',
+    status:      'live',
+    featured:    true,
+    title:       'U.S. Hospital Operations Map',
+    desc:        'Every U.S. hospital, surgery center, and dialysis facility from live CMS data. Color states, zoom in, and click any facility for its public profile, or filter by the health system or chain that operates it. Real, reusable backend dataset.',
+    url:         '/tools/healthcare-operators-map/',
+    type:        'interactive',
+    badge:       'Interactive',
+    badgeClass:  'badge-interactive',
+    bandClass:   'tc-band-blue',
+    mark:        'OP',
+    markClass:   'mark-blue',
+    tags:        ['Facility Map', 'Systems', 'CMS Data'],
+    motif:       'compass-rose',
+    ps:          ['p2a', 'p2b', 'p3', 'p4'],
+    labNode:     'healthcare-operators-map'
   }
 
 ];
