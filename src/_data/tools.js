@@ -113,6 +113,25 @@ module.exports = [
     motif:       'compass-rose',
     ps:          ['p2a', 'p2b', 'p3', 'p4'],
     labNode:     'healthcare-operators-map'
+  },
+
+  {
+    id:          'healthcare-career-tree',
+    status:      'live',
+    featured:    true,
+    title:       'Healthcare Career Tree',
+    desc:        'A branching map of healthcare careers. Start with the roles that need no license, follow the credentials down through specialty, leadership, and technology, and pin your own path. A second track maps the patient journey from healthy to critical.',
+    url:         '/tools/healthcare-career-tree/',
+    type:        'interactive',
+    badge:       'Interactive',
+    badgeClass:  'badge-interactive',
+    bandClass:   'tc-band-teal',
+    mark:        'CT',
+    markClass:   'mark-teal',
+    tags:        ['Careers', 'Roles', 'Pathways'],
+    motif:       'compass-rose',
+    ps:          ['p1', 'p2a', 'p2b'],
+    labNode:     'healthcare-career-tree'
   }
 
 ];
