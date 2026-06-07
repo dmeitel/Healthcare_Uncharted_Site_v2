@@ -16,23 +16,50 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { validateNodes } = require('./lib/entity');
+const { mergeBackbone, validateNodes } = require('./lib/entity');
 
 const ROOT = path.join(__dirname, '..');
 const P = (...p) => path.join(ROOT, ...p);
 const read = (rel) => JSON.parse(fs.readFileSync(P(rel), 'utf8'));
+const readText = (rel) => fs.readFileSync(P(rel), 'utf8');   // for adapters parsing non-JSON sources (e.g. the Atlas .njk)
 
-// Each adapter is { name, run(read) -> node[] }. This list is the whole seam.
+// Each adapter is { name, run(read, readText) -> node[] }. This list is the seam.
+// Backbone first (mint the shared spine), then datasets that link into it.
 const ADAPTERS = [
+  require('./lib/adapters/backbone'),
   require('./lib/adapters/career-tree'),
+  require('./lib/adapters/facilities'),
+  require('./lib/adapters/ascs'),
+  require('./lib/adapters/dialysis'),
+  require('./lib/adapters/metrics'),
+  require('./lib/adapters/suppliers'),
+  require('./lib/adapters/atlas-concepts'),
 ];
 
 let all = [];
 for (const a of ADAPTERS) {
-  const nodes = a.run(read);
+  const nodes = a.run(read, readText);
   console.log('  ' + a.name + ': ' + nodes.length + ' nodes');
   all = all.concat(nodes);
 }
+
+// Collapse duplicate backbone nodes (one place:state:al, not thousands).
+const m = mergeBackbone(all);
+all = m.nodes;
+if (m.merged) console.log('  merged ' + m.merged + ' duplicate backbone refs');
+
+// Apply curated cross-layer edges (the editorial connective tissue). Skip any
+// whose endpoints don't exist so a typo surfaces instead of dangling.
+const crossLinks = require('./lib/cross-links');
+const xlByUid = new Map(all.map((n) => [n.uid, n]));
+let xlApplied = 0; const xlSkipped = [];
+for (const cl of crossLinks) {
+  const from = xlByUid.get(cl.from);
+  if (from && xlByUid.has(cl.to)) { from.rels.push({ rel: cl.rel, to: cl.to, curated: true }); xlApplied++; }
+  else xlSkipped.push(cl.from + ' -' + cl.rel + '-> ' + cl.to);
+}
+console.log('  cross-links: ' + xlApplied + ' applied' + (xlSkipped.length ? ', ' + xlSkipped.length + ' skipped (missing endpoint)' : ''));
+xlSkipped.forEach((s) => console.log('    skip: ' + s));
 
 const v = validateNodes(all);
 

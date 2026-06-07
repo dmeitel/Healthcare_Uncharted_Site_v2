@@ -188,8 +188,8 @@ nav{position:sticky;top:0;z-index:50;background:rgba(10,15,26,.92);backdrop-filt
 <script>
 const STATE_NAMES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 const FIPS_TO_ABBR={'01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD','47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY'};
-const TYPE_LABEL={acute:'Acute care',cah:'Critical access',child:"Children's",psych:'Psychiatric',va:'VA',dod:'Dept. of Defense',rural:'Rural emergency',ltac:'Long-term acute',other:'Other',asc:'Surgery center',dialysis:'Dialysis center'};
-const TYPE_COLOR={acute:'#FF5A5F',cah:'#F2B134',child:'#C77DFF',psych:'#4D9DE0',va:'#6BCB77',dod:'#4059AD',rural:'#FF8C42',ltac:'#E26FB0',other:'#9aa7b8',asc:'#E8A838',dialysis:'#5BC8FF'};
+const TYPE_LABEL={acute:'Acute care',cah:'Critical access',child:"Children's",psych:'Psychiatric',va:'VA',dod:'Dept. of Defense',rural:'Rural emergency',ltac:'Long-term acute',other:'Other',asc:'Surgery center',dialysis:'Dialysis center',pharmacy:'Pharmacy',dme:'DME & equipment',optical:'Optical / vision','orthotics-prosthetics':'Orthotics & prosthetics'};
+const TYPE_COLOR={acute:'#FF5A5F',cah:'#F2B134',child:'#C77DFF',psych:'#4D9DE0',va:'#6BCB77',dod:'#4059AD',rural:'#FF8C42',ltac:'#E26FB0',other:'#9aa7b8',asc:'#E8A838',dialysis:'#5BC8FF',pharmacy:'#2DD4BF',dme:'#8E7CFF',optical:'#F5A623','orthotics-prosthetics':'#FF7AA2'};
 // One simple geometric symbol per hospital type — distinct shape + color, legible at marker scale.
 const _circ=(cx,cy,r)=>`M${cx-r},${cy}a${r},${r} 0 1,0 ${2*r},0a${r},${r} 0 1,0 ${-2*r},0Z`;
 const _poly=(n,r,rot)=>{let p=[];for(let i=0;i<n;i++){const a=(-90+rot+i*360/n)*Math.PI/180;p.push((Math.round(r*Math.cos(a)*100)/100)+','+(Math.round(r*Math.sin(a)*100)/100));}return 'M'+p.join('L')+'Z';};
@@ -234,11 +234,20 @@ const DIALYSIS_METRICS=[
   {k:'star',label:'Avg CMS star',u:'★',f:_avgStarF},
   {k:'np',label:'% nonprofit',u:'%',f:hs=>hs.length?Math.round(hs.filter(h=>h.o==='np').length/hs.length*100):0},
 ];
+const SUPPLIER_METRICS=[
+  {k:'total',label:'Total suppliers',f:hs=>hs.length},
+  {k:'assign',label:'% accept assignment',u:'%',f:hs=>hs.length?Math.round(hs.filter(h=>h.a).length/hs.length*100):0},
+  {k:'cba',label:'% competitive-bid',u:'%',f:hs=>hs.length?Math.round(hs.filter(h=>h.cb).length/hs.length*100):0},
+];
 // resource registry — each is a separate dataset rendered by the same map engine
 const RES={
   hospitals:{label:'Hospitals',file:'/assets/data/us-hospitals.json',metrics:HOSPITAL_METRICS,noun:'hospitals'},
   asc:{label:'Surgery centers',file:'/assets/data/us-ascs.json',metrics:ASC_METRICS,noun:'surgery centers'},
   dialysis:{label:'Dialysis',file:'/assets/data/us-dialysis.json',metrics:DIALYSIS_METRICS,noun:'dialysis centers'},
+  dme:{label:'DME & equipment',file:'/assets/data/us-suppliers-dme.json',metrics:SUPPLIER_METRICS,noun:'DME suppliers',sup:true},
+  pharmacy:{label:'Pharmacies',file:'/assets/data/us-suppliers-pharmacy.json',metrics:SUPPLIER_METRICS,noun:'pharmacies',sup:true},
+  optical:{label:'Optical & vision',file:'/assets/data/us-suppliers-optical.json',metrics:SUPPLIER_METRICS,noun:'optical suppliers',sup:true},
+  'orthotics-prosthetics':{label:'Orthotics & prosthetics',file:'/assets/data/us-suppliers-orthotics-prosthetics.json',metrics:SUPPLIER_METRICS,noun:'O&P suppliers',sup:true},
 };
 let activeRes='hospitals';
 const METRICS_OF=()=>RES[activeRes].metrics;
@@ -287,11 +296,11 @@ function render(animate){
   else if (view==='state') renderStateProfile(selState);
   else if (view==='org') renderOrgProfile(selOrg);
   else renderNational();
-  const S={hospitals:['https://data.cms.gov/provider-data/dataset/xubh-q36u','CMS Hospital General Information'],asc:['https://data.cms.gov/provider-data/dataset/4jcv-atw7','CMS Ambulatory Surgical Center Quality'],dialysis:['https://data.cms.gov/provider-data/dataset/23ew-n7w9','CMS Dialysis Facility Listing']}[activeRes];
+  const S={hospitals:['https://data.cms.gov/provider-data/dataset/xubh-q36u','CMS Hospital General Information'],asc:['https://data.cms.gov/provider-data/dataset/4jcv-atw7','CMS Ambulatory Surgical Center Quality'],dialysis:['https://data.cms.gov/provider-data/dataset/23ew-n7w9','CMS Dialysis Facility Listing']}[activeRes]||['https://data.cms.gov/provider-data/dataset/ct36-nrcq','CMS Medical Equipment Suppliers'];
   document.getElementById('srcBanner').textContent='✓ Live CMS data · '+HOSP.length.toLocaleString()+' '+RES[activeRes].noun+' nationwide';
   document.getElementById('srcNote').innerHTML=
-    'Source: <a href="'+S[0]+'" target="_blank" rel="noopener">'+S[1]+' &#8599;</a>, current. Geocoded via U.S. ZIP centroids.<br><br>'+
-    (activeRes==='hospitals'?'Beds &amp; trauma via HIFLD / CovidCareMap; system affiliation via AHRQ Compendium 2023.':activeRes==='dialysis'?'Chain operator, stations, modalities &amp; star rating from the CMS dialysis file.':'Medicare-certified ambulatory surgery centers (no inpatient beds).');
+    'Source: <a href="'+S[0]+'" target="_blank" rel="noopener">'+S[1]+' &#8599;</a>, current. '+(RES[activeRes].sup?'Coordinates from the source file.':'Geocoded via U.S. ZIP centroids.')+'<br><br>'+
+    (activeRes==='hospitals'?'Beds &amp; trauma via HIFLD / CovidCareMap; system affiliation via AHRQ Compendium 2023.':activeRes==='dialysis'?'Chain operator, stations, modalities &amp; star rating from the CMS dialysis file.':RES[activeRes].sup?'Medicare-enrolled DMEPOS suppliers: durable medical equipment, prosthetics, orthotics, supplies.':'Medicare-certified ambulatory surgery centers (no inpatient beds).');
 }
 
 function drawMap(animate){
@@ -698,7 +707,7 @@ function chainBars(hs){
   const rows=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,6), max=rows.length?rows[0][1]:1;
   return rows.map(([k,v])=>`<div class="bar-row"><span class="nm">${orgName(k)}</span><span class="vv">${v}</span></div><div class="bar"><span style="width:${v/max*100}%;background:var(--teal)"></span></div>`).join('');
 }
-function renderFacility(){ if(activeRes==='asc') renderASC(); else if(activeRes==='dialysis') renderDialysis(); else renderHospital(); }
+function renderFacility(){ if(activeRes==='asc') renderASC(); else if(activeRes==='dialysis') renderDialysis(); else if(RES[activeRes].sup) renderSupplier(); else renderHospital(); }
 function renderASC(){
   const h=selHosp;
   document.getElementById('sidePanel').innerHTML=
@@ -732,6 +741,21 @@ function renderDialysis(){
     _gmaps(h);
   document.getElementById('hClose').onclick=closeFacility;
   const sl=document.getElementById('hsysLink'); if(sl) sl.onclick=()=>gotoOrg(h.sys);
+}
+function renderSupplier(){
+  const h=selHosp;
+  document.getElementById('sidePanel').innerHTML=
+    _pfhead(TYPE_LABEL[h.t]||'Supplier')+
+    `<div class="card-name">${titleCase(h.n)}</div>`+
+    `<div class="card-loc">${titleCase(h.c)}, ${h.s}</div>`+
+    `<div style="margin-bottom:12px"><span class="pill" style="background:${(TYPE_COLOR[h.t]||'#8E7CFF')}22;color:${TYPE_COLOR[h.t]||'#8E7CFF'};border:1px solid ${(TYPE_COLOR[h.t]||'#8E7CFF')}55">${TYPE_LABEL[h.t]||'Supplier'}</span></div>`+
+    `<div class="row"><span>Provider specialty</span><b style="font-size:11px">${h.pt||'—'}</b></div>`+
+    `<div class="row"><span>Accepts Medicare assignment</span><b>${h.a?'Yes':'No'}</b></div>`+
+    `<div class="row"><span>Competitive-bid contracted</span><b>${h.cb?'Yes':'No'}</b></div>`+
+    `<div class="row"><span>CMS supplier ID</span><b>${h.id}${h.dup>1?` <span style="color:var(--t3)">(+${h.dup-1} more enrollment${h.dup>2?'s':''} here)</span>`:''}</b></div>`+
+    `<div class="hint">CMS DMEPOS supplier directory. Co-located enrollments are merged into one location. Accepting assignment means the supplier agrees to the Medicare-approved amount.</div>`+
+    _gmaps(h);
+  document.getElementById('hClose').onclick=closeFacility;
 }
 function renderHospital(){
   const h=selHosp;

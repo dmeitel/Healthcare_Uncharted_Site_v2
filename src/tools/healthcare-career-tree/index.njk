@@ -229,10 +229,12 @@ permalink: /tools/healthcare-career-tree/
     position: absolute; top: 0; right: 0; height: 100%; width: 340px; max-width: 86vw;
     background: rgba(5,12,10,0.98); border-left: 2px solid rgba(78,205,196,0.22);
     box-shadow: -8px 0 30px rgba(0,0,0,0.5); z-index: 30;
-    transform: translateX(100%); transition: transform .26s cubic-bezier(.4,0,.2,1);
+    /* fade in/out (with a subtle nudge) instead of a slide — slides only clear the edge dock, not the centered-column dock */
+    opacity: 0; visibility: hidden; transform: translateX(14px);
+    transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
     display: flex; flex-direction: column; overflow: hidden;
   }
-  #hct-panel.open { transform: translateX(0); }
+  #hct-panel.open { opacity: 1; visibility: visible; transform: none; transition: opacity .2s ease, transform .2s ease; }
   /* On My Path the content is centered (.bp-col, ~1240px) — nest the panel's LEFT edge against the column's right
      border (sit in the margin beside it), clamped so it never runs past the screen on narrower windows. */
   #hct-canvas-wrap[data-view="path"] #hct-panel { left: min(calc(50% + 620px), calc(100% - 340px)); right: auto; }
@@ -330,9 +332,8 @@ permalink: /tools/healthcare-career-tree/
   /* ── My Path: build planner ────────────────────────────── */
   #hct-mypath { margin: 0; background: none; border: 0; box-shadow: none; }
   /* career "character sheet": identity bar + trunk-centric 3-column sheet */
-  .bp-id { flex-shrink: 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 9px 16px 10px; border-bottom: 1px solid rgba(78,205,196,0.14); }
-  .bp-id-left { flex: 1 1 0; min-width: 180px; display: flex; align-items: center; }
-  .bp-id-right { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+  .bp-id { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 9px 16px 10px; border-bottom: 1px solid rgba(78,205,196,0.14); }
+  .bp-id-center { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; }   /* shifter + score chips */
   .bp-id-block { display: flex; flex-direction: column; gap: 2px; }
   .bp-id-name { background: transparent; border: none; border-bottom: 1px solid rgba(120,200,190,0.28); color: #F4FAF8; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; padding: 2px 1px; width: 210px; }
   .bp-id-name::placeholder { color: rgba(150,190,200,0.45); font-weight: 700; }
@@ -382,6 +383,52 @@ permalink: /tools/healthcare-career-tree/
   .bp-card-dragging { opacity: 0.45; }
   .bp-card-over { outline: 2px dashed rgba(78,205,196,0.55); outline-offset: 2px; }
   .bp-panel { background: rgba(8,16,13,0.6); border: 1px solid rgba(78,205,196,0.18); border-radius: 12px; padding: 12px; }
+  /* ── Legend / key — always-on, docked in the left margin beside the centered column, collapsible ── */
+  .bp-legend { position: absolute; top: 70px; left: max(10px, calc(50% - 846px)); width: 214px; z-index: 25; }
+  .bp-legend-inner { display: flex; flex-direction: column; max-height: calc(100% - 110px); overflow: hidden; background: #0b1512; border: 1px solid rgba(78,205,196,0.26); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
+  .bp-legend-head { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 9px 7px 9px 14px; border-bottom: 1px solid rgba(78,205,196,0.14); }
+  .bp-legend-h { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6FE3D8; }
+  .bp-legend-min { background: none; border: none; color: rgba(180,205,215,0.6); font-size: 18px; line-height: 1; cursor: pointer; padding: 1px 7px; border-radius: 5px; }
+  .bp-legend-min:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .bp-legend-body { padding: 6px 14px 14px; overflow-y: auto; }
+  .bp-legend-tab { display: none; background: rgba(78,205,196,0.14); border: 1px solid rgba(78,205,196,0.4); color: #8FE8DC; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; border-radius: 9px; padding: 7px 11px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); white-space: nowrap; }
+  .bp-legend-tab:hover { background: rgba(78,205,196,0.24); color: #fff; }
+  .bp-legend.min { width: auto; }
+  .bp-legend.min .bp-legend-inner { display: none; }
+  .bp-legend.min .bp-legend-tab { display: block; }
+  .bp-legend-grp { font-family: 'Outfit', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(160,200,210,0.65); margin: 13px 0 6px; }
+  .bp-legend-grp:first-child { margin-top: 2px; }
+  .bp-legend-row { display: flex; align-items: center; gap: 11px; padding: 4px 0; }
+  .bp-legend-sw { flex: 0 0 50px; display: flex; align-items: center; justify-content: center; }
+  .bp-legend-tx { font-size: 12px; line-height: 1.38; color: rgba(222,236,239,0.92); }
+  .bp-legend-tx b { color: #F4FAF8; }
+  @media (max-width: 1180px){ .bp-legend:not(.min) { left: 10px; } }
+  /* ── Export sheet: a fixed-width, designed poster built from the build data (device-independent, polished) ── */
+  .hct-export-sheet { box-sizing: border-box; background: linear-gradient(180deg,#0b1512,#0d1117 60%); color: #E6EEF0; font-family: 'DM Sans', sans-serif; padding: 40px 42px 30px; }
+  .hct-export-sheet * { animation: none !important; }   /* nothing mid-fly-in in the capture */
+  .hct-export-sheet .bp-del, .hct-export-sheet .bp-fork, .hct-export-sheet .bp-layer, .hct-export-sheet .bp-node-add { display: none !important; }
+  .ex-hd { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 2px solid rgba(78,205,196,0.32); padding-bottom: 18px; margin-bottom: 24px; }
+  .ex-hd-name { font-family: 'Outfit', sans-serif; font-size: 35px; font-weight: 800; color: #F4FAF8; line-height: 1.04; }
+  .ex-hd-role { font-size: 15px; color: #7FE3D8; margin-top: 6px; }
+  .ex-hd-goal { font-size: 13.5px; color: #E8C547; margin-top: 5px; }
+  .ex-hd-brand { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.1em; color: #4ECDC4; text-transform: uppercase; text-align: right; line-height: 1.25; white-space: nowrap; }
+  .ex-sec-ttl { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #6FE3D8; margin-bottom: 11px; }
+  .ex-trunk-wrap { border: 1px solid rgba(78,205,196,0.18); border-radius: 14px; background: rgba(8,16,13,0.55); padding: 16px 18px; margin-bottom: 18px; overflow: hidden; }
+  .ex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .ex-card { border: 1px solid rgba(78,205,196,0.18); border-radius: 14px; background: rgba(8,16,13,0.55); padding: 15px 17px; }
+  .ex-card.ex-wide { grid-column: 1 / -1; }
+  .ex-items { display: flex; flex-wrap: wrap; gap: 9px; }
+  .ex-item { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: #E2EEF0; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.09); border-radius: 9px; padding: 4px 11px 4px 5px; }
+  .ex-item.ex-fut { border-color: rgba(232,197,71,0.42); border-style: dashed; }
+  .ex-item.ex-fut .ex-il { color: #F0CF6B; }
+  .ex-item .ex-iy { color: rgba(180,205,210,0.6); font-size: 11.5px; }
+  .ex-text { font-size: 13.5px; line-height: 1.55; color: rgba(220,235,238,0.92); white-space: pre-wrap; word-break: break-word; }
+  .ex-empty { font-size: 12.5px; color: rgba(150,185,195,0.5); font-style: italic; }
+  .ex-next-grp { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #7FE3D8; margin: 9px 0 4px; }
+  .ex-next-grp:first-child { margin-top: 0; }
+  .ex-next-item { font-size: 13px; color: #E2EEF0; margin: 3px 0; }
+  .ex-next-item::before { content: '◇ '; color: #E8C547; }
+  .ex-ft { margin-top: 22px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,0.09); text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: rgba(120,200,190,0.62); }
   .bp-panel-next { border-color: rgba(232,197,71,0.3); background: rgba(20,16,6,0.5); }
   .bp-next-goal { font-size: 12px; color: rgba(220,238,238,0.9); margin-bottom: 6px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); line-height: 1.35; }
   .bp-next-goal b { color: #F0CF6B; }
@@ -439,25 +486,28 @@ permalink: /tools/healthcare-career-tree/
     border-radius: 6px; color: #F4FAF8; font-size: 12px; font-weight: 700; padding: 3px 5px; text-align: center; font-family: 'DM Sans', sans-serif; }
   .bp-name::placeholder { color: rgba(120,200,190,0.7); font-style: italic; font-weight: 600; }
   .bp-name:focus { outline: none; border-color: #E8C547; }
+  /* the "Other" anchor's name field WRAPS to ~2 lines (and scrolls beyond) instead of scrolling a single line — fits longer free text */
+  .bp-name-area { width: 74px; height: 34px; resize: none; overflow-y: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.12; font-size: 11px; padding: 3px 5px; }
   .bp-del { position: absolute; top: 2px; right: 3px; width: 16px; height: 16px; line-height: 15px; text-align: center;
     border: none; background: rgba(6,14,12,0.82); color: rgba(200,215,222,0.62); font-size: 13px; cursor: pointer; border-radius: 50%; opacity: 0; transition: opacity .12s, color .12s; }
   .bp-node:hover .bp-del { opacity: 1; }
   .bp-del:hover { color: #ff8080; }
   .bp-empty { font-size: 11.5px; color: rgba(180,205,215,0.5); padding: 10px; text-align: center; }
   /* HAVE ↔ WANT layers */
-  .mp-shift { display: inline-flex; border: 1px solid rgba(120,200,190,0.3); border-radius: 8px; overflow: hidden; margin-right: 8px; }
+  .mp-shift { display: inline-flex; border: 1px solid rgba(120,200,190,0.3); border-radius: 8px; overflow: hidden; }
   .mp-shift button { padding: 5px 12px; font-size: 11.5px; font-weight: 700; background: rgba(255,255,255,0.03); border: none; border-right: 1px solid rgba(120,200,190,0.2); color: rgba(200,224,228,0.7); cursor: pointer; font-family: 'DM Sans', sans-serif; }
   .mp-shift button:last-child { border-right: none; }
   .mp-shift button:hover { background: rgba(120,200,190,0.1); color: #cfeae6; }
   .mp-shift button.on { background: rgba(78,205,196,0.22); color: #F4FAF8; }
   .bp-layer { position: absolute; top: 2px; right: 22px; width: 16px; height: 16px; line-height: 15px; text-align: center;
-    border: none; background: rgba(6,14,12,0.82); color: rgba(120,200,190,0.7); font-size: 10px; cursor: pointer; border-radius: 50%; opacity: 0; transition: opacity .12s, color .12s; }
-  .bp-node:hover .bp-layer { opacity: 1; }
-  .bp-layer:hover { color: #4ECDC4; }
-  /* FUTURE/goal tiles read as an aspirational layer: hollow gold-dashed hex, amber label, persistent ◇ marker */
+    border: none; background: rgba(6,14,12,0.82); color: rgba(240,207,107,0.85); font-size: 10px; cursor: pointer; border-radius: 50%; opacity: 0; transition: opacity .12s, color .12s; }
+  .bp-node:hover .bp-layer { opacity: 1; }                          /* hover-only, like the × */
+  .bp-layer:hover { color: #F0CF6B; }                              /* current tile shows ◇ (amber) → click to set a goal */
+  /* FUTURE/goal tiles read as an aspirational layer: hollow gold-dashed hex, amber label, green ✓ on hover → make it Current */
   .bp-node.bp-future .bp-hexbg { stroke-dasharray: 5 3; stroke-width: 2.4; fill-opacity: 0.45; }
   .bp-node.bp-future .bp-node-lbl, .bp-node.bp-future .bp-name, .bp-node.bp-future .bp-cred-in { color: rgba(240,212,140,0.95); }
-  .bp-node.bp-future .bp-layer { opacity: 1; color: rgba(232,197,71,0.95); }   /* ◇ goal marker stays on */
+  .bp-node.bp-future .bp-layer { color: rgba(127,227,160,0.95); }
+  .bp-node.bp-future .bp-layer:hover { color: #9CF0B8; }
   .bp-node.bp-ghost { opacity: 0.32; }
   .bp-node.bp-ghost .bp-name, .bp-node.bp-ghost .bp-cred-in, .bp-node.bp-ghost .bp-years, .bp-node.bp-ghost .bp-fork, .bp-node.bp-ghost .bp-del, .bp-node.bp-ghost .bp-layer { pointer-events: none; }
   .bp-sp-cell.bp-sp-ghost { opacity: 0.34; }
@@ -684,6 +734,7 @@ permalink: /tools/healthcare-career-tree/
 
     <!-- CONTEXTUAL CONTROLS — My Path tab -->
     <span class="tb-ctx" id="tbc-path" style="display:none">
+      <button class="mp-fbtn" id="hct-mp-export" title="Download your path as an image">⬇ Export JPEG</button>
       <button class="mp-fbtn" id="hct-mp-clear">Reset build</button>
     </span>
 
@@ -736,23 +787,21 @@ permalink: /tools/healthcare-career-tree/
     <section id="hct-mypath" class="hct-view active" data-view="path">
       <!-- IDENTITY BAR -->
       <div class="bp-id">
-        <div class="bp-id-left">
-          <div class="bp-id-block">
-            <input class="bp-id-name" id="bp-name" placeholder="Your name" maxlength="40" autocomplete="off">
-            <div class="bp-id-sub" id="bp-role">Add your current role to begin</div>
-          </div>
+        <div class="bp-id-block">
+          <input class="bp-id-name" id="bp-name" placeholder="Your name" maxlength="40" autocomplete="off">
+          <div class="bp-id-sub" id="bp-role">Add your current role to begin</div>
         </div>
-        <span class="mp-shift" id="mp-shift" title="Switch between the career you HAVE and the one you WANT">
-          <button data-layer="current" class="on">Current</button>
-          <button data-layer="future">Future</button>
-          <button data-layer="both">Both</button>
-        </span>
-        <div class="bp-id-right">
-          <div class="bp-id-block bp-id-goal">
-            <label class="bp-id-lbl">Goal</label>
-            <input class="bp-id-goal-in" id="bp-goal" placeholder="What you're aiming for (e.g., CRNA)" maxlength="60" autocomplete="off">
-          </div>
+        <div class="bp-id-center">
+          <span class="mp-shift" id="mp-shift" title="Switch between the career you HAVE and the one you WANT">
+            <button data-layer="current" class="on">Current</button>
+            <button data-layer="future">Future</button>
+            <button data-layer="both">Both</button>
+          </span>
           <div class="bp-id-vitals" id="bp-vitals"></div>
+        </div>
+        <div class="bp-id-block bp-id-goal">
+          <label class="bp-id-lbl">Goal</label>
+          <input class="bp-id-goal-in" id="bp-goal" placeholder="What you're aiming for (e.g., CRNA)" maxlength="60" autocomplete="off">
         </div>
       </div>
 
@@ -771,6 +820,14 @@ permalink: /tools/healthcare-career-tree/
           <div class="bp-dash" id="bp-dash"></div>
         </div>
       </div>
+      <!-- Legend / key — always-on panel docked in the left margin, collapsible -->
+      <aside id="bp-legend" class="bp-legend">
+        <div class="bp-legend-inner">
+          <div class="bp-legend-head"><span class="bp-legend-h">Key</span><button class="bp-legend-min" id="bp-legend-min" title="Minimize">–</button></div>
+          <div class="bp-legend-body" id="bp-legend-body"></div>
+        </div>
+        <button class="bp-legend-tab" id="bp-legend-tab" title="Show the key">⊞ Key</button>
+      </aside>
     </section>
 
     <!-- Detail panel overlay (slides in from the right) -->
@@ -810,7 +867,7 @@ permalink: /tools/healthcare-career-tree/
   const BUILD_KEY = c => 'hct-build-' + c;
   let uid = 0; const newId = () => 'b' + (++uid) + '-' + Date.now();
   // movable dashboard panels (Career is fixed on top; these flow into the grid below, drag/add/remove)
-  const PANEL_ORDER = ['education','skill','spec','experience','next','sw','notes'];
+  const PANEL_ORDER = ['education','skill','spec','experience','next','sw','notes','other'];
   const PANELS = {
     education:  { title:'Education Growth', kind:'spiral', grid:'bp-grid-education',  search:['bp-edu-search','bp-edu-suggest'],   picker:'cred',       ph:'Search credentials (MHA, NCLEX-RN, BSN…)' },
     skill:      { title:'Skill Growth',     kind:'spiral', grid:'bp-grid-skill',      search:['bp-skill-search','bp-skill-suggest'], picker:'skill',     ph:'Search skills (airway, vitals, charting…)' },
@@ -818,9 +875,10 @@ permalink: /tools/healthcare-career-tree/
     experience: { title:'Experience',       kind:'spiral', grid:'bp-grid-experience', search:['bp-exp-search','bp-exp-suggest'],     picker:'experience', ph:'Search settings & populations…' },
     next:       { title:'Next Steps',       kind:'next' },
     sw:         { title:'Strengths & Weaknesses', kind:'text', field:'sw',    ph:"What you bring, and what you're working on…" },
-    notes:      { title:'Notes',            kind:'text', field:'notes', ph:'Anything you want to remember…' }
+    notes:      { title:'Notes',            kind:'text', field:'notes', ph:'Anything you want to remember…' },
+    other:      { title:'Other',            kind:'text', field:'other', ph:'Anything else — awards, languages, volunteer work, links…' }
   };
-  function blankBuild(){ return { budget: 30, view: 'current', name: '', goal: '', layout: { order: ['education','skill','spec','experience','next','sw','notes'], hidden: [], sizes: {} }, career: [], education: [], skill: [], spec: [], experience: [], sw: '', notes: '' }; }
+  function blankBuild(){ return { budget: 30, view: 'current', name: '', goal: '', layout: { order: ['education','skill','spec','experience','next','sw','notes','other'], hidden: [], sizes: {} }, career: [], education: [], skill: [], spec: [], experience: [], sw: '', notes: '', other: '' }; }
   // two layers on My Path: 'current' (what you HAVE) and 'future' (what you WANT). build.view = current|future|both.
   function nodeLayer(n){ return (n && n.layer === 'future') ? 'future' : 'current'; }
   function activeLayer(){ return (build.view === 'future' || build.view === 'both') ? 'future' : 'current'; }   // which layer a new tile joins
@@ -914,6 +972,14 @@ permalink: /tools/healthcare-career-tree/
     NAMED_DEFS.forEach((def,i) => { if (def.lvl === lvl && def.re.test(edu) && !out.has(def.face)) out.set(def.face, { face:def.face, label:def.label, rank:10+i }); });
     if (!out.size){ const g = GENERIC_LEVEL[lvl]; if (g) out.set(g[0], { face:g[0], label:g[1], generic:true, rank:999 }); }
     return [...out.values()];
+  }
+  // full degree name for a credential FACE (BSN → "Bachelor of Science in Nursing"); falls back to the face itself, not the generic level
+  function degreeFullName(face, degree){
+    if (!face) return (DATA.meta.degrees[degree]||{}).label || '';
+    const nd = NAMED_DEFS.find(d => d.face === face); if (nd) return nd.label;
+    for (const fam in FAMILY_DEG){ const lv = FAMILY_DEG[fam]; for (const k in lv){ if (lv[k][0] === face) return lv[k][1]; } }
+    for (const k in GENERIC_LEVEL){ if (GENERIC_LEVEL[k][0] === face) return GENERIC_LEVEL[k][1]; }
+    return face;
   }
   let   lodFar = false;    // level-of-detail: true when zoomed out (abbr-only)
   let   userZoomed = false; // true once the user manually zooms/pans (suppresses auto-fit)
@@ -1374,7 +1440,6 @@ permalink: /tools/healthcare-career-tree/
 
   // ── Detail panel ───────────────────────────────────────
   function openPanel(id){
-    if (curView !== 'career') setView('career');   // a ROLE detail belongs only on the Career Matrix — never floats on My Path
     const n = nodeById.get(id);
     const c = DATA.classes[curClass];
     const fam = c.families[n.family] || {};
@@ -1409,7 +1474,7 @@ permalink: /tools/healthcare-career-tree/
     h += '<button class="hct-pin-btn'+(isPin?' pinned':'')+'" id="hct-pin">'+(isPin?'★ On your path — remove':'☆ Add to my path')+'</button>';
 
     document.getElementById('hct-p-body').innerHTML = h;
-    const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = 'career';
+    const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = curView;   // belongs to whatever view opened it (docks right on My Path, right edge on the Career Matrix)
 
     document.getElementById('hct-pin').onclick = () => togglePin(id);
     document.querySelectorAll('#hct-p-body .hct-chip').forEach(ch => {
@@ -1455,7 +1520,7 @@ permalink: /tools/healthcare-career-tree/
         PANEL_ORDER.forEach(k => { if (!order.includes(k)) order.push(k); });
         const hidden = Array.isArray(o.layout && o.layout.hidden) ? o.layout.hidden.filter(k => PANEL_ORDER.includes(k)) : [];
         const sizes = (o.layout && o.layout.sizes && typeof o.layout.sizes === 'object') ? o.layout.sizes : {};
-        return Object.assign(b, { budget:o.budget||30, view, name:o.name||'', goal:o.goal||'', layout:{ order, hidden, sizes }, sw:o.sw||'', notes:o.notes||'',
+        return Object.assign(b, { budget:o.budget||30, view, name:o.name||'', goal:o.goal||'', layout:{ order, hidden, sizes }, sw:o.sw||'', notes:o.notes||'', other:o.other||'',
           career:o.career, education:o.education, skill:o.skill, spec:o.spec, experience:o.experience });
       }
     } catch(e){}
@@ -1579,8 +1644,7 @@ permalink: /tools/healthcare-career-tree/
     if (roleEl){
       const cur = build.career.filter(n => nodeLayer(n)==='current');
       const role = cur.length ? cur[cur.length-1] : null;   // most-advanced role you HAVE
-      if (role){ const t = role.roleId ? (nodeById.get(role.roleId)||{}).tier : null;
-        roleEl.innerHTML = '<b>'+esc(tileDisplayName(role,'career'))+'</b> · '+(t!=null ? 'Tier '+(t+1) : cur.length+' role'+(cur.length!==1?'s':''));
+      if (role){ roleEl.innerHTML = '<b>'+esc(tileDisplayName(role,'career'))+'</b>';   // current role only — the "Tier N" depth number read as jargon
       } else roleEl.textContent = 'Add your current role to begin';
     }
     const vit = document.getElementById('bp-vitals');
@@ -1611,6 +1675,179 @@ permalink: /tools/healthcare-career-tree/
       const n = (build[el.dataset.k]||[]).find(x => x.id === el.dataset.id);
       if (n){ n.layer = 'current'; saveBuild(); renderMyPath(); }   // achieved → moves into your Current layer
     });
+  }
+
+  // ── Export My Path as a JPEG (lazy-loads html2canvas only on first use) ──
+  let html2canvasPromise = null;
+  function ensureHtml2canvas(){
+    if (window.html2canvas) return Promise.resolve();
+    if (!html2canvasPromise) html2canvasPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      s.onload = () => resolve(); s.onerror = () => reject(new Error('html2canvas failed to load'));
+      document.head.appendChild(s);
+    });
+    return html2canvasPromise;
+  }
+  // small on-brand hex chip for the export sheet sections
+  function exMiniHex(abbr, color, dashed){
+    const r = 17, w = 2*r, h = 2*r+4, cx = r, cy = r+2;
+    const t = String(abbr||'').slice(0,5);
+    const fs = t.length>4 ? 7 : t.length>2 ? 9 : 11;
+    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="flex:0 0 auto">'+
+      '<path d="'+hexPath(cx,cy,r)+'" fill="'+hexA(color,0.22)+'" stroke="'+color+'" stroke-width="2"'+(dashed?' stroke-dasharray="3 2"':'')+'/>'+
+      '<text x="'+cx+'" y="'+(cy+fs*0.34).toFixed(1)+'" text-anchor="middle" style="font-family:DM Sans,sans-serif;font-weight:800;font-size:'+fs+'px;fill:#EAF6F4">'+esc(t)+'</text></svg>';
+  }
+  // Build a fixed-width (1080px) export poster straight from the build DATA — identical on any device (phone or desktop),
+  // not a screenshot of the live responsive layout. Clean header + scaled trunk + uniform section cards + full text.
+  function buildExportSheet(){
+    const W = 1080, PAD = 42, contentW = W - PAD*2;
+    const sheet = document.createElement('div'); sheet.className = 'hct-export-sheet'; sheet.style.width = W+'px';
+    const name = (build.name||'').trim() || 'My Career Path';
+    const roleEl = document.getElementById('bp-role'); const role = roleEl ? roleEl.textContent.trim() : '';
+    const goal = (build.goal||'').trim();
+    const hd = document.createElement('div'); hd.className = 'ex-hd';
+    hd.innerHTML = '<div><div class="ex-hd-name">'+esc(name)+'</div>'+
+      (role ? '<div class="ex-hd-role">'+esc(role)+'</div>' : '')+
+      (goal ? '<div class="ex-hd-goal">Goal: '+esc(goal)+'</div>' : '')+'</div>'+
+      '<div class="ex-hd-brand">Healthcare<br>Uncharted</div>';
+    sheet.appendChild(hd);
+    // CAREER PATH — clone the live trunk grid (+ connector overlay + forks), strip chrome, scale to fit the width
+    const grid = document.getElementById('bp-grid-career');
+    if (grid && build.career.length){
+      const wrap = document.createElement('div'); wrap.className = 'ex-trunk-wrap';
+      wrap.innerHTML = '<div class="ex-sec-ttl">Career Path</div>';
+      const ov = grid.querySelector('.bp-conn-ov'); const ovH = ov ? parseFloat(ov.getAttribute('height'))||0 : 0;
+      const naturalW = Math.max(grid.scrollWidth, grid.offsetWidth, 1);
+      const naturalH = Math.max(grid.scrollHeight, grid.offsetHeight, ovH, 1);
+      const scale = Math.min(1, (contentW - 36) / naturalW);
+      const cg = grid.cloneNode(true);
+      cg.style.overflow = 'visible'; cg.style.width = naturalW+'px';
+      cg.querySelectorAll('.bp-del,.bp-fork,.bp-layer,.bp-node-add,.bp-conn-add').forEach(e => e.remove());   // drop hover chrome + the + tile AND its dangling connector
+      // hide empty inputs WITHOUT removing them — removing a name box above a hex shifts the hex up and the (already-measured) connectors miss it
+      cg.querySelectorAll('.bp-years,.bp-name,.bp-cred-in').forEach(el => { if (!String(el.value||'').trim()) el.style.visibility = 'hidden'; });
+      const scaler = document.createElement('div'); scaler.style.cssText = 'height:'+Math.ceil(naturalH*scale+2)+'px;overflow:hidden';
+      const inner = document.createElement('div'); inner.style.cssText = 'transform:scale('+scale.toFixed(4)+');transform-origin:top left;width:'+naturalW+'px';
+      inner.appendChild(cg); scaler.appendChild(inner); wrap.appendChild(scaler);
+      sheet.appendChild(wrap);
+    }
+    // section cards (skip empties)
+    const grid2 = document.createElement('div'); grid2.className = 'ex-grid';
+    [['education','Education'],['skill','Skills'],['spec','Specialization'],['experience','Experience']].forEach(([k,ttl]) => {
+      const items = build[k]||[]; if (!items.length) return;
+      let h = '<div class="ex-sec-ttl">'+ttl+'</div><div class="ex-items">';
+      items.forEach(n => {
+        const fut = nodeLayer(n)==='future';
+        let abbr, color, label;
+        if (k==='education'){ const dm = DATA.meta.degrees[n.degree]||{}; abbr = n.label||'?'; color = credHexColor(n) || dm.color || '#E8C547'; label = degreeFullName(n.label, n.degree); }
+        else { abbr = n.abbr || (n.name||'').slice(0,4); color = n.zcol || '#5AC8BE'; label = n.name || n.abbr || ''; }
+        h += '<span class="ex-item'+(fut?' ex-fut':'')+'">'+exMiniHex(abbr,color,fut)+'<span class="ex-il">'+esc(label)+'</span>'+(n.years?'<span class="ex-iy">'+esc(n.years)+'</span>':'')+'</span>';
+      });
+      h += '</div>';
+      const card = document.createElement('div'); card.className = 'ex-card'; card.innerHTML = h; grid2.appendChild(card);
+    });
+    // NEXT STEPS — future-layer items grouped (the Want overlay)
+    let nextHTML = '';
+    [['career','Roles to reach'],['education','Credentials to earn'],['skill','Skills to build'],['spec','Focus areas'],['experience','Experience to gain']].forEach(([k,lbl]) => {
+      const items = (build[k]||[]).filter(n => nodeLayer(n)==='future' && !n.anchor);
+      if (!items.length) return;
+      nextHTML += '<div class="ex-next-grp">'+lbl+'</div>';
+      items.forEach(n => nextHTML += '<div class="ex-next-item">'+esc(tileDisplayName(n,k))+'</div>');
+    });
+    if (nextHTML){ const card = document.createElement('div'); card.className = 'ex-card'; card.innerHTML = '<div class="ex-sec-ttl">Next Steps</div>'+nextHTML; grid2.appendChild(card); }
+    // STRENGTHS + NOTES + OTHER — full text, full width
+    [['sw','Strengths & Weaknesses'],['notes','Notes'],['other','Other']].forEach(([k,ttl]) => {
+      const v = (build[k]||'').trim(); if (!v) return;
+      const card = document.createElement('div'); card.className = 'ex-card ex-wide';
+      card.innerHTML = '<div class="ex-sec-ttl">'+ttl+'</div><div class="ex-text">'+esc(v)+'</div>';
+      grid2.appendChild(card);
+    });
+    if (grid2.children.length) sheet.appendChild(grid2);
+    const ft = document.createElement('div'); ft.className = 'ex-ft'; ft.textContent = 'Healthcare Uncharted · Career Tree · healthcareuncharted.com';
+    sheet.appendChild(ft);
+    return sheet;
+  }
+  async function exportMyPath(){
+    if (!document.querySelector('#hct-mypath .bp-col')) return;
+    const btn = document.getElementById('hct-mp-export'); const orig = btn ? btn.textContent : '';
+    if (btn){ btn.textContent = 'Rendering…'; btn.disabled = true; }
+    closePanel();
+    let sheet = null;
+    try {
+      await ensureHtml2canvas();
+      sheet = buildExportSheet();
+      sheet.style.cssText += ';position:fixed;left:0;top:0;z-index:-1;pointer-events:none';   // off-screen-ish (behind the opaque app), still renderable
+      document.body.appendChild(sheet);
+      if (document.fonts && document.fonts.ready){ try { await document.fonts.ready; } catch(_){} }
+      const canvas = await html2canvas(sheet, { backgroundColor:'#0d1117', scale: 2, useCORS: true, logging: false });
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/jpeg', 0.94);
+      a.download = ((build.name||'').trim().replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'') || 'my-path') + '-career-path.jpg';
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch(err){
+      console.error('export My Path', err);
+      alert('Could not build the image. The export library loads from a CDN — check your connection and try again.');
+    } finally {
+      if (sheet) sheet.remove();
+      if (btn){ btn.textContent = orig; btn.disabled = false; }
+    }
+  }
+
+  // ── Legend / key (what the tiles, lines, and badges mean) ──
+  function legendHex(fill, stroke, dashed, glyph, glyphCol){
+    const r=15, cx=20, cy=17;
+    return '<svg width="40" height="36" viewBox="0 0 40 36">'+
+      '<path d="'+hexPath(cx,cy,r)+'" style="fill:'+fill+';stroke:'+stroke+';stroke-width:2'+(dashed?';stroke-dasharray:4 3':'')+'"/>'+
+      (glyph ? '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" style="font-size:14px;font-weight:800;fill:'+(glyphCol||'#EAF6F4')+'">'+glyph+'</text>' : '')+'</svg>';
+  }
+  function legendBadge(glyph, col){
+    return '<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" style="fill:rgba(6,14,12,0.92);stroke:'+col+';stroke-width:1.2"/>'+
+      '<text x="13" y="17.5" text-anchor="middle" style="font-size:12px;font-weight:800;fill:'+col+'">'+glyph+'</text></svg>';
+  }
+  function legendForkBadge(col){
+    return '<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" style="fill:rgba(6,14,12,0.92);stroke:'+col+';stroke-width:1.2"/>'+
+      '<path d="M13 8 V12 M13 12 L9.5 16.5 M13 12 L16.5 16.5" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  }
+  function legendLine(kind){
+    const teal='#5AC8BE', gold='#E8C547', purp='#B07BD6';
+    if (kind==='solid')  return '<svg width="56" height="20"><circle cx="7" cy="10" r="3" fill="'+teal+'"/><line x1="7" y1="10" x2="49" y2="10" stroke="'+teal+'" stroke-width="2.6"/><circle cx="49" cy="10" r="3" fill="'+teal+'"/></svg>';
+    if (kind==='step')   return '<svg width="56" height="26"><path d="M7 6 H28 V20 H49" fill="none" stroke="'+teal+'" stroke-width="2.6"/><circle cx="7" cy="6" r="3" fill="'+teal+'"/><circle cx="49" cy="20" r="3" fill="'+teal+'"/></svg>';
+    if (kind==='dashed') return '<svg width="56" height="20"><circle cx="7" cy="10" r="3" fill="'+gold+'"/><line x1="7" y1="10" x2="49" y2="10" stroke="'+gold+'" stroke-width="2.6" stroke-dasharray="4 3"/><circle cx="49" cy="10" r="3" fill="'+gold+'"/></svg>';
+    if (kind==='fork')   return '<svg width="56" height="30"><path d="M12 5 V13 H32 V25 H48" fill="none" stroke="'+purp+'" stroke-width="2.6"/><circle cx="12" cy="5" r="3" fill="'+purp+'"/><circle cx="48" cy="25" r="3" fill="'+purp+'"/></svg>';
+    return '';
+  }
+  function renderLegend(){
+    const body = document.getElementById('bp-legend-body'); if (!body || body.dataset.built) return;
+    const teal = '#4ECDC4', gold = '#E8C547';
+    const rows = [
+      ['grp','Tiles'],
+      [legendHex(hexA(teal,0.2), teal), '<b>Have</b> — a role, credential, or skill you hold. Solid, colored by field.'],
+      [legendHex(hexA(gold,0.12), gold, true), '<b>Goal</b> — something you want next. Gold, dashed, hollow.'],
+      [legendHex(hexA(teal,0.07), hexA(teal,0.4)), '<b>Context</b> — faint tiles are current items, shown while you view Future.'],
+      [legendHex(hexA(gold,0.2), gold, false, '★', '#0d1117'), '<b>Milestones</b> — gold markers: ★ Start of Career, ⚑ Retirement, ◆ Other.'],
+      ['grp','Lines'],
+      [legendLine('solid'), 'Your path from one role to the next.'],
+      [legendLine('step'), 'A change in job type — the trunk steps up or down.'],
+      [legendLine('dashed'), 'Connects to a <b>goal</b> you haven’t reached yet.'],
+      [legendLine('fork'), 'A <b>fork</b> — two roles at the same time (e.g. work + teach).'],
+      ['grp','Buttons (hover a tile)'],
+      [legendBadge('✓','#7FE3A0'), 'Mark a goal as something you now <b>have</b>.'],
+      [legendBadge('◇','#F0CF6B'), 'Mark something you have as a <b>goal</b>.'],
+      [legendBadge('×','#ff8080'), 'Remove the tile.'],
+      [legendForkBadge('#C9A6E6'), '<b>Fork</b> — add a second concurrent role.'],
+      ['grp','View'],
+      ['<svg width="56" height="20"><rect x="3" y="4" width="50" height="13" rx="4" style="fill:rgba(78,205,196,0.16);stroke:rgba(78,205,196,0.45)"/></svg>', '<b>Current / Future / Both</b> — switch between what you have, what you want, and both layered.']
+    ];
+    body.innerHTML = rows.map(r => r[0]==='grp'
+      ? '<div class="bp-legend-grp">'+esc(r[1])+'</div>'
+      : '<div class="bp-legend-row"><span class="bp-legend-sw">'+r[0]+'</span><span class="bp-legend-tx">'+r[1]+'</span></div>'
+    ).join('');
+    body.dataset.built = '1';
+  }
+  function setLegendMin(min){
+    const el = document.getElementById('bp-legend'); if (!el) return;
+    el.classList.toggle('min', min);
+    try { localStorage.setItem('hct-legend-min', min ? '1' : '0'); } catch(e){}
   }
 
   // build the movable dashboard cards (rebuilds only when the layout/order changes, to preserve focus + inputs)
@@ -1734,8 +1971,9 @@ permalink: /tools/healthcare-career-tree/
     opts = opts || {}; const conc = !!opts.conc;
     const isReal = cfg.kind==='role' ? !!node.roleId : (cfg.kind==='cred' ? node.kind==='real' : false);
     let col, face, sub = null;
-    if (node.anchor){ col = '#E8C547'; face = node.anchor==='start' ? '★' : '⚑';
-      sub = node.name || (node.anchor==='start' ? 'Start of Career' : 'Retirement'); }
+    if (node.anchor){ col = '#E8C547';
+      if (node.anchor === 'other'){ face = credFaceShort(node.name) || '◆'; sub = null; }   // gold like the bookends, but a free-text name you type
+      else { face = node.anchor==='start' ? '★' : '⚑'; sub = node.name || (node.anchor==='start' ? 'Start of Career' : 'Retirement'); } }
     else if (cfg.kind==='role'){ col = roleFamColor(node.roleId, node.family) || '#5AC8BE';
       face = node.roleId ? (node.abbr||'?') : (credFaceShort(node.name)||'✎'); sub = node.roleId ? node.name : null; }
     else if (cfg.kind==='cred'){ col = isReal ? ((DATA.meta.degrees[node.degree]||{}).color||'#E8C547') : '#E8C547';
@@ -1751,15 +1989,17 @@ permalink: /tools/healthcare-career-tree/
     // name above the hex, years below (clean stacked look)
     if (sub != null) html += '<div class="bp-node-lbl">'+esc(sub)+'</div>';
     else if (cfg.kind==='cred') html += '<input class="bp-cred-in" placeholder="CODE" maxlength="40" value="'+esc(node.label||'')+'">';
+    else if (node.anchor==='other') html += '<textarea class="bp-name bp-name-area" placeholder="type anything" maxlength="60" rows="2">'+esc(node.name||'')+'</textarea>';
     else html += '<input class="bp-name" placeholder="search…" maxlength="44" value="'+esc(node.name||'')+'">';
     html += bpHexSVG(face, hexA(col,0.20), col);
     html += '<textarea class="bp-years" rows="2" maxlength="20" placeholder="years">'+esc(node.years||'')+'</textarea>';
     cell.innerHTML = html;
     const nm = cell.querySelector('.bp-name');
     if (nm){
-      nm.oninput = () => { node.name = nm.value; saveBuild(); setHexFace(cell, credFaceShort(nm.value)||'✎'); cell.classList.toggle('on', !!nm.value.trim()); showTileSuggest(cfg, node, nm); };
+      nm.oninput = () => { node.name = nm.value; saveBuild(); setHexFace(cell, credFaceShort(nm.value)||(node.anchor==='other'?'◆':'✎')); cell.classList.toggle('on', !!nm.value.trim()); showTileSuggest(cfg, node, nm); };
       nm.onfocus = () => showTileSuggest(cfg, node, nm);
       nm.onblur  = () => setTimeout(hideTileSuggest, 160);
+      if (nm.tagName === 'TEXTAREA') nm.onkeydown = (e) => { if (e.key === 'Enter') e.preventDefault(); };   // wrap, but no newlines in a name
     }
     const ci = cell.querySelector('.bp-cred-in');
     if (ci) ci.oninput = () => { node.label = ci.value; saveBuild(); setHexFace(cell, credFaceShort(ci.value)); cell.classList.toggle('on', !!ci.value.trim()); };
@@ -1769,6 +2009,11 @@ permalink: /tools/healthcare-career-tree/
     cell.querySelector('.bp-del').onclick = opts.onRemove;
     const fk = cell.querySelector('.bp-fork'); if (fk) fk.onclick = opts.onFork;
     cell.querySelector('.bp-layer').onclick = (e) => { e.stopPropagation(); node.layer = (nodeLayer(node)==='future' ? 'current' : 'future'); saveBuild(); renderMyPath(); };
+    // click a REAL role's hex → open its detail, docked to the right of the center column (stopPropagation so the global off-click doesn't immediately close it)
+    if (cfg.key === 'career' && node.roleId){
+      const hx = cell.querySelector('.bp-hex');
+      if (hx){ hx.style.cursor = 'pointer'; hx.addEventListener('click', (e) => { e.stopPropagation(); selectedId = node.roleId; openPanel(node.roleId); }); }
+    }
     return cell;
   }
 
@@ -1854,12 +2099,12 @@ permalink: /tools/healthcare-career-tree/
     const ov = document.createElementNS(NS,'svg'); ov.setAttribute('class','bp-conn-ov');
     ov.setAttribute('width', (n+1)*(CELLW+GAP)); ov.setAttribute('height', totalH);
     grid.appendChild(ov);
-    const addLine = (x1,y1,x2,y2,col,dashed) => {
+    const addLine = (x1,y1,x2,y2,col,dashed,cls) => {
       const ln = document.createElementNS(NS,'line');
       ln.setAttribute('x1',x1.toFixed(1)); ln.setAttribute('y1',y1.toFixed(1)); ln.setAttribute('x2',x2.toFixed(1)); ln.setAttribute('y2',y2.toFixed(1));
-      ln.setAttribute('stroke',col); ln.setAttribute('stroke-width','2.5'); ln.setAttribute('stroke-linecap','round'); if (dashed) ln.setAttribute('stroke-dasharray','3 5'); ov.appendChild(ln);
+      ln.setAttribute('stroke',col); ln.setAttribute('stroke-width','2.5'); ln.setAttribute('stroke-linecap','round'); if (dashed) ln.setAttribute('stroke-dasharray','3 5'); if (cls) ln.setAttribute('class',cls); ov.appendChild(ln);
       [[x1,y1],[x2,y2]].forEach(([x,y]) => { const ci=document.createElementNS(NS,'circle');
-        ci.setAttribute('cx',x.toFixed(1)); ci.setAttribute('cy',y.toFixed(1)); ci.setAttribute('r','4'); ci.setAttribute('fill',col); ov.appendChild(ci); });
+        ci.setAttribute('cx',x.toFixed(1)); ci.setAttribute('cy',y.toFixed(1)); ci.setAttribute('r','4'); ci.setAttribute('fill',col); if (cls) ci.setAttribute('class',cls); ov.appendChild(ci); });
     };
     const addElbow = (x0,y0,cx,cy,x2,y2,col,dashed) => {   // an L: x0,y0 → corner cx,cy → x2,y2
       const p = document.createElementNS(NS,'path');
@@ -1882,9 +2127,10 @@ permalink: /tools/healthcare-career-tree/
       const cx = hx(j), cy = hy(j), tx = hx(j+1), ty = hy(j+1);
       const col = (isCareer && lb!==la && vis[j+1]) ? (roleFamColor(vis[j+1].roleId, vis[j+1].family) || linkCol) : linkCol;
       const fut = nodeLayer(vis[j])==='future' || (vis[j+1] && nodeLayer(vis[j+1])==='future');   // reaches into a goal → dashed
-      if (lb === la)      addLine(cx+APO, cy,      tx-APO, ty,      col, fut);   // same lane → edge-mid to edge-mid (straight across)
-      else if (lb < la)   addLine(cx+APO, cy-SIDE, tx-APO, ty+SIDE, col, fut);   // next is UP   → upper-right corner → its lower-left corner
-      else                addLine(cx+APO, cy+SIDE, tx-APO, ty-SIDE, col, fut);   // next is DOWN → lower-right corner → its upper-left corner
+      const cls = (j === n-1) ? 'bp-conn-add' : null;   // the connector that runs into the + add-tile — droppable in the JPEG export
+      if (lb === la)      addLine(cx+APO, cy,      tx-APO, ty,      col, fut, cls);   // same lane → edge-mid to edge-mid (straight across)
+      else if (lb < la)   addLine(cx+APO, cy-SIDE, tx-APO, ty+SIDE, col, fut, cls);   // next is UP   → upper-right corner → its lower-left corner
+      else                addLine(cx+APO, cy+SIDE, tx-APO, ty-SIDE, col, fut, cls);   // next is DOWN → lower-right corner → its upper-left corner
     }
     // fork connector: an L off the main's BOTTOM-LEFT corner — straight down, then right into the concurrent's left side
     vis.forEach((node, i) => {
@@ -1915,6 +2161,7 @@ permalink: /tools/healthcare-career-tree/
     const minY = Math.min(...pts.map(p=>p.y))-R-3, maxY = Math.max(...pts.map(p=>p.y))+R+3;
     const svg = document.createElementNS(NS,'svg');
     svg.setAttribute('class','bp-spiral'); svg.setAttribute('width', (maxX-minX).toFixed(0));   // natural px (don't balloon a lone hex); CSS caps with max-width
+    svg.setAttribute('height', (maxY-minY).toFixed(0));   // explicit height so html2canvas (JPEG export) renders the spiral, not a blank box
     svg.setAttribute('viewBox', minX.toFixed(1)+' '+minY.toFixed(1)+' '+(maxX-minX).toFixed(1)+' '+(maxY-minY).toFixed(1));
 
     vis.forEach((node,i) => {
@@ -1954,7 +2201,7 @@ permalink: /tools/healthcare-career-tree/
     addG.setAttribute('class','bp-sp-add'); addG.setAttribute('transform','translate('+ap.x.toFixed(1)+','+ap.y.toFixed(1)+')');
     addG.innerHTML = '<path d="'+hexPath(0,0,R)+'" class="bp-sp-addhex"/>'+
       '<text text-anchor="middle" y="7" class="bp-sp-tx" style="font-size:24px;fill:rgba(232,197,71,0.85)">+</text>';
-    addG.onclick = () => addCustomNode('education');
+    addG.onclick = () => addCustomNode(cfg.key);   // add to THIS spiral's track (education/skill/spec/experience), not always education
     svg.appendChild(addG);
     host.appendChild(svg);
   }
@@ -2036,7 +2283,8 @@ permalink: /tools/healthcare-career-tree/
   // My-Path-only anchor tiles (gold) — bookend the career timeline; NOT in the Career Matrix, only searchable here
   const ANCHORS = [
     { id:'__anchor-start', label:'Start of Career', abbr:'★', color:'#E8C547', anchor:'start', kw:['start','begin','career','entry','first'] },
-    { id:'__anchor-end',   label:'Retirement',      abbr:'⚑', color:'#E8C547', anchor:'end',   kw:['retire','retirement','end','finish','last'] }
+    { id:'__anchor-end',   label:'Retirement',      abbr:'⚑', color:'#E8C547', anchor:'end',   kw:['retire','retirement','end','finish','last'] },
+    { id:'__anchor-other', label:'Other (type your own)', abbr:'◆', color:'#E8C547', anchor:'other', kw:['other','custom','gap','break','milestone','note','misc','sabbatical','military','travel'] }
   ];
   function tileSuggestMatches(cfg, q){
     q = (q||'').trim().toLowerCase();
@@ -2053,6 +2301,7 @@ permalink: /tools/healthcare-career-tree/
       .map(n => ({ id:n.id, label:n.label, abbr:n.abbr, color:col }));
   }
   function showTileSuggest(cfg, node, inp){
+    if (node.anchor) return;                            // anchor tiles (incl. "Other") are free-text — no role search
     if (node.roleId || node.atlasId) return;            // already a real node
     if (cfg.kind === 'cred') return;                    // education has its own flow
     const matches = tileSuggestMatches(cfg, inp.value);
@@ -2066,7 +2315,7 @@ permalink: /tools/healthcare-career-tree/
   }
   function convertTileToReal(cfg, node, id){
     const anc = ANCHORS.find(a => a.id === id);
-    if (anc){ node.anchor = anc.anchor; node.name = anc.label; node.abbr = anc.abbr; delete node.roleId; delete node.concurrent;
+    if (anc){ node.anchor = anc.anchor; node.name = anc.anchor==='other' ? '' : anc.label; node.abbr = anc.abbr; delete node.roleId; delete node.concurrent;
       syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); return; }
     if (cfg.kind === 'role'){ const n = nodeById.get(id); if (!n) return;
       node.roleId = id; node.abbr = n.abbr; node.family = n.family; node.name = n.label.replace(/\n/g,' ');
@@ -2153,12 +2402,12 @@ permalink: /tools/healthcare-career-tree/
     const n = nodeById.get(id); if (!n) return;
     hiddenPathways.delete(n.pathway); hiddenFamilies.delete(n.family);   // make sure it's visible
     buildPathwayDropdowns();
-    if (curView !== 'career') setView('career');   // a credential's "Opens these roles" chip JUMPS to the Career Matrix (where role details live)
+    if (curView === 'edu') setView('career');   // the Education Matrix has no center column → jump to the Career Matrix (My Path keeps it in-place)
     eduSelId = null;
     selectedId = id;
     render(false);
-    openPanel(id);
-    setTimeout(() => focusNode(id), 90);   // pan/zoom the board to the jumped-to role
+    openPanel(id);   // detail opens IN the current view, docked to the right of the center column on My Path (dockPanel + the [data-view] nest CSS)
+    if (curView === 'career') setTimeout(() => focusNode(id), 90);   // only pan the board when it's the visible view
   }
 
   function renderSchooling(){
@@ -2829,6 +3078,11 @@ permalink: /tools/healthcare-career-tree/
     // build-planner controls — five growth tracks
     document.querySelectorAll('#mp-shift button').forEach(b => b.onclick = (e) => { e.stopPropagation(); setLayerView(b.dataset.layer); });
     document.getElementById('hct-mp-clear').onclick = (e) => { e.stopPropagation(); resetBuild(); };
+    const mpExport = document.getElementById('hct-mp-export'); if (mpExport) mpExport.onclick = (e) => { e.stopPropagation(); exportMyPath(); };
+    renderLegend();   // the key is always on — build it once at load
+    const legMin = document.getElementById('bp-legend-min'); if (legMin) legMin.onclick = (e) => { e.stopPropagation(); setLegendMin(true); };
+    const legTab = document.getElementById('bp-legend-tab'); if (legTab) legTab.onclick = (e) => { e.stopPropagation(); setLegendMin(false); };
+    try { if (localStorage.getItem('hct-legend-min')==='1') setLegendMin(true); } catch(e){}
     document.getElementById('bp-name').oninput  = (e) => { build.name = e.target.value; saveBuild(); };
     document.getElementById('bp-goal').oninput  = (e) => { build.goal = e.target.value; saveBuild(); renderNextSteps(); };
     // sw/notes textareas + the section search bars are inside the movable dashboard cards → wired in renderDash()

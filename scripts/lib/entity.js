@@ -44,6 +44,7 @@ const TYPES = [
   'concept',        // an Atlas concept / idea node
   'credential',     // a degree, license, or cert (education layer)
   'policy',         // a law, rule, or bill (policy layer)
+  'supply',         // a supply-density rollup about a place (DME categories)
 ];
 
 const RELS = [
@@ -56,6 +57,12 @@ const RELS = [
   'affects',    // policy -> metric/role/... (directional, weightable)
   'trained-by', // role -> credential / program
   'requires',   // role -> credential
+  // ── cross-layer (curated, hand-authored in scripts/lib/cross-links.js) ──
+  'uses',        // role -> expertise (a job runs on these skills)
+  'measured-by', // role/concept -> metric (this thing is quantified by that metric)
+  'cares-for',   // role -> patient-state (who this role treats)
+  'in-zone',     // any entity -> atlas zone concept (its home on the atlas)
+  'represents',  // atlas concept -> the entities it stands for
 ];
 
 // Which Atlas layer a node belongs to. Maps onto Atlas zones later; doubles as
@@ -69,6 +76,7 @@ const LAYERS = [
   'metrics',          // measured population / clinical / payer values
   'policy',           // laws & rules
   'education',         // credentials & programs
+  'supply',           // supply-density rollups (DME suppliers)
 ];
 
 // kebab a value without mangling already-clean ids or numeric codes ('010001').
@@ -115,6 +123,40 @@ const tally = (nodes, key) => {
   return out;
 };
 
+// Backbone types are the shared spine: many adapters point at the same one, so
+// duplicate uids are EXPECTED here and get merged, not errored. For everything
+// else a duplicate uid is a real bug (two roles claiming the same id).
+const BACKBONE = ['place', 'system', 'credential'];
+
+// Merge duplicate backbone nodes into one (union rels, fill missing facets,
+// keep the richest search). Non-backbone duplicates are left intact so
+// validateNodes still flags them as errors.
+function mergeBackbone(nodes) {
+  const groups = new Map();
+  for (const n of nodes) {
+    if (!groups.has(n.uid)) groups.set(n.uid, []);
+    groups.get(n.uid).push(n);
+  }
+  const out = [];
+  let merged = 0;
+  for (const group of groups.values()) {
+    if (group.length === 1 || !group.every((n) => BACKBONE.includes(n.type))) {
+      group.forEach((n) => out.push(n));
+      continue;
+    }
+    merged += group.length - 1;
+    const base = { ...group[0], facets: { ...group[0].facets }, rels: [...group[0].rels] };
+    const seen = new Set(base.rels.map((e) => e.rel + '|' + e.to));
+    for (const n of group.slice(1)) {
+      for (const [k, val] of Object.entries(n.facets)) if (base.facets[k] == null && val != null) base.facets[k] = val;
+      for (const e of n.rels) { const k = e.rel + '|' + e.to; if (!seen.has(k)) { seen.add(k); base.rels.push(e); } }
+      if (n.search && n.search.length > base.search.length) base.search = n.search;
+    }
+    out.push(base);
+  }
+  return { nodes: out, merged };
+}
+
 // Pure validation. The assembler prints this; it is how you SEE the backend
 // working before any tool reads it. Dangling = an edge pointing at a uid that
 // does not exist, i.e. a link that is not real yet.
@@ -140,4 +182,4 @@ function validateNodes(nodes) {
   };
 }
 
-module.exports = { TYPES, RELS, LAYERS, slug, uid, flatten, buildSearch, edge, makeNode, validateNodes };
+module.exports = { TYPES, RELS, LAYERS, slug, uid, flatten, buildSearch, edge, makeNode, mergeBackbone, validateNodes };
