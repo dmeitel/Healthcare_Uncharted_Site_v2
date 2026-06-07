@@ -13,3 +13,23 @@
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# ── Caching ────────────────────────────────────────────────────────────────
+# Nothing here is content-hashed, so the policy is: cache the big independent
+# assets, but use stale-while-revalidate so an update lands on the next visit's
+# background refresh instead of being re-downloaded every time. HTML, CSS and JS
+# are left on Netlify's default (revalidate / cheap 304) so a new deploy is
+# picked up immediately and CSS/JS never go out of sync with the HTML.
+
+# Map + tool JSON (the multi-MB files). The win is NOT re-fetching these on a
+# repeat visit; they change rarely, and SWR refreshes them in the background.
+[[headers]]
+  for = "/assets/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=604800"
+
+# Images basically never change.
+[[headers]]
+  for = "/assets/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=2592000"

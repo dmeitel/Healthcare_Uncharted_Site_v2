@@ -78,6 +78,21 @@ write('search-index.json', {
   items: all.map((n) => ({ uid: n.uid, type: n.type, layer: n.facets.layer || null, label: n.label, search: n.search, href: n.href })),
 });
 
+// search-graph.json — purpose-built for the search tool: every node with its
+// label, search string, a trimmed facet set, and compact relationships
+// (rels as [rel, to] or [rel, to, value]). Smaller than entities.json (no
+// lat/lon/long text), but it carries the rels the relationship-walk needs.
+const FACET_KEYS = ['layer', 'state', 'facType', 'ownership', 'kind', 'lens', 'unit', 'dir', 'domain', 'family', 'tier', 'tierLabel', 'pathway', 'zone', 'zoneLabel', 'group', 'supplierKind', 'category', 'trauma', 'beds', 'stars'];
+const pick = (o, keys) => { const r = {}; for (const k of keys) if (o && o[k] != null) r[k] = o[k]; return r; };
+write('search-graph.json', {
+  _meta: stamp,
+  nodes: all.map((n) => ({
+    uid: n.uid, type: n.type, label: n.label, search: n.search, href: n.href,
+    facets: pick(n.facets, FACET_KEYS),
+    rels: (n.rels || []).map((e) => (e.value != null ? [e.rel, e.to, e.value] : [e.rel, e.to])),
+  })),
+});
+
 // ── headless report: this is how you see the backend working ──────────────
 const edges = all.reduce((s, n) => s + (n.rels ? n.rels.length : 0), 0);
 console.log('\nby type:');

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healthcare Atlas Search — Healthcare Uncharted</title>
+<link rel="icon" type="image/png" href="/assets/images/Icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#131a24; --panel2:#0f151d; --line:#1f2a38;
+    --t1:#eaf2f7; --t2:#b6c6d4; --t3:#7c8ea0;
+    --blue:#1B5FA8; --teal:#4ECDC4; --white:#F6F9FC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--t1);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 18px}
+
+  header{border-bottom:1px solid var(--line);padding:22px 0 16px;position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 70%,rgba(13,17,23,.92));z-index:5}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal)}
+  h1{font-family:'Outfit',sans-serif;font-weight:800;font-size:26px;margin:4px 0 14px;letter-spacing:-.01em}
+  .searchbar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .searchbar:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(78,205,196,.12)}
+  .searchbar svg{flex:none;opacity:.6}
+  #q{flex:1;background:none;border:none;outline:none;color:var(--t1);font-size:16px;font-family:inherit}
+  #q::placeholder{color:var(--t3)}
+  #count{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--t3);white-space:nowrap}
+
+  .filters{padding:12px 0 4px}
+  .frow{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .flabel{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);padding-top:6px;min-width:48px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--t2);cursor:pointer;user-select:none;transition:.12s;display:inline-flex;align-items:center;gap:6px}
+  .chip:hover{border-color:var(--t3);color:var(--t1)}
+  .chip.on{color:#06121a;font-weight:600;border-color:transparent}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.85}
+  .chip .ct{font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:.7}
+
+  main{display:grid;grid-template-columns:1fr 380px;gap:18px;padding:14px 0 60px;align-items:start}
+  @media(max-width:880px){main{grid-template-columns:1fr}#detail{position:static}}
+
+  .group{margin-bottom:18px}
+  .group-h{display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;margin:0 0 8px;letter-spacing:.02em}
+  .group-h .n{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);font-weight:400}
+  .row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid transparent;border-radius:9px;cursor:pointer;transition:.1s}
+  .row:hover{background:var(--panel);border-color:var(--line)}
+  .row.sel{background:var(--panel);border-color:var(--teal)}
+  .row .rl{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .rl mark{background:rgba(78,205,196,.22);color:var(--teal);border-radius:3px;padding:0 1px}
+  .row .rsub{font-size:11px;color:var(--t3);font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+  .more{font-size:12px;color:var(--t3);padding:6px 10px;font-family:'IBM Plex Mono',monospace}
+
+  #detail{position:sticky;top:130px;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-height:200px;max-height:calc(100vh - 150px);overflow:auto}
+  .empty{padding:40px 22px;color:var(--t3);font-size:13.5px;line-height:1.6}
+  .empty b{color:var(--t2)}
+  .d-pad{padding:18px}
+  .d-type{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:'IBM Plex Mono',monospace;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em}
+  .d-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;margin:10px 0 2px;line-height:1.2}
+  .d-uid{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);word-break:break-all;margin-bottom:14px}
+  .d-facets{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px;margin-bottom:16px}
+  .d-facets .k{color:var(--t3);font-family:'IBM Plex Mono',monospace;font-size:11px}
+  .d-facets .v{color:var(--t2)}
+  .d-sec{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:14px 0 7px}
+  .rels{display:flex;flex-direction:column;gap:9px}
+  .relgrp .rv{font-size:11px;color:var(--teal);margin-bottom:4px;font-family:'IBM Plex Mono',monospace}
+  .relgrp .rv.inc{color:#E8A838}
+  .relchips{display:flex;flex-wrap:wrap;gap:5px}
+  .rchip{font-size:12px;padding:3px 9px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--t2);cursor:pointer;transition:.1s;display:inline-flex;align-items:center;gap:6px}
+  .rchip:hover{border-color:var(--teal);color:var(--t1)}
+  .rchip .val{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--teal)}
+  .rchip .tc{width:6px;height:6px;border-radius:50%}
+  .d-link{display:inline-block;margin-top:16px;font-size:13px;color:var(--teal);text-decoration:none;border:1px solid rgba(78,205,196,.4);padding:7px 12px;border-radius:8px}
+  .d-link:hover{background:rgba(78,205,196,.1)}
+  .loading{padding:60px 0;text-align:center;color:var(--t3);font-family:'IBM Plex Mono',monospace;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Healthcare Uncharted · unified data graph</div>
+    <h1>Atlas Search</h1>
+    <div class="searchbar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="Search roles, facilities, metrics, suppliers, atlas concepts…" autocomplete="off" spellcheck="false">
+      <span id="count"></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters">
+    <div class="frow"><span class="flabel">Type</span><span class="chips" id="typeChips"></span></div>
+    <div class="frow"><span class="flabel">Layer</span><span class="chips" id="layerChips"></span></div>
+  </div>
+
+  <main>
+    <section id="results"><div class="loading" id="loading">loading the graph…</div></section>
+    <aside id="detail"><div class="empty">Pick a result to see its <b>connections</b>. Every node links to the roles, places, metrics, and concepts it touches — click a connection to walk to it.</div></aside>
+  </main>
+</div>
+
+<script>
+const DATA_URL='/assets/data/derived/search-graph.json';
+
+const TYPE_COLOR={role:'#4ECDC4',facility:'#5BC8FF',metric:'#1B5FA8',supply:'#8E7CFF','patient-state':'#E8A838',concept:'#FF6B6B',expertise:'#5DBF87',place:'#9AA7B2',system:'#B07BD6'};
+const TYPE_LABEL={role:'Roles',facility:'Facilities',metric:'Metrics',supply:'Supply',['patient-state']:'Patient states',concept:'Atlas concepts',expertise:'Expertise',place:'Places',system:'Systems'};
+const TYPE_ORDER=['concept','role','expertise','metric','supply','patient-state','system','place','facility'];
+const CAP=30;
+
+let NODES=[], BY=new Map(), INC=new Map();
+let q='', selUid=null;
+const fType=new Set(), fLayer=new Set();
+const titleize=s=>String(s||'').replace(/(^|[\s-])\w/g,m=>m.toUpperCase()).replace(/-/g,' ');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+fetch(DATA_URL).then(r=>r.json()).then(d=>{
+  NODES=d.nodes;
+  BY=new Map(NODES.map(n=>[n.uid,n]));
+  // build incoming index once
+  for(const n of NODES){ for(const e of n.rels){ const to=e[1]; if(!INC.has(to))INC.set(to,[]); INC.get(to).push([e[0],n.uid,e[2]]); } }
+  buildFilterChips();
+  document.getElementById('q').focus();
+  run();
+}).catch(e=>{ document.getElementById('loading').textContent='could not load the data graph.'; console.error(e); });
+
+function buildFilterChips(){
+  const tc={}, lc={};
+  NODES.forEach(n=>{ tc[n.type]=(tc[n.type]||0)+1; const l=n.facets.layer; if(l)lc[l]=(lc[l]||0)+1; });
+  const tEl=document.getElementById('typeChips');
+  tEl.innerHTML=TYPE_ORDER.filter(t=>tc[t]).map(t=>chip(t,TYPE_LABEL[t]||t,tc[t],TYPE_COLOR[t],'type')).join('');
+  const lEl=document.getElementById('layerChips');
+  lEl.innerHTML=Object.keys(lc).sort().map(l=>chip(l,titleize(l),lc[l],'#6b7c8e','layer')).join('');
+  document.querySelectorAll('.chip[data-kind]').forEach(c=>c.onclick=()=>{
+    const set=c.dataset.kind==='type'?fType:fLayer;
+    const v=c.dataset.val; if(set.has(v))set.delete(v); else set.add(v);
+    c.classList.toggle('on'); c.style.background=c.classList.contains('on')?c.dataset.col:''; run();
+  });
+}
+function chip(val,label,ct,col,kind){
+  return `<span class="chip" data-kind="${kind}" data-val="${esc(val)}" data-col="${col}"><span class="dot" style="color:${col}"></span>${esc(label)} <span class="ct">${ct}</span></span>`;
+}
+
+document.getElementById('q').addEventListener('input',e=>{ q=e.target.value.trim().toLowerCase(); run(); });
+
+function run(){
+  const toks=q.split(/\s+/).filter(Boolean);
+  let matches=NODES;
+  if(fType.size) matches=matches.filter(n=>fType.has(n.type));
+  if(fLayer.size) matches=matches.filter(n=>fLayer.has(n.facets.layer));
+  if(toks.length) matches=matches.filter(n=>toks.every(t=>n.search.indexOf(t)>=0));
+  render(matches,toks);
+}
+
+function render(matches,toks){
+  document.getElementById('count').textContent=matches.length.toLocaleString()+(matches.length===1?' result':' results');
+  const groups={}; matches.forEach(n=>{(groups[n.type]=groups[n.type]||[]).push(n);});
+  const order=TYPE_ORDER.filter(t=>groups[t]);
+  if(!matches.length){ document.getElementById('results').innerHTML='<div class="loading">no matches — loosen a filter or term.</div>'; return; }
+  let html='';
+  for(const t of order){
+    const arr=groups[t];
+    html+=`<div class="group"><div class="group-h"><span style="color:${TYPE_COLOR[t]}">●</span>${TYPE_LABEL[t]||t}<span class="n">${arr.length}</span></div>`;
+    arr.slice(0,CAP).forEach(n=>{ html+=rowHtml(n,toks); });
+    if(arr.length>CAP) html+=`<div class="more">+${arr.length-CAP} more ${TYPE_LABEL[t]||t} — narrow with a filter or term</div>`;
+    html+='</div>';
+  }
+  const r=document.getElementById('results'); r.innerHTML=html;
+  r.querySelectorAll('.row[data-uid]').forEach(el=>el.onclick=()=>select(el.dataset.uid));
+}
+function rowHtml(n,toks){
+  return `<div class="row${n.uid===selUid?' sel':''}" data-uid="${esc(n.uid)}"><span class="rl">${hl(n.label,toks)}</span><span class="rsub">${esc(subOf(n))}</span></div>`;
+}
+function subOf(n){
+  const f=n.facets;
+  if(n.type==='facility') return [f.state,f.facType].filter(Boolean).join(' · ');
+  if(n.type==='role') return [f.family,f.tierLabel].filter(Boolean).join(' · ');
+  if(n.type==='metric') return f.lens||'';
+  if(n.type==='supply'||n.type==='concept') return f.kind||f.zoneLabel||'';
+  if(n.type==='place') return f.kind||'';
+  if(n.type==='expertise') return f.group||'';
+  return '';
+}
+function hl(label,toks){
+  let s=esc(label); if(!toks||!toks.length) return s;
+  toks.forEach(t=>{ if(!t)return; const re=new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); s=s.replace(re,'<mark>$1</mark>'); });
+  return s;
+}
+
+function select(uid){
+  selUid=uid;
+  document.querySelectorAll('.row').forEach(r=>r.classList.toggle('sel',r.dataset.uid===uid));
+  const n=BY.get(uid); if(!n) return;
+  const col=TYPE_COLOR[n.type]||'#9AA7B2';
+  let h=`<div class="d-pad">`;
+  h+=`<span class="d-type" style="background:${col}22;color:${col}">${TYPE_LABEL[n.type]||n.type}</span>`;
+  h+=`<div class="d-title">${esc(n.label)}</div><div class="d-uid">${esc(n.uid)}</div>`;
+
+  const fk=Object.entries(n.facets).filter(([k])=>k!=='layer');
+  if(fk.length){ h+='<div class="d-facets">'+fk.map(([k,v])=>`<span class="k">${esc(k)}</span><span class="v">${esc(v)}</span>`).join('')+'</div>'; }
+
+  // outgoing
+  if(n.rels.length){
+    h+='<div class="d-sec">connects to</div><div class="rels">';
+    h+=relGroups(n.rels.map(e=>[e[0],e[1],e[2]]),false);
+    h+='</div>';
+  }
+  // incoming
+  const inc=INC.get(uid)||[];
+  if(inc.length){
+    h+='<div class="d-sec">referenced by</div><div class="rels">';
+    h+=relGroups(inc,true);
+    h+='</div>';
+  }
+  if(n.href) h+=`<a class="d-link" href="${esc(n.href)}">Open in its tool →</a>`;
+  h+='</div>';
+  document.getElementById('detail').innerHTML=h;
+  document.querySelectorAll('#detail .rchip[data-uid]').forEach(c=>c.onclick=()=>{ select(c.dataset.uid); document.getElementById('detail').scrollTop=0; });
+}
+function relGroups(list,incoming){
+  const g={};
+  list.forEach(([rel,uid,val])=>{ (g[rel]=g[rel]||[]).push([uid,val]); });
+  let out='';
+  for(const [rel,arr] of Object.entries(g)){
+    out+=`<div class="relgrp"><div class="rv${incoming?' inc':''}">${incoming?'← ':''}${esc(rel.replace(/-/g,' '))} <span style="opacity:.6">(${arr.length})</span></div><div class="relchips">`;
+    arr.slice(0,10).forEach(([uid,val])=>{
+      const t=BY.get(uid); const col=t?TYPE_COLOR[t.type]:'#9AA7B2';
+      out+=`<span class="rchip" data-uid="${esc(uid)}"><span class="tc" style="background:${col}"></span>${esc(t?t.label:uid)}${val!=null?`<span class="val">${esc(val)}</span>`:''}</span>`;
+    });
+    if(arr.length>10) out+=`<span class="rchip" style="cursor:default;opacity:.6">+${arr.length-10} more</span>`;
+    out+='</div></div>';
+  }
+  return out;
+}
+</script>
+</body>
+</html>

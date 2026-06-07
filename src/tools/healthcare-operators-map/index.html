@@ -1,5 +1,7 @@
 ---
-layout: false
+layout: base.njk
+navPage: tools
+no_footer: true
 section: tool
 status: live
 order: 3
@@ -8,35 +10,12 @@ description: A live national map of U.S. healthcare facilities from CMS data —
 tags: [interactive, maps, hospitals, systems, data-viz]
 has_interactive: true
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>U.S. Hospital Operations Map — Healthcare Uncharted</title>
-<link rel="icon" type="image/png" href="/assets/images/Icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <style>
-:root{
-  --dark:#0a0f1a;--surface:#0f1825;--raised:#162030;--border:#1a2d48;--border2:#24405e;
-  --t1:#fff;--t2:#b8cfe8;--t3:#5a7898;
-  --teal:#4ECDC4;--blue:#1B5FA8;--amber:#E8A838;
-  --font:'DM Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;--display:'Outfit',var(--font);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--dark);color:var(--t1);line-height:1.6;-webkit-font-smoothing:antialiased}
-a{color:var(--teal);text-decoration:none}
-nav{position:sticky;top:0;z-index:50;background:rgba(10,15,26,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between}
-.nav-brand{display:flex;align-items:center;gap:10px}
-.nav-brand img{width:30px;height:30px;border-radius:7px;display:block}
-.nav-brand span{font-family:var(--display);font-weight:700;font-size:15px}
-.nav-brand span b{color:var(--teal)}
-.nav-link{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--t3)}
-.nav-link:hover{color:var(--t1)}
+/* :root vars + nav come from the site (hu-global.css / base.njk) now — this tool uses the standard header + light/dark theme */
+*{box-sizing:border-box}
+.wrap a{color:var(--teal);text-decoration:none}
 .wrap{max-width:1180px;margin:0 auto;padding:30px 28px 70px}
 .head h1{font-family:var(--display);font-size:clamp(25px,3.6vw,38px);font-weight:800;letter-spacing:-.025em;line-height:1.05}
 .head h1 em{font-style:normal;color:var(--teal)}
@@ -70,7 +49,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(10,15,26,.92);backdrop-filt
 .cltxt{fill:#eaf6f4;font-family:var(--mono);font-weight:600;pointer-events:none;user-select:none;dominant-baseline:central}
 .spider line{stroke:#9fc6e8;stroke-opacity:.55;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
 .mapsearch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(360px,76%);z-index:30}
-#searchInput{width:100%;padding:9px 14px;border-radius:9px;border:1px solid var(--border2);background:rgba(13,26,44,.94);color:var(--t1);font-size:13px;font-family:var(--body);outline:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+#searchInput{width:100%;padding:9px 14px;border-radius:9px;border:1px solid var(--border2);background:rgba(13,26,44,.94);color:var(--t1);font-size:13px;font-family:var(--font);outline:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #searchInput::placeholder{color:var(--t3)}
 #searchInput:focus{border-color:var(--teal)}
 .search-results{display:none;margin-top:5px;background:#0d1a2c;border:1px solid var(--border2);border-radius:10px;overflow:hidden;max-height:330px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,.6)}
@@ -137,12 +116,6 @@ nav{position:sticky;top:0;z-index:50;background:rgba(10,15,26,.92);backdrop-filt
 .src{font-size:11px;color:var(--t3);line-height:1.6;font-family:var(--mono)}
 .src a{color:var(--t3);border-bottom:1px dotted var(--border2)}
 </style>
-</head>
-<body>
-<nav>
-  <a class="nav-brand" href="/"><img src="/assets/images/Icon.png" alt="Healthcare Uncharted"><span>Healthcare <b>Uncharted</b></span></a>
-  <a class="nav-link" href="/tools/">&larr; All tools</a>
-</nav>
 
 <div class="wrap">
   <div class="head">
@@ -205,7 +178,12 @@ const ICON_PATH={
   ltac:_poly(4,11,0),       // diamond
   other:_star(5,11,4.6,0),  // star
   asc:'M-3.4,-10H3.4V-3.4H10V3.4H3.4V10H-3.4V3.4H-10V-3.4H-3.4Z', // cross (surgery)
-  dialysis:_circ(0,0,9)     // circle
+  dialysis:_circ(0,0,9),    // circle
+  // supplier types (shown one at a time — distinct symbol + color so the legend reads clearly)
+  dme:_poly(4,10,45),       // square (equipment)
+  pharmacy:'M-3.4,-10H3.4V-3.4H10V3.4H3.4V10H-3.4V3.4H-10V-3.4H-3.4Z', // cross (Rx)
+  optical:_circ(0,0,9),     // circle (lens)
+  'orthotics-prosthetics':_poly(4,11,0) // diamond
 };
 // marker screen-radius from bed count (a touch larger than dots so the icon shapes stay legible)
 const iconR=b=>b?Math.max(4.5,Math.min(11,3.8+Math.sqrt(b)*0.3)):5;
@@ -340,7 +318,12 @@ function drawMap(animate){
       pts=HOSP.filter(h=>h.sys===selOrg).slice().sort((a,b)=>(b.beds||0)-(a.beds||0));
       curPts=pts; resolveOrgPlacement(pts);
     }
-    document.getElementById('ptleg').innerHTML='<span style="opacity:.75">shape = type · size = beds · ⬤ number = group (click to fan) &middot;</span> '+[...new Set(pts.map(h=>h.t))].map(t=>`<span>${legendSym(t)} ${TYPE_LABEL[t]}</span>`).join('');
+    const _sup=RES[activeRes].sup;
+    const _types=[...new Set(pts.map(h=>h.t))].map(t=>`<span>${legendSym(t)} ${TYPE_LABEL[t]||RES[activeRes].label}</span>`).join(' ');
+    // suppliers (DME / pharmacy / optical / orthotics) are one type at one size — only the hospital view has shape-by-type + size-by-beds
+    const _pre=_sup ? '<span style="opacity:.75">⬤ number = group (click to fan) &middot;</span> '
+                    : '<span style="opacity:.75">shape = type · size = beds · ⬤ number = group (click to fan) &middot;</span> ';
+    document.getElementById('ptleg').innerHTML=_pre+_types;
   }
 
   // target transform: identity for U.S., zoomed-to-bounds for a state
@@ -372,10 +355,11 @@ function drawMap(animate){
   else { svg.call(Z.transform,T); }
 
   document.getElementById('mapTitle').textContent = view==='state' ? STATE_NAMES[selState] : view==='org' ? orgName(selOrg) : 'United States';
+  const _noun=RES[activeRes].noun;
   document.getElementById('mapSub').textContent = view==='state'
-    ? (byState[selState]||[]).length+' hospitals · scroll to zoom · click a number to fan its hospitals out'
+    ? (byState[selState]||[]).length+' '+_noun+' · scroll to zoom · click a number to fan them out'
     : view==='org'
-    ? (curPts?curPts.length:0)+' hospitals nationwide · scroll to zoom · click a number to fan'
+    ? (curPts?curPts.length:0)+' '+_noun+' nationwide · scroll to zoom · click a number to fan'
     : metric().label+' by state';
 }
 // Print the active metric value on each state (U.S. view). Small/crowded NE states
@@ -478,7 +462,7 @@ function drawCl(gsel,d){
     gsel.append('text').attr('class','cltxt').attr('text-anchor','middle').attr('dy','0.02em').attr('font-size',(Rc*0.92).toFixed(1)).text(n);
   }
 }
-function clusterTip(e,d){const t=document.getElementById('tip');t.innerHTML=`<b>${d.members.length} hospitals</b><span>click to fan them out</span>`;place(e,t);}
+function clusterTip(e,d){const t=document.getElementById('tip');t.innerHTML=`<b>${d.members.length} ${RES[activeRes].noun}</b><span>click to fan them out</span>`;place(e,t);}
 // fan positions: concentric rings, ~23px spacing so nothing overlaps
 function fanPositions(n){
   const spacing=23, pos=[]; let placed=0, ring=1;
@@ -533,7 +517,7 @@ function renderSearch(q){
   const sys=searchSystems(q), rs=searchHosp(q);
   if(!sys.length && !rs.length){ box.innerHTML='<div class="sr-empty">No matches</div>'; box.style.display='block'; return; }
   let html='';
-  if(sys.length) html+='<div class="sr-head">Health systems</div>'+sys.map((s,i)=>`<div class="sr-row sr-sys" data-s="${i}"><span class="sr-ic sysdot">&#9670;</span><span class="sr-nm">${orgName(s.name)}</span><span class="sr-meta">${s.count} hospitals</span></div>`).join('');
+  if(sys.length) html+='<div class="sr-head">Health systems</div>'+sys.map((s,i)=>`<div class="sr-row sr-sys" data-s="${i}"><span class="sr-ic sysdot">&#9670;</span><span class="sr-nm">${orgName(s.name)}</span><span class="sr-meta">${s.count} ${RES[activeRes].noun}</span></div>`).join('');
   if(rs.length) html+=(sys.length?'<div class="sr-head">Hospitals</div>':'')+rs.map((h,i)=>`<div class="sr-row" data-i="${i}"><span class="sr-ic">${legendSym(h.t)}</span><span class="sr-nm">${titleCase(h.n)}</span><span class="sr-meta">${titleCase(h.c)}, ${h.s}</span></div>`).join('');
   box.innerHTML=html; box.style.display='block';
   box.querySelectorAll('.sr-sys').forEach(r=>r.onclick=()=>gotoOrg(sys[+r.dataset.s].name));
@@ -638,7 +622,12 @@ function renderCounty(feat){
 }
 function drawLegend(range,mn,mx){
   const L=document.getElementById('legend');
-  if(view==='state'||view==='org'){ L.innerHTML='<span>Points colored by hospital type</span>'; return; }
+  if(view==='state'||view==='org'){
+    L.innerHTML = RES[activeRes].sup ? `<span>${legendSym(activeRes)} ${RES[activeRes].label} — Medicare-enrolled suppliers</span>`
+      : activeRes==='hospitals' ? '<span>Points colored by hospital type</span>'
+      : `<span>${legendSym(activeRes)} ${RES[activeRes].label}</span>`;
+    return;
+  }
   L.innerHTML=`<span>${fmtM(mn)}</span><div class="legend-bar" style="background:linear-gradient(90deg,${range.join(',')})"></div><span>${fmtM(mx)}</span><span style="margin-left:auto">${metric().label}</span>`;
 }
 
@@ -784,7 +773,7 @@ const orgName=s=>titleCase(s||'').replace(/\b(Va|Dod|Hca|Llc|Inc)\b/g,m=>m.toUpp
 
 // ── TOOLTIP ───────────────────────────────────────────────────────────
 function place(e,el){let x=e.clientX+15,y=e.clientY+15;if(x+230>innerWidth)x=e.clientX-230;if(y+70>innerHeight)y=e.clientY-70;el.style.left=x+'px';el.style.top=y+'px';el.hidden=false;}
-function stateTip(e,ab){const t=document.getElementById('tip');if(!ab||!STATE_NAMES[ab]){hideTip();return;}t.innerHTML=`<b>${STATE_NAMES[ab]}</b><span>${(byState[ab]||[]).length} hospitals · ${metric().label}: ${fmtM(stateVal(ab))}</span>`;place(e,t);}
+function stateTip(e,ab){const t=document.getElementById('tip');if(!ab||!STATE_NAMES[ab]){hideTip();return;}t.innerHTML=`<b>${STATE_NAMES[ab]}</b><span>${(byState[ab]||[]).length} ${RES[activeRes].noun} · ${metric().label}: ${fmtM(stateVal(ab))}</span>`;place(e,t);}
 function hospTip(e,h){const t=document.getElementById('tip');t.innerHTML=`<b>${titleCase(h.n)}</b><span>${titleCase(h.c)} · ${TYPE_LABEL[h.t]}${h.r?' · '+h.r+'★':''}</span>`;place(e,t);}
 function hideTip(){document.getElementById('tip').hidden=true;}
 addEventListener('scroll',hideTip,{passive:true});
@@ -828,5 +817,3 @@ async function init(){
 }
 init();
 </script>
-</body>
-</html>
