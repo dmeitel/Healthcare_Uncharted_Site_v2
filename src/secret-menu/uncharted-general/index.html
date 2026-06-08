@@ -135,6 +135,15 @@ eleventyExcludeFromCollections: true
 .uc-step button:hover:not(:disabled){border-color:#4ecb8d;color:#4ecb8d}
 .uc-step button:disabled{opacity:.3;cursor:not-allowed}
 .uc-step .n{font-family:var(--mono);font-weight:600;min-width:18px;text-align:center;font-size:12px;color:var(--t1)}
+.uc-burn-wrap{margin:9px 0 2px;cursor:help}
+.uc-burn-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.03em;color:var(--t3);margin-bottom:3px;text-transform:uppercase}
+.uc-burn-head b{font-size:10px;letter-spacing:.02em}
+.uc-burn{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+.uc-burn span{display:block;height:100%;border-radius:3px;transition:width .3s ease}
+.uc-burn-wrap.crit .uc-burn{box-shadow:0 0 0 1px rgba(255,90,106,.5)}
+.uc-quit{font-family:var(--mono);font-size:10px;color:#ff7a7a;margin-top:4px;letter-spacing:.02em}
+.ug-card-burn{animation:ugBurnPulse 2.4s ease-in-out infinite}
+@keyframes ugBurnPulse{0%,100%{box-shadow:0 0 0 1px rgba(255,90,106,.18)}50%{box-shadow:0 0 9px 1px rgba(255,90,106,.32)}}
 .uc-actions{display:flex;gap:6px;margin-top:11px}
 .uc-actions button{flex:1;padding:7px 4px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:10.5px;line-height:1.3;cursor:pointer;font-family:var(--font)}
 .uc-actions button:hover:not(:disabled){border-color:#4ecb8d;color:#4ecb8d}
@@ -397,7 +406,29 @@ eleventyExcludeFromCollections: true
     // Fire-the-CEO valve: only unlocks in a morale crisis. Big one-time morale jolt, but you lose the trait,
     // eat a reputation hit, and the seat goes vacant — appoint a replacement within ceoGraceQuarters or you're stuck.
     fireMoraleFloor: 35, fireMoraleBoost: 20, fireRepHit: 8, ceoGraceQuarters: 4, vacantMoraleDrag: 4,
-    choiceEventChance: 0.45 };   // odds a non-boss quarter's crisis is a DECISION instead of a passive modifier
+    choiceEventChance: 0.45,   // odds a non-boss quarter's crisis is a DECISION instead of a passive modifier
+    // ── STAFF BURNOUT & TURNOVER ──────────────────────────────────────────
+    // Each unit's floor staff (RN + Tech) carry a 0–100 burnout level. It RISES under chronic overload, cost-cutting
+    // (austerity), under-market pay, and low morale; it HEALS under slack, fair pay, and good morale. High burnout
+    // saps throughput, and past the quit floor staff walk — you lose trained capacity and pay to re-hire. It bites
+    // harder every year (burnYearRamp) and scales with difficulty, so holding a big system together is the late game.
+    burnLoad: 17,        // strain per unit of floor overload  (demand ÷ floor-staff capacity, minus 1; capped -0.5..+1)
+    burnAust: 12,        // strain per point of austerity below 1.0 (cost-cutting runs the staff hot)
+    burnPay: 11,         // strain per point of floor pay below market (above market relieves)
+    burnMorale: 9,       // strain per point of hospital morale below the pivot
+    burnMoralePivot: 58, // morale at/above which morale stops adding strain
+    burnRecover: 7,      // baseline burnout that heals each quarter no matter what
+    burnYearRamp: 0.10,  // positive strain grows 10% per year — the late-curve steepener
+    burnReliefCap: 0.70, // most a wellness/float buff stack can dampen the quarter's pressure
+    burnQuitFloor: 66,   // burnout at which floor staff start to quit
+    burnQuitRate: 0.22,  // fraction of a unit's floor staff that walk at full (100) burnout
+    burnQuitRelief: 22,  // burnout released when people leave (the pressure valve)
+    burnQuitMorale: 3,   // hospital morale hit per staffer who quits
+    burnQuitRep: 1.2,    // reputation hit per staffer who quits
+    burnFactorMax: 0.13  // worst-case throughput penalty from a fully burned-out floor — kept small on purpose: the
+                         // distinctive bite of burnout is TURNOVER (losing staff), not an efficiency spiral that just
+                         // doubles up on the existing low-morale throughput drag.
+  };
   // ── DIFFICULTY + RUN SETTINGS (chosen on the start menu, before the run) ──
   // Difficulty is one preset multiplier: it tightens goals toward their feasible ceiling and makes
   // crises bite harder. Normal (mult 1.0) is the original, untouched balance. Starting cash / morale /
@@ -529,7 +560,8 @@ eleventyExcludeFromCollections: true
   const ENHANCEMENTS = [
     {id:'lean',  icon:'⚙️', name:'Lean Staffing',     desc:'Every FTE treats 20% more patients per quarter.', mods:{throughput:1.2}},
     {id:'payer', icon:'💳', name:'Premium Payer Mix', desc:'+15% revenue on every patient, permanently.', mods:{revenue:1.15}},
-    {id:'well',  icon:'🧘', name:'Wellness Program',  desc:'+6 staff morale at the end of every quarter.', moraleBonus:6},
+    {id:'well',  icon:'🧘', name:'Wellness Program',  desc:'+6 staff morale every quarter, and burnout builds 22% slower.', moraleBonus:6, burnRelief:0.22},
+    {id:'float', icon:'🛟', name:'Float Pool',        desc:'A flexible cross-unit staffing pool soaks up the worst overload. Burnout builds 40% slower everywhere.', burnRelief:0.40},
     {id:'rep',   icon:'⭐',       name:'Reputation Engine', desc:'Reputation gains land 60% harder.', repMult:1.6},
     {id:'endow', icon:'🏦', name:'Endowment',         desc:'A donor wires you $250k right now.', repeatable:true, onPick:r=>{r.cash+=250;}},
     {id:'fast',  icon:'🏗️', name:'Fast-Track Permits',desc:'New units finish one quarter sooner.', buildFast:1},
@@ -542,6 +574,7 @@ eleventyExcludeFromCollections: true
     {id:'cfo',     icon:'📐', name:'Strategic CFO',     desc:'A sharp number-two reworks the capital stack. Overhead runs 10% lighter.', ceoUpgrade:true, overheadMult:0.9},
     {id:'liaison', icon:'🩺', name:'Physician Liaison', desc:'The chief courts the medical staff in person. Physician pay runs 12% lighter.', ceoUpgrade:true, physPayMult:0.88},
     {id:'mandate', icon:'📈', name:'Growth Mandate',    desc:'The board wants scale now. Revenue +10%, but the push costs 2 morale a quarter.', ceoUpgrade:true, mods:{revenue:1.1}, moraleBonus:-2},
+    {id:'retain',  icon:'🤝', name:'Retention Office',  desc:'The chief makes keeping people a standing priority. Burnout builds 30% slower and hiring runs 15% lighter.', ceoUpgrade:true, burnRelief:0.30, hireMult:0.85},
   ];
   // ── CEOs: every run opens by picking who's in the corner office. ────────
   // Each trait is a permanent buff that helps some levers and hurts others. CEO objects fold into the
@@ -595,6 +628,7 @@ eleventyExcludeFromCollections: true
     overhead:'Fixed facility cost to keep the lights on, no matter the volume.',
     ceo:'The leader you chose at the start of the run. Their trait is permanent and folds into every quarter — boosting some levers, dragging on others.',
     payer:'Your blended reimbursement, set by the payer mix of the service lines you run. Commercial pays best; ED, med/surg, behavioral, and dialysis skew Medicare/Medicaid/self-pay. Build commercial-heavy lines (surgery, cardiology, ortho) to lift the rate; lean on safety-net volume and it drops. A balanced mix sits near ×1.00. Easy turns payer mix off entirely; Normal models Medicare and Commercial only; Hard brings the full mix, including the low-paying public payers.',
+    burnout:'Floor-staff (RN + Tech) burnout — shown here as the worst across your open units. It climbs with chronic overload, austerity (cost-cutting), under-market pay, and low morale; it eases with slack staffing, fair pay, and good morale. Past the quit line burned-out staff walk out, costing trained capacity, morale, and reputation, and it bites harder every year. Each unit card carries its own burnout bar. Relief: staff up, ease austerity, raise pay, or pick a wellness / float-pool upgrade.',
   };
 
   let run, overlayOpen=false, pendingDraft=[], lastEndPayload=null, tutOpen=false, selectedCeoId=null, ceoSlide=0;
@@ -611,6 +645,10 @@ eleventyExcludeFromCollections: true
   const physPayMult  = s => buffs(s).reduce((m,e)=> m*(e.physPayMult||1), 1);    // CEO-only lever
   const staffPayMult = s => buffs(s).reduce((m,e)=> m*(e.staffPayMult||1), 1);   // CEO-only lever
   const ceoBonus     = s => buffs(s).reduce((m,e)=> m+(e.bonus||0), 0);          // flat quarterly cash (no-CEO comp)
+  const burnRelief   = s => clamp(buffs(s).reduce((m,e)=> m+(e.burnRelief||0), 0), 0, CFG.burnReliefCap);   // wellness/float dampening on burnout pressure
+  const burnFactor   = d => 1 - CFG.burnFactorMax * Math.pow(clamp((d.burnout||0)/100,0,1), 1.25);          // burned-out floor staff move fewer patients
+  const burnLabel    = b => b>=CFG.burnQuitFloor ? 'Critical' : b>=45 ? 'High' : b>=22 ? 'Rising' : 'Healthy';
+  const burnColor    = b => b>=CFG.burnQuitFloor ? '#ff5a6a' : b>=45 ? '#E8A838' : b>=22 ? '#d7c95a' : '#4ecb8d';
   const info       = key => `<span class="ug-info" data-def="${DEFS[key]}">i</span>`;
   const capFactor  = a => a>=1 ? 1 : (0.4 + 0.6*a);   // cutting overhead throttles capacity
   // ── Icons + per-tier color ─────────────────────────────────────────────
@@ -694,15 +732,17 @@ eleventyExcludeFromCollections: true
     const capacity = d.capacity * ((ev&&ev.capMod&&ev.capMod[d.id])||1) * ((ev&&ev.capAll)||1) * capFactor(s.austerity);
     const physicians = alloc[d.id]||0;
     const tput = eff * mod('throughput', s);
+    const bf = burnFactor(d);                       // burned-out floor staff (RN/Tech) move fewer patients
     const partMd = physicians   * d.prod.md     * tput;
-    const partRn = d.staff.rn    * d.prod.rn     * tput;
-    const partSh = d.staff.shared* d.prod.shared * tput;
+    const partRn = d.staff.rn    * d.prod.rn     * tput * bf;
+    const partSh = d.staff.shared* d.prod.shared * tput * bf;
     const staffCap = partMd + partRn + partSh;
+    const floorCap = partRn + partSh;               // RN+Tech capacity — the basis for floor-staff overload
     const throughput = Math.min(demand, capacity, staffCap);
     let limit = 'demand';
     if (staffCap <= capacity && staffCap < demand) limit = 'staff';
     else if (capacity < staffCap && capacity < demand) limit = 'capacity';
-    return {operational:true, demand, capacity, staffCap, throughput, limit, physicians, partMd, partRn, partSh};
+    return {operational:true, demand, capacity, staffCap, floorCap, throughput, limit, physicians, partMd, partRn, partSh, burnout:(d.burnout||0), bf};
   }
   function computeQuarter(s, ev){
     let revenue=0, salaries=0, overhead=0, demand=0, throughput=0;
@@ -736,6 +776,53 @@ eleventyExcludeFromCollections: true
   }
   const limitColor = l => l==='demand' ? '#4ECDC4' : l==='staff' ? '#E8A838' : l==='capacity' ? '#ff7a7a' : '#8fabcc';
   const limitText  = l => l==='demand' ? 'Meeting demand' : l==='staff' ? 'Staff-limited' : l==='capacity' ? 'Capacity-limited' : 'Under construction';
+
+  // ── STAFF BURNOUT: end-of-quarter accrual + turnover ───────────────────
+  // Run AFTER a quarter is cleared, so the depleted staff carry into the NEXT quarter (whose goal is then
+  // sized off the post-turnover state via _startSnap — so feasibility always holds). Burnout rises with
+  // chronic floor overload, austerity, under-market pay, and low morale; it heals under slack/fair pay/good
+  // morale. Past the quit floor, floor staff (RN/Tech) walk — costing trained capacity, morale, and reputation.
+  function applyBurnout(ev){
+    const alloc = physAlloc(run), yr = yearOf(run.level);
+    const avgFloorPay = (run.pay.rn + run.pay.shared)/2;
+    const relief = burnRelief(run);
+    let quitTotal = 0; const quitUnits = [];
+    run.departments.forEach(d=>{
+      if (d.construction) return;
+      if (d.burnout==null) d.burnout = 0;
+      const p = deptProject(d, run, ev, alloc);
+      // Floor overload only counts when the unit is STAFF-limited and turning patients away (a capacity- or
+      // physician-bottleneck doesn't burn out the floor). staffCap includes physicians — they share the load.
+      const overload = (p.limit==='staff') ? Math.max(0, p.demand/Math.max(1,p.staffCap) - 1) : 0;
+      const loadTerm = Math.min(overload, 1.2) * CFG.burnLoad;
+      const austTerm = Math.max(0, 1-run.austerity) * CFG.burnAust;
+      const payTerm  = (1 - avgFloorPay) * CFG.burnPay;
+      const morTerm  = (CFG.burnMoralePivot - run.morale)/100 * CFG.burnMorale;
+      let pressure = loadTerm + austTerm + payTerm + morTerm;                 // net pressure (can be negative = relief)
+      if (pressure>0) pressure *= diffOf().mult * (1 + CFG.burnYearRamp*(yr-1)) * (1-relief);   // difficulty, year ramp + wellness only touch real pressure
+      d.burnout = clamp(d.burnout + pressure - CFG.burnRecover, 0, 100);      // baseline healing always applies
+      if (d.burnout >= CFG.burnQuitFloor){
+        const over = (d.burnout-CFG.burnQuitFloor)/(100-CFG.burnQuitFloor);   // 0..1 past the floor
+        const floorStaff = d.staff.rn + d.staff.shared;
+        let quit = Math.round(over * floorStaff * CFG.burnQuitRate);
+        if (over>=0.12 && quit<1) quit = 1;                                   // deep in the red always loses at least one
+        quit = Math.min(quit, floorStaff);
+        for (let k=0;k<quit;k++){                                             // pull from the bigger pool first
+          const pool = (d.staff.rn>=d.staff.shared && d.staff.rn>0) ? 'rn' : (d.staff.shared>0 ? 'shared' : (d.staff.rn>0?'rn':null));
+          if (!pool) break; d.staff[pool] -= 1;
+        }
+        if (quit>0){ quitTotal += quit; quitUnits.push({short:d.short||d.name, n:quit}); d.burnout = clamp(d.burnout-CFG.burnQuitRelief, 0, 100); }
+      }
+    });
+    if (quitTotal>0){
+      run.morale     = clamp(run.morale     - quitTotal*CFG.burnQuitMorale, 0, 100);
+      run.reputation = clamp(run.reputation - quitTotal*CFG.burnQuitRep,    0, 100);
+    }
+    run.lastTurnover = quitTotal>0 ? {total:quitTotal, units:quitUnits} : null;
+    return run.lastTurnover;
+  }
+  // Highest burnout across the operational floor — used for the at-a-glance HUD readout.
+  const peakBurnout = s => s.departments.reduce((m,d)=> d.construction ? m : Math.max(m, d.burnout||0), 0);
 
   // ── FEASIBILITY ENGINE ────────────────────────────────────────────────
   // A greedy "best-effort" play of the quarter: keep buying the highest-ROI improvement (hire RN/Tech,
@@ -1242,6 +1329,10 @@ eleventyExcludeFromCollections: true
       return endScreen({passed:false, title: boss?'BOSS QUARTER LOST':'GOAL MISSED', how,
         sub:`<strong style="color:var(--t1)">Objective:</strong> ${run.goal.label}<br><span style="color:#ffb3b3">${why}</span>`});
     }
+    // Quarter cleared. Now the staff pay for how it was run: burnout accrues, and the burned-out walk.
+    applyBurnout(ev);
+    if (run.morale <= 0) return endScreen({passed:false, title:'MASS WALKOUT',
+      sub:'You cleared the quarter, but burned-out staff walked faster than you could backfill them and morale collapsed. The building cannot run empty.', how:diagnoseWalkout(r)});
     // Reward cadence: Q1/Q3 just advance, Q2 a small upgrade, Q4 (boss) a year-end surplus + a major upgrade.
     if (q===4){ const bonus=Math.round(180+90*yr); run.cash+=bonus;
       if (settings.years>0 && yr>=settings.years){
@@ -1352,13 +1443,21 @@ eleventyExcludeFromCollections: true
     const mdTip = `<b>${spName} coverage</b>Physicians are staffed hospital-wide and spread across every unit in this specialty by demand. This unit currently draws <b>${p.physicians.toFixed(1)}</b>. ${mdShort? 'It needs more &mdash; add '+spName+' physicians in the Medical Staff panel.' : 'Adjust the pool in the Medical Staff panel.'}`;
     const mdLine = `<div class="uc-md${mdShort?' short':''}" data-def="${mdTip}">${spName} &middot; <b>${p.physicians.toFixed(1)}</b> MD${mdShort?' <span class="need">need more</span>':''}</div>`;
     const staff=STAFF.map(t=>`<div class="uc-staffrow"><span class="l">${t.label}</span><div class="uc-step"><button data-act="fire" data-i="${i}" data-type="${t.key}" ${d.staff[t.key]<=0?'disabled':''}>&minus;</button><span class="n">${d.staff[t.key]}</span><button data-act="hire" data-i="${i}" data-type="${t.key}">+</button></div></div>`).join('');
-    return `<div class="ug-card" style="--c:${c}">
+    const b=d.burnout||0, bc=burnColor(b), bl=burnLabel(b);
+    const turn=run.lastTurnover && run.lastTurnover.units.find(u=>u.short===(d.short||d.name));
+    const burnBar = `<div class="uc-burn-wrap${b>=CFG.burnQuitFloor?' crit':''}" data-def="<b>Floor burnout &middot; ${bl} (${Math.round(b)}/100)</b>RN + Tech burnout. Climbs with chronic overload, austerity (cost-cutting), under-market pay, and low morale; eases with slack staffing, fair pay, and good morale. Past ${CFG.burnQuitFloor} the staff start to quit, and high burnout already drags throughput. Relief: hire, ease austerity, raise pay, or pick a wellness upgrade.">
+        <div class="uc-burn-head"><span>Floor burnout</span><b style="color:${bc}">${bl}</b></div>
+        <div class="uc-burn"><span style="width:${clamp(b,0,100).toFixed(0)}%;background:${bc}"></span></div>
+        ${turn?`<div class="uc-quit">&#9660; ${turn.n} ${turn.n===1?'staffer':'staff'} quit last quarter</div>`:''}
+      </div>`;
+    return `<div class="ug-card${b>=CFG.burnQuitFloor?' ug-card-burn':''}" style="--c:${c}">
       <div class="uc-head"><span class="uc-icon">${ico(d.icon, tierColor(d.tier))}</span><span class="uc-name">${d.name}</span></div>
       <div class="uc-status" style="color:${c}">${label}</div>
       <div class="uc-stat"><b>${num(p.throughput)}</b> / ${num(p.demand)} pts <span style="color:${c}">(${pct(svc)})</span></div>
       <div class="uc-load"><span style="width:${(clamp(svc,0,1)*100).toFixed(0)}%;background:${c}"></span></div>
       ${mdLine}
       ${staff}
+      ${burnBar}
       <div class="uc-actions">
         <button data-act="expand" data-i="${i}" ${run.cash<expandCost?'disabled':''}>Expand +25%<br>${money(expandCost)}</button>
         <button data-act="reset" data-i="${i}" ${(d._spent||0)<=0?'disabled':''}>Undo${(d._spent||0)>0?'<br>'+money(d._spent):''}</button>
@@ -1525,6 +1624,8 @@ eleventyExcludeFromCollections: true
       <h3>Projected Quarter</h3>
       <div class="pj-row"><span>Patients treated</span><b>${num(r.throughput)}</b></div>
       <div class="pj-row"><span>Demand met</span><b>${pct(r.service)}</b></div>
+      <div class="pj-row"><span>Peak floor burnout${info('burnout')}</span><b style="color:${burnColor(peakBurnout(run))}">${burnLabel(peakBurnout(run))}</b></div>
+      ${run.lastTurnover?`<div class="pj-row" style="margin-top:-4px"><span style="color:#ff7a7a">&#8627; staff lost last quarter</span><b style="color:#ff7a7a">${run.lastTurnover.total}</b></div>`:''}
       <div class="pj-div"></div>
       <div class="pj-row"><span>Revenue</span><b>${money(r.revenue)}</b></div>
       ${payerRow}
@@ -1780,7 +1881,7 @@ eleventyExcludeFromCollections: true
 
   openStartMenu();                       // the run opens on the start menu (settings), then the CEO pick
 
-  if (typeof window!=='undefined' && window.__UG_TEST){ window.__ug={get run(){return run;}, get settings(){return settings;}, DIFFICULTIES, SIZES, effectiveStart, PAYERS, DIFF_PAYERS, activePayerKeys, payerMix, blendedReimb, UNITS, SPECIALTIES, CEOS, NO_CEO, ceoBonus, computeQuarter, deptProject, physAlloc, bestEffort, howToWin, diagnoseBankruptcy, diagnoseWalkout, makeGoal, makeEvent, CHOICE_EVENTS, pickChoiceEvent, resolveEventChoice, openEventChoice, finalizeLevel, runQuarter, advance, hire, expand, hirePhys, firePhys, startConstruction, pickEnhancement, pickCeo, setPay, initRun, openStartMenu, peekBoard, reopenEnd, fireCeo, appointCeo, openCeoReplace, openFireConfirm, canFireCeo, gotoCeoSlide, ceoOrder, get ceoSlide(){return ceoSlide;}, get selectedCeoId(){return selectedCeoId;}, difficulty, qInYear, yearOf}; }
+  if (typeof window!=='undefined' && window.__UG_TEST){ window.__ug={get run(){return run;}, get settings(){return settings;}, DIFFICULTIES, SIZES, effectiveStart, PAYERS, DIFF_PAYERS, activePayerKeys, payerMix, blendedReimb, UNITS, SPECIALTIES, CEOS, NO_CEO, ceoBonus, computeQuarter, deptProject, physAlloc, bestEffort, howToWin, diagnoseBankruptcy, diagnoseWalkout, makeGoal, makeEvent, applyBurnout, peakBurnout, burnFactor, burnRelief, CFG, ENHANCEMENTS, CHOICE_EVENTS, pickChoiceEvent, resolveEventChoice, openEventChoice, finalizeLevel, runQuarter, advance, hire, expand, hirePhys, firePhys, startConstruction, pickEnhancement, pickCeo, setPay, initRun, openStartMenu, peekBoard, reopenEnd, fireCeo, appointCeo, openCeoReplace, openFireConfirm, canFireCeo, gotoCeoSlide, ceoOrder, get ceoSlide(){return ceoSlide;}, get selectedCeoId(){return selectedCeoId;}, difficulty, qInYear, yearOf}; }
 })();
 </script>
 {% endraw %}
