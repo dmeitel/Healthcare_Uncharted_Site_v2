@@ -13,6 +13,29 @@
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    # Force HTTPS for a year, including subdomains. Netlify serves HTTPS already;
+    # this tells browsers to never even try plain HTTP. Add `; preload` later if
+    # you want to submit to the browser preload lists (that commitment is hard to undo).
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    # CSP in REPORT-ONLY mode. It blocks nothing. It only logs violations to the
+    # browser console so we can see what a real policy would break before enforcing.
+    # Sources below match what the site actually loads:
+    #   jsdelivr   -> D3 + topojson      unpkg -> Lucide icons
+    #   cdnjs      -> sql.js wasm (SQL mystery tool)
+    #   fonts.*    -> Google Fonts        'unsafe-inline' -> your inline tool/game scripts
+    # To enforce later: rename this key to "Content-Security-Policy".
+    Content-Security-Policy-Report-Only = """\
+default-src 'self'; \
+script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; \
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+font-src 'self' https://fonts.gstatic.com; \
+img-src 'self' data: blob:; \
+connect-src 'self' https://cdnjs.cloudflare.com; \
+object-src 'none'; \
+base-uri 'self'; \
+frame-ancestors 'self'; \
+form-action 'self'\
+"""
 
 # ── Caching ────────────────────────────────────────────────────────────────
 # Nothing here is content-hashed, so the policy is: cache the big independent

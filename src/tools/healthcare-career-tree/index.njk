@@ -724,6 +724,10 @@ permalink: /tools/healthcare-career-tree/
           <button class="bp-modal-x" id="bp-data-x" title="Close">×</button>
           <div class="bp-modal-h">Save / Load your path</div>
           <div class="bp-modal-sec">
+            <div class="bp-modal-lbl">Start from LinkedIn. On your profile, click <b>More → Save to PDF</b>, then load that file here to auto-build your path. <b>This replaces your current path.</b> The file is read in your browser. Nothing is uploaded.</div>
+            <div class="bp-modal-row"><label class="bp-modal-btn bp-modal-file primary">⬆ Import LinkedIn PDF…<input type="file" id="bp-li-file" accept="application/pdf,.pdf" hidden></label><span id="bp-li-msg" class="bp-modal-msg"></span></div>
+          </div>
+          <div class="bp-modal-sec">
             <div class="bp-modal-lbl">Back up — copy this code, or download it as a file. Paste/load it on any device to restore everything.</div>
             <textarea id="bp-data-out" class="bp-modal-ta" readonly spellcheck="false"></textarea>
             <div class="bp-modal-row"><button id="bp-data-copy" class="bp-modal-btn">Copy code</button><button id="bp-data-dl" class="bp-modal-btn">Download file</button></div>
@@ -1495,6 +1499,154 @@ permalink: /tools/healthcare-career-tree/
     build = imported; syncPinned(); saveBuild(); renderMyPath(); updateBoardPins();
     dataMsg('Imported ✓', true);
     setTimeout(closeDataModal, 750);
+  }
+
+  // ── Import from a LinkedIn "Save to PDF" export ──────────────────────────
+  // PDF.js is lazy-loaded only when used (keeps the page light). The text layer is parsed in the
+  // browser, translated into a build, and run through the same replace-and-render path as doImport().
+  const PDFJS_SRC = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+  const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  let _pdfjsP = null;
+  function loadPdfJs(){
+    if (_pdfjsP) return _pdfjsP;
+    _pdfjsP = new Promise((resolve, reject) => {
+      if (window.pdfjsLib){ try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; } catch(e){} return resolve(window.pdfjsLib); }
+      const s = document.createElement('script'); s.src = PDFJS_SRC; s.async = true;
+      s.onload = () => { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; resolve(window.pdfjsLib); } catch(e){ reject(e); } };
+      s.onerror = () => reject(new Error('could not load the PDF reader'));
+      document.head.appendChild(s);
+    });
+    return _pdfjsP;
+  }
+  function liMsg(t, ok){ const m = document.getElementById('bp-li-msg'); if (m){ m.textContent = t; m.className = 'bp-modal-msg ' + (ok ? 'ok' : 'err'); } }
+
+  // text layer -> ordered lines. LinkedIn PDFs are two-column (dark sidebar left, content right);
+  // read the sidebar first then the main column (each top-to-bottom) so sections stay contiguous.
+  async function extractLinkedInPdf(file){
+    const pdfjsLib = await loadPdfJs();
+    const data = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: data }).promise;
+    const out = []; let name = '';
+    for (let p = 1; p <= pdf.numPages; p++){
+      const page = await pdf.getPage(p);
+      const vw = page.getViewport({ scale: 1 });
+      const tc = await page.getTextContent();
+      const rows = {};
+      tc.items.forEach(it => {
+        const str = it.str || ''; if (!str) return;
+        const x = it.transform[4], y = it.transform[5];
+        const col = x < vw.width * 0.33 ? 0 : 1;
+        const key = col + ':' + Math.round(y / 3);
+        (rows[key] = rows[key] || { col: col, y: y, parts: [] }).parts.push({ x: x, w: it.width || 0, s: str });
+      });
+      const lines = Object.keys(rows).map(k => {
+        const r = rows[k], ps = r.parts.sort((a,b) => a.x - b.x);
+        let text = '', prevEnd = null;
+        ps.forEach(pt => { if (prevEnd !== null && pt.x - prevEnd > 1) text += ' '; text += pt.s; prevEnd = pt.x + pt.w; });
+        return { col: r.col, y: r.y, text: text.replace(/\s+/g, ' ').trim() };
+      }).filter(r => r.text);
+      lines.sort((a,b) => a.col - b.col || b.y - a.y);
+      if (p === 1){ const fm = lines.find(r => r.col === 1); if (fm) name = fm.text; }
+      lines.forEach(r => out.push(r.text));
+    }
+    return { name: name, lines: out };
+  }
+
+  // structure the ordered lines into roles + schools (tuned to LinkedIn's fixed export format)
+  function parseLinkedInLines(rawLines){
+    const LI_DATE = /^(?:[A-Z][a-z]+ \d{4}|\d{4}) - (?:Present|[A-Z][a-z]+ \d{4}|\d{4}) \(.+\)$/;
+    const LI_TENURE = /^(?:\d+ years?(?: \d+ months?)?|\d+ months?)$/;
+    const LI_FOOTER = /^Page \d+ of \d+$/;
+    const LI_BULLET = /^[•·▪]\s/;
+    const LI_GEO = /,\s*United States$|^[A-Z][a-zA-Z.]+,\s*[A-Z]{2}$/;
+    const LI_EDU = /·\s*\(.*\d{4}.*\)\s*$/;
+    const MO = { January:1, February:2, March:3, April:4, May:5, June:6, July:7, August:8, September:9, October:10, November:11, December:12 };
+    const NOW = (new Date()).getFullYear() * 12 + ((new Date()).getMonth() + 1);
+    function toMo(s){ if (/present/i.test(s)) return NOW; let m = s.match(/^([A-Z][a-z]+)\s+(\d{4})$/); if (m) return (+m[2]) * 12 + (MO[m[1]] || 1); let y = s.match(/^(\d{4})$/); if (y) return (+y[1]) * 12 + 1; return null; }
+    function yr(s){ if (!s) return '?'; if (/present/i.test(s)) return 'Now'; const m = s.match(/(\d{4})/); return m ? m[1] : s; }
+
+    const lines = rawLines.map(l => (l || '').trim()).filter(l => l && !LI_FOOTER.test(l));
+    let expStart = -1, expEnd = lines.length, eduStart = -1;
+    lines.forEach((l,i) => { if (l === 'Experience') expStart = i; if (l === 'Education' && eduStart < 0) eduStart = i; });
+    if (eduStart >= 0 && eduStart > expStart) expEnd = eduStart;
+    const exp = expStart >= 0 ? lines.slice(expStart + 1, expEnd) : [];
+    const edu = eduStart >= 0 ? lines.slice(eduStart + 1) : [];
+
+    const kind = exp.map(l => LI_DATE.test(l) ? 'DATE' : LI_TENURE.test(l) ? 'TENURE' : LI_BULLET.test(l) ? 'BULLET' : 'TEXT');
+    const nextM = i => { for (let j = i + 1; j < exp.length; j++){ if (kind[j] === 'BULLET') continue; return j; } return -1; };
+    const role = exp.map((_,i) => { if (kind[i] !== 'TEXT') return null; const nx = nextM(i); return (nx >= 0 && kind[nx] === 'DATE') ? 'TITLE' : null; });
+    exp.forEach((_,i) => { if (kind[i] !== 'TEXT' || role[i]) return; if (LI_GEO.test(exp[i])) return; const nx = nextM(i); if (nx >= 0 && (kind[nx] === 'TENURE' || role[nx] === 'TITLE')) role[i] = 'COMPANY'; });
+
+    const roles = []; let company = null, current = null;
+    exp.forEach((line,i) => {
+      if (role[i] === 'COMPANY') company = line;
+      else if (role[i] === 'TITLE'){ current = { company: company, title: line, locked: false }; roles.push(current); }
+      else if (kind[i] === 'DATE' && current){ const m = line.match(/^(.+?) - (.+?) \(/); if (m){ current.startRaw = m[1]; current.endRaw = m[2]; current.start = toMo(m[1]); current.end = toMo(m[2]); current.yr = yr(m[1]) + '-' + yr(m[2]); } }
+      else if (kind[i] === 'TEXT' && current && !current.locked){ current.location = line; current.locked = true; }
+    });
+    roles.forEach(r => { delete r.locked; });
+
+    const schools = [];
+    for (let i = 0; i < edu.length; i++){ if (LI_EDU.test(edu[i]) || /·/.test(edu[i])){ const dm = edu[i].match(/\(([^)]*\d{4}[^)]*)\)/); schools.push({ school: edu[i - 1] || '', degree: edu[i].replace(/\s*·.*$/, '').trim(), years: dm ? dm[1] : '' }); } }
+    return { roles: roles, schools: schools };
+  }
+
+  // fuzzy-match an imported title to a real board role (reuses the board's label/abbr vocabulary)
+  function matchRoleToBoard(title){
+    if (!nodeById || !nodeById.size) return null;
+    const q = (title || '').toLowerCase().replace(/[-/]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!q) return null;
+    const qt = new Set(q.split(' ').filter(w => w.length > 2));
+    let best = null, bestScore = 0;
+    nodeById.forEach(n => {
+      const lbl = (n.label || '').toLowerCase().replace(/\n/g, ' ').replace(/[-/]/g, ' ').replace(/\s+/g, ' ').trim();
+      let score = 0;
+      if (lbl === q) score = 100;
+      else if (lbl && (lbl.includes(q) || q.includes(lbl))) score = 60;
+      else { const lt = lbl.split(' ').filter(w => w.length > 2); const hits = lt.filter(w => qt.has(w)).length; score = hits * 18; }
+      if (score > bestScore){ bestScore = score; best = n; }
+    });
+    return bestScore >= 36 ? best : null;
+  }
+
+  // parsed roles/schools -> a valid build. Roles at the "spine" employer (most roles) stay on the
+  // trunk; overlapping side-employer roles fork off it (the tool's one-fork-per-node model).
+  function linkedInToBuild(name, roles, schools){
+    const b = blankBuild();
+    b.name = (name || '').replace(/\s+(RRT|MHA|MSRT|MSRC|RRT-ACCS|MBA|MPH|MSN|BSN|PhD|MD|DNP|FAARC|CPHQ)\b.*$/, '').trim() || (name || '');
+    const valid = roles.filter(r => r.start != null);
+    const byCo = {}; valid.forEach(r => { const c = r.company || '?'; (byCo[c] = byCo[c] || { n: 0, m: 0 }); byCo[c].n++; byCo[c].m += (r.end && r.start) ? (r.end - r.start) : 0; });
+    let spine = null, best = -1; Object.keys(byCo).forEach(c => { const s = byCo[c].n * 100000 + byCo[c].m; if (s > best){ best = s; spine = c; } });
+    const sorted = valid.slice().sort((a,b) => a.start - b.start);
+    let overlaps = 0; const trunk = [];
+    const mk = r => { const m = matchRoleToBoard(r.title); const n = { id: newId(), name: r.title, years: r.yr || '', layer: 'current', _s: r.start, _e: r.end }; if (m){ n.roleId = m.id; n.abbr = m.abbr; n.family = m.family; } return n; };
+    sorted.forEach(r => {
+      const node = mk(r);
+      if ((r.company || '?') !== spine){
+        const host = trunk.find(t => t._s != null && t._e != null && r.start < t._e && t._s < r.end && !t.concurrent);
+        if (host){ host.concurrent = { id: newId(), name: node.name, years: node.years, layer: 'current', roleId: node.roleId, abbr: node.abbr, family: node.family }; overlaps++; return; }
+      }
+      trunk.push(node);
+    });
+    b.career = trunk.map(n => { const o = {}; Object.keys(n).forEach(k => { if (k !== '_s' && k !== '_e') o[k] = n[k]; }); return o; });
+    b.education = schools.map(s => ({ id: newId(), kind: 'custom', label: s.degree + (s.school ? (' (' + s.school + ')') : ''), years: s.years || '', layer: 'current' }));
+    return { build: b, overlaps: overlaps };
+  }
+
+  async function importLinkedInPdf(file){
+    if (!file) return;
+    liMsg('Reading PDF…', true);
+    let parsed, name;
+    try { const ex = await extractLinkedInPdf(file); name = ex.name; parsed = parseLinkedInLines(ex.lines); }
+    catch(e){ liMsg('Could not read that PDF (' + ((e && e.message) || 'error') + ').', false); return; }
+    if (!parsed.roles.length && !parsed.schools.length){ liMsg('No experience or education found. Is this a LinkedIn profile PDF (More → Save to PDF)?', false); return; }
+    const res = linkedInToBuild(name, parsed.roles, parsed.schools);
+    const nC = res.build.career.length, nE = res.build.education.length;
+    const note = res.overlaps ? (', ' + res.overlaps + ' forked as concurrent') : '';
+    if (!confirm('Import ' + nC + ' role' + (nC !== 1 ? 's' : '') + note + ' and ' + nE + ' school' + (nE !== 1 ? 's' : '') + ' from "' + (res.build.name || 'this profile') + '"?\n\nThis REPLACES your current path (can’t be undone).')){ liMsg('Import cancelled.', false); return; }
+    build = migrateBuild(res.build); syncPinned(); saveBuild(); renderMyPath(); updateBoardPins();
+    liMsg('Imported ' + nC + ' roles' + note + ' ✓. Tidy up names and forks as needed.', true);
+    setTimeout(closeDataModal, 1300);
   }
 
   function updateBoardPins(){
@@ -3023,6 +3175,7 @@ permalink: /tools/healthcare-career-tree/
     const dDl = document.getElementById('bp-data-dl'); if (dDl) dDl.onclick = downloadBuildFile;
     const dImport = document.getElementById('bp-data-import'); if (dImport) dImport.onclick = doImport;
     const dFile = document.getElementById('bp-data-file'); if (dFile) dFile.onchange = (e) => { loadBuildFile(e.target.files && e.target.files[0]); e.target.value = ''; };
+    const liFile = document.getElementById('bp-li-file'); if (liFile) liFile.onchange = (e) => { importLinkedInPdf(e.target.files && e.target.files[0]); e.target.value = ''; };
     const dModal = document.getElementById('bp-data-modal'); if (dModal) dModal.addEventListener('click', (e) => { if (e.target === dModal) closeDataModal(); });
     renderLegend();   // the key is always on — build it once at load
     const legMin = document.getElementById('bp-legend-min'); if (legMin) legMin.onclick = (e) => { e.stopPropagation(); setLegendMin(true); };
