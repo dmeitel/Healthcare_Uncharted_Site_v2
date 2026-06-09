@@ -75,6 +75,9 @@ permalink: /tools/healthcare-career-tree/
     background: rgba(232,197,71,0.22); color: #E8C547; padding: 1px 7px; border-radius: 9px; margin-left: 7px; }
   /* contextual control clusters that swap per active tab */
   .tb-ctx { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  /* contextual clusters are slaved to the toolbar's data-view (robust — can't desync from the active tab) */
+  #hct-tb #tbc-career, #hct-tb #tbc-path { display: none; }
+  #hct-tb[data-view="career"] #tbc-career, #hct-tb[data-view="path"] #tbc-path { display: inline-flex; }
   /* Career view */
   #hct-career { padding: 0; }
   #hct-board { position: relative; flex: 1; overflow: hidden; min-height: 0; }
@@ -219,6 +222,13 @@ permalink: /tools/healthcare-career-tree/
   }
   .hct-pin-btn:hover { background: rgba(232,197,71,0.22); }
   .hct-pin-btn.pinned { background: rgba(232,197,71,0.9); color: #1a1405; border-color: rgba(232,197,71,1); }
+  /* role panel: educational requirement + one-click add to Education Growth */
+  .hct-edu-req { display: flex; align-items: baseline; gap: 9px; margin: 5px 0 9px; }
+  .hct-edu-req-face { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 14px; color: #6FE3D8; }
+  .hct-edu-req-deg { font-size: 12px; color: rgba(180,205,215,0.72); }
+  .hct-edu-add { width: 100%; margin-top: 4px; padding: 9px; cursor: pointer; border-radius: 9px; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 700; background: rgba(78,205,196,0.14); border: 1px solid rgba(78,205,196,0.42); color: #8FE8DC; transition: all .14s; }
+  .hct-edu-add:hover { background: rgba(78,205,196,0.24); color: #fff; }
+  .hct-edu-add.added { background: rgba(93,191,135,0.18); border-color: #5DBF87; color: #BFF0CE; cursor: default; }
   /* ── My Path builder (top container) ───────────────────── */
   #hct-mypath {
     flex-shrink: 0; margin: 6px 8px 0; z-index: 26;
@@ -241,6 +251,7 @@ permalink: /tools/healthcare-career-tree/
   .bp-id-name::placeholder { color: rgba(150,190,200,0.45); font-weight: 700; }
   .bp-id-name:focus { outline: none; border-bottom-color: #4ECDC4; }
   .bp-id-sub { font-size: 11.5px; color: rgba(180,205,215,0.62); font-family: 'DM Sans', sans-serif; }
+  .bp-id-tagline { font-size: 11px; font-style: italic; color: rgba(160,200,210,0.72); font-family: 'DM Sans', sans-serif; line-height: 1.2; max-width: 250px; margin: 1px 0; }
   .bp-id-sub b { color: #6FE3D8; font-weight: 700; }
   .bp-id-lbl { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232,197,71,0.8); font-weight: 700; font-family: 'Outfit', sans-serif; }
   .bp-id-goal-in { background: rgba(0,0,0,0.3); border: 1px solid rgba(232,197,71,0.3); border-radius: 7px; color: #E2EEF4; font-size: 12.5px; padding: 5px 10px; width: 250px; font-family: 'DM Sans', sans-serif; }
@@ -345,8 +356,9 @@ permalink: /tools/healthcare-career-tree/
   .ex-hd { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 2px solid rgba(78,205,196,0.32); padding-bottom: 18px; margin-bottom: 24px; }
   .ex-hd-name { font-family: 'Outfit', sans-serif; font-size: 35px; font-weight: 800; color: #F4FAF8; line-height: 1.04; }
   .ex-hd-role { font-size: 15px; color: #7FE3D8; margin-top: 6px; }
+  .ex-hd-tagline { font-size: 14px; font-style: italic; color: rgba(180,210,215,0.82); margin-top: 5px; }
   .ex-hd-goal { font-size: 13.5px; color: #E8C547; margin-top: 5px; }
-  .ex-hd-brand { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.1em; color: #4ECDC4; text-transform: uppercase; text-align: right; line-height: 1.25; white-space: nowrap; }
+  .ex-hd-logo { width: 232px; height: auto; flex-shrink: 0; align-self: flex-end; }
   .ex-sec-ttl { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #6FE3D8; margin-bottom: 11px; }
   .ex-trunk-wrap { border: 1px solid rgba(78,205,196,0.18); border-radius: 14px; background: rgba(8,16,13,0.55); padding: 16px 18px; margin-bottom: 18px; overflow: hidden; }
   .ex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
@@ -363,15 +375,35 @@ permalink: /tools/healthcare-career-tree/
   .ex-next-item { font-size: 13px; color: #E2EEF0; margin: 3px 0; }
   .ex-next-item::before { content: '◇ '; color: #E8C547; }
   .ex-ft { margin-top: 22px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,0.09); text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: rgba(120,200,190,0.62); }
+  /* roomier Career Path tiles so full titles fit — applies in the live tool AND the export */
+  .bp-grid-lanes .bp-node { width: 150px; }
+  .bp-grid-lanes .bp-node-add { position: relative; }   /* sit above the (now-underneath) connector overlay */
+  .bp-grid-lanes .bp-node .bp-node-lbl { height: 48px; max-width: 146px; box-sizing: border-box; display: flex; align-items: flex-end; justify-content: center; text-align: center; -webkit-line-clamp: unset; overflow: hidden; line-height: 1.16; font-size: 11.5px; padding: 2px 6px; background: rgba(8,16,12,0.92); border-radius: 8px; }
+  .bp-grid-lanes .bp-node .bp-name-role { width: 146px; height: 46px; box-sizing: border-box; white-space: pre-wrap; overflow-wrap: anywhere; overflow: hidden; resize: none; line-height: 1.16; text-align: center; font-size: 11.5px; padding: 2px 6px; background: rgba(8,16,12,0.92); border-radius: 8px; }
+  /* opaque backings so connector lines pass BEHIND the title/years text, not through it */
+  .bp-grid-lanes .bp-years { background: rgba(8,16,12,0.92); }
+  /* a gold backdrop marks the FUTURE (goal) side vs the current side — live + export */
+  .bp-grid-lanes .bp-node.bp-future { background: rgba(232,197,71,0.10); border: 1px solid rgba(232,197,71,0.30); border-radius: 12px; }
+  .hct-export-sheet .ex-item.ex-fut { background: rgba(232,197,71,0.10); }
+  .ex-card.ex-next { border-color: rgba(232,197,71,0.34); background: rgba(36,29,8,0.5); }
   .bp-panel-next { border-color: rgba(232,197,71,0.3); background: rgba(20,16,6,0.5); }
   .bp-next-goal { font-size: 12px; color: rgba(220,238,238,0.9); margin-bottom: 6px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); line-height: 1.35; }
   .bp-next-goal b { color: #F0CF6B; }
   .bp-next-nogoal { color: rgba(180,205,215,0.5); font-style: italic; }
   .bp-next-grp { font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(120,210,200,0.72); font-weight: 700; margin: 9px 0 4px; font-family: 'Outfit', sans-serif; }
-  .bp-next-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(212,232,236,0.86); padding: 3px 2px; cursor: pointer; border-radius: 5px; font-family: 'DM Sans', sans-serif; }
+  .bp-next-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: rgba(212,232,236,0.86); padding: 4px 2px; cursor: pointer; border-radius: 5px; font-family: 'DM Sans', sans-serif; }
   .bp-next-item:hover { color: #fff; background: rgba(120,200,190,0.08); }
-  .bp-next-chk { color: #E8C547; font-size: 13px; flex-shrink: 0; }
+  .bp-next-chk { color: #E8C547; font-size: 13px; flex-shrink: 0; line-height: 1.35; }
   .bp-next-item:hover .bp-next-chk { color: #5DBF87; }
+  .bp-next-tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .bp-next-act { font-size: 10.5px; font-style: italic; color: rgba(175,200,212,0.6); line-height: 1.25; }
+  .bp-next-sug { cursor: default; }
+  .bp-next-sug .bp-next-chk { color: #8FD9CE; }
+  .bp-next-sug:hover, .bp-next-sug:hover .bp-next-chk { background: rgba(120,200,190,0.05); color: #8FD9CE; }
+  .bp-next-add { cursor: pointer; }
+  .bp-next-add .bp-next-chk { color: #F0CF6B; font-weight: 700; }
+  .bp-next-add:hover { background: rgba(232,197,71,0.09); color: #fff; }
+  .bp-next-add:hover .bp-next-chk { color: #E8C547; }
   .bp-next-empty { font-size: 11.5px; color: rgba(180,205,215,0.55); font-style: italic; line-height: 1.5; }
   .bp-h { display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
     font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
@@ -387,6 +419,7 @@ permalink: /tools/healthcare-career-tree/
   .bp-node.bp-dragging { opacity: 0.45; }
   .bp-node.bp-dragging .bp-hex { cursor: grabbing; }
   .bp-node.bp-dragover { border-color: rgba(78,205,196,0.55); background: rgba(78,205,196,0.06); }
+  .bp-node-add.bp-dragover { outline: 2px dashed rgba(120,200,190,0.7); outline-offset: 3px; border-radius: 12px; }
   .bp-node-add { flex: 0 0 auto; align-self: flex-start; margin-top: 0; }
   /* fork button (Career) + forked concurrent tile */
   .bp-fork { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
@@ -596,7 +629,7 @@ permalink: /tools/healthcare-career-tree/
 
 <div id="hct-shell">
   <!-- ── TOP BAR — slim tabs on the left, contextual controls on the right ── -->
-  <div id="hct-tb">
+  <div id="hct-tb" data-view="path">
     <span class="hct-logo">Career Tree</span>
     <span class="hct-sep"></span>
 
@@ -632,8 +665,8 @@ permalink: /tools/healthcare-career-tree/
       <button class="hct-btn" id="hct-fit">Fit</button>
     </span>
 
-    <!-- CONTEXTUAL CONTROLS — My Path tab -->
-    <span class="tb-ctx" id="tbc-path" style="display:none">
+    <!-- CONTEXTUAL CONTROLS — My Path tab (visibility driven by #hct-tb[data-view]) -->
+    <span class="tb-ctx" id="tbc-path">
       <button class="mp-fbtn" id="hct-mp-data" title="Back up your path to a code/file, or restore one">⤓ Save / Load</button>
       <button class="mp-fbtn" id="hct-mp-export" title="Download your path as an image">⬇ Export JPEG</button>
       <button class="mp-fbtn" id="hct-mp-clear">Reset build</button>
@@ -687,6 +720,7 @@ permalink: /tools/healthcare-career-tree/
       <div class="bp-id">
         <div class="bp-id-block">
           <input class="bp-id-name" id="bp-name" placeholder="Your name" maxlength="40" autocomplete="off">
+          <div class="bp-id-tagline" id="bp-tagline" style="display:none"></div>
           <div class="bp-id-sub" id="bp-role">Add your current role to begin</div>
         </div>
         <div class="bp-id-center">
@@ -784,6 +818,7 @@ permalink: /tools/healthcare-career-tree/
   let selectedId = null;
   let pinned = new Set();          // role ids referenced by skill nodes (for board rings)
   let build = blankBuild();        // the My Path build planner (freeform skill tree + side panels)
+  let exportMode = false;          // when true, the career trunk renders roomier (bigger cells, full wrapping titles) for the JPEG export
   const BUILD_KEY = c => 'hct-build-' + c;
   let uid = 0; const newId = () => 'b' + (++uid) + '-' + Date.now();
   // movable dashboard panels (Career is fixed on top; these flow into the grid below, drag/add/remove)
@@ -798,9 +833,12 @@ permalink: /tools/healthcare-career-tree/
     notes:      { title:'Notes',            kind:'text', field:'notes', ph:'Anything you want to remember…' },
     other:      { title:'Other',            kind:'text', field:'other', ph:'Anything else — awards, languages, volunteer work, links…' }
   };
-  function blankBuild(){ return { budget: 30, view: 'current', name: '', goal: '', layout: { order: ['education','skill','spec','experience','next','sw','notes','other'], hidden: [], sizes: {}, titles: {} }, career: [], education: [], skill: [], spec: [], experience: [], sw: '', notes: '', other: '' }; }
+  function blankBuild(){ return { budget: 30, view: 'current', name: '', goal: '', layout: { order: ['education','skill','spec','experience','notes','sw','next','other'], hidden: ['other'], sizes: {}, titles: {} }, career: [], education: [], skill: [], spec: [], experience: [], sw: '', notes: '', other: '', tagline: '' }; }
+  // "Other" sections are dynamic: 'other', 'other-2', 'other-3'… each a renamable text card
+  function isOtherKey(k){ return k === 'other' || /^other-\d+$/.test(k); }
+  function panelOf(key){ return PANELS[key] || (isOtherKey(key) ? { title:'Other', kind:'text', field:key, ph:'Anything else — awards, languages, volunteer work, links…' } : null); }
   // a panel's displayed title — a user-set custom title (e.g. renamed "Other") wins over the default
-  function panelTitle(key){ return (build.layout.titles && build.layout.titles[key]) || (PANELS[key] && PANELS[key].title) || key; }
+  function panelTitle(key){ return (build.layout.titles && build.layout.titles[key]) || (panelOf(key) && panelOf(key).title) || key; }
   // two layers on My Path: 'current' (what you HAVE) and 'future' (what you WANT). build.view = current|future|both.
   function nodeLayer(n){ return (n && n.layer === 'future') ? 'future' : 'current'; }
   function activeLayer(){ return (build.view === 'future' || build.view === 'both') ? 'future' : 'current'; }   // which layer a new tile joins
@@ -1393,6 +1431,18 @@ permalink: /tools/healthcare-career-tree/
       kids.forEach(k => h += '<span class="hct-chip" data-go="'+k+'">'+esc(nodeById.get(k).abbr)+' · '+esc(nodeById.get(k).label.replace(/\n/g,' '))+'</span>');
       h += '</div>';
     }
+    // educational requirement → one click drops it into your Education Growth (and updates Next Steps)
+    if (curClass === 'roles'){
+      const reqFace = credForNode(n) || (DATA.meta.degrees[n.degree]||{}).label || '';
+      if (reqFace && (credForNode(n) || (DEG_LEVEL[n.degree]||0) > 0)){
+        const reqDeg = n.degree, have = build.education.some(e => e.kind==='real' && e.label===reqFace && e.degree===reqDeg);
+        const degLbl = (DATA.meta.degrees[reqDeg]||{}).label || reqDeg;
+        h += '<div class="hct-list-h">Educational requirement</div>';
+        h += '<div class="hct-edu-req"><span class="hct-edu-req-face">'+esc(reqFace)+'</span>'+(reqFace!==degLbl?'<span class="hct-edu-req-deg">'+esc(degLbl)+'</span>':'')+'</div>';
+        h += have ? '<button class="hct-edu-add added" disabled>✓ In your Education Growth</button>'
+                  : '<button class="hct-edu-add" id="hct-edu-add" data-face="'+esc(reqFace)+'" data-deg="'+esc(reqDeg)+'" data-col="'+esc((DATA.meta.degrees[reqDeg]||{}).color||'')+'">+ Add to Education Growth</button>';
+      }
+    }
     const isPin = pinned.has(id);
     h += '<button class="hct-pin-btn'+(isPin?' pinned':'')+'" id="hct-pin">'+(isPin?'★ On your path — remove':'☆ Add to my path')+'</button>';
 
@@ -1400,6 +1450,8 @@ permalink: /tools/healthcare-career-tree/
     const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = curView;   // belongs to whatever view opened it (docks right on My Path, right edge on the Career Matrix)
 
     document.getElementById('hct-pin').onclick = () => togglePin(id);
+    const eduAdd = document.getElementById('hct-edu-add');
+    if (eduAdd) eduAdd.onclick = () => { addReqCred(eduAdd.dataset.face, eduAdd.dataset.deg, eduAdd.dataset.col, roleLayerInBuild(id) || activeLayer()); openPanel(id); };   // cred follows the role's layer (current role → current cred); refresh panel
     document.querySelectorAll('#hct-p-body .hct-chip').forEach(ch => {
       ch.onclick = () => { const g = ch.getAttribute('data-go'); selectedId=g; openPanel(g); render(true); };
     });
@@ -1422,7 +1474,9 @@ permalink: /tools/healthcare-career-tree/
     { key:'experience', grid:'bp-grid-experience', kind:'custom', spiral:true, zone:'experience', title:'Experience' }
   ];
 
-  function syncPinned(){ const ids=[]; build.career.forEach(s=>{ if(s.roleId) ids.push(s.roleId); if(s.concurrent && s.concurrent.roleId) ids.push(s.concurrent.roleId); }); pinned = new Set(ids); }
+  // a career node can carry MULTIPLE concurrent (forked) roles in `concurrents`; back-compat for the old single `.concurrent`
+  function concsOf(node){ return node && Array.isArray(node.concurrents) ? node.concurrents : (node && node.concurrent ? [node.concurrent] : []); }
+  function syncPinned(){ const ids=[]; build.career.forEach(s=>{ if(s.roleId) ids.push(s.roleId); concsOf(s).forEach(c=>{ if(c && c.roleId) ids.push(c.roleId); }); }); pinned = new Set(ids); }
   function saveBuild(){ try { localStorage.setItem(BUILD_KEY(curClass), JSON.stringify(build)); } catch(e){} }
   // sanitize a raw saved/imported object into a valid build (shared by loadBuild + import)
   function migrateBuild(o){
@@ -1432,15 +1486,20 @@ permalink: /tools/healthcare-career-tree/
     if (Array.isArray(o.specs) && !o.spec)     o.spec = o.specs;
     const b = blankBuild();
     ['career','education','skill','spec','experience'].forEach(k => { if (!Array.isArray(o[k])) o[k] = []; });
+    // forks now live in `concurrents` (array) — migrate the legacy single `.concurrent`
+    o.career.forEach(s => { if (!s) return; if (s.concurrent && !Array.isArray(s.concurrents)) s.concurrents = [s.concurrent]; delete s.concurrent; });
     const view = (o.view==='future'||o.view==='both') ? o.view : 'current';
     // migrate layout: keep saved order (valid keys only), append any new panels, carry hidden
-    let order = Array.isArray(o.layout && o.layout.order) ? o.layout.order.filter(k => PANEL_ORDER.includes(k)) : [];
+    const validKey = k => PANEL_ORDER.includes(k) || /^other-\d+$/.test(k);
+    let order = Array.isArray(o.layout && o.layout.order) ? o.layout.order.filter(validKey) : [];
     PANEL_ORDER.forEach(k => { if (!order.includes(k)) order.push(k); });
-    const hidden = Array.isArray(o.layout && o.layout.hidden) ? o.layout.hidden.filter(k => PANEL_ORDER.includes(k)) : [];
+    const hidden = Array.isArray(o.layout && o.layout.hidden) ? o.layout.hidden.filter(validKey) : [];
     const sizes = (o.layout && o.layout.sizes && typeof o.layout.sizes === 'object') ? o.layout.sizes : {};
     const titles = (o.layout && o.layout.titles && typeof o.layout.titles === 'object') ? o.layout.titles : {};
-    return Object.assign(b, { budget:o.budget||30, view, name:o.name||'', goal:o.goal||'', layout:{ order, hidden, sizes, titles }, sw:o.sw||'', notes:o.notes||'', other:o.other||'',
+    Object.assign(b, { budget:o.budget||30, view, name:o.name||'', goal:o.goal||'', layout:{ order, hidden, sizes, titles }, sw:o.sw||'', notes:o.notes||'', other:o.other||'', tagline:o.tagline||'',
       career:o.career, education:o.education, skill:o.skill, spec:o.spec, experience:o.experience });
+    Object.keys(o).forEach(k => { if (/^other-\d+$/.test(k) && typeof o[k] === 'string') b[k] = o[k]; });   // carry dynamic "Other" sections
+    return b;
   }
   function loadBuild(cls){
     try { const o = JSON.parse(localStorage.getItem(BUILD_KEY(cls)) || 'null'); if (o && typeof o === 'object') return migrateBuild(o); } catch(e){}
@@ -1526,7 +1585,7 @@ permalink: /tools/healthcare-career-tree/
     const pdfjsLib = await loadPdfJs();
     const data = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: data }).promise;
-    const out = []; let name = '';
+    const out = [], side = []; let name = '', headline = '';
     for (let p = 1; p <= pdf.numPages; p++){
       const page = await pdf.getPage(p);
       const vw = page.getViewport({ scale: 1 });
@@ -1546,10 +1605,30 @@ permalink: /tools/healthcare-career-tree/
         return { col: r.col, y: r.y, text: text.replace(/\s+/g, ' ').trim() };
       }).filter(r => r.text);
       lines.sort((a,b) => a.col - b.col || b.y - a.y);
-      if (p === 1){ const fm = lines.find(r => r.col === 1); if (fm) name = fm.text; }
-      lines.forEach(r => out.push(r.text));
+      if (p === 1){   // page-1 main column = [name, headline lines…, location, Summary, …]
+        const main = lines.filter(r => r.col === 1);
+        if (main.length){ name = main[0].text; const hl = [];
+          for (let q = 1; q < main.length; q++){ const t = main[q].text;
+            if (t === 'Summary' || /,\s*United States$/.test(t) || /^[A-Z][a-zA-Z.]+,\s*[A-Z]{2}\b/.test(t)) break; hl.push(t); }
+          headline = hl.join(' '); }
+      }
+      lines.forEach(r => { out.push(r.text); if (r.col === 0) side.push(r.text); });
     }
-    return { name: name, lines: out };
+    return { name: name, headline: headline, lines: out, sidebar: side };
+  }
+
+  // sidebar (left column) -> Top Skills + Certifications, read under their fixed section headers
+  function parseSidebarLines(side){
+    const HEAD = { 'Contact':1, 'Top Skills':1, 'Skills':1, 'Languages':1, 'Certifications':1, 'Honors-Awards':1, 'Honors & Awards':1, 'Publications':1, 'Interests':1 };
+    const skills = [], certs = [], awards = [], pubs = []; let cur = null;
+    (side || []).forEach(l => {
+      if (HEAD[l]){ cur = l; return; }
+      if (cur === 'Top Skills' || cur === 'Skills'){ if (skills.length < 12) skills.push(l); }
+      else if (cur === 'Certifications'){ if (certs.length < 16) certs.push(l); }
+      else if (cur === 'Honors-Awards' || cur === 'Honors & Awards'){ if (awards.length < 16) awards.push(l); }
+      else if (cur === 'Publications'){ if (pubs.length < 16) pubs.push(l); }
+    });
+    return { skills: skills, certs: certs, awards: awards, pubs: pubs };
   }
 
   // structure the ordered lines into roles + schools (tuned to LinkedIn's fixed export format)
@@ -1566,8 +1645,8 @@ permalink: /tools/healthcare-career-tree/
     function yr(s){ if (!s) return '?'; if (/present/i.test(s)) return 'Now'; const m = s.match(/(\d{4})/); return m ? m[1] : s; }
 
     const lines = rawLines.map(l => (l || '').trim()).filter(l => l && !LI_FOOTER.test(l));
-    let expStart = -1, expEnd = lines.length, eduStart = -1;
-    lines.forEach((l,i) => { if (l === 'Experience') expStart = i; if (l === 'Education' && eduStart < 0) eduStart = i; });
+    let expStart = -1, expEnd = lines.length, eduStart = -1, sumStart = -1;
+    lines.forEach((l,i) => { if (l === 'Experience') expStart = i; if (l === 'Education' && eduStart < 0) eduStart = i; if (l === 'Summary' && sumStart < 0) sumStart = i; });
     if (eduStart >= 0 && eduStart > expStart) expEnd = eduStart;
     const exp = expStart >= 0 ? lines.slice(expStart + 1, expEnd) : [];
     const edu = eduStart >= 0 ? lines.slice(eduStart + 1) : [];
@@ -1588,7 +1667,8 @@ permalink: /tools/healthcare-career-tree/
 
     const schools = [];
     for (let i = 0; i < edu.length; i++){ if (LI_EDU.test(edu[i]) || /·/.test(edu[i])){ const dm = edu[i].match(/\(([^)]*\d{4}[^)]*)\)/); schools.push({ school: edu[i - 1] || '', degree: edu[i].replace(/\s*·.*$/, '').trim(), years: dm ? dm[1] : '' }); } }
-    return { roles: roles, schools: schools };
+    const summary = (sumStart >= 0 && expStart > sumStart) ? lines.slice(sumStart + 1, expStart).join(' ').trim() : '';
+    return { roles: roles, schools: schools, summary: summary };
   }
 
   // fuzzy-match an imported title to a real board role (reuses the board's label/abbr vocabulary)
@@ -1604,6 +1684,7 @@ permalink: /tools/healthcare-career-tree/
       if (lbl === q) score = 100;
       else if (lbl && (lbl.includes(q) || q.includes(lbl))) score = 60;
       else { const lt = lbl.split(' ').filter(w => w.length > 2); const hits = lt.filter(w => qt.has(w)).length; score = hits * 18; }
+      if ((n.abbr || '').toLowerCase().replace(/[^a-z0-9]/g, '') === q.replace(/[^a-z0-9]/g, '')) score = Math.max(score, 92);   // exact abbr match (e.g. goal "CRNA")
       if (score > bestScore){ bestScore = score; best = n; }
     });
     return bestScore >= 36 ? best : null;
@@ -1611,9 +1692,11 @@ permalink: /tools/healthcare-career-tree/
 
   // parsed roles/schools -> a valid build. Roles at the "spine" employer (most roles) stay on the
   // trunk; overlapping side-employer roles fork off it (the tool's one-fork-per-node model).
-  function linkedInToBuild(name, roles, schools){
+  function linkedInToBuild(p){
     const b = blankBuild();
+    const name = p.name, roles = p.roles || [], schools = p.schools || [], skills = p.skills || [], certs = p.certs || [];
     b.name = (name || '').replace(/\s+(RRT|MHA|MSRT|MSRC|RRT-ACCS|MBA|MPH|MSN|BSN|PhD|MD|DNP|FAARC|CPHQ)\b.*$/, '').trim() || (name || '');
+    b.tagline = (p.headline || '').trim();
     const valid = roles.filter(r => r.start != null);
     const byCo = {}; valid.forEach(r => { const c = r.company || '?'; (byCo[c] = byCo[c] || { n: 0, m: 0 }); byCo[c].n++; byCo[c].m += (r.end && r.start) ? (r.end - r.start) : 0; });
     let spine = null, best = -1; Object.keys(byCo).forEach(c => { const s = byCo[c].n * 100000 + byCo[c].m; if (s > best){ best = s; spine = c; } });
@@ -1623,29 +1706,37 @@ permalink: /tools/healthcare-career-tree/
     sorted.forEach(r => {
       const node = mk(r);
       if ((r.company || '?') !== spine){
-        const host = trunk.find(t => t._s != null && t._e != null && r.start < t._e && t._s < r.end && !t.concurrent);
-        if (host){ host.concurrent = { id: newId(), name: node.name, years: node.years, layer: 'current', roleId: node.roleId, abbr: node.abbr, family: node.family }; overlaps++; return; }
+        // side-employer role: fork it off the first overlapping trunk node (a node can hold several forks)
+        const host = trunk.find(t => t._s != null && t._e != null && r.start < t._e && t._s < r.end);
+        if (host){ (host.concurrents = host.concurrents || []).push({ id: newId(), name: node.name, years: node.years, layer: 'current', roleId: node.roleId, abbr: node.abbr, family: node.family }); overlaps++; return; }
       }
       trunk.push(node);
     });
     b.career = trunk.map(n => { const o = {}; Object.keys(n).forEach(k => { if (k !== '_s' && k !== '_e') o[k] = n[k]; }); return o; });
-    b.education = schools.map(s => ({ id: newId(), kind: 'custom', label: s.degree + (s.school ? (' (' + s.school + ')') : ''), years: s.years || '', layer: 'current' }));
+    b.education = schools.map(s => ({ id: newId(), kind: 'custom', label: s.degree + (s.school ? (' (' + s.school + ')') : ''), years: s.years || '', layer: 'current' }))
+      .concat((certs || []).map(c => ({ id: newId(), kind: 'custom', label: c, years: '', layer: 'current' })));
+    b.skill = (skills || []).map(s => ({ id: newId(), kind: 'custom', label: s, years: '', layer: 'current' }));
+    b.notes = (p.summary || '').trim();   // Summary → Notes card
+    const ach = (p.awards || []).concat(p.pubs || []);   // Honors-Awards + Publications → renamed "Achievements" card
+    b.other = ach.map(s => '• ' + s).join('\n');
+    if (ach.length){ (b.layout.titles = b.layout.titles || {}).other = 'Achievements'; b.layout.hidden = (b.layout.hidden||[]).filter(k => k !== 'other'); }   // show the Other card so the imported Achievements are visible
     return { build: b, overlaps: overlaps };
   }
 
   async function importLinkedInPdf(file){
     if (!file) return;
     liMsg('Reading PDF…', true);
-    let parsed, name;
-    try { const ex = await extractLinkedInPdf(file); name = ex.name; parsed = parseLinkedInLines(ex.lines); }
+    let ex, main, sb;
+    try { ex = await extractLinkedInPdf(file); main = parseLinkedInLines(ex.lines); sb = parseSidebarLines(ex.sidebar); }
     catch(e){ liMsg('Could not read that PDF (' + ((e && e.message) || 'error') + ').', false); return; }
-    if (!parsed.roles.length && !parsed.schools.length){ liMsg('No experience or education found. Is this a LinkedIn profile PDF (More → Save to PDF)?', false); return; }
-    const res = linkedInToBuild(name, parsed.roles, parsed.schools);
-    const nC = res.build.career.length, nE = res.build.education.length;
-    const note = res.overlaps ? (', ' + res.overlaps + ' forked as concurrent') : '';
-    if (!confirm('Import ' + nC + ' role' + (nC !== 1 ? 's' : '') + note + ' and ' + nE + ' school' + (nE !== 1 ? 's' : '') + ' from "' + (res.build.name || 'this profile') + '"?\n\nThis REPLACES your current path (can’t be undone).')){ liMsg('Import cancelled.', false); return; }
+    if (!main.roles.length && !main.schools.length){ liMsg('No experience or education found. Is this a LinkedIn profile PDF (More → Save to PDF)?', false); return; }
+    const res = linkedInToBuild({ name: ex.name, headline: ex.headline, roles: main.roles, schools: main.schools, summary: main.summary, skills: sb.skills, certs: sb.certs, awards: sb.awards, pubs: sb.pubs });
+    const nC = res.build.career.length, nE = res.build.education.length, nS = res.build.skill.length;
+    const note = res.overlaps ? (', ' + res.overlaps + ' forked concurrent') : '';
+    const extra = nS ? (' and ' + nS + ' skill' + (nS !== 1 ? 's' : '')) : '';
+    if (!confirm('Import ' + nC + ' role' + (nC !== 1 ? 's' : '') + note + ', ' + nE + ' school' + (nE !== 1 ? 's' : '') + extra + ' from "' + (res.build.name || 'this profile') + '"?\n\nThis REPLACES your current path (can’t be undone).')){ liMsg('Import cancelled.', false); return; }
     build = migrateBuild(res.build); syncPinned(); saveBuild(); renderMyPath(); updateBoardPins();
-    liMsg('Imported ' + nC + ' roles' + note + ' ✓. Tidy up names and forks as needed.', true);
+    liMsg('Imported ' + nC + ' roles' + note + extra + ' ✓. Tidy up names and forks as needed.', true);
     setTimeout(closeDataModal, 1300);
   }
 
@@ -1761,6 +1852,8 @@ permalink: /tools/healthcare-career-tree/
       if (role){ roleEl.innerHTML = '<b>'+esc(tileDisplayName(role,'career'))+'</b>';   // current role only — the "Tier N" depth number read as jargon
       } else roleEl.textContent = 'Add your current role to begin';
     }
+    const tg = document.getElementById('bp-tagline');
+    if (tg){ const t = (build.tagline||'').trim(); tg.textContent = t; tg.style.display = t ? '' : 'none'; }
     const vit = document.getElementById('bp-vitals');
     if (vit){
       const cur = k => build[k].filter(n => nodeLayer(n)==='current').length;
@@ -1769,26 +1862,99 @@ permalink: /tools/healthcare-career-tree/
       vit.innerHTML = chips.map(([n2,l,g]) => '<div class="bp-vital'+(g?' goal':'')+'"><div class="bp-vital-n">'+n2+'</div><div class="bp-vital-l">'+l+'</div></div>').join('');
     }
   }
-  // Next Steps: your FUTURE-layer tiles, framed by your goal — click one to mark it done (→ current)
+  // ── Next Steps = an action plan: your Future-layer items + steps auto-routed from where you are to your goal ──
+  function futureOf(k){ return build[k].filter(n => nodeLayer(n)==='future'); }
+  function currentRoleNode(){   // your most-advanced CURRENT role that maps to a real board node
+    if (!nodeById || !nodeById.size) return null;
+    const cur = build.career.filter(n => nodeLayer(n)==='current' && n.roleId && nodeById.has(n.roleId));
+    if (!cur.length) return null;
+    return cur.map(n => nodeById.get(n.roleId)).sort((a,b) => (a.tier||0)-(b.tier||0)).pop();
+  }
+  function bfsLeadsTo(fromId, toId){   // shortest forward path through the leadsTo edges
+    if (fromId === toId) return [fromId];
+    const q = [[fromId]], seen = new Set([fromId]); let guard = 0;
+    while (q.length && guard++ < 6000){
+      const path = q.shift(), node = nodeById.get(path[path.length-1]); if (!node) continue;
+      for (const t of (node.leadsTo || [])){ if (seen.has(t)) continue;
+        if (t === toId) return path.concat(t); seen.add(t); q.push(path.concat(t)); }
+    }
+    return null;
+  }
+  function credForNode(node){ try { return credFace(node) || ''; } catch(_){ return ''; } }
+  // the plan's TARGETS are your Future-layer role tiles; route current → each, collect the gaps
+  function planFromFutureTiles(){
+    const start = currentRoleNode();
+    const futureRoles = build.career.filter(n => nodeLayer(n)==='future' && n.roleId && nodeById.has(n.roleId));
+    const pinnedRoles = new Set(build.career.filter(n => n.roleId).map(n => n.roleId));
+    const haveCred = new Set(build.education.filter(e => e.kind==='real').map(e => e.label + '|' + e.degree));
+    const school = [], midRoles = []; const seenDeg = new Set(), seenRole = new Set();
+    futureRoles.forEach(fr => {
+      const target = nodeById.get(fr.roleId);
+      const ids = start ? bfsLeadsTo(start.id, target.id) : null;
+      const path = ids ? ids.map(id => nodeById.get(id)) : [target];
+      let prevDeg = start ? (DEG_LEVEL[start.degree] || 0) : -1;
+      path.forEach(node => {
+        if (start && node.id === start.id){ prevDeg = DEG_LEVEL[node.degree] || 0; return; }
+        const dl = DEG_LEVEL[node.degree] || 0;
+        if (dl > prevDeg){
+          const face = credForNode(node) || (DATA.meta.degrees[node.degree]||{}).label || node.degree;
+          const key = face + '|' + node.degree;
+          if (!seenDeg.has(key) && !haveCred.has(key)){ seenDeg.add(key);
+            school.push({ face: face, degree: node.degree, col: (DATA.meta.degrees[node.degree]||{}).color || '' }); }
+        }
+        prevDeg = Math.max(prevDeg, dl);
+        if (node.id !== target.id && !pinnedRoles.has(node.id) && !seenRole.has(node.id)){ seenRole.add(node.id);
+          midRoles.push({ label: 'Step into ' + node.label.replace(/\n/g, ' '), action: 'On the way to ' + target.label.replace(/\n/g, ' ') + '.' }); }
+      });
+    });
+    return { school: school, midRoles: midRoles };
+  }
+  // which layer a role sits on in YOUR build (current = have, future = want), or null if it isn't on your path
+  function roleLayerInBuild(id){
+    for (const s of build.career){ if (s.roleId === id) return nodeLayer(s);
+      for (const c of concsOf(s)) if (c.roleId === id) return nodeLayer(c); }
+    return null;
+  }
+  // add a required credential to Education Growth at the given layer — current for a role you HAVE, future for one you WANT (deduped)
+  function addReqCred(face, degree, col, layer){
+    if (!face) return;
+    layer = (layer === 'current') ? 'current' : 'future';
+    let node = build.education.find(e => e.kind==='real' && e.label===face && e.degree===degree);
+    if (!node){ node = { id:newId(), kind:'real', label:face, degree:degree, col:col||null, sub:(DATA.meta.degrees[degree]||{}).label||'', years:'', layer:layer }; build.education.push(node); }
+    else if (layer === 'current') node.layer = 'current';   // you have it now — upgrade, never downgrade a current cred to future
+    syncPinned(); saveBuild(); renderMyPath();
+  }
+
   function renderNextSteps(){
     const host = document.getElementById('bp-next'); if (!host) return;
-    const goal = (build.goal||'').trim();
-    let h = goal ? '<div class="bp-next-goal">Working toward <b>'+esc(goal)+'</b></div>'
-                 : '<div class="bp-next-goal bp-next-nogoal">Set a goal above to frame your path.</div>';
-    const groups = [['career','Roles to reach'],['education','Credentials to earn'],['skill','Skills to build'],['spec','Focus areas'],['experience','Experience to gain']];
+    const targets = build.career.filter(n => nodeLayer(n)==='future');
+    let h = targets.length
+      ? '<div class="bp-next-goal">Aiming for <b>'+targets.map(n => esc(tileDisplayName(n,'career'))).join(', ')+'</b></div>'
+      : '<div class="bp-next-goal bp-next-nogoal">Flip the shifter to <b>Future</b> and drop in the roles you want. Your step-by-step plan builds here.</div>';
+    const act = { education:'Research programs, apply, enroll, then earn it.', skill:'Practice it until it sticks.',
+                  spec:'Build real depth here.', experience:'Put in time in this setting.', career:'Apply once the steps above are in hand.' };
+    const itemRow = (n,k) => '<div class="bp-next-item" data-k="'+k+'" data-id="'+esc(n.id||'')+'"><span class="bp-next-chk">◇</span><span class="bp-next-tx"><b>'+esc(tileDisplayName(n,k))+'</b><span class="bp-next-act">'+act[k]+'</span></span></div>';
+    const sugRow = (label,action) => '<div class="bp-next-item bp-next-sug"><span class="bp-next-chk">✦</span><span class="bp-next-tx"><b>'+esc(label)+'</b><span class="bp-next-act">'+esc(action)+'</span></span></div>';
+    const addRow = (s) => '<div class="bp-next-item bp-next-add" data-face="'+esc(s.face)+'" data-deg="'+esc(s.degree)+'" data-col="'+esc(s.col||'')+'" title="Add to your Education plan"><span class="bp-next-chk">+</span><span class="bp-next-tx"><b>'+esc(s.face)+'</b><span class="bp-next-act">Required for your goal. Click to add it to Education.</span></span></div>';
+
+    const plan = planFromFutureTiles();
     let any = false;
-    groups.forEach(([k,lbl]) => {
-      const items = build[k].filter(n => nodeLayer(n)==='future');
-      if (!items.length) return; any = true;
-      h += '<div class="bp-next-grp">'+lbl+'</div>';
-      items.forEach(n => h += '<div class="bp-next-item" data-k="'+k+'" data-id="'+esc(n.id||'')+'"><span class="bp-next-chk">◇</span><span>'+esc(tileDisplayName(n,k))+'</span></div>');
-    });
-    if (!any) h += '<div class="bp-next-empty">Flip the shifter to <b>Future</b> and add what you want to gain — your goals show up here as next steps. Click one to mark it done.</div>';
+    const stage = (title, parts) => { if (!parts.length) return; any = true; h += '<div class="bp-next-grp">'+title+'</div>' + parts.join(''); };
+
+    stage('Schooling & credentials',
+      futureOf('education').map(n => itemRow(n,'education')).concat(plan.school.map(addRow)));
+    stage('Skills & experience',
+      ['skill','spec','experience'].reduce((a,k) => a.concat(futureOf(k).map(n => itemRow(n,k))), []));
+    stage('Roles to land',
+      futureOf('career').map(n => itemRow(n,'career')).concat(plan.midRoles.map(s => sugRow(s.label, s.action))));
+
+    if (!any) h += '<div class="bp-next-empty">No future goals yet. Flip to <b>Future</b> and drop in a role you want, and the plan to reach it shows up here.</div>';
     host.innerHTML = h;
-    host.querySelectorAll('.bp-next-item').forEach(el => el.onclick = () => {
+    host.querySelectorAll('.bp-next-item[data-id]').forEach(el => el.onclick = () => {
       const n = (build[el.dataset.k]||[]).find(x => x.id === el.dataset.id);
       if (n){ n.layer = 'current'; saveBuild(); renderMyPath(); }   // achieved → moves into your Current layer
     });
+    host.querySelectorAll('.bp-next-add').forEach(el => el.onclick = () => addReqCred(el.dataset.face, el.dataset.deg, el.dataset.col, 'future'));   // plan suggestions are toward future goals
   }
 
   // ── Export My Path as a JPEG (lazy-loads html2canvas only on first use) ──
@@ -1820,11 +1986,13 @@ permalink: /tools/healthcare-career-tree/
     const name = (build.name||'').trim() || 'My Career Path';
     const roleEl = document.getElementById('bp-role'); const role = roleEl ? roleEl.textContent.trim() : '';
     const goal = (build.goal||'').trim();
+    const tagline = (build.tagline||'').trim();
     const hd = document.createElement('div'); hd.className = 'ex-hd';
     hd.innerHTML = '<div><div class="ex-hd-name">'+esc(name)+'</div>'+
+      (tagline ? '<div class="ex-hd-tagline">'+esc(tagline)+'</div>' : '')+
       (role ? '<div class="ex-hd-role">'+esc(role)+'</div>' : '')+
       (goal ? '<div class="ex-hd-goal">Goal: '+esc(goal)+'</div>' : '')+'</div>'+
-      '<div class="ex-hd-brand">Healthcare<br>Uncharted</div>';
+      '<img class="ex-hd-logo" src="/assets/images/logotransparency.png" alt="Healthcare Uncharted">';
     sheet.appendChild(hd);
     // CAREER PATH — clone the live trunk grid (+ connector overlay + forks), strip chrome, scale to fit the width
     const grid = document.getElementById('bp-grid-career');
@@ -1834,7 +2002,7 @@ permalink: /tools/healthcare-career-tree/
       const ov = grid.querySelector('.bp-conn-ov'); const ovH = ov ? parseFloat(ov.getAttribute('height'))||0 : 0;
       const naturalW = Math.max(grid.scrollWidth, grid.offsetWidth, 1);
       const naturalH = Math.max(grid.scrollHeight, grid.offsetHeight, ovH, 1);
-      const scale = Math.min(1, (contentW - 36) / naturalW);
+      const scale = Math.min(1.8, (contentW - 36) / naturalW);   // upscale a small trunk to fill the width (bigger tiles); downscale a big one to fit
       const cg = grid.cloneNode(true);
       cg.style.overflow = 'visible'; cg.style.width = naturalW+'px';
       cg.querySelectorAll('.bp-del,.bp-fork,.bp-layer,.bp-node-add,.bp-conn-add').forEach(e => e.remove());   // drop hover chrome + the + tile AND its dangling connector
@@ -1868,12 +2036,12 @@ permalink: /tools/healthcare-career-tree/
       nextHTML += '<div class="ex-next-grp">'+lbl+'</div>';
       items.forEach(n => nextHTML += '<div class="ex-next-item">'+esc(tileDisplayName(n,k))+'</div>');
     });
-    if (nextHTML){ const card = document.createElement('div'); card.className = 'ex-card'; card.innerHTML = '<div class="ex-sec-ttl">Next Steps</div>'+nextHTML; grid2.appendChild(card); }
+    if (nextHTML){ const card = document.createElement('div'); card.className = 'ex-card ex-next'; card.innerHTML = '<div class="ex-sec-ttl">Next Steps</div>'+nextHTML; grid2.appendChild(card); }
     // STRENGTHS + NOTES + OTHER — full text, full width (Other uses its custom title)
-    [['sw','Strengths & Weaknesses'],['notes','Notes'],['other',panelTitle('other')]].forEach(([k,ttl]) => {
+    build.layout.order.filter(k => !build.layout.hidden.includes(k) && panelOf(k) && panelOf(k).kind === 'text').forEach(k => {
       const v = (build[k]||'').trim(); if (!v) return;
       const card = document.createElement('div'); card.className = 'ex-card ex-wide';
-      card.innerHTML = '<div class="ex-sec-ttl">'+ttl+'</div><div class="ex-text">'+esc(v)+'</div>';
+      card.innerHTML = '<div class="ex-sec-ttl">'+esc(panelTitle(k))+'</div><div class="ex-text">'+esc(v)+'</div>';
       grid2.appendChild(card);
     });
     if (grid2.children.length) sheet.appendChild(grid2);
@@ -1889,10 +2057,13 @@ permalink: /tools/healthcare-career-tree/
     let sheet = null;
     try {
       await ensureHtml2canvas();
+      exportMode = true; renderMyPath();   // re-render the trunk with roomy export tiles + full titles
       sheet = buildExportSheet();
       sheet.style.cssText += ';position:fixed;left:0;top:0;z-index:-1;pointer-events:none';   // off-screen-ish (behind the opaque app), still renderable
       document.body.appendChild(sheet);
       if (document.fonts && document.fonts.ready){ try { await document.fonts.ready; } catch(_){} }
+      // make sure the HU logo image is fully loaded before the capture (else it renders blank)
+      await Promise.all([...sheet.querySelectorAll('img')].map(im => (im.complete && im.naturalWidth) ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; setTimeout(res, 3000); })));
       const canvas = await html2canvas(sheet, { backgroundColor:'#0d1117', scale: 2, useCORS: true, logging: false });
       const a = document.createElement('a');
       a.href = canvas.toDataURL('image/jpeg', 0.94);
@@ -1902,6 +2073,7 @@ permalink: /tools/healthcare-career-tree/
       console.error('export My Path', err);
       alert('Could not build the image. The export library loads from a CDN — check your connection and try again.');
     } finally {
+      exportMode = false; renderMyPath();   // restore the live trunk
       if (sheet) sheet.remove();
       if (btn){ btn.textContent = orig; btn.disabled = false; }
     }
@@ -1948,7 +2120,7 @@ permalink: /tools/healthcare-career-tree/
       [legendBadge('✓','#7FE3A0'), 'Mark a goal as something you now <b>have</b>.'],
       [legendBadge('◇','#F0CF6B'), 'Mark something you have as a <b>goal</b>.'],
       [legendBadge('×','#ff8080'), 'Remove the tile.'],
-      [legendForkBadge('#C9A6E6'), '<b>Fork</b> — add a second concurrent role.'],
+      [legendForkBadge('#C9A6E6'), '<b>Fork</b> — add a concurrent role (you can stack more than one).'],
       ['grp','View'],
       ['<svg width="56" height="20"><rect x="3" y="4" width="50" height="13" rx="4" style="fill:rgba(78,205,196,0.16);stroke:rgba(78,205,196,0.45)"/></svg>', '<b>Current / Future / Both</b> — switch between what you have, what you want, and both layered.']
     ];
@@ -1968,13 +2140,13 @@ permalink: /tools/healthcare-career-tree/
   function renderDash(){
     const host = document.getElementById('bp-dash'); if (!host) return;
     renderAddMenu();
-    const order = build.layout.order.filter(k => PANELS[k] && !build.layout.hidden.includes(k));
+    const order = build.layout.order.filter(k => panelOf(k) && !build.layout.hidden.includes(k));
     const sig = order.join(',');
     if (sig === dashSig && host.children.length) return;
     dashSig = sig;
     host.innerHTML = '';
     order.forEach((key, i) => {
-      const p = PANELS[key];
+      const p = panelOf(key);
       const card = document.createElement('div');
       card.className = 'bp-panel bp-card' + (key==='next' ? ' bp-panel-next' : '') + (p.kind==='text' ? ' bp-resize' : '');
       card.setAttribute('data-key', key);
@@ -1983,7 +2155,7 @@ permalink: /tools/healthcare-career-tree/
       if (p.kind === 'spiral') body = '<div class="bp-pick"><input id="'+p.search[0]+'" class="bp-pick-in" placeholder="'+esc(p.ph)+'" autocomplete="off"><div class="bp-suggest" id="'+p.search[1]+'"></div></div><div class="bp-spiral-wrap" id="'+p.grid+'"></div>';
       else if (p.kind === 'next') body = '<div id="bp-next" class="bp-next"></div>';
       else if (p.kind === 'text') body = '<textarea class="bp-text" id="bp-'+p.field+'" placeholder="'+esc(p.ph)+'"></textarea>';
-      const titleEl = (key === 'other')   // the Other card's title is renamable (and persists)
+      const titleEl = isOtherKey(key)   // the Other card's title is renamable (and persists)
         ? '<input class="bp-card-t bp-card-t-edit" value="'+esc(panelTitle(key))+'" maxlength="28" placeholder="Other" title="Rename this section">'
         : '<span class="bp-card-t">'+esc(panelTitle(key))+'</span>';
       card.innerHTML = '<div class="bp-card-h"><span class="bp-grip" title="Drag to move">⠿</span>'+titleEl+'<button class="bp-card-x" title="Remove section">×</button></div>'+body;
@@ -2020,14 +2192,26 @@ permalink: /tools/healthcare-career-tree/
   }
   function renderAddMenu(){
     const menu = document.getElementById('bp-add-menu'), btn = document.getElementById('bp-add-section'); if (!menu || !btn) return;
-    const hidden = build.layout.hidden.filter(k => PANELS[k]);
-    btn.style.display = hidden.length ? '' : 'none';
-    menu.innerHTML = hidden.map(k => '<div class="bp-addmenu-item" data-key="'+k+'">+ '+esc(panelTitle(k))+'</div>').join('');
+    const hiddenFixed = build.layout.hidden.filter(k => PANELS[k] && k !== 'other');   // 'other' is managed by the always-on "+ Other section"
+    btn.style.display = '';   // you can always add another Other section
+    menu.innerHTML = hiddenFixed.map(k => '<div class="bp-addmenu-item" data-key="'+k+'">+ '+esc(panelTitle(k))+'</div>').join('')
+      + '<div class="bp-addmenu-item" data-newother="1">+ Other section</div>';
     menu.querySelectorAll('[data-key]').forEach(el => el.onclick = () => {
       const k = el.dataset.key; build.layout.hidden = build.layout.hidden.filter(x => x!==k);
       if (!build.layout.order.includes(k)) build.layout.order.push(k);
       menu.classList.remove('open'); saveBuild(); renderMyPath();
     });
+    const no = menu.querySelector('[data-newother]'); if (no) no.onclick = () => { menu.classList.remove('open'); addOtherSection(); };
+  }
+  // show the first not-currently-shown "Other" slot, or mint a fresh other-N if all are already shown
+  function addOtherSection(){
+    const shown = k => build.layout.order.includes(k) && !build.layout.hidden.includes(k);
+    let key = 'other';
+    if (shown('other')){ let n = 2; while (shown('other-'+n)) n++; key = 'other-'+n; }
+    build.layout.hidden = build.layout.hidden.filter(x => x !== key);
+    if (!build.layout.order.includes(key)) build.layout.order.push(key);
+    if (build[key] === undefined) build[key] = '';
+    saveBuild(); renderMyPath();
   }
 
   function renderMyPath(){
@@ -2109,6 +2293,8 @@ permalink: /tools/healthcare-career-tree/
     if (sub != null) html += '<div class="bp-node-lbl">'+esc(sub)+'</div>';
     else if (cfg.kind==='cred') html += '<input class="bp-cred-in" placeholder="CODE" maxlength="40" value="'+esc(node.label||'')+'">';
     else if (node.anchor==='other') html += '<textarea class="bp-name bp-name-area" placeholder="type anything" maxlength="60" rows="2">'+esc(node.name||'')+'</textarea>';
+    else if (exportMode && cfg.kind==='role') html += '<div class="bp-node-lbl">'+esc(node.name||'')+'</div>';   // export: clean full title
+    else if (cfg.kind==='role') html += '<textarea class="bp-name bp-name-role" rows="2" maxlength="60" placeholder="search, or * for all">'+esc(node.name||'')+'</textarea>';   // live: full, editable, wrapping title
     else html += '<input class="bp-name" placeholder="search…" maxlength="44" value="'+esc(node.name||'')+'">';
     html += bpHexSVG(face, hexA(col,0.20), col);
     html += '<textarea class="bp-years" rows="2" maxlength="20" placeholder="years">'+esc(node.years||'')+'</textarea>';
@@ -2152,25 +2338,40 @@ permalink: /tools/healthcare-career-tree/
     const lanes = isCareer ? careerLanes(vis) : vis.map(() => 0);
     const minLane = lanes.length ? Math.min(...lanes) : 0;
     const maxLane = lanes.length ? Math.max(...lanes) : 0;
-    const CELLW = 2*BPR, GAP = 24, APO = BPR*Math.sqrt(3)/2, SIDE = BPR*0.5, HEXC = CAREER_HEXC, LANE_H = CAREER_LANE_H, CONC_DY = 178, CONC_DX = 24;
-    const hasConc = isCareer && vis.some(nd => nd.concurrent);
+    // roomy tiles + full wrapping titles are the default for the career trunk (live AND export)
+    const CELLW = isCareer ? 150 : 2*BPR, GAP = isCareer ? 26 : 24, APO = BPR*Math.sqrt(3)/2, SIDE = BPR*0.5, HEXC = CAREER_HEXC, LANE_H = CAREER_LANE_H, CONC_DY = isCareer ? 210 : 178, CONC_DX = isCareer ? 30 : 24, CONC_STACK = isCareer ? 172 : 142;
+    const maxConc = isCareer ? vis.reduce((m,nd) => Math.max(m, concsOf(nd).length), 0) : 0;
+    const hasConc = maxConc > 0;
     grid.classList.toggle('bp-grid-lanes', isCareer);
+
+    // ── drag-and-drop: pick up ANY tile (trunk or fork) and drop it on a trunk tile, a fork, or the + ──
+    // dragSrc carries the node + a detach() that pulls it out of wherever it currently lives.
+    const wireTileDrag = (cell, dnode, detach) => {
+      cell.draggable = true;
+      cell.addEventListener('dragstart', e => { if (e.target.closest('input,textarea')) { e.preventDefault(); return; }   // grab the hex/body to drag; the text fields stay editable
+        dragSrc = { node: dnode, detach: detach }; cell.classList.add('bp-dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dnode.id||''); } catch(_){} });
+      cell.addEventListener('dragend', () => { cell.classList.remove('bp-dragging'); dragSrc = null; });
+    };
+    const wireTileDrop = (cell, selfNode, place) => {
+      const ok = () => dragSrc && typeof dragSrc.detach === 'function' && dragSrc.node !== selfNode;
+      cell.addEventListener('dragover', e => { if (ok()) { e.preventDefault(); cell.classList.add('bp-dragover'); } });
+      cell.addEventListener('dragleave', () => cell.classList.remove('bp-dragover'));
+      cell.addEventListener('drop', e => { cell.classList.remove('bp-dragover'); if (!ok()) return; e.preventDefault();
+        place(dragSrc); syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); });
+    };
+    const detachFromTrunk = nd => () => { const k = list.indexOf(nd); if (k >= 0) list.splice(k, 1); };
 
     const tileEls = [];
     vis.forEach((node, i) => {
       const cell = makeTile(cfg, node, {
         onRemove: () => { const k = list.indexOf(node); if (k>=0) list.splice(k,1); syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); },
-        onFork:   () => { if (!node.concurrent) node.concurrent = { id:newId(), name:'', years:'', layer:nodeLayer(node) }; saveBuild(); renderMyPath(); }
+        onFork:   () => { (node.concurrents = concsOf(node).slice()).push({ id:newId(), name:'', years:'', layer:nodeLayer(node) }); delete node.concurrent; saveBuild(); renderMyPath(); }
       });
-      cell.draggable = true;   // drag to reorder (main tiles only); reorder the REAL list by node reference
-      cell.addEventListener('dragstart', e => { if (e.target.closest('input')) { e.preventDefault(); return; }
-        dragSrc = { list, node }; cell.classList.add('bp-dragging'); e.dataTransfer.effectAllowed='move'; try { e.dataTransfer.setData('text/plain', node.id||''); } catch(_){} });
-      cell.addEventListener('dragend', () => { cell.classList.remove('bp-dragging'); dragSrc = null; });
-      cell.addEventListener('dragover', e => { if (dragSrc && dragSrc.list === list) { e.preventDefault(); cell.classList.add('bp-dragover'); } });
-      cell.addEventListener('dragleave', () => cell.classList.remove('bp-dragover'));
-      cell.addEventListener('drop', e => { cell.classList.remove('bp-dragover'); if (!dragSrc || dragSrc.list !== list || dragSrc.node === node) return; e.preventDefault();
-        const m = dragSrc.node, fi = list.indexOf(m); if (fi >= 0) list.splice(fi, 1);
-        let ti = list.indexOf(node); if (ti < 0) ti = list.length; list.splice(ti, 0, m); saveBuild(); renderMyPath(); });
+      if (isCareer){
+        wireTileDrag(cell, node, detachFromTrunk(node));
+        // drop onto a trunk tile → land on the trunk at this spot (reorder a trunk tile, or PROMOTE a fork up to the main line)
+        wireTileDrop(cell, node, src => { src.detach(); let ti = list.indexOf(node); if (ti < 0) ti = list.length; list.splice(ti, 0, src.node); });
+      }
       cell.style.marginTop = ((lanes[i]-minLane)*LANE_H) + 'px';
       tileEls.push(cell);
       grid.appendChild(cell);
@@ -2182,6 +2383,8 @@ permalink: /tools/healthcare-career-tree/
     const lastLane = lanes.length ? lanes[lanes.length-1] : 0;
     add.style.marginTop = ((lastLane - minLane)*LANE_H + (HEXC - (BPR+3))) + 'px';   // line the + hex up with the tiles
     grid.appendChild(add);
+    // drop onto + → append the dragged tile to the END of the trunk (promote a fork / move a role onto the main line)
+    if (isCareer) wireTileDrop(add, null, src => { src.detach(); list.push(src.node); });
 
     const NS = 'http://www.w3.org/2000/svg', n = vis.length;
     const laneAt = j => (j < n ? lanes[j] : lastLane);
@@ -2203,21 +2406,32 @@ permalink: /tools/healthcare-career-tree/
 
     // forked concurrent tiles, hanging directly BELOW their main node (the Y branches down)
     vis.forEach((node, i) => {
-      if (!node.concurrent) return;
-      const ctile = makeTile(cfg, node.concurrent, { conc:true,
-        onRemove: () => { delete node.concurrent; syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); } });
-      ctile.style.position = 'absolute';
-      ctile.style.left = ((hx(i) - CELLW/2) + CONC_DX) + 'px';   // offset sideways so the fork connects at an angle, not straight down
-      ctile.style.width = CELLW + 'px';
-      ctile.style.top = (hy(i) + CONC_DY - HEXC) + 'px';
-      grid.appendChild(ctile);
+      concsOf(node).forEach((cn, k) => {
+        const ctile = makeTile(cfg, cn, { conc:true,
+          onRemove: () => { const arr = concsOf(node).slice(); const ix = arr.indexOf(cn); if (ix>=0) arr.splice(ix,1); delete node.concurrent; if (arr.length) node.concurrents = arr; else delete node.concurrents; syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); } });
+        ctile.style.position = 'absolute';
+        ctile.style.left = ((hx(i) - CELLW/2) + CONC_DX) + 'px';   // offset sideways so the fork connects at an angle, not straight down
+        ctile.style.width = CELLW + 'px';
+        ctile.style.top = (hy(i) + CONC_DY + k*CONC_STACK - HEXC) + 'px';   // stack extra forks downward
+        // drag a fork out; detach() pulls it from its parent's concurrents
+        wireTileDrag(ctile, cn, () => { const arr = node.concurrents = concsOf(node).slice(); const ix = arr.indexOf(cn); if (ix>=0) arr.splice(ix,1); if (!arr.length) delete node.concurrents; });
+        // drop onto a fork → make the dragged tile a fork (concurrent) of THIS fork's parent (e.g. demote a trunk role)
+        wireTileDrop(ctile, cn, src => { if (src.node === node) return; src.detach(); const arr = node.concurrents = concsOf(node).slice(); arr.push(src.node); delete node.concurrent; });
+        grid.appendChild(ctile);
+      });
     });
 
-    const totalH = (maxLane-minLane)*LANE_H + (hasConc ? CONC_DY : 0) + 175;
+    // size the box to the ACTUAL content (measure every tile's bottom) instead of a magic constant —
+    // absolute-positioned forks don't grow the grid on their own, and tile heights changed with the roomy layout.
+    const gbr = grid.getBoundingClientRect();
+    let contentBottom = 0;
+    grid.querySelectorAll('.bp-node, .bp-node-add').forEach(el => { const r = el.getBoundingClientRect(); if (r.height){ const b = r.bottom - gbr.top; if (b > contentBottom) contentBottom = b; } });
+    const fallbackH = (maxLane-minLane)*LANE_H + (hasConc ? CONC_DY + (maxConc-1)*CONC_STACK : 0) + 200;
+    const totalH = contentBottom > 0 ? Math.ceil(contentBottom + 14) : fallbackH;   // measured fit, else geometric estimate (hidden tab)
     grid.style.height = totalH + 'px';
     const ov = document.createElementNS(NS,'svg'); ov.setAttribute('class','bp-conn-ov');
     ov.setAttribute('width', (n+1)*(CELLW+GAP)); ov.setAttribute('height', totalH);
-    grid.appendChild(ov);
+    grid.insertBefore(ov, grid.firstChild);   // overlay UNDER the tiles → connector lines pass BEHIND the title/years plates, not over them
     const addLine = (x1,y1,x2,y2,col,dashed,cls) => {
       const ln = document.createElementNS(NS,'line');
       ln.setAttribute('x1',x1.toFixed(1)); ln.setAttribute('y1',y1.toFixed(1)); ln.setAttribute('x2',x2.toFixed(1)); ln.setAttribute('y2',y2.toFixed(1));
@@ -2253,13 +2467,14 @@ permalink: /tools/healthcare-career-tree/
     }
     // fork connector: an L off the main's BOTTOM-LEFT corner — straight down, then right into the concurrent's left side
     vis.forEach((node, i) => {
-      if (!node.concurrent) return;
-      const c = node.concurrent, fcol = (c.roleId ? (roleFamColor(c.roleId, c.family) || linkCol) : linkCol);
-      const fut = nodeLayer(node)==='future' || nodeLayer(c)==='future';
-      const mainCy = hy(i), concCy = mainCy + CONC_DY, concCx = hx(i) + CONC_DX;
-      const x0 = hx(i) - APO, y0 = mainCy + SIDE;     // main bottom-left corner (start)
-      const x2 = concCx - APO, y2 = concCy;           // concurrent left flat side (end)
-      addElbow(x0, y0, x0, y2, x2, y2, fcol, fut);     // down the left, square corner, across into the job
+      concsOf(node).forEach((c, k) => {
+        const fcol = (c.roleId ? (roleFamColor(c.roleId, c.family) || linkCol) : linkCol);
+        const fut = nodeLayer(node)==='future' || nodeLayer(c)==='future';
+        const mainCy = hy(i), concCy = mainCy + CONC_DY + k*CONC_STACK, concCx = hx(i) + CONC_DX;
+        const x0 = hx(i) - APO, y0 = mainCy + SIDE;     // main bottom-left corner (start)
+        const x2 = concCx - APO, y2 = concCy;           // concurrent left flat side (end)
+        addElbow(x0, y0, x0, y2, x2, y2, fcol, fut);     // down the left, square corner, across into the job
+      });
     });
   }
 
@@ -2407,17 +2622,19 @@ permalink: /tools/healthcare-career-tree/
   ];
   function tileSuggestMatches(cfg, q){
     q = (q||'').trim().toLowerCase();
+    const all = (q === '' || q === '*');   // empty focus OR "*" wildcard → browse the whole list (the dropdown scrolls)
     if (cfg.kind === 'role'){ const fams = DATA.classes[curClass].families;
-      const anchors = ANCHORS.filter(a => !q || a.label.toLowerCase().includes(q) || a.kw.some(k => k.includes(q) || q.includes(k)));
-      if (!q) return anchors;   // on focus, offer the two anchors as quick adds
-      const roles = [...nodeById.values()].filter(n => n.label.toLowerCase().replace(/\n/g,' ').includes(q) || (n.abbr||'').toLowerCase().includes(q)).slice(0,10)
+      const anchors = ANCHORS.filter(a => all || a.label.toLowerCase().includes(q) || a.kw.some(k => k.includes(q) || q.includes(k)));
+      const pool = [...nodeById.values()];
+      const matched = all ? pool : pool.filter(n => n.label.toLowerCase().replace(/\n/g,' ').includes(q) || (n.abbr||'').toLowerCase().includes(q));
+      const roles = matched.slice(0, all ? 600 : 40)
         .map(n => ({ id:n.id, label:n.label.replace(/\n/g,' '), abbr:n.abbr, color:(fams[n.family]||{}).color||'#4ECDC4' }));
-      return roles.concat(anchors); }
-    if (!q) return [];
+      return all ? anchors.concat(roles) : roles.concat(anchors); }   // browse: anchors first, then the full list
     if (!DATA.growth) return [];
     const col = (DATA.growth.zones[cfg.key]||{}).color || '#5AC8BE';
-    return DATA.growth.nodes.filter(n => n.zone===cfg.key && (n.label.toLowerCase().includes(q) || (n.abbr||'').toLowerCase().includes(q) || (n.group||'').toLowerCase().includes(q))).slice(0,10)
-      .map(n => ({ id:n.id, label:n.label, abbr:n.abbr, color:col }));
+    const gpool = DATA.growth.nodes.filter(n => n.zone===cfg.key);
+    const gmatched = all ? gpool : gpool.filter(n => n.label.toLowerCase().includes(q) || (n.abbr||'').toLowerCase().includes(q) || (n.group||'').toLowerCase().includes(q));
+    return gmatched.slice(0, all ? 600 : 40).map(n => ({ id:n.id, label:n.label, abbr:n.abbr, color:col }));
   }
   function showTileSuggest(cfg, node, inp){
     if (node.anchor) return;                            // anchor tiles (incl. "Other") are free-text — no role search
@@ -2434,7 +2651,7 @@ permalink: /tools/healthcare-career-tree/
   }
   function convertTileToReal(cfg, node, id){
     const anc = ANCHORS.find(a => a.id === id);
-    if (anc){ node.anchor = anc.anchor; node.name = anc.anchor==='other' ? '' : anc.label; node.abbr = anc.abbr; delete node.roleId; delete node.concurrent;
+    if (anc){ node.anchor = anc.anchor; node.name = anc.anchor==='other' ? '' : anc.label; node.abbr = anc.abbr; delete node.roleId; delete node.concurrent; delete node.concurrents;
       syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); return; }
     if (cfg.kind === 'role'){ const n = nodeById.get(id); if (!n) return;
       node.roleId = id; node.abbr = n.abbr; node.family = n.family; node.name = n.label.replace(/\n/g,' ');
@@ -2449,30 +2666,29 @@ permalink: /tools/healthcare-career-tree/
   function wireCredPicker(inputId, suggestId){
     const inp = document.getElementById(inputId), sug = document.getElementById(suggestId);
     if (!inp || !sug) return;
-    inp.oninput = () => {
-      const q = inp.value.trim().toLowerCase();
-      if (!q){ sug.classList.remove('open'); sug.innerHTML=''; return; }
-      const matches = credIndex.filter(c => c.search.includes(q)).slice(0,18);
+    const render = () => {
+      const q = inp.value.trim().toLowerCase(); const all = (q === '' || q === '*');   // click in (or *) → browse the whole list
+      const matches = (all ? credIndex : credIndex.filter(c => c.search.includes(q))).slice(0, all ? 600 : 40);
       sug.innerHTML = matches.length
         ? matches.map(c => { const dc=(DATA.meta.degrees[c.degree]||{}).color||'#E8C547';
             return '<div class="bp-sg" data-face="'+esc(c.face)+'" data-deg="'+esc(c.degree)+'"><span class="bp-sg-dot" style="background:'+dc+'"></span><span class="bp-sg-nm">'+esc(c.face)+'</span><span class="bp-sg-ab">'+esc(c.degreeLabel)+'</span></div>'; }).join('')
         : '<div class="bp-sg" style="opacity:.6;cursor:default">No match</div>';
       sug.classList.add('open');
-      sug.querySelectorAll('[data-face]').forEach(el => el.onclick = () => { addCredFromIndex(el.getAttribute('data-face'), el.getAttribute('data-deg')); inp.value=''; sug.classList.remove('open'); inp.focus(); });
+      sug.querySelectorAll('[data-face]').forEach(el => el.onclick = () => { addCredFromIndex(el.getAttribute('data-face'), el.getAttribute('data-deg')); inp.value=''; sug.classList.remove('open'); });
     };
+    inp.oninput = render; inp.onfocus = render;
   }
 
   // Skill/Spec/Experience pickers: search a Areas of Expertise Matrix zone → toggleGrowthNode
   function wireGrowthPicker(inputId, suggestId, zone){
     const inp = document.getElementById(inputId), sug = document.getElementById(suggestId);
     if (!inp || !sug) return;
-    inp.oninput = () => {
+    const render = () => {
       if (!DATA || !DATA.growth) return;   // DATA loads async — read it inside the handler, not at wire-time
       const pool = DATA.growth.nodes.filter(n => n.zone === zone);
       const col = DATA.growth.zones[zone].color, track = DATA.growth.zones[zone].track;
-      const q = inp.value.trim().toLowerCase();
-      if (!q){ sug.classList.remove('open'); sug.innerHTML=''; return; }
-      const matches = pool.filter(n => n.label.toLowerCase().includes(q) || (n.abbr||'').toLowerCase().includes(q) || (n.group||'').toLowerCase().includes(q)).slice(0,16);
+      const q = inp.value.trim().toLowerCase(); const all = (q === '' || q === '*');   // click in (or *) → browse the whole list
+      const matches = (all ? pool : pool.filter(n => n.label.toLowerCase().includes(q) || (n.abbr||'').toLowerCase().includes(q) || (n.group||'').toLowerCase().includes(q))).slice(0, all ? 600 : 40);
       sug.innerHTML = matches.length
         ? matches.map(n => { const on = (build[track]||[]).some(s=>s.atlasId===n.id);
             return '<div class="bp-sg'+(on?' on':'')+'" data-gid="'+n.id+'"><span class="bp-sg-dot" style="background:'+col+'"></span><span class="bp-sg-nm">'+esc(n.label)+'</span><span class="bp-sg-ab">'+esc(n.group||'')+(on?' ✓':'')+'</span></div>'; }).join('')
@@ -2481,9 +2697,10 @@ permalink: /tools/healthcare-career-tree/
       sug.querySelectorAll('[data-gid]').forEach(el => el.onclick = () => {
         const gn = pool.find(x => x.id === el.getAttribute('data-gid'));
         if (gn && !(build[track]||[]).some(s=>s.atlasId===gn.id)) toggleGrowthNode(gn);
-        inp.value=''; sug.classList.remove('open'); inp.focus();
+        inp.value=''; render();   // keep the list open (added item now shows ✓) for browsing/adding more
       });
     };
+    inp.oninput = render; inp.onfocus = render;
   }
 
   // ── Schooling & Requirements ───────────────────────────
@@ -3044,6 +3261,7 @@ permalink: /tools/healthcare-career-tree/
   // switch the active full-bleed view (top-bar tabs) + swap that tab's contextual controls
   function setView(v){
     if (v === 'edu' && curClass !== 'roles') v = 'career';   // Education is roles-only
+    const tbEl = document.getElementById('hct-tb'); if (tbEl) tbEl.dataset.view = v;   // FIRST: CSS swaps the contextual cluster — set before any render that could throw
     if (v === 'career' && !boardRendered) render(false);     // lazy: build the heavy board on first open (before the rAF fit needs curFamilyInfo)
     if (v === 'edu' && !eduRendered) renderSchooling();      // lazy: build the Education Matrix on first open
     const changed = (v !== curView);
@@ -3055,8 +3273,6 @@ permalink: /tools/healthcare-career-tree/
     const cw = document.getElementById('hct-canvas-wrap'); if (cw) cw.setAttribute('data-view', v);   // lets CSS nest the panel per view
     document.querySelectorAll('#hct-tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
     document.querySelectorAll('.hct-view').forEach(s => s.classList.toggle('active', s.dataset.view === v));
-    document.getElementById('tbc-career').style.display = (v === 'career') ? '' : 'none';
-    document.getElementById('tbc-path').style.display   = (v === 'path')   ? '' : 'none';
     if (changed) requestAnimationFrame(() => {
       if (v === 'career'){ userZoomed = false; fitDefaultGroup(false); requestAnimationFrame(() => fitDefaultGroup(false));
         setTimeout(() => { if (curView === 'career' && !userZoomed) fitDefaultGroup(false); }, 180); }   // settle re-fit: catch the final board size after the tab finishes showing (skips if the user already moved the view)
