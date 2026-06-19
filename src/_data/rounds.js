@@ -20,6 +20,25 @@ module.exports = {
   entries: [
 
     {
+      slug:            'wound-and-workload',
+      title:           'The Wound and the Workload',
+      posted:          '2026-06-18',
+      summary:         'We called it burnout and told people to be more resilient. The data says it was the workplace all along.',
+      tags:            ['clinician-burnout', 'workforce', 'mental-health', 'nurse-staffing'],
+      fourPs:          ['provider-p2a', 'patient', 'policy'],
+      readMinutes:     11,
+      featured:        true,
+      status:          'published',
+      map_node:        'rounds-wound-and-workload',
+      map_connections: ['provider-p2a', 'provider-p2b', 'policy-state-oversight'],
+      atlasLinks: [
+        { label: 'Physician Workforce', zone: 'provider',  to: 'provider/physicians' },
+        { label: 'Nursing Workforce',   zone: 'provider',  to: 'provider/nursing' },
+        { label: 'Behavioral Health',   zone: 'pubhealth', to: 'pubhealth/behavioral' }
+      ]
+    },
+
+    {
       slug:            'ai-promise-vs-bill',
       title:           'The Promise and the Bill',
       posted:          '2026-06-03',
@@ -30,7 +49,12 @@ module.exports = {
       featured:        true,
       status:          'published',
       map_node:        'rounds-ai-promise-vs-bill',
-      map_connections: ['payer-incentives', 'provider-p2a', 'policy-ai-oversight']
+      map_connections: ['payer-incentives', 'provider-p2a', 'policy-ai-oversight'],
+      atlasLinks: [
+        { label: 'CDSS & AI Tools',    zone: 'provider', to: 'provider/cdss' },
+        { label: 'Coding & CDI',       zone: 'payer',    to: 'payer/coding' },
+        { label: 'CMS & Fed Agencies', zone: 'policy',   to: 'policy/cms' }
+      ]
     },
 
     {
@@ -44,7 +68,12 @@ module.exports = {
       featured:        true,
       status:          'published',
       map_node:        'rounds-steward-postmortem',
-      map_connections: ['provider-p2b', 'payer-incentives', 'policy-state-oversight']
+      map_connections: ['provider-p2b', 'payer-incentives', 'policy-state-oversight'],
+      atlasLinks: [
+        { label: 'Acute Care Hospital', zone: 'provider', to: 'provider/acute' },
+        { label: 'Patient Safety',      zone: 'patient',  to: 'patient/pt-safety' },
+        { label: 'State Regulations',   zone: 'policy',   to: 'policy/state-law' }
+      ]
     }
 
   ]
