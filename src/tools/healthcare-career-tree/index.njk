@@ -625,6 +625,68 @@ permalink: /tools/healthcare-career-tree/
   }
 
 
+  /* ═══════════════════════════════════════════════════════════════
+     THEME ALIGNMENT — re-point the structural surfaces, inputs, and the
+     text on them to the site's design tokens, so the tool matches the
+     rest of the site in dark mode and follows the day/night toggle.
+     Accent colors (teal, amber, field hues) are left intentional.
+     Placed last so it wins by source order. */
+  #hct-shell { background: var(--dark); color: var(--t2); }
+  #hct-tb { background: var(--surface); border-bottom-color: var(--border); }
+  #hct-schooling, #hct-panel, .edu-detail, .bp-panel,
+  .bp-legend-inner, .bp-modal-card, .bp-addmenu, .hct-dd-menu,
+  #hct-tip { background: var(--surface); border-color: var(--border); }
+  #hct-panel { border-left-color: var(--border); }
+  #hct-tip { color: var(--t1); }
+  .bp-panel-next { background: var(--surface); }
+  .edu-row, .edu-row:hover { background: var(--raised); border-color: var(--border); }
+  .bp-legend-head, .hct-p-head, .bp-id { border-bottom-color: var(--border); }
+  .axis-bg, .top-frozen-bg, .hct-band-chip { fill: var(--surface); }
+  .hct-node .hx-back { fill: var(--dark); }
+  .hct-band-txt, .hct-node .hx-title { fill: var(--t1); }
+
+  /* inputs — token surfaces keep their text legible in both themes */
+  .edu-search, .bp-id-goal-in, .bp-years, .bp-name, .bp-name-area,
+  .bp-modal-ta, .bp-text { background: var(--raised); color: var(--t1); border-color: var(--border); }
+  .bp-id-name { color: var(--t1); border-bottom-color: var(--border); }
+  /* Career Path tiles: role-name + year boxes use higher-specificity lane
+     backings, so override them at matching specificity (they were black in
+     light mode and near-black-green in dark — now token surfaces in both). */
+  .bp-grid-lanes .bp-node .bp-node-lbl,
+  .bp-grid-lanes .bp-node .bp-name-role,
+  .bp-grid-lanes .bp-years { background: var(--raised); color: var(--t1); }
+  /* section search inputs + the results dropdown */
+  .bp-cred-in, .bp-pick-in { background: var(--raised); color: var(--t1); border-color: var(--border); }
+  .bp-suggest { background: var(--surface); border-color: var(--border); }
+  .bp-sg { color: var(--t2); }
+  .bp-sg-ab { color: var(--t3); }
+  /* Career Path name boxes: tighter + vertically centered so short titles
+     don't float in a big box; imported roles are click-to-rename. */
+  .bp-grid-lanes .bp-node .bp-node-lbl,
+  .bp-grid-lanes .bp-node .bp-name-role { height: 44px; font-size: 11px; line-height: 1.14; padding: 3px 7px; }
+  .bp-grid-lanes .bp-node .bp-node-lbl { display: flex; align-items: center; justify-content: center; }
+  .bp-node-edit { cursor: text; outline: 1px solid transparent; transition: outline-color .12s; }
+  .bp-node-edit:hover { outline-color: var(--border2); }
+  .bp-node-edit:focus { outline: 1px solid var(--teal); }
+  /* the export poster is always dark — pin its trunk tiles to fixed dark chips
+     so an export taken in light mode still looks right */
+  .hct-export-sheet .bp-grid-lanes .bp-node .bp-node-lbl,
+  .hct-export-sheet .bp-grid-lanes .bp-years { background: rgba(255,255,255,0.06); color: #EAF4F2; border-color: rgba(255,255,255,0.12); }
+
+  /* light mode — turn the previously light-only text dark on the now-light surfaces */
+  [data-theme='light'] .bp-legend-tx, [data-theme='light'] .bp-legend-grp,
+  [data-theme='light'] .edu-card-sub, [data-theme='light'] .edu-d-ex,
+  [data-theme='light'] .hct-chip, [data-theme='light'] .bp-id-sub,
+  [data-theme='light'] .bp-id-tagline, [data-theme='light'] .bp-vital-l,
+  [data-theme='light'] .bp-dash-lbl, [data-theme='light'] .bp-next-item,
+  [data-theme='light'] .bp-next-goal, [data-theme='light'] .bp-next-empty,
+  [data-theme='light'] .bp-modal-lbl, [data-theme='light'] .bp-hint,
+  [data-theme='light'] .hct-meta .k, [data-theme='light'] .edu-searchnote,
+  [data-theme='light'] .hct-blurb, [data-theme='light'] .edu-lcount,
+  [data-theme='light'] .edu-lex, [data-theme='light'] .bp-next-act { color: var(--t2); }
+  [data-theme='light'] .bp-legend-tx b, [data-theme='light'] .edu-lt,
+  [data-theme='light'] .edu-d-ttl, [data-theme='light'] .bp-name { color: var(--t1); }
+
   </style>
 
 <div id="hct-shell">
@@ -2007,7 +2069,7 @@ permalink: /tools/healthcare-career-tree/
       cg.style.overflow = 'visible'; cg.style.width = naturalW+'px';
       cg.querySelectorAll('.bp-del,.bp-fork,.bp-layer,.bp-node-add,.bp-conn-add').forEach(e => e.remove());   // drop hover chrome + the + tile AND its dangling connector
       // hide empty inputs WITHOUT removing them — removing a name box above a hex shifts the hex up and the (already-measured) connectors miss it
-      cg.querySelectorAll('.bp-years,.bp-name,.bp-cred-in').forEach(el => { if (!String(el.value||'').trim()) el.style.visibility = 'hidden'; });
+      cg.querySelectorAll('.bp-years,.bp-name,.bp-cred-in').forEach(el => { const v = (el.value !== undefined ? el.value : el.textContent); if (!String(v||'').trim()) el.style.visibility = 'hidden'; });
       const scaler = document.createElement('div'); scaler.style.cssText = 'height:'+Math.ceil(naturalH*scale+2)+'px;overflow:hidden';
       const inner = document.createElement('div'); inner.style.cssText = 'transform:scale('+scale.toFixed(4)+');transform-origin:top left;width:'+naturalW+'px';
       inner.appendChild(cg); scaler.appendChild(inner); wrap.appendChild(scaler);
@@ -2278,7 +2340,7 @@ permalink: /tools/healthcare-career-tree/
       if (node.anchor === 'other'){ face = credFaceShort(node.name) || '◆'; sub = null; }   // gold like the bookends, but a free-text name you type
       else { face = node.anchor==='start' ? '★' : '⚑'; sub = node.name || (node.anchor==='start' ? 'Start of Career' : 'Retirement'); } }
     else if (cfg.kind==='role'){ col = roleFamColor(node.roleId, node.family) || '#5AC8BE';
-      face = node.roleId ? (node.abbr||'?') : (credFaceShort(node.name)||'✎'); sub = node.roleId ? node.name : null; }
+      face = node.roleId ? (node.abbr||'?') : (credFaceShort(node.name)||'✎'); sub = null; }
     else if (cfg.kind==='cred'){ col = isReal ? ((DATA.meta.degrees[node.degree]||{}).color||'#E8C547') : '#E8C547';
       face = isReal ? (node.label||'?') : credFaceShort(node.label); sub = isReal ? (node.sub||node.roleName||node.label) : null; }
     else { const fromAtlas = !!node.atlasId; col = node.zcol || '#5AC8BE';
@@ -2294,10 +2356,13 @@ permalink: /tools/healthcare-career-tree/
     else if (cfg.kind==='cred') html += '<input class="bp-cred-in" placeholder="CODE" maxlength="40" value="'+esc(node.label||'')+'">';
     else if (node.anchor==='other') html += '<textarea class="bp-name bp-name-area" placeholder="type anything" maxlength="60" rows="2">'+esc(node.name||'')+'</textarea>';
     else if (exportMode && cfg.kind==='role') html += '<div class="bp-node-lbl">'+esc(node.name||'')+'</div>';   // export: clean full title
+    else if (cfg.kind==='role' && node.roleId) html += '<div class="bp-node-lbl bp-node-edit" contenteditable="true" spellcheck="false" title="Click to rename">'+esc(node.name||'')+'</div>';   // real/imported role: click to rename, keeps the hex abbr
     else if (cfg.kind==='role') html += '<textarea class="bp-name bp-name-role" rows="2" maxlength="60" placeholder="search, or * for all">'+esc(node.name||'')+'</textarea>';   // live: full, editable, wrapping title
     else html += '<input class="bp-name" placeholder="search…" maxlength="44" value="'+esc(node.name||'')+'">';
     html += bpHexSVG(face, hexA(col,0.20), col);
-    html += '<textarea class="bp-years" rows="2" maxlength="20" placeholder="years">'+esc(node.years||'')+'</textarea>';
+    html += exportMode
+      ? '<div class="bp-years">'+esc(node.years||'')+'</div>'   // export: a div wraps cleanly in html2canvas (a textarea would clip to one line)
+      : '<textarea class="bp-years" rows="2" maxlength="20" placeholder="years">'+esc(node.years||'')+'</textarea>';
     cell.innerHTML = html;
     const nm = cell.querySelector('.bp-name');
     if (nm){
@@ -2305,6 +2370,12 @@ permalink: /tools/healthcare-career-tree/
       nm.onfocus = () => showTileSuggest(cfg, node, nm);
       nm.onblur  = () => setTimeout(hideTileSuggest, 160);
       if (nm.tagName === 'TEXTAREA') nm.onkeydown = (e) => { if (e.key === 'Enter') e.preventDefault(); };   // wrap, but no newlines in a name
+    }
+    const le = cell.querySelector('.bp-node-edit');   // imported/real role: rename in place, keep the hex abbr, no role-search
+    if (le){
+      le.oninput   = () => { node.name = le.textContent; saveBuild(); cell.classList.toggle('on', !!le.textContent.trim()); };
+      le.onblur    = () => { const v = le.textContent.replace(/\s+/g,' ').trim(); if (v !== le.textContent) le.textContent = v; node.name = v; saveBuild(); };
+      le.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); le.blur(); } };
     }
     const ci = cell.querySelector('.bp-cred-in');
     if (ci) ci.oninput = () => { node.label = ci.value; saveBuild(); setHexFace(cell, credFaceShort(ci.value)); cell.classList.toggle('on', !!ci.value.trim()); };
@@ -2620,13 +2691,75 @@ permalink: /tools/healthcare-career-tree/
     { id:'__anchor-end',   label:'Retirement',      abbr:'⚑', color:'#E8C547', anchor:'end',   kw:['retire','retirement','end','finish','last'] },
     { id:'__anchor-other', label:'Other (type your own)', abbr:'◆', color:'#E8C547', anchor:'other', kw:['other','custom','gap','break','milestone','note','misc','sabbatical','military','travel'] }
   ];
+  // Layman → role synonyms: an everyday word ("teacher", "boss") also surfaces
+  // the real roles that match the concept ("Clinical Educator", "Adjunct
+  // Faculty", "Manager"...). Keys are stems; values are role-label keywords.
+  const ROLE_SYNONYMS = {
+    teach:['educator','faculty','instructor','professor','adjunct','preceptor','trainer','education'],
+    professor:['faculty','educator','instructor','adjunct','academic'],
+    instructor:['educator','faculty','instructor','trainer','preceptor'],
+    trainer:['educator','trainer','instructor','development'],
+    boss:['manager','director','supervisor','lead','chief','administrator'],
+    manager:['manager','director','supervisor','lead','coordinator'],
+    leader:['director','manager','chief','lead','executive','officer','supervisor'],
+    executive:['executive','director','officer','chief','president'],
+    doctor:['physician','hospitalist','attending','medical director'],
+    physician:['physician','hospitalist','attending'],
+    nurse:['nurse','nursing','charge'],
+    aide:['aide','assistant','technician','technologist'],
+    assistant:['assistant','aide','technician'],
+    helper:['aide','assistant','support','technician'],
+    tech:['technician','technologist'],
+    technician:['technician','technologist'],
+    therapist:['therapist','therapy','respiratory','physical','occupational','speech'],
+    admin:['administrator','administrative','manager','coordinator','clerk','office'],
+    billing:['billing','coder','coding','revenue','claims','reimbursement'],
+    coder:['coder','coding','billing'],
+    computer:['informatics','analyst','technology','systems','data'],
+    it:['informatics','analyst','technology','systems','data'],
+    research:['research','scientist','analyst'],
+    scientist:['scientist','research','laboratory'],
+    counselor:['counselor','social worker','case manager'],
+    social:['social worker','case manager','counselor'],
+    pharmacist:['pharmacy','pharmacist'],
+    pharmacy:['pharmacy','pharmacist'],
+    surgeon:['surgeon','surgical','operating'],
+    lab:['laboratory','technologist','pathology'],
+    clerk:['clerk','registration','receptionist','scheduler','administrative'],
+    receptionist:['receptionist','registration','clerk','scheduler'],
+    scheduler:['scheduler','scheduling','registration','coordinator'],
+    dietician:['dietitian','nutrition','dietary'],
+    dietitian:['dietitian','nutrition'],
+    imaging:['radiology','imaging','sonographer','technologist'],
+    xray:['radiology','imaging','technologist'],
+    compliance:['compliance','quality','risk','regulatory','audit'],
+    quality:['quality','compliance','improvement','safety'],
+    consultant:['consultant','advisor','specialist'],
+    advisor:['advisor','consultant','specialist','policy'],
+    policy:['policy','advisor','government','regulatory','public health'],
+    analyst:['analyst','informatics','data'],
+    coordinator:['coordinator','navigator','manager'],
+    navigator:['navigator','coordinator','case manager'],
+    student:['student','intern','trainee','resident'],
+    intern:['intern','resident','trainee']
+  };
+  function synonymTerms(q){
+    q = (q||'').trim().toLowerCase();
+    if (q.length < 3) return [];
+    const out = new Set();
+    for (const key in ROLE_SYNONYMS){
+      if (q === key || q.indexOf(key) >= 0 || key.indexOf(q) >= 0) ROLE_SYNONYMS[key].forEach(t => out.add(t));
+    }
+    return [...out];
+  }
   function tileSuggestMatches(cfg, q){
     q = (q||'').trim().toLowerCase();
     const all = (q === '' || q === '*');   // empty focus OR "*" wildcard → browse the whole list (the dropdown scrolls)
     if (cfg.kind === 'role'){ const fams = DATA.classes[curClass].families;
       const anchors = ANCHORS.filter(a => all || a.label.toLowerCase().includes(q) || a.kw.some(k => k.includes(q) || q.includes(k)));
       const pool = [...nodeById.values()];
-      const matched = all ? pool : pool.filter(n => n.label.toLowerCase().replace(/\n/g,' ').includes(q) || (n.abbr||'').toLowerCase().includes(q));
+      const syn = all ? [] : synonymTerms(q);
+      const matched = all ? pool : pool.filter(n => { const lbl = n.label.toLowerCase().replace(/\n/g,' '); return lbl.includes(q) || (n.abbr||'').toLowerCase().includes(q) || syn.some(t => lbl.indexOf(t) >= 0); });
       const roles = matched.slice(0, all ? 600 : 40)
         .map(n => ({ id:n.id, label:n.label.replace(/\n/g,' '), abbr:n.abbr, color:(fams[n.family]||{}).color||'#4ECDC4' }));
       return all ? anchors.concat(roles) : roles.concat(anchors); }   // browse: anchors first, then the full list
