@@ -1,0 +1,1318 @@
+---
+layout: base.njk
+title: "Process Engineering in Healthcare"
+description: "Most healthcare workflows were never designed. They accreted. Process engineering is the discipline of building them on purpose, mapping the work before you touch it, and this whole site is one long attempt to do exactly that."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial palette + DM Serif Display: a long-read on process engineering as the discipline behind every map and tool on this site."
+---
+{% block extraHead %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+
+<style>
+  /* ── Editorial palette layered on HU tokens ── */
+  .pe{
+    --jp-bg:        var(--dark);
+    --jp-surface:   var(--surface);
+    --jp-raised:    var(--raised);
+    --jp-line:      var(--border);
+    --jp-line-2:    var(--border2);
+    --jp-ink-1:     var(--t1);
+    --jp-ink-2:     var(--t2);
+    --jp-ink-3:     var(--t3);
+    --jp-ink-4:     var(--t4);
+    --jp-accent:    var(--teal);
+    --jp-accent-d:  var(--teal-dk);
+    --jp-blue:      #6aadff;
+    --jp-amber:     var(--amber);
+    --jp-red:       var(--red);
+    --jp-serif:     'DM Serif Display', Georgia, serif;
+    --jp-sans:      var(--font);
+    --jp-mono:      var(--mono);
+  }
+
+  /* ── Page shell ── */
+  .pe{ background:var(--jp-bg); color:var(--jp-ink-2); font-family:var(--jp-sans); line-height:1.65; }
+  .pe *,.pe *::before,.pe *::after{ box-sizing:border-box; }
+  .pe section{ position:relative; }
+
+  /* ── HERO ── */
+  .pe-hero{ position:relative; overflow:hidden; border-bottom:1px solid var(--jp-line);
+            background: linear-gradient(135deg, var(--jp-bg) 0%, var(--jp-surface) 55%, var(--jp-bg) 100%); }
+  .pe-hero::before{ content:""; position:absolute; top:-160px; right:-120px; width:520px; height:520px;
+                    background:radial-gradient(circle, rgba(78,205,196,.14) 0%, transparent 65%); pointer-events:none; }
+  .pe-hero::after{ content:""; position:absolute; bottom:-220px; left:-160px; width:560px; height:560px;
+                   background:radial-gradient(circle, rgba(27,95,168,.10) 0%, transparent 65%); pointer-events:none; }
+  .pe-hero-inner{ max-width:1100px; margin:0 auto; padding:80px 36px 64px; position:relative; z-index:1;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:780px){ .pe-hero-inner{ grid-template-columns:1fr; gap:32px; padding:56px 24px 44px; } }
+
+  .jp-eyebrow{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--jp-accent); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .jp-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--jp-accent);
+                    box-shadow:0 0 14px var(--jp-accent); flex-shrink:0; }
+  .jp-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--jp-ink-4); }
+
+  .jp-h1{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(44px, 7vw, 86px);
+          line-height:1.02; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 22px; }
+  .jp-h1 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-hero-sub{ font-size:19px; line-height:1.55; color:var(--jp-ink-2); max-width:640px; margin:0 0 32px;
+                font-family:var(--jp-sans); }
+  .jp-hero-sub strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-thesis{ background: linear-gradient(135deg, rgba(78,205,196,.09), rgba(27,95,168,.04));
+              border:1px solid rgba(78,205,196,.22); border-left:4px solid var(--jp-accent);
+              border-radius:6px; padding:18px 22px; max-width:680px; }
+  .jp-thesis-label{ color:var(--jp-accent); font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .jp-thesis-text{ font-size:15px; line-height:1.6; color:var(--jp-ink-2); display:inline; }
+  .jp-thesis-text strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-byline{ margin-top:24px; font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3);
+              letter-spacing:.06em; display:flex; gap:14px; flex-wrap:wrap; }
+  .jp-byline span strong{ color:var(--jp-ink-2); font-weight:500; }
+
+  /* hero: chaos -> order visual */
+  .pe-hero-viz{ width:300px; max-width:100%; }
+  @media (max-width:780px){ .pe-hero-viz{ width:100%; max-width:340px; } }
+  .peh{ width:100%; height:auto; display:block; overflow:visible; }
+  .peh-tangle{ stroke-width:2; fill:none; stroke-linecap:round; }
+  .peh-tangle.g{ stroke:var(--jp-ink-3); opacity:.5; }
+  .peh-tangle.a{ stroke:var(--jp-amber); opacity:.65; }
+  .peh-down{ stroke:var(--jp-ink-4); stroke-width:1.5; fill:none; }
+  .peh-downhead{ fill:var(--jp-ink-4); }
+  .peh-line{ stroke:var(--jp-accent); stroke-width:2.4; fill:none; stroke-linecap:round;
+             stroke-dasharray:230; stroke-dashoffset:0; animation:pehDraw 5.5s ease-in-out infinite; }
+  .peh-order{ animation:pehFade 5.5s ease-in-out infinite; }
+  .peh-node{ fill:var(--jp-accent); }
+  .peh-head{ fill:var(--jp-accent); }
+  .peh-lab{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; }
+  .peh-lab.g{ fill:var(--jp-ink-3); }
+  .peh-lab.t{ fill:var(--jp-accent); }
+  @keyframes pehDraw{ 0%{ stroke-dashoffset:230; } 28%{ stroke-dashoffset:0; } 86%{ stroke-dashoffset:0; } 100%{ stroke-dashoffset:230; } }
+  @keyframes pehFade{ 0%{ opacity:0; } 12%{ opacity:1; } 86%{ opacity:1; } 100%{ opacity:0; } }
+  @media (prefers-reduced-motion: reduce){
+    .peh-line{ animation:none; stroke-dashoffset:0; }
+    .peh-order{ animation:none; opacity:1; }
+  }
+
+  /* ── BODY layout ── */
+  .jp-body{ max-width:880px; margin:0 auto; padding:64px 36px 96px; }
+  @media (max-width:780px){ .jp-body{ padding:48px 24px 72px; } }
+  .jp-section + .jp-section{ margin-top:60px; }
+
+  .jp-kicker{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+              color:var(--jp-accent); margin-bottom:14px; display:flex; align-items:center; gap:9px; }
+  .jp-kicker::before{ content:""; width:22px; height:1px; background:var(--jp-accent); }
+
+  .jp-h2{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(28px, 4vw, 42px);
+          line-height:1.15; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 18px; }
+  .jp-h2 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+  .jp-h3{ font-family:var(--jp-serif); font-weight:400; font-size:24px; line-height:1.25;
+          color:var(--jp-ink-1); margin:32px 0 14px; }
+
+  .jp-p{ font-size:17px; line-height:1.78; color:var(--jp-ink-2); margin:0 0 18px; }
+  .jp-p strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-p em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  .jp-caps{ font-weight:600; letter-spacing:.02em; color:var(--jp-ink-1); }
+
+  .jp-pull{ font-family:var(--jp-serif); font-size:25px; line-height:1.4; color:var(--jp-ink-1);
+            margin:30px 0; padding:8px 0 8px 28px; border-left:3px solid var(--jp-accent); font-style:italic; }
+
+  /* ── TLDR cards ── */
+  .jp-tldr{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin:36px 0; }
+  @media (max-width:680px){ .jp-tldr{ grid-template-columns:1fr; } }
+  .jp-tldr-card{ background:var(--jp-raised); border:1px solid var(--jp-line); border-top:3px solid var(--jp-accent);
+                 border-radius:8px; padding:22px 22px 24px; }
+  .jp-tldr-num{ font-family:var(--jp-mono); font-size:11px; font-weight:600; color:var(--jp-accent);
+                background:rgba(78,205,196,.1); padding:4px 9px; border-radius:5px; display:inline-block;
+                margin-bottom:14px; letter-spacing:.06em; }
+  .jp-tldr-h{ font-family:var(--jp-serif); font-size:17px; line-height:1.35; color:var(--jp-ink-1); margin-bottom:8px; }
+  .jp-tldr-p{ font-size:13.5px; line-height:1.65; color:var(--jp-ink-2); }
+  .jp-tldr-p strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  /* ── Figure shell ── */
+  .pe-fig{ margin:36px 0; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:14px;
+           padding:30px 30px 24px; position:relative; overflow:hidden; }
+  .pe-fig-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px;
+                flex-wrap:wrap; gap:12px; }
+  .pe-fig-title{ font-family:var(--jp-serif); font-size:19px; color:var(--jp-ink-1); }
+  .pe-fig-key{ font-family:var(--jp-mono); font-size:10px; color:var(--jp-ink-3); letter-spacing:.12em;
+               text-transform:uppercase; }
+  .pe-fig-cap{ margin-top:20px; padding-top:16px; border-top:1px solid var(--jp-line);
+               font-size:13.5px; color:var(--jp-ink-2); line-height:1.65; }
+  .pe-fig-cap strong{ color:var(--jp-ink-1); font-weight:600; }
+  .pe-svg{ width:100%; height:auto; display:block; overflow:visible; }
+
+  /* ── Swim lanes ── */
+  .sw-lane{ fill:none; stroke:var(--jp-line); stroke-width:1; opacity:.7; }
+  .sw-laneband{ fill:rgba(255,255,255,.012); }
+  .sw-lanelabel{ font-family:var(--jp-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+                 fill:var(--jp-ink-3); text-anchor:end; }
+  .sw-divider{ stroke:var(--jp-line-2); stroke-width:1; }
+  .sw-box{ fill:var(--jp-raised); stroke:var(--jp-line-2); stroke-width:1.5; }
+  .sw-box.warn{ fill:rgba(232,168,56,.08); stroke:var(--jp-amber); }
+  .sw-boxt{ font-family:var(--jp-sans); font-size:12.5px; font-weight:600; fill:var(--jp-ink-1); text-anchor:middle; }
+  .sw-flow{ fill:none; stroke:var(--jp-accent); stroke-width:2; opacity:.8; }
+  .sw-flow.warn{ stroke:var(--jp-amber); stroke-dasharray:5 4; opacity:1; }
+  .sw-head{ fill:var(--jp-accent); }
+  .sw-head.warn{ fill:var(--jp-amber); }
+
+  /* ── Value stream bar ── */
+  .vs-wait{ fill:rgba(120,150,185,.10); stroke:var(--jp-line); stroke-width:1; }
+  .vs-va{ fill:var(--jp-accent); }
+  .vs-tick{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.04em; fill:var(--jp-ink-3); text-anchor:middle; }
+  .vs-vlabel{ font-family:var(--jp-mono); font-size:8.5px; letter-spacing:.03em; fill:var(--jp-accent); text-anchor:middle; }
+  .vs-brace{ stroke:var(--jp-ink-3); stroke-width:1; fill:none; opacity:.5; }
+  .vs-sum{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.06em; fill:var(--jp-ink-2); }
+  .vs-sum tspan.va{ fill:var(--jp-accent); font-weight:600; }
+  .vs-sum tspan.wt{ fill:var(--jp-ink-3); }
+
+  /* ── DMAIC strip ── */
+  .dm-strip{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:8px 0 4px; }
+  @media (max-width:720px){ .dm-strip{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:420px){ .dm-strip{ grid-template-columns:1fr; } }
+  .dm-step{ background:var(--jp-raised); border:1px solid var(--jp-line); border-radius:9px; padding:16px 15px 17px;
+            position:relative; }
+  .dm-step::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px;
+                    background:linear-gradient(90deg, transparent, var(--jp-accent), transparent); opacity:.6; }
+  .dm-letter{ font-family:var(--jp-serif); font-size:30px; line-height:1; color:var(--jp-accent); margin-bottom:6px; }
+  .dm-name{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+            color:var(--jp-ink-3); margin-bottom:10px; }
+  .dm-body{ font-size:12.5px; line-height:1.55; color:var(--jp-ink-2); }
+  .dm-body strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  /* ── Toolkit tabs ── */
+  .pe-toolkit{ margin:32px 0; }
+  .pe-tabs{ display:flex; gap:4px; border-bottom:1px solid var(--jp-line); overflow-x:auto; scrollbar-width:none; }
+  .pe-tabs::-webkit-scrollbar{ display:none; }
+  .pe-tab{ flex:1 1 0; min-width:max-content; cursor:pointer; background:none; border:none;
+           border-bottom:2px solid transparent; margin-bottom:-1px; padding:13px 18px; text-align:left;
+           font-family:var(--jp-sans); color:var(--jp-ink-3); transition:color .15s, border-color .15s, background .15s; }
+  .pe-tab:hover{ color:var(--jp-ink-1); background:rgba(78,205,196,.04); }
+  .pe-tab.active{ color:var(--jp-ink-1); border-bottom-color:var(--jp-accent); }
+  .pe-tab .n{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; color:var(--jp-ink-4);
+              display:block; margin-bottom:4px; }
+  .pe-tab.active .n{ color:var(--jp-accent); }
+  .pe-tab .t{ font-family:var(--jp-serif); font-size:17px; line-height:1.1; white-space:nowrap; }
+
+  .pe-tabpanel{ display:none; }
+  .pe-tabpanel.active{ display:block; animation:peFade .35s ease; }
+  @keyframes peFade{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:translateY(0);} }
+
+  .pe-tk{ background:var(--jp-surface); border:1px solid var(--jp-line); border-top:none;
+          border-radius:0 0 14px 14px; padding:24px 26px 26px; }
+  .pe-tk-viz{ background:var(--jp-bg); border:1px solid var(--jp-line); border-radius:11px;
+              padding:18px 24px 20px; margin-bottom:22px; }
+  .pe-tk-cols{ display:grid; grid-template-columns:1.55fr 1fr; gap:24px; align-items:start; }
+  @media (max-width:640px){ .pe-tk-cols{ grid-template-columns:1fr; gap:16px; } }
+  .pe-tk-origin{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.05em; color:var(--jp-accent);
+                 text-transform:uppercase; margin-bottom:10px; }
+  .pe-tk-body{ font-size:15px; line-height:1.74; color:var(--jp-ink-2); margin:0; }
+  .pe-tk-body strong{ color:var(--jp-ink-1); font-weight:600; }
+  .pe-tk-use{ font-size:13px; line-height:1.65; color:var(--jp-ink-2); background:var(--jp-raised);
+              border:1px solid var(--jp-line); border-left:3px solid var(--jp-accent); border-radius:0 9px 9px 0;
+              padding:15px 18px; }
+  .pe-tk-use .lab{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase;
+                   color:var(--jp-accent); display:block; margin-bottom:7px; }
+
+  /* ── Big graphic primitives (shared across the four tabs) ── */
+  .gx{ width:100%; height:auto; display:block; overflow:visible; }
+  .gx-wait{ fill:rgba(120,150,185,.12); stroke:var(--jp-line-2); stroke-width:1; }
+  .gx-box{ fill:var(--jp-raised); stroke:var(--jp-line-2); stroke-width:1.5; }
+  .gx-node{ fill:var(--jp-raised); stroke:var(--jp-accent); stroke-width:2; }
+  .gx-dia{ fill:var(--jp-raised); stroke:var(--jp-amber); stroke-width:1.8; }
+  .gx-flow{ stroke:var(--jp-accent); stroke-width:2; fill:none; }
+  .gx-head{ fill:var(--jp-accent); }
+  .gx-amber-s{ stroke:var(--jp-amber); stroke-width:2; fill:none; }
+  .gx-amber-head{ fill:var(--jp-amber); }
+  .gx-amber-f{ fill:rgba(232,168,56,.18); stroke:var(--jp-amber); stroke-width:1.6; }
+  .gx-dot{ fill:var(--jp-accent); }
+  .gx-dot.dim{ fill:var(--jp-ink-3); opacity:.55; }
+  .gx-t{ font-family:var(--jp-mono); font-size:12px; letter-spacing:.02em; fill:var(--jp-ink-3); }
+  .gx-t.sm{ font-size:10.5px; }
+  .gx-t.mid{ text-anchor:middle; }
+  .gx-t.end{ text-anchor:end; }
+  .gx-t.teal{ fill:var(--jp-accent); }
+  .gx-t.amber{ fill:var(--jp-amber); }
+  .gx-t.red{ fill:var(--jp-red); }
+  .gx-t.ink{ fill:var(--jp-ink-1); }
+  .gx-title{ font-family:var(--jp-serif); font-size:21px; fill:var(--jp-ink-1); }
+  .gx-title .em{ fill:var(--jp-accent); }
+  /* clean labeled tiles (Lean) */
+  .gx-tile{ fill:var(--jp-raised); stroke:var(--jp-line-2); stroke-width:1.2; }
+  .gx-tile.hot{ fill:rgba(78,205,196,.16); stroke:var(--jp-accent); stroke-width:1.8; }
+  .gx-tilet{ font-family:var(--jp-sans); font-size:14px; font-weight:600; fill:var(--jp-ink-2); text-anchor:middle; }
+  .gx-tilet.hot{ fill:var(--jp-accent); }
+  .gx-badge{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.12em; fill:var(--jp-accent); text-anchor:middle; }
+  .gx-sub{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.02em; fill:var(--jp-ink-3); }
+  /* target / bullseye (Six Sigma) */
+  .gx-ring{ fill:none; stroke:var(--jp-line-2); stroke-width:1.3; }
+  .gx-bull{ fill:rgba(78,205,196,.14); stroke:var(--jp-accent); stroke-width:1.3; }
+  .gx-hit{ fill:var(--jp-ink-2); }
+  .gx-hit.good{ fill:var(--jp-accent); }
+  .gx-hit.miss{ fill:var(--jp-amber); }
+
+  /* ── PDSA loop (animated) ── */
+  .jp-loop-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px;
+                 flex-wrap:wrap; gap:12px; }
+  .jp-loop-title{ font-family:var(--jp-serif); font-size:19px; color:var(--jp-ink-1); }
+  .jp-loop-play{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+                 padding:8px 16px; background:transparent; color:var(--jp-accent); border:1px solid var(--jp-accent);
+                 border-radius:20px; cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:8px; }
+  .jp-loop-play:hover{ background:rgba(78,205,196,.08); }
+  .jp-loop-play .play-icon{ width:0; height:0; border-left:7px solid currentColor; border-top:5px solid transparent;
+                            border-bottom:5px solid transparent; }
+  .jp-loop-play.playing .play-icon{ display:none; }
+  .jp-loop-svg{ width:100%; height:auto; max-width:520px; margin:0 auto; display:block; }
+  .jp-loop-node-bg{ fill:var(--jp-raised); stroke:var(--jp-line-2); stroke-width:1.5; transition:all .4s; }
+  .jp-loop-node-bg.active{ fill:rgba(78,205,196,.12); stroke:var(--jp-accent); stroke-width:2; }
+  .jp-loop-node-l{ font-family:var(--jp-serif); font-size:19px; fill:var(--jp-ink-1); text-anchor:middle; }
+  .jp-loop-node-s{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase;
+                   fill:var(--jp-ink-3); text-anchor:middle; }
+  .jp-loop-arrow{ stroke:var(--jp-line-2); stroke-width:2; fill:none; opacity:.55; transition:all .4s; }
+  .jp-loop-arrow.active{ stroke:var(--jp-accent); opacity:1; stroke-width:2.5; }
+  .jp-loop-arrow-head{ fill:var(--jp-line-2); transition:all .4s; }
+  .jp-loop-arrow-head.active{ fill:var(--jp-accent); }
+
+  /* ── Site-as-map grid ── */
+  .sm-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:32px 0; }
+  @media (max-width:680px){ .sm-grid{ grid-template-columns:1fr; } }
+  .sm-card{ display:block; text-decoration:none; background:var(--jp-surface); border:1px solid var(--jp-line);
+            border-radius:11px; padding:20px 22px; transition:border-color .18s, transform .18s, background .18s; }
+  .sm-card:hover{ border-color:var(--jp-accent); transform:translateY(-2px); background:rgba(78,205,196,.04); }
+  .sm-concept{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+               color:var(--jp-accent); margin-bottom:8px; }
+  .sm-tool{ font-family:var(--jp-serif); font-size:18px; color:var(--jp-ink-1); margin-bottom:8px; line-height:1.25; }
+  .sm-card:hover .sm-tool{ color:var(--jp-accent); }
+  .sm-body{ font-size:13px; line-height:1.62; color:var(--jp-ink-2); }
+  .sm-go{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.1em; color:var(--jp-ink-3); margin-top:12px;
+          display:flex; align-items:center; gap:6px; }
+  .sm-card:hover .sm-go{ color:var(--jp-accent); }
+
+  /* ── Counter callout ── */
+  .jp-counter{ margin:30px 0; background:rgba(232,168,56,.04); border:1px solid rgba(232,168,56,.22);
+               border-left:3px solid var(--jp-amber); border-radius:0 12px 12px 0; padding:22px 26px; }
+  .jp-counter-label{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+                     color:var(--jp-amber); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .jp-counter-label::before{ content:""; width:5px; height:5px; border-radius:50%; background:var(--jp-amber); }
+  .jp-counter-body{ font-size:14.5px; color:var(--jp-ink-2); line-height:1.72; }
+  .jp-counter-body strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-counter-body a{ color:var(--jp-amber); text-decoration:none; border-bottom:1px solid rgba(232,168,56,.4); }
+  .jp-counter-body a:hover{ color:var(--jp-ink-1); }
+
+  /* ── Next / related CTA ── */
+  /* ── Diagnostic triage ── */
+  .dx{ margin:28px 0 8px; }
+  .dx-q{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .dx-opt{ flex:1 1 auto; min-width:140px; cursor:pointer; font-family:var(--jp-sans); font-size:15px;
+           padding:14px 16px; background:var(--jp-surface); color:var(--jp-ink-2);
+           border:1px solid var(--jp-line); border-radius:10px; transition:border-color .15s, color .15s, background .15s; }
+  .dx-opt:hover{ border-color:var(--jp-line-2); color:var(--jp-ink-1); }
+  .dx-opt.active{ border-color:var(--jp-accent); color:var(--jp-ink-1); background:rgba(78,205,196,.08); }
+  .dx-opt b{ color:var(--jp-ink-1); }
+  .dx-result{ display:none; }
+  .dx-result.active{ display:block; animation:peFade .3s ease; }
+  .dx-card{ background:var(--jp-surface); border:1px solid var(--jp-line); border-left:3px solid var(--jp-accent);
+            border-radius:0 12px 12px 0; padding:22px 26px; }
+  .dx-tool{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+            color:var(--jp-accent); margin-bottom:10px; }
+  .dx-h{ font-family:var(--jp-serif); font-size:22px; color:var(--jp-ink-1); margin-bottom:10px; line-height:1.2; }
+  .dx-p{ font-size:15px; line-height:1.7; color:var(--jp-ink-2); margin:0 0 14px; }
+  .dx-move{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); background:var(--jp-raised);
+            border:1px solid var(--jp-line); border-radius:8px; padding:13px 16px; }
+  .dx-move .lab{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase;
+                 color:var(--jp-accent); display:block; margin-bottom:5px; }
+  .dx-move strong{ color:var(--jp-ink-1); }
+
+  /* ── Worked case study ── */
+  .cs{ margin:26px 0; border:1px solid var(--jp-line); border-radius:14px; overflow:hidden; background:var(--jp-surface); }
+  .cs-head{ padding:18px 24px; background:linear-gradient(135deg, rgba(78,205,196,.08), rgba(27,95,168,.03));
+            border-bottom:1px solid var(--jp-line); display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .cs-tag{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--jp-accent); }
+  .cs-title{ font-family:var(--jp-serif); font-size:21px; color:var(--jp-ink-1); }
+  .cs-step{ padding:20px 24px; border-bottom:1px solid var(--jp-line); }
+  .cs-step:last-child{ border-bottom:none; }
+  .cs-step-lab{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+                color:var(--jp-ink-3); margin-bottom:10px; display:flex; align-items:center; gap:9px; }
+  .cs-step-lab .b{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:5px;
+                   background:rgba(78,205,196,.12); color:var(--jp-accent); font-weight:600; }
+  .cs-p{ font-size:14.5px; line-height:1.7; color:var(--jp-ink-2); margin:0 0 6px; }
+  .cs-p strong{ color:var(--jp-ink-1); }
+  .sipoc{ width:100%; border-collapse:collapse; margin-top:8px; font-size:12px; }
+  .sipoc th{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--jp-accent);
+             text-align:left; padding:8px 10px; border-bottom:1px solid var(--jp-line-2); }
+  .sipoc td{ padding:8px 10px; color:var(--jp-ink-2); border-bottom:1px solid var(--jp-line); vertical-align:top; line-height:1.55; }
+  .sipoc td + td, .sipoc th + th{ border-left:1px solid var(--jp-line); }
+  .cs-result{ background:rgba(78,205,196,.06); border:1px solid rgba(78,205,196,.22); border-radius:10px; padding:16px 18px; margin-top:4px; font-size:14.5px; line-height:1.7; color:var(--jp-ink-2); }
+  .cs-result strong{ color:var(--jp-ink-1); }
+  .cs-metric{ display:flex; gap:28px; flex-wrap:wrap; margin-top:12px; }
+  .cs-metric .v{ font-family:var(--jp-serif); font-size:26px; color:var(--jp-accent); display:block; line-height:1; }
+  .cs-metric .k{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--jp-ink-3); margin-top:6px; }
+
+  /* ── Bottleneck metaphor (animated bottle) ── */
+  .bottle{ margin:24px 0; border:1px solid var(--jp-line); border-radius:14px; background:var(--jp-bg); padding:18px 22px 16px; overflow:hidden; }
+  .bottle svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .bn-body{ fill:var(--jp-surface); stroke:var(--jp-line-2); stroke-width:2; }
+  .bn-neck{ stroke:var(--jp-amber); stroke-width:2.5; fill:none; }
+  .bn-dot{ fill:var(--teal); }
+  .bn-arrow{ stroke:var(--jp-amber); stroke-width:1.5; fill:none; }
+  .bn-ahead{ fill:var(--jp-amber); }
+  .bn-t{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.04em; fill:var(--jp-ink-3); }
+  .bn-t.teal{ fill:var(--teal); }
+  .bn-t.amber{ fill:var(--jp-amber); }
+  .bn-t.mid{ text-anchor:middle; }
+  .bn-t.end{ text-anchor:end; }
+  .bottle-cap{ font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3); margin-top:14px; line-height:1.65; }
+  .bottle-cap strong{ color:var(--jp-ink-1); }
+
+  /* ── Playbook ── */
+  .pe-play{ margin:18px 0 8px; display:grid; gap:10px; }
+  .pe-play-item{ display:grid; grid-template-columns:96px 1fr; gap:18px; align-items:start;
+                 background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:16px 20px; }
+  @media(max-width:560px){ .pe-play-item{ grid-template-columns:1fr; gap:6px; } }
+  .pe-play-when{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--jp-accent); padding-top:3px; }
+  .pe-play-what{ font-size:14.5px; line-height:1.6; color:var(--jp-ink-2); }
+  .pe-play-what strong{ color:var(--jp-ink-1); }
+
+  /* ── Field kit ── */
+  .kit{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 8px; }
+  @media(max-width:720px){ .kit{ grid-template-columns:1fr; } }
+  .kit-card{ background:var(--jp-surface); border:1px solid var(--jp-line); border-top:3px solid var(--jp-accent);
+             border-radius:8px; padding:18px 18px 16px; display:flex; flex-direction:column; }
+  .kit-name{ font-family:var(--jp-serif); font-size:18px; color:var(--jp-ink-1); margin-bottom:3px; }
+  .kit-sub{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.08em; color:var(--jp-ink-3); margin-bottom:13px; text-transform:uppercase; }
+  .kit-lines{ font-size:12px; line-height:1.75; color:var(--jp-ink-2); flex:1; margin-bottom:14px; }
+  .kit-lines b{ color:var(--jp-ink-1); font-weight:600; }
+  .kit-copy{ cursor:pointer; font-family:var(--jp-mono); font-size:10px; letter-spacing:.06em; padding:9px 14px;
+             border-radius:7px; border:1px solid var(--jp-line-2); background:transparent; color:var(--jp-ink-2); transition:border-color .15s, color .15s, background .15s; align-self:flex-start; }
+  .kit-copy:hover{ border-color:var(--jp-accent); color:var(--jp-accent); }
+  .kit-copy.done{ border-color:var(--jp-accent); color:var(--jp-accent); background:rgba(78,205,196,.08); }
+
+  /* ── "Whole site" legend band ── */
+  .pe-legend{ margin:36px 0 0; background:linear-gradient(135deg, rgba(78,205,196,.07), rgba(27,95,168,.03));
+              border:1px solid var(--jp-line); border-radius:14px; padding:26px 28px 28px; }
+  .pe-legend-h{ font-family:var(--jp-serif); font-size:19px; color:var(--jp-ink-1); margin-bottom:4px; }
+  .pe-legend-sub{ font-size:13px; color:var(--jp-ink-3); line-height:1.6; margin-bottom:18px; max-width:560px; }
+  .pe-legend-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  @media (max-width:680px){ .pe-legend-grid{ grid-template-columns:1fr 1fr; } }
+  .pe-leg{ display:block; text-decoration:none; padding:15px 15px 16px; border:1px solid var(--jp-line);
+           border-radius:9px; background:var(--jp-surface); transition:border-color .18s, transform .18s, background .18s; }
+  .pe-leg:hover{ border-color:var(--jp-accent); transform:translateY(-2px); background:rgba(78,205,196,.05); }
+  .pe-leg-n{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+             color:var(--jp-accent); margin-bottom:7px; }
+  .pe-leg-d{ font-size:11.5px; line-height:1.5; color:var(--jp-ink-2); }
+
+  /* ── Sources ── */
+  .jp-sources{ margin-top:60px; padding:28px 0 0; border-top:1px solid var(--jp-line); }
+  .jp-sources-title{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+                     color:var(--jp-ink-3); margin-bottom:18px; }
+  .jp-source{ font-size:13px; line-height:1.7; color:var(--jp-ink-3); margin-bottom:10px; padding-left:18px; position:relative; }
+  .jp-source::before{ content:"·"; position:absolute; left:6px; color:var(--jp-ink-4); }
+  .jp-source a{ color:var(--jp-ink-2); text-decoration:none; border-bottom:1px solid var(--jp-line); }
+  .jp-source a:hover{ color:var(--jp-accent); border-color:var(--jp-accent); }
+  .jp-source em{ font-style:italic; }
+</style>
+
+<article class="pe">
+
+  <!-- ══════════ HERO ══════════ -->
+  <header class="pe-hero">
+    <div class="pe-hero-inner">
+      <div>
+        <div class="jp-eyebrow">
+          <span class="dot"></span>
+          <span>Method</span>
+          <span class="sep"></span>
+          <span>Process engineering</span>
+        </div>
+
+        <h1 class="jp-h1">Nobody <em>designed</em> this.</h1>
+
+        <p class="jp-hero-sub">Every workflow in healthcare is a decision somebody made. Most of them, nobody made on purpose. They accreted, one workaround at a time, until the workaround <strong>was</strong> the process. Process engineering is the discipline of building the work on purpose, and this whole site is one long attempt to do it.</p>
+
+        <div class="jp-thesis">
+          <span class="jp-thesis-label">Principle</span>
+          <span class="jp-thesis-text">You cannot fix a process you have not mapped. You cannot map one you refuse to look at. So you look. <strong>That is most of the job, and almost nobody does it.</strong></span>
+        </div>
+
+        <div class="jp-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~12 min read</span>
+          <span>Ohno · Deming · Goldratt</span>
+        </div>
+      </div>
+
+      <div class="pe-hero-viz">
+        <svg class="peh" viewBox="0 0 300 226" role="img" aria-label="A tangle of crossing workaround lines at the top, an arrow downward, and a clean ordered flow of connected nodes below. Accreted, then designed.">
+          <text class="peh-lab g" x="20" y="12">accreted &middot; nobody drew this</text>
+          <path class="peh-tangle g" d="M22 38 C 90 90 150 26 210 78"/>
+          <path class="peh-tangle g" d="M40 88 C 110 28 170 92 270 34"/>
+          <path class="peh-tangle a" d="M26 68 Q 130 100 252 56"/>
+          <path class="peh-tangle g" d="M64 24 Q 140 82 264 88"/>
+          <path class="peh-tangle g" d="M30 94 C 120 48 190 94 270 48"/>
+          <path class="peh-tangle a" d="M52 30 L 254 94"/>
+
+          <line class="peh-down" x1="150" y1="108" x2="150" y2="128"/>
+          <polygon class="peh-downhead" points="150,132 144,121 156,121"/>
+          <text class="peh-lab g" x="166" y="125">redesign</text>
+
+          <g class="peh-order">
+            <line class="peh-line" x1="32" y1="178" x2="258" y2="178"/>
+            <polygon class="peh-head" points="270,178 260,173 260,183"/>
+            <circle class="peh-node" cx="32"  cy="178" r="4.5"/>
+            <circle class="peh-node" cx="88"  cy="178" r="4.5"/>
+            <circle class="peh-node" cx="145" cy="178" r="4.5"/>
+            <circle class="peh-node" cx="201" cy="178" r="4.5"/>
+            <circle class="peh-node" cx="258" cy="178" r="4.5"/>
+            <text class="peh-lab t" x="32" y="206">designed &middot; on purpose</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="jp-body">
+
+    <!-- ── TLDR ── -->
+    <div class="jp-tldr">
+      <div class="jp-tldr-card">
+        <div class="jp-tldr-num">01</div>
+        <div class="jp-tldr-h">A process is a sequence of decisions.</div>
+        <div class="jp-tldr-p">Most healthcare workflows were never designed. They grew. Engineering means <strong>choosing</strong> the sequence instead of inheriting it.</div>
+      </div>
+      <div class="jp-tldr-card">
+        <div class="jp-tldr-num">02</div>
+        <div class="jp-tldr-h">Mapping comes before fixing.</div>
+        <div class="jp-tldr-p">You draw the real flow, the lanes, the handoffs, the waits, before you touch anything. The map shows you where the work actually goes. Usually it goes to waiting.</div>
+      </div>
+      <div class="jp-tldr-card">
+        <div class="jp-tldr-num">03</div>
+        <div class="jp-tldr-h">Healthcare is the hard case.</div>
+        <div class="jp-tldr-p">Four different customers, life-or-death variation, and a data model underneath all of it. Every tool on this site is one more layer of that map.</div>
+      </div>
+    </div>
+
+    <!-- ══════════ 1. NOBODY DESIGNED THIS ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">The premise</div>
+      <h2 class="jp-h2">It all <em>accreted.</em></h2>
+      <p class="jp-p">Walk a hospital floor at 6 a.m. and watch the morning med pass. Watch a discharge that should take an hour take six. Watch a prior authorization bounce between a nurse, a fax machine that is somehow still a fax machine, and an insurance portal that times out. Then ask the obvious question. Who designed this?</p>
+      <p class="jp-p">Nobody did. Not really. A scheduling rule got added after a bad week in 2014. A double-check got bolted on after a near miss. A field became required because one auditor asked for it once. None of it was drawn on a single sheet of paper by a person who could see the whole thing. It <span class="jp-caps">accreted</span>. And accreted process is the default state of almost every organization, healthcare more than most.</p>
+      <p class="jp-pull">"A workaround that survives long enough stops being a workaround. It becomes the process. Then it gets trained. Audited. Defended."</p>
+      <p class="jp-p">Process engineering is the opposite of accretion. It is the discipline of taking a system that produces some outcome and redesigning the steps so it produces a better one. On purpose. With evidence. The idea did not come from medicine. It came from factories, from Taiichi Ohno on the Toyota shop floor working out why a car took longer to build than the sum of its parts. It came from W. Edwards Deming teaching variation and feedback to postwar Japan. It came from a physicist named Goldratt asking why a plant with no idle machines still could not ship on time.</p>
+      <p class="jp-p">Healthcare imported all of it. Late in some places, badly in a few, and in a handful of cases brilliantly. The point of this piece is to show you the toolkit, then show you that the toolkit is exactly what the rest of this site is built out of. <em>The maps are the method.</em></p>
+    </section>
+
+    <!-- ══════════ 2. MAP BEFORE YOU FIX ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">The first move</div>
+      <h2 class="jp-h2">Map before you <em>fix.</em></h2>
+      <p class="jp-p">Here is the mistake almost everyone makes. They feel the pain, they name a cause, and they jump to a fix. The discharge is slow, so we will add a discharge coordinator. The fix lands on top of an unmapped process, and six months later the discharge is still slow and now there is a coordinator too.</p>
+      <p class="jp-p">The engineer does something slower and far more useful first. They draw the actual flow. Not the flow in the policy binder. The real one. Who touches the work, in what order, and what has to be handed from one person to the next. The notation for that is old and boring and it works: the <strong>swim lane</strong>. One lane per role. The work moves left to right. Every time a box crosses a lane line, that is a handoff.</p>
+
+      <div class="pe-fig">
+        <div class="pe-fig-head">
+          <div class="pe-fig-title">A visit, drawn honestly</div>
+          <div class="pe-fig-key">Swim-lane map</div>
+        </div>
+        <svg class="pe-svg" viewBox="0 0 720 300" role="img" aria-label="A swim-lane diagram of a clinic visit across four lanes: Patient, Front Desk, Provider, and Payer. The flow crosses into the Payer lane for prior authorization and back, drawn in amber as the point where the process stalls.">
+          <!-- lane bands -->
+          <rect class="sw-laneband" x="96" y="16" width="616" height="64"/>
+          <rect class="sw-laneband" x="96" y="152" width="616" height="64"/>
+          <!-- lane separators -->
+          <line class="sw-lane" x1="96" y1="80" x2="712" y2="80"/>
+          <line class="sw-lane" x1="96" y1="148" x2="712" y2="148"/>
+          <line class="sw-lane" x1="96" y1="216" x2="712" y2="216"/>
+          <line class="sw-divider" x1="96" y1="16" x2="96" y2="284"/>
+          <!-- lane labels -->
+          <text class="sw-lanelabel" x="88" y="52">Patient</text>
+          <text class="sw-lanelabel" x="88" y="120">Front Desk</text>
+          <text class="sw-lanelabel" x="88" y="188">Provider</text>
+          <text class="sw-lanelabel" x="88" y="256">Payer</text>
+          <!-- connectors -->
+          <path class="sw-flow" d="M198 48 C210 48 210 116 222 116"/>
+          <polygon class="sw-head" points="222,116 215,112 215,120"/>
+          <path class="sw-flow" d="M318 116 C330 116 330 184 342 184"/>
+          <polygon class="sw-head" points="342,184 335,180 335,188"/>
+          <path class="sw-flow warn" d="M438 184 C450 184 450 252 462 252"/>
+          <polygon class="sw-head warn" points="462,252 455,248 455,256"/>
+          <path class="sw-flow warn" d="M558 252 C570 252 570 184 582 184"/>
+          <polygon class="sw-head warn" points="582,184 575,180 575,188"/>
+          <!-- step boxes -->
+          <rect class="sw-box" x="102" y="30" width="96" height="36" rx="7"/>
+          <text class="sw-boxt" x="150" y="53">Symptom</text>
+          <rect class="sw-box" x="222" y="98" width="96" height="36" rx="7"/>
+          <text class="sw-boxt" x="270" y="121">Register</text>
+          <rect class="sw-box" x="342" y="166" width="96" height="36" rx="7"/>
+          <text class="sw-boxt" x="390" y="189">Order test</text>
+          <rect class="sw-box warn" x="462" y="234" width="96" height="36" rx="7"/>
+          <text class="sw-boxt" x="510" y="257">Prior auth</text>
+          <rect class="sw-box" x="582" y="166" width="96" height="36" rx="7"/>
+          <text class="sw-boxt" x="630" y="189">Treat</text>
+        </svg>
+        <div class="pe-fig-cap"><strong>Every lane boundary is a handoff, and every handoff is where work waits, drops, or dies.</strong> The amber path is the one that stalls a real visit for days. The clinical work was fast. The crossing into the payer lane and back is where the time went. You only see that once you draw it.</div>
+      </div>
+
+      <p class="jp-p">That picture is doing a lot of work. It tells you the clinical steps were never the bottleneck. It tells you the time lives in a crossing between two organizations that do not share a system. And it gives you something to fix that is real, instead of adding another box to a process you could not see.</p>
+      <p class="jp-p">Mature versions of this get names and standards. <strong>SIPOC</strong> forces you to write down the Suppliers, Inputs, Process, Outputs, and Customers before you map a single step, so you do not start in the middle. <strong>BPMN</strong>, business process model and notation, is the formal grammar of these diagrams, the one analysts use so two people draw the same symbol the same way. You do not need the jargon to start. You need a wall, some sticky notes, and the discipline to draw what actually happens instead of what is supposed to.</p>
+    </section>
+
+    <!-- ══════════ 3. THE FOUR TOOLKITS ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">The method stack</div>
+      <h2 class="jp-h2">Four toolkits, one <em>job.</em></h2>
+      <p class="jp-p">Process engineering is not one method. It is a stack of them, built by different people solving different problems, and they fit together better than their fan clubs admit. You map the work, you find the waiting, you reduce the variation, and you keep a loop running so the gains do not rot. Here is the stack, oldest idea to most operational.</p>
+
+      <div class="pe-toolkit">
+        <div class="pe-tabs" role="tablist" aria-label="The four toolkits of process engineering">
+          <button class="pe-tab active" role="tab" aria-selected="true" data-kit="lean"><span class="n">01</span><span class="t">Lean &amp; VSM</span></button>
+          <button class="pe-tab" role="tab" aria-selected="false" data-kit="sigma"><span class="n">02</span><span class="t">Six Sigma</span></button>
+          <button class="pe-tab" role="tab" aria-selected="false" data-kit="bpmn"><span class="n">03</span><span class="t">Workflow / BPMN</span></button>
+          <button class="pe-tab" role="tab" aria-selected="false" data-kit="deming"><span class="n">04</span><span class="t">Deming &amp; Constraints</span></button>
+        </div>
+
+        <!-- ── LEAN ── -->
+        <div class="pe-tabpanel active" role="tabpanel" data-kit="lean">
+          <div class="pe-tk">
+            <div class="pe-tk-viz">
+              <svg class="gx" viewBox="0 0 760 224" role="img" aria-label="The eight wastes of Lean shown as labeled tiles: Defects, Overproduction, Waiting, Unused talent, Transport, Inventory, Motion, Over-processing. Waiting is highlighted as the biggest.">
+                <text class="gx-title" x="30" y="32">The eight wastes of Lean.</text>
+                <text class="gx-sub" x="30" y="56">Anything the customer would not pay for. Waiting is almost always the biggest.</text>
+                <rect class="gx-tile" x="30" y="78" width="161" height="60" rx="9"/>
+                <text class="gx-tilet" x="110" y="113">Defects</text>
+                <rect class="gx-tile" x="209" y="78" width="161" height="60" rx="9"/>
+                <text class="gx-tilet" x="289" y="113">Overproduction</text>
+                <rect class="gx-tile hot" x="388" y="78" width="161" height="60" rx="9"/>
+                <text class="gx-tilet hot" x="468" y="104">Waiting</text>
+                <text class="gx-badge" x="468" y="123">THE BIG ONE</text>
+                <rect class="gx-tile" x="567" y="78" width="161" height="60" rx="9"/>
+                <text class="gx-tilet" x="647" y="113">Unused talent</text>
+                <rect class="gx-tile" x="30" y="152" width="161" height="60" rx="9"/>
+                <text class="gx-tilet" x="110" y="187">Transport</text>
+                <rect class="gx-tile" x="209" y="152" width="161" height="60" rx="9"/>
+                <text class="gx-tilet" x="289" y="187">Inventory</text>
+                <rect class="gx-tile" x="388" y="152" width="161" height="60" rx="9"/>
+                <text class="gx-tilet" x="468" y="187">Motion</text>
+                <rect class="gx-tile" x="567" y="152" width="161" height="60" rx="9"/>
+                <text class="gx-tilet" x="647" y="187">Over-processing</text>
+              </svg>
+            </div>
+            <div class="pe-tk-origin">Toyota · Ohno · later named by Womack &amp; Jones</div>
+            <div class="pe-tk-cols">
+              <div class="pe-tk-body">Lean has one obsession: <strong>waste</strong>. Anything the customer would not pay for if they could see it. The discipline catalogs eight kinds of it, and waiting is almost always the biggest. Value-stream mapping is the tool. You draw the whole journey and mark which steps add value and which are pure wait.</div>
+              <div class="pe-tk-use"><span class="lab">In healthcare</span>The waiting room is not a metaphor. It is muda. So is the chart that sits in a queue, the bed that cannot turn over, the lab that gets re-drawn because the first tube was lost.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SIX SIGMA ── -->
+        <div class="pe-tabpanel" role="tabpanel" data-kit="sigma">
+          <div class="pe-tk">
+            <div class="pe-tk-viz">
+              <svg class="gx" viewBox="0 0 760 250" role="img" aria-label="Two dartboard targets. The before target on the left has shots scattered all over, some missing the board entirely. The after target on the right has every shot tightly grouped in the bullseye. Same target, far less spread.">
+                <text class="gx-title" x="30" y="32">Same target. <tspan class="em">Far less spread.</tspan></text>
+                <!-- BEFORE: scattered -->
+                <circle class="gx-ring" cx="200" cy="138" r="80"/>
+                <circle class="gx-ring" cx="200" cy="138" r="55"/>
+                <circle class="gx-ring" cx="200" cy="138" r="30"/>
+                <circle class="gx-ring" cx="200" cy="138" r="9"/>
+                <circle class="gx-hit" cx="176" cy="106" r="5"/>
+                <circle class="gx-hit" cx="236" cy="122" r="5"/>
+                <circle class="gx-hit" cx="196" cy="174" r="5"/>
+                <circle class="gx-hit" cx="156" cy="152" r="5"/>
+                <circle class="gx-hit" cx="250" cy="160" r="5"/>
+                <circle class="gx-hit" cx="212" cy="100" r="5"/>
+                <circle class="gx-hit" cx="168" cy="180" r="5"/>
+                <circle class="gx-hit" cx="258" cy="130" r="5"/>
+                <circle class="gx-hit miss" cx="110" cy="120" r="5"/>
+                <circle class="gx-hit miss" cx="288" cy="172" r="5"/>
+                <text class="gx-t amber sm end" x="96" y="112">miss</text>
+                <text class="gx-t mid" x="200" y="238">BEFORE</text>
+                <text class="gx-t sm mid" x="200" y="254">shots all over</text>
+                <!-- arrow -->
+                <line class="gx-flow" x1="306" y1="138" x2="452" y2="138"/>
+                <polygon class="gx-head" points="456,138 446,132 446,144"/>
+                <text class="gx-t teal sm mid" x="380" y="124">reduce the spread</text>
+                <!-- AFTER: tight -->
+                <circle class="gx-ring" cx="560" cy="138" r="80"/>
+                <circle class="gx-ring" cx="560" cy="138" r="55"/>
+                <circle class="gx-ring" cx="560" cy="138" r="30"/>
+                <circle class="gx-bull" cx="560" cy="138" r="15"/>
+                <circle class="gx-hit good" cx="560" cy="138" r="5"/>
+                <circle class="gx-hit good" cx="551" cy="132" r="5"/>
+                <circle class="gx-hit good" cx="569" cy="134" r="5"/>
+                <circle class="gx-hit good" cx="555" cy="146" r="5"/>
+                <circle class="gx-hit good" cx="566" cy="145" r="5"/>
+                <circle class="gx-hit good" cx="549" cy="142" r="5"/>
+                <circle class="gx-hit good" cx="571" cy="130" r="5"/>
+                <circle class="gx-hit good" cx="560" cy="127" r="5"/>
+                <text class="gx-t teal mid" x="560" y="238">AFTER</text>
+                <text class="gx-t teal sm mid" x="560" y="254">every shot on target</text>
+              </svg>
+            </div>
+            <div class="pe-tk-origin">Motorola, 1986 · scaled by GE</div>
+            <div class="pe-tk-cols">
+              <div class="pe-tk-body">Where Lean hunts waste, Six Sigma hunts <strong>variation</strong>. The enemy is the process that works fine on Tuesday and fails on Friday for no reason anyone can name. Its engine is DMAIC: Define, Measure, Analyze, Improve, Control. It is data-first and it is relentless about the last letter.</div>
+              <div class="pe-tk-use"><span class="lab">In healthcare</span>Two patients with the same heart attack should not get care that differs by which nurse was on. Variation is where harm hides. Measuring it is half the cure.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── WORKFLOW / BPMN ── -->
+        <div class="pe-tabpanel" role="tabpanel" data-kit="bpmn">
+          <div class="pe-tk">
+            <div class="pe-tk-viz">
+              <svg class="gx" viewBox="0 0 760 210" role="img" aria-label="A BPMN flow for a visit: arrive, register, a decision labeled Auth, then treat and done. If not authorized it branches down to a prior-auth box that loops back to the decision. A legend explains the symbols.">
+                <text class="gx-title" x="40" y="30">A flow, and the <tspan class="em">decision that branches.</tspan></text>
+                <circle class="gx-node" cx="58" cy="84" r="18"/>
+                <text class="gx-t sm mid" x="58" y="122">arrive</text>
+                <line class="gx-flow" x1="76" y1="84" x2="116" y2="84"/><polygon class="gx-head" points="118,84 110,80 110,88"/>
+                <rect class="gx-box" x="118" y="62" width="118" height="44" rx="6"/>
+                <text class="gx-t mid ink" x="177" y="89">Register</text>
+                <line class="gx-flow" x1="236" y1="84" x2="296" y2="84"/><polygon class="gx-head" points="298,84 290,80 290,88"/>
+                <polygon class="gx-dia" points="352,48 390,84 352,120 314,84"/>
+                <text class="gx-t sm mid amber" x="352" y="81">Auth?</text>
+                <line class="gx-flow" x1="390" y1="84" x2="452" y2="84"/><polygon class="gx-head" points="454,84 446,80 446,88"/>
+                <text class="gx-t sm" x="404" y="76">yes</text>
+                <rect class="gx-box" x="454" y="62" width="110" height="44" rx="6"/>
+                <text class="gx-t mid ink" x="509" y="89">Treat</text>
+                <line class="gx-flow" x1="564" y1="84" x2="624" y2="84"/><polygon class="gx-head" points="626,84 618,80 618,88"/>
+                <circle class="gx-node" cx="652" cy="84" r="18"/>
+                <circle class="gx-node" cx="652" cy="84" r="10"/>
+                <text class="gx-t sm mid" x="652" y="122">done</text>
+                <line class="gx-flow" x1="352" y1="120" x2="352" y2="150" style="stroke:var(--jp-amber)"/><polygon class="gx-amber-head" points="352,152 348,144 356,144"/>
+                <text class="gx-t sm amber" x="360" y="140">no</text>
+                <rect class="gx-box" x="282" y="152" width="140" height="40" rx="6" style="stroke:var(--jp-amber)"/>
+                <text class="gx-t mid amber" x="352" y="177">Prior auth</text>
+                <path class="gx-amber-s" d="M282 164 C 262 132 292 106 320 98"/><polygon class="gx-amber-head" points="323,95 314,98 321,105"/>
+                <circle class="gx-node" cx="500" cy="172" r="7"/><text class="gx-t sm" x="514" y="176">event</text>
+                <rect class="gx-box" x="566" y="165" width="24" height="14" rx="3"/><text class="gx-t sm" x="598" y="176">task</text>
+                <polygon class="gx-dia" points="660,165 672,172 660,179 648,172"/><text class="gx-t sm" x="682" y="176">decision</text>
+              </svg>
+            </div>
+            <div class="pe-tk-origin">Flowcharts · swim lanes · OMG standard</div>
+            <div class="pe-tk-cols">
+              <div class="pe-tk-body">This is the notation itself, the part that is pure craft. Swim lanes, SIPOC, BPMN symbols. It sounds like the least important toolkit and it is the one most projects skip, which is why most projects fix the wrong thing. <strong>The map is the intervention.</strong> Half the value is in the drawing.</div>
+              <div class="pe-tk-use"><span class="lab">In healthcare</span>The first time a unit sees its own discharge drawn end to end, the room goes quiet. Nobody had ever seen the whole thing at once.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── DEMING & CONSTRAINTS ── -->
+        <div class="pe-tabpanel" role="tabpanel" data-kit="deming">
+          <div class="pe-tk">
+            <div class="pe-tk-viz">
+              <svg class="gx" viewBox="0 0 760 210" role="img" aria-label="Many units of work pile up and funnel into one narrow constraint, and only a few exit. The system runs at the speed of its slowest step.">
+                <text class="gx-title" x="40" y="30">The system runs at its <tspan class="em">slowest step.</tspan></text>
+                <line class="gx-flow" x1="14" y1="115" x2="44" y2="115"/><polygon class="gx-head" points="46,115 38,111 38,119"/>
+                <path class="gx-wait" d="M50 64 L432 100 L700 100 L700 134 L432 134 L50 170 Z"/>
+                <rect class="gx-amber-f" x="428" y="96" width="20" height="42" rx="3"/>
+                <circle class="gx-dot" cx="92"  cy="82"  r="4.5"/><circle class="gx-dot" cx="92"  cy="102" r="4.5"/><circle class="gx-dot" cx="92"  cy="122" r="4.5"/><circle class="gx-dot" cx="92"  cy="142" r="4.5"/>
+                <circle class="gx-dot" cx="135" cy="88"  r="4.5"/><circle class="gx-dot" cx="135" cy="108" r="4.5"/><circle class="gx-dot" cx="135" cy="128" r="4.5"/><circle class="gx-dot" cx="135" cy="148" r="4.5"/>
+                <circle class="gx-dot" cx="180" cy="94"  r="4.5"/><circle class="gx-dot" cx="180" cy="114" r="4.5"/><circle class="gx-dot" cx="180" cy="134" r="4.5"/>
+                <circle class="gx-dot" cx="228" cy="100" r="4.5"/><circle class="gx-dot" cx="228" cy="120" r="4.5"/><circle class="gx-dot" cx="228" cy="140" r="4.5"/>
+                <circle class="gx-dot" cx="278" cy="106" r="4.5"/><circle class="gx-dot" cx="278" cy="126" r="4.5"/>
+                <circle class="gx-dot" cx="330" cy="112" r="4.5"/><circle class="gx-dot" cx="330" cy="132" r="4.5"/>
+                <circle class="gx-dot dim" cx="505" cy="117" r="4.5"/><circle class="gx-dot dim" cx="565" cy="117" r="4.5"/><circle class="gx-dot dim" cx="625" cy="117" r="4.5"/><circle class="gx-dot dim" cx="680" cy="117" r="4.5"/>
+                <line class="gx-flow" x1="702" y1="117" x2="744" y2="117"/><polygon class="gx-head" points="746,117 738,113 738,121"/>
+                <text class="gx-t teal" x="56" y="52">work piles up</text>
+                <text class="gx-t teal end" x="744" y="100">trickles out</text>
+                <text class="gx-t amber mid" x="438" y="160">the constraint</text>
+                <text class="gx-t sm mid" x="380" y="194">e.g. the one inpatient bed the whole ED is waiting on</text>
+              </svg>
+            </div>
+            <div class="pe-tk-origin">Shewhart &amp; Deming · Goldratt's Theory of Constraints</div>
+            <div class="pe-tk-cols">
+              <div class="pe-tk-body">The systems-thinking backbone. Deming gave us the feedback loop, Plan-Do-Study-Act, small tests of change run fast instead of one big rollout prayed over. Goldratt gave us the bottleneck rule: <strong>a system is only as fast as its single slowest constraint</strong>, so improving anything else is theater.</div>
+              <div class="pe-tk-use"><span class="lab">In healthcare</span>This is the language quality improvement already speaks. The IHI Model for Improvement is PDSA in a lab coat. Most hospitals just never connect it back to the rest of the stack.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VALUE STREAM ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Lean, made visible</div>
+      <h2 class="jp-h2">Find the <em>waiting.</em></h2>
+      <p class="jp-p">When you map a real care episode and color the value-add time separately from the wait time, the result is always uncomfortable. The care itself, the part a clinician actually does, is a sliver. The rest of the timeline is the patient sitting, the chart queued, the order pending, the result not yet read.</p>
+
+      <div class="pe-fig">
+        <div class="pe-fig-head">
+          <div class="pe-fig-title">One clinic visit, by the clock</div>
+          <div class="pe-fig-key">Value-stream timeline</div>
+        </div>
+        <svg class="pe-svg" viewBox="0 0 720 170" role="img" aria-label="A timeline of a clinic visit. Most of the bar is faint waiting time. Four narrow teal segments mark the actual value-add work: vitals, exam, procedure, and discharge plan. Lead time about three hours and forty minutes, value-add about twenty-two minutes.">
+          <!-- wait + value segments, total x 40..680 -->
+          <rect class="vs-wait" x="40"  y="60" width="120" height="40"/>
+          <rect class="vs-va"   x="160" y="60" width="14"  height="40"/>
+          <rect class="vs-wait" x="174" y="60" width="110" height="40"/>
+          <rect class="vs-va"   x="284" y="60" width="22"  height="40"/>
+          <rect class="vs-wait" x="306" y="60" width="140" height="40"/>
+          <rect class="vs-va"   x="446" y="60" width="18"  height="40"/>
+          <rect class="vs-wait" x="464" y="60" width="120" height="40"/>
+          <rect class="vs-va"   x="584" y="60" width="16"  height="40"/>
+          <rect class="vs-wait" x="600" y="60" width="80"  height="40"/>
+          <!-- value labels -->
+          <text class="vs-vlabel" x="167" y="52">vitals</text>
+          <text class="vs-vlabel" x="295" y="52">exam</text>
+          <text class="vs-vlabel" x="455" y="52">procedure</text>
+          <text class="vs-vlabel" x="592" y="52">plan</text>
+          <!-- wait ticks -->
+          <text class="vs-tick" x="100" y="118">waiting room</text>
+          <text class="vs-tick" x="229" y="118">wait for provider</text>
+          <text class="vs-tick" x="376" y="118">wait for orders</text>
+          <text class="vs-tick" x="524" y="118">wait for results</text>
+          <text class="vs-tick" x="640" y="118">checkout</text>
+          <!-- summary -->
+          <text class="vs-sum" x="40" y="150">Lead time <tspan class="wt">≈ 3 h 40 m</tspan>   ·   Value-add <tspan class="va">≈ 22 m</tspan>   ·   the teal is the care</text>
+        </svg>
+        <div class="pe-fig-cap">The teal slivers are the only part the patient came for. Everything else is wait. Here the care is about a tenth of the visit, and this is already a clean one. Map an episode nobody has touched and the value-add routinely falls below five percent. <strong>Lean does not start by speeding up the teal. It starts by attacking the gray,</strong> because that is where the hours are. Speed up a 22-minute exam and you save seconds. Kill an hour of waiting and you change the day.</div>
+      </div>
+
+      <p class="jp-p">This is the whole reason mapping comes first. Without the picture, every instinct points at the teal, because the teal is the part you can see people doing. The gray is invisible. It is the patient who is not in front of you, the chart in a queue, the result no one has opened. Lean's contribution to medicine is mostly this one reframe. <em>Go attack the gray.</em></p>
+    </section>
+
+    <!-- ── DMAIC ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Six Sigma, made operational</div>
+      <h2 class="jp-h2">Then kill the <em>variation.</em></h2>
+      <p class="jp-p">Once the waiting is under control, the next enemy is inconsistency. The classic healthcare proof is door-to-balloon time, the minutes between a heart attack patient arriving and the blocked artery being opened. Every minute is muscle. For years the time varied wildly by hospital, by shift, by luck. Then teams ran it through a loop that looks like this.</p>
+
+      <div class="pe-fig">
+        <div class="pe-fig-head">
+          <div class="pe-fig-title">DMAIC, on door-to-balloon time</div>
+          <div class="pe-fig-key">Six Sigma cycle</div>
+        </div>
+        <div class="dm-strip">
+          <div class="dm-step">
+            <div class="dm-letter">D</div>
+            <div class="dm-name">Define</div>
+            <div class="dm-body">The goal: artery open in <strong>under 90 minutes</strong>, every time, not on average.</div>
+          </div>
+          <div class="dm-step">
+            <div class="dm-letter">M</div>
+            <div class="dm-name">Measure</div>
+            <div class="dm-body">Time-stamp every step. Door, EKG, lab call, cath team page, balloon.</div>
+          </div>
+          <div class="dm-step">
+            <div class="dm-letter">A</div>
+            <div class="dm-name">Analyze</div>
+            <div class="dm-body">The delay was the <strong>page</strong>. Waiting for a cardiologist to confirm before activating.</div>
+          </div>
+          <div class="dm-step">
+            <div class="dm-letter">I</div>
+            <div class="dm-name">Improve</div>
+            <div class="dm-body">Let the ED activate the cath lab directly. One call, whole team.</div>
+          </div>
+          <div class="dm-step">
+            <div class="dm-letter">C</div>
+            <div class="dm-name">Control</div>
+            <div class="dm-body">Audit every case forever, so the old habit cannot creep back.</div>
+          </div>
+        </div>
+        <div class="pe-fig-cap">National median door-to-balloon time fell from well over 90 minutes to under 60 across the 2000s, and the change was not a new drug or a new wire. <strong>It was a redesigned process,</strong> measured, and held. That last letter, Control, is the one everyone skips and the only reason any of it lasts.</div>
+      </div>
+
+      <p class="jp-p">DMAIC is not magic. It is the refusal to guess. Define what good looks like as a number. Measure the real thing, not the story about it. Find the one step that actually moves the number. Change that step. Then guard it, because every improved process drifts back toward the comfortable old one the moment you stop watching.</p>
+    </section>
+
+    <!-- ── PDSA LOOP ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Deming, made into a habit</div>
+      <h2 class="jp-h2">Keep the <em>loop</em> running.</h2>
+      <p class="jp-p">Here is the part that separates a real engineering culture from a binder full of dead initiatives. You do not roll out one giant change and pray. You run small tests, fast, and you let what you learn from each one shape the next. Deming built it from Walter Shewhart's work and it has powered healthcare quality improvement ever since: Plan, Do, Study, Act. Then around again.</p>
+
+      <div class="pe-fig">
+        <div class="jp-loop-head">
+          <div class="jp-loop-title">The improvement loop</div>
+          <button class="jp-loop-play" id="pdsaPlay" type="button" aria-label="Play the improvement loop animation"><span class="play-icon"></span><span class="play-label">Run the cycle</span></button>
+        </div>
+        <svg class="jp-loop-svg" id="pdsaLoop" viewBox="0 0 480 360" role="img" aria-label="The PDSA cycle: Plan, Do, Study, Act, arranged in a clockwise loop with arrows running between them.">
+          <!-- arrows (clockwise) -->
+          <g data-arrow>
+            <path class="jp-loop-arrow" d="M300 64 Q360 82 376 150"/>
+            <polygon class="jp-loop-arrow-head" points="376,152 369,140 383,142"/>
+          </g>
+          <g data-arrow>
+            <path class="jp-loop-arrow" d="M376 210 Q360 282 306 298"/>
+            <polygon class="jp-loop-arrow-head" points="304,298 318,294 311,306"/>
+          </g>
+          <g data-arrow>
+            <path class="jp-loop-arrow" d="M174 298 Q120 282 104 210"/>
+            <polygon class="jp-loop-arrow-head" points="104,208 111,220 97,218"/>
+          </g>
+          <g data-arrow>
+            <path class="jp-loop-arrow" d="M104 150 Q120 82 174 64"/>
+            <polygon class="jp-loop-arrow-head" points="176,64 162,68 169,56"/>
+          </g>
+          <!-- nodes -->
+          <g data-node>
+            <rect class="jp-loop-node-bg" x="180" y="34" width="120" height="52" rx="9"/>
+            <text class="jp-loop-node-l" x="240" y="60">Plan</text>
+            <text class="jp-loop-node-s" x="240" y="76">a small change</text>
+          </g>
+          <g data-node>
+            <rect class="jp-loop-node-bg" x="320" y="154" width="120" height="52" rx="9"/>
+            <text class="jp-loop-node-l" x="380" y="180">Do</text>
+            <text class="jp-loop-node-s" x="380" y="196">on one unit</text>
+          </g>
+          <g data-node>
+            <rect class="jp-loop-node-bg" x="180" y="274" width="120" height="52" rx="9"/>
+            <text class="jp-loop-node-l" x="240" y="300">Study</text>
+            <text class="jp-loop-node-s" x="240" y="316">what the data says</text>
+          </g>
+          <g data-node>
+            <rect class="jp-loop-node-bg" x="40" y="154" width="120" height="52" rx="9"/>
+            <text class="jp-loop-node-l" x="100" y="180">Act</text>
+            <text class="jp-loop-node-s" x="100" y="196">adopt or adjust</text>
+          </g>
+        </svg>
+        <div class="pe-fig-cap">Small, fast, repeated. <strong>A test you can run by Friday beats a rollout you launch next year,</strong> because the Friday test teaches you something while the big rollout is still in committee. The loop never closes. That is the point.</div>
+      </div>
+
+      <p class="jp-p">And running underneath all of it is Goldratt's quieter rule. A process is only as fast as its single slowest step, its constraint. The emergency department backs up not because everyone is slow but because there is one inpatient bed that will not open. Pour effort anywhere except the constraint and you get a busier system that is exactly as slow as before. Find the bottleneck. Fix the bottleneck. Then find the new one, because there is always a new one.</p>
+    </section>
+
+    <!-- ══════════ 4. THE SITE IS THE MAP ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">The payoff</div>
+      <h2 class="jp-h2">This site <em>is</em> the map.</h2>
+      <p class="jp-p">Now the part I have been building toward. The front page of Healthcare Uncharted makes one promise in four words: healthcare doesn't come with a map. The tagline under it is shorter still. <em>Map the system. Understand the why.</em> And the About page says it flattest of all: no one was mapping the full system, the clinical, financial, operational, and political layers together, so this site exists to close that gap.</p>
+      <p class="jp-p">Read those three lines again with the last four sections in your head. <span class="jp-caps">That is a process-engineering brief.</span> You cannot close a gap you have not drawn. You cannot map a system you refuse to look at whole. The mission of this site and the first move of this discipline are the same sentence.</p>
+      <p class="jp-p">So I drew it. Not to build a process-engineering portfolio, but because the only way I know how to understand an ecosystem I work inside every day is to map it. Each tool here is one layer of one enormous swim-lane diagram. Read them as the discipline in disguise.</p>
+
+      <div class="sm-grid">
+        <a class="sm-card" href="/tools/healthcare-iceberg-map/">
+          <div class="sm-concept">Mapping &middot; you cannot fix what you cannot see</div>
+          <div class="sm-tool">The Healthcare Iceberg Map</div>
+          <div class="sm-body">Eight layers of the system in one view, from the patient experience on the surface down to the policy and financial forces underneath. The first move in any engineering job is to surface what is below the waterline. This is that move, for the whole system.</div>
+          <div class="sm-go">Open the map &rarr;</div>
+        </a>
+
+        <a class="sm-card" href="/tools/American-4Ps-Map/">
+          <div class="sm-concept">Lean &middot; value is defined by the customer</div>
+          <div class="sm-tool">The Multi-Lens State Map</div>
+          <div class="sm-body">The same state data seen through six lenses: patient, clinical, operations, payer, policy, baseline. Lean says value is whatever the customer would pay for. Healthcare has four customers who each define value differently. This map is that argument, drawn on all fifty states.</div>
+          <div class="sm-go">Open the map &rarr;</div>
+        </a>
+
+        <a class="sm-card" href="/tools/hospital-map/">
+          <div class="sm-concept">Flow &middot; the facility as a process system</div>
+          <div class="sm-tool">The Hospital Blueprint</div>
+          <div class="sm-body">A cross-section of a hospital where every unit shows who staffs it, how patients move through it, how it bills, and what happens when it breaks. That is a value stream and a constraint map wearing a floor plan. Patient flow is the whole game.</div>
+          <div class="sm-go">Open the map &rarr;</div>
+        </a>
+
+        <a class="sm-card" href="/tools/clinical-sql-mystery/">
+          <div class="sm-concept">Data model &middot; every process runs on one</div>
+          <div class="sm-tool">The Clinical SQL Mystery</div>
+          <div class="sm-body">Patient &rarr; Encounter &rarr; Clinical Event. Every workflow in medicine writes to that spine, and if you do not understand the data model you cannot measure the process, which means you cannot engineer it. This one teaches the spine by making you query it.</div>
+          <div class="sm-go">Play the cases &rarr;</div>
+        </a>
+
+        <a class="sm-card" href="/tools/healthcare-career-tree/">
+          <div class="sm-concept">The workforce is a process too</div>
+          <div class="sm-tool">The Healthcare Career Tree</div>
+          <div class="sm-body">A branching map of roles, credentials, and pathways, with a second track for the patient journey from healthy to critical. People move through a system the same way work does. Map the lanes, find the gates, see where the talent gets stuck.</div>
+          <div class="sm-go">Open the tree &rarr;</div>
+        </a>
+
+        <a class="sm-card" href="/tools/healthcare-operators-map/">
+          <div class="sm-concept">Measure &middot; real data, not anecdote</div>
+          <div class="sm-tool">The U.S. Hospital Operations Map</div>
+          <div class="sm-body">Every hospital, surgery center, and dialysis facility from live CMS data, filterable by the system that operates them. You cannot improve a process on a story. You improve it on the measured thing. This is the measured thing, at national scale.</div>
+          <div class="sm-go">Open the map &rarr;</div>
+        </a>
+
+        <a class="sm-card" href="/tools/healthcare-vendor-directory/">
+          <div class="sm-concept">SIPOC &middot; the supplier side</div>
+          <div class="sm-tool">The Vendor Directory</div>
+          <div class="sm-body">Who supplies the technology, which layers they touch, and whether their tech is proven, emerging, or cautionary. The S in SIPOC is Suppliers. No process map is honest until you know who feeds it inputs and how much you depend on them.</div>
+          <div class="sm-go">Open the directory &rarr;</div>
+        </a>
+
+        <a class="sm-card" href="/atlas/">
+          <div class="sm-concept">The whole thing &middot; one connected map</div>
+          <div class="sm-tool">The Healthcare Atlas</div>
+          <div class="sm-body">Every tool and article above is a node here, and the edges are how they connect. This is the master swim-lane diagram of the entire ecosystem. Process engineering at the scale of a country, which is the only scale that lets you see why any of it behaves the way it does.</div>
+          <div class="sm-go">Open the Atlas &rarr;</div>
+        </a>
+      </div>
+
+      <p class="jp-p">And the tools are only the interactive layer. The <a href="/learn/" style="color:var(--jp-accent);text-decoration:none;border-bottom:1px solid var(--jp-line)">Learn</a> library is the same instinct in long form. The Four Players framework draws who the customers even are, because Lean is useless until you know whose value you are serving. The field guide on laws and paradoxes is a catalog of the ways a process predictably breaks. The explainers trace how a patient turns into a data record, which is the spine every workflow writes to. <a href="/rounds/" style="color:var(--jp-accent);text-decoration:none;border-bottom:1px solid var(--jp-line)">Rounds</a> points the same lens at the present, taking a thing that just happened and mapping what actually moved. And the <a href="/atlas/" style="color:var(--jp-accent);text-decoration:none;border-bottom:1px solid var(--jp-line)">Atlas</a> stitches all of it into one surface you can walk. Different formats. One method.</p>
+
+      <p class="jp-pull">"I built a site to understand healthcare. It turned out I was just doing process engineering on something the size of a country, one map at a time."</p>
+    </section>
+
+    <!-- ══════════ 5. WHERE IT BREAKS ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">The honest part</div>
+      <h2 class="jp-h2">Where it <em>breaks.</em></h2>
+      <p class="jp-p">If you only hear the success stories, process engineering starts to sound like a religion, and that is exactly when it gets dangerous in a hospital. So here is the other side, because the failure modes are real and most of them are on this site already, in the field guide on healthcare's laws and paradoxes.</p>
+
+      <div class="jp-counter">
+        <div class="jp-counter-label">The metric becomes the target</div>
+        <div class="jp-counter-body">The moment you measure a process, people optimize the measurement, not the care. That is <a href="/learn/laws-and-paradoxes/#goodhart">Goodhart's Law</a>, and healthcare is littered with it. Hit the four-hour ED target by admitting people who should go home. Improve the readmission number by coding around it. A measured process you do not watch closely will be gamed. Count on it.</div>
+      </div>
+
+      <p class="jp-p">There are three more traps worth naming plainly.</p>
+      <p class="jp-p"><strong>The map is not the territory.</strong> A swim-lane diagram is a model, and every model leaves things out. The clean boxes hide the nurse who knows the system is wrong and quietly fixes it forty times a day. Engineer away her workaround without understanding why it exists and you can make care worse while every metric improves.</p>
+      <p class="jp-p"><strong>The org chart becomes the data model.</strong> That is <a href="/learn/laws-and-paradoxes/#conway">Conway's Law</a>. Systems end up shaped like the organizations that build them, so a fragmented health system builds fragmented workflows, and no amount of mapping fixes a structure problem you are pretending is a process problem.</p>
+      <p class="jp-p"><strong>The factory is not the body.</strong> Toyota's line builds identical cars. Medicine treats people who are not identical and do not want to be optimized like a transmission. Borrow the tools, yes. Import the worldview wholesale and you get the worst of both: the coldness of the assembly line and none of its reliability. The discipline serves the care. Never the other way around.</p>
+      <p class="jp-p">None of this is a reason to skip the work. It is a reason to do it with your eyes open. A bad map beats no map, and a humble map beats a confident one. The engineers who do real good in healthcare are the ones who hold the method loosely and the patient tightly.</p>
+    </section>
+
+    <!-- ══════════ 6. DIAGNOSTIC ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">Start here</div>
+      <h2 class="jp-h2">What kind of <em>broken</em> is it?</h2>
+      <p class="jp-p">The four toolkits are not interchangeable, and reaching for the wrong one is how improvement projects die. So before you pick a tool, name the problem. Tell me what your process actually does wrong and I will point you at the toolkit that fits, and the first move to make.</p>
+
+      <div class="dx">
+        <div class="dx-q" role="tablist">
+          <button class="dx-opt active" role="tab" aria-selected="true" data-dx="slow">It's <b>slow</b></button>
+          <button class="dx-opt" role="tab" aria-selected="false" data-dx="incon">It's <b>inconsistent</b></button>
+          <button class="dx-opt" role="tab" aria-selected="false" data-dx="tangled">It's <b>tangled</b></button>
+          <button class="dx-opt" role="tab" aria-selected="false" data-dx="stuck">It's <b>stuck</b></button>
+        </div>
+
+        <div class="dx-result active" data-dx="slow">
+          <div class="dx-card">
+            <div class="dx-tool">Reach for &middot; Lean &amp; value-stream mapping</div>
+            <div class="dx-h">Your problem is waiting, not working.</div>
+            <div class="dx-p">Slow almost never means people are too slow. It means the work sits in queues between the people. The thing you are trying to speed up is probably already fast. The hours are in the gaps.</div>
+            <div class="dx-move"><span class="lab">First move</span>Time one real case end to end and mark every minute as <strong>work</strong> or <strong>wait</strong>. Then go attack the biggest block of wait. Ignore the work for now.</div>
+          </div>
+        </div>
+
+        <div class="dx-result" data-dx="incon">
+          <div class="dx-card">
+            <div class="dx-tool">Reach for &middot; Six Sigma &amp; DMAIC</div>
+            <div class="dx-h">Same task, different result depending on who or when.</div>
+            <div class="dx-p">It works on Tuesday and fails on Friday. One nurse does it one way, the next does it another. That is variation, and in healthcare variation is where harm hides. You cannot fix a spread you have not measured.</div>
+            <div class="dx-move"><span class="lab">First move</span>Define <strong>good</strong> as a single number with a target. Then measure the actual spread across thirty real cases before you change one thing. The data will tell you where the variation enters.</div>
+          </div>
+        </div>
+
+        <div class="dx-result" data-dx="tangled">
+          <div class="dx-card">
+            <div class="dx-tool">Reach for &middot; Workflow mapping &amp; BPMN</div>
+            <div class="dx-h">Nobody can even say how it works.</div>
+            <div class="dx-p">Ask five people how the process runs and you get five answers, all of them partly wrong. There is no shared picture, so every fix lands on a different imaginary process. The map itself is the intervention here.</div>
+            <div class="dx-move"><span class="lab">First move</span>Get the four to six people who actually do it in one room for an hour. Draw the swim lane on the wall, one lane per role. The mess shows up the moment it is all in one place.</div>
+          </div>
+        </div>
+
+        <div class="dx-result" data-dx="stuck">
+          <div class="dx-card">
+            <div class="dx-tool">Reach for &middot; Theory of Constraints</div>
+            <div class="dx-h">Everyone is busy and nothing moves.</div>
+            <div class="dx-p">The whole system is flat out, and throughput still will not budge. That is the signature of a bottleneck. One step governs the pace of the entire process, and effort spent anywhere else just makes a busier system that is exactly as slow.</div>
+            <div class="dx-move"><span class="lab">First move</span>Find the single step with a queue piling up in front of it. That is your constraint. Pour everything into that one step and nothing else, until the queue moves. Then find the next one.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 7. WORKED CASE ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">Watch it work once</div>
+      <h2 class="jp-h2">A real one: <em>prior authorization.</em></h2>
+      <p class="jp-p">Theory is cheap. Here is the whole method run on one process every clinic hates, start to finish. Prior authorization for a home oxygen order. The pattern holds for almost anything: imaging, infusions, durable equipment, referrals. The figures below are representative of what these redesigns look like, not one audited clinic. Watch how little of this is about working harder.</p>
+
+      <div class="cs">
+        <div class="cs-head">
+          <span class="cs-title">Prior auth for home oxygen</span>
+          <span class="cs-tag">Case file</span>
+        </div>
+
+        <div class="cs-step">
+          <div class="cs-step-lab"><span class="b">1</span> Frame it &middot; SIPOC</div>
+          <p class="cs-p">Before drawing a single box, name the edges. Who feeds the process, who it serves, and the five high-level steps. Five minutes of this stops you from starting in the middle of the wrong thing.</p>
+          <table class="sipoc">
+            <thead><tr><th>Suppliers</th><th>Inputs</th><th>Process</th><th>Outputs</th><th>Customers</th></tr></thead>
+            <tbody><tr>
+              <td>Ordering provider<br>Patient<br>DME vendor<br>Payer portal</td>
+              <td>Diagnosis + O&#8322; sat<br>Signed order<br>Insurance info</td>
+              <td>1. Order placed<br>2. Auth packet built<br>3. Submitted to payer<br>4. Payer reviews<br>5. Decision &amp; dispense</td>
+              <td>Approved auth<br>Oxygen delivered<br>Clean claim</td>
+              <td>Patient<br>Provider<br>Billing</td>
+            </tr></tbody>
+          </table>
+        </div>
+
+        <div class="cs-step">
+          <div class="cs-step-lab"><span class="b">2</span> Draw it &middot; current-state map</div>
+          <p class="cs-p">Six steps, four lanes, and one crossing that eats days. The clinical work is done in minutes. Then the packet crosses into the payer lane and stops.</p>
+          <p class="cs-p"><strong>The finding:</strong> nearly all of the lead time is one wait, and about a third of submissions bounce back for a missing field. When a packet bounces, the multi-day wait happens twice. The rework loop, not the review itself, is the real wound.</p>
+        </div>
+
+        <div class="cs-step">
+          <div class="cs-step-lab"><span class="b">3</span> Time it &middot; value stream</div>
+          <p class="cs-p">Add the clock and the picture is brutal. The work is real but tiny. The wait is everything.</p>
+          <div class="cs-metric">
+            <div><span class="v">~3 days</span><span class="k">Lead time</span></div>
+            <div><span class="v">~40 min</span><span class="k">Value-add work</span></div>
+            <div><span class="v">&lt; 1%</span><span class="k">Cycle efficiency</span></div>
+          </div>
+        </div>
+
+        <div class="cs-step">
+          <div class="cs-step-lab"><span class="b">4</span> Attack it &middot; DMAIC charter</div>
+          <p class="cs-p"><strong>Define:</strong> every clean auth decided within 24 hours. <strong>Measure:</strong> timestamp submit to decision, and track the bounce rate. <strong>Analyze:</strong> the bounces trace to three missing fields, every time. <strong>Improve:</strong> a one-page completeness checklist plus a rule that nothing submits until it passes. <strong>Control:</strong> a weekly bounce-rate review so the old habit cannot creep back.</p>
+        </div>
+
+        <div class="cs-step">
+          <div class="cs-step-lab"><span class="b">5</span> Test it &middot; one PDSA</div>
+          <p class="cs-p"><strong>Plan:</strong> run the three-field checklist for one ordering provider, for one week. <strong>Do:</strong> applied it to the next twenty-two orders. <strong>Study:</strong> the bounce rate fell from roughly a third to near zero, and the resubmits disappeared with it. <strong>Act:</strong> adopt for that provider, then spread to the next.</p>
+        </div>
+
+        <div class="cs-step">
+          <div class="cs-result"><strong>The result.</strong> Nobody worked faster. They stopped doing the wait twice. Closing the rework loop, not speeding up the humans, is where the days came back. No new staff, no new software. One checklist, aimed by a map at the one crossing that was bleeding time. That is the whole discipline in a single case.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 8. VISUAL: THE BOTTLE ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">The idea, in one picture</div>
+      <h2 class="jp-h2">Why it's called a <em>bottleneck.</em></h2>
+      <p class="jp-p">Forget the jargon for a second, because the word is the whole idea. Pour anything through a bottle and it does not matter how big the bottle is. Everything has to squeeze through the neck, one at a time, and the neck sets the pace. A process works exactly the same way. Somewhere in it there is a neck. The job is to find it.</p>
+
+      <div class="bottle">
+        <svg viewBox="0 0 760 240" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="An animated bottle lying on its side. Dots representing work flow in from the left, crowd at the narrow neck, and trickle out the far side. The neck is labeled the bottleneck.">
+          <defs>
+            <path id="bnTop" d="M58 90 L430 90 C510 90 545 120 600 120 L740 120"/>
+            <path id="bnMid" d="M58 120 L740 120"/>
+            <path id="bnBot" d="M58 150 L430 150 C510 150 545 120 600 120 L740 120"/>
+          </defs>
+
+          <!-- bottle body -->
+          <path class="bn-body" d="M64 58 L466 58 C520 58 536 94 590 98 C624 98 636 96 650 92 L650 148 C636 144 624 142 590 142 C536 146 520 182 466 182 L64 182 C48 182 42 168 42 120 C42 72 48 58 64 58 Z"/>
+          <!-- neck walls (the constraint) -->
+          <path class="bn-neck" d="M590 98 C624 98 636 96 650 92"/>
+          <path class="bn-neck" d="M590 142 C624 142 636 144 650 148"/>
+
+          <!-- flowing work: top lane -->
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5.4s" begin="-0.4s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnTop"/></animateMotion><animate attributeName="opacity" dur="5.4s" begin="-0.4s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5.4s" begin="-1.75s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnTop"/></animateMotion><animate attributeName="opacity" dur="5.4s" begin="-1.75s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5.4s" begin="-3.1s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnTop"/></animateMotion><animate attributeName="opacity" dur="5.4s" begin="-3.1s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5.4s" begin="-4.45s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnTop"/></animateMotion><animate attributeName="opacity" dur="5.4s" begin="-4.45s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+
+          <!-- middle lane -->
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5s" begin="0s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnMid"/></animateMotion><animate attributeName="opacity" dur="5s" begin="0s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5s" begin="-1.25s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnMid"/></animateMotion><animate attributeName="opacity" dur="5s" begin="-1.25s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5s" begin="-2.5s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnMid"/></animateMotion><animate attributeName="opacity" dur="5s" begin="-2.5s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="5s" begin="-3.75s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnMid"/></animateMotion><animate attributeName="opacity" dur="5s" begin="-3.75s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+
+          <!-- bottom lane -->
+          <circle class="bn-dot" r="4.5"><animateMotion dur="4.6s" begin="-0.7s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnBot"/></animateMotion><animate attributeName="opacity" dur="4.6s" begin="-0.7s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="4.6s" begin="-1.85s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnBot"/></animateMotion><animate attributeName="opacity" dur="4.6s" begin="-1.85s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="4.6s" begin="-3s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnBot"/></animateMotion><animate attributeName="opacity" dur="4.6s" begin="-3s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+          <circle class="bn-dot" r="4.5"><animateMotion dur="4.6s" begin="-4.15s" repeatCount="indefinite" keyPoints="0;0.5;0.78;1" keyTimes="0;0.32;0.86;1" calcMode="linear"><mpath xlink:href="#bnBot"/></animateMotion><animate attributeName="opacity" dur="4.6s" begin="-4.15s" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.08;0.5;0.9;1"/></circle>
+
+          <!-- labels -->
+          <text class="bn-t teal mid" x="235" y="44">work piles up</text>
+          <text class="bn-t end" x="726" y="112">leaves slowly</text>
+          <line class="bn-arrow" x1="612" y1="212" x2="612" y2="153"/>
+          <polygon class="bn-ahead" points="612,150 606,160 618,160"/>
+          <text class="bn-t amber mid" x="612" y="230">the bottleneck</text>
+        </svg>
+        <div class="bottle-cap">Work piles up behind the narrowest point and trickles out the far side. <strong>Make the bottle bigger all you want. Until you widen the NECK, nothing moves faster.</strong></div>
+      </div>
+
+      <p class="jp-p">That neck is the constraint, and it is the only thing worth fixing first. Everything poured in ahead of it just waits. Everything past it sits idle, starved for work. Relieve the neck and the whole line speeds up at once. Then, quietly, a new neck forms somewhere else, and the job begins again.</p>
+    </section>
+
+    <!-- ══════════ CLOSE ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">What to do Monday</div>
+      <h2 class="jp-h2">Pick one <em>process.</em></h2>
+      <p class="jp-p">Do not start with a strategy. Start with one process that annoys you. The discharge, the prior auth, the morning huddle that runs forty minutes and decides nothing. Draw it on a wall with the people who actually do it. Mark the handoffs. Time the waits. You will find the problem is almost never where the complaints point, and almost always in a crossing nobody owns.</p>
+      <p class="jp-p">That is the entire discipline in one sitting. Map it. Find the gray. Test one small change by Friday. Watch the number. Then do it again. The rest, the certifications and the colored belts and the consultants, is commentary on those five moves.</p>
+
+      <h3 class="jp-h3">Your first two weeks</h3>
+      <p class="jp-p">Here is that loop, paced for a real unit instead of a whiteboard. No budget, no software, no permission you do not already have.</p>
+      <div class="pe-play">
+        <div class="pe-play-item"><div class="pe-play-when">Day 1</div><div class="pe-play-what"><strong>Pick one process that annoys you,</strong> and name the pain as a number. Not "discharge is slow." Say "discharge takes 4 hours and we want 2."</div></div>
+        <div class="pe-play-item"><div class="pe-play-when">Day 1</div><div class="pe-play-what"><strong>Get the four to six people who actually do the work</strong> in a room for sixty minutes. Not their managers. The people whose hands are on it.</div></div>
+        <div class="pe-play-item"><div class="pe-play-when">Days 2&ndash;3</div><div class="pe-play-what"><strong>Draw the current state.</strong> One lane per role, sticky note every step, a mark at every handoff. Draw what happens, not what the policy says happens.</div></div>
+        <div class="pe-play-item"><div class="pe-play-when">Day 4</div><div class="pe-play-what"><strong>Time one real case end to end.</strong> Mark each minute work or wait. Find the biggest single block of wait. That is your target, and it is almost never where people complain.</div></div>
+        <div class="pe-play-item"><div class="pe-play-when">Day 5</div><div class="pe-play-what"><strong>Pick one change aimed at that wait,</strong> and write a one-line PDSA. Small enough to run by next Friday. If it needs a committee, it is too big.</div></div>
+        <div class="pe-play-item"><div class="pe-play-when">Week 2</div><div class="pe-play-what"><strong>Run the test on one unit, one shift.</strong> Watch the number. Adopt it, adjust it, or kill it. Then aim the next cycle at whatever the new bottleneck turns out to be.</div></div>
+        <div class="pe-play-item"><div class="pe-play-when">Ongoing</div><div class="pe-play-what"><strong>Hold the gain.</strong> The Control step nobody does. Audit the change until it is the new normal, or the process drifts straight back to comfortable and slow.</div></div>
+      </div>
+
+      <h3 class="jp-h3">The field kit</h3>
+      <p class="jp-p">Three worksheets, the only paperwork this needs. Copy any of them into your own doc and fill it in with the people who do the work. That is the whole toolkit. The rest is courage.</p>
+      <div class="kit">
+        <div class="kit-card">
+          <div class="kit-name">SIPOC</div>
+          <div class="kit-sub">Frame the process</div>
+          <div class="kit-lines">Suppliers, Inputs, Process, Outputs, Customers. <b>Five minutes that stop you from solving the wrong problem.</b> Fill it before you draw a single box.</div>
+          <button class="kit-copy" data-kit="sipoc" type="button">Copy worksheet</button>
+        </div>
+        <div class="kit-card">
+          <div class="kit-name">PDSA</div>
+          <div class="kit-sub">Test one change</div>
+          <div class="kit-lines">Plan, Do, Study, Act. <b>The engine of every real improvement.</b> One small test, run fast, with a prediction you can be wrong about.</div>
+          <button class="kit-copy" data-kit="pdsa" type="button">Copy worksheet</button>
+        </div>
+        <div class="kit-card">
+          <div class="kit-name">A3</div>
+          <div class="kit-sub">One page, whole problem</div>
+          <div class="kit-lines">Background to follow-up on a single sheet. <b>If it does not fit on one page, you do not understand it yet.</b> The discipline of saying it plainly.</div>
+          <button class="kit-copy" data-kit="a3" type="button">Copy worksheet</button>
+        </div>
+      </div>
+
+      <p class="jp-pull">"Most of healthcare is not broken because people are careless. It is broken because nobody ever drew the whole thing and asked if it had to be this way. So draw it. Then ask."</p>
+
+      <div class="pe-legend">
+        <div class="pe-legend-h">One method, five surfaces.</div>
+        <div class="pe-legend-sub">Every part of Healthcare Uncharted is the same move. Map the system, then ask if it had to be this way. Here is the whole map.</div>
+        <div class="pe-legend-grid">
+          <a class="pe-leg" href="/tools/"><div class="pe-leg-n">Tools</div><div class="pe-leg-d">Map each layer, interactively.</div></a>
+          <a class="pe-leg" href="/learn/"><div class="pe-leg-n">Learn</div><div class="pe-leg-d">The frameworks behind the maps.</div></a>
+          <a class="pe-leg" href="/rounds/"><div class="pe-leg-n">Rounds</div><div class="pe-leg-d">The method, pointed at the news.</div></a>
+          <a class="pe-leg" href="/atlas/"><div class="pe-leg-n">Atlas</div><div class="pe-leg-d">Every node, one connected surface.</div></a>
+          <a class="pe-leg" href="/about/"><div class="pe-leg-n">About</div><div class="pe-leg-d">Who drew it, and why.</div></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SOURCES ── -->
+    <div class="jp-sources">
+      <div class="jp-sources-title">Sources &amp; lineage</div>
+      <div class="jp-source">Ohno, Taiichi. <em>Toyota Production System: Beyond Large-Scale Production.</em> The origin of Lean and the catalog of waste (muda).</div>
+      <div class="jp-source">Womack, J. &amp; Jones, D. <em>Lean Thinking</em>, and <em>The Machine That Changed the World.</em> Named and exported the Toyota method, including value-stream mapping.</div>
+      <div class="jp-source">Deming, W. Edwards. <em>Out of the Crisis.</em> System of Profound Knowledge and the PDSA cycle, built on Walter Shewhart's statistical control work.</div>
+      <div class="jp-source">Motorola / General Electric. The Six Sigma methodology and the DMAIC improvement cycle, 1986 onward.</div>
+      <div class="jp-source">Goldratt, Eliyahu. <em>The Goal.</em> The Theory of Constraints and the rule that throughput is governed by a single bottleneck.</div>
+      <div class="jp-source">Object Management Group (OMG). Business Process Model and Notation (BPMN), the formal standard for workflow diagrams.</div>
+      <div class="jp-source">Institute for Healthcare Improvement (IHI). The Model for Improvement, the operational home of PDSA in clinical settings. <a href="https://www.ihi.org" target="_blank" rel="noopener">ihi.org</a></div>
+      <div class="jp-source">Institute of Medicine. <em>To Err Is Human</em> (1999) and <em>Crossing the Quality Chasm</em> (2001). The reports that pushed systems thinking into U.S. patient safety.</div>
+      <div class="jp-source">D2B: An Alliance for Quality, and the broader door-to-balloon literature on STEMI process redesign and national time reductions.</div>
+      <div class="jp-source">Internal: this piece sits alongside the <a href="/learn/laws-and-paradoxes/">Laws &amp; Paradoxes</a> field guide and the <a href="/learn/4ps-framework/">Four Players</a> framework. Every tool linked above is a working instance of the method described here.</div>
+    </div>
+
+  </div>
+</article>
+
+<script>
+(function(){
+  var loopEl  = document.getElementById('pdsaLoop');
+  var playBtn = document.getElementById('pdsaPlay');
+  if (!loopEl || !playBtn) return;
+  var playLabel = playBtn.querySelector('.play-label');
+  var nodes  = loopEl.querySelectorAll('[data-node]');
+  var arrows = loopEl.querySelectorAll('[data-arrow]');
+  var isPlaying = false;
+  var timers = [];
+
+  function clearLoop(){
+    timers.forEach(function(t){ clearTimeout(t); });
+    timers = [];
+    nodes.forEach(function(n){ n.querySelector('.jp-loop-node-bg').classList.remove('active'); });
+    arrows.forEach(function(a){
+      a.querySelector('.jp-loop-arrow').classList.remove('active');
+      a.querySelector('.jp-loop-arrow-head').classList.remove('active');
+    });
+  }
+
+  function playLoop(){
+    if (isPlaying) return;
+    isPlaying = true;
+    playBtn.classList.add('playing');
+    if (playLabel) playLabel.textContent = 'Running…';
+    clearLoop();
+    var stepMs = 720;
+    nodes.forEach(function(node, i){
+      timers.push(setTimeout(function(){ node.querySelector('.jp-loop-node-bg').classList.add('active'); }, i * stepMs));
+      if (arrows[i]){
+        timers.push(setTimeout(function(){
+          arrows[i].querySelector('.jp-loop-arrow').classList.add('active');
+          arrows[i].querySelector('.jp-loop-arrow-head').classList.add('active');
+        }, i * stepMs + 360));
+      }
+    });
+    timers.push(setTimeout(function(){
+      isPlaying = false;
+      playBtn.classList.remove('playing');
+      if (playLabel) playLabel.textContent = 'Run again';
+    }, nodes.length * stepMs + 420));
+  }
+
+  playBtn.addEventListener('click', playLoop);
+
+  if ('IntersectionObserver' in window){
+    var autoPlayed = false;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting && !autoPlayed){ autoPlayed = true; setTimeout(playLoop, 400); }
+      });
+    }, { threshold: 0.4 });
+    io.observe(loopEl);
+  }
+})();
+</script>
+
+<script>
+(function(){
+  var tabs   = Array.prototype.slice.call(document.querySelectorAll('.pe-tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.pe-tabpanel'));
+  if (!tabs.length) return;
+  function show(kit){
+    tabs.forEach(function(t){ var on = t.dataset.kit === kit; t.classList.toggle('active', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    panels.forEach(function(p){ p.classList.toggle('active', p.dataset.kit === kit); });
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){ show(t.dataset.kit); });
+  });
+})();
+</script>
+
+<script>
+/* ── Diagnostic triage ── */
+(function(){
+  var opts = Array.prototype.slice.call(document.querySelectorAll('.dx-opt'));
+  var results = Array.prototype.slice.call(document.querySelectorAll('.dx-result'));
+  if (!opts.length) return;
+  function show(k){
+    opts.forEach(function(o){ var on = o.dataset.dx === k; o.classList.toggle('active', on); o.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    results.forEach(function(r){ r.classList.toggle('active', r.dataset.dx === k); });
+  }
+  opts.forEach(function(o){ o.addEventListener('click', function(){ show(o.dataset.dx); }); });
+})();
+
+/* ── Bottle visual: freeze the animation for reduced-motion users ── */
+(function(){
+  var svg = document.querySelector('.bottle svg');
+  if (!svg || !svg.pauseAnimations) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    try { svg.setCurrentTime(2.4); svg.pauseAnimations(); } catch(e){}
+  }
+})();
+
+/* ── Field-kit copy ── */
+(function(){
+  var T = {
+    sipoc: "SIPOC  ·  <process name>\n\nSUPPLIERS (who feeds the process):\n  - \nINPUTS (what they feed it):\n  - \nPROCESS (5 high-level steps, no more):\n  1. \n  2. \n  3. \n  4. \n  5. \nOUTPUTS (what comes out):\n  - \nCUSTOMERS (who receives it):\n  - \n",
+    pdsa: "PDSA CYCLE  ·  <the one change you are testing>\n\nPLAN   (the change, your prediction, and who / where / when):\n\nDO     (what actually happened, what surprised you):\n\nSTUDY  (did the data match the prediction? by how much?):\n\nACT    (adopt / adapt / abandon, and the next test):\n",
+    a3: "A3  ·  <the problem in one line>\n\n1. BACKGROUND   (why this matters, and why now):\n\n2. CURRENT STATE (the map + the measure, the facts, not opinions):\n\n3. GOAL          (a number, and a date):\n\n4. ROOT CAUSE    (ask why until it stops moving):\n\n5. COUNTERMEASURE(the change you will test):\n\n6. PLAN          (PDSA: who does what, by when):\n\n7. FOLLOW-UP     (did it hold? what is the next constraint?):\n"
+  };
+  Array.prototype.slice.call(document.querySelectorAll('.kit-copy')).forEach(function(b){
+    b.addEventListener('click', function(){
+      var text = T[b.getAttribute('data-kit')] || '';
+      function done(){ var o = b.textContent; b.textContent = 'Copied ✓'; b.classList.add('done'); setTimeout(function(){ b.textContent = o; b.classList.remove('done'); }, 1600); }
+      function fallback(){ var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e){} document.body.removeChild(ta); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    });
+  });
+})();
+</script>

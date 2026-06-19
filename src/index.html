@@ -25,6 +25,29 @@ navPage: home
   width: 100%;
   height: 100%;
   display: block;
+  z-index: 0;
+}
+/* Readability scrim: a solid dark base under the hero text that fades up into
+   the network, so the headline reads cleanly over the busy honeycomb. Sits
+   above the canvas (z0) but below the content (z1) and the compass/SM tile. */
+.hero-v3::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to top,
+    rgba(0, 17, 23, 0.97) 0%,
+    rgba(0, 17, 23, 0.90) 24%,
+    rgba(0, 17, 23, 0.50) 40%,
+    rgba(0, 17, 23, 0.00) 52%);
+}
+[data-theme="light"] .hero-v3::after {
+  background: linear-gradient(to top,
+    rgba(238, 242, 247, 0.98) 0%,
+    rgba(238, 242, 247, 0.92) 24%,
+    rgba(238, 242, 247, 0.55) 40%,
+    rgba(238, 242, 247, 0.00) 52%);
 }
 /* Transparent hit area centered over the canvas compass rose. Clicking it
    re-rolls the routes. Sits above .hero-v3-content (z-index 1) so the centre
@@ -610,8 +633,9 @@ const SEARCH_DATA = [
 // ── HEX GRID BACKDROP ────────────────────────────────────
 // A faint honeycomb behind the hero, the grid the Atlas is built from.
 // A compass rose sits at the centre, like the Atlas hub. Each page load draws
-// two routes that walk the hex borders between random hexes. Static after
-// that: redraws only on resize and theme change.
+// several routes that walk the hex borders between random hexes, plus a field
+// of lit nodes. Roughly 1 in 10 loads is a constellation: routes burst out of
+// the compass. Static after that: redraws only on resize and theme change.
 (function () {
   const cv = document.getElementById('hu-network-bg');
   if (!cv) return;
@@ -624,25 +648,50 @@ const SEARCH_DATA = [
   // time the compass is clicked, so fresh routes draw on demand. One crosses
   // left-to-right, one top-to-bottom.
   function rollRoutes() {
-    return [
-      { a: [0.08 + Math.random() * 0.30, 0.14 + Math.random() * 0.46],
-        b: [0.62 + Math.random() * 0.30, 0.14 + Math.random() * 0.46] },
-      { a: [0.14 + Math.random() * 0.72, 0.05 + Math.random() * 0.18],
-        b: [0.14 + Math.random() * 0.72, 0.74 + Math.random() * 0.20] }
+    const r = [
+      // left-to-right
+      { a: [0.05 + Math.random() * 0.22, 0.12 + Math.random() * 0.48],
+        b: [0.66 + Math.random() * 0.28, 0.12 + Math.random() * 0.48] },
+      // top-to-bottom
+      { a: [0.12 + Math.random() * 0.74, 0.05 + Math.random() * 0.16],
+        b: [0.12 + Math.random() * 0.74, 0.74 + Math.random() * 0.20] },
+      // a diagonal cross
+      { a: [0.05 + Math.random() * 0.24, 0.58 + Math.random() * 0.30],
+        b: [0.70 + Math.random() * 0.24, 0.08 + Math.random() * 0.30] }
     ];
+    // a fourth most of the time, for a denser web
+    if (Math.random() < 0.65) {
+      r.push({ a: [0.06 + Math.random() * 0.28, 0.10 + Math.random() * 0.26],
+               b: [0.60 + Math.random() * 0.30, 0.52 + Math.random() * 0.36] });
+    }
+    return r;
   }
-  let routes = rollRoutes();
+
+  // Rare "constellation": routes burst out of the compass to points all around
+  // the board. Rolled on ~1 in 10 page loads (and compass clicks) as a treat.
+  function rollSpecialRoutes() {
+    const out = [];
+    const n = 6 + Math.floor(Math.random() * 3);            // 6 to 8 spokes
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * Math.PI * 2 + Math.random() * 0.35;
+      const rad = 0.40 + Math.random() * 0.12;
+      const bx = Math.max(0.04, Math.min(0.96, 0.5 + Math.cos(ang) * rad * 0.92));
+      const by = Math.max(0.05, Math.min(0.93, 0.5 + Math.sin(ang) * rad));
+      out.push({ a: [0.5, 0.5], b: [bx, by] });
+    }
+    return out;
+  }
 
   // Scattered lit hexes: accent nodes in random Atlas zone colors, rolled
   // fresh each page load. They sit clear of the central compass.
   const ATLAS_COLORS = ['#FF6B6B','#6aabff','#4ECDC4','#5DBF87','#0EA5E9','#8B5CF6','#E8A838'];
   const hexToRgb = h =>
     [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)].join(',');
-  function rollLitHexes() {
-    const n = 4 + Math.floor(Math.random() * 5);            // 4 to 8
+  function rollLitHexes(count) {
+    const n = (count != null) ? count : (8 + Math.floor(Math.random() * 6));  // 8 to 13
     const out = [];
     let guard = 0;
-    while (out.length < n && guard++ < 200) {
+    while (out.length < n && guard++ < 300) {
       const fx = 0.04 + Math.random() * 0.92;
       const fy = 0.05 + Math.random() * 0.90;
       if (Math.abs(fx - 0.5) < 0.11 && Math.abs(fy - 0.5) < 0.26) continue;   // clear the compass
@@ -650,7 +699,20 @@ const SEARCH_DATA = [
     }
     return out;
   }
-  let litHexes = rollLitHexes();
+
+  // Roll the whole backdrop. ~1 in 10 is a special constellation: a burst of
+  // routes out of the compass plus a denser field of lit nodes.
+  function rollAll() {
+    if (Math.random() < 0.1) {
+      routes = rollSpecialRoutes();
+      litHexes = rollLitHexes(15 + Math.floor(Math.random() * 5));            // 15 to 19
+    } else {
+      routes = rollRoutes();
+      litHexes = rollLitHexes();
+    }
+  }
+  let routes, litHexes;
+  rollAll();
 
   // Easter egg: a tile that glows dark green, reads "SM", and links to the
   // (otherwise unlisted) Secret Menu. Teaser at clicks 8-9 (gone by 10), then
@@ -958,8 +1020,7 @@ const SEARCH_DATA = [
   // as a page refresh, but without the reload.
   const compassBtn = document.getElementById('hu-compass-btn');
   if (compassBtn) compassBtn.addEventListener('click', () => {
-    routes = rollRoutes();
-    litHexes = rollLitHexes();
+    rollAll();
     compassClicks++;
 
     // First teaser window at clicks 8-9 (gone by 10). Then a recurring cycle

@@ -7,6 +7,20 @@ module.exports = {
   modules: [
 
     {
+      id:       'process-engineering',
+      num:      'M01',
+      category: 'Method',
+      ps:       'P2a / P2b / P3 / P4',
+      title:    'Process Engineering: Designing the Work Behind the Work',
+      desc:     'Most healthcare workflows were never designed. They accreted. This is the discipline of building them on purpose. Mapping the work, finding the waiting, killing the variation. And why every map and tool on this site is that method, pointed at a system the size of a country.',
+      url:      '/learn/process-engineering/',
+      tags:     ['Lean', 'DMAIC', 'Workflow Mapping', 'PDSA'],
+      status:   'live',
+      featured: true,
+      labNode:  'process-engineering'
+    },
+
+    {
       id:       'ehr-data-model',
       num:      '01',
       category: 'EHR Fundamentals',
