@@ -86,6 +86,23 @@ function fetchJson(url) {
     };
   }
 
+  // --- current-vintage county-equivalent corrections (us-atlas is older) ---
+  // Connecticut replaced its 8 counties with 9 planning regions (2022 Census
+  // vintage); Alaska split Valdez-Cordova into Chugach + Copper River (2019).
+  // CDC/BLS/Census data use the new FIPS, so the spine must too. Facilities (old
+  // CMS county names) map onto these via the vintage fallback in aggregate.js.
+  ['09001', '09003', '09005', '09007', '09009', '09011', '09013', '09015', '02261'].forEach((f) => { delete counties[f]; });
+  const VINTAGE_ADD = {
+    '09110': 'Capitol', '09120': 'Greater Bridgeport', '09130': 'Lower Connecticut River Valley',
+    '09140': 'Naugatuck Valley', '09150': 'Northeastern Connecticut', '09160': 'Northwest Hills',
+    '09170': 'South Central Connecticut', '09180': 'Southeastern Connecticut', '09190': 'Western Connecticut',
+    '02063': 'Chugach', '02066': 'Copper River',
+  };
+  for (const [fips, name] of Object.entries(VINTAGE_ADD)) {
+    const sf = fips.slice(0, 2);
+    counties[fips] = { name, stateFips: sf, stateAbbr: STATES[sf][0] };
+  }
+
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'geo.json'), JSON.stringify(geo, null, 2) + '\n');
   fs.writeFileSync(

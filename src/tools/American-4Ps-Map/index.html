@@ -646,6 +646,25 @@ body[data-colorblind="true"] {
 .state.has-val-4 { fill: var(--c4); }
 .state.has-val-5 { fill: var(--c5); }
 .state.no-data { fill: url(#no-data-hatch); }
+/* county choropleth (same quintile palette as states) */
+.county { stroke: rgba(0,0,0,0.10); stroke-width: 0.2; vector-effect: non-scaling-stroke; cursor: default; }
+[data-theme="light"] .county { stroke: rgba(0,0,0,0.06); }
+.county.has-val-1 { fill: var(--c1); } .county.has-val-2 { fill: var(--c2); }
+.county.has-val-3 { fill: var(--c3); } .county.has-val-4 { fill: var(--c4); }
+.county.has-val-5 { fill: var(--c5); } .county.no-data { fill: url(#no-data-hatch); }
+.county:hover { stroke: var(--hu-text-1); stroke-width: 0.9; }
+.county-state-border { fill: none; stroke: var(--hu-border-2); stroke-width: 0.7; vector-effect: non-scaling-stroke; pointer-events: none; }
+/* state / county granularity toggle */
+.grain-toggle { display: flex; gap: 0; flex-shrink: 0; align-self: flex-start; border: 1px solid var(--hu-border); border-radius: 7px; overflow: hidden; }
+.grain-btn { padding: 5px 12px; font-size: 11px; font-weight: 600; font-family: var(--font); background: transparent; color: var(--hu-text-3); border: none; cursor: pointer; transition: all 0.15s; }
+.grain-btn + .grain-btn { border-left: 1px solid var(--hu-border); }
+.grain-btn:hover:not(:disabled) { color: var(--hu-text-1); background: var(--hu-raised); }
+.grain-btn.active { background: var(--hu-teal); color: #06222b; }
+.grain-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.county-tip { position: fixed; z-index: 90; pointer-events: none; background: var(--hu-surface); border: 1px solid var(--hu-border-2); border-radius: 8px; padding: 7px 11px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); font-size: 12px; }
+.county-tip[hidden] { display: none; }
+.county-tip b { color: var(--hu-text-1); display: block; font-size: 12.5px; }
+.county-tip span { font-family: var(--mono); font-size: 11px; color: var(--hu-teal); }
 .stat-value.no-data-val { font-size: 12px; color: var(--hu-text-3); font-family: var(--font); font-weight: 400; }
 .state:hover {
   stroke: var(--hu-text-1);
@@ -1640,6 +1659,10 @@ body[data-colorblind="true"] {
           </div>
           <div class="map-h1-sub" id="mapH1Sub">Age-adjusted prevalence, % of adult population</div>
         </div>
+        <div class="grain-toggle" id="grainToggle" data-tip="<strong>Map detail</strong><br>Switch between state and county view. County is available for metrics with county-level source data (population health, income, unemployment, uninsured).">
+          <button class="grain-btn active" data-grain="state">State</button>
+          <button class="grain-btn" data-grain="county" id="grainCountyBtn">County</button>
+        </div>
         <div class="map-outlook-chips" id="mapOutlookChips" style="display:none">
           <div class="map-outlook-chip" id="mocLens" style="display:none">
             <span class="moc-prefix" id="mocLensPrefix"></span>
@@ -1668,6 +1691,7 @@ body[data-colorblind="true"] {
         <span class="legend-anno mob-legend-anno" id="mobLegendAnno">worse → better</span>
       </div>
 
+      <div class="county-tip" id="countyTip" hidden></div>
       <div class="map-stage">
         <button class="pz-reset-btn" id="mapPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
         <div class="pz-hint" id="mapPzHint">Pinch to zoom &middot; drag to pan</div>
@@ -2319,6 +2343,51 @@ let metricOutlookCollapsed = false;
 let compareState = null;
 let mapMode = 'explore';
 
+// ===== COUNTY GRANULARITY =====
+let mapGrain = 'state';            // 'state' | 'county'
+let countyData = null;             // /assets/data/countyData.json (eager, for toggle availability)
+let countyFeatures = null;         // us-atlas counties (lazy, on first county view)
+let _countyGeoLoading = false;
+// This map's "baseline" lens holds income/unemployment, which countyData stores under "economics".
+const COUNTY_ALIAS = { baseline: 'economics' };
+const countyLensKey = (lens) => COUNTY_ALIAS[lens] || lens;
+// us-atlas draws OLD county shapes (CT counties, AK Valdez-Cordova); county data uses the
+// current units, so map each old shape's FIPS to its current data FIPS (best-fit).
+const COUNTY_FIPS_XWALK = { '09001':'09190','09003':'09110','09005':'09160','09007':'09130','09009':'09170','09011':'09180','09013':'09110','09015':'09150','02261':['02063','02066'] };
+
+function metricHasCounty(lens, idx) { return !!(countyData && countyData[countyLensKey(lens)] && countyData[countyLensKey(lens)][idx]); }
+function countyVal(lens, idx, fips) {
+  if (!countyData) return null;
+  const d = countyData[countyLensKey(lens)] && countyData[countyLensKey(lens)][idx];
+  if (!d) return null;
+  if (d[fips] != null) return d[fips];
+  const x = COUNTY_FIPS_XWALK[fips]; if (!x) return null;
+  if (Array.isArray(x)) { const a = x.map(f => d[f]).filter(v => v != null); return a.length ? Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10 : null; }
+  return d[x] != null ? d[x] : null;
+}
+const _cqCache = {};
+function countyQuintileRaw(lens, idx, fips) {
+  const key = countyLensKey(lens) + ':' + idx;
+  if (!_cqCache[key]) {
+    const d = (countyData && countyData[countyLensKey(lens)] && countyData[countyLensKey(lens)][idx]) || {};
+    const entries = Object.entries(d).filter(([,v]) => v != null).sort((a,b) => a[1]-b[1]);
+    const n = entries.length, r = {};
+    let i = 0;
+    while (i < n) { let j = i; while (j < n && entries[j][1] === entries[i][1]) j++; const mid = (i+j-1)/2; const q = Math.min(5, Math.ceil((mid+1)/n*5)); for (let k=i;k<j;k++) r[entries[k][0]] = q; i = j; }
+    _cqCache[key] = r;
+  }
+  let q = _cqCache[key][fips];
+  if (q == null) { const x = COUNTY_FIPS_XWALK[fips]; if (x) q = _cqCache[key][Array.isArray(x) ? x[0] : x]; }
+  return q != null ? q : null;
+}
+// direction-adjusted bucket, matching displayQuintile's convention (county is single-vintage, no year/change mode)
+function displayCountyQuintile(fips) {
+  const q = countyQuintileRaw(activeLens, activeMetricIdx, fips);
+  if (q == null) return null;
+  const dir = METRICS[activeLens].items[activeMetricIdx]?.dir ?? -1;
+  return dir === 1 ? q : dir === -1 ? (6 - q) : q;
+}
+
 // ===== OVERALL OUTLOOK =====
 const OUTLOOK_CONFIG = {
   patient: {
@@ -2700,6 +2769,7 @@ async function loadMap() {
     usFeatures = topojson.feature(us, us.objects.states).features;
     document.getElementById('mapLoading').style.display = 'none';
     drawMap();
+    fetch('/assets/data/countyData.json').then(r => r.json()).then(d => { countyData = d; refreshGrainToggle(); }).catch(() => {});
     let resizeTimer;
     const ro = new ResizeObserver(() => {
       clearTimeout(resizeTimer);
@@ -2749,6 +2819,57 @@ function refreshTimeLabel() {
   }
 }
 
+async function ensureCountyGeo() {
+  if (countyFeatures || _countyGeoLoading) return;
+  _countyGeoLoading = true;
+  try {
+    const us = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json').then(r => r.json());
+    countyFeatures = topojson.feature(us, us.objects.counties).features;
+    drawMap();
+  } catch (e) { console.error('county geometry load failed', e); }
+  _countyGeoLoading = false;
+}
+
+function refreshGrainToggle() {
+  const btn = document.getElementById('grainCountyBtn');
+  if (!btn) return;
+  const ok = metricHasCounty(activeLens, activeMetricIdx);
+  btn.disabled = !ok;
+  // if we're in county view but the new metric has no county data, fall back to state
+  if (!ok && mapGrain === 'county') mapGrain = 'state';
+  document.querySelectorAll('#grainToggle .grain-btn').forEach(b => b.classList.toggle('active', b.dataset.grain === mapGrain));
+}
+
+function showCountyTip(fips, name, x, y) {
+  const tip = document.getElementById('countyTip');
+  const v = countyVal(activeLens, activeMetricIdx, fips);
+  const unit = METRICS[activeLens].items[activeMetricIdx]?.unit;
+  tip.innerHTML = '<b>' + name + '</b><span>' + (v == null ? 'no data' : fmtVal(v, unit)) + '</span>';
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x + 14, window.innerWidth - r.width - 8) + 'px';
+  tip.style.top = Math.max(8, y - r.height - 12) + 'px';
+}
+function hideCountyTip() { const t = document.getElementById('countyTip'); if (t) t.hidden = true; }
+
+function drawCountyChoropleth(path) {
+  svg.append('g')
+    .selectAll('path')
+    .data(countyFeatures)
+    .join('path')
+    .attr('d', path)
+    .attr('class', d => { const q = displayCountyQuintile(String(d.id).padStart(5, '0')); return 'county ' + (q === null ? 'no-data' : 'has-val-' + q); })
+    .on('mousemove', function(event, d) { if (isTouch()) return; showCountyTip(String(d.id).padStart(5, '0'), (d.properties && d.properties.name) || 'County', event.clientX, event.clientY); })
+    .on('mouseleave', hideCountyTip);
+  // state borders on top for orientation
+  svg.append('g')
+    .selectAll('path')
+    .data(usFeatures)
+    .join('path')
+    .attr('d', path)
+    .attr('class', 'county-state-border');
+}
+
 function drawMap() {
   if (!usFeatures) return;
   const svgEl = document.getElementById('mapSvg');
@@ -2759,6 +2880,7 @@ function drawMap() {
 
   svg.attr('viewBox', `0 0 ${w} ${h}`).attr('width', w).attr('height', h);
   svg.selectAll('*').remove();
+  refreshGrainToggle();   // keep the State/County toggle in sync with the current metric
 
   const defs = svg.append('defs');
   const pat = defs.append('pattern')
@@ -2784,6 +2906,14 @@ function drawMap() {
   const projection = d3.geoAlbersUsa()
     .fitExtent([[pad, pad], [w - pad, h - pad]], { type: 'FeatureCollection', features: usFeatures });
   const path = d3.geoPath(projection);
+
+  // County view: draw the county choropleth + state borders and stop. (County data
+  // is single-vintage, so the year slider / change mode don't apply here.)
+  if (mapGrain === 'county' && metricHasCounty(activeLens, activeMetricIdx)) {
+    if (countyFeatures) { drawCountyChoropleth(path); return; }
+    ensureCountyGeo();   // not loaded yet → fetch, then redraw; fall through to states this frame
+  }
+
   function colorClassFor(abbr) {
     const q = displayQuintile(abbr);
     return q === null ? 'no-data' : 'has-val-' + q;
@@ -3890,6 +4020,17 @@ renderRanking();
 renderTrendChart();
 renderEntityPanel();
 updateStatPanel();
+
+// State / County granularity toggle
+document.getElementById('grainToggle').addEventListener('click', (e) => {
+  const b = e.target.closest('.grain-btn');
+  if (!b || b.disabled || b.dataset.grain === mapGrain) return;
+  mapGrain = b.dataset.grain;
+  document.querySelectorAll('#grainToggle .grain-btn').forEach(x => x.classList.toggle('active', x.dataset.grain === mapGrain));
+  if (mapGrain === 'county') { hideCountyTip(); ensureCountyGeo(); }
+  drawMap();
+});
+
 loadMap();
 updateHash();
 

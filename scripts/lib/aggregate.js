@@ -31,11 +31,20 @@ function buildCountyIndex(counties) {
   return idx;
 }
 
+// Old CMS county names -> current county-equivalent FIPS, for geographies that
+// changed after CMS's data: CT's 8 counties -> 9 planning regions (best-fit), and
+// AK's Valdez-Cordova -> Chugach. Keeps facilities joinable to the current spine.
+const VINTAGE_FALLBACK = {
+  'CT|FAIRFIELD': '09190', 'CT|HARTFORD': '09110', 'CT|LITCHFIELD': '09160', 'CT|MIDDLESEX': '09130',
+  'CT|NEWHAVEN': '09170', 'CT|NEWLONDON': '09180', 'CT|TOLLAND': '09110', 'CT|WINDHAM': '09150',
+  'AK|VALDEZCORDOVA': '02063',
+};
+
 /** Resolve a facility to a county FIPS, with special cases. Returns fips or null. */
 function resolveCountyFips(facility, countyIdx) {
   if (facility.s === 'DC') return '11001'; // CMS sometimes labels DC county "THE DISTRICT"
   const key = facility.s + '|' + normCounty(facility.co);
-  return countyIdx[key] || null;
+  return countyIdx[key] || VINTAGE_FALLBACK[key] || null;
 }
 
 /** State population from county populations (countyFIPS[:2] === stateFIPS). */
