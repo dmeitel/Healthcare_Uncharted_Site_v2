@@ -21,6 +21,20 @@ module.exports = {
     },
 
     {
+      id:       'healthcare-data-sources',
+      num:      'M02',
+      category: 'Infrastructure',
+      ps:       'P1 / P2a / P2b / P3 / P4',
+      title:    'Where Healthcare Data Lives',
+      desc:     'Every map and tool on this site runs on real public data. CDC, Census, CMS, BLS, HRSA, KFF. This is exactly what we pull, where it comes from, and how we house it so one dataset can feed the whole site at once. The blueprint for the data warehouse underneath everything.',
+      url:      '/learn/healthcare-data-sources/',
+      tags:     ['Data', 'Sourcing', 'Architecture'],
+      status:   'live',
+      featured: false,
+      labNode:  'data-warehouse'
+    },
+
+    {
       id:       'ehr-data-model',
       num:      '01',
       category: 'EHR Fundamentals',

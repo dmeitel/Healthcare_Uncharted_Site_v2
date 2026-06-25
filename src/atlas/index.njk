@@ -675,9 +675,7 @@ const ZONE_DEFS = [
       {q:2,  r:-7, type:'node',    label:'FHIR &\nInterop',        nodeId:'fhir',
         desc:'HL7 FHIR R4. The standard making EHR data moveable. SMART on FHIR apps, patient-facing APIs, and the 21st Century Cures mandate behind it.',
         links:[{label:'Iceberg Map', url:'/tools/healthcare-iceberg-map/', icon:'🧊'},{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
-      {q:0,  r:-5, type:'node',    label:'Data\nWarehousing',      nodeId:'data-warehouse',
-        desc:'Epic Caboodle, Clarity, enterprise data warehouses. The analytics layer above the EHR. SQL queries, dashboards, and the analysts keeping it running.',
-        links:[{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
+      {q:0,  r:-5, type:'terrain', label:'', nodeId:null, desc:''},
       {q:3,  r:-3, type:'node',    label:'Clinical\nTrials',       nodeId:'trials',
         desc:'Phase I–IV trial structure. IRB oversight, informed consent, sponsor/CRO relationships. The pipeline from bench to bedside. Most trials fail.',
         links:[]},
@@ -916,6 +914,9 @@ const ZONE_DEFS = [
       {q:-4, r:7,  type:'node',    label:'Pharma\nBenefits PBM',   nodeId:'pbm-tech',
         desc:'PBM technology layer: Express Scripts, CVS Caremark, OptumRx platforms. Formulary management, rebate reconciliation, prior auth automation.',
         links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-6, r:5,  type:'node',    label:'Data\nWarehousing',      nodeId:'data-warehouse',
+        desc:'Where raw datasets are housed, cleaned, and made queryable. Epic Caboodle and Clarity above the EHR; public-data warehouses behind every map on this site. The analytics layer above the source data.',
+        links:[{label:'Where Data Lives', url:'/learn/healthcare-data-sources/', icon:'📦'},{label:'Clinical SQL Mystery', url:'/tools/clinical-sql-mystery/', icon:'🔍'}]},
       {q:-6, r:4,  type:'terrain', label:'', nodeId:null, desc:''},
     ]
   },
@@ -2992,8 +2993,10 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
     const col=TC[n.type]||'#9AA7B2';
     let h='<div class="fd-top"><button class="fd-back" id="fd-back">‹ results</button><span class="fd-type" style="background:'+col+'22;color:'+col+'">'+(TN[n.type]||n.type)+'</span></div>';
     h+='<div class="fd-title">'+esc(n.label)+'</div><div class="fd-uid">'+esc(n.uid)+'</div>';
-    const fk=Object.entries(n.facets||{}).filter(kv=>kv[0]!=='layer');
+    const fk=Object.entries(n.facets||{}).filter(kv=>kv[0]!=='layer'&&kv[0]!=='stats');
     if(fk.length) h+='<div class="fd-facets">'+fk.map(kv=>'<span class="fk">'+esc(kv[0])+'</span><span class="fv">'+esc(kv[1])+'</span>').join('')+'</div>';
+    const stats=n.facets&&n.facets.stats;
+    if(stats&&stats.length){ h+='<div class="fd-sec">data</div><div class="fd-facets">'+stats.map(s=>{const u=s.unit==='%'?'%':s.unit==='$k'?'k':s.unit?(' '+s.unit):''; return '<span class="fk">'+esc(s.label)+'</span><span class="fv">'+esc(s.value+u)+'</span>';}).join('')+'</div>'; }
     if(n.rels&&n.rels.length) h+='<div class="fd-sec">connects to</div>'+relGroups(n.rels,false);
     const inc=INC.get(n.uid)||[];
     if(inc.length) h+='<div class="fd-sec">referenced by</div>'+relGroups(inc,true);

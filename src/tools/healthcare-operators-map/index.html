@@ -16,26 +16,42 @@ has_interactive: true
 /* :root vars + nav come from the site (hu-global.css / base.njk) now — this tool uses the standard header + light/dark theme */
 *{box-sizing:border-box}
 .wrap a{color:var(--teal);text-decoration:none}
-.wrap{max-width:1180px;margin:0 auto;padding:30px 28px 70px}
-.head h1{font-family:var(--display);font-size:clamp(25px,3.6vw,38px);font-weight:800;letter-spacing:-.025em;line-height:1.05}
+/* full-screen app layout: fill the viewport below the sticky nav, no page scroll */
+html,body{height:100%}
+body{overflow:hidden;display:flex;flex-direction:column}
+body>nav{flex:none}
+#main-content{flex:1;min-height:0;display:flex}
+.wrap{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;padding:12px 20px 12px;overflow:hidden}
+.head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none}
+.head h1{font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
 .head h1 em{font-style:normal;color:var(--teal)}
-.head p{font-size:15px;color:var(--t2);max-width:700px;margin-top:11px;line-height:1.7}
+.head p{display:none}
 .head p strong{color:var(--t1)}
-.src-banner{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--teal);background:rgba(78,205,196,.09);border:1px solid rgba(78,205,196,.28);border-radius:8px;padding:7px 13px}
+.src-banner{flex:none;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--teal);background:rgba(78,205,196,.09);border:1px solid rgba(78,205,196,.28);border-radius:8px;padding:7px 13px}
 
-.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:24px 0 18px}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;margin:10px 0 0;scrollbar-width:none;flex:none}
+.controls::-webkit-scrollbar{display:none}
+.controls>*{flex:none}
 .controls .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-right:4px}
-.cb{font-size:12.5px;padding:6px 13px;border-radius:18px;border:1px solid var(--border);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.cb{font-size:12.5px;padding:6px 13px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;font-family:var(--font)}
 .cb:hover{color:var(--t2);border-color:var(--border2)}
 .cb.active{color:#06121f;background:var(--teal);border-color:var(--teal);font-weight:600}
 
-.board{display:grid;grid-template-columns:1fr 312px;gap:20px;align-items:start}
-@media(max-width:880px){.board{grid-template-columns:1fr}}
-.map-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px 12px;min-width:0;position:relative}
-.map-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:10px;flex-wrap:wrap}
-.map-title{font-family:var(--display);font-size:18px;font-weight:700}
-.map-sub{font-size:12px;color:var(--t3);font-family:var(--mono)}
-.map-stage{position:relative;width:100%;height:min(64vh,580px);overflow:hidden}
+.board{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:stretch;flex:1;min-height:0;margin-top:10px}
+@media(max-width:880px){
+  body{overflow:auto;display:block}
+  #main-content{display:block}
+  .wrap{height:auto;overflow:visible;padding:16px}
+  .board{grid-template-columns:1fr;flex:none;min-height:0;margin-top:14px}
+  .map-stage{height:min(70vh,520px)!important;flex:none!important}
+  .side{height:auto!important;overflow:visible!important}
+}
+.map-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px 12px;min-width:0;position:relative;height:100%;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.map-head{margin:-16px -18px 14px;padding:13px 18px 11px;background:var(--raised);border-bottom:2px solid var(--border2);border-radius:13px 13px 0 0}
+.map-eyebrow{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
+.map-title{font-family:var(--display);font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.01em}
+.map-sub{font-size:12px;color:var(--t3);font-family:var(--mono);margin-top:3px}
+.map-stage{position:relative;width:100%;flex:1;min-height:0;overflow:hidden}
 #mapSvg{width:100%;height:100%;display:block}
 .map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--t3)}
 .state{stroke:var(--dark);stroke-width:.6;cursor:pointer;transition:opacity .12s;vector-effect:non-scaling-stroke}
@@ -71,13 +87,16 @@ has_interactive: true
 .counties .c-line path{fill:none;stroke:#fff;stroke-opacity:.82;stroke-width:.9;vector-effect:non-scaling-stroke;pointer-events:all;cursor:pointer}
 .counties .c-line path.hot{fill:rgba(255,255,255,.15);stroke-opacity:1}
 .counties .c-line path.sel{fill:rgba(255,255,255,.13);stroke-opacity:1}
+.counties .c-fill path{stroke:none;pointer-events:none;opacity:.8}
+.chl{display:inline-flex;align-items:center;gap:7px;margin-left:10px;font-family:var(--mono);font-size:10px;color:var(--t3)}
+.chl-bar{width:120px;height:8px;border-radius:5px}
 .lakes path{fill:#0c2236;stroke:#1f4a6b;stroke-opacity:.7;stroke-width:.6;vector-effect:non-scaling-stroke;pointer-events:none}
 .hosp:hover{stroke:#fff;stroke-width:1.4}
 .backbtn{position:absolute;top:14px;left:18px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--t2);background:rgba(13,26,44,.9);border:1px solid var(--border2);border-radius:7px;padding:6px 12px;cursor:pointer}
 .backbtn:hover{border-color:var(--teal);color:#fff}
-.legend{display:flex;align-items:center;gap:8px;margin-top:12px;font-family:var(--mono);font-size:10.5px;color:var(--t3);flex-wrap:wrap}
+.legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--t3);flex-wrap:wrap;flex:none}
 .legend-bar{flex:1;height:9px;border-radius:5px;max-width:240px}
-.ptleg{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-family:var(--mono);font-size:10.5px;color:var(--t2)}
+.ptleg{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--t2);flex:none}
 .ptleg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
 /* per-state value labels on the U.S. choropleth */
 .statenum{font-family:var(--mono);font-size:11px;font-weight:700;fill:#fff;paint-order:stroke;stroke:rgba(8,16,28,.82);stroke-width:2.6px;stroke-linejoin:round}
@@ -94,10 +113,11 @@ has_interactive: true
 .tip b{font-size:12.5px;color:#fff;display:block}
 .tip span{font-family:var(--mono);font-size:10.5px;color:var(--t2)}
 
-.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:72px}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.side{display:flex;flex-direction:column;gap:14px;height:100%;min-height:0;overflow-y:auto;padding-right:2px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
 .panel h3{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
-.pf-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.panel>h3{padding-bottom:9px;border-bottom:1px solid var(--border)}
+.pf-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .pf-head h3{font-family:var(--display);font-size:19px;font-weight:700;color:var(--t1);text-transform:none;letter-spacing:-.01em;margin:0}
 .pf-clear{font-family:var(--mono);font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;padding:4px}
 .pf-clear:hover{color:var(--t1)}
@@ -126,10 +146,12 @@ has_interactive: true
 
   <div class="controls restabs" id="restabs"><span class="lbl">Resource</span></div>
   <div class="controls" id="controls"><span class="lbl">Color by</span></div>
+  <div class="controls" id="countyControls" hidden><span class="lbl">County layer</span></div>
 
   <div class="board">
     <div class="map-card">
       <div class="map-head">
+        <div class="map-eyebrow" id="mapEyebrow">Operations</div>
         <div class="map-title" id="mapTitle">United States</div>
         <div class="map-sub" id="mapSub"></div>
       </div>
@@ -235,7 +257,9 @@ let HOSP=[], byState={}, usFeatures=null, featByAbbr={};
 let activeMetric=0, view='us', selState=null, selHosp=null, selCounty=null, selOrg=null, Gcur=null, curProj=null;
 let showNums=true;
 let countyFeatures=null, countyLoading=false, lakeFeatures=null, countyPop=null, curPts=null, curK=1, spiderCluster=null;
+let countyHealth=null, countyMetric=null;   // countyData.json (county-grain metrics) + active patient metric index (string) or null=off
 let curSvg=null, curZ=null, curW=0, curH=0, focusH=null, curClusters=null, SYS_LIST=[];
+let curT=null, preserveCam=false;   // last camera transform + flag to hold it across an in-place redraw
 
 const metric=()=>METRICS_OF()[activeMetric]||METRICS_OF()[0];
 const fmtM=v=>v==null?'—':(metric().u==='%'?v+'%':metric().u==='★'?v+'★':v.toLocaleString('en-US'));
@@ -250,16 +274,86 @@ function buildControls(){
   c.innerHTML='<span class="lbl">Color by</span>'+M.map((m,i)=>`<button class="cb ${i===activeMetric?'active':''}" data-i="${i}">${m.label}</button>`).join('');
 }
 function stateVal(ab){ return metric().f(byState[ab]||[]); }
+
+// ── County choropleth (countyData.json — any lens with county-grain data) ───
+const CH_SHORT={'Adults reporting fair or poor health':'Fair/poor health','Coronary heart disease prevalence':'Heart disease','Diabetes prevalence':'Diabetes','Obesity prevalence':'Obesity','Routine checkup in past year':'Checkup','Unemployment rate':'Unemployment','Median household income':'Median income'};
+const CH_LENS_LABEL={patient:'Community health · CDC PLACES',economics:'Economy · BLS / Census',baseline:'Demographics · Census',payer:'Coverage · Census / CMS',clinical:'Workforce · HRSA / BLS',operations:'Operations · CMS / AHA',policy:'Policy'};
+const CH_LENS_ORDER=['patient','economics','baseline','payer','clinical','operations','policy'];
+const chShort=n=>CH_SHORT[n]||n;
+const chFmt=(v,m)=>v==null?'—':(m&&m.unit==='%'?v+'%':m&&m.unit==='$k'?'$'+v+'k':v.toLocaleString('en-US'));
+// flat list of available county metrics across every lens present in the data
+function chMetrics(){
+  const M=countyHealth&&countyHealth.meta; if(!M) return [];
+  const lenses=Object.keys(M).sort((a,b)=>{const ia=CH_LENS_ORDER.indexOf(a),ib=CH_LENS_ORDER.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib);});
+  const out=[];
+  for(const lens of lenses) for(const idx of Object.keys(M[lens])) out.push({key:lens+':'+idx,lens,idx,...M[lens][idx]});
+  return out;
+}
+function chMeta(key){ if(!key||!countyHealth||!countyHealth.meta) return null; const [lens,idx]=key.split(':'); const m=countyHealth.meta[lens]&&countyHealth.meta[lens][idx]; return m?{...m,lens,idx}:null; }
+function chVals(key){ if(!key||!countyHealth) return null; const [lens,idx]=key.split(':'); return countyHealth[lens]&&countyHealth[lens][idx]; }
+// The base map (us-atlas) still draws the OLD county geographies, but CDC/BLS now
+// publish on the NEW ones: Connecticut switched to 9 planning regions (2022) and
+// Alaska split Valdez-Cordova (2019). Best-fit each old shape to the new unit it
+// most overlaps, so those areas show real data instead of rendering blank.
+const CH_FIPS_XWALK={'09001':'09190','09003':'09110','09005':'09160','09007':'09130','09009':'09170','09011':'09180','09013':'09110','09015':'09150','02261':['02063','02066']};
+function chCountyVal(vals,fips){
+  if(!vals) return null;
+  if(vals[fips]!=null) return vals[fips];
+  const x=CH_FIPS_XWALK[fips]; if(!x) return null;
+  if(Array.isArray(x)){ const a=x.map(f=>vals[f]).filter(v=>v!=null); return a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10:null; }
+  return vals[x]!=null?vals[x]:null;
+}
+function countyChoro(){
+  if(countyMetric==null||!countyHealth) return null;
+  const vals=chVals(countyMetric), meta=chMeta(countyMetric);
+  if(!vals||!meta) return null;
+  const arr=Object.values(vals).filter(v=>v!=null); if(!arr.length) return null;
+  const mn=Math.min(...arr), mx=Math.max(...arr);
+  const range=d3.quantize(d3.interpolateRgb('#1d3350','#4ECDC4'),5);
+  return {scale:d3.scaleQuantize().domain([mn,mx]).range(range),mn,mx,range,meta,vals};
+}
+function buildCountyControls(){
+  const c=document.getElementById('countyControls'); if(!c) return;
+  const mets=chMetrics(); if(!mets.length){ c.hidden=true; return; }
+  let html='<span class="lbl">County layer</span>'+
+    `<button class="cb ${countyMetric==null?'active':''}" data-cm="off">Off</button>`+
+    mets.map(m=>`<button class="cb ${m.key===countyMetric?'active':''}" data-cm="${m.key}">${chShort(m.name)}</button>`).join('');
+  const ch=countyChoro();
+  if(ch){
+    const dir=ch.meta.dir===-1?'higher = worse':ch.meta.dir===1?'higher = better':'';
+    html+=`<span class="chl"><span>${chFmt(ch.mn,ch.meta)}</span><span class="chl-bar" style="background:linear-gradient(90deg,${ch.range.join(',')})"></span><span>${chFmt(ch.mx,ch.meta)}</span>${dir?`<span style="opacity:.65">· ${dir}</span>`:''}</span>`;
+  }
+  c.innerHTML=html;
+}
+function setCountyMetric(k){ countyMetric=(k==='off')?null:k; buildCountyControls(); paintCounties(); if(view==='state'&&selCounty) renderCounty(selCounty); }
+function countyHealthRows(fips){
+  const mets=chMetrics(); if(!mets.length) return '';
+  const groups={}; mets.forEach(m=>{(groups[m.lens]=groups[m.lens]||[]).push(m);});
+  let html='';
+  for(const lens of Object.keys(groups)){
+    const yr=groups[lens][0].year||'';
+    html+=`<div class="sec-h" style="color:var(--teal)">${CH_LENS_LABEL[lens]||lens}${yr?' '+yr:''}</div>`;
+    html+=groups[lens].map(m=>{const v=chCountyVal(chVals(m.key),fips); return `<div class="row"><span>${chShort(m.name)}</span><b>${chFmt(v==null?null:v,m)}</b></div>`;}).join('');
+  }
+  if(CH_FIPS_XWALK[fips]) html+=`<div class="hint">Community data shown via best-fit to the current Census geography (CT planning regions / AK borough split).</div>`;
+  return html;
+}
 async function switchResource(key){
   if(key===activeRes||!RES[key]) return;
-  activeRes=key; activeMetric=0;
-  view='us'; selState=null; selHosp=null; selCounty=null; selOrg=null; focusH=null; curPts=null; spiderCluster=null;
+  activeRes=key;
+  if(activeMetric>=(RES[key].metrics||[]).length) activeMetric=0;   // clamp choropleth metric to the new resource
+  // Keep the user where they are: preserve the state/county view across a resource
+  // change so they can compare resources without backing out. Only facility- and
+  // system-specific selections reset (org view falls back to its state, else US).
+  if(view==='org') view = selState ? 'state' : 'us';
+  selHosp=null; selOrg=null; focusH=null; curPts=null; spiderCluster=null;
   const r=RES[key];
   if(!r._data){ try{ r._data=await fetch(r.file).then(x=>x.json()).then(j=>j.facilities||j.hospitals); }catch(e){ console.error('resource load',e); return; } }
   HOSP=r._data; byState={}; HOSP.forEach(h=>{(byState[h.s]=byState[h.s]||[]).push(h);});
   const sc={}; HOSP.forEach(h=>{if(h.sys)sc[h.sys]=(sc[h.sys]||0)+1;}); SYS_LIST=Object.entries(sc).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count);
   buildResTabs();
   document.getElementById('searchInput').value=''; hideSearch();
+  preserveCam=true;   // keep the exact camera; only the facility layer changes
   render();
 }
 
@@ -269,6 +363,7 @@ function render(animate){
   document.getElementById('backBtn').hidden = (view==='us');
   document.getElementById('numToggle').hidden = (view!=='us');
   document.getElementById('ptleg').hidden = (view==='us');
+  const cc=document.getElementById('countyControls'); if(cc){ if(view==='state'&&countyHealth){ buildCountyControls(); cc.hidden=false; } else cc.hidden=true; }
   if (selHosp && (view==='state'||view==='org')) renderFacility();
   else if (view==='state' && selCounty) renderCounty(selCounty);
   else if (view==='state') renderStateProfile(selState);
@@ -345,15 +440,20 @@ function drawMap(animate){
   let zMoved=false;
   const Z=d3.zoom().scaleExtent([1,64])
     .on('start',()=>{ zMoved=false; })
-    .on('zoom',e=>{ zMoved=true; if(spiderCluster) collapseSpider(); curK=e.transform.k; g.attr('transform',e.transform); repositionClusters(curK); hideTip(); })
-    .on('end',e=>{ curK=e.transform.k; if(zMoved && (view==='state'||view==='org')){ renderClusters(curK,true); revealFocus(); } });
+    .on('zoom',e=>{ zMoved=true; curT=e.transform; if(spiderCluster) collapseSpider(); curK=e.transform.k; g.attr('transform',e.transform); repositionClusters(curK); hideTip(); })
+    .on('end',e=>{ curK=e.transform.k; curT=e.transform; if(zMoved && (view==='state'||view==='org')){ renderClusters(curK,true); revealFocus(); } });
   curSvg=svg; curZ=Z; curW=w; curH=h;
   svg.call(Z).on('dblclick.zoom',null);
   svg.on('click.spider',()=>collapseSpider()); // click empty map / state to collapse a fan
+  // Hold the exact camera across an in-place redraw (e.g. switching resource while
+  // zoomed into a county) so a toggle never bumps the user's view.
+  if(preserveCam && curT && (view==='state'||view==='org')){ T=curT; animate=false; }
+  preserveCam=false; curT=T;
   if(view==='state'||view==='org') renderClusters(T.k,false); // exist during the camera glide-in
   if(animate){ svg.transition().duration(650).ease(d3.easeCubicInOut).call(Z.transform,T); }
   else { svg.call(Z.transform,T); }
 
+  document.getElementById('mapEyebrow').textContent = view==='org' ? 'Health system' : RES[activeRes].label;
   document.getElementById('mapTitle').textContent = view==='state' ? STATE_NAMES[selState] : view==='org' ? orgName(selOrg) : 'United States';
   const _noun=RES[activeRes].noun;
   document.getElementById('mapSub').textContent = view==='state'
@@ -584,6 +684,11 @@ function paintCounties(){
   const sf=String(featByAbbr[selState].id).padStart(2,'0');
   const cf=countyFeatures.filter(c=>String(c.id).padStart(5,'0').slice(0,2)===sf);
   const pth=d3.geoPath(curProj);
+  // health choropleth fill, under the outlines
+  const choro=countyChoro();
+  let fillG=cg.select('g.c-fill'); if(fillG.empty()) fillG=cg.insert('g',':first-child').attr('class','c-fill');
+  fillG.selectAll('path').data(choro?cf:[]).join('path').attr('d',pth)
+    .attr('fill',d=>{const v=chCountyVal(choro.vals,String(d.id).padStart(5,'0'));return v==null?'transparent':choro.scale(v);});
   let halo=cg.select('g.c-halo'); if(halo.empty()) halo=cg.append('g').attr('class','c-halo');
   let line=cg.select('g.c-line'); if(line.empty()) line=cg.append('g').attr('class','c-line');
   halo.selectAll('path').data(cf).join('path').attr('d',pth);
@@ -597,7 +702,10 @@ function countyPopOf(feat){const fips=String(feat.id).padStart(5,'0');return cou
 function countyTip(e,feat){
   const t=document.getElementById('tip');
   const pop=countyPopOf(feat);
-  t.innerHTML=`<b>${feat.properties.name} County, ${selState}</b><span>${pop!=null?pop.toLocaleString()+' residents · click for profile':'click for profile'}</span>`;
+  const ch=countyChoro();
+  let extra='';
+  if(ch){ const v=chCountyVal(ch.vals,String(feat.id).padStart(5,'0')); extra=`<span style="color:var(--teal)">${chShort(ch.meta.name)}: ${chFmt(v,ch.meta)}</span>`; }
+  t.innerHTML=`<b>${feat.properties.name} County, ${selState}</b><span>${pop!=null?pop.toLocaleString()+' residents':''}</span>${extra}<span>click for profile</span>`;
   place(e,t);
 }
 function renderCounty(feat){
@@ -605,19 +713,29 @@ function renderCounty(feat){
   const pop=countyPopOf(feat);
   let stPop=0; if(countyPop){const s2=fips.slice(0,2);for(const k in countyPop){if(k.slice(0,2)===s2)stPop+=countyPop[k].p;}}
   const share=(pop!=null&&stPop)?(pop/stPop*100):null;
-  const inco=(byState[selState]||[]).filter(h=>(h.co||'').toLowerCase()===nm.toLowerCase());
-  const beds=inco.reduce((s,h)=>s+(h.beds||0),0);
-  const per1k=(pop&&beds)?(beds/pop*1000):null;
+  // facilities in this county via point-in-polygon — works for every resource
+  // (only hospitals carry a county-name field; the rest are matched by geometry).
+  const inco=(byState[selState]||[]).filter(h=>{const lo=placeLo(h),la=placeLa(h);return lo!=null&&la!=null&&d3.geoContains(feat,[lo,la]);});
+  const noun=RES[activeRes].noun, nounCap=noun.charAt(0).toUpperCase()+noun.slice(1);
+  let secondary='';
+  if(activeRes==='hospitals'){
+    const beds=inco.reduce((s,h)=>s+(h.beds||0),0), per1k=(pop&&beds)?(beds/pop*1000):null;
+    secondary=`<div class="row"><span>Staffed beds</span><b>${beds?beds.toLocaleString():'n/a'}</b></div>`+
+              `<div class="row"><span>Beds per 1,000 residents</span><b>${per1k!=null?per1k.toFixed(1):'n/a'}</b></div>`;
+  } else if(activeRes==='dialysis'){
+    const stns=inco.reduce((s,h)=>s+(h.st||0),0);
+    secondary=`<div class="row"><span>Dialysis stations</span><b>${stns?stns.toLocaleString():'n/a'}</b></div>`;
+  }
   document.getElementById('sidePanel').innerHTML=
     `<div class="pf-head"><h3 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">County profile</h3><button class="pf-clear" id="cClose">back &#10005;</button></div>`+
     `<div class="card-name">${nm} County</div>`+
     `<div class="card-loc">${STATE_NAMES[selState]}</div>`+
     `<div class="row"><span>Population (2024 est.)</span><b>${pop!=null?pop.toLocaleString():'n/a'}</b></div>`+
     `<div class="row"><span>Share of ${selState} population</span><b>${share!=null?share.toFixed(1)+'%':'n/a'}</b></div>`+
-    `<div class="row"><span>Hospitals in county</span><b>${inco.length}</b></div>`+
-    `<div class="row"><span>Staffed beds</span><b>${beds?beds.toLocaleString():'n/a'}</b></div>`+
-    `<div class="row"><span>Beds per 1,000 residents</span><b>${per1k!=null?per1k.toFixed(1):'n/a'}</b></div>`+
-    `<div class="hint">Population: U.S. Census Bureau 2024 county estimates. Hospital counts matched by county name from CMS data.</div>`;
+    `<div class="row"><span>${nounCap} in county</span><b>${inco.length}</b></div>`+
+    secondary+
+    countyHealthRows(fips)+
+    `<div class="hint">Population: U.S. Census Bureau 2024 county estimates. ${nounCap} located within the county boundary. Community health: CDC PLACES, crude prevalence.</div>`;
   document.getElementById('cClose').onclick=()=>{selCounty=null;renderStateProfile(selState);if(Gcur)Gcur.selectAll('.c-line path').classed('sel',false);};
 }
 function drawLegend(range,mn,mx){
@@ -778,7 +896,8 @@ function hospTip(e,h){const t=document.getElementById('tip');t.innerHTML=`<b>${t
 function hideTip(){document.getElementById('tip').hidden=true;}
 addEventListener('scroll',hideTip,{passive:true});
 
-document.getElementById('controls').addEventListener('click',e=>{const t=e.target.closest('[data-i]');if(!t)return;activeMetric=+t.dataset.i;render();});
+document.getElementById('controls').addEventListener('click',e=>{const t=e.target.closest('[data-i]');if(!t)return;activeMetric=+t.dataset.i;preserveCam=true;render();});
+document.getElementById('countyControls').addEventListener('click',e=>{const t=e.target.closest('[data-cm]');if(!t)return;setCountyMetric(t.dataset.cm);});
 document.getElementById('restabs').addEventListener('click',e=>{const t=e.target.closest('[data-res]');if(!t)return;switchResource(t.dataset.res);});
 document.getElementById('backBtn').onclick=backToUS;
 document.getElementById('numToggle').addEventListener('click',function(){showNums=!showNums;this.classList.toggle('off',!showNums);if(view==='us')drawMap(false);});
@@ -802,6 +921,7 @@ async function init(){
     ]);
     lakeFeatures = lakes && lakes.features ? lakes.features : null;
     fetch('/assets/data/us-counties.json').then(r=>r.json()).then(d=>{countyPop=d;}).catch(()=>{});
+    fetch('/assets/data/countyData.json').then(r=>r.json()).then(d=>{countyHealth=d;if(view==='state')render();}).catch(()=>{});
     usFeatures=topojson.feature(us,us.objects.states).features;
     usFeatures.forEach(f=>{const ab=FIPS_TO_ABBR[String(f.id).padStart(2,'0')];if(ab)featByAbbr[ab]=f;});
     HOSP=data.hospitals; RES.hospitals._data=HOSP;

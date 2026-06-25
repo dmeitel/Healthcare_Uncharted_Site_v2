@@ -1,0 +1,746 @@
+---
+layout: base.njk
+title: "Where Healthcare Data Lives"
+description: "Every map and tool on this site runs on real public data. Here is exactly what we pull, where it comes from, and how we house it so one dataset can feed the whole site at once."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial palette + DM Serif Display: a long-read on how Healthcare Uncharted sources and houses the public data behind every tool."
+---
+{% block extraHead %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+
+<style>
+  /* ── Editorial palette layered on HU tokens ── */
+  .ds{
+    --jp-bg:        var(--dark);
+    --jp-surface:   var(--surface);
+    --jp-raised:    var(--raised);
+    --jp-line:      var(--border);
+    --jp-line-2:    var(--border2);
+    --jp-ink-1:     var(--t1);
+    --jp-ink-2:     var(--t2);
+    --jp-ink-3:     var(--t3);
+    --jp-ink-4:     var(--t4);
+    --jp-accent:    var(--teal);
+    --jp-accent-d:  var(--teal-dk);
+    --jp-blue:      #6aadff;
+    --jp-amber:     var(--amber);
+    --jp-red:       var(--red);
+    --jp-purple:    #b59ff5;
+    --jp-green:     #4ecb8d;
+    --jp-serif:     'DM Serif Display', Georgia, serif;
+    --jp-sans:      var(--font);
+    --jp-mono:      var(--mono);
+  }
+
+  /* ── Page shell ── */
+  .ds{ background:var(--jp-bg); color:var(--jp-ink-2); font-family:var(--jp-sans); line-height:1.65; }
+  .ds *,.ds *::before,.ds *::after{ box-sizing:border-box; }
+  .ds section{ position:relative; }
+
+  /* ── HERO ── */
+  .ds-hero{ position:relative; overflow:hidden; border-bottom:1px solid var(--jp-line);
+            background: linear-gradient(135deg, var(--jp-bg) 0%, var(--jp-surface) 55%, var(--jp-bg) 100%); }
+  .ds-hero::before{ content:""; position:absolute; top:-160px; right:-120px; width:520px; height:520px;
+                    background:radial-gradient(circle, rgba(78,205,196,.14) 0%, transparent 65%); pointer-events:none; }
+  .ds-hero::after{ content:""; position:absolute; bottom:-220px; left:-160px; width:560px; height:560px;
+                   background:radial-gradient(circle, rgba(27,95,168,.10) 0%, transparent 65%); pointer-events:none; }
+  .ds-hero-inner{ max-width:1100px; margin:0 auto; padding:80px 36px 64px; position:relative; z-index:1;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:880px){ .ds-hero-inner{ grid-template-columns:1fr; gap:32px; padding:56px 24px 44px; } }
+
+  .jp-eyebrow{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--jp-accent); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .jp-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--jp-accent);
+                    box-shadow:0 0 14px var(--jp-accent); flex-shrink:0; }
+  .jp-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--jp-ink-4); }
+
+  .jp-h1{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(42px, 6.6vw, 82px);
+          line-height:1.03; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 22px; }
+  .jp-h1 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-hero-sub{ font-size:19px; line-height:1.55; color:var(--jp-ink-2); max-width:640px; margin:0 0 32px;
+                font-family:var(--jp-sans); }
+  .jp-hero-sub strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-thesis{ background: linear-gradient(135deg, rgba(78,205,196,.09), rgba(27,95,168,.04));
+              border:1px solid rgba(78,205,196,.22); border-left:4px solid var(--jp-accent);
+              border-radius:6px; padding:18px 22px; max-width:680px; }
+  .jp-thesis-label{ color:var(--jp-accent); font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .jp-thesis-text{ font-size:15px; line-height:1.6; color:var(--jp-ink-2); display:inline; }
+  .jp-thesis-text strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-byline{ margin-top:24px; font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3);
+              letter-spacing:.06em; display:flex; gap:14px; flex-wrap:wrap; }
+  .jp-byline span strong{ color:var(--jp-ink-2); font-weight:500; }
+
+  /* hero viz: supplier -> shelf -> storefront */
+  .ds-hero-viz{ width:320px; max-width:100%; }
+  @media (max-width:880px){ .ds-hero-viz{ width:100%; max-width:360px; } }
+  .dsh{ width:100%; height:auto; display:block; overflow:visible; }
+  .dsh-box{ fill:var(--jp-raised); stroke:var(--jp-line-2); stroke-width:1.4; }
+  .dsh-shelf{ fill:rgba(78,205,196,.12); stroke:var(--jp-accent); stroke-width:1.8; }
+  .dsh-flow{ stroke:var(--jp-accent); stroke-width:2; fill:none; opacity:.85; }
+  .dsh-head{ fill:var(--jp-accent); }
+  .dsh-t{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.04em; fill:var(--jp-ink-3); }
+  .dsh-t.mid{ text-anchor:middle; }
+  .dsh-t.teal{ fill:var(--jp-accent); }
+  .dsh-lab{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase; fill:var(--jp-ink-4); }
+  .dsh-dot{ fill:var(--jp-accent); }
+
+  /* ── BODY layout ── */
+  .jp-body{ max-width:880px; margin:0 auto; padding:64px 36px 96px; }
+  @media (max-width:780px){ .jp-body{ padding:48px 24px 72px; } }
+  .jp-section + .jp-section{ margin-top:60px; }
+
+  .jp-kicker{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+              color:var(--jp-accent); margin-bottom:14px; display:flex; align-items:center; gap:9px; }
+  .jp-kicker::before{ content:""; width:22px; height:1px; background:var(--jp-accent); }
+
+  .jp-h2{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(28px, 4vw, 42px);
+          line-height:1.15; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 18px; }
+  .jp-h2 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+  .jp-h3{ font-family:var(--jp-serif); font-weight:400; font-size:24px; line-height:1.25;
+          color:var(--jp-ink-1); margin:32px 0 14px; }
+
+  .jp-p{ font-size:17px; line-height:1.78; color:var(--jp-ink-2); margin:0 0 18px; }
+  .jp-p strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-p em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  .jp-p a{ color:var(--jp-accent); text-decoration:none; border-bottom:1px solid rgba(78,205,196,.35); }
+  .jp-p a:hover{ color:var(--jp-ink-1); border-color:var(--jp-accent); }
+  .jp-caps{ font-weight:600; letter-spacing:.02em; color:var(--jp-ink-1); }
+
+  .jp-pull{ font-family:var(--jp-serif); font-size:25px; line-height:1.4; color:var(--jp-ink-1);
+            margin:30px 0; padding:8px 0 8px 28px; border-left:3px solid var(--jp-accent); font-style:italic; }
+
+  /* ── TLDR cards ── */
+  .jp-tldr{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin:36px 0; }
+  @media (max-width:680px){ .jp-tldr{ grid-template-columns:1fr; } }
+  .jp-tldr-card{ background:var(--jp-raised); border:1px solid var(--jp-line); border-top:3px solid var(--jp-accent);
+                 border-radius:8px; padding:22px 22px 24px; }
+  .jp-tldr-num{ font-family:var(--jp-mono); font-size:11px; font-weight:600; color:var(--jp-accent);
+                background:rgba(78,205,196,.1); padding:4px 9px; border-radius:5px; display:inline-block;
+                margin-bottom:14px; letter-spacing:.06em; }
+  .jp-tldr-h{ font-family:var(--jp-serif); font-size:17px; line-height:1.35; color:var(--jp-ink-1); margin-bottom:8px; }
+  .jp-tldr-p{ font-size:13.5px; line-height:1.65; color:var(--jp-ink-2); }
+  .jp-tldr-p strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  /* ── Figure shell ── */
+  .ds-fig{ margin:36px 0; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:14px;
+           padding:30px 30px 24px; position:relative; overflow:hidden; }
+  .ds-fig-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px;
+                flex-wrap:wrap; gap:12px; }
+  .ds-fig-title{ font-family:var(--jp-serif); font-size:19px; color:var(--jp-ink-1); }
+  .ds-fig-key{ font-family:var(--jp-mono); font-size:10px; color:var(--jp-ink-3); letter-spacing:.12em;
+               text-transform:uppercase; }
+  .ds-fig-cap{ margin-top:20px; padding-top:16px; border-top:1px solid var(--jp-line);
+               font-size:13.5px; color:var(--jp-ink-2); line-height:1.65; }
+  .ds-fig-cap strong{ color:var(--jp-ink-1); font-weight:600; }
+  .ds-svg{ width:100%; height:auto; display:block; overflow:visible; }
+
+  /* warehouse-flow + spine primitives */
+  .gx-box{ fill:var(--jp-raised); stroke:var(--jp-line-2); stroke-width:1.4; }
+  .gx-shelf{ fill:rgba(78,205,196,.12); stroke:var(--jp-accent); stroke-width:1.8; }
+  .gx-store{ fill:rgba(27,95,168,.10); stroke:var(--jp-blue); stroke-width:1.4; }
+  .gx-flow{ stroke:var(--jp-accent); stroke-width:2; fill:none; opacity:.8; }
+  .gx-head{ fill:var(--jp-accent); }
+  .gx-t{ font-family:var(--jp-mono); font-size:11.5px; letter-spacing:.02em; fill:var(--jp-ink-2); }
+  .gx-t.sm{ font-size:10px; fill:var(--jp-ink-3); }
+  .gx-t.mid{ text-anchor:middle; }
+  .gx-t.teal{ fill:var(--jp-accent); }
+  .gx-t.blue{ fill:var(--jp-blue); }
+  .gx-t.ink{ fill:var(--jp-ink-1); }
+  .gx-col{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; fill:var(--jp-ink-4); text-anchor:middle; }
+  .gx-node{ fill:var(--jp-raised); stroke:var(--jp-line-2); stroke-width:1.4; }
+  .gx-shelfnode{ fill:rgba(78,205,196,.16); stroke:var(--jp-accent); stroke-width:2; }
+  .gx-spoke{ stroke:var(--jp-accent); stroke-width:1.6; fill:none; opacity:.6; }
+
+  /* ── SOURCE CATALOG ── */
+  .ds-cat{ margin:14px 0; }
+  .ds-cat + .ds-cat{ margin-top:14px; }
+  .ds-cat-head{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:4px;
+                padding:0 2px; }
+  .ds-cat-name{ font-family:var(--jp-serif); font-size:21px; color:var(--jp-ink-1); }
+  .ds-chip{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase;
+            padding:3px 9px; border-radius:20px; border:1px solid; }
+  .ds-chip.teal{ color:var(--jp-accent); border-color:rgba(78,205,196,.4); background:rgba(78,205,196,.08); }
+  .ds-chip.blue{ color:var(--jp-blue); border-color:rgba(27,95,168,.4); background:rgba(27,95,168,.10); }
+  .ds-chip.green{ color:var(--jp-green); border-color:rgba(45,155,111,.4); background:rgba(45,155,111,.10); }
+  .ds-chip.amber{ color:var(--jp-amber); border-color:rgba(232,168,56,.4); background:rgba(232,168,56,.10); }
+  .ds-chip.purple{ color:var(--jp-purple); border-color:rgba(139,111,240,.4); background:rgba(139,111,240,.10); }
+  .ds-chip.red{ color:#ff9090; border-color:rgba(223,87,82,.4); background:rgba(223,87,82,.10); }
+  .ds-cat-note{ font-size:12.5px; color:var(--jp-ink-3); line-height:1.55; margin:6px 2px 14px; max-width:660px; }
+
+  .ds-srcs{ border:1px solid var(--jp-line); border-radius:12px; overflow:hidden; }
+  .ds-src{ display:grid; grid-template-columns:1.15fr 1.6fr .8fr; gap:18px; padding:16px 20px;
+           border-bottom:1px solid var(--jp-line); align-items:start; }
+  .ds-src:last-child{ border-bottom:none; }
+  .ds-src:nth-child(odd){ background:var(--jp-surface); }
+  @media (max-width:680px){ .ds-src{ grid-template-columns:1fr; gap:6px; padding:16px 16px; } }
+  .ds-src-name{ font-family:var(--jp-sans); font-size:15px; font-weight:600; color:var(--jp-ink-1); }
+  .ds-src-name a{ color:var(--jp-ink-1); text-decoration:none; border-bottom:1px solid var(--jp-line-2); }
+  .ds-src-name a:hover{ color:var(--jp-accent); border-color:var(--jp-accent); }
+  .ds-src-id{ font-family:var(--jp-mono); font-size:10px; color:var(--jp-ink-3); margin-top:4px; }
+  .ds-src-what{ font-size:13.5px; line-height:1.6; color:var(--jp-ink-2); }
+  .ds-src-cad{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.04em; color:var(--jp-ink-3);
+               text-transform:uppercase; line-height:1.5; }
+  .ds-src-cad .pull{ display:inline-block; padding:2px 7px; border-radius:5px; margin-bottom:5px; font-size:9px; letter-spacing:.1em; }
+  .ds-src-cad .pull.auto{ background:rgba(78,205,196,.1); color:var(--jp-accent); border:1px solid rgba(78,205,196,.3); }
+  .ds-src-cad .pull.hand{ background:rgba(232,168,56,.08); color:var(--jp-amber); border:1px solid rgba(232,168,56,.28); }
+
+  /* ── Counter / honesty callout ── */
+  .jp-counter{ margin:30px 0; background:rgba(232,168,56,.04); border:1px solid rgba(232,168,56,.22);
+               border-left:3px solid var(--jp-amber); border-radius:0 12px 12px 0; padding:22px 26px; }
+  .jp-counter-label{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+                     color:var(--jp-amber); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .jp-counter-label::before{ content:""; width:5px; height:5px; border-radius:50%; background:var(--jp-amber); }
+  .jp-counter-body{ font-size:14.5px; color:var(--jp-ink-2); line-height:1.72; }
+  .jp-counter-body strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  /* ── Contract list ── */
+  .ds-contract{ margin:24px 0; display:grid; gap:8px; }
+  .ds-field{ display:grid; grid-template-columns:130px 1fr; gap:18px; align-items:baseline;
+             background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:8px; padding:13px 18px; }
+  @media (max-width:560px){ .ds-field{ grid-template-columns:1fr; gap:4px; } }
+  .ds-field-k{ font-family:var(--jp-mono); font-size:13px; color:var(--jp-accent); font-weight:500; }
+  .ds-field-v{ font-size:13.5px; line-height:1.6; color:var(--jp-ink-2); }
+  .ds-field-v strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  /* ── Refresh loop strip ── */
+  .ds-loop{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:24px 0 8px; }
+  @media (max-width:760px){ .ds-loop{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:440px){ .ds-loop{ grid-template-columns:1fr; } }
+  .ds-loop-step{ background:var(--jp-raised); border:1px solid var(--jp-line); border-radius:9px; padding:16px 15px 17px; position:relative; }
+  .ds-loop-step::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px;
+                         background:linear-gradient(90deg, transparent, var(--jp-accent), transparent); opacity:.6; }
+  .ds-loop-n{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.12em; color:var(--jp-accent); margin-bottom:8px; }
+  .ds-loop-h{ font-family:var(--jp-serif); font-size:16px; color:var(--jp-ink-1); margin-bottom:7px; line-height:1.2; }
+  .ds-loop-p{ font-size:12px; line-height:1.55; color:var(--jp-ink-2); }
+
+  /* ── Storefront / site-as-map grid ── */
+  .ds-map{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:32px 0; }
+  @media (max-width:680px){ .ds-map{ grid-template-columns:1fr; } }
+  .ds-mcard{ display:block; text-decoration:none; background:var(--jp-surface); border:1px solid var(--jp-line);
+             border-radius:11px; padding:20px 22px; transition:border-color .18s, transform .18s, background .18s; }
+  .ds-mcard:hover{ border-color:var(--jp-accent); transform:translateY(-2px); background:rgba(78,205,196,.04); }
+  .ds-mc-eyebrow{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+                  color:var(--jp-accent); margin-bottom:8px; }
+  .ds-mc-name{ font-family:var(--jp-serif); font-size:18px; color:var(--jp-ink-1); margin-bottom:8px; line-height:1.25; }
+  .ds-mcard:hover .ds-mc-name{ color:var(--jp-accent); }
+  .ds-mc-body{ font-size:13px; line-height:1.62; color:var(--jp-ink-2); }
+  .ds-mc-feed{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.04em; color:var(--jp-ink-3); margin-top:12px;
+               display:flex; align-items:center; gap:6px; }
+  .ds-mcard:hover .ds-mc-feed{ color:var(--jp-accent); }
+
+  /* ── Closing legend band ── */
+  .ds-legend{ margin:40px 0 0; background:linear-gradient(135deg, rgba(78,205,196,.07), rgba(27,95,168,.03));
+              border:1px solid var(--jp-line); border-radius:14px; padding:26px 28px 28px; }
+  .ds-legend-h{ font-family:var(--jp-serif); font-size:20px; color:var(--jp-ink-1); margin-bottom:6px; }
+  .ds-legend-p{ font-size:14px; color:var(--jp-ink-2); line-height:1.7; max-width:620px; }
+  .ds-legend-p strong{ color:var(--jp-ink-1); }
+
+  /* ── Sources ── */
+  .jp-sources{ margin-top:60px; padding:28px 0 0; border-top:1px solid var(--jp-line); }
+  .jp-sources-title{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+                     color:var(--jp-ink-3); margin-bottom:18px; }
+  .jp-source{ font-size:13px; line-height:1.7; color:var(--jp-ink-3); margin-bottom:10px; padding-left:18px; position:relative; }
+  .jp-source::before{ content:"·"; position:absolute; left:6px; color:var(--jp-ink-4); }
+  .jp-source a{ color:var(--jp-ink-2); text-decoration:none; border-bottom:1px solid var(--jp-line); }
+  .jp-source a:hover{ color:var(--jp-accent); border-color:var(--jp-accent); }
+</style>
+
+<article class="ds">
+
+  <!-- ══════════ HERO ══════════ -->
+  <header class="ds-hero">
+    <div class="ds-hero-inner">
+      <div>
+        <div class="jp-eyebrow">
+          <span class="dot"></span>
+          <span>Infrastructure</span>
+          <span class="sep"></span>
+          <span>Data sourcing</span>
+        </div>
+
+        <h1 class="jp-h1">Where the data <em>lives.</em></h1>
+
+        <p class="jp-hero-sub">Every map and tool on this site runs on real public data. Not vendor decks, not vibes. Real federal and nonprofit datasets, pulled, cleaned, and housed so that one number can show up in five places at once. This is how that works, and where every piece of it comes from.</p>
+
+        <div class="jp-thesis">
+          <span class="jp-thesis-label">Principle</span>
+          <span class="jp-thesis-text">The hard part of a data project was never the chart. It is knowing where the number came from, and whether you can get it again next year. <strong>Provenance first. Pretty second.</strong></span>
+        </div>
+
+        <div class="jp-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~11 min read</span>
+          <span>CDC · Census · CMS · BLS · HRSA · KFF</span>
+        </div>
+      </div>
+
+      <div class="ds-hero-viz">
+        <svg class="dsh" viewBox="0 0 320 250" role="img" aria-label="A three-stage flow: public data sources on the left feed a pull pipeline into a shared shelf labeled state, which feeds the tools on the right.">
+          <text class="dsh-lab" x="6" y="14">sources</text>
+          <text class="dsh-lab" x="118" y="14">the shelf</text>
+          <text class="dsh-lab" x="244" y="14">storefront</text>
+
+          <!-- sources -->
+          <g>
+            <rect class="dsh-box" x="4" y="28" width="74" height="22" rx="5"/>
+            <text class="dsh-t" x="14" y="43">CDC</text>
+            <rect class="dsh-box" x="4" y="58" width="74" height="22" rx="5"/>
+            <text class="dsh-t" x="14" y="73">Census</text>
+            <rect class="dsh-box" x="4" y="88" width="74" height="22" rx="5"/>
+            <text class="dsh-t" x="14" y="103">CMS</text>
+            <rect class="dsh-box" x="4" y="118" width="74" height="22" rx="5"/>
+            <text class="dsh-t" x="14" y="133">BLS</text>
+            <rect class="dsh-box" x="4" y="148" width="74" height="22" rx="5"/>
+            <text class="dsh-t" x="14" y="163">HRSA</text>
+            <rect class="dsh-box" x="4" y="178" width="74" height="22" rx="5"/>
+            <text class="dsh-t" x="14" y="193">KFF</text>
+          </g>
+
+          <!-- arrows into shelf -->
+          <path class="dsh-flow" d="M80 39 C 104 39 104 110 124 113"/>
+          <path class="dsh-flow" d="M80 69 C 104 69 104 112 124 116"/>
+          <path class="dsh-flow" d="M80 99 L 124 116"/>
+          <path class="dsh-flow" d="M80 129 L 124 120"/>
+          <path class="dsh-flow" d="M80 159 C 104 159 104 124 124 122"/>
+          <path class="dsh-flow" d="M80 189 C 104 189 104 128 124 124"/>
+          <polygon class="dsh-head" points="126,118 117,114 118,124"/>
+
+          <!-- the shelf -->
+          <rect class="dsh-shelf" x="126" y="96" width="74" height="50" rx="8"/>
+          <text class="dsh-t teal mid" x="163" y="118" style="font-size:11px;font-weight:600">STATE</text>
+          <text class="dsh-t sm mid" x="163" y="133">one shared shelf</text>
+          <circle class="dsh-dot" cx="138" cy="106" r="2"/>
+          <circle class="dsh-dot" cx="188" cy="106" r="2"/>
+
+          <!-- arrow to storefront -->
+          <path class="dsh-flow" d="M200 121 L 232 121"/>
+          <polygon class="dsh-head" points="236,121 227,116 227,126"/>
+
+          <!-- storefront -->
+          <g>
+            <rect class="dsh-box" x="238" y="40" width="78" height="22" rx="5"/>
+            <text class="dsh-t" x="247" y="55" style="font-size:9px">Lens Map</text>
+            <rect class="dsh-box" x="238" y="70" width="78" height="22" rx="5"/>
+            <text class="dsh-t" x="247" y="85" style="font-size:9px">Ops Map</text>
+            <rect class="dsh-box" x="238" y="100" width="78" height="22" rx="5"/>
+            <text class="dsh-t" x="247" y="115" style="font-size:9px">Career Tree</text>
+            <rect class="dsh-box" x="238" y="130" width="78" height="22" rx="5"/>
+            <text class="dsh-t" x="247" y="145" style="font-size:9px">Atlas</text>
+            <rect class="dsh-box" x="238" y="160" width="78" height="22" rx="5"/>
+            <text class="dsh-t" x="247" y="175" style="font-size:9px">Learn</text>
+          </g>
+          <path class="dsh-flow" d="M236 121 C 248 121 248 53 238 51" opacity=".4"/>
+          <path class="dsh-flow" d="M236 121 C 248 121 248 83 238 81" opacity=".4"/>
+          <path class="dsh-flow" d="M236 121 C 248 121 248 143 238 141" opacity=".4"/>
+          <path class="dsh-flow" d="M236 121 C 248 121 248 173 238 171" opacity=".4"/>
+
+          <text class="dsh-t sm mid" x="163" y="224">update the shelf once,</text>
+          <text class="dsh-t teal mid" x="163" y="238">the whole storefront moves</text>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="jp-body">
+
+    <!-- ── TLDR ── -->
+    <div class="jp-tldr">
+      <div class="jp-tldr-card">
+        <div class="jp-tldr-num">01</div>
+        <div class="jp-tldr-h">Public data only.</div>
+        <div class="jp-tldr-p">Everything comes from federal agencies and reputable nonprofits. CDC, Census, CMS, BLS, HRSA, KFF. Every number on the site traces back to a named source with a link.</div>
+      </div>
+      <div class="jp-tldr-card">
+        <div class="jp-tldr-num">02</div>
+        <div class="jp-tldr-h">One shelf, no islands.</div>
+        <div class="jp-tldr-p">Datasets that look unrelated all get filed under the same key, usually the <strong>state</strong>. A hospital, a poverty rate, and a nursing shortage end up on the same shelf, so they can be read together.</div>
+      </div>
+      <div class="jp-tldr-card">
+        <div class="jp-tldr-num">03</div>
+        <div class="jp-tldr-h">Built to be reused.</div>
+        <div class="jp-tldr-p">No tool owns its data. The data sits underneath, and the tools are windows onto it. Update the source, rebuild, and every map that touches it updates at once.</div>
+      </div>
+    </div>
+
+    <!-- ══════════ 1. THE PREMISE ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">The premise</div>
+      <h2 class="jp-h2">The chart is the <em>easy</em> part.</h2>
+      <p class="jp-p">People think the work in a data project is the visual. The colors, the hover states, the animation. That is the last ten percent, and it is the fun part, so it gets all the attention. The real work happens before any of that. It is finding the number, trusting the number, and being able to get the number again when a fresh version drops eighteen months from now.</p>
+      <p class="jp-p">Most healthcare dashboards you have seen fail that last test. Somebody pulled a spreadsheet once, pasted the values into a slide, and shipped it. Six months later nobody remembers which file it came from or how it was cleaned. The chart still renders. It is just quietly wrong, and getting wronger.</p>
+      <p class="jp-pull">"A number with no source is a rumor with a font."</p>
+      <p class="jp-p">So this site treats sourcing as the actual product. Before a metric shows up on a map, it carries its origin with it. What agency published it, the exact dataset, the year it represents, the method behind it, and the caveats that keep an honest person from over-reading it. The visual is downstream of all that. This page is the tour of the part nobody usually shows you.</p>
+    </section>
+
+    <!-- ══════════ 2. WHAT WE PULL ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">What is relevant and sourceable</div>
+      <h2 class="jp-h2">The shelves, and what fills them.</h2>
+      <p class="jp-p">Healthcare is not one dataset. It is six or seven different worlds that only make sense together. Population health on its own is trivia. Population health next to insurance coverage, provider supply, and household income starts to explain something. So we pull across all of it, and we group what we pull the way the system actually breaks down.</p>
+
+      <h3 class="jp-h3">Why these sources, and not others</h3>
+      <p class="jp-p">There is a lot of healthcare data for sale. Ranking sites, scorecards, private aggregators with slick dashboards. We do not use them, and the reason is a rule, not a preference. A source has to pass four tests to earn a spot on the shelf. Almost all the paid aggregators are built on top of these same federal feeds anyway. We just go to the source instead of the reseller.</p>
+      <div class="ds-contract">
+        <div class="ds-field"><div class="ds-field-k">system of record</div><div class="ds-field-v">The agency that actually <strong>defines</strong> the measure, not someone repackaging it. CDC for disease prevalence. CMS for facilities. Census for population and income. The original, not the recap.</div></div>
+        <div class="ds-field"><div class="ds-field-k">public + reproducible</div><div class="ds-field-v">Free, no license, no paywall. <strong>You can pull the exact same file we did</strong> and check our work. Credibility you can audit beats credibility you have to trust.</div></div>
+        <div class="ds-field"><div class="ds-field-k">standard geography</div><div class="ds-field-v">It keys to FIPS, state, or county. A source that uses its own made-up regions cannot join the shelf, so it cannot sit next to anything else. No geography, no entry.</div></div>
+        <div class="ds-field"><div class="ds-field-k">uniform coverage</div><div class="ds-field-v">All 50 states and DC, measured the same way. Not a 12-state sample dressed up as national. If a state is missing, we say so out loud.</div></div>
+      </div>
+
+      <p class="jp-p">Here is the working catalog. Each row is a real source we use or are wiring in, what it gives us, and how it gets refreshed. The teal tag means a script pulls it. The amber tag means it is hand-compiled today, with its vintage tracked, and on the list to automate.</p>
+
+      <!-- POP HEALTH -->
+      <div class="ds-cat">
+        <div class="ds-cat-head">
+          <span class="ds-cat-name">Population health</span>
+          <span class="ds-chip teal">Patient lens</span>
+        </div>
+        <p class="ds-cat-note">Who is sick, with what, and how long they live. The demand side of the whole system.</p>
+        <div class="ds-srcs">
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-State-Data-202/dv4u-3x3q" target="_blank" rel="noopener">CDC PLACES / BRFSS</a></div><div class="ds-src-id">small-area estimation</div></div>
+            <div class="ds-src-what">Chronic disease and risk-factor prevalence: diabetes, obesity, coronary heart disease, self-rated health, routine checkups.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual · ~2yr lag</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://wonder.cdc.gov/" target="_blank" rel="noopener">CDC WONDER / NCHS</a></div><div class="ds-src-id">death certificate data</div></div>
+            <div class="ds-src-what">Age-adjusted mortality and life expectancy at birth. Cancer mortality, all-cause patterns.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual · ~2yr lag</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://data.census.gov/" target="_blank" rel="noopener">Census ACS</a></div><div class="ds-src-id">American Community Survey</div></div>
+            <div class="ds-src-what">Age structure and demographics that shape demand: median age, share over 65, share under 18.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORKFORCE -->
+      <div class="ds-cat">
+        <div class="ds-cat-head">
+          <span class="ds-cat-name">Workforce &amp; clinical capacity</span>
+          <span class="ds-chip blue">Clinical lens</span>
+        </div>
+        <p class="ds-cat-note">Who is there to deliver the care. The supply side, and the shortages.</p>
+        <div class="ds-srcs">
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://data.hrsa.gov/data/download" target="_blank" rel="noopener">HRSA AHRF</a></div><div class="ds-src-id">Area Health Resources File</div></div>
+            <div class="ds-src-what">Physicians and nurse practitioners per capita, plus federally designated Health Professional Shortage Areas.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.bls.gov/oes/" target="_blank" rel="noopener">BLS OEWS</a></div><div class="ds-src-id">by SOC occupation code</div></div>
+            <div class="ds-src-what">Employment counts for specific occupations, normalized per 100k. Registered nurses, respiratory therapists, and more.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.acgme.org/data-collections/" target="_blank" rel="noopener">ACGME / AAMC</a></div><div class="ds-src-id">GME pipeline</div></div>
+            <div class="ds-src-what">Accredited residency positions per capita. The training pipeline that becomes tomorrow's physician supply.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FACILITIES -->
+      <div class="ds-cat">
+        <div class="ds-cat-head">
+          <span class="ds-cat-name">Facilities &amp; operators</span>
+          <span class="ds-chip amber">Operations lens</span>
+        </div>
+        <p class="ds-cat-note">The physical system. Every hospital, surgery center, dialysis clinic, and equipment supplier, by location. This is the most mature layer, and it is fully scripted.</p>
+        <div class="ds-srcs">
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://data.cms.gov/provider-data/" target="_blank" rel="noopener">CMS Care Compare</a></div><div class="ds-src-id">Hospital General Info · xubh-q36u</div></div>
+            <div class="ds-src-what">Every registered hospital: type, ownership, beds, star rating, ED wait times, readmissions. ~5,400 facilities.</div>
+            <div class="ds-src-cad"><span class="pull auto">Auto</span><br>Quarterly</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://data.cms.gov/provider-data/" target="_blank" rel="noopener">CMS ASC + Dialysis</a></div><div class="ds-src-id">4jcv-atw7 · 23ew-n7w9</div></div>
+            <div class="ds-src-what">Medicare-certified ambulatory surgery centers and dialysis facilities, with chain ownership for the dialysis side.</div>
+            <div class="ds-src-cad"><span class="pull auto">Auto</span><br>Quarterly</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://data.cms.gov/provider-data/" target="_blank" rel="noopener">CMS DMEPOS suppliers</a></div><div class="ds-src-id">ct36-nrcq</div></div>
+            <div class="ds-src-what">Medicare equipment suppliers, split by kind: pharmacy, home medical equipment, optical, orthotics and prosthetics.</div>
+            <div class="ds-src-cad"><span class="pull auto">Auto</span><br>On demand</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.ahrq.gov/chsp/data-resources/compendium.html" target="_blank" rel="noopener">AHRQ Compendium</a></div><div class="ds-src-id">health system linkage</div></div>
+            <div class="ds-src-what">Which health system owns which hospital. Turns 5,000 dots into ~630 recognizable systems.</div>
+            <div class="ds-src-cad"><span class="pull auto">Auto</span><br>Annual</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSURANCE -->
+      <div class="ds-cat">
+        <div class="ds-cat-head">
+          <span class="ds-cat-name">Insurance &amp; payer mix</span>
+          <span class="ds-chip green">Payer lens</span>
+        </div>
+        <p class="ds-cat-note">Who pays, who is covered, and who is not. The money side of access.</p>
+        <div class="ds-srcs">
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.census.gov/programs-surveys/sahie/data.html" target="_blank" rel="noopener">Census SAHIE</a></div><div class="ds-src-id">Small Area Health Insurance Est.</div></div>
+            <div class="ds-src-what">Uninsured rate by state, modeled from ACS, Medicaid enrollment, and IRS data.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual · ~2yr lag</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.medicaid.gov/medicaid/program-information/medicaid-and-chip-enrollment-data/" target="_blank" rel="noopener">CMS Medicaid &amp; Medicare</a></div><div class="ds-src-id">enrollment dashboards</div></div>
+            <div class="ds-src-what">Share of the state population on Medicaid, CHIP, and Medicare. The public-coverage footprint.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Monthly / Qtrly</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.cms.gov/cciio/resources/data-resources/marketplace-puf" target="_blank" rel="noopener">CMS Marketplace PUF</a></div><div class="ds-src-id">exchange filings</div></div>
+            <div class="ds-src-what">ACA exchange enrollment and the benchmark silver-plan premium. Coverage you buy yourself.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ECONOMICS -->
+      <div class="ds-cat">
+        <div class="ds-cat-head">
+          <span class="ds-cat-name">Economics &amp; labor</span>
+          <span class="ds-chip purple">Economics lens</span>
+        </div>
+        <p class="ds-cat-note">The conditions people live in before they ever reach care. The social drivers nobody bills for.</p>
+        <div class="ds-srcs">
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://data.census.gov/" target="_blank" rel="noopener">Census ACS</a></div><div class="ds-src-id">DP03 / DP04 tables</div></div>
+            <div class="ds-src-what">Median household income and housing cost burden. Whether households can absorb a medical bill at all.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.bls.gov/lau/" target="_blank" rel="noopener">BLS LAUS</a></div><div class="ds-src-id">Local Area Unemployment</div></div>
+            <div class="ds-src-what">Unemployment rate. Job loss usually means loss of employer coverage, which lands straight back on the payer shelf.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual / Monthly</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://map.feedingamerica.org/" target="_blank" rel="noopener">USDA Map the Meal Gap</a></div><div class="ds-src-id">via Feeding America</div></div>
+            <div class="ds-src-what">Food insecurity rate. Independently tied to worse chronic-disease management and higher hospitalization.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://meric.mo.gov/data/cost-living-data-series" target="_blank" rel="noopener">MERIC</a></div><div class="ds-src-id">cost of living index</div></div>
+            <div class="ds-src-what">Composite cost-of-living index relative to the national average. Real purchasing power, not just headline income.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POLICY -->
+      <div class="ds-cat">
+        <div class="ds-cat-head">
+          <span class="ds-cat-name">Policy &amp; regulation</span>
+          <span class="ds-chip red">Policy lens</span>
+        </div>
+        <p class="ds-cat-note">The rules each state writes for itself. The lever that moves everything else on this list.</p>
+        <div class="ds-srcs">
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.kff.org/medicaid/issue-brief/status-of-state-medicaid-expansion-decisions-interactive-map/" target="_blank" rel="noopener">KFF</a></div><div class="ds-src-id">policy trackers</div></div>
+            <div class="ds-src-what">Medicaid expansion status and other state coverage decisions. The single biggest fork in the uninsured map.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Continuous</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.ncsl.org/health" target="_blank" rel="noopener">NCSL</a></div><div class="ds-src-id">state legislation database</div></div>
+            <div class="ds-src-what">Certificate of Need scope and active drug-pricing laws. The structural rules on who can build and bill what.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Continuous</div>
+          </div>
+          <div class="ds-src">
+            <div><div class="ds-src-name"><a href="https://www.aanp.org/advocacy/state/state-practice-environment" target="_blank" rel="noopener">AANP + CCHP</a></div><div class="ds-src-id">scope &amp; telehealth</div></div>
+            <div class="ds-src-what">Nurse practitioner scope of practice and telehealth parity laws. Who is allowed to deliver care, and how.</div>
+            <div class="ds-src-cad"><span class="pull hand">Hand</span><br>Annual / Cont.</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="jp-p" style="margin-top:28px">Notice the pattern in that last column. The facility data is automated and the rest is hand-compiled today. That is the honest current state, and it is exactly the gap the back half of this page is about.</p>
+    </section>
+
+    <!-- ══════════ 3. HOW WE HOUSE IT ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">How we house it</div>
+      <h2 class="jp-h2">One shelf. <em>No islands.</em></h2>
+      <p class="jp-p">Here is the move that makes the whole thing work. Every dataset, no matter how different it looks, gets flattened into one shape and filed under one shared key. A hospital and a poverty rate have nothing in common on the surface. But both of them happen in a place. So both get filed under the state. That shared shelf is what lets them be read together.</p>
+
+      <div class="ds-fig">
+        <div class="ds-fig-head">
+          <div class="ds-fig-title">Sources in, one shelf, tools out</div>
+          <div class="ds-fig-key">The pipeline</div>
+        </div>
+        <svg class="ds-svg" viewBox="0 0 720 300" role="img" aria-label="Public data sources on the left flow through a pull-and-clean pipeline into a shared shelf keyed by state in the middle, which feeds five tools on the right. Updating the shelf updates every tool.">
+          <text class="gx-col" x="92" y="22">PUBLIC SOURCES</text>
+          <text class="gx-col" x="360" y="22">THE WAREHOUSE</text>
+          <text class="gx-col" x="630" y="22">THE STOREFRONT</text>
+
+          <!-- sources -->
+          <g>
+            <rect class="gx-box" x="18" y="44" width="148" height="30" rx="6"/><text class="gx-t" x="30" y="63">CDC · pop health</text>
+            <rect class="gx-box" x="18" y="84" width="148" height="30" rx="6"/><text class="gx-t" x="30" y="103">Census · economics</text>
+            <rect class="gx-box" x="18" y="124" width="148" height="30" rx="6"/><text class="gx-t" x="30" y="143">CMS · facilities</text>
+            <rect class="gx-box" x="18" y="164" width="148" height="30" rx="6"/><text class="gx-t" x="30" y="183">BLS · labor</text>
+            <rect class="gx-box" x="18" y="204" width="148" height="30" rx="6"/><text class="gx-t" x="30" y="223">HRSA · workforce</text>
+            <rect class="gx-box" x="18" y="244" width="148" height="30" rx="6"/><text class="gx-t" x="30" y="263">KFF · policy</text>
+          </g>
+
+          <!-- pipeline funnel -->
+          <path class="gx-flow" d="M166 59 C 210 59 210 150 250 150"/>
+          <path class="gx-flow" d="M166 99 C 210 99 210 150 250 150"/>
+          <path class="gx-flow" d="M166 139 L 250 150"/>
+          <path class="gx-flow" d="M166 179 L 250 152"/>
+          <path class="gx-flow" d="M166 219 C 210 219 210 152 250 152"/>
+          <path class="gx-flow" d="M166 259 C 210 259 210 154 250 154"/>
+
+          <!-- pull + clean box -->
+          <rect class="gx-box" x="252" y="120" width="92" height="62" rx="8"/>
+          <text class="gx-t mid sm" x="298" y="142">pull script</text>
+          <text class="gx-t mid sm" x="298" y="157">clean</text>
+          <text class="gx-t mid sm" x="298" y="172">+ source tag</text>
+
+          <path class="gx-flow" d="M344 151 L 378 151"/>
+          <polygon class="gx-head" points="382,151 372,146 372,156"/>
+
+          <!-- the shelf -->
+          <rect class="gx-shelf" x="384" y="112" width="118" height="78" rx="10"/>
+          <text class="gx-t teal mid" x="443" y="140" style="font-size:15px;font-weight:600">STATE</text>
+          <text class="gx-t mid sm" x="443" y="158">the shared shelf</text>
+          <text class="gx-t mid sm" x="443" y="173">value rides the link</text>
+          <circle class="gx-head" cx="398" cy="124" r="2.5"/>
+          <circle class="gx-head" cx="488" cy="124" r="2.5"/>
+
+          <path class="gx-flow" d="M502 151 L 536 151"/>
+          <polygon class="gx-head" points="540,151 530,146 530,156"/>
+
+          <!-- storefront -->
+          <g>
+            <rect class="gx-store" x="556" y="44" width="150" height="30" rx="6"/><text class="gx-t blue" x="568" y="63">Multi-Lens Map</text>
+            <rect class="gx-store" x="556" y="84" width="150" height="30" rx="6"/><text class="gx-t blue" x="568" y="103">Operations Map</text>
+            <rect class="gx-store" x="556" y="124" width="150" height="30" rx="6"/><text class="gx-t blue" x="568" y="143">Career Tree</text>
+            <rect class="gx-store" x="556" y="164" width="150" height="30" rx="6"/><text class="gx-t blue" x="568" y="183">The Atlas</text>
+            <rect class="gx-store" x="556" y="204" width="150" height="30" rx="6"/><text class="gx-t blue" x="568" y="223">Learn modules</text>
+          </g>
+          <path class="gx-flow" d="M540 151 C 552 151 548 59 556 59" opacity=".4"/>
+          <path class="gx-flow" d="M540 151 C 552 151 548 99 556 99" opacity=".4"/>
+          <path class="gx-flow" d="M540 151 C 552 151 548 139 556 139" opacity=".4"/>
+          <path class="gx-flow" d="M540 151 C 552 151 548 179 556 179" opacity=".4"/>
+          <path class="gx-flow" d="M540 151 C 552 151 548 219 556 219" opacity=".4"/>
+        </svg>
+        <div class="ds-fig-cap"><strong>Update the shelf once, the whole storefront moves.</strong> No tool stores its own copy of the data. They all read the same shelf. So a corrected hospital count or a fresh unemployment rate shows up everywhere it is used, the moment the warehouse rebuilds.</div>
+      </div>
+
+      <h3 class="jp-h3">Everything is the same shape</h3>
+      <p class="jp-p">A hospital, a nursing role, a state, a policy, a chronic-disease rate. Underneath, they are all the same record. That sameness is the whole trick. The plumbing never has to know what kind of thing it is holding, which means adding a brand new dataset is never a rebuild. It is just one more thing filed into the same shape.</p>
+
+      <div class="ds-contract">
+        <div class="ds-field"><div class="ds-field-k">uid</div><div class="ds-field-v">A unique, namespaced id. <strong>This is the join key.</strong> A hospital "in Utah," a poverty rate "for UT," and a policy "in Utah" all resolve to the same place, so they meet on the shelf.</div></div>
+        <div class="ds-field"><div class="ds-field-k">type + label</div><div class="ds-field-v">What kind of thing it is, and its human name.</div></div>
+        <div class="ds-field"><div class="ds-field-k">facets</div><div class="ds-field-v">The structured, filterable detail. Ownership, beds, the unit, the year, whether higher is better.</div></div>
+        <div class="ds-field"><div class="ds-field-k">search</div><div class="ds-field-v">A precomputed text string, so the same record is findable everywhere without re-indexing.</div></div>
+        <div class="ds-field"><div class="ds-field-k">rels</div><div class="ds-field-v">Typed links to other records, with the value carried <strong>on the link itself</strong>. "This metric describes Utah, value 8.2%."</div></div>
+        <div class="ds-field"><div class="ds-field-k">source</div><div class="ds-field-v">Where it came from. The dataset, the agency, the retrieval date. Provenance travels with the data, not in a footnote.</div></div>
+      </div>
+
+      <p class="jp-p">Because the value rides on the link between a metric and its state, the same slot can later carry weight, direction, and the source of a claim like "this policy moved that metric." That is a field we add, not a rebuild we suffer. The shape was chosen so the painful retrofits never happen.</p>
+
+      <div class="jp-counter">
+        <div class="jp-counter-label">The payoff</div>
+        <div class="jp-counter-body">Once everything shares the shelf, the islands disappear. A respiratory therapist role links to the metric that counts RTs per capita, and that metric already describes every state, which is where the hospitals and the suppliers already live. <strong>Follow the links and you walk from a single job title all the way to the map.</strong> That walk is only possible because nothing was stored off on its own.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ 4. KEEPING IT FRESH ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">Keeping it honest</div>
+      <h2 class="jp-h2">New data drops. <em>Now what?</em></h2>
+      <p class="jp-p">Public data is not static. CDC, Census, and CMS push fresh releases on their own schedules, usually every six to twelve months, often with a two-year lag baked in. A site built on that data is only as trustworthy as its plan for the day the numbers change. Without a plan, every dataset slowly rots in place while the chart keeps rendering like nothing happened.</p>
+      <p class="jp-p">So there are two refresh modes here, and the site is honest about which is which. Some layers are <em>scripted</em>: a pull script hits the source, cleans it, and rewrites the file. The facility maps work this way. Re-run, review the diff, done. Other layers are <em>hand-compiled</em> today, with the vintage of every single metric tracked so the site always knows how old each number is. The direction is to give every source its own script, so a refresh is never a research project.</p>
+
+      <div class="ds-loop">
+        <div class="ds-loop-step"><div class="ds-loop-n">01</div><div class="ds-loop-h">Pull</div><div class="ds-loop-p">A script per source fetches the latest release straight from the agency.</div></div>
+        <div class="ds-loop-step"><div class="ds-loop-n">02</div><div class="ds-loop-h">Clean</div><div class="ds-loop-p">Normalize, geocode, file under the shared state key, attach the source tag.</div></div>
+        <div class="ds-loop-step"><div class="ds-loop-n">03</div><div class="ds-loop-h">Validate</div><div class="ds-loop-p">Check the shape. Flag broken links and any source whose format quietly changed.</div></div>
+        <div class="ds-loop-step"><div class="ds-loop-n">04</div><div class="ds-loop-h">Diff</div><div class="ds-loop-p">Show what moved before anything ships. No blind overwrites.</div></div>
+        <div class="ds-loop-step"><div class="ds-loop-n">05</div><div class="ds-loop-h">Rebuild</div><div class="ds-loop-p">One rebuild, and every tool on the shelf reflects the new numbers at once.</div></div>
+      </div>
+
+      <p class="jp-p">Two rules keep that loop trustworthy. <strong>Staleness is a fact we show, not a thing we hide.</strong> Every metric carries its vintage, and old numbers say so out loud instead of pretending to be current. And <strong>sources drift.</strong> Agencies move URLs, change column names, start requiring keys. The pull has to notice and flag that, not silently write garbage into a clean file. A refresh that fails loudly beats a refresh that lies quietly.</p>
+    </section>
+
+    <!-- ══════════ 4.5 WHAT WE CAN PROMISE ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">What we can promise</div>
+      <h2 class="jp-h2">Honest beats <em>clean.</em></h2>
+      <p class="jp-p">Here is a claim I will not make: that this data is perfect. Nobody who works with public health data gets to say that and mean it. The numbers come from surveys, models, and estimates, and they carry every limit those methods carry. What I will claim is narrower and a lot more useful. The data is <em>honest</em>. You can see exactly where every number came from, how it was handled, and how old it is. Four things we stand behind, and two we will never pretend.</p>
+      <div class="ds-contract">
+        <div class="ds-field"><div class="ds-field-k">provenance</div><div class="ds-field-v">Every value traces to a named dataset, its ID, its URL, and the date we pulled it. <strong>No orphan numbers.</strong> If you want to check us, the link is right there in the metric.</div></div>
+        <div class="ds-field"><div class="ds-field-k">faithful</div><div class="ds-field-v">We do not hand-edit values. Where we transform one, like weighting county prevalence up to a state, it is open, deterministic code you could re-run. Our number is a <strong>documented function of the official one</strong>, not a guess.</div></div>
+        <div class="ds-field"><div class="ds-field-k">validated</div><div class="ds-field-v">Every refresh checks that all 51 states resolve, that counties match real FIPS codes, that no link points at nothing. The pull <strong>refuses to write</strong> when something unexpected goes missing. That is what clean actually means here: complete and sound, not silently broken.</div></div>
+        <div class="ds-field"><div class="ds-field-k">dated</div><div class="ds-field-v">Every metric carries its vintage and shows it. <strong>Old numbers say they are old</strong> instead of pretending to be current. You always know how fresh the thing you are looking at is.</div></div>
+      </div>
+      <div class="jp-counter">
+        <div class="jp-counter-label">What we will not pretend</div>
+        <div class="jp-counter-body">We do not control the accuracy of the source itself. CDC PLACES is modeled from a self-reported survey, with confidence intervals and the occasional methodology change that moves every state at once. Obesity did exactly that in 2022. We inherit those limits, so we <strong>carry the source's own caveats instead of burying them</strong>. And numbers from different agencies, different years, and different methods are for seeing the shape of a thing, not for splitting hairs at the decimal. Directional truth, honestly sourced. That is the standard, and it is a higher one than clean.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ 5. BUILT FOR EVERY PROJECT ══════════ -->
+    <section class="jp-section">
+      <div class="jp-kicker">Why it is built this way</div>
+      <h2 class="jp-h2">One dataset, <em>many windows.</em></h2>
+      <p class="jp-p">The reason for all of this is leverage. When the data lives underneath instead of inside any one tool, every tool gets to reuse it, and every new tool starts with the whole warehouse already behind it. The same hospital file drives the operations map, feeds state rollups, and answers a search in the Atlas. Build once, surface everywhere.</p>
+
+      <div class="ds-map">
+        <a class="ds-mcard" href="/tools/American-4Ps-Map/">
+          <div class="ds-mc-eyebrow">Tool</div>
+          <div class="ds-mc-name">The Multi-Lens Map</div>
+          <div class="ds-mc-body">Every state metric, across all six lenses, on one interactive choropleth. This is the storefront for the population, payer, economics, and policy shelves.</div>
+          <div class="ds-mc-feed">reads the state metrics &rarr;</div>
+        </a>
+        <a class="ds-mcard" href="/tools/healthcare-operators-map/">
+          <div class="ds-mc-eyebrow">Tool</div>
+          <div class="ds-mc-name">The Operations Map</div>
+          <div class="ds-mc-body">Every hospital, surgery center, dialysis clinic, and supplier in the country, mapped and searchable by system. The facility shelf, made visible.</div>
+          <div class="ds-mc-feed">reads the facility data &rarr;</div>
+        </a>
+        <a class="ds-mcard" href="/tools/healthcare-career-tree/">
+          <div class="ds-mc-eyebrow">Tool</div>
+          <div class="ds-mc-name">The Career Tree</div>
+          <div class="ds-mc-body">Roles and pathways across healthcare, linked to the workforce metrics that count them. Where a job title connects back to the labor data.</div>
+          <div class="ds-mc-feed">reads workforce + metrics &rarr;</div>
+        </a>
+        <a class="ds-mcard" href="/atlas/#techeco/data-warehouse">
+          <div class="ds-mc-eyebrow">The map of maps</div>
+          <div class="ds-mc-name">The Atlas</div>
+          <div class="ds-mc-body">The single canonical map of the whole system. Search walks the links between every shelf, so one query crosses from a concept to a metric to a place to a facility. This module lives on the Data Warehousing tile.</div>
+          <div class="ds-mc-feed">open the Data Warehousing tile &rarr;</div>
+        </a>
+      </div>
+
+      <div class="ds-legend">
+        <div class="ds-legend-h">The short version</div>
+        <p class="ds-legend-p">Pull real public data. File it under one shared key so nothing ends up an island. Carry its source and its vintage with it, always. Then let every tool read from the same shelf, so <strong>updating the data once updates the whole site.</strong> That is the entire architecture. Everything else is just more shelves.</p>
+      </div>
+    </section>
+
+    <!-- ── SOURCES ── -->
+    <div class="jp-sources">
+      <div class="jp-sources-title">Primary data sources referenced</div>
+      <div class="jp-source"><a href="https://data.cdc.gov/" target="_blank" rel="noopener">CDC</a>. PLACES / BRFSS chronic disease and risk factors; WONDER / NCHS mortality and life expectancy.</div>
+      <div class="jp-source"><a href="https://data.census.gov/" target="_blank" rel="noopener">U.S. Census Bureau</a>. American Community Survey (income, housing, demographics); SAHIE uninsured estimates.</div>
+      <div class="jp-source"><a href="https://data.cms.gov/provider-data/" target="_blank" rel="noopener">CMS</a>. Care Compare hospital, ASC, and dialysis data; DMEPOS supplier directory; Medicaid, Medicare, and Marketplace enrollment.</div>
+      <div class="jp-source"><a href="https://www.bls.gov/" target="_blank" rel="noopener">Bureau of Labor Statistics</a>. OEWS occupational employment; LAUS local area unemployment.</div>
+      <div class="jp-source"><a href="https://data.hrsa.gov/" target="_blank" rel="noopener">HRSA</a>. Area Health Resources File; Health Professional Shortage Area designations.</div>
+      <div class="jp-source"><a href="https://www.ahrq.gov/chsp/data-resources/compendium.html" target="_blank" rel="noopener">AHRQ</a>. Compendium of U.S. Health Systems (hospital-to-system linkage).</div>
+      <div class="jp-source"><a href="https://www.kff.org/" target="_blank" rel="noopener">KFF</a>, <a href="https://www.ncsl.org/health" target="_blank" rel="noopener">NCSL</a>, <a href="https://www.aanp.org/" target="_blank" rel="noopener">AANP</a>, <a href="https://www.cchpca.org/" target="_blank" rel="noopener">CCHP</a>. state policy trackers: Medicaid expansion, Certificate of Need, scope of practice, telehealth parity.</div>
+      <div class="jp-source"><em>Currency and method notes for every metric are carried in the site's own metric definitions and surfaced on each tool.</em></div>
+    </div>
+
+  </div>
+</article>
