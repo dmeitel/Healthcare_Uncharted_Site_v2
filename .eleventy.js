@@ -4,6 +4,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/downloads");
   eleventyConfig.addPassthroughCopy("src/robots.txt");
   eleventyConfig.addPassthroughCopy("src/site.webmanifest");
+  eleventyConfig.addPassthroughCopy("src/brand");                                  // brand kit -> /brand/
+  eleventyConfig.addPassthroughCopy({ "src/brand/favicon.ico": "favicon.ico" });   // root /favicon.ico for auto-discovery
 
   // ── COLLECTIONS ──────────────────────────────────────────────────────────
   // Define named collections for site architecture (avoiding data-file shadowing)

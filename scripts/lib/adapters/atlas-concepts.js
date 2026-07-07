@@ -26,6 +26,15 @@ function parseZoneDefs(src) {
   return new Function(snippet + '\nreturn ZONE_DEFS;')();
 }
 
+// Same trick for a named expansion config object (const NAME = { ... };).
+function parseExpand(src, name) {
+  const start = src.indexOf('const ' + name + ' ');
+  if (start < 0) return null;
+  const end = src.indexOf('\n};', start);     // first line-initial }; closes the object
+  if (end < 0) return null;
+  return new Function(src.slice(start, end + 3) + '\nreturn ' + name + ';')();
+}
+
 module.exports = {
   name: 'atlas-concepts',
   run(read, readText) {
@@ -71,6 +80,69 @@ module.exports = {
         }));
       }
     }
+
+    // ── vendor binding ──────────────────────────────────────────────────────
+    // Map each techeco hex concept to the real vendors it stands for, so the
+    // Atlas HUD ("Live data") surfaces them via the `represents` edge that
+    // resolveBindings already reads. Data-driven from vendors.json: when the
+    // directory grows, the hexes light up with the new vendors on next build.
+    // sectors[] matches vendor.sector; match is a name regex for single-vendor hexes.
+    const VENDOR_HEX = {
+      // techeco — reuse the existing vendor hexes
+      'ai-vendors':      { sectors: ['scribing', 'clinical'] },
+      'rcm-vendors':     { sectors: ['rcm'] },
+      'pacs':            { sectors: ['imaging', 'radiology'] },
+      'interop-mid':     { sectors: ['interop'] },
+      'cyber':           { sectors: ['cyber'] },
+      'telehealth-plat': { sectors: ['telehealth'] },
+      'pbm-tech':        { sectors: ['rx'] },
+      'digital-health':  { sectors: ['engage'] },
+      'data-warehouse':  { sectors: ['analytics'] },
+      'ehr-tools':       { sectors: ['ehr'] },          // techeco landmark — Medical Record Tools (expands to all EHRs)
+      // other zones — reuse hexes that are the natural home for a sector
+      'med-devices':     { sectors: ['device', 'cardio'] }, // medsci (cardiovascular tech is largely devices)
+      'rpm':             { sectors: ['rpm'] },          // medsci (Wearables & RPM)
+      'diagnostics':     { sectors: ['labs'] },         // medsci (Diagnostics & Lab)
+      'trials':          { sectors: ['research'] },     // medsci (Clinical Trials)
+      'radiology':       { sectors: ['radiology'] },    // provider (Radiology & Imaging)
+      'behavioral':      { sectors: ['behavioral'] },   // pubhealth (Behavioral Health)
+      'accreditation':   { sectors: ['orgs'] },         // policy (Accreditation Bodies)
+      'vendor-dir':      { sectors: ['cautionary'] },   // techeco landmark — the directory's cautionary tales
+    };
+    let vdata = null;
+    try { vdata = read('src/assets/data/vendors.json'); } catch (e) { vdata = null; }
+    if (vdata && Array.isArray(vdata.vendors)) {
+      for (const [hexId, rule] of Object.entries(VENDOR_HEX)) {
+        const concept = byUid.get(uid('concept', hexId));
+        if (!concept) continue;
+        const matches = vdata.vendors.filter((v) =>
+          (rule.sectors && rule.sectors.includes(v.sector)) ||
+          (rule.match && rule.match.test(v.name)));
+        for (const v of matches) concept.rels.push(edge('represents', uid('vendor', v.name)));
+      }
+    }
+
+    // EHR expansion sub-tiles -> concepts, each representing its EHR vendor, so a
+    // sub-tile's "Live data" surfaces that vendor. Parsed from EXPAND_EHR in the .njk.
+    const ehrExp = parseExpand(readText('src/atlas/index.njk'), 'EXPAND_EHR');
+    if (ehrExp && Array.isArray(ehrExp.subs)) {
+      const zoneUid = uid('concept', 'zone', ehrExp.zoneId);
+      for (const sub of ehrExp.subs) {
+        const cUid = uid('concept', sub.nodeId);
+        if (byUid.has(cUid) || !sub.vendor) continue;
+        byUid.set(cUid, makeNode({
+          uid: cUid,
+          type: 'concept',
+          label: String(sub.label || sub.nodeId).replace(/\n/g, ' '),
+          facets: { layer: 'concept', kind: 'sub', zone: ehrExp.zoneId },
+          searchParts: [sub.label, sub.desc, sub.vendor],
+          rels: [edge('part-of', zoneUid), edge('represents', uid('vendor', sub.vendor))],
+          source: { dataset: 'atlas/index.njk', kind: 'expansion-sub', zone: ehrExp.zoneId, sourceId: sub.nodeId },
+          href: '/atlas/#' + encodeURIComponent(sub.nodeId),
+        }));
+      }
+    }
+
     return [...byUid.values()];
   },
 };

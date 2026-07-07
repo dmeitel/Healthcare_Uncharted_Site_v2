@@ -56,8 +56,8 @@ navPage: home
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 196px;
-  height: 196px;
+  width: 190px;
+  height: 190px;
   transform: translate(-50%, -50%);
   padding: 0;
   border: 0;
@@ -654,15 +654,12 @@ const SEARCH_DATA = [
         b: [0.66 + Math.random() * 0.28, 0.12 + Math.random() * 0.48] },
       // top-to-bottom
       { a: [0.12 + Math.random() * 0.74, 0.05 + Math.random() * 0.16],
-        b: [0.12 + Math.random() * 0.74, 0.74 + Math.random() * 0.20] },
-      // a diagonal cross
-      { a: [0.05 + Math.random() * 0.24, 0.58 + Math.random() * 0.30],
-        b: [0.70 + Math.random() * 0.24, 0.08 + Math.random() * 0.30] }
+        b: [0.12 + Math.random() * 0.74, 0.74 + Math.random() * 0.20] }
     ];
-    // a fourth most of the time, for a denser web
-    if (Math.random() < 0.65) {
-      r.push({ a: [0.06 + Math.random() * 0.28, 0.10 + Math.random() * 0.26],
-               b: [0.60 + Math.random() * 0.30, 0.52 + Math.random() * 0.36] });
+    // a diagonal now and then, for a touch more web without the clutter
+    if (Math.random() < 0.4) {
+      r.push({ a: [0.05 + Math.random() * 0.24, 0.58 + Math.random() * 0.30],
+               b: [0.70 + Math.random() * 0.24, 0.08 + Math.random() * 0.30] });
     }
     return r;
   }
@@ -688,7 +685,7 @@ const SEARCH_DATA = [
   const hexToRgb = h =>
     [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)].join(',');
   function rollLitHexes(count) {
-    const n = (count != null) ? count : (8 + Math.floor(Math.random() * 6));  // 8 to 13
+    const n = (count != null) ? count : (7 + Math.floor(Math.random() * 4));  // 7 to 10
     const out = [];
     let guard = 0;
     while (out.length < n && guard++ < 300) {
@@ -705,7 +702,7 @@ const SEARCH_DATA = [
   function rollAll() {
     if (Math.random() < 0.1) {
       routes = rollSpecialRoutes();
-      litHexes = rollLitHexes(15 + Math.floor(Math.random() * 5));            // 15 to 19
+      litHexes = rollLitHexes(12 + Math.floor(Math.random() * 4));            // 12 to 15
     } else {
       routes = rollRoutes();
       litHexes = rollLitHexes();
@@ -840,12 +837,12 @@ const SEARCH_DATA = [
     ctx.save();
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-    ctx.shadowColor = `rgba(${teal},0.5)`;
-    ctx.shadowBlur = 9;
+    ctx.shadowColor = `rgba(${teal},0.3)`;
+    ctx.shadowBlur = 5;
 
     if (path && path.length > 1) {
-      ctx.strokeStyle = `rgba(${teal},0.42)`;
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(${teal},0.32)`;
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
       path.forEach((k, i) => {
         const p = grid.verts.get(k);
@@ -856,10 +853,10 @@ const SEARCH_DATA = [
 
     [ca, cb].forEach(c => {
       hex(c[0], c[1], s - 1);
-      ctx.fillStyle = `rgba(${teal},0.16)`;
+      ctx.fillStyle = `rgba(${teal},0.12)`;
       ctx.fill();
-      ctx.strokeStyle = `rgba(${teal},0.78)`;
-      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = `rgba(${teal},0.6)`;
+      ctx.lineWidth = 1.3;
       ctx.stroke();
     });
     ctx.restore();
@@ -871,13 +868,13 @@ const SEARCH_DATA = [
     const rgb = lit.rgb;
     ctx.save();
     ctx.lineJoin = 'round';
-    ctx.shadowColor = `rgba(${rgb},0.6)`;
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = `rgba(${rgb},0.45)`;
+    ctx.shadowBlur = 8;
     hex(c[0], c[1], s - 1);
-    ctx.fillStyle = `rgba(${rgb},0.20)`;
+    ctx.fillStyle = `rgba(${rgb},0.16)`;
     ctx.fill();
-    ctx.strokeStyle = `rgba(${rgb},0.85)`;
-    ctx.lineWidth = 1.7;
+    ctx.strokeStyle = `rgba(${rgb},0.7)`;
+    ctx.lineWidth = 1.4;
     ctx.stroke();
     ctx.restore();
   }
@@ -918,50 +915,135 @@ const SEARCH_DATA = [
     link.classList.add('revealed');
   }
 
-  // Compass rose at the centre, the hero's answer to the Atlas hub hex.
-  function drawCompass(cx, cy, teal, bg) {
-    const hubR = 98, longL = 64, shortL = 37, baseR = 13, dW = 11 * Math.PI / 180;
+  // Brand compass rose, drawn straight into the canvas to match the design in
+  // /brand/hu-atlas-core-node.svg: a blue hex frame, a teal ring with ticks, a
+  // four-point blue/teal star, N/E/S/W labels and the HU monogram at the centre.
+  // Sits in a clean hex clearing so the honeycomb and routes don't show through.
+  // Geometry is scaled from the SVG, whose hex has a 182-unit vertex radius.
+  function drawCompass(cx, cy, dark, bg, s) {
+    const R = 2.7 * s;            // hex-frame vertex radius
+    const k = R / 182;            // scale from the SVG's 182-unit hex
+    const circleR = 115 * k;
+
+    // Theme-aware brand palette (brighter on dark, deeper on light).
+    const BLUE    = dark ? '#3585cc' : '#1B5FA8';
+    const BLUE_LT = dark ? '#5aa6e6' : '#3585cc';
+    const TEAL    = dark ? '#4ecdc4' : '#2FA79E';
+    const TEAL_LT = dark ? '#7ff0e6' : '#4ecdc4';
+    const TEAL_DK = dark ? '#3fa9a2' : '#1f7d76';
+
     ctx.save();
-    hex(cx, cy, hubR);                       // hub hex masks the grid + route behind it
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    // Clean hex clearing behind the compass.
+    hex(cx, cy, R);
     ctx.fillStyle = bg;
     ctx.fill();
-    ctx.strokeStyle = `rgba(${teal},0.5)`;
-    ctx.lineWidth = 1.4;
+
+    // Blue hex frame.
+    hex(cx, cy, R);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = BLUE;
+    ctx.globalAlpha = 0.85;
     ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Teal ring.
     ctx.beginPath();
-    ctx.arc(cx, cy, hubR * 0.6, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${teal},0.18)`;
-    ctx.lineWidth = 1;
+    ctx.arc(cx, cy, circleR, 0, Math.PI * 2);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = TEAL;
+    ctx.globalAlpha = 0.9;
     ctx.stroke();
-    ctx.shadowColor = `rgba(${teal},0.55)`;
-    ctx.shadowBlur = 12;
-    for (let i = 0; i < 8; i++) {             // 8 spikes, cardinals long, diagonals short
-      const ang = -Math.PI / 2 + i * Math.PI / 4;
-      const cardinal = (i % 2 === 0);
-      const L = cardinal ? longL : shortL;
+    ctx.globalAlpha = 1;
+
+    // 36 ticks around the ring; longer + brighter at the cardinals.
+    for (let i = 0; i < 36; i++) {
+      const ang = (-90 + i * 10) * Math.PI / 180;
+      const c = Math.cos(ang), sn = Math.sin(ang);
+      const major = (i % 9 === 0), sec = (i % 3 === 0);
+      const len = (major ? 11 : sec ? 7 : 4) * k;
       ctx.beginPath();
-      ctx.moveTo(cx + L * Math.cos(ang), cy + L * Math.sin(ang));
-      ctx.lineTo(cx + baseR * Math.cos(ang + dW), cy + baseR * Math.sin(ang + dW));
-      ctx.lineTo(cx + baseR * Math.cos(ang - dW), cy + baseR * Math.sin(ang - dW));
-      ctx.closePath();
-      ctx.fillStyle = cardinal ? `rgba(${teal},0.5)` : `rgba(${teal},0.26)`;
-      ctx.fill();
+      ctx.moveTo(cx + c * circleR, cy + sn * circleR);
+      ctx.lineTo(cx + c * (circleR - len), cy + sn * (circleR - len));
+      ctx.lineWidth = major ? 2 : 1;
+      ctx.strokeStyle = TEAL;
+      ctx.globalAlpha = major ? 0.9 : 0.4;
+      ctx.stroke();
     }
-    ctx.beginPath();
-    ctx.arc(cx, cy, 3.6, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${teal},0.85)`;
-    ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.font = '600 11px "IBM Plex Mono", monospace';
-    ctx.fillStyle = `rgba(${teal},0.62)`;
+    ctx.globalAlpha = 1;
+
+    // Four-point star: N/S teal darts, E/W blue darts, each split into a light
+    // and a dark half for the folded-facet look. Light half is always +perp.
+    const darts = [
+      { ax: 0,  ay: -1, lt: TEAL_LT, dk: TEAL_DK },   // N
+      { ax: 1,  ay: 0,  lt: BLUE_LT, dk: BLUE    },   // E
+      { ax: 0,  ay: 1,  lt: TEAL_LT, dk: TEAL_DK },   // S
+      { ax: -1, ay: 0,  lt: BLUE_LT, dk: BLUE    }    // W
+    ];
+    darts.forEach(d => {
+      const ax = d.ax, ay = d.ay, px = -ay, py = ax;   // perp
+      const P = (dist, off) => [cx + ax * dist * k + px * off * k,
+                                cy + ay * dist * k + py * off * k];
+      const base = P(15, 0), tip = P(100, 0);
+      const quad = (offB, offM, col) => {
+        const b = P(15, offB), m = P(56, offM);
+        ctx.beginPath();
+        ctx.moveTo(base[0], base[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.lineTo(m[0], m[1]);
+        ctx.lineTo(tip[0], tip[1]);
+        ctx.closePath();
+        ctx.fillStyle = col;
+        ctx.fill();
+      };
+      quad(10, 15, d.lt);      // light half (+perp)
+      quad(-10, -15, d.dk);    // dark half (-perp)
+    });
+
+    // N/E/S/W labels just outside the ring.
+    const fs = Math.max(12, Math.round(21 * k));
+    ctx.font = `700 ${fs}px Outfit, "Poppins", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const lr = 75;   // label radius: clears the dart tips and sits inside the hex edge (inradius ~85)
-    ctx.fillText('N', cx, cy - lr);
-    ctx.fillText('S', cx, cy + lr);
-    ctx.fillText('E', cx + lr, cy);
-    ctx.fillText('W', cx - lr, cy);
+    const lr = 132 * k;
+    [['N', 0, -1, TEAL_LT], ['E', 1, 0, BLUE_LT],
+     ['S', 0, 1, TEAL], ['W', -1, 0, BLUE_LT]].forEach(([t, ax, ay, col]) => {
+      ctx.fillStyle = col;
+      ctx.fillText(t, cx + ax * lr, cy + ay * lr);
+    });
+
+    // Centre: soft blue glow, dark hex, blue outline, HU monogram.
+    ctx.beginPath();
+    ctx.arc(cx, cy, 27 * k, 0, Math.PI * 2);
+    ctx.fillStyle = BLUE;
+    ctx.globalAlpha = 0.18;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    const chR = 32 * k;
+    hex(cx, cy, chR);
+    ctx.fillStyle = dark ? '#0d1117' : '#ffffff';   // pure white centre in light mode, not a dark/grey blob
+    ctx.fill();
+    hex(cx, cy, chR);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = BLUE;
+    ctx.globalAlpha = 0.9;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    const mf = Math.max(11, Math.round(chR * 0.95));
+    ctx.font = `800 ${mf}px Outfit, sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const hW = ctx.measureText('H').width, uW = ctx.measureText('U').width;
+    const gap = mf * 0.04, tot = hW + uW + gap, x0 = cx - tot / 2;
+    ctx.fillStyle = BLUE_LT;
+    ctx.fillText('H', x0, cy);
+    ctx.fillStyle = TEAL;
+    ctx.fillText('U', x0 + hW + gap, cy);
+
     ctx.restore();
   }
 
@@ -981,7 +1063,7 @@ const SEARCH_DATA = [
       const cy = row * rowH;
       const offset = (row % 2) ? colW / 2 : 0;
       const f = Math.max(0, 1 - cy / H);
-      ctx.strokeStyle = `rgba(${teal},${(0.04 + 0.15 * f * f).toFixed(3)})`;
+      ctx.strokeStyle = `rgba(${teal},${(0.028 + 0.09 * f * f).toFixed(3)})`;
       for (let cx = -colW; cx <= W + colW; cx += colW) {
         hex(cx + offset, cy, s - 1);
         ctx.stroke();
@@ -999,7 +1081,10 @@ const SEARCH_DATA = [
     // stays clean, though the tile is placed well clear of it anyway.
     if (secretTile) drawSecretTile(secretTile, s, colW, rowH);
 
-    drawCompass(W / 2, H / 2, teal, bg);
+    // The compass occupies a single grid cell. Snap it (and its click target) to
+    // the nearest cell centre so it tessellates with the honeycomb, then ring that
+    // cell with a moat, exactly like the Atlas hub.
+    drawCompass(W / 2, H / 2, dark, bg, s);
   }
 
   function resize() {

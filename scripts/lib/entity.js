@@ -45,6 +45,7 @@ const TYPES = [
   'credential',     // a degree, license, or cert (education layer)
   'policy',         // a law, rule, or bill (policy layer)
   'supply',         // a supply-density rollup about a place (DME categories)
+  'vendor',         // a health-tech company / product (vendor directory)
 ];
 
 const RELS = [

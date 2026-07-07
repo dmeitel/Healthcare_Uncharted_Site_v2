@@ -34,6 +34,7 @@ const ADAPTERS = [
   require('./lib/adapters/metrics'),
   require('./lib/adapters/county-metrics'),
   require('./lib/adapters/suppliers'),
+  require('./lib/adapters/vendors'),
   require('./lib/adapters/atlas-concepts'),
 ];
 
@@ -83,7 +84,7 @@ write('search-index.json', {
 // label, search string, a trimmed facet set, and compact relationships
 // (rels as [rel, to] or [rel, to, value]). Smaller than entities.json (no
 // lat/lon/long text), but it carries the rels the relationship-walk needs.
-const FACET_KEYS = ['layer', 'state', 'facType', 'ownership', 'kind', 'lens', 'unit', 'dir', 'domain', 'family', 'tier', 'tierLabel', 'pathway', 'zone', 'zoneLabel', 'group', 'supplierKind', 'category', 'trauma', 'beds', 'stars', 'stats'];
+const FACET_KEYS = ['layer', 'state', 'facType', 'ownership', 'kind', 'lens', 'unit', 'dir', 'domain', 'family', 'tier', 'tierLabel', 'pathway', 'zone', 'zoneLabel', 'group', 'supplierKind', 'category', 'trauma', 'beds', 'stars', 'stats', 'sector', 'sectorLabel', 'status', 'owner', 'ps'];
 const pick = (o, keys) => { const r = {}; for (const k of keys) if (o && o[k] != null) r[k] = o[k]; return r; };
 write('search-graph.json', {
   _meta: stamp,

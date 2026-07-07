@@ -44,6 +44,10 @@ permalink: /atlas/
   font-size: 16px; transition: all .12s; font-family: inherit;
 }
 .atlas-btn:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.50); color: #4ECDC4; }
+.atlas-craft-link { display: flex; align-items: center; gap: 5px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; color: #4ECDC4; background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.35); padding: 5px 12px; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: all .12s; }
+.atlas-craft-link:hover { background: rgba(78,205,196,0.16); border-color: rgba(78,205,196,0.6); color: #7fead9; }
+[data-theme='light'] .atlas-craft-link { color: #1B5FA8; background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.30); }
+[data-theme='light'] .atlas-craft-link:hover { background: rgba(27,95,168,0.12); border-color: rgba(27,95,168,0.55); color: #1B5FA8; }
 #atlas-canvas { flex: 1; position: relative; overflow: hidden; }
 #atlas-svg { width: 100%; height: 100%; display: block; cursor: grab; }
 #atlas-svg:active { cursor: grabbing; }
@@ -145,6 +149,19 @@ permalink: /atlas/
   font-family: 'DM Sans', sans-serif;
   font-size: 13px; color: rgba(140,180,215,0.80); line-height: 1.62;
 }
+#hud-data { margin-top: 11px; padding-top: 10px; border-top: 1px solid rgba(78,205,196,0.14); }
+.hud-dhdr { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #4ECDC4; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.hud-dhdr::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #4ECDC4; box-shadow: 0 0 7px #4ECDC4; }
+.hud-drow { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; font-size: 12px; border-bottom: 1px solid rgba(78,205,196,0.06); }
+.hud-drow:last-child { border-bottom: none; }
+.hud-drow[data-uid] { cursor: pointer; }
+.hud-drow[data-uid]:hover .hud-dlabel { color: #4ECDC4; }
+.hud-dlabel { color: #cfe0ea; flex: 1; line-height: 1.35; }
+.hud-dval { font-family: 'IBM Plex Mono', monospace; color: #fff; font-weight: 600; white-space: nowrap; }
+.hud-dsub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.04em; color: rgba(140,180,200,0.6); text-transform: uppercase; }
+[data-theme='light'] #hud-data { border-top-color: rgba(27,95,168,0.16); }
+[data-theme='light'] .hud-dlabel { color: #22405c; }
+[data-theme='light'] .hud-dval { color: #0d1117; }
 #hud-links-col {
   padding: 2px 16px 16px; display: none; flex-direction: column; gap: 5px;
 }
@@ -475,6 +492,8 @@ permalink: /atlas/
       <button class="atlas-flt" id="af-tools">Tool Nodes</button>
     </div>
     <div class="atlas-sep"></div>
+    <a class="atlas-craft-link" href="/atlas/craft/" title="Atlas Craft — search the atlas and wire your own relationship diagrams">Craft &#8599;</a>
+    <div class="atlas-sep"></div>
     <div id="atlas-controls">
       <button class="atlas-btn" id="a-zi">+</button>
       <button class="atlas-btn" id="a-zo">−</button>
@@ -562,7 +581,7 @@ permalink: /atlas/
           <div id="hud-title" id="h-title"></div>
         </div>
         <div id="hud-body">
-          <div id="hud-desc-col"><div id="hud-desc"></div></div>
+          <div id="hud-desc-col"><div id="hud-desc"></div><div id="hud-data" style="display:none"></div></div>
           <div id="hud-links-col">
             <div class="hud-lhdr">Connected</div>
             <div id="hud-links"></div>
@@ -896,12 +915,10 @@ const ZONE_DEFS = [
       {q:-3, r:5,  type:'landmark', label:'Vendor\nDirectory',     nodeId:'vendor-dir',
         desc:'Major healthcare technology vendors across EHR, RCM, imaging, analytics, AI, and infrastructure. What they do, who they serve, and where they fit.',
         links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
-      {q:-4, r:5,  type:'node',    label:'Epic\nSystems',          nodeId:'epic',
-        desc:'Largest EHR vendor. ~35% of U.S. hospital market. MyChart, Healthy Planet, Cosmos research network. Integrated, expensive, dominant.',
+      {q:-4, r:5,  type:'landmark', label:'Medical\nRecord Tools', nodeId:'ehr-tools',
+        desc:'The EHR layer: the systems of record clinicians live in. Expand to see the acute, ambulatory, and post-acute vendors that run U.S. healthcare documentation, orders, and billing.',
         links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
-      {q:-5, r:5,  type:'node',    label:'Oracle Cerner /\nMEDITECH', nodeId:'cerner',
-        desc:'Second-tier EHR vendors. Oracle acquired Cerner in 2022. Government and community hospital market. Integration challenges post-acquisition.',
-        links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
+      {q:-5, r:5,  type:'terrain', label:'', nodeId:null, desc:''},
       {q:-3, r:6,  type:'node',    label:'Digital Health\nStartups', nodeId:'digital-health',
         desc:'The $20B+ annual VC investment in healthcare technology. Most companies address the patient-consumer layer. Most fail in clinical workflow integration.',
         links:[{label:'Vendor Directory', url:'/tools/healthcare-vendor-directory/', icon:'📋'}]},
@@ -1228,6 +1245,7 @@ function autoLayoutSubs(lq, lr, subs) {
         const at = GRID_MAP.get(`${tq},${tr}`);
         if (at && at.type === 'landmark') continue;
         if (MOAT_KEYS.includes(`${tq},${tr}`)) continue;
+        if (ANCHOR_KEYS.includes(`${tq},${tr}`)) continue;   // never place a sub on an anchor
         const align = dq*fanX + (-dq-dr)*fanY + dr*fanZ;
         candidates.push({dq, dr, ring, align});
       }
@@ -1266,6 +1284,7 @@ function generateCandidates(lq, lr, maxRing) {
         if (Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds)) !== ring) continue;
         const tq = lq + dq, tr = lr + dr;
         if (MOAT_KEYS.includes(`${tq},${tr}`)) continue;
+        if (ANCHOR_KEYS.includes(`${tq},${tr}`)) continue;   // anchors are never candidates
         const align = dq*fanX + (-dq-dr)*fanY + dr*fanZ;
         cands.push({q: tq, r: tr, ring, align});
       }
@@ -1290,6 +1309,7 @@ function findZoneTerrain(zoneId, sourceQ, sourceR, claimed, maxRing) {
         const k = `${tq},${tr}`;
         if (claimed.has(k)) continue;
         if (MOAT_KEYS.includes(k)) continue;
+        if (ANCHOR_KEYS.includes(k)) continue;               // never displace a cell onto an anchor
         const cell = GRID_MAP.get(k);
         if (!cell || cell.type !== 'terrain') continue;
         if (cell.zoneId !== zoneId) continue;
@@ -1312,6 +1332,7 @@ function findAnyFreeHex(lq, lr, claimed, maxRing) {
         const k = `${tq},${tr}`;
         if (claimed.has(k)) continue;
         if (MOAT_KEYS.includes(k)) continue;
+        if (ANCHOR_KEYS.includes(k)) continue;               // anchors are never a fallback target
         return {q: tq, r: tr};
       }
     }
@@ -1340,6 +1361,7 @@ function computeProceduralPushes(lq, lr, subs, excludeNodeId, zoneId) {
     }
   });
   MOAT_KEYS.forEach(k => claimed.set(k, {type: 'lock'}));
+  ANCHOR_KEYS.forEach(k => claimed.set(k, {type: 'lock'}));   // anchors locked: nothing displaces onto them
 
   expandedSet.forEach(otherId => {
     if (otherId === excludeNodeId) return;
@@ -1613,6 +1635,7 @@ function initExpansion(cfg) {
       document.getElementById('hud-links').innerHTML   = '';
       document.getElementById('hud-links-col').classList.remove('has-links');
       document.getElementById('atlas-hud').classList.add('open');
+      fillHudData(sub.nodeId);
     });
 
     subGroups.push({sg, tx, ty, nodeId: sub.nodeId, linker});
@@ -1743,6 +1766,35 @@ const EXPAND_SCOPE = {
   ],
 };
 
+// Medical Record Tools — Health Tech zone (-4,5). All EHR options under one landmark.
+const EXPAND_EHR = {
+  zoneId: 'techeco', nodeId: 'ehr-tools',
+  subs: [
+    {nodeId:'ehr-epic',     vendor:'Epic Systems',          label:'Epic',
+     desc:'The market leader. ~42% of U.S. hospitals, far more by beds. MyChart, Cosmos, Healthy Planet. Integrated, expensive, dominant in large systems.'},
+    {nodeId:'ehr-oracle',   vendor:'Oracle Health (Cerner)', label:'Oracle\nCerner',
+     desc:'Cerner, acquired by Oracle in 2022 for $28.3B. ~23% of hospitals. Strong in government (VA, DoD) and community hospitals. Mid-migration to Oracle cloud.'},
+    {nodeId:'ehr-meditech', vendor:'MEDITECH',              label:'MEDITECH',
+     desc:'~15% of hospitals. Privately held, cost-effective, strong in community and rural hospitals. Expanse is its modern web-based platform.'},
+    {nodeId:'ehr-athena',   vendor:'athenahealth',          label:'athena-\nhealth',
+     desc:'Cloud-native, single-instance ambulatory leader. The network model: billing and payer rules learned across thousands of practices flow to everyone.'},
+    {nodeId:'ehr-ecw',      vendor:'eClinicalWorks',        label:'eClinical-\nWorks',
+     desc:'Huge independent and small-group ambulatory footprint, aggressively priced. Carries a $155M DOJ settlement (2017) over certification and kickbacks.'},
+    {nodeId:'ehr-nextgen',  vendor:'NextGen Healthcare',    label:'NextGen',
+     desc:'Ambulatory EHR and practice management for small and mid-size specialty groups. Taken private by Thoma Bravo in 2024 for $1.8B.'},
+    {nodeId:'ehr-modmed',   vendor:'ModMed (Modernizing Medicine)', label:'ModMed',
+     desc:'Specialty-native EHR (dermatology, ophthalmology, ortho) built around structured specialty templates. Owned by Clearlake Capital.'},
+    {nodeId:'ehr-veradigm', vendor:'Veradigm (Allscripts)', label:'Veradigm',
+     desc:'The ambulatory and data assets left after Allscripts sold its hospital business. Strategy centers on monetizing de-identified clinical data for life sciences.'},
+    {nodeId:'ehr-pcc',      vendor:'PointClickCare',        label:'Point-\nClickCare',
+     desc:'Owns the post-acute world the way Epic owns acute. ~60% of skilled nursing. Cloud-based, built for SNF, LTC, and senior living. 27,000+ providers.'},
+    {nodeId:'ehr-altera',   vendor:'Altera Digital Health', label:'Altera',
+     desc:'The former Allscripts hospital EHR business (Sunrise, Paragon), now under Constellation Software. Acute-care focus, smaller installed base.'},
+    {nodeId:'ehr-trubridge',vendor:'TruBridge (CPSI / Evident)', label:'TruBridge',
+     desc:'Rebranded CPSI. EHR and revenue-cycle services for community and rural hospitals. Public, with a heavy RCM-services mix alongside the EHR.'},
+  ],
+};
+
 // ── SVG SETUP ─────────────────────────────────────────────────────────────────
 const svgEl = document.getElementById('atlas-svg');
 const svg   = d3.select('#atlas-svg');
@@ -1779,7 +1831,7 @@ const hubStroke  = ()=> isLight() ? '#1B5FA8' : '#4ECDC4';
 svg.append('rect').attr('id','svg-bg').attr('width','100%').attr('height','100%').attr('fill', svgBgColor());
 new MutationObserver(()=>{
   d3.select('#svg-bg').attr('fill', svgBgColor());
-  d3.select('#hub-body').attr('fill', hubFill()).attr('stroke', hubStroke());
+  if (typeof renderHubCompass === 'function') renderHubCompass();  // redraw the brand compass in the new palette
 }).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
 const g = svg.append('g').attr('id','atlas-g');
 g.append('rect').attr('x',-1000).attr('y',-1000).attr('width',5000).attr('height',5000).attr('fill','url(#bg-dot)');
@@ -1853,6 +1905,49 @@ GRID_MAP.forEach((v, k) => {
 });
 function gridGet(q, r)      { return GRID_MAP.get(`${q},${r}`); }
 function gridOccupied(q, r) { return GRID_MAP.has(`${q},${r}`); }
+
+// ── ANCHOR LATTICE (fixed blank waypoint tiles) ──────────────────────────────
+// Six 60-degree corners of rings 4 and 8, each snapped to the nearest BLANK cell
+// so an anchor never sits on a content tile. These are LOCKED: the expansion engine
+// never places a sub on, nor displaces a cell onto, an anchor (ANCHOR_KEYS guards
+// every placement path), so anchors stay blank. Connection routes hop through them.
+const ANCHOR_RINGS = [4, 8];
+const ANCHOR_DIRS = [[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]];
+const ANCHOR_LIST = [];
+const ANCHOR_KEYS = [];
+(function buildAnchors() {
+  const seen = new Set();
+  const nearestBlank = (px) => {
+    let best = null, bd = Infinity;
+    GRID_MAP.forEach((v, key) => {
+      if (v.type !== 'terrain') return;
+      const [q, r] = key.split(',').map(Number);
+      const d = (hPx(q, r)[0] - px[0]) ** 2 + (hPx(q, r)[1] - px[1]) ** 2;
+      if (d < bd) { bd = d; best = { q, r }; }
+    });
+    return best;
+  };
+  ANCHOR_RINGS.forEach(dd => ANCHOR_DIRS.forEach(dir => {
+    const c = nearestBlank(hPx(dir[0] * dd, dir[1] * dd));
+    if (!c) return; const k = c.q + ',' + c.r;
+    if (seen.has(k)) return; seen.add(k);
+    ANCHOR_LIST.push({ q: c.q, r: c.r, px: hPx(c.q, c.r), ring: dd });
+    ANCHOR_KEYS.push(k);
+  }));
+})();
+
+// The central moat ring (d=1) also serves as INNER anchors, so links can route
+// AROUND the hub through the empty centre instead of looping far out. The moat
+// hexes aren't normally in the grid, so add them as blank cells (the router can
+// then traverse the ring), plus the hub as an impassable cell. Both stay locked
+// for expansion (they're already in MOAT_KEYS). edgeCost bars any hub-touching
+// edge, so routes hug the moat ring but never cross the centre.
+[[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]].forEach(([q, r]) => {
+  const k = q + ',' + r;
+  if (!GRID_MAP.has(k)) GRID_MAP.set(k, { zoneId: null, nodeId: null, type: 'terrain' });
+  if (!ANCHOR_KEYS.includes(k)) { ANCHOR_LIST.push({ q, r, px: hPx(q, r), ring: 1 }); ANCHOR_KEYS.push(k); }
+});
+if (!GRID_MAP.has('0,0')) GRID_MAP.set('0,0', { zoneId: null, nodeId: null, type: 'hub' });
 
 // ── COMPUTE PIXEL POSITIONS ───────────────────────────────────────────────────
 ZONE_DEFS.forEach(zone => {
@@ -1992,30 +2087,56 @@ ZONE_DEFS.forEach(z => {
     return (Math.abs(q1-q2)+Math.abs(r1-r2)+Math.abs((q1+r1)-(q2+r2)))/2;
   }
 
-  // Edge traversal cost between adjacent vertex keys vka → vkb.
-  // Costs are near-uniform (~1.0) so A* minimises edge count — the most direct
-  // route. The interior surcharge is tiny (1.12 vs 1.0), enough only to break
-  // ties toward zone borders among paths of equal length, never to force a
-  // detour. Min cost stays 1.0 so the ~1.0-per-step heuristic is admissible and
-  // A* returns the genuinely shortest path. Hub and moat stay hard barriers.
+  // Edge traversal cost between adjacent vertex keys vka, vkb. Zone-BOUNDARY edges
+  // (the line between two different zones) and the outer map perimeter are the
+  // cheap "roads" (1.0); cutting through a zone INTERIOR is dearer (1.6), so A*
+  // hugs the borders and only dips inside near the endpoints to reach a landmark.
+  // Off-grid vertices cost more so routes do not wander past the map edge. The d=2
+  // ring just outside the moat carries a small surcharge so the cross-hub routes
+  // spread across it instead of all piling onto the same moat-edge vertices. The
+  // hub stays a hard barrier, but the moat ring is now passable so links can route
+  // around the hub through it. Min cost stays 1.0 so the heuristic stays admissible.
   function edgeCost(vka, vkb) {
     const ha = vtxMap.get(vka)||[], hb = vtxMap.get(vkb)||[];
     const shared = ha.filter(a => hb.some(b => b.q===a.q && b.r===a.r));
+    // Hub is an impassable barrier (never cross the centre); the moat RING is now
+    // passable so links route around the hub through it. Use the closest ring among
+    // the shared hexes: d=0 touches the hub, d=1 is the moat ring.
+    let minD = Infinity;
+    for (const {q,r} of shared) { const d = hexD(q,r,0,0); if (d < minD) minD = d; }
+    if (minD === 0) return 80;   // hub-touching edge: hard barrier (never cross the centre)
+    // Per-hex penalties + anchor detection.
+    let pen = 0, onAnchor = false;
     for (const {q,r} of shared) {
-      const d = hexD(q,r,0,0);
-      if (d===0) return 80;  // hub — avoid hard
-      if (d===1) return 8;   // moat — firm barrier, never crossed
+      const k = `${q},${r}`;
+      if (routeBlocked.has(k)) pen += 14;
+      if (ANCHOR_KEYS.includes(k)) onAnchor = true;
     }
-    // Penalty for edges bordering a hex occupied by an active expansion — makes
-    // routes detour around the expansion footprint rather than cut through it.
-    let blockPen = 0;
-    for (const {q,r} of shared) {
-      if (routeBlocked.has(`${q},${r}`)) blockPen += 14;
-    }
-    if (shared.length === 0) return 1.2 + blockPen;
-    if (shared.length === 1) return 1.0 + blockPen; // map-edge perimeter
-    const zones = [...new Set(shared.map(h=>(GRID_MAP.get(`${h.q},${h.r}`)||{}).zoneId).filter(Boolean))];
-    return (zones.length > 1 ? 1.0 : 1.12) + blockPen; // boundary vs interior — tie-break only
+    // Anchor highway: edges touching a fixed anchor (the moat ring included) are
+    // cheap, so one continuous A* threads through the lattice and around the hub
+    // instead of stitching independent legs (which kinked and backtracked).
+    if (onAnchor) return 0.5 + pen;
+    if (minD === 1) return 1.6 + pen;            // moat ring (non-anchor) — passable
+    for (const {q,r} of shared) if (hexD(q,r,0,0) === 2) pen += 1.0;   // de-congest the d=2 ring
+    let base;
+    if (shared.length === 0) base = 2.0;         // off-grid: discourage wandering off the map
+    else if (shared.length === 1) base = 1.0;    // map-edge perimeter (clean coastline road)
+    else { const zones = [...new Set(shared.map(h=>(GRID_MAP.get(`${h.q},${h.r}`)||{}).zoneId).filter(Boolean))]; base = (zones.length > 1 ? 1.0 : 1.6); } // boundary road vs interior cut
+    return base + pen;
+  }
+
+  // Edge direction bucket (0-5, hex edges are 60 deg apart) from vertex key a to b.
+  function edgeDir(aK, bK) {
+    const a = aK.split(',').map(Number), b = bK.split(',').map(Number);
+    return Math.round(Math.atan2(b[1] - a[1], b[0] - a[0]) / (Math.PI / 3));
+  }
+  // Small penalty for changing direction. Hex zone borders are themselves a
+  // stair-step, so without this a border-hugging route zig-zags every edge. This
+  // makes A* prefer long straight runs and turn only when it must, for a cleaner,
+  // more road-like line. Kept below the interior surcharge so borders still win.
+  function turnPen(prevK, curK, nextK) {
+    if (prevK == null) return 0;
+    return edgeDir(prevK, curK) === edgeDir(curK, nextK) ? 0 : 0.25;
   }
 
   // Vertex-graph A*. Multi-source / multi-target: A* may leave from any of the
@@ -2025,10 +2146,9 @@ ZONE_DEFS.forEach(z => {
   // [{q,r,vi}] tuple sequence, or null.
   function vtxAstar(startQ, startR, endQ, endR) {
     const [ecx,ecy] = hPx(endQ,endR);
-    // Heuristic: distance to the end landmark centre, less one hex radius (the
-    // actual target vertex sits ~s closer than the centre). Stays admissible
-    // against the 1.0 minimum edge cost, so A* returns the true shortest path.
-    const h = (vx,vy) => Math.max(0, Math.hypot(vx-ecx, vy-ecy) - s) / s;
+    // Heuristic: hex-steps to the end landmark, scaled by the MIN edge cost (0.5,
+    // the anchor-highway rate) so it never overestimates and A* stays optimal.
+    const h = (vx,vy) => Math.max(0, Math.hypot(vx-ecx, vy-ecy) - s) / s * 0.5;
     const endKeys = new Set();
     for (let vi=0;vi<6;vi++) {
       const [vx,vy]=hexVtx(endQ,endR,vi);
@@ -2044,7 +2164,7 @@ ZONE_DEFS.forEach(z => {
       open.set(k,{f:h(vx,vy)});
     }
     let iter=0;
-    while (open.size>0 && iter++<8000) {
+    while (open.size>0 && iter++<16000) {
       let ck=null,mf=Infinity;
       open.forEach((n,k)=>{ if(n.f<mf){mf=n.f;ck=k;} });
       if (endKeys.has(ck)) {
@@ -2054,7 +2174,7 @@ ZONE_DEFS.forEach(z => {
       }
       open.delete(ck);
       vtxNeighbours(ck).forEach((nInfo,nk)=>{
-        const tg=(gScore.get(ck)||0)+edgeCost(ck,nk);
+        const tg=(gScore.get(ck)||0)+edgeCost(ck,nk)+turnPen(cameFrom.get(ck),ck,nk);
         if (!gScore.has(nk)||tg<gScore.get(nk)) {
           gScore.set(nk,tg); cameFrom.set(nk,ck); nodeInfo.set(nk,nInfo);
           const [nx,ny]=hexVtx(nInfo.q,nInfo.r,nInfo.vi);
@@ -2074,6 +2194,24 @@ ZONE_DEFS.forEach(z => {
     let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
     for (let i=1;i<pts.length;i++) d += ` L${pts[i][0].toFixed(1)},${pts[i][1].toFixed(1)}`;
     return d;
+  }
+
+  // ── Anchor-lattice routing ───────────────────────────────────────────────────
+  // Connections follow the hex BORDERS (flat vertex paths) through a fixed lattice
+  // of BLANK anchor tiles (six 60-degree corners of rings 4 & 8 snapped to blank
+  // cells, plus the central moat ring). Anchors aren't stitched waypoints; they are
+  // cheap edges in edgeCost, so a single continuous A* per link is pulled through
+  // them and around the hub via the moat. Fixed lattice, so routes stay stable.
+  const ANCHORS = ANCHOR_LIST;     // fixed blank waypoint tiles (markers; the cheap-edge highway lives in edgeCost)
+  // ONE continuous border-following A* per link. Anchor + moat edges are cheap
+  // (edgeCost), so the single path is naturally pulled through the fixed lattice and
+  // around the hub on its own, with NO stitching of independent legs, which is what
+  // produced the kinks and backtracks. Stable because the lattice never moves.
+  function anchorRoute(fq, fr, tq, tr) {
+    const canon = vtxAstar(fq, fr, tq, tr);
+    if (!canon || !canon.length) return { d: '', e0: null, e1: null };
+    const f = canon[0], l = canon[canon.length - 1];
+    return { d: buildVtxPath(canon), e0: hexVtx(f.q, f.r, f.vi), e1: hexVtx(l.q, l.r, l.vi) };
   }
 
   const connTip  = document.getElementById('conn-tooltip');
@@ -2096,9 +2234,8 @@ ZONE_DEFS.forEach(z => {
       tz.cells.filter(c=>c.type!=='terrain').reduce((b,c)=>
         ((c.wx-tz.cx)**2+(c.wy-tz.cy)**2)<((b.wx-tz.cx)**2+(b.wy-tz.cy)**2)?c:b);
 
-    const canonical = vtxAstar(fcell.q,fcell.r,tcell.q,tcell.r);
-    const pathD = canonical ? buildVtxPath(canonical)
-      : `M${fz.cx.toFixed(1)},${fz.cy.toFixed(1)} L${tz.cx.toFixed(1)},${tz.cy.toFixed(1)}`;
+    const rt = anchorRoute(fcell.q,fcell.r,tcell.q,tcell.r);
+    const pathD = rt.d;
 
     const rg=connG.append('g').attr('class','route-group')
       .attr('data-from',conn.from).attr('data-to',conn.to);
@@ -2129,18 +2266,15 @@ ZONE_DEFS.forEach(z => {
         .attr('stroke',col).attr('stroke-width',1.2).attr('stroke-opacity',0.95)
         .attr('pointer-events','none'),
     ];
-    function placeEndpoints(canon, dur) {
-      if (!canon || canon.length < 1) { endpoints.forEach(e=>e.attr('opacity',0)); return; }
-      const a = canon[0], b = canon[canon.length-1];
-      const [ax,ay] = hexVtx(a.q,a.r,a.vi);
-      const [bx,by] = hexVtx(b.q,b.r,b.vi);
+    function placeEndpoints(p0, p1, dur) {
+      if (!p0 || !p1) { endpoints.forEach(e=>e.attr('opacity',0)); return; }
       endpoints[0].attr('opacity',1); endpoints[1].attr('opacity',1);
-      const e0 = dur ? endpoints[0].transition().duration(dur).ease(d3.easeCubicInOut) : endpoints[0];
-      const e1 = dur ? endpoints[1].transition().duration(dur).ease(d3.easeCubicInOut) : endpoints[1];
-      e0.attr('cx',ax).attr('cy',ay);
-      e1.attr('cx',bx).attr('cy',by);
+      const ep0 = dur ? endpoints[0].transition().duration(dur).ease(d3.easeCubicInOut) : endpoints[0];
+      const ep1 = dur ? endpoints[1].transition().duration(dur).ease(d3.easeCubicInOut) : endpoints[1];
+      ep0.attr('cx',p0[0]).attr('cy',p0[1]);
+      ep1.attr('cx',p1[0]).attr('cy',p1[1]);
     }
-    placeEndpoints(canonical);
+    placeEndpoints(rt.e0, rt.e1);
 
     const hit=rg.append('path').attr('d',pathD).attr('fill','none')
       .attr('stroke','transparent').attr('stroke-width',16).attr('cursor','pointer');
@@ -2165,8 +2299,19 @@ ZONE_DEFS.forEach(z => {
       window._selectRoute(conn, col);
     });
 
-    builtRoutes.push({conn, rg, col, fp, canonical, endpoints, placeEndpoints,
+    builtRoutes.push({conn, rg, col, fp, e0:rt.e0, e1:rt.e1, endpoints, placeEndpoints,
       fq:fcell.q, fr:fcell.r, tq:tcell.q, tr:tcell.r, layers:[rGlow,rBody,fp,hit]});
+  });
+
+  // Anchor markers — the fixed lattice waypoints, drawn as subtle focus points so
+  // the structure the lines hop through is visible. Inside connG so they show with
+  // the connections.
+  const anchorG = connG.append('g').attr('id','anchor-g').attr('pointer-events','none');
+  ANCHORS.forEach(a => {
+    anchorG.append('circle').attr('cx', a.px[0]).attr('cy', a.px[1]).attr('r', s * 0.5)
+      .attr('fill','none').attr('stroke','#4ECDC4').attr('stroke-opacity',0.16).attr('stroke-width',1).attr('stroke-dasharray','2 5');
+    anchorG.append('circle').attr('cx', a.px[0]).attr('cy', a.px[1]).attr('r', 2)
+      .attr('fill','#4ECDC4').attr('fill-opacity',0.4);
   });
 
   // ── Route selection & highlighting ─────────────────────────────────────────
@@ -2178,6 +2323,7 @@ ZONE_DEFS.forEach(z => {
   // landmark hexes of the hovered/selected route get a bright ring.
   let activeRouteConn = null;
   let hoverConn = null;
+  let focusZone = null;          // when a zone hex is selected, only its links light up (calm default)
   const checkedTypes = new Set();
 
   // Endpoint highlight rings — repositioned over the two landmark hexes of the
@@ -2200,10 +2346,12 @@ ZONE_DEFS.forEach(z => {
   function refreshRouteVis() {
     const hasTypes = checkedTypes.size > 0;
     const isolate = !!hoverConn;
-    const anyActive = isolate || !!activeRouteConn || hasTypes;
+    const hasFocus = !!focusZone;
+    const anyActive = isolate || !!activeRouteConn || hasTypes || hasFocus;
     const isOn = conn => isolate
       ? conn === hoverConn
-      : (conn === activeRouteConn || (hasTypes && checkedTypes.has(conn.type)));
+      : (conn === activeRouteConn || (hasTypes && checkedTypes.has(conn.type)) ||
+         (hasFocus && (conn.from === focusZone || conn.to === focusZone)));
     let onCount = 0;
     builtRoutes.forEach(({conn}) => { if (isOn(conn)) onCount++; });
     // As more routes light up, shrink the glow + body so they stay distinct
@@ -2211,22 +2359,24 @@ ZONE_DEFS.forEach(z => {
     const k = onCount <= 2 ? 1 : Math.max(0.16, 2 / onCount);
     const glowW = 10 + 16 * k, glowO = 0.03 + 0.15 * k;
     const bodyW = onCount <= 2 ? 4.5 : 3.2;
+    // Calm default: at rest (nothing hovered/selected/focused) the whole web sits
+    // quiet and faint; selecting a zone (or hovering a link) brings its lines up.
     builtRoutes.forEach(({conn, rg, fp}) => {
       const on = isOn(conn);
       const dim = anyActive && !on;
       rg.select('.r-body').transition().duration(160)
         .attr('stroke-width', on ? bodyW : 2)
-        .attr('stroke-opacity', on ? 0.94 : dim ? 0.05 : 0.14);
+        .attr('stroke-opacity', on ? 0.94 : dim ? 0.04 : 0.09);
       rg.select('.r-glow').transition().duration(160)
         .attr('stroke-width', on ? glowW : 10)
-        .attr('stroke-opacity', on ? glowO : dim ? 0.008 : 0.025);
+        .attr('stroke-opacity', on ? glowO : dim ? 0.006 : 0.015);
       fp.transition().duration(160)
         .attr('stroke-width', on ? 2.0 : 1.2)
-        .attr('stroke-opacity', on ? 0.96 : dim ? 0.06 : 0.36);
+        .attr('stroke-opacity', on ? 0.96 : dim ? 0.05 : 0.16);
       rg.selectAll('.r-endpoint').transition().duration(160)
-        .attr('r', on ? 4.3 : 3.2)
-        .attr('fill-opacity', on ? 0.95 : dim ? 0.15 : 0.75)
-        .attr('stroke-opacity', on ? 1 : dim ? 0.22 : 0.95);
+        .attr('r', on ? 4.3 : 3.0)
+        .attr('fill-opacity', on ? 0.95 : dim ? 0.12 : 0.45)
+        .attr('stroke-opacity', on ? 1 : dim ? 0.18 : 0.55);
     });
     updateEndpointHl();
   }
@@ -2252,6 +2402,14 @@ ZONE_DEFS.forEach(z => {
     return checkedTypes.has(type);
   };
 
+  // Called by node selection: focus a zone so only its links light up (calm default).
+  // Pass null to clear. Does not touch route/type selection state.
+  window._focusZoneRoutes = function(zoneId) {
+    focusZone = zoneId || null;
+    reorderRoutes();
+    refreshRouteVis();
+  };
+
   window._selectRoute = function(conn, col) {
     activeRouteConn = conn;
     reorderRoutes();
@@ -2264,6 +2422,7 @@ ZONE_DEFS.forEach(z => {
     document.getElementById('hud-desc').textContent = conn.desc || '';
     document.getElementById('hud-links').innerHTML = '';
     document.getElementById('hud-links-col').classList.remove('has-links');
+    fillHudData(null);   // connections are routes, not concept hexes — clear any bound data
     document.getElementById('atlas-hud').classList.add('open');
     if (window._syncConnPanel) window._syncConnPanel();
   };
@@ -2283,14 +2442,14 @@ ZONE_DEFS.forEach(z => {
   // (e.g. Expand All firing 7×) collapses into a single re-route pass.
   let _routeUpdatePending = false;
   function doUpdateRoutes() {
+    // Anchors are fixed, so routes are stable across expand/collapse. Rebuild the
+    // expansion-blocked set so the border-following legs detour around an open
+    // expansion's footprint, then re-assert each route's path.
     rebuildRouteBlocked();
     builtRoutes.forEach(route => {
-      const canon = vtxAstar(route.fq, route.fr, route.tq, route.tr);
-      if (!canon) return;
-      route.canonical = canon;
-      const newD = buildVtxPath(canon);
-      route.layers.forEach(p => p.transition().duration(420).ease(d3.easeCubicInOut).attr('d', newD));
-      route.placeEndpoints(canon, 420);
+      const rt = anchorRoute(route.fq, route.fr, route.tq, route.tr);
+      route.layers.forEach(p => p.attr('d', rt.d));
+      route.placeEndpoints(rt.e0, rt.e1);
     });
   }
   window.updateRoutes = function() {
@@ -2535,46 +2694,80 @@ const hubG = g.append('g').attr('id','hub-center');
     .attr('pointer-events','none');
 });
 
-// Outer glow rings (concentric, purely decorative)
-[s+24, s+15].forEach((r,i) => {
-  hubG.append('path').attr('d',hPath(OX,OY,r))
-    .attr('class','hub-glow-ring')
-    .attr('fill','none').attr('stroke','#4ECDC4')
-    .attr('stroke-width',1.0).attr('stroke-opacity',i===0?0.10:0.18)
-    .attr('pointer-events','none');
-});
+// Hub core node — the brand compass rose, drawn inline as native SVG (not a
+// loaded <image>) so it renders crisp and fully transparent with no backdrop,
+// and adapts to the theme like the home-page compass. Geometry matches
+// /brand/hu-atlas-core-node.svg: centre (340,218) in a "158 36 364 364" viewBox,
+// so HUB_SZ = 2*s scales it to exactly one grid cell.
+const HUB_SZ = 2 * s;
 
-// Hub body hex
-const hubBody = hubG.append('path').attr('d',hPath(OX,OY,s+9))
-  .attr('id','hub-body')
-  .attr('fill', hubFill()).attr('stroke', hubStroke())
-  .attr('stroke-width',2.5).attr('stroke-opacity',0.88)
-  .attr('filter','url(#hub-glow)').attr('cursor','pointer');
+// Build the compass interior markup for the current theme (deeper palette in light).
+function compassInner(dark) {
+  const BLUE    = dark ? '#3585cc' : '#1B5FA8';
+  const BLUE_LT = dark ? '#5aa6e6' : '#3585cc';
+  const TEAL    = dark ? '#4ecdc4' : '#2FA79E';
+  const TEAL_LT = dark ? '#7ff0e6' : '#4ecdc4';
+  const TEAL_DK = dark ? '#3fa9a2' : '#1f7d76';
+  const CENTER  = dark ? '#0d1117' : '#ffffff';   // pure white centre in light mode, not a dark/grey blob
+  const BG      = dark ? '#06100a' : '#eaf0eb';   // hub-cell backing, matches the board so there's no grey box
 
-// Hub fill (subtle tint)
-hubG.append('path').attr('d',hPath(OX,OY,s+7))
-  .attr('class','hub-tint')
-  .attr('fill','#4ECDC4').attr('fill-opacity',0.10)
-  .attr('pointer-events','none');
+  let ticks = '';
+  for (let i = 0; i < 36; i++) {
+    const a = (-90 + i * 10) * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
+    const major = i % 9 === 0, sec = i % 3 === 0;
+    const len = major ? 12 : sec ? 8 : 5;
+    const w = major ? 2 : sec ? 1.5 : 1, op = major ? 0.9 : sec ? 0.6 : 0.4;
+    const x1 = (340 + c * 115).toFixed(1), y1 = (218 + sn * 115).toFixed(1);
+    const x2 = (340 + c * (115 - len)).toFixed(1), y2 = (218 + sn * (115 - len)).toFixed(1);
+    ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${TEAL}" stroke-width="${w}" opacity="${op}"/>`;
+  }
 
-// Hub labels (always visible at all zoom levels)
-const htG = hubG.append('g').attr('pointer-events','none');
-htG.append('text').attr('x',OX).attr('y',OY-10)
-  .attr('class','hub-label-text')
-  .attr('text-anchor','middle').attr('font-family','Outfit, sans-serif')
-  .attr('font-size','13px').attr('font-weight','900').attr('letter-spacing','0.16em')
-  .attr('fill','#4ECDC4').attr('fill-opacity',0.95)
-  .attr('filter','url(#txt-shadow)').text('HU');
-htG.append('text').attr('x',OX).attr('y',OY+5)
-  .attr('class','hub-label-text')
-  .attr('text-anchor','middle').attr('font-family','IBM Plex Mono, monospace')
-  .attr('font-size','6.5px').attr('font-weight','500').attr('letter-spacing','0.18em')
-  .attr('fill','#4ECDC4').attr('fill-opacity',0.62).text('ATLAS');
+  const lblStyle = 'font-family:Poppins,sans-serif;font-size:21px;font-weight:bold';
+  return `<polygon points="340,36 497.6,127 497.6,309 340,400 182.4,309 182.4,127" fill="${BG}"/>`
+    + `<polygon points="340,36 497.6,127 497.6,309 340,400 182.4,309 182.4,127" fill="none" stroke="${BLUE}" stroke-width="2.5" opacity="0.85"/>`
+    + `<circle cx="340" cy="218" r="115" fill="none" stroke="${TEAL}" stroke-width="2" opacity="0.9"/>`
+    + ticks
+    + `<polygon points="340,203 350,203 355,162 340,118" fill="${TEAL_LT}"/><polygon points="340,203 330,203 325,162 340,118" fill="${TEAL_DK}"/>`
+    + `<polygon points="355,218 355,228 394,233 440,218" fill="${BLUE_LT}"/><polygon points="355,218 355,208 394,203 440,218" fill="${BLUE}"/>`
+    + `<polygon points="340,233 330,233 325,274 340,318" fill="${TEAL_LT}"/><polygon points="340,233 350,233 355,274 340,318" fill="${TEAL_DK}"/>`
+    + `<polygon points="325,218 325,208 286,203 240,218" fill="${BLUE_LT}"/><polygon points="325,218 325,228 286,233 240,218" fill="${BLUE}"/>`
+    + `<text x="340" y="86" text-anchor="middle" fill="${TEAL_LT}" style="${lblStyle}" dominant-baseline="middle">N</text>`
+    + `<text x="340" y="350" text-anchor="middle" fill="${TEAL}" style="${lblStyle}" dominant-baseline="middle">S</text>`
+    + `<text x="474" y="218" text-anchor="middle" fill="${BLUE_LT}" style="${lblStyle}" dominant-baseline="middle">E</text>`
+    + `<text x="206" y="218" text-anchor="middle" fill="${BLUE_LT}" style="${lblStyle}" dominant-baseline="middle">W</text>`
+    + `<polygon points="340,186 367.7,202 367.7,234 340,250 312.3,234 312.3,202" fill="${CENTER}"/>`
+    + (dark ? `<circle cx="340" cy="218" r="27" fill="${BLUE}" opacity="0.20"/>` : '')
+    + `<polygon points="340,186 367.7,202 367.7,234 340,250 312.3,234 312.3,202" fill="none" stroke="${BLUE}" stroke-width="2.5" opacity="0.9" stroke-linejoin="round"/>`
+    + `<g transform="translate(318.75,203.72) scale(0.34)">`
+    +   `<path d="M0.00,4.00 Q0.00,0.00 4.00,0.00 L15.00,0.00 Q19.00,0.00 19.00,4.00 L19.00,23.00 Q19.00,27.00 15.70,29.26 L3.30,37.74 Q0.00,40.00 0.00,36.00 Z" fill="${BLUE}"/>`
+    +   `<path d="M0.00,50.00 Q0.00,46.00 3.38,43.86 L15.62,36.14 Q19.00,34.00 23.00,34.00 L46.00,34.00 Q50.00,34.00 50.00,38.00 L50.00,49.00 Q50.00,53.00 46.00,53.00 L23.00,53.00 Q19.00,53.00 19.00,57.00 L19.00,80.00 Q19.00,84.00 15.00,84.00 L4.00,84.00 Q0.00,84.00 0.00,80.00 Z" fill="${BLUE}"/>`
+    +   `<path d="M57,1.5 Q57,-2.5 61,-2.5 L72,-2.5 Q76,-2.5 76,1.5 L76,52.5 Q76,67.5 91,67.5 Q106,67.5 106,52.5 L106,1.5 Q106,-2.5 110,-2.5 L121,-2.5 Q125,-2.5 125,1.5 L125,52.5 Q125,86.5 91,86.5 Q57,86.5 57,52.5 Z" fill="${TEAL}"/>`
+    + `</g>`;
+}
+
+// Draw (or redraw) the compass as a nested <svg> whose viewBox scales the brand
+// geometry to one grid cell. Re-run on theme change to repaint the palette.
+function renderHubCompass() {
+  hubG.selectAll('.hub-compass').remove();
+  const node = hubG.append('svg')
+    .attr('class', 'hub-compass')
+    .attr('x', OX - HUB_SZ / 2).attr('y', OY - HUB_SZ / 2)
+    .attr('width', HUB_SZ).attr('height', HUB_SZ)
+    .attr('viewBox', '158 36 364 364')
+    .attr('overflow', 'visible')
+    .attr('pointer-events', 'none');
+  node.node().innerHTML = compassInner(!isLight());
+}
+renderHubCompass();
+
+// Transparent hit hex over the compass keeps the click-to-reset target.
+const hubBody = hubG.append('path').attr('d',hPath(OX,OY,s+4))
+  .attr('id','hub-body').attr('fill','transparent').attr('cursor','pointer');
 
 // Hub interactivity
 hubBody.on('click', ev=>{ev.stopPropagation(); deselectNode(); resetView();});
-hubBody.on('mouseenter', function(){ d3.select(this).attr('stroke-opacity',1).attr('fill','#4ECDC4'); });
-hubBody.on('mouseleave', function(){ d3.select(this).attr('stroke-opacity',0.85).attr('fill', hubFill()).attr('stroke', hubStroke()); });
+hubBody.on('mouseenter', () => hubG.select('.hub-compass').transition().duration(160).attr('opacity',0.85));
+hubBody.on('mouseleave', () => hubG.select('.hub-compass').transition().duration(160).attr('opacity',1));
 
 // Lift zone name labels above hub moat so adjacent zones (Public Health, etc.) aren't obscured
 d3.selectAll('.az-zone-label').each(function(){ g.node().appendChild(this); });
@@ -2585,7 +2778,7 @@ d3.select('#conn-g').raise();
 
 // ── LANDMARK EXPANSION OVERLAYS ──────────────────────────────────────────────
 // Build overlay SVGs for all registered landmarks. Must run after zone cells rendered.
-[EXPAND_PATHOPHYS, EXPAND_INFORMATICS, EXPAND_MEDICARE, EXPAND_ACCESS, EXPAND_POP_HEALTH, EXPAND_FED_LAW, EXPAND_SCOPE].forEach(initExpansion);
+[EXPAND_PATHOPHYS, EXPAND_INFORMATICS, EXPAND_MEDICARE, EXPAND_ACCESS, EXPAND_POP_HEALTH, EXPAND_FED_LAW, EXPAND_SCOPE, EXPAND_EHR].forEach(initExpansion);
 
 // ── EXPAND INDICATORS ────────────────────────────────────────────────────────
 // After overlays are built, inject 4-chevron expand arrows into every expandable landmark hex.
@@ -2735,9 +2928,31 @@ window.addEventListener('hashchange', () => {
 });
 
 // ── BOTTOM HUD ────────────────────────────────────────────────────────────────
+// Populate the HUD "Live data" section with a hex's bound values from the entity
+// graph (resolved by the search IIFE, exposed via window.__atlasBind). Empty/hidden
+// for hexes with no data links; rows drill into the full entity detail on click.
+function fillHudData(nodeId){
+  const el = document.getElementById('hud-data');
+  if (!el) return;
+  window.__lastHudNode = nodeId;
+  const items = (nodeId && window.__atlasBind) ? window.__atlasBind(nodeId) : [];
+  if (!items || !items.length){ el.innerHTML = ''; el.style.display = 'none'; return; }
+  let h = '<div class="hud-dhdr">Live data</div>';
+  for (const it of items){
+    h += '<div class="hud-drow"' + (it.uid ? (' data-uid="' + it.uid + '"') : '') + '>' +
+         '<span class="hud-dlabel">' + it.label + '</span>' +
+         (it.value ? ('<span class="hud-dval">' + it.value + '</span>') : '') +
+         (it.sub ? ('<span class="hud-dsub">' + it.sub + '</span>') : '') +
+         '</div>';
+  }
+  el.innerHTML = h; el.style.display = 'block';
+  el.querySelectorAll('.hud-drow[data-uid]').forEach(r => { r.onclick = () => { if (window.__atlasSelect) window.__atlasSelect(r.getAttribute('data-uid')); }; });
+}
+
 function selectNode(zone,cell) {
   activeNode=cell; activeZone=zone;
   if (typeof window._deselectRoute === 'function') window._deselectRoute();
+  if (typeof window._focusZoneRoutes === 'function') window._focusZoneRoutes(zone.id);
   updateHash(zone, cell);
   updateBC(zone,cell);
 
@@ -2760,6 +2975,7 @@ function selectNode(zone,cell) {
     linksEl.appendChild(a);
   });
   document.getElementById('atlas-hud').classList.add('open');
+  fillHudData(cell.nodeId);
 
   d3.selectAll('.az-node-cell').each(function(){
     const el=d3.select(this), nid=el.attr('data-nodeid'), zid=el.attr('data-zoneid');
@@ -2796,6 +3012,7 @@ function deselectNode() {
     const op=getCellBaseOpacity(c2);
     el.select('.hex-body').attr('fill-opacity',op.fill).attr('stroke-opacity',op.strk).attr('filter',null);
   });
+  if (typeof window._focusZoneRoutes === 'function') window._focusZoneRoutes(null);
   if (typeof window._clrRoutes === 'function') window._clrRoutes();
   if (typeof window._deselectRoute === 'function') window._deselectRoute();
 }
@@ -2935,7 +3152,36 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
     GRAPH=d.nodes; GBY=new Map(GRAPH.map(n=>[n.uid,n]));
     for(const n of GRAPH){ for(const e of (n.rels||[])){ const to=e[1]; let a=INC.get(to); if(!a){a=[];INC.set(to,a);} a.push([e[0],n.uid,e[2]]); } }
     ready=true; if(inp.value) run();
+    window.__atlasBind = resolveBindings; window.__atlasSelect = select;
+    if (window.__lastHudNode != null && typeof fillHudData === 'function') fillHudData(window.__lastHudNode);
   }).catch(()=>{ cntEl.textContent='offline'; });
+
+  // Resolve a hex's bound live data from the graph: metric national averages
+  // (measured-by) + the entities it represents. Empty for hexes with no links.
+  function resolveBindings(nodeId){
+    const n = GBY.get('concept:'+nodeId);
+    if (!n || !n.rels) return [];
+    const out = [];
+    for (const e of n.rels){
+      const rel = e[0], to = e[1];
+      if (rel === 'measured-by'){
+        const m = GBY.get(to); if (!m) continue;
+        const vals = (m.rels||[]).filter(x=>x[0]==='describes' && typeof x[2]==='number').map(x=>x[2]);
+        const avg = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10 : null;
+        const unit = (m.facets && m.facets.unit) || '';
+        let value, sub = vals.length ? 'US avg' : '';
+        if (avg == null) value = '—';
+        else if (unit === 'Y/N') { value = Math.round(avg*100) + '% of states'; sub = ''; }   // Y/N metrics: share of states
+        else if (unit === '#' || unit === 'HPSAs') value = Math.round(avg).toLocaleString() + (unit==='HPSAs' ? ' HPSAs' : '');
+        else value = avg + (unit ? (' ' + unit) : '');
+        out.push({ label: m.label, value, sub, uid: to });
+      } else if (rel === 'represents'){
+        const t = GBY.get(to);
+        out.push({ label: t ? t.label : to, value: '', sub: t ? t.type : '', uid: to });
+      }
+    }
+    return out;
+  }
 
   function clearHits(){ document.querySelectorAll('.az-node-cell.az-find-hit').forEach(el=>el.classList.remove('az-find-hit')); }
   function highlight(matches){ clearHits(); matches.forEach(n=>{ const nid=nodeIdOf(n.uid); if(nid&&CELL_BY_NODE.has(nid)){ try{ document.querySelectorAll('.az-node-cell[data-nodeid="'+CSS.escape(nid)+'"]').forEach(el=>el.classList.add('az-find-hit')); }catch(e){} } }); }
