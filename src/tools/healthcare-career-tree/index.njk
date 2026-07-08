@@ -9,15 +9,13 @@ order: 9
 permalink: /tools/healthcare-career-tree/
 ---
 
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-
 <style>
   #hct-shell {
     background: #06100a;
     height: calc(100vh - 64px);
     display: flex; flex-direction: column;
     overflow: hidden; position: relative;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font);
     color: #E2EEF4;
   }
   /* ── Toolbar ───────────────────────────────────────────── */
@@ -28,41 +26,37 @@ permalink: /tools/healthcare-career-tree/
     display: flex; align-items: center; flex-wrap: wrap;
     padding: 8px 16px; gap: 10px; flex-shrink: 0; position: relative; z-index: 40;
   }
-  .hct-logo {
-    font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
-    letter-spacing: 0.10em; text-transform: uppercase;
-    color: rgba(78,205,196,0.95); flex-shrink: 0;
-  }
+  .hct-logo { display: flex; align-items: baseline; gap: 8px; flex-shrink: 0; white-space: nowrap; }
   .hct-sep { width: 1px; height: 22px; background: rgba(78,205,196,0.15); flex-shrink: 0; }
   /* Segmented controls */
   .hct-seg { display: flex; background: rgba(255,255,255,0.04); border: 1px solid rgba(78,205,196,0.18); border-radius: 8px; overflow: hidden; }
   .hct-seg button {
     appearance: none; border: none; background: transparent; cursor: pointer; flex: 1;
-    font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 600;
+    font-family: var(--font); font-size: 12.5px; font-weight: 600;
     color: rgba(180,205,215,0.7); padding: 6px 12px; transition: all .12s; white-space: nowrap;
   }
   .hct-seg button:hover { color: #E2EEF4; background: rgba(255,255,255,0.04); }
-  .hct-seg button.on { background: rgba(78,205,196,0.16); color: #6FE3D8; }
+  .hct-seg button.on { background: var(--teal); color: #062024; font-weight: 600; }
   .hct-seg.dom button.on { background: rgba(232,168,56,0.16); color: #F0C36B; }
   .hct-lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(140,180,215,0.5); margin-right: 2px; }
   .hct-spacer { flex: 1; }
   .hct-btn {
     appearance: none; height: 32px; padding: 0 12px; cursor: pointer;
     background: rgba(255,255,255,0.04); border: 1px solid rgba(78,205,196,0.18); border-radius: 8px;
-    color: rgba(180,205,215,0.85); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 600;
+    color: rgba(180,205,215,0.85); font-family: var(--font); font-size: 12.5px; font-weight: 600;
     transition: all .12s; white-space: nowrap;
   }
-  .hct-btn:hover { color: #E2EEF4; border-color: rgba(78,205,196,0.4); background: rgba(78,205,196,0.08); }
+  .hct-btn:hover { color: #E2EEF4; border-color: rgba(78,205,196,0.5); }
   .hct-btn.reset { border-color: rgba(232,120,120,0.35); color: rgba(240,170,170,0.9); }
   .hct-btn.reset:hover { border-color: rgba(232,120,120,0.7); background: rgba(232,120,120,0.12); color: #ffb3b3; }
-  .hct-phead-txt { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; pointer-events: none; }
+  .hct-phead-txt { font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; pointer-events: none; }
   .hct-phead-bar { opacity: 0.8; pointer-events: none; }
-  .hct-fhead { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; pointer-events: none; opacity: 0.82; }
+  .hct-fhead { font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; pointer-events: none; opacity: 0.82; }
   .hct-dcontainer { fill-opacity: 0.05; stroke-width: 1.3; stroke-opacity: 0.5; pointer-events: none; }
   .hct-pcontainer { fill-opacity: 0.02; stroke-width: 1.7; stroke-opacity: 0.7; pointer-events: none; }
   .hct-rcontainer { fill: rgba(255,255,255,0.01); stroke: rgba(255,255,255,0.09); stroke-width: 1.3; pointer-events: none; }
   .hct-region-div { stroke: rgba(255,255,255,0.16); stroke-width: 1.5; stroke-dasharray: 3 6; pointer-events: none; }
-  .hct-region-lbl { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; letter-spacing: 0.12em; pointer-events: none; }
+  .hct-region-lbl { font-family: var(--display); font-size: 15px; font-weight: 800; letter-spacing: 0.12em; pointer-events: none; }
   .hct-region-clin { fill: rgba(120,210,200,0.65); }
   .hct-region-biz { fill: rgba(232,197,71,0.62); }
   /* ── Canvas: one full-bleed area, three stacked views, ONE active at a time ─── */
@@ -71,7 +65,7 @@ permalink: /tools/healthcare-career-tree/
   .hct-view.active { display: flex; }
   /* Primary tabs in the top bar */
   .hct-tabs button { padding: 7px 14px; font-size: 13px; }
-  .tab-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
+  .tab-badge { font-family: var(--mono); font-size: 10px; font-weight: 700;
     background: rgba(232,197,71,0.22); color: #E8C547; padding: 1px 7px; border-radius: 9px; margin-left: 7px; }
   /* contextual control clusters that swap per active tab */
   .tb-ctx { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -87,10 +81,10 @@ permalink: /tools/healthcare-career-tree/
     border: 1px solid rgba(93,191,135,0.28); border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
   /* Education Matrix — iceberg-style stacked degree layers + detail panel */
   .edu-search-wrap { margin-left: auto; display: flex; align-items: center; gap: 9px; }
-  .edu-search { width: 290px; box-sizing: border-box; background: rgba(0,0,0,0.32); border: 1px solid rgba(78,205,196,0.3); border-radius: 7px; color: #E2EEF4; font-size: 12px; padding: 6px 11px; font-family: 'DM Sans', sans-serif; }
+  .edu-search { width: 290px; box-sizing: border-box; background: rgba(0,0,0,0.32); border: 1px solid rgba(78,205,196,0.3); border-radius: 7px; color: #E2EEF4; font-size: 12px; padding: 6px 11px; font-family: var(--font); }
   .edu-search::placeholder { color: rgba(150,190,200,0.5); font-style: italic; }
   .edu-search:focus { outline: none; border-color: #4ECDC4; background: rgba(0,0,0,0.45); }
-  .edu-searchnote { font-size: 10.5px; color: rgba(160,200,210,0.62); font-family: 'IBM Plex Mono', monospace; white-space: nowrap; min-width: 64px; }
+  .edu-searchnote { font-size: 10.5px; color: rgba(160,200,210,0.62); font-family: var(--mono); white-space: nowrap; min-width: 64px; }
   .edu-hide { display: none !important; }
   .edu-row-hide { display: none !important; }
   .edu-hud { flex: 1; min-height: 0; display: flex; gap: 10px; padding: 0 10px 10px; }
@@ -102,20 +96,20 @@ permalink: /tools/healthcare-career-tree/
   .edu-ll { width: 184px; flex-shrink: 0; padding: 12px 14px; border-right: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 4px; position: relative; }
   .edu-ll::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; border-radius: 7px 0 0 7px; background: var(--lc, #4ECDC4); opacity: 0.7; }
   .edu-ll-top { display: flex; align-items: center; gap: 7px; }
-  .edu-ln { padding: 1px 6px; border-radius: 3px; font-size: 9.5px; font-weight: 700; border: 1px solid; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em; }
-  .edu-deg-chip { padding: 1px 7px; border-radius: 3px; font-size: 10px; font-weight: 700; color: #08120e; font-family: 'IBM Plex Mono', monospace; }
-  .edu-lt { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; color: rgba(228,242,246,0.96); line-height: 1.1; margin-top: 2px; }
-  .edu-ltime { font-size: 10px; font-weight: 700; color: rgba(232,197,71,0.9); font-family: 'IBM Plex Mono', monospace; }
-  .edu-lcount { font-size: 9.5px; color: rgba(160,195,210,0.55); font-family: 'IBM Plex Mono', monospace; }
+  .edu-ln { padding: 1px 6px; border-radius: 3px; font-size: 9.5px; font-weight: 700; border: 1px solid; font-family: var(--mono); letter-spacing: 0.06em; }
+  .edu-deg-chip { padding: 1px 7px; border-radius: 3px; font-size: 10px; font-weight: 700; color: #08120e; font-family: var(--mono); }
+  .edu-lt { font-family: var(--display); font-size: 14px; font-weight: 800; color: rgba(228,242,246,0.96); line-height: 1.1; margin-top: 2px; }
+  .edu-ltime { font-size: 10px; font-weight: 700; color: rgba(232,197,71,0.9); font-family: var(--mono); }
+  .edu-lcount { font-size: 9.5px; color: rgba(160,195,210,0.55); font-family: var(--mono); }
   .edu-lexams { margin-top: 5px; }
-  .edu-lexh { font-size: 8px; font-weight: 700; letter-spacing: 0.07em; color: rgba(120,210,200,0.8); font-family: 'Outfit', sans-serif; margin-bottom: 3px; }
+  .edu-lexh { font-size: 8px; font-weight: 700; letter-spacing: 0.07em; color: rgba(120,210,200,0.8); font-family: var(--display); margin-bottom: 3px; }
   .edu-lex { font-size: 9.5px; color: rgba(200,222,228,0.72); display: flex; align-items: flex-start; gap: 5px; line-height: 1.25; margin-bottom: 2px; }
   .edu-lex-dot { width: 4px; height: 4px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
   .edu-cards { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-content: center; gap: 16px 16px; padding: 16px 18px; }
   .edu-card { position: relative; width: 108px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; background: none; border: none; cursor: pointer; }
   .edu-hex { display: block; transition: transform .12s ease, filter .12s; }
-  .edu-hex-tx { font-weight: 800; fill: #F8FCFB; paint-order: stroke; stroke: rgba(4,12,9,0.55); stroke-width: 3px; font-family: 'Outfit', sans-serif; }
-  .edu-card-sub { font-size: 11px; color: rgba(200,224,230,0.78); line-height: 1.18; text-align: center; font-family: 'DM Sans', sans-serif; max-width: 116px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .edu-hex-tx { font-weight: 800; fill: #F8FCFB; paint-order: stroke; stroke: rgba(4,12,9,0.55); stroke-width: 3px; font-family: var(--display); }
+  .edu-card-sub { font-size: 11px; color: rgba(200,224,230,0.78); line-height: 1.18; text-align: center; font-family: var(--font); max-width: 116px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .edu-card:hover .edu-hex { transform: translateY(-2px); filter: brightness(1.18); }
   .edu-card:hover .edu-card-sub { color: rgba(220,240,244,0.92); }
   .edu-card.ip .edu-hex { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--cc) 55%, transparent)); }
@@ -126,22 +120,22 @@ permalink: /tools/healthcare-career-tree/
   .edu-detail { width: 270px; flex-shrink: 0; border: 1px solid rgba(78,205,196,0.32); border-radius: 7px; background: rgba(4,11,22,0.96); display: flex; flex-direction: column; overflow: hidden; }
   .edu-detail-empty { margin: auto; padding: 22px; text-align: center; font-size: 12px; color: rgba(170,200,210,0.5); font-style: italic; line-height: 1.5; }
   .edu-d-top { padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); background: linear-gradient(135deg, color-mix(in srgb, var(--lc) 12%, transparent) 0%, transparent 70%); }
-  .edu-d-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; border: 1px solid; font-size: 10px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; margin-bottom: 7px; }
-  .edu-d-ttl { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; color: #F4FAF8; line-height: 1.12; }
-  .edu-d-sub { font-size: 11px; font-weight: 600; margin-top: 3px; font-family: 'DM Sans', sans-serif; }
+  .edu-d-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; border: 1px solid; font-size: 10px; font-weight: 700; font-family: var(--mono); margin-bottom: 7px; }
+  .edu-d-ttl { font-family: var(--display); font-size: 18px; font-weight: 800; color: #F4FAF8; line-height: 1.12; }
+  .edu-d-sub { font-size: 11px; font-weight: 600; margin-top: 3px; font-family: var(--font); }
   .edu-d-body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 10px; }
   .edu-d-body::-webkit-scrollbar { width: 3px; }
   .edu-d-body::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.18); }
   .edu-d-sec { margin-top: 13px; }
-  .edu-d-sech { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(120,210,200,0.7); margin-bottom: 6px; font-family: 'Outfit', sans-serif; }
-  .edu-d-time { font-size: 13px; font-weight: 700; color: rgba(232,197,71,0.92); font-family: 'IBM Plex Mono', monospace; }
+  .edu-d-sech { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(120,210,200,0.7); margin-bottom: 6px; font-family: var(--display); }
+  .edu-d-time { font-size: 13px; font-weight: 700; color: rgba(232,197,71,0.92); font-family: var(--mono); }
   .edu-d-ex { font-size: 11px; color: rgba(214,234,238,0.82); display: flex; gap: 6px; line-height: 1.3; margin-bottom: 5px; }
   .edu-d-ex-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
   .edu-d-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-  .edu-d-chip { font-size: 10.5px; padding: 3px 8px; border-radius: 11px; background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.28); color: rgba(214,238,238,0.9); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .12s; }
+  .edu-d-chip { font-size: 10.5px; padding: 3px 8px; border-radius: 11px; background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.28); color: rgba(214,238,238,0.9); cursor: pointer; font-family: var(--font); transition: background .12s; }
   .edu-d-chip:hover { background: rgba(78,205,196,0.22); }
   .edu-d-foot { flex-shrink: 0; padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.07); }
-  .edu-d-add { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid var(--lc, #4ECDC4); background: color-mix(in srgb, var(--lc) 16%, transparent); color: #F4FAF8; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .12s; }
+  .edu-d-add { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid var(--lc, #4ECDC4); background: color-mix(in srgb, var(--lc) 16%, transparent); color: #F4FAF8; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font); transition: background .12s; }
   .edu-d-add:hover { background: color-mix(in srgb, var(--lc) 28%, transparent); }
   .edu-d-add.added { background: rgba(93,191,135,0.2); border-color: #5DBF87; color: #BdF0CE; cursor: default; }
   .sch-zoombar { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 5px; z-index: 3; }
@@ -149,9 +143,9 @@ permalink: /tools/healthcare-career-tree/
   .sch-zoombar button:hover { border-color: #5DBF87; color: #BFF3D4; }
   /* BLS heatmap legend (Career Matrix, color-by Pay/Growth) */
   .hct-clegend { position: absolute; left: 8px; bottom: 8px; z-index: 3; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; width: 188px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.3); }
-  .hct-clegend .cl-ttl { font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: .07em; color: var(--t2); margin-bottom: 7px; }
+  .hct-clegend .cl-ttl { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .07em; color: var(--t2); margin-bottom: 7px; }
   .hct-clegend .cl-bar { height: 8px; border-radius: 4px; }
-  .hct-clegend .cl-ends { display: flex; justify-content: space-between; margin-top: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--t3); }
+  .hct-clegend .cl-ends { display: flex; justify-content: space-between; margin-top: 5px; font-family: var(--mono); font-size: 9px; color: var(--t3); }
   .hct-clegend .cl-nd { display: flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 9.5px; color: var(--t3); }
   .hct-clegend .cl-nd i { width: 11px; height: 11px; border-radius: 3px; background: #2a3340; border: 1px solid #3a4452; display: inline-block; flex: none; }
   [data-theme='light'] #hct-schooling { background: rgba(255,255,255,0.99); }
@@ -166,8 +160,8 @@ permalink: /tools/healthcare-career-tree/
   .hct-band-rect { pointer-events: none; }
   .hct-band-line { stroke: rgba(78,205,196,0.10); stroke-width: 1; pointer-events: none; }
   .hct-band-chip { fill: rgba(6,16,12,0.92); stroke: rgba(78,205,196,0.30); stroke-width: 1; pointer-events: none; }
-  .hct-band-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; fill: rgba(78,205,196,0.95); pointer-events: none; }
-  .hct-band-txt { font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; fill: rgba(214,238,242,0.95); text-transform: uppercase; pointer-events: none; }
+  .hct-band-num { font-family: var(--mono); font-size: 11px; font-weight: 700; fill: rgba(78,205,196,0.95); pointer-events: none; }
+  .hct-band-txt { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; fill: rgba(214,238,242,0.95); text-transform: uppercase; pointer-events: none; }
   /* frozen left axis (level / degree labels pinned to the left while you slide) */
   .axis-frozen { pointer-events: none; }
   .top-frozen-bg { fill: #081310; pointer-events: none; }
@@ -179,8 +173,8 @@ permalink: /tools/healthcare-career-tree/
   .hct-node { cursor: pointer; }
   .hct-node .hx-back { fill: #08120e; }
   .hct-node .hx-body { transition: fill-opacity .15s, stroke-opacity .15s; }
-  .hct-node .hx-title { font-family: 'DM Sans', sans-serif; font-weight: 600; fill: #EDF6F4; pointer-events: none; }
-  .hct-node .hx-abbr { font-family: 'IBM Plex Mono', monospace; font-weight: 700; fill: rgba(150,225,215,0.92); text-anchor: middle; pointer-events: none; }
+  .hct-node .hx-title { font-family: var(--font); font-weight: 600; fill: #EDF6F4; pointer-events: none; }
+  .hct-node .hx-abbr { font-family: var(--mono); font-weight: 700; fill: rgba(150,225,215,0.92); text-anchor: middle; pointer-events: none; }
   .hct-edge { fill: none; pointer-events: none; }
   /* Tooltip */
   #hct-tip {
@@ -208,8 +202,8 @@ permalink: /tools/healthcare-career-tree/
   .hct-p-close:hover { color: #E2EEF4; }
   .hct-p-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 9px; border-radius: 20px; margin-bottom: 9px; }
   .hct-p-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .hct-p-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.15; margin: 0; }
-  .hct-p-abbr { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(78,205,196,0.8); margin-top: 4px; }
+  .hct-p-title { font-family: var(--display); font-size: 20px; font-weight: 700; line-height: 1.15; margin: 0; }
+  .hct-p-abbr { font-family: var(--mono); font-size: 12px; color: rgba(78,205,196,0.8); margin-top: 4px; }
   .hct-p-body { padding: 14px 18px 18px; overflow-y: auto; flex: 1; }
   .hct-p-summary { font-size: 13.5px; line-height: 1.55; color: rgba(220,235,240,0.92); margin: 0 0 16px; }
   .hct-meta { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; margin-bottom: 16px; }
@@ -218,22 +212,22 @@ permalink: /tools/healthcare-career-tree/
   /* BLS pay & outlook block (real sourced data) */
   .hct-bls { background: var(--raised); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; margin: 2px 0 16px; }
   .hct-bls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .hct-bls-stat .v { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; color: var(--t1); line-height: 1.05; }
+  .hct-bls-stat .v { font-family: var(--display); font-size: 22px; font-weight: 800; color: var(--t1); line-height: 1.05; }
   .hct-bls-stat .v.g-hi { color: var(--teal); }
   .hct-bls-stat .v.g-mid { color: var(--teal); }
   .hct-bls-stat .v.g-lo { color: var(--amber); }
-  .hct-bls-stat .k { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-top: 4px; }
+  .hct-bls-stat .k { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-top: 4px; }
   .hct-bls-range { margin-top: 13px; }
   .hct-bls-track { position: relative; height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--teal), var(--amber)); opacity: .85; }
   .hct-bls-med { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: var(--t1); border: 2px solid var(--surface); transform: translate(-50%,-50%); box-shadow: 0 1px 3px rgba(0,0,0,.45); }
-  .hct-bls-ends { display: flex; justify-content: space-between; margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--t3); }
+  .hct-bls-ends { display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--t3); }
   .hct-bls-ends span:nth-child(2) { letter-spacing: .05em; text-transform: uppercase; opacity: .8; }
   .hct-bls-outlook { font-size: 11.5px; color: var(--t2); margin-top: 11px; }
   .hct-bls-note { font-size: 10.5px; color: var(--t3); font-style: italic; margin-top: 5px; line-height: 1.4; }
-  .hct-bls-src { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--t3); margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border); }
+  .hct-bls-src { font-family: var(--mono); font-size: 9.5px; color: var(--t3); margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border); }
   .hct-bls-src a { color: var(--teal); text-decoration: none; }
   .hct-bls-src a:hover { text-decoration: underline; }
-  .hct-list-h { font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(78,205,196,0.85); margin: 14px 0 7px; }
+  .hct-list-h { font-family: var(--display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(78,205,196,0.85); margin: 14px 0 7px; }
   .hct-list { list-style: none; padding: 0; margin: 0; }
   .hct-list li { font-size: 12.5px; line-height: 1.45; color: rgba(220,235,240,0.88); padding-left: 16px; position: relative; margin-bottom: 5px; }
   .hct-list li::before { content: ''; position: absolute; left: 2px; top: 7px; width: 5px; height: 5px; border-radius: 50%; background: rgba(78,205,196,0.6); }
@@ -242,16 +236,16 @@ permalink: /tools/healthcare-career-tree/
   .hct-chip:hover { background: rgba(78,205,196,0.14); border-color: rgba(78,205,196,0.4); color: #fff; }
   .hct-pin-btn {
     width: 100%; margin-top: 18px; padding: 11px; cursor: pointer; border-radius: 9px;
-    font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 700; letter-spacing: 0.02em;
+    font-family: var(--display); font-size: 13.5px; font-weight: 700; letter-spacing: 0.02em;
     background: rgba(232,197,71,0.14); border: 1px solid rgba(232,197,71,0.4); color: #F0CF6B; transition: all .14s;
   }
   .hct-pin-btn:hover { background: rgba(232,197,71,0.22); }
   .hct-pin-btn.pinned { background: rgba(232,197,71,0.9); color: #1a1405; border-color: rgba(232,197,71,1); }
   /* role panel: educational requirement + one-click add to Education Growth */
   .hct-edu-req { display: flex; align-items: baseline; gap: 9px; margin: 5px 0 9px; }
-  .hct-edu-req-face { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 14px; color: #6FE3D8; }
+  .hct-edu-req-face { font-family: var(--mono); font-weight: 700; font-size: 14px; color: #6FE3D8; }
   .hct-edu-req-deg { font-size: 12px; color: rgba(180,205,215,0.72); }
-  .hct-edu-add { width: 100%; margin-top: 4px; padding: 9px; cursor: pointer; border-radius: 9px; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 700; background: rgba(78,205,196,0.14); border: 1px solid rgba(78,205,196,0.42); color: #8FE8DC; transition: all .14s; }
+  .hct-edu-add { width: 100%; margin-top: 4px; padding: 9px; cursor: pointer; border-radius: 9px; font-family: var(--display); font-size: 12.5px; font-weight: 700; background: rgba(78,205,196,0.14); border: 1px solid rgba(78,205,196,0.42); color: #8FE8DC; transition: all .14s; }
   .hct-edu-add:hover { background: rgba(78,205,196,0.24); color: #fff; }
   .hct-edu-add.added { background: rgba(93,191,135,0.18); border-color: #5DBF87; color: #BFF0CE; cursor: default; }
   /* ── My Path builder (top container) ───────────────────── */
@@ -261,7 +255,7 @@ permalink: /tools/healthcare-career-tree/
     border: 1px solid rgba(232,197,71,0.28);
     border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
   }
-  .mp-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(232,197,71,0.85); background: rgba(232,197,71,0.14); padding: 1px 8px; border-radius: 10px; }
+  .mp-count { font-family: var(--mono); font-size: 11px; color: rgba(232,197,71,0.85); background: rgba(232,197,71,0.14); padding: 1px 8px; border-radius: 10px; }
   #hct-mp-svg { display: block; }
   .mp-fbtn { padding: 5px 11px; font-size: 11.5px; font-weight: 600; border-radius: 7px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14); color: #cfe0e6; }
   .mp-fbtn:hover { background: rgba(232,197,71,0.14); border-color: rgba(232,197,71,0.4); color: #F0CF6B; }
@@ -272,21 +266,21 @@ permalink: /tools/healthcare-career-tree/
   .bp-id-center { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; }
   /* shifter + score chips */
   .bp-id-block { display: flex; flex-direction: column; gap: 2px; }
-  .bp-id-name { background: transparent; border: none; border-bottom: 1px solid rgba(120,200,190,0.28); color: #F4FAF8; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; padding: 2px 1px; width: 210px; }
+  .bp-id-name { background: transparent; border: none; border-bottom: 1px solid rgba(120,200,190,0.28); color: #F4FAF8; font-family: var(--display); font-size: 18px; font-weight: 800; padding: 2px 1px; width: 210px; }
   .bp-id-name::placeholder { color: rgba(150,190,200,0.45); font-weight: 700; }
   .bp-id-name:focus { outline: none; border-bottom-color: #4ECDC4; }
-  .bp-id-sub { font-size: 11.5px; color: rgba(180,205,215,0.62); font-family: 'DM Sans', sans-serif; }
-  .bp-id-tagline { font-size: 11px; font-style: italic; color: rgba(160,200,210,0.72); font-family: 'DM Sans', sans-serif; line-height: 1.2; max-width: 250px; margin: 1px 0; }
+  .bp-id-sub { font-size: 11.5px; color: rgba(180,205,215,0.62); font-family: var(--font); }
+  .bp-id-tagline { font-size: 11px; font-style: italic; color: rgba(160,200,210,0.72); font-family: var(--font); line-height: 1.2; max-width: 250px; margin: 1px 0; }
   .bp-id-sub b { color: #6FE3D8; font-weight: 700; }
-  .bp-id-lbl { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232,197,71,0.8); font-weight: 700; font-family: 'Outfit', sans-serif; }
-  .bp-id-goal-in { background: rgba(0,0,0,0.3); border: 1px solid rgba(232,197,71,0.3); border-radius: 7px; color: #E2EEF4; font-size: 12.5px; padding: 5px 10px; width: 250px; font-family: 'DM Sans', sans-serif; }
+  .bp-id-lbl { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232,197,71,0.8); font-weight: 700; font-family: var(--display); }
+  .bp-id-goal-in { background: rgba(0,0,0,0.3); border: 1px solid rgba(232,197,71,0.3); border-radius: 7px; color: #E2EEF4; font-size: 12.5px; padding: 5px 10px; width: 250px; font-family: var(--font); }
   .bp-id-goal-in::placeholder { color: rgba(180,170,130,0.5); font-style: italic; }
   .bp-id-goal-in:focus { outline: none; border-color: #E8C547; }
   .bp-id-vitals { display: flex; gap: 7px; }
   .bp-vital { text-align: center; padding: 4px 11px; border: 1px solid rgba(120,200,190,0.22); border-radius: 9px; background: rgba(255,255,255,0.02); min-width: 46px; }
-  .bp-vital-n { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; color: #6FE3D8; line-height: 1.05; }
+  .bp-vital-n { font-family: var(--display); font-size: 17px; font-weight: 800; color: #6FE3D8; line-height: 1.05; }
   .bp-vital.goal .bp-vital-n { color: #E8C547; }
-  .bp-vital-l { font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(170,200,210,0.6); font-family: 'DM Sans', sans-serif; }
+  .bp-vital-l { font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(170,200,210,0.6); font-family: var(--font); }
   .bp-sheet { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 12px; }
   .bp-col { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
   .bp-sheet::-webkit-scrollbar { width: 6px; }
@@ -294,13 +288,13 @@ permalink: /tools/healthcare-career-tree/
   .bp-spiral-wrap { display: flex; justify-content: center; }
   /* movable dashboard: Career on top, the rest flow into a multi-column card grid */
   .bp-dash-bar { display: flex; align-items: center; gap: 10px; padding: 2px 4px; }
-  .bp-dash-lbl { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(160,195,210,0.5); font-family: 'Outfit', sans-serif; }
+  .bp-dash-lbl { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(160,195,210,0.5); font-family: var(--display); }
   .bp-addwrap { position: relative; margin-left: auto; }
-  .bp-addbtn { padding: 4px 11px; font-size: 11.5px; font-weight: 600; border-radius: 7px; cursor: pointer; background: rgba(120,200,190,0.1); border: 1px solid rgba(120,200,190,0.3); color: #9fe0d6; font-family: 'DM Sans', sans-serif; }
+  .bp-addbtn { padding: 4px 11px; font-size: 11.5px; font-weight: 600; border-radius: 7px; cursor: pointer; background: rgba(120,200,190,0.1); border: 1px solid rgba(120,200,190,0.3); color: #9fe0d6; font-family: var(--font); }
   .bp-addbtn:hover { background: rgba(120,200,190,0.2); }
   .bp-addmenu { position: absolute; right: 0; top: calc(100% + 4px); min-width: 190px; background: #0a1712; border: 1px solid rgba(78,205,196,0.3); border-radius: 8px; padding: 4px; display: none; z-index: 40; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
   .bp-addmenu.open { display: block; }
-  .bp-addmenu-item { padding: 6px 10px; font-size: 12px; color: rgba(214,234,238,0.88); cursor: pointer; border-radius: 6px; font-family: 'DM Sans', sans-serif; }
+  .bp-addmenu-item { padding: 6px 10px; font-size: 12px; color: rgba(214,234,238,0.88); cursor: pointer; border-radius: 6px; font-family: var(--font); }
   .bp-addmenu-item:hover { background: rgba(120,200,190,0.14); color: #fff; }
   .bp-dash { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
   .bp-dash.bp-dash-dragging { outline: 2px dashed rgba(78,205,196,0.45); outline-offset: 10px; border-radius: 16px; }
@@ -324,7 +318,7 @@ permalink: /tools/healthcare-career-tree/
   .bp-card { animation: bpFlyIn .32s ease both; }
   @keyframes bpFlyIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
   .bp-card-h { display: flex; align-items: center; gap: 7px; margin: -2px -2px 8px; }
-  .bp-card-t { font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #6FE3D8; flex: 1; }
+  .bp-card-t { font-family: var(--display); font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #6FE3D8; flex: 1; }
   .bp-card-t-edit { background: transparent; border: none; border-bottom: 1px dashed transparent; padding: 1px 2px; min-width: 0; }
   .bp-card-t-edit:hover { border-bottom-color: rgba(120,200,190,0.4); }
   .bp-card-t-edit:focus { outline: none; border-bottom-color: #4ECDC4; color: #8FF0E4; }
@@ -342,36 +336,36 @@ permalink: /tools/healthcare-career-tree/
   .bp-modal-card { position: relative; width: min(560px, 94%); max-height: 88%; overflow-y: auto; background: #0b1512; border: 1px solid rgba(78,205,196,0.34); border-radius: 14px; padding: 22px 24px 24px; box-shadow: 0 18px 50px rgba(0,0,0,0.62); }
   .bp-modal-x { position: absolute; top: 12px; right: 14px; background: none; border: none; color: rgba(180,205,215,0.5); font-size: 22px; line-height: 1; cursor: pointer; }
   .bp-modal-x:hover { color: #fff; }
-  .bp-modal-h { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; letter-spacing: 0.03em; color: #6FE3D8; margin-bottom: 16px; }
+  .bp-modal-h { font-family: var(--display); font-size: 17px; font-weight: 800; letter-spacing: 0.03em; color: #6FE3D8; margin-bottom: 16px; }
   .bp-modal-sec { margin-bottom: 18px; }
   .bp-modal-lbl { font-size: 12px; color: rgba(200,224,228,0.82); margin-bottom: 7px; line-height: 1.4; }
   .bp-modal-lbl b { color: #F0CF6B; }
-  .bp-modal-ta { width: 100%; box-sizing: border-box; height: 86px; resize: vertical; background: rgba(0,0,0,0.34); border: 1px solid rgba(78,205,196,0.25); border-radius: 8px; color: #DCEef0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.4; padding: 9px 11px; word-break: break-all; }
+  .bp-modal-ta { width: 100%; box-sizing: border-box; height: 86px; resize: vertical; background: rgba(0,0,0,0.34); border: 1px solid rgba(78,205,196,0.25); border-radius: 8px; color: #DCEef0; font-family: var(--mono); font-size: 11px; line-height: 1.4; padding: 9px 11px; word-break: break-all; }
   .bp-modal-ta:focus { outline: none; border-color: #4ECDC4; }
   .bp-modal-row { display: flex; align-items: center; gap: 9px; margin-top: 9px; flex-wrap: wrap; }
-  .bp-modal-btn { padding: 6px 13px; font-size: 12px; font-weight: 600; border-radius: 7px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.16); color: #cfe0e6; font-family: 'DM Sans', sans-serif; transition: all .12s; }
+  .bp-modal-btn { padding: 6px 13px; font-size: 12px; font-weight: 600; border-radius: 7px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.16); color: #cfe0e6; font-family: var(--font); transition: all .12s; }
   .bp-modal-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
   .bp-modal-btn.primary { background: rgba(78,205,196,0.18); border-color: rgba(78,205,196,0.5); color: #8FE8DC; }
   .bp-modal-btn.primary:hover { background: rgba(78,205,196,0.3); color: #fff; }
   .bp-modal-file { display: inline-block; }
-  .bp-modal-msg { font-size: 11.5px; font-family: 'DM Sans', sans-serif; }
+  .bp-modal-msg { font-size: 11.5px; font-family: var(--font); }
   .bp-modal-msg.ok { color: #7FE3A0; }
   .bp-modal-msg.err { color: #ff9090; }
   /* ── Legend / key — always-on, docked in the left margin beside the centered column, collapsible ── */
   .bp-legend { position: absolute; top: 70px; left: max(10px, calc(50% - 846px)); width: 214px; z-index: 25; }
   .bp-legend-inner { display: flex; flex-direction: column; max-height: calc(100% - 110px); overflow: hidden; background: #0b1512; border: 1px solid rgba(78,205,196,0.26); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
   .bp-legend-head { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 9px 7px 9px 14px; border-bottom: 1px solid rgba(78,205,196,0.14); }
-  .bp-legend-h { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6FE3D8; }
+  .bp-legend-h { font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6FE3D8; }
   .bp-legend-min { background: none; border: none; color: rgba(180,205,215,0.6); font-size: 18px; line-height: 1; cursor: pointer; padding: 1px 7px; border-radius: 5px; }
   .bp-legend-min:hover { color: #fff; background: rgba(255,255,255,0.06); }
   .bp-legend-body { padding: 6px 14px 14px; overflow-y: auto; }
-  .bp-legend-tab { display: none; background: rgba(78,205,196,0.14); border: 1px solid rgba(78,205,196,0.4); color: #8FE8DC; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; border-radius: 9px; padding: 7px 11px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); white-space: nowrap; }
+  .bp-legend-tab { display: none; background: rgba(78,205,196,0.14); border: 1px solid rgba(78,205,196,0.4); color: #8FE8DC; font-family: var(--display); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; border-radius: 9px; padding: 7px 11px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); white-space: nowrap; }
   .bp-legend-tab:hover { background: rgba(78,205,196,0.24); color: #fff; }
   .bp-legend.min { width: auto; top: 13px; }
   /* collapsed → raise the Key tab up to the identity/settings bar level (its left side is empty) */
   .bp-legend.min .bp-legend-inner { display: none; }
   .bp-legend.min .bp-legend-tab { display: block; }
-  .bp-legend-grp { font-family: 'Outfit', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(160,200,210,0.65); margin: 13px 0 6px; }
+  .bp-legend-grp { font-family: var(--display); font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(160,200,210,0.65); margin: 13px 0 6px; }
   .bp-legend-grp:first-child { margin-top: 2px; }
   .bp-legend-row { display: flex; align-items: center; gap: 11px; padding: 4px 0; }
   .bp-legend-sw { flex: 0 0 50px; display: flex; align-items: center; justify-content: center; }
@@ -382,17 +376,17 @@ permalink: /tools/healthcare-career-tree/
   }
 
   /* ── Export sheet: a fixed-width, designed poster built from the build data (device-independent, polished) ── */
-  .hct-export-sheet { box-sizing: border-box; background: linear-gradient(180deg,#0b1512,#0d1117 60%); color: #E6EEF0; font-family: 'DM Sans', sans-serif; padding: 40px 42px 30px; }
+  .hct-export-sheet { box-sizing: border-box; background: linear-gradient(180deg,#0b1512,#0d1117 60%); color: #E6EEF0; font-family: var(--font); padding: 40px 42px 30px; }
   .hct-export-sheet * { animation: none !important; }
   /* nothing mid-fly-in in the capture */
   .hct-export-sheet .bp-del, .hct-export-sheet .bp-fork, .hct-export-sheet .bp-layer, .hct-export-sheet .bp-node-add { display: none !important; }
   .ex-hd { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 2px solid rgba(78,205,196,0.32); padding-bottom: 18px; margin-bottom: 24px; }
-  .ex-hd-name { font-family: 'Outfit', sans-serif; font-size: 35px; font-weight: 800; color: #F4FAF8; line-height: 1.04; }
+  .ex-hd-name { font-family: var(--display); font-size: 35px; font-weight: 800; color: #F4FAF8; line-height: 1.04; }
   .ex-hd-role { font-size: 15px; color: #7FE3D8; margin-top: 6px; }
   .ex-hd-tagline { font-size: 14px; font-style: italic; color: rgba(180,210,215,0.82); margin-top: 5px; }
   .ex-hd-goal { font-size: 13.5px; color: #E8C547; margin-top: 5px; }
   .ex-hd-logo { width: 232px; height: auto; flex-shrink: 0; align-self: flex-end; }
-  .ex-sec-ttl { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #6FE3D8; margin-bottom: 11px; }
+  .ex-sec-ttl { font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #6FE3D8; margin-bottom: 11px; }
   .ex-trunk-wrap { border: 1px solid rgba(78,205,196,0.18); border-radius: 14px; background: rgba(8,16,13,0.55); padding: 16px 18px; margin-bottom: 18px; overflow: hidden; }
   .ex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   .ex-card { border: 1px solid rgba(78,205,196,0.18); border-radius: 14px; background: rgba(8,16,13,0.55); padding: 15px 17px; }
@@ -407,7 +401,7 @@ permalink: /tools/healthcare-career-tree/
   .ex-next-grp:first-child { margin-top: 0; }
   .ex-next-item { font-size: 13px; color: #E2EEF0; margin: 3px 0; }
   .ex-next-item::before { content: '◇ '; color: #E8C547; }
-  .ex-ft { margin-top: 22px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,0.09); text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: rgba(120,200,190,0.62); }
+  .ex-ft { margin-top: 22px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,0.09); text-align: right; font-family: var(--mono); font-size: 11.5px; color: rgba(120,200,190,0.62); }
   /* roomier Career Path tiles so full titles fit — applies in the live tool AND the export */
   .bp-grid-lanes .bp-node { width: 132px; }
   .bp-grid-lanes .bp-node-add { position: relative; }   /* sit above the (now-underneath) connector overlay */
@@ -423,8 +417,8 @@ permalink: /tools/healthcare-career-tree/
   .bp-next-goal { font-size: 12px; color: rgba(220,238,238,0.9); margin-bottom: 6px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); line-height: 1.35; }
   .bp-next-goal b { color: #F0CF6B; }
   .bp-next-nogoal { color: rgba(180,205,215,0.5); font-style: italic; }
-  .bp-next-grp { font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(120,210,200,0.72); font-weight: 700; margin: 9px 0 4px; font-family: 'Outfit', sans-serif; }
-  .bp-next-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: rgba(212,232,236,0.86); padding: 4px 2px; cursor: pointer; border-radius: 5px; font-family: 'DM Sans', sans-serif; }
+  .bp-next-grp { font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(120,210,200,0.72); font-weight: 700; margin: 9px 0 4px; font-family: var(--display); }
+  .bp-next-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: rgba(212,232,236,0.86); padding: 4px 2px; cursor: pointer; border-radius: 5px; font-family: var(--font); }
   .bp-next-item:hover { color: #fff; background: rgba(120,200,190,0.08); }
   .bp-next-chk { color: #E8C547; font-size: 13px; flex-shrink: 0; line-height: 1.35; }
   .bp-next-item:hover .bp-next-chk { color: #5DBF87; }
@@ -441,7 +435,7 @@ permalink: /tools/healthcare-career-tree/
   .bp-next-add:hover .bp-next-chk { color: #E8C547; }
   .bp-next-empty { font-size: 11.5px; color: rgba(180,205,215,0.55); font-style: italic; line-height: 1.5; }
   .bp-h { display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-    font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
+    font-family: var(--display); font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
     text-transform: uppercase; color: #6FE3D8; margin-bottom: 10px; }
   .bp-hint { font-size: 11px; color: rgba(180,205,215,0.5); margin: 0 0 10px; line-height: 1.4; }
   /* tiles in a row (Career steps into family lanes); connectors drawn by one overlay SVG on top */
@@ -463,11 +457,11 @@ permalink: /tools/healthcare-career-tree/
   .bp-fork:hover { color: #4ECDC4; }
   .bp-years { width: 60px; height: 32px; box-sizing: border-box; resize: none; overflow: hidden; white-space: pre-wrap; word-break: break-word;
     background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.16); border-radius: 5px; color: #EAF4F2; font-weight: 600;
-    font-size: 11px; line-height: 1.25; padding: 3px 4px; text-align: center; font-family: 'IBM Plex Mono', monospace; }
+    font-size: 11px; line-height: 1.25; padding: 3px 4px; text-align: center; font-family: var(--mono); }
   .bp-years::placeholder { color: rgba(180,205,215,0.4); }
   .bp-years:focus { outline: none; border-color: #4ECDC4; }
   .bp-name { width: 66px; height: 26px; box-sizing: border-box; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 6px; color: #F4FAF8; font-size: 12px; font-weight: 700; padding: 3px 5px; text-align: center; font-family: 'DM Sans', sans-serif; }
+    border-radius: 6px; color: #F4FAF8; font-size: 12px; font-weight: 700; padding: 3px 5px; text-align: center; font-family: var(--font); }
   .bp-name::placeholder { color: rgba(120,200,190,0.7); font-style: italic; font-weight: 600; }
   .bp-name:focus { outline: none; border-color: #E8C547; }
   /* the "Other" anchor's name field WRAPS to ~2 lines (and scrolls beyond) instead of scrolling a single line — fits longer free text */
@@ -478,10 +472,10 @@ permalink: /tools/healthcare-career-tree/
   .bp-del:hover { color: #ff8080; }
   /* HAVE ↔ WANT layers */
   .mp-shift { display: inline-flex; border: 1px solid rgba(120,200,190,0.3); border-radius: 8px; overflow: hidden; }
-  .mp-shift button { padding: 5px 12px; font-size: 11.5px; font-weight: 700; background: rgba(255,255,255,0.03); border: none; border-right: 1px solid rgba(120,200,190,0.2); color: rgba(200,224,228,0.7); cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .mp-shift button { padding: 5px 12px; font-size: 11.5px; font-weight: 700; background: rgba(255,255,255,0.03); border: none; border-right: 1px solid rgba(120,200,190,0.2); color: rgba(200,224,228,0.7); cursor: pointer; font-family: var(--font); }
   .mp-shift button:last-child { border-right: none; }
   .mp-shift button:hover { background: rgba(120,200,190,0.1); color: #cfeae6; }
-  .mp-shift button.on { background: rgba(78,205,196,0.22); color: #F4FAF8; }
+  .mp-shift button.on { background: var(--teal); color: #062024; }
   .bp-layer { position: absolute; top: 2px; right: 22px; width: 16px; height: 16px; line-height: 15px; text-align: center;
     border: none; background: rgba(6,14,12,0.82); color: rgba(240,207,107,0.85); font-size: 10px; cursor: pointer; border-radius: 50%; opacity: 0; transition: opacity .12s, color .12s; }
   .bp-node:hover .bp-layer { opacity: 1; }
@@ -502,7 +496,7 @@ permalink: /tools/healthcare-career-tree/
   /* matrix-style hex tiles (skills, specs, credentials) */
   .bp-hex { display: block; }
   .bp-hexbg { stroke-width: 1.7; transition: filter .12s; }
-  .bp-hex-tx { font-family: 'IBM Plex Mono', monospace; font-weight: 800; fill: #FFFFFF; pointer-events: none;
+  .bp-hex-tx { font-family: var(--mono); font-weight: 800; fill: #FFFFFF; pointer-events: none;
     paint-order: stroke; stroke: rgba(4,12,9,0.6); stroke-width: 3px; stroke-linejoin: round; }
   .bp-hexbg { stroke-width: 2; }
   .bp-node:hover .bp-hexbg, .bp-cred:hover .bp-hexbg, .bp-node-add:hover .bp-hexbg { filter: brightness(1.3); }
@@ -520,19 +514,19 @@ permalink: /tools/healthcare-career-tree/
   .bp-sp-del { opacity: 0; cursor: pointer; transition: opacity .12s; }
   .bp-sp-cell:hover .bp-sp-del { opacity: 1; }
   .bp-sp-del circle { fill: rgba(6,14,12,0.92); stroke: rgba(255,128,128,0.5); stroke-width: 1; }
-  .bp-sp-del text { fill: rgba(255,170,170,0.92); font-size: 12px; font-weight: 700; font-family: 'DM Sans', sans-serif; }
+  .bp-sp-del text { fill: rgba(255,170,170,0.92); font-size: 12px; font-weight: 700; font-family: var(--font); }
   .bp-sp-del:hover circle { stroke: #ff8080; fill: rgba(40,10,10,0.92); }
   .bp-sp-del:hover text { fill: #ff8080; }
   /* layer-flip badge (top-left, opposite the × ): hover-only like the ×. Green ✓ on a Want tile to mark it Current, amber ◇ on a Have tile to set a goal */
   .bp-sp-layer { opacity: 0; cursor: pointer; transition: opacity .12s; }
   .bp-sp-cell:hover .bp-sp-layer { opacity: 1; }
   .bp-sp-layer circle { fill: rgba(6,14,12,0.92); stroke: rgba(232,197,71,0.5); stroke-width: 1; }
-  .bp-sp-layer text { fill: rgba(240,207,107,0.92); font-size: 11px; font-weight: 800; font-family: 'DM Sans', sans-serif; }
+  .bp-sp-layer text { fill: rgba(240,207,107,0.92); font-size: 11px; font-weight: 800; font-family: var(--font); }
   .bp-sp-cell.bp-sp-future .bp-sp-layer circle { stroke: rgba(93,191,135,0.6); }
   .bp-sp-cell.bp-sp-future .bp-sp-layer text { fill: #7FE3A0; }
   .bp-sp-layer:hover circle { fill: rgba(10,40,20,0.92); stroke: #5DBF87; }
   .bp-sp-layer:hover text { fill: #9CF0B8; }
-  .bp-sp-tx { font-family: 'IBM Plex Mono', monospace; font-weight: 800; fill: #FFFFFF; pointer-events: none;
+  .bp-sp-tx { font-family: var(--mono); font-weight: 800; fill: #FFFFFF; pointer-events: none;
     paint-order: stroke; stroke: rgba(4,12,9,0.6); stroke-width: 3px; stroke-linejoin: round; }
   .bp-sp-add { cursor: pointer; }
   .bp-sp-addhex { fill: rgba(255,255,255,0.03); stroke: rgba(232,197,71,0.4); stroke-width: 1.5; stroke-dasharray: 4 3; }
@@ -541,12 +535,12 @@ permalink: /tools/healthcare-career-tree/
     background: rgba(232,120,120,0.12); border: 1px solid rgba(232,120,120,0.3); color: #f0a8a8; }
   .bp-sp-del:hover { filter: brightness(1.2); }
   .bp-cred-in { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 5px; color: #EDF6F4; font-size: 10px; padding: 2px 4px; text-align: center; font-family: 'IBM Plex Mono', monospace; }
+    border-radius: 5px; color: #EDF6F4; font-size: 10px; padding: 2px 4px; text-align: center; font-family: var(--mono); }
   .bp-cred-in:focus { outline: none; border-color: #E8C547; }
   /* real-data picker (search → drop a tree node in) */
   .bp-pick { position: relative; margin-bottom: 10px; }
   .bp-pick-in { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.28); border: 1px solid rgba(78,205,196,0.25);
-    border-radius: 7px; color: #E2EEF4; font-size: 11.5px; padding: 6px 9px; font-family: 'DM Sans', sans-serif; }
+    border-radius: 7px; color: #E2EEF4; font-size: 11.5px; padding: 6px 9px; font-family: var(--font); }
   .bp-pick-in:focus { outline: none; border-color: rgba(78,205,196,0.55); }
   .bp-suggest { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 50; background: rgba(7,15,12,0.99);
     border: 1px solid rgba(78,205,196,0.25); border-radius: 8px; box-shadow: 0 10px 26px rgba(0,0,0,0.55); max-height: 240px; overflow-y: auto; display: none; }
@@ -557,11 +551,11 @@ permalink: /tools/healthcare-career-tree/
   .bp-sg:hover { background: rgba(78,205,196,0.1); }
   .bp-sg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .bp-sg-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bp-sg-ab { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: rgba(160,195,210,0.7); flex-shrink: 0; }
+  .bp-sg-ab { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: rgba(160,195,210,0.7); flex-shrink: 0; }
   .bp-sg.on { opacity: 0.55; }
   /* ── Areas of Expertise Matrix (one map, three zones) ──────────────── */
   .view-head { flex-shrink: 0; display: flex; align-items: baseline; gap: 12px; padding: 9px 16px 8px; }
-  .view-ttl { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6FE3D8; }
+  .view-ttl { font-family: var(--display); font-size: 14px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6FE3D8; }
   .view-hint { font-size: 11.5px; color: rgba(180,205,215,0.5); font-style: italic; }
   #hct-atlas { padding: 0; }
   #hct-atlas-board { position: relative; flex: 1; min-height: 0; overflow: hidden; margin: 0 8px 8px;
@@ -572,13 +566,13 @@ permalink: /tools/healthcare-career-tree/
   .atlas-bg-hex { fill: rgba(255,255,255,0.012); stroke: rgba(255,255,255,0.05); stroke-width: 1; pointer-events: none; }
   .atlas-region-hex { fill-opacity: 0.05; stroke-opacity: 0.20; stroke-width: 1; pointer-events: none; }
   .atlas-hub-hex { fill: rgba(78,205,196,0.05); stroke: #4ECDC4; stroke-width: 1.6; pointer-events: none; }
-  .atlas-hub-t1 { font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: 0.02em; fill: #7FEAD9; pointer-events: none; }
-  .atlas-hub-t2 { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em; fill: rgba(127,234,217,0.7); pointer-events: none; }
-  .atlas-zone-lbl { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 0.12em; pointer-events: none; }
+  .atlas-hub-t1 { font-family: var(--display); font-weight: 800; letter-spacing: 0.02em; fill: #7FEAD9; pointer-events: none; }
+  .atlas-hub-t2 { font-family: var(--mono); letter-spacing: 0.06em; fill: rgba(127,234,217,0.7); pointer-events: none; }
+  .atlas-zone-lbl { font-family: var(--display); font-size: 16px; font-weight: 800; letter-spacing: 0.12em; pointer-events: none; }
   .atlas-hex { transition: fill-opacity .12s; }
   .atlas-node { transition: opacity .15s ease; }
   .atlas-node:hover .atlas-hex { fill-opacity: 0.5; }
-  .atlas-abbr { font-family: 'IBM Plex Mono', monospace; pointer-events: none; }
+  .atlas-abbr { font-family: var(--mono); pointer-events: none; }
   /* search highlight: matches pop (brighter fill + glow), non-matches fade back */
   .atlas-node.atlas-dim { opacity: 0.12; pointer-events: none; }
   .atlas-node.atlas-hit { filter: drop-shadow(0 0 6px rgba(127,234,217,0.85)); }
@@ -588,26 +582,26 @@ permalink: /tools/healthcare-career-tree/
   .atlas-check { opacity: 0; pointer-events: none; transition: opacity .12s; }
   .atlas-node.atlas-sel .atlas-check { opacity: 1; }
   .atlas-check circle { fill: #7FEAD9; stroke: #042018; stroke-width: 1; }
-  .atlas-check text { font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 800; fill: #042018; pointer-events: none; }
+  .atlas-check text { font-family: var(--font); font-size: 9px; font-weight: 800; fill: #042018; pointer-events: none; }
   .atlas-tools { margin-left: auto; display: flex; align-items: center; gap: 9px; }
   .atlas-multibtn { padding: 6px 12px; font-size: 11.5px; font-weight: 700; border-radius: 7px; cursor: pointer; white-space: nowrap;
-    background: rgba(176,123,214,0.12); border: 1px solid rgba(176,123,214,0.4); color: #C9A6E6; font-family: 'DM Sans', sans-serif; transition: all .12s; }
+    background: rgba(176,123,214,0.12); border: 1px solid rgba(176,123,214,0.4); color: #C9A6E6; font-family: var(--font); transition: all .12s; }
   .atlas-multibtn:hover { background: rgba(176,123,214,0.22); color: #E6D6F4; }
   .atlas-multibtn.on { background: #B07BD6; border-color: #B07BD6; color: #16091f; }
   .atlas-selbar { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: none; align-items: center; gap: 10px;
     background: rgba(8,14,22,0.97); border: 1px solid rgba(176,123,214,0.45); border-radius: 11px; padding: 8px 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.55); z-index: 12; }
   .atlas-selbar.on { display: flex; }
-  #hct-atlas-selcount { font-size: 12px; font-weight: 700; color: #E6D6F4; font-family: 'DM Sans', sans-serif; min-width: 74px; }
+  #hct-atlas-selcount { font-size: 12px; font-weight: 700; color: #E6D6F4; font-family: var(--font); min-width: 74px; }
   .atlas-selbtn { padding: 5px 11px; font-size: 11.5px; font-weight: 600; border-radius: 7px; cursor: pointer; white-space: nowrap;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.16); color: #cfe0e6; font-family: 'DM Sans', sans-serif; transition: all .12s; }
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.16); color: #cfe0e6; font-family: var(--font); transition: all .12s; }
   .atlas-selbtn:hover { background: rgba(255,255,255,0.1); color: #fff; }
   .atlas-selbtn.add { background: rgba(176,123,214,0.18); border-color: rgba(176,123,214,0.5); color: #D9C2EE; }
   .atlas-selbtn.add:hover { background: rgba(176,123,214,0.32); color: #fff; }
   .atlas-selbtn:disabled { opacity: 0.4; cursor: default; }
   .bp-text { width: 100%; box-sizing: border-box; min-height: 92px; resize: vertical;
     background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-    color: #D6EEF0; font-size: 12.5px; line-height: 1.5; padding: 8px 10px; font-family: 'DM Sans', sans-serif; }
+    color: #D6EEF0; font-size: 12.5px; line-height: 1.5; padding: 8px 10px; font-family: var(--font); }
   .bp-text:focus { outline: none; border-color: rgba(78,205,196,0.45); }
   @media (max-width: 760px){
   .bp { grid-template-columns: 1fr; } 
@@ -626,7 +620,7 @@ permalink: /tools/healthcare-career-tree/
   .hct-dd-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
   .hct-dd-btn.dim { opacity: 0.45; }
   .hct-dd-btn .pdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .hct-dd-btn .ddc { font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.7; }
+  .hct-dd-btn .ddc { font-family: var(--mono); font-size: 10px; opacity: 0.7; }
   .hct-dd-btn .cv { font-size: 9px; opacity: 0.7; }
   .hct-dd-menu { position: absolute; top: calc(100% + 5px); left: 0; z-index: 60; min-width: 210px; margin: 0; background: rgba(7,15,12,0.99); border: 1px solid rgba(78,205,196,0.28); border-radius: 8px; padding: 6px; display: none; box-shadow: 0 10px 28px rgba(0,0,0,0.55); }
   .hct-dd.open .hct-dd-menu { display: block; }
@@ -642,7 +636,6 @@ permalink: /tools/healthcare-career-tree/
   /* ── Light mode ────────────────────────────────────────── */
   [data-theme='light'] #hct-shell { background: #eef3f1; color: #14323a; }
   [data-theme='light'] #hct-tb { background: rgba(255,255,255,0.96); border-bottom-color: rgba(27,95,168,0.18); }
-  [data-theme='light'] .hct-logo { color: #1B5FA8; }
   [data-theme='light'] #hct-panel, [data-theme='light'] #hct-mypath { background: rgba(255,255,255,0.99); }
   [data-theme='light'] .hct-dd-menu { background: #fff; }
   [data-theme='light'] .hct-node .hx-back { fill: #eef3f1; }
@@ -723,6 +716,102 @@ permalink: /tools/healthcare-career-tree/
   [data-theme='light'] .bp-legend-tx b, [data-theme='light'] .edu-lt,
   [data-theme='light'] .edu-d-ttl, [data-theme='light'] .bp-name { color: var(--t1); }
 
+  /* light mode, continued — chrome text/borders still carrying dark-tuned
+     light literals on the now-white token surfaces */
+  [data-theme='light'] .hct-seg button { color: var(--t2); }
+  [data-theme='light'] .hct-seg button:hover { color: var(--t1); background: rgba(0,0,0,0.04); }
+  [data-theme='light'] .hct-lbl { color: var(--t3); }
+  [data-theme='light'] .hct-btn { color: var(--t2); background: rgba(0,0,0,0.03); }
+  [data-theme='light'] .hct-btn:hover { color: var(--t1); }
+  [data-theme='light'] .hct-p-close, [data-theme='light'] .bp-modal-x,
+  [data-theme='light'] .bp-legend-min, [data-theme='light'] .bp-card-x { color: var(--t3); }
+  [data-theme='light'] .hct-p-close:hover, [data-theme='light'] .bp-modal-x:hover { color: var(--t1); }
+  [data-theme='light'] .bp-legend-min:hover { color: var(--t1); background: rgba(0,0,0,0.05); }
+  [data-theme='light'] .bp-modal-btn, [data-theme='light'] .mp-fbtn,
+  [data-theme='light'] .hct-allbtn,
+  [data-theme='light'] .hct-dd-btn, [data-theme='light'] .hct-dd-item,
+  [data-theme='light'] .bp-addmenu-item, [data-theme='light'] .mp-shift button { color: var(--t2); }
+  [data-theme='light'] .bp-modal-btn, [data-theme='light'] .mp-fbtn,
+  [data-theme='light'] .hct-allbtn,
+  [data-theme='light'] .hct-dd-btn { border-color: var(--border); }
+  [data-theme='light'] .bp-modal-btn:hover, [data-theme='light'] .hct-dd-btn:hover,
+  [data-theme='light'] .bp-addmenu-item:hover, [data-theme='light'] .bp-next-item:hover,
+  [data-theme='light'] .bp-next-add:hover,
+  [data-theme='light'] .hct-chip:hover, [data-theme='light'] .mp-shift button:hover { color: var(--t1); }
+  [data-theme='light'] .bp-modal-btn:hover { background: rgba(0,0,0,0.05); }
+  [data-theme='light'] .hct-dd-btn:hover { border-color: var(--border2); }
+  [data-theme='light'] .hct-chip { background: rgba(0,0,0,0.03); border-color: var(--border); }
+  [data-theme='light'] .edu-d-chip, [data-theme='light'] .hct-edu-req-deg { color: var(--t2); }
+  [data-theme='light'] .edu-detail-empty, [data-theme='light'] .view-hint,
+  [data-theme='light'] .bp-sg-head, [data-theme='light'] #hct-loading,
+  [data-theme='light'] .bp-next-nogoal { color: var(--t3); }
+  [data-theme='light'] .edu-card.sel .edu-card-sub { color: var(--t1); }
+  [data-theme='light'] .bp-node-lbl { color: var(--t1); }
+  [data-theme='light'] .edu-d-add { color: var(--t1); }
+  [data-theme='light'] .bp-vital { border-color: var(--border); background: rgba(0,0,0,0.02); }
+  [data-theme='light'] .edu-ll { border-right-color: var(--border); }
+  [data-theme='light'] .edu-d-top { border-bottom-color: var(--border); }
+  [data-theme='light'] .edu-d-foot { border-top-color: var(--border); }
+  /* teal accents readable as TEXT on white → dark-teal convention */
+  [data-theme='light'] .hct-p-abbr, [data-theme='light'] .hct-list-h,
+  [data-theme='light'] .hct-edu-req-face, [data-theme='light'] .bp-id-sub b,
+  [data-theme='light'] .bp-vital-n, [data-theme='light'] .bp-card-t,
+  [data-theme='light'] .bp-h, [data-theme='light'] .bp-legend-h,
+  [data-theme='light'] .bp-modal-h, [data-theme='light'] .view-ttl,
+  [data-theme='light'] .edu-lexh, [data-theme='light'] .edu-d-sech,
+  [data-theme='light'] .bp-next-lbl, [data-theme='light'] .hct-dd-act,
+  [data-theme='light'] .hct-allbtn.show, [data-theme='light'] .bp-addbtn,
+  [data-theme='light'] .bp-card-t-edit:focus,
+  [data-theme='light'] .bp-next-sug .bp-next-chk,
+  [data-theme='light'] .hct-bls-stat .v.g-hi, [data-theme='light'] .hct-bls-stat .v.g-mid,
+  [data-theme='light'] .hct-bls-src a, [data-theme='light'] #hct-tip .tip-val { color: var(--teal-dk); }
+  [data-theme='light'] .hct-edu-add, [data-theme='light'] .hct-edu-add:hover,
+  [data-theme='light'] .bp-modal-btn.primary, [data-theme='light'] .bp-modal-btn.primary:hover,
+  [data-theme='light'] .bp-legend-tab, [data-theme='light'] .bp-legend-tab:hover { color: var(--teal-dk); }
+  [data-theme='light'] .hct-dd-act[data-hideall] { color: var(--t2); border-color: var(--border); }
+  /* gold accents → darker gold on white */
+  [data-theme='light'] .tab-badge, [data-theme='light'] .mp-count,
+  [data-theme='light'] .bp-id-lbl, [data-theme='light'] .edu-ltime,
+  [data-theme='light'] .edu-d-time, [data-theme='light'] .bp-modal-lbl b,
+  [data-theme='light'] .bp-next-goal b, [data-theme='light'] .bp-next-chk,
+  [data-theme='light'] .mp-fbtn:hover,
+  [data-theme='light'] .hct-pin-btn { color: #8A6A15; }
+  [data-theme='light'] .bp-vital.goal .bp-vital-n { color: #8A6A15; }
+  [data-theme='light'] .hct-bls-stat .v.g-lo { color: #8A6A15; }
+  [data-theme='light'] .bp-node.bp-future .bp-node-lbl, [data-theme='light'] .bp-node.bp-future .bp-name,
+  [data-theme='light'] .bp-node.bp-future .bp-cred-in { color: #8A6A15; }
+  /* state re-asserts (same-or-higher specificity rules above would bleed in) */
+  [data-theme='light'] .hct-seg button.on { background: var(--teal); color: #062024; }
+  [data-theme='light'] .hct-seg.dom button.on { background: rgba(232,168,56,0.2); color: #8A6A15; }
+  [data-theme='light'] .mp-shift button.on { background: var(--teal); color: #062024; }
+  [data-theme='light'] .hct-pin-btn.pinned { background: rgba(232,197,71,0.9); color: #1a1405; }
+  [data-theme='light'] .hct-edu-add.added, [data-theme='light'] .edu-d-add.added { color: #1E7A48; }
+  [data-theme='light'] .bp-modal-msg.ok { color: #1E7A48; }
+  [data-theme='light'] .bp-modal-msg.err { color: #B03A3A; }
+  [data-theme='light'] .hct-btn.reset { color: #B03A3A; border-color: rgba(176,58,58,0.4); }
+  [data-theme='light'] .hct-btn.reset:hover { color: #8F2626; background: rgba(176,58,58,0.08); }
+  [data-theme='light'] .bp-sp-del { color: #B03A3A; }
+  [data-theme='light'] #cred-remove, [data-theme='light'] #item-remove { color: #B03A3A !important; }
+  /* purple multi-select accent */
+  [data-theme='light'] .atlas-multibtn { color: #7A4AA8; }
+  [data-theme='light'] .atlas-multibtn:hover { color: #5D3585; }
+  [data-theme='light'] .atlas-multibtn.on { background: #B07BD6; color: #16091f; }
+  /* JS-inlined accent chips: darken text + tint together */
+  [data-theme='light'] .hct-p-badge, [data-theme='light'] .edu-ln,
+  [data-theme='light'] .edu-d-badge, [data-theme='light'] .edu-d-sub { filter: brightness(0.72) saturate(1.35); }
+  /* career board scene lines drawn with white literals → ink on the light board */
+  [data-theme='light'] .hct-rcontainer { fill: rgba(0,40,50,0.02); stroke: rgba(0,40,50,0.14); }
+  [data-theme='light'] .hct-region-div { stroke: rgba(0,40,50,0.2); }
+  [data-theme='light'] .hct-region-clin { fill: rgba(11,106,96,0.55); }
+  [data-theme='light'] .hct-region-biz { fill: rgba(138,106,21,0.5); }
+  [data-theme='light'] .hct-band-line { stroke: rgba(27,95,168,0.15); }
+  /* schooling zoombar was a pinned-dark pill on the now-white matrix */
+  [data-theme='light'] .sch-zoombar button { background: rgba(255,255,255,0.92); border-color: rgba(30,122,72,0.4); color: #1E7A48; }
+  [data-theme='light'] .sch-zoombar button:hover { border-color: #1E7A48; color: #14532D; }
+  /* Areas of Expertise board: hex styling is dark-tuned (white-literal grid,
+     pale hub/zone ink) — pin the board itself dark; its chrome stays themed */
+  [data-theme='light'] #hct-atlas-board { background: rgba(9,17,14,0.97); }
+
   /* ═══════════════════════════════════════════════════════════════
      TOUCH · KEYBOARD · SMALL-SCREEN pass (placed last so it wins).
      ═══════════════════════════════════════════════════════════════ */
@@ -746,7 +835,7 @@ permalink: /tools/healthcare-career-tree/
   .hct-clegend .cl-ttl { font-size: 10px; }
   .hct-clegend .cl-ends { font-size: 9.5px; }
   .hct-clegend .cl-ends span:nth-child(2) { opacity: .7; }
-  #hct-tip .tip-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--teal); margin-top: 3px; }
+  #hct-tip .tip-val { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-top: 3px; }
 
   /* ── Phone layout (≤ 600px) ─────────────────────────────────── */
   @media (max-width: 600px) {
@@ -782,12 +871,20 @@ permalink: /tools/healthcare-career-tree/
     /* zoombar: bigger tap targets */
     .sch-zoombar button { width: 40px; height: 40px; font-size: 17px; }
   }
+
+  /* ── Shared attribution strip ───────────────────────────────
+     Slimmed, and kept BELOW the tool's docked overlays (detail panel /
+     mobile bottom sheet z30, modals) so they cover it rather than the
+     reverse. In the Areas of Expertise view the bottom-right zoombar
+     lives at bottom:8px, so lift the strip clear of it there. */
+  .tool-attribution--fixed { bottom: 6px; right: 12px; padding: 4px 10px; z-index: 25; }
+  #hct-shell:has(#hct-tb[data-view="atlas"]) ~ .tool-attribution--fixed { bottom: 52px; }
   </style>
 
 <div id="hct-shell">
   <!-- ── TOP BAR — slim tabs on the left, contextual controls on the right ── -->
   <div id="hct-tb" data-view="path">
-    <span class="hct-logo">Career Tree</span>
+    <span class="hct-logo"><span class="tool-bar-kicker">Tool</span><span class="tool-bar-title">Career <span>Tree</span></span></span>
     <span class="hct-sep"></span>
 
     <!-- PRIMARY TABS: which view is on screen -->
@@ -971,6 +1068,11 @@ permalink: /tools/healthcare-career-tree/
   </div>
 </div>
 
+{% set ta_fixed = true %}
+{% set ta_source = 'BLS Occupational Outlook · May 2024' %}
+{% include "components/tool-attribution.njk" %}
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
 (function(){
   'use strict';
@@ -2324,7 +2426,7 @@ permalink: /tools/healthcare-career-tree/
     const fs = t.length>4 ? 7 : t.length>2 ? 9 : 11;
     return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="flex:0 0 auto">'+
       '<path d="'+hexPath(cx,cy,r)+'" fill="'+hexA(color,0.22)+'" stroke="'+color+'" stroke-width="2"'+(dashed?' stroke-dasharray="3 2"':'')+'/>'+
-      '<text x="'+cx+'" y="'+(cy+fs*0.34).toFixed(1)+'" text-anchor="middle" style="font-family:DM Sans,sans-serif;font-weight:800;font-size:'+fs+'px;fill:#EAF6F4">'+esc(t)+'</text></svg>';
+      '<text x="'+cx+'" y="'+(cy+fs*0.34).toFixed(1)+'" text-anchor="middle" style="font-family:var(--font);font-weight:800;font-size:'+fs+'px;fill:#EAF6F4">'+esc(t)+'</text></svg>';
   }
   // Build a fixed-width (1080px) export poster straight from the build DATA — identical on any device (phone or desktop),
   // not a screenshot of the live responsive layout. Clean header + scaled trunk + uniform section cards + full text.

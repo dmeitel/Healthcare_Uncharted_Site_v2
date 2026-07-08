@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * build-data.js — derive the macro rollups from the granular facility roster
- * and write them to src/assets/data/derived/ for client-side fetch, plus a
- * systems seed registry. Run before the Eleventy build.
+ * and write them to data-build/ (build intermediates, NOT deployed), plus a
+ * systems seed registry. Run before the Eleventy build. Templates get the
+ * same rollups via src/_data/facility.js, which recomputes with aggregate().
  *
  *   node scripts/build-data.js
  */
@@ -21,14 +22,14 @@ const countyPop = read('src/assets/data/us-counties.json');
 
 const result = aggregate({ facilities, counties, geo, countyPop });
 
-const OUT = P('src/assets/data/derived');
+const OUT = P('data-build');   // build intermediates — NOT deployed (src/assets is passthrough-copied)
 fs.mkdirSync(OUT, { recursive: true });
 
 const stamp = { generated_by: 'scripts/build-data.js', source: 'us-hospitals.json', facilityCount: facilities.length };
 
 const write = (name, obj) => {
   fs.writeFileSync(path.join(OUT, name), JSON.stringify(obj) + '\n');
-  console.log('  wrote derived/' + name);
+  console.log('  wrote data-build/' + name);
 };
 
 write('national-summary.json', { _meta: stamp, ...result.national, join: result.join });

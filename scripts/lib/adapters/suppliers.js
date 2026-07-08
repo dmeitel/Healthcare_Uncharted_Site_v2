@@ -17,7 +17,7 @@ const { makeNode, edge, uid } = require('../entity');
 module.exports = {
   name: 'suppliers',
   run(read) {
-    const agg = read('src/assets/data/derived/suppliers-by-state.json');
+    const agg = read('data-build/suppliers-by-state.json');
     const labels = agg.kinds || {};
     const out = [];
 

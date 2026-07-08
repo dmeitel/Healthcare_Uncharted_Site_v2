@@ -46,7 +46,7 @@ module.exports = {
           searchParts: [m.name, m.sub, m.defn, lens, m.source, m.unit],
           rels,
           source: { dataset: 'stateData.json+metricsConfig.json', lens, index: i },
-          href: '/tools/American-4Ps-Map/?lens=' + encodeURIComponent(lens) + '&metric=' + i,
+          href: '/tools/multi-lens-map/?lens=' + encodeURIComponent(lens) + '&metric=' + i,
         }));
       });
     }

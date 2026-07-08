@@ -15,7 +15,7 @@
  *
  * Outputs:
  *   src/assets/data/us-suppliers-<kind>.json          per-kind points (one map layer each)
- *   src/assets/data/derived/suppliers-by-state.json   state x kind counts (master graph)
+ *   data-build/suppliers-by-state.json   state x kind counts (master graph)
  *
  * Coordinates come from the CSV (no geocoding). Network fetch + cache.
  *   node scripts/build-suppliers.js
@@ -151,8 +151,8 @@ async function getCSV() {
     }) + '\n');
   }
 
-  fs.mkdirSync(P('src/assets/data/derived'), { recursive: true });
-  fs.writeFileSync(P('src/assets/data/derived/suppliers-by-state.json'), JSON.stringify({
+  fs.mkdirSync(P('data-build'), { recursive: true });
+  fs.writeFileSync(P('data-build/suppliers-by-state.json'), JSON.stringify({
     _meta: { generated_by: 'scripts/build-suppliers.js', source: 'CMS DMEPOS suppliers', note: 'locations after merging duplicate enrollments', stateCount: Object.keys(byState).length },
     kinds: KIND_LABEL, national, byState,
   }) + '\n');

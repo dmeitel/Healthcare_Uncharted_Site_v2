@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const P = (...p) => path.join(__dirname, '..', ...p);
 
-const data = JSON.parse(fs.readFileSync(P('src/assets/data/derived/entities.json'), 'utf8'));
+const data = JSON.parse(fs.readFileSync(P('data-build/entities.json'), 'utf8'));
 const nodes = data.nodes;
 const byUid = new Map(nodes.map((n) => [n.uid, n]));
 

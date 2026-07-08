@@ -19,7 +19,7 @@
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
 
   <!-- Browser chrome + PWA -->
-  <meta name="theme-color" content="#1B5FA8">
+  <meta name="theme-color" id="metaThemeColor" content="#0a0f1a">
   <link rel="manifest" href="/site.webmanifest">
 
   <!-- Favicon / app icons (brand kit) — scheme-aware: light art on light tabs, dark art on dark tabs -->
@@ -47,6 +47,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://unpkg.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/hu-global.css">
   <link rel="stylesheet" href="/brand/web/brand.css">
@@ -88,8 +90,32 @@
   }
   </script>
 
+  {% if section == 'rounds' or section == 'learn' or section == 'talk' %}
+  <!-- Article structured data for editorial pages -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": {{ title | json | safe }},
+    "description": {{ (description or summary or site.tagline) | json | safe }},
+    {% if posted or date %}"datePublished": "{{ (posted or date) | dateISO }}",{% endif %}
+    "url": "{{ site.url }}{{ page.url }}",
+    "image": "{{ site.url }}{{ og_image or '/brand/og-image.png' }}",
+    "author": { "@id": "{{ site.url }}/#person" },
+    "publisher": { "@id": "{{ site.url }}/#organization" }
+  }
+  </script>
+  {% endif %}
+
   {% block extraHead %}{% endblock %}
-  <script>if(localStorage.getItem('hu-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}</script>
+  <script>
+    (function(){
+      var t = localStorage.getItem('hu-theme') === 'light' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+      var m = document.getElementById('metaThemeColor');
+      if (m) m.setAttribute('content', t === 'light' ? '#EEF2F7' : '#0a0f1a');
+    })();
+  </script>
 </head>
 <body>
 
@@ -141,11 +167,24 @@
         <div class="footer-nav-list">
           <a class="footer-nav-link" href="/atlas/">Healthcare Atlas</a>
           <a class="footer-nav-link" href="/tools/healthcare-iceberg-map/">Iceberg Map</a>
-          <a class="footer-nav-link" href="/tools/American-4Ps-Map/">Multi-Lens State Map</a>
+          <a class="footer-nav-link" href="/tools/multi-lens-map/">Multi-Lens State Map</a>
           <a class="footer-nav-link" href="/tools/healthcare-vendor-directory/">Vendor Directory</a>
           <a class="footer-nav-link" href="/tools/clinical-sql-mystery/">Clinical SQL Mystery</a>
         </div>
       </div>
+    </div>
+    <div class="footer-subscribe">
+      <div class="footer-col-title">Field Notes</div>
+      <p class="fs-sub">New tools, new data, no noise. When something ships, you hear about it.</p>
+      <form name="field-notes" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="bot-field" class="fs-form">
+        <input type="hidden" name="form-name" value="field-notes">
+        <p class="fs-hp" aria-hidden="true"><label>Skip this field: <input name="bot-field"></label></p>
+        <label class="fs-label" for="fsEmail">Email</label>
+        <div class="fs-row">
+          <input class="fs-input" id="fsEmail" type="email" name="email" required autocomplete="email" placeholder="you@hospital.org">
+          <button class="fs-btn" type="submit">Sign up</button>
+        </div>
+      </form>
     </div>
     <div class="footer-bottom">
       <div class="footer-copy">&copy; 2026 Healthcare Uncharted &middot; David Eitel &middot; Educational use &mdash; not clinical advice</div>
@@ -183,19 +222,20 @@ function syncToggleLabel() {
 }
 syncToggleLabel();
 themeToggle.addEventListener('click', () => {
-  const goingLight = document.documentElement.getAttribute('data-theme') !== 'light';
-  if (goingLight) {
-    document.documentElement.setAttribute('data-theme', 'light');
-    localStorage.setItem('hu-theme', 'light');
-  } else {
-    document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('hu-theme', 'dark');
-  }
+  const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('hu-theme', next);
+  const m = document.getElementById('metaThemeColor');
+  if (m) m.setAttribute('content', next === 'light' ? '#EEF2F7' : '#0a0f1a');
   syncToggleLabel();
 });
 </script>
 
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
+
+{% if site.goatcounter %}
+<script data-goatcounter="https://{{ site.goatcounter }}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+{% endif %}
 </body>
 </html>

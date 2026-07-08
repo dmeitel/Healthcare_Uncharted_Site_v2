@@ -1,0 +1,4234 @@
+---
+layout: base.njk
+navPage: tools
+no_footer: true
+section: tool
+status: published
+order: 1
+title: U.S. Healthcare Multi-Lens Map
+description: Explore U.S. state healthcare through six lenses — Patient, Clinical, Operations, Payer, Policy, and Economics. Compare all 50 states on 40+ metrics.
+tags: [interactive, maps, policy, data-viz]
+has_interactive: true
+---
+<style>
+:root {
+  /* --hu-* tokens are aliases of the global design-system tokens (hu-global.css).
+     Global [data-theme="light"] remaps flow through automatically. */
+  --hu-dark: var(--dark);
+  --hu-surface: var(--surface);
+  --hu-raised: var(--raised);
+  --hu-light: #F6F9FC;
+  --hu-blue: var(--blue);
+  --hu-blue-mid: #2d4a8a;
+  --hu-teal: var(--teal);
+  --hu-teal-dark: var(--teal-dk);
+  --hu-green: var(--green);
+  --hu-red: var(--red);
+  --hu-amber: var(--amber);
+  --hu-text-1: var(--t1);
+  --hu-text-2: var(--t2);
+  --hu-text-3: var(--t3);
+  --hu-text-muted: #6B8299;
+  --hu-border: var(--border);
+  --hu-border-2: var(--border2);
+
+  --lens-patient: #4ECDC4;
+  --lens-clinical: #1B5FA8;
+  --lens-operations: #E8A838;
+  --lens-payer: #2D9B6F;
+  --lens-policy: #DF5752;
+  --lens-economics: #8B5CF6;
+  --lens-baseline: #0EA5E9;
+
+  --c1: #DF5752;
+  --c2: #E8A838;
+  --c3: #4a6a8a;
+  --c4: #4ECDC4;
+  --c5: #2D9B6F;
+}
+
+[data-theme="light"] {
+  /* Only vars that stayed literal need a light remap; aliased --hu-* vars
+     inherit the global light remap. */
+  --hu-text-muted: #94A3B8;
+  --c3:            #94a3b8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--hu-dark);
+  color: var(--hu-text-1);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+}
+
+/* App shell sits under the 64px global sticky nav (base.njk).
+   Layout comes from .hu-shell (hu-global.css): flex column,
+   height calc(100dvh - 64px), overflow hidden; unlocks to a
+   scrolling stack below 700px. Rows: lens-strip (auto) /
+   .main (flex:1) / .bottom-bar (56px). */
+
+/* ── Tutorial button & modal ──────────────────────────────────────── */
+/* ── Colorblind-safe quintile scale ── */
+body[data-colorblind="true"] {
+  --c1: #d45500;
+  --c2: #f5a42a;
+  --c3: #888888;
+  --c4: #7b9fd4;
+  --c5: #2166ac;
+}
+
+.tutorial-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; color: var(--hu-text-2);
+  background: none; border: 1px solid var(--hu-border);
+  cursor: pointer; transition: all 0.15s; font-family: var(--font);
+}
+.tutorial-btn:hover, .tutorial-btn.open {
+  color: var(--hu-teal); border-color: rgba(78,205,196,.5);
+  background: rgba(78,205,196,.07);
+}
+.tutorial-overlay {
+  position: fixed; inset: 0; z-index: 400; /* shell z-scale: modal 400, above sheet 300 */
+  background: rgba(0,0,0,.65); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.tutorial-overlay.open { opacity: 1; pointer-events: all; }
+.tutorial-modal {
+  background: var(--hu-surface);
+  border: 1px solid var(--hu-border-2);
+  border-radius: 14px;
+  width: 100%; max-width: 740px; max-height: 88vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,.6);
+  transform: translateY(12px); transition: transform .2s;
+}
+.tutorial-overlay.open .tutorial-modal { transform: translateY(0); }
+.tutorial-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--hu-border); flex-shrink: 0;
+}
+.tutorial-head-text {}
+.tutorial-title { font-family: var(--display); font-size: 18px; font-weight: 800; color: var(--hu-text-1); }
+.tutorial-sub { font-size: 12px; color: var(--hu-text-3); font-family: var(--mono); margin-top: 3px; }
+.tutorial-close {
+  background: none; border: 1px solid var(--hu-border); color: var(--hu-text-3);
+  border-radius: 7px; font-size: 15px; padding: 4px 10px; cursor: pointer; transition: all .15s; flex-shrink: 0;
+}
+.tutorial-close:hover { color: var(--hu-text-1); border-color: var(--hu-border-2); }
+.tutorial-body {
+  overflow-y: auto; padding: 18px 24px 24px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.tut-card {
+  background: var(--hu-raised); border: 1px solid var(--hu-border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.tut-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.tut-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-weight: 800; font-size: 12px; color: #fff;
+  flex-shrink: 0; letter-spacing: -0.02em;
+}
+.tut-card-title { font-size: 13px; font-weight: 700; color: var(--hu-text-1); }
+.tut-card-body { font-size: 12px; color: var(--hu-text-2); line-height: 1.7; }
+.tut-card-body ul { list-style: none; padding: 0; margin: 4px 0 0; display: flex; flex-direction: column; gap: 4px; }
+.tut-card-body li { padding-left: 12px; position: relative; }
+.tut-card-body li::before { content: '·'; color: var(--hu-teal); position: absolute; left: 0; }
+.tut-tag {
+  display: inline-block; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 4px; letter-spacing: .04em;
+  background: rgba(78,205,196,.1); color: var(--hu-teal); white-space: nowrap;
+}
+.tut-tag.amber { background: rgba(232,168,56,.12); color: var(--hu-amber); }
+.tut-tag.blue  { background: rgba(27,95,168,.2);   color: #6ab0f5; }
+[data-theme="light"] .tut-tag { color: var(--hu-teal-dark); }
+[data-theme="light"] .tut-tag.amber { color: #946905; }
+[data-theme="light"] .tut-tag.blue { color: var(--hu-blue); }
+.tut-divider {
+  grid-column: 1 / -1; border: none; border-top: 1px solid var(--hu-border); margin: 4px 0;
+}
+
+.usa-map-btn {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--hu-text-3);
+  background: transparent;
+  border: 1px solid var(--hu-border);
+  padding: 4px 12px; border-radius: 4px;
+  cursor: pointer; transition: all 0.18s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.usa-map-btn:hover { border-color: var(--hu-teal); color: var(--hu-teal); }
+.usa-map-btn.active { border-color: var(--hu-teal); color: var(--hu-teal); }
+
+/* .shell-main provides flex:1/min-height:0; re-stated here since this
+   rule overrides its display:flex with the bespoke 3-column grid. */
+.main { display: grid; grid-template-columns: 340px 1fr 340px; overflow: hidden; flex: 1; min-height: 0; }
+
+/* ── Data cards ──────────────────────────────────────────────────── */
+.data-card {
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border);
+  border-radius: 10px;
+  margin: 10px 12px;
+  overflow: hidden;
+}
+.data-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 9px;
+  border-bottom: 1px solid var(--hu-border);
+  background: rgba(255,255,255,0.025);
+}
+[data-theme="light"] .data-card-header { background: rgba(0,0,0,0.03); }
+.data-card-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hu-text-3);
+}
+.data-card-actions { display: flex; align-items: center; gap: 4px; }
+.data-card-body { padding: 12px 14px; }
+.data-card-footer {
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--hu-border);
+  background: rgba(0,0,0,0.12);
+}
+
+/* ── Card-style ranking tabs ─────────────────────────────────────── */
+.card-tab {
+  padding: 4px 10px;
+  background: transparent; border: 1px solid var(--hu-border);
+  border-radius: 4px;
+  font-size: 11px; font-weight: 500; color: var(--hu-text-3);
+  cursor: pointer; font-family: var(--font); transition: all 0.12s;
+}
+.card-tab:hover { color: var(--hu-text-2); border-color: var(--hu-border-2); }
+.card-tab.active { background: var(--hu-surface); color: var(--hu-text-1); border-color: var(--hu-border-2); }
+
+/* ── Colorblind toggle (legend) ──────────────────────────────────── */
+.cb-legend-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--hu-text-3); font-size: 13px; line-height: 1;
+  padding: 2px 3px; border-radius: 3px;
+  transition: color 0.15s;
+  margin-left: 6px; flex-shrink: 0;
+}
+.cb-legend-btn:hover { color: var(--hu-text-1); }
+.cb-legend-btn.active { color: var(--hu-teal); }
+
+/* ── Floating state card ─────────────────────────────────────────── */
+.state-float-card {
+  position: absolute; z-index: 50;
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border-2);
+  border-radius: 10px; padding: 12px 14px;
+  min-width: 160px; max-width: 210px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  pointer-events: none;
+  animation: sfc-in 0.15s ease;
+}
+@keyframes sfc-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sfc-state { font-size: 12px; font-weight: 600; color: var(--hu-text-2); margin-bottom: 2px; }
+.sfc-metric { font-size: 11px; font-weight: 500; color: var(--hu-text-3); line-height: 1.3; margin-bottom: 7px; }
+.sfc-value { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.sfc-band  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--hu-text-2); margin-bottom: 5px; }
+.sfc-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sfc-vs    { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); margin-bottom: 2px; }
+
+/* Float card — System Outlook section */
+.sfc-sep { height: 1px; background: var(--hu-border); margin: 8px 0 6px; }
+.sfc-outlook-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; pointer-events: auto;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--hu-text-3); padding: 1px 0;
+  transition: color 0.12s;
+}
+.sfc-outlook-toggle:hover { color: var(--hu-text-2); }
+.sfc-chev { font-size: 12px; transition: transform 0.15s; display: inline-block; }
+.sfc-outlook-toggle.open .sfc-chev { transform: rotate(90deg); }
+.sfc-outlook-body { margin-top: 7px; }
+.sfc-sys-tier {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; margin-bottom: 6px;
+}
+.sfc-sys-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.sfc-lens-row { display: flex; gap: 3px; }
+.sfc-lens-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+.sfc-lens-bar-track { width: 100%; height: 3px; background: var(--hu-border); border-radius: 2px; overflow: hidden; }
+.sfc-lens-bar-fill  { height: 100%; border-radius: 2px; }
+.sfc-lens-abbr { font-family: var(--mono); font-size: 8px; color: var(--hu-text-3); letter-spacing: 0.04em; }
+
+.left-panel {
+  background: var(--hu-surface);
+  border-right: 1px solid var(--hu-border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.left-panel .metrics-section {
+  flex: 1 1 0; min-height: 0;
+  max-height: none; border-top: 1px solid var(--hu-border-2);
+}
+.left-stat-block {
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+.left-stat-block .data-card-body { padding: 10px 14px 6px; }
+.left-stat-block .detail-state { font-size: 20px; }
+.left-stat-block .detail-stats { padding: 0; border-bottom: none; }
+.left-stat-block .stat-row { padding: 8px 14px; }
+.left-stat-block .source-cite { padding: 0; border-bottom: none; }
+.left-stat-block .compare-hint { padding: 8px 14px; font-size: 11px; color: var(--hu-text-3); font-family: var(--mono); border-top: 1px solid var(--hu-border); }
+.left-stat-block .compare-panel { padding: 10px 14px 12px; border-top: 1px solid var(--hu-border); }
+
+/* ── Lens strip (doubles as the shell .tool-bar) ────────────────── */
+.lens-strip {
+  background: var(--hu-surface);
+  border-bottom: 1px solid var(--hu-border);
+  display: flex; align-items: stretch;
+  flex-shrink: 0;
+  overflow-x: auto; scrollbar-width: none;
+  padding: 0; /* cancel .tool-bar padding: the active-lens underline sits flush on the strip's bottom border */
+}
+.lens-strip::-webkit-scrollbar { display: none; }
+/* Identity block: pinned left while the tab row scrolls (mirrors .lens-strip-guide's sticky-right) */
+.lens-strip-identity {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px 0 clamp(12px, 2.5vw, 20px);
+  position: sticky; left: 0; z-index: 2;
+  background: var(--hu-surface);
+  border-right: 1px solid var(--hu-border);
+  flex-shrink: 0; align-self: stretch;
+}
+.lens-strip-inner {
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 2px; min-width: max-content;
+}
+.ls-group-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--hu-text-3); padding: 0 8px 0 4px; white-space: nowrap;
+}
+.ls-divider { width: 1px; background: var(--hu-border); margin: 8px 12px; align-self: stretch; }
+.lens-strip-guide {
+  margin-left: auto; flex-shrink: 0;
+  display: flex; align-items: center; padding: 0 16px;
+  position: sticky; right: 0;
+  background: var(--hu-surface);
+  border-left: 1px solid var(--hu-border);
+}
+.lens-strip .lens-btn {
+  flex-direction: row; padding: 12px 12px 10px 8px; gap: 8px;
+  border-radius: 0; border: none; border-bottom: 2px solid transparent;
+  background: transparent;
+}
+.lens-strip .lens-btn:hover { background: var(--hu-raised); border-bottom-color: var(--hu-border-2); }
+.lens-strip .lens-btn.active { background: transparent; border-bottom-width: 2px; }
+.lens-strip .lens-btn[data-lens="patient"].active    { border-bottom-color: var(--lens-patient); }
+.lens-strip .lens-btn[data-lens="clinical"].active   { border-bottom-color: var(--lens-clinical); }
+.lens-strip .lens-btn[data-lens="operations"].active { border-bottom-color: var(--lens-operations); }
+.lens-strip .lens-btn[data-lens="payer"].active      { border-bottom-color: var(--lens-payer); }
+.lens-strip .lens-btn[data-lens="policy"].active     { border-bottom-color: var(--lens-policy); }
+.lens-strip .lens-btn[data-lens="baseline"].active   { border-bottom-color: var(--lens-baseline); }
+.lens-strip .lens-name { font-size: 13px; }
+.lens-strip .lens-bar-wrap { display: none; }
+
+/* ── Overview bar ──────────────────────────────────────────────── */
+.overview-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--hu-border);
+  background: var(--hu-surface);
+  overflow: hidden;
+}
+.overview-bar-cell {
+  padding: 10px 16px 10px;
+  overflow: hidden;
+}
+.overview-bar-cell + .overview-bar-cell {
+  border-left: 1px solid var(--hu-border);
+}
+/* Compact overrides for cards when inside overview bar */
+.overview-bar .system-outlook-card {
+  margin: 0; padding: 0; background: none; border: none; border-radius: 0;
+}
+.overview-bar .sys-header { margin-bottom: 5px; }
+.overview-bar .sys-meta { margin-bottom: 6px; }
+.overview-bar .sys-lens-grid { grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.overview-bar .outlook-card {
+  margin: 0; padding: 0; background: none; border: none; border-radius: 0;
+}
+.overview-bar .outlook-header { margin-bottom: 5px; }
+
+.panel-section { padding: 20px 20px 16px; border-bottom: 1px solid var(--hu-border); }
+.panel-section:last-child { border-bottom: none; }
+.panel-label {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--hu-text-3); margin-bottom: 12px;
+}
+
+.lens-list { display: flex; flex-direction: column; gap: 2px; }
+.lens-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  background: transparent; border: 1px solid transparent;
+  border-radius: 7px; text-align: left; cursor: pointer;
+  transition: all 0.15s;
+  color: var(--hu-text-2); font-family: var(--font);
+}
+.lens-btn:hover { background: var(--hu-raised); color: var(--hu-text-1); }
+.lens-btn.active { background: var(--hu-raised); border-color: var(--hu-border-2); }
+.lens-btn.active .lens-name { color: var(--hu-text-1); }
+.lens-icon {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--display); font-weight: 700; font-size: 10px;
+}
+.lens-icon.patient { background: rgba(78, 205, 196, 0.18); color: var(--lens-patient); }
+.lens-icon.clinical { background: rgba(27, 95, 168, 0.25); color: var(--lens-clinical); }
+.lens-icon.operations { background: rgba(232, 168, 56, 0.18); color: var(--lens-operations); }
+.lens-icon.payer { background: rgba(45, 155, 111, 0.18); color: var(--lens-payer); }
+.lens-icon.policy { background: rgba(223, 87, 82, 0.18); color: var(--lens-policy); }
+.lens-icon.economics { background: rgba(139, 92, 246, 0.18); color: var(--lens-economics); }
+.lens-icon.baseline { background: rgba(14, 165, 233, 0.18); color: var(--lens-baseline); }
+/* Light: lens accents as letter-on-tint fail contrast on white — darken whole chip */
+[data-theme="light"] .lens-icon { filter: brightness(.72) saturate(1.3); }
+.lens-divider { height: 1px; background: var(--hu-border); margin: 8px 4px 6px; }
+.lens-group-label { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hu-text-3); padding: 2px 4px 4px; }
+.lens-name { font-size: 13px; font-weight: 600; color: var(--hu-text-2); flex: 1; }
+.lens-bar-wrap { width: 44px; height: 3px; background: var(--hu-border); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.lens-bar-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 0.35s ease, background 0.35s ease; }
+
+.metric-list { display: flex; flex-direction: column; gap: 3px; }
+.metric-item {
+  padding: 7px 10px 7px 9px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; color: var(--hu-text-2);
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  transition: all 0.12s;
+}
+.metric-item:hover { background: var(--hu-raised); color: var(--hu-text-1); }
+.metric-item.active {
+  background: var(--hu-raised);
+  border-color: var(--hu-border-2);
+  border-left-color: var(--accent-color, var(--hu-teal));
+  color: var(--hu-text-1);
+}
+.metric-unit { font-family: var(--mono); font-size: 11px; color: var(--hu-text-3); }
+.metric-dir-label { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+
+.metric-group-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px 5px; cursor: pointer; user-select: none;
+  border-radius: 5px; transition: background 0.12s; margin-top: 2px;
+}
+.metric-group-header:first-child { margin-top: 0; }
+.metric-group-header:hover { background: var(--hu-raised); }
+.metric-group-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--hu-text-3); flex: 1;
+}
+.metric-group-count {
+  font-family: var(--mono); font-size: 9px; color: var(--hu-text-3);
+  background: var(--hu-raised); border: 1px solid var(--hu-border);
+  border-radius: 3px; padding: 1px 5px; line-height: 1.5;
+}
+.metric-group-arrow {
+  font-size: 10px; color: var(--hu-text-3);
+  transition: transform 0.15s; line-height: 1; flex-shrink: 0;
+  transform: rotate(90deg); /* default: expanded = arrow points down */
+}
+.metric-group-header.collapsed .metric-group-arrow { transform: rotate(0deg); } /* collapsed = arrow points right */
+.metric-show-more {
+  width: 100%; text-align: left;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--hu-text-3); background: none; border: none;
+  padding: 4px 10px 6px 38px; cursor: pointer; border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+.metric-show-more:hover { color: var(--hu-text-2); background: var(--hu-raised); }
+
+.source-note { font-size: 12px; color: var(--hu-text-3); line-height: 1.5; font-family: var(--mono); }
+.source-note strong { color: var(--hu-text-2); font-weight: 500; }
+
+.map-canvas {
+  background: var(--hu-dark);
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.map-header {
+  padding: 14px 24px 12px;
+  border-bottom: 2px solid var(--hu-border-2);
+  background: var(--hu-raised);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+}
+.map-title-block { min-width: 0; flex: 1; }
+.map-eyebrow {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent-color, var(--hu-teal)); margin-bottom: 4px;
+}
+[data-theme="light"] .map-eyebrow { filter: brightness(.72) saturate(1.3); }
+.map-h1-row { display: flex; align-items: center; gap: 7px; }
+.map-h1 {
+  font-family: var(--display); font-size: 18px; font-weight: 700;
+  color: var(--hu-text-1); letter-spacing: -0.01em;
+}
+.map-h1-sub { font-size: 12px; color: var(--hu-text-3); margin-top: 2px; }
+.map-h1-info { width: 18px; height: 18px; font-size: 11px; flex-shrink: 0; }
+.map-h1-info:hover { background: var(--accent-color, var(--hu-teal)); color: var(--hu-dark); }
+
+/* ── Map header outlook chips ────────────────────────────────────── */
+.map-outlook-chips {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.map-outlook-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; color: var(--hu-text-3);
+  background: var(--hu-surface); border: 1px solid var(--hu-border);
+  border-radius: 6px; padding: 6px 12px; white-space: nowrap;
+  cursor: default; transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.map-outlook-chip:hover { border-color: var(--hu-border-2); background: var(--hu-raised); }
+.moc-prefix {
+  color: var(--hu-text-3); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; font-weight: 600;
+}
+.moc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.moc-label { font-weight: 700; font-size: 11px; }
+.moc-sep { width: 1px; height: 20px; background: var(--hu-border); margin: 0 2px; }
+
+/* ── Outlook hover popover ───────────────────────────────────────── */
+.moc-popover {
+  position: fixed; z-index: 500;
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border-2);
+  border-radius: 10px; padding: 14px 16px;
+  min-width: 230px; max-width: 280px;
+  box-shadow: 0 10px 32px rgba(0,0,0,0.55);
+  pointer-events: none;
+  opacity: 0; transition: opacity 0.15s;
+}
+.moc-popover.visible { opacity: 1; }
+.moc-pop-eyebrow {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hu-text-3); margin-bottom: 8px;
+}
+.moc-pop-tier {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 8px;
+}
+.moc-pop-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.moc-pop-tier-label {
+  font-family: var(--display); font-size: 18px; font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.moc-pop-bar-track {
+  height: 4px; background: var(--hu-border); border-radius: 2px;
+  overflow: hidden; margin-bottom: 8px;
+}
+.moc-pop-bar-fill { height: 100%; border-radius: 2px; }
+.moc-pop-meta {
+  font-family: var(--mono); font-size: 10px; color: var(--hu-text-3);
+  margin-bottom: 10px;
+}
+.moc-pop-lens-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hu-border);
+}
+.moc-pop-lens-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.moc-pop-lens-icon {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 10px; color: #fff;
+  font-family: var(--display);
+}
+.moc-pop-bar-track-sm {
+  width: 100%; height: 3px; background: var(--hu-border);
+  border-radius: 2px; overflow: hidden;
+}
+.moc-pop-bar-fill-sm { height: 100%; border-radius: 2px; }
+.moc-pop-lens-name {
+  font-family: var(--mono); font-size: 8px; color: var(--hu-text-3);
+  text-align: center; white-space: nowrap;
+}
+
+.view-toggle { display: none; }
+
+.map-stage {
+  flex: 1; position: relative;
+  background:
+    radial-gradient(ellipse at center, rgba(27, 95, 168, 0.06) 0%, transparent 70%),
+    var(--hu-dark);
+  overflow: hidden;
+}
+#mapSvg { position: absolute; inset: 0; display: block; }
+
+.state {
+  stroke: var(--hu-border);
+  stroke-width: 0.75;
+  cursor: pointer;
+  transition: opacity 0.12s, stroke-width 0.12s, filter 0.12s;
+}
+.state.has-val-1 { fill: var(--c1); }
+.state.has-val-2 { fill: var(--c2); }
+.state.has-val-3 { fill: var(--c3); }
+.state.has-val-4 { fill: var(--c4); }
+.state.has-val-5 { fill: var(--c5); }
+.state.no-data { fill: url(#no-data-hatch); }
+/* county choropleth (same quintile palette as states) */
+.county { stroke: rgba(0,0,0,0.10); stroke-width: 0.2; vector-effect: non-scaling-stroke; cursor: default; }
+[data-theme="light"] .county { stroke: rgba(0,0,0,0.06); }
+.county.has-val-1 { fill: var(--c1); } .county.has-val-2 { fill: var(--c2); }
+.county.has-val-3 { fill: var(--c3); } .county.has-val-4 { fill: var(--c4); }
+.county.has-val-5 { fill: var(--c5); } .county.no-data { fill: url(#no-data-hatch); }
+.county:hover { stroke: var(--hu-text-1); stroke-width: 0.9; }
+.county-state-border { fill: none; stroke: var(--hu-border-2); stroke-width: 0.7; vector-effect: non-scaling-stroke; pointer-events: none; }
+/* state / county granularity toggle */
+.grain-toggle { display: flex; gap: 0; flex-shrink: 0; align-self: flex-start; border: 1px solid var(--hu-border); border-radius: 7px; overflow: hidden; }
+.grain-btn { padding: 5px 12px; font-size: 11px; font-weight: 600; font-family: var(--font); background: transparent; color: var(--hu-text-3); border: none; cursor: pointer; transition: all 0.15s; }
+.grain-btn + .grain-btn { border-left: 1px solid var(--hu-border); }
+.grain-btn:hover:not(:disabled) { color: var(--hu-text-1); background: var(--hu-raised); }
+.grain-btn.active { background: var(--hu-teal); color: #06222b; }
+.grain-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.county-tip { position: fixed; z-index: 90; pointer-events: none; background: var(--hu-surface); border: 1px solid var(--hu-border-2); border-radius: 8px; padding: 7px 11px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); font-size: 12px; }
+.county-tip[hidden] { display: none; }
+.county-tip b { color: var(--hu-text-1); display: block; font-size: 12.5px; }
+.county-tip span { font-family: var(--mono); font-size: 11px; color: var(--hu-teal); }
+[data-theme="light"] .county-tip span { color: var(--hu-teal-dark); }
+.stat-value.no-data-val { font-size: 12px; color: var(--hu-text-3); font-family: var(--font); font-weight: 400; }
+.state:hover {
+  stroke: var(--hu-text-1);
+  stroke-width: 1.5;
+  filter: brightness(1.18);
+}
+.state.selected {
+  stroke: var(--hu-surface);
+  stroke-width: 2.5;
+  filter: brightness(1.1) drop-shadow(0 0 5px rgba(78,205,196,0.6));
+}
+[data-theme="light"] .state.selected {
+  stroke: #0A0F1A;
+  filter: brightness(0.92) drop-shadow(0 0 5px rgba(27,95,168,0.5));
+}
+.state.compare-state {
+  stroke: var(--hu-amber);
+  stroke-width: 2.5;
+  filter: brightness(1.1) drop-shadow(0 0 4px rgba(232,168,56,0.55));
+}
+.state:focus { outline: none; }
+.state:focus-visible {
+  stroke: var(--hu-teal) !important;
+  stroke-width: 2.5 !important;
+  filter: brightness(1.15);
+}
+.compare-panel { padding: 14px 20px 16px; border-bottom: 1px solid var(--hu-border); }
+.compare-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.compare-title { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--hu-text-3); }
+.compare-clear-btn { background: none; border: 1px solid var(--hu-border); border-radius: 4px; color: var(--hu-text-3); font-size: 10px; font-family: var(--mono); padding: 2px 8px; cursor: pointer; transition: all 0.15s; }
+.compare-clear-btn:hover { border-color: var(--hu-teal); color: var(--hu-teal); }
+.compare-metric { font-size: 11px; color: var(--hu-text-2); margin-bottom: 12px; line-height: 1.35; }
+.compare-cols { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: start; }
+.compare-vs { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); padding-top: 20px; text-align: center; }
+.compare-col { display: flex; flex-direction: column; gap: 3px; }
+.compare-col-b { align-items: flex-end; text-align: right; }
+.compare-col-state { font-size: 11px; font-weight: 600; color: var(--hu-text-2); }
+.compare-col-val { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--hu-text-1); line-height: 1.1; }
+.compare-col-band { display: flex; align-items: center; gap: 4px; font-size: 10px; }
+.compare-col-b .compare-col-band { flex-direction: row-reverse; }
+.compare-winner { margin-top: 10px; padding: 7px 10px; border-radius: 5px; background: rgba(255,255,255,0.04); font-size: 11px; color: var(--hu-text-2); font-family: var(--mono); line-height: 1.4; }
+[data-theme="light"] .compare-winner { background: rgba(0,0,0,0.045); }
+.compare-hint { padding: 8px 20px; font-size: 11px; color: var(--hu-text-3); font-family: var(--mono); border-bottom: 1px solid var(--hu-border); }
+
+/* ── Global hover tooltip ─────────────────────────────────────────── */
+.gtip {
+  position: fixed; z-index: 9999; pointer-events: none;
+  background: var(--hu-dark);
+  border: 1px solid var(--hu-border-2);
+  border-radius: 7px;
+  padding: 7px 11px;
+  font-size: 12px; line-height: 1.55;
+  color: var(--hu-text-2);
+  max-width: 230px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.55);
+  opacity: 0; transition: opacity .12s;
+}
+.gtip.visible { opacity: 1; }
+.gtip strong { color: var(--hu-text-1); font-weight: 600; }
+
+.map-loading {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  color: var(--hu-text-3); font-family: var(--mono);
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--hu-border);
+  border-top-color: var(--hu-teal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+.right-panel {
+  background: var(--hu-surface);
+  border-left: 1px solid var(--hu-border);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.sheet-handle { display: none; }
+.metrics-sheet-handle { display: none; }
+.metrics-mob-section { display: none; }
+.mob-legend { display: none; }
+.metrics-section {
+  flex: 0 0 auto; max-height: 44%;
+  overflow-y: auto; border-bottom: 2px solid var(--hu-border);
+  display: flex; flex-direction: column;
+}
+.metrics-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px 6px;
+  position: sticky; top: 0; background: var(--hu-surface); z-index: 2;
+  border-bottom: 1px solid var(--hu-border);
+}
+.metrics-section-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--hu-text-3);
+}
+.metrics-section .metric-list { padding: 6px 10px 8px; }
+.metrics-section .outlook-card { margin: 6px 10px 0; }
+.data-section { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; padding-bottom: 8px; }
+.detail-header { padding: 20px; border-bottom: 1px solid var(--hu-border); }
+.detail-eyebrow {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--hu-text-3); margin-bottom: 6px;
+}
+.detail-state {
+  font-family: var(--display); font-size: 24px; font-weight: 700;
+  color: var(--hu-text-1); letter-spacing: -0.01em;
+}
+.detail-meta { font-size: 13px; color: var(--hu-text-3); margin-top: 4px; font-family: var(--mono); }
+
+.detail-stats { padding: 16px 20px; border-bottom: 1px solid var(--hu-border); }
+.stat-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 0; border-bottom: 1px solid var(--hu-border);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label { font-size: 13px; color: var(--hu-text-2); }
+.stat-value { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--hu-text-1); }
+.stat-value-group { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.pop-context { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--hu-text-1); letter-spacing: 0.03em; white-space: nowrap; }
+.stat-vs { font-size: 12px; color: var(--hu-text-3); margin-left: 6px; }
+.stat-vs.up { color: var(--hu-amber); }
+.stat-vs.down { color: var(--hu-teal); }
+[data-theme="light"] .stat-vs.up { color: #946905; }
+[data-theme="light"] .stat-vs.down { color: var(--hu-teal-dark); }
+.stat-row--rank { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
+.rank-display { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.rank-count { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--hu-text-1); text-align: right; line-height: 1.35; max-width: 160px; }
+.rank-band { display: flex; align-items: center; gap: 5px; }
+.rank-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rank-band-label { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
+
+.source-cite { padding: 10px 20px 12px; border-bottom: 1px solid var(--hu-border); }
+.source-cite-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.source-cite-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--hu-text-3); opacity: 0.65; flex-shrink: 0; }
+.source-cite-dot { font-size: 10px; color: var(--hu-text-3); opacity: 0.4; }
+.source-cite-link { font-size: 10px; color: var(--hu-teal); text-decoration: none; }
+.source-cite-link:hover { text-decoration: underline; }
+[data-theme="light"] .source-cite-link { color: var(--hu-teal-dark); }
+.source-cite-date { font-size: 10px; color: var(--hu-text-3); }
+.caveat-btn { background: none; border: none; color: #E8A838; cursor: pointer; font-size: 11px; padding: 0 1px; line-height: 1; margin-left: 2px; }
+.caveat-btn:hover { opacity: 0.75; }
+.caveat-txt { margin-top: 7px; font-size: 10px; font-style: italic; color: var(--hu-text-3); line-height: 1.45; padding: 6px 8px; background: rgba(255,255,255,0.04); border-radius: 3px; border-left: 2px solid #E8A838; }
+[data-theme="light"] .caveat-btn { color: #946905; }
+[data-theme="light"] .caveat-txt { background: rgba(0,0,0,0.045); }
+
+.ranking-section { padding: 16px 20px; border-bottom: 1px solid var(--hu-border); }
+.ranking-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.ranking-tab {
+  flex: 1; padding: 6px;
+  background: var(--hu-raised); border: 1px solid var(--hu-border);
+  border-radius: 5px;
+  font-size: 12px; font-weight: 500; color: var(--hu-text-3);
+  cursor: pointer; font-family: var(--font);
+}
+.ranking-tab.active { background: var(--hu-dark); color: var(--hu-text-1); border-color: var(--hu-border-2); }
+.rank-list { display: flex; flex-direction: column; gap: 2px; }
+.rank-row {
+  display: grid; grid-template-columns: 24px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 7px 8px; border-radius: 4px;
+  font-size: 13px; cursor: pointer;
+  transition: background 0.1s;
+}
+.rank-row:hover { background: var(--hu-raised); }
+.rank-num { font-family: var(--mono); font-size: 11px; color: var(--hu-text-3); font-weight: 600; text-align: right; }
+.rank-name { color: var(--hu-text-2); }
+.rank-val { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--hu-text-1); }
+
+.chart-placeholder { padding: 16px 20px 20px; }
+.chart-title {
+  font-size: 12px; font-family: var(--mono); color: var(--hu-text-3);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;
+}
+.spark-svg {
+  width: 100%; height: 60px;
+  background: var(--hu-raised);
+  border-radius: 4px; border: 1px solid var(--hu-border);
+}
+
+.bottom-bar {
+  background: color-mix(in srgb, var(--hu-dark) 96%, transparent);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--hu-border);
+  padding: 0 clamp(16px, 3vw, 32px);
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: center; gap: 24px;
+  height: 56px; flex-shrink: 0; /* was the app grid's 56px row; .app is now a .hu-shell flex column */
+}
+.legend { display: flex; align-items: center; gap: 10px; }
+.legend-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hu-text-3); }
+.legend-scale { display: flex; align-items: center; gap: 1px; }
+.legend-step { width: 32px; height: 14px; }
+.legend-step.s1 { background: var(--c1); }
+.legend-step.s2 { background: var(--c2); }
+.legend-step.s3 { background: var(--c3); }
+.legend-step.s4 { background: var(--c4); }
+.legend-step.s5 { background: var(--c5); }
+.legend-anno { font-size: 12px; color: var(--hu-text-3); font-family: var(--mono); }
+
+.time-control { display: flex; align-items: center; gap: 12px; justify-self: center; }
+.time-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hu-text-3); }
+.time-pills { display: flex; gap: 4px; }
+.time-pill {
+  padding: 4px 10px;
+  background: var(--hu-raised); border: 1px solid var(--hu-border);
+  border-radius: 4px;
+  font-family: var(--mono); font-size: 12px; color: var(--hu-text-3);
+  cursor: pointer;
+}
+.time-pill.active { background: var(--hu-dark); color: var(--hu-text-1); border-color: var(--hu-border-2); }
+
+/* Typography comes from the shared .tool-attribution class (hu-global.css);
+   this rule only handles placement inside the bottom bar. */
+.attribution { text-align: right; position: relative; display: flex; align-items: center; gap: 5px; justify-content: flex-end; padding: 0; }
+.attribution strong { color: var(--hu-text-2); font-weight: 500; }
+.attrib-sep { opacity: 0.4; }
+.sources-btn { background: none; border: none; color: var(--hu-text-3); font-size: 11px; font-family: var(--mono); cursor: pointer; padding: 0; transition: color 0.15s; }
+.sources-btn:hover { color: var(--hu-teal); }
+.sources-popover {
+  display: none; position: absolute; bottom: calc(100% + 10px); right: 0;
+  background: var(--hu-surface); border: 1px solid var(--hu-border-2);
+  border-radius: 6px; padding: 10px 14px;
+  font-size: 11px; color: var(--hu-text-2); font-family: var(--mono);
+  white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.35); z-index: 200;
+  min-width: 200px; max-width: 360px; white-space: normal; line-height: 1.5;
+}
+.sources-popover.visible { display: block; }
+.sources-popover-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--hu-text-3); margin-bottom: 5px; }
+.sources-popover-body { color: var(--hu-text-1); }
+
+/* Metric info tooltip */
+.metric-item { position: relative; }
+.metric-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--hu-border-2);
+  color: var(--hu-text-2);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: help;
+  flex-shrink: 0;
+  transition: all 0.12s;
+}
+.metric-item:hover .metric-info-icon { background: var(--accent-color, var(--hu-teal)); color: var(--hu-dark); }
+.metric-item-label { display: flex; align-items: flex-start; flex: 1; min-width: 0; gap: 6px; }
+.metric-item-text { white-space: normal; overflow: visible; line-height: 1.35; }
+.metric-info-icon { margin-top: 1px; }
+
+.metric-explainer {
+  position: fixed;
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border-2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  width: 320px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+.metric-explainer.visible { opacity: 1; }
+.me-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hu-text-1);
+  margin-bottom: 8px;
+}
+.me-section {
+  font-size: 12px;
+  color: var(--hu-text-2);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.me-section:last-child { margin-bottom: 0; }
+.me-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-color, var(--hu-teal));
+  display: block;
+  margin-bottom: 3px;
+}
+[data-theme="light"] .me-label { filter: brightness(.72) saturate(1.3); }
+.me-caveat {
+  background: rgba(232, 168, 56, 0.08);
+  border-left: 2px solid var(--hu-amber);
+  padding: 6px 10px;
+  border-radius: 0 4px 4px 0;
+  font-size: 11px;
+  color: var(--hu-text-2);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* Conditional sections for provider groups / payers */
+.lens-detail-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--hu-border);
+}
+.lds-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hu-text-3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lds-badge {
+  font-size: 10px;
+  background: rgba(232, 168, 56, 0.15);
+  color: var(--hu-amber);
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+[data-theme="light"] .lds-badge { color: #946905; }
+.entity-list { display: flex; flex-direction: column; gap: 8px; }
+.entity-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border);
+  border-radius: 6px;
+}
+.entity-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hu-text-1);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.entity-rank {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--hu-text-3);
+  font-weight: 500;
+}
+.entity-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--hu-text-2);
+}
+.entity-bar {
+  height: 3px;
+  background: var(--hu-border);
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.entity-bar-fill {
+  height: 100%;
+  background: var(--accent-color, var(--hu-teal));
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* Time slider redesign */
+.time-control { gap: 16px; }
+.time-mode-toggle {
+  display: flex;
+  background: var(--hu-raised);
+  border: 1px solid var(--hu-border);
+  border-radius: 5px;
+  padding: 2px;
+}
+.time-mode-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--hu-text-3);
+  cursor: pointer;
+  border-radius: 3px;
+}
+.time-mode-btn.active {
+  background: var(--hu-dark);
+  color: var(--hu-text-1);
+}
+.time-mode-btn[data-mapmode="compare"].active {
+  color: var(--hu-amber);
+}
+.mode-divider { width: 1px; height: 18px; background: var(--hu-border); margin: 0 10px; flex-shrink: 0; }
+.time-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.time-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 200px;
+  height: 4px;
+  background: var(--hu-border-2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; height: 16px;
+  background: var(--accent-color, var(--hu-teal));
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--hu-dark);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.time-slider::-moz-range-thumb {
+  width: 16px; height: 16px;
+  background: var(--accent-color, var(--hu-teal));
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--hu-dark);
+}
+.time-current {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hu-text-1);
+  min-width: 38px;
+  text-align: center;
+}
+.year-step-btn {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid var(--hu-border);
+  border-radius: 4px;
+  color: var(--hu-text-3);
+  cursor: pointer;
+  font-size: 13px; line-height: 1;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.year-step-btn:hover:not(:disabled) { border-color: var(--hu-teal); color: var(--hu-teal); }
+.year-step-btn:disabled { opacity: 0.25; cursor: default; }
+.time-current.change-mode {
+  color: var(--accent-color, var(--hu-teal));
+}
+[data-theme="light"] .time-current.change-mode { filter: brightness(.72) saturate(1.3); }
+
+/* Dynamic trend chart */
+.trend-chart-svg { width: 100%; height: 100px; cursor: crosshair; }
+.tc-axis-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--hu-text-3);
+}
+.tc-line { fill: none; stroke-width: 1.75; }
+.tc-area { opacity: 0.25; }
+.tc-dot { stroke: var(--hu-dark); stroke-width: 1.5; }
+.tc-dot.current { r: 5; }
+.tc-grid { stroke: var(--hu-border); stroke-dasharray: 2 3; }
+.tc-hover-line { stroke: var(--hu-text-3); stroke-dasharray: 2 2; opacity: 0; }
+.tc-hover-line.visible { opacity: 1; }
+.tc-selyear { stroke: rgba(255,255,255,0.25); }
+[data-theme="light"] .tc-selyear { stroke: rgba(0,0,0,0.30); }
+.tc-realdot { stroke: #0d1117; }
+[data-theme="light"] .tc-realdot { stroke: var(--hu-raised); }
+/* Light: lens accent fills on chart text fail contrast on the raised chart bg */
+[data-theme="light"] .trend-chart-svg text { filter: brightness(.72) saturate(1.3); }
+
+/* System-level perspective outlook card */
+.system-outlook-card {
+  background: linear-gradient(135deg, rgba(27,95,168,0.10), rgba(78,205,196,0.06));
+  border: 1px solid var(--hu-border-2);
+  border-radius: 8px;
+  padding: 13px 14px 14px;
+  margin-bottom: 12px;
+}
+.sys-header {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hu-text-3);
+  margin-bottom: 8px;
+}
+.sys-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.sys-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sys-tier-label {
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--display);
+  letter-spacing: -0.01em;
+}
+.sys-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--hu-text-3);
+  margin-bottom: 12px;
+}
+.sys-lens-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.sys-lens-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.sys-lens-icon {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+  color: #fff;
+  font-family: var(--display);
+}
+.sys-lens-bar-track {
+  width: 100%;
+  height: 3px;
+  background: var(--hu-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sys-lens-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+.sys-lens-name {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--hu-text-3);
+  text-align: center;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.card-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.card-toggle-btn {
+  background: none; border: none; color: var(--hu-text-3);
+  cursor: pointer; font-size: 12px; padding: 0 0 0 6px; line-height: 1;
+  transition: color 0.15s, transform 0.2s; transform-origin: center;
+  flex-shrink: 0;
+}
+.card-toggle-btn:hover { color: var(--hu-text-1); }
+.card-collapsed .card-toggle-btn { transform: rotate(-90deg); }
+.card-collapsed .card-body { display: none; }
+
+/* Overall Outlook card */
+.outlook-card {
+  border-left: 3px solid var(--accent-color, var(--hu-teal));
+  background: rgba(0,0,0,0.25);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 14px 12px;
+  margin-bottom: 10px;
+}
+.outlook-header {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hu-text-3);
+  margin-bottom: 7px;
+}
+.outlook-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.outlook-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.outlook-tier-label {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--display);
+  letter-spacing: -0.01em;
+}
+.outlook-meta-row {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--hu-text-3);
+  margin-bottom: 9px;
+}
+.outlook-bar-track {
+  height: 4px;
+  background: var(--hu-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.outlook-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+[data-theme="light"] .outlook-card { background: rgba(0,0,0,0.05); }
+/* Light: tier/band colors arrive inline from JS (dark-tuned) — darken for contrast on white */
+[data-theme="light"] .sys-tier-label,
+[data-theme="light"] .outlook-tier-label,
+[data-theme="light"] .moc-pop-tier-label,
+[data-theme="light"] .sfc-sys-tier,
+[data-theme="light"] .sfc-value,
+[data-theme="light"] .rank-band-label,
+[data-theme="light"] .compare-col-band { filter: brightness(.72) saturate(1.3); }
+
+.left-panel::-webkit-scrollbar, .right-panel::-webkit-scrollbar { width: 8px; }
+.left-panel::-webkit-scrollbar-track, .right-panel::-webkit-scrollbar-track { background: var(--hu-surface); }
+.left-panel::-webkit-scrollbar-thumb, .right-panel::-webkit-scrollbar-thumb { background: var(--hu-border-2); border-radius: 4px; }
+
+/* ================================================================
+   TABLET  700px – 1099px  (HU shell standard breakpoints)
+================================================================ */
+@media (min-width: 700px) and (max-width: 1099px) {
+
+  /* Unlock scroll so the stacked layout can breathe */
+  html, body { height: auto; overflow: auto; }
+
+  .app {
+    display: flex; flex-direction: column;
+    height: auto; min-height: calc(100vh - 64px);
+  }
+
+  .overview-bar { display: none; }
+
+  /* tablet: stack left panel + map side by side, right panel below */
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 1fr auto;
+    overflow: visible;
+    flex: 1;
+  }
+
+  .left-panel { grid-column: 1; grid-row: 1 / 3; border-right: 1px solid var(--hu-border); border-bottom: none; }
+  .map-canvas { grid-column: 2; grid-row: 1; }
+
+  .right-panel {
+    grid-column: 2; grid-row: 2;
+    border-left: none; border-top: 1px solid var(--hu-border);
+    overflow: visible; height: auto; max-height: none;
+    display: flex; flex-direction: column;
+  }
+  .data-section { overflow: visible; }
+
+  .metric-item { padding: 7px 10px; font-size: 13px; }
+
+  /* Bottom bar */
+  .bottom-bar { height: auto; flex-wrap: wrap; gap: 8px; padding: 8px 16px 10px; }
+  .legend { display: none; }
+  .attribution { display: none; }
+
+  /* Pinch-zoom: lock map stage scroll on tablet too */
+  .map-stage { touch-action: none; }
+}
+
+/* ================================================================
+   MOBILE  ≤ 699px  (HU shell standard breakpoint)
+================================================================ */
+@media (max-width: 699px) {
+
+  /* ── Unlock scrolling ── */
+  html, body { height: auto; overflow: auto; }
+
+  /* ── App: flex column, natural height ── */
+  .app {
+    display: flex; flex-direction: column;
+    height: auto; min-height: calc(100dvh - 64px);
+  }
+
+  /* ── Lens strip: compact on mobile ── */
+  .lens-strip-inner { padding: 0 12px; }
+  .lens-strip-identity { padding: 0 10px 0 12px; gap: 8px; }
+  .lens-strip-identity .tool-bar-kicker { display: none; }
+  .ls-group-label { display: none; }
+  .ls-divider { margin: 6px 8px; }
+  .lens-strip .lens-btn { padding: 8px 10px 6px 7px; gap: 6px; }
+  .lens-strip .lens-name { font-size: 12px; }
+
+  /* ── Main: single column ── */
+  .main { display: flex; flex-direction: column; overflow: visible; flex: 1; }
+  .left-panel { display: none; }
+
+  /* ── Right panel: slide-up sheet (holds metrics + data on mobile).
+        In-flow collapsible, but styled to .shell-sheet conventions:
+        16px top radius, drag pill, upward shadow. ── */
+  .right-panel {
+    display: flex; flex-direction: column;
+    border-left: none; border-top: 1px solid var(--hu-border-2);
+    overflow: hidden; height: auto; max-height: none;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 40px rgba(0,0,0,.45);
+  }
+  [data-theme="light"] .right-panel { box-shadow: 0 -12px 40px rgba(0,20,50,.16); }
+  .sheet-handle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--hu-border);
+    background: var(--hu-surface); flex-shrink: 0;
+  }
+  .sheet-handle-label { font-size: 12px; font-family: var(--mono); color: var(--hu-text-2); }
+  .sheet-handle-chevron { font-size: 13px; color: var(--hu-text-3); transition: transform 0.2s; }
+  .right-panel.sheet-open .sheet-handle-chevron { transform: rotate(180deg); }
+  .data-section { display: none; overflow: visible; }
+  .right-panel.sheet-open .data-section { display: flex; flex-direction: column; }
+  #systemOutlookCard, #outlookCard { display: none !important; }
+  .overview-bar { display: none; }
+
+  /* Metric list: constrained height */
+  .metric-item { padding: 7px 10px; font-size: 13px; }
+
+  /* ── Map: tall enough to tap states accurately ── */
+  .map-canvas {
+    min-height: 280px;
+    height: clamp(280px, 75vw, 380px);
+    flex-shrink: 0;
+  }
+  .map-header {
+    padding: 8px 12px 6px;
+    flex-wrap: wrap; gap: 4px;
+  }
+  .map-eyebrow { font-size: 9px; }
+  .map-h1 {
+    font-size: 13px;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .map-h1-sub { font-size: 11px; display: none; }
+  /* Stack chips below title, hide on very narrow screens */
+  .map-outlook-chips { display: none !important; }
+  .map-h1-info { display: none; }
+
+  /* ── Right panel: natural height, no fixed scroll ── */
+  .right-panel {
+    border-left: none;
+    border-top: 1px solid var(--hu-border-2);
+    overflow: visible;
+    height: auto;
+  }
+  .detail-header { padding: 12px 14px 8px; }
+  .detail-state { font-size: 18px; }
+  .trend-chart-svg { height: 80px; }
+
+  /* ── Bottom bar: stack controls, hide legend & attribution ── */
+  .bottom-bar {
+    display: flex; flex-direction: column;
+    height: auto; padding: 8px 14px 10px;
+    gap: 8px;
+    position: sticky; bottom: 0;
+  }
+  .legend { display: none; }
+  .attribution { display: none; }
+  .time-control {
+    flex-wrap: wrap; justify-content: center;
+    gap: 8px; width: 100%;
+  }
+  .mode-divider { display: none; }
+  .time-slider-wrap { width: 100%; justify-content: center; gap: 8px; }
+  .time-slider { flex: 1; min-width: 0; }
+  .time-current { min-width: 56px; text-align: center; font-size: 12px; }
+
+  /* ── Tutorial modal: full screen on mobile ── */
+  .tutorial-overlay { padding: 0; align-items: flex-end; }
+  .tutorial-modal { max-width: 100%; max-height: 92dvh; border-radius: 16px 16px 0 0; }
+  .tutorial-body { grid-template-columns: 1fr; }
+
+  /* ── Compare panel ── */
+  .compare-cols { gap: 6px; }
+  .compare-col-val { font-size: 16px; }
+
+  /* ── Rankings ── */
+  .rank-row { padding: 7px 12px; }
+
+  /* ── Pinch-zoom: lock map scroll on mobile ── */
+  .map-stage { touch-action: none; }
+
+  /* ── Mobile metric handle (topmost grip: carries the sheet drag pill) ── */
+  .metrics-sheet-handle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 16px 10px; cursor: pointer; border-bottom: 1px solid var(--hu-border);
+    background: var(--hu-surface); flex-shrink: 0;
+    position: relative; border-radius: 16px 16px 0 0;
+  }
+  .metrics-sheet-handle::before {
+    content: ""; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    width: 44px; height: 4px; border-radius: 2px; background: var(--hu-border-2);
+  }
+  .right-panel.metrics-open .metrics-sheet-handle .sheet-handle-chevron { transform: rotate(180deg); }
+  .metrics-mob-section { display: none; max-height: 45vh; overflow-y: auto; border-bottom: 1px solid var(--hu-border); }
+  .right-panel.metrics-open .metrics-mob-section { display: block; }
+
+  /* ── Mobile color legend ── */
+  .mob-legend {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px 4px; flex-shrink: 0;
+    border-bottom: 1px solid var(--hu-border);
+    background: var(--hu-surface);
+  }
+  .mob-legend-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hu-text-3); }
+  .mob-legend .legend-step { width: 22px; height: 12px; }
+  .mob-legend .legend-anno { font-size: 10px; color: var(--hu-text-3); font-family: var(--mono); }
+}
+
+/* ── Pinch-zoom UI (shared) ─────────────────────────────── */
+.pz-reset-btn {
+  position: absolute; bottom: 14px; left: 50%;
+  transform: translateX(-50%); z-index: 90;
+  display: none; align-items: center; gap: 6px;
+  background: rgba(8,20,44,0.9); border: 1px solid rgba(78,205,196,0.55);
+  color: rgba(78,205,196,0.92); padding: 7px 18px;
+  border-radius: 20px; font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  cursor: pointer; white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+.pz-hint {
+  position: absolute; bottom: 50px; left: 50%;
+  transform: translateX(-50%); z-index: 90;
+  pointer-events: none; display: none; white-space: nowrap;
+  background: rgba(8,20,44,0.85); border: 1px solid rgba(78,205,196,0.3);
+  border-radius: 16px; padding: 5px 14px;
+  font-size: 10px; letter-spacing: .04em;
+  color: rgba(78,205,196,0.82);
+  font-family: 'IBM Plex Mono', monospace;
+  transition: opacity 0.8s ease;
+}
+[data-theme="light"] .pz-reset-btn {
+  background: rgba(240,250,255,0.96); border-color: rgba(78,205,196,0.5);
+  color: rgba(5,120,110,0.92);
+}
+[data-theme="light"] .pz-hint {
+  background: rgba(240,250,255,0.92); border-color: rgba(78,205,196,0.35);
+  color: rgba(5,120,110,0.85);
+}
+</style>
+<div class="app hu-shell">
+
+  <div class="lens-strip tool-bar">
+    <div class="lens-strip-identity">
+      <span class="tool-bar-kicker">Tool</span>
+      <span class="tool-bar-title">Multi-Lens <span>Map</span></span>
+    </div>
+    <div class="lens-strip-inner">
+      <span class="ls-group-label">4Ps</span>
+      <button class="lens-btn active" data-lens="patient" data-tip="<strong>Patient Lens</strong><br>Population health status, chronic disease burden, demographics, and health outcomes.">
+        <div class="lens-icon patient">P</div>
+        <div class="lens-name">Patient</div>
+      </button>
+      <button class="lens-btn" data-lens="clinical" data-tip="<strong>Clinical Lens</strong><br>Healthcare workforce supply, provider access, and care delivery quality.">
+        <div class="lens-icon clinical">C</div>
+        <div class="lens-name">Clinical</div>
+      </button>
+      <button class="lens-btn" data-lens="operations" data-tip="<strong>Operations Lens</strong><br>Hospital capacity, bed availability, facilities, and system infrastructure.">
+        <div class="lens-icon operations">O</div>
+        <div class="lens-name">Operations</div>
+      </button>
+      <button class="lens-btn" data-lens="payer" data-tip="<strong>Payer Lens</strong><br>Insurance coverage rates, enrollment, payer mix, and uninsured burden.">
+        <div class="lens-icon payer">$</div>
+        <div class="lens-name">Payer</div>
+      </button>
+      <button class="lens-btn" data-lens="policy" data-tip="<strong>Policy Lens</strong><br>State laws, Medicaid decisions, regulations, and the healthcare policy environment.">
+        <div class="lens-icon policy">L</div>
+        <div class="lens-name">Policy</div>
+      </button>
+      <div class="ls-divider"></div>
+      <span class="ls-group-label">Context</span>
+      <button class="lens-btn" data-lens="baseline" data-tip="<strong>Baseline Lens</strong><br>Economic conditions and state demographics: income, employment, housing, and Census population data by age, race, and origin.">
+        <div class="lens-icon baseline">B</div>
+        <div class="lens-name">Baseline</div>
+      </button>
+    </div>
+    <span class="tool-bar-spacer"></span>
+    <div class="lens-strip-guide tool-bar-actions">
+      <button class="tutorial-btn" id="tutorialBtn">? Guide</button>
+    </div>
+  </div>
+
+  <!-- div, not <main>: base.njk already provides <main id="main-content"> -->
+  <div class="main shell-main">
+
+    <aside class="left-panel">
+
+      <!-- metric value context for selected state -->
+      <div class="left-stat-block">
+
+        <div class="data-card">
+
+          <div class="data-card-header">
+            <span class="data-card-title" id="detailEyebrow">National View</span>
+          </div>
+
+          <div class="data-card-body">
+            <div class="detail-state" id="selStateName">United States</div>
+            <div class="detail-meta" id="selStateMeta">National aggregate · all 50 states + DC</div>
+          </div>
+
+          <div class="detail-stats" id="detailStats">
+            <div class="stat-row">
+              <span class="stat-label" id="selCurrLabel">National average</span>
+              <div class="stat-value-group">
+                <span class="stat-value" id="selCurrVal">—</span>
+                <span class="pop-context" id="popContext" style="display:none;"></span>
+              </div>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label" id="selNatAvgLabel">State range</span>
+              <span class="stat-value" id="selNatAvg">—</span>
+            </div>
+            <div class="stat-row stat-row--rank">
+              <span class="stat-label" id="selRankLabel" data-tip="<strong>Standing</strong><br>How many states perform better on this metric, direction-adjusted. <strong>Top 20%</strong> = among the best-performing states nationally. <strong>Bottom 20%</strong> = among the lowest-performing states nationally.">Standing</span>
+              <div class="rank-display">
+                <span class="rank-count" id="selRank">—</span>
+                <div class="rank-band" id="selRankBand" style="display:none;">
+                  <span class="rank-dot" id="selRankDot"></span>
+                  <span class="rank-band-label" id="selBandLabel"></span>
+                </div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label" data-tip="The year this metric's underlying data was collected or reported. May differ from the selected map year if recent data isn't yet available.">Data year</span>
+              <span class="stat-value" id="selDataYear">—</span>
+            </div>
+          </div>
+
+          <div class="compare-hint" id="compareHint" style="display:none;">Click another state on the map to compare</div>
+
+          <div class="compare-panel" id="comparePanel" style="display:none;">
+            <div class="compare-header">
+              <span class="compare-title">Comparing States</span>
+              <button class="compare-clear-btn" id="compareClear" data-tip="Clear the comparison and return to single-state view.">✕ Clear</button>
+            </div>
+            <div class="compare-metric" id="compareMetricLabel"></div>
+            <div class="compare-cols">
+              <div class="compare-col">
+                <div class="compare-col-state" id="compareNameA"></div>
+                <div class="compare-col-val" id="compareValA">—</div>
+                <div class="compare-col-band" id="compareBandA"></div>
+              </div>
+              <div class="compare-vs">vs</div>
+              <div class="compare-col compare-col-b">
+                <div class="compare-col-state" id="compareNameB"></div>
+                <div class="compare-col-val" id="compareValB">—</div>
+                <div class="compare-col-band" id="compareBandB"></div>
+              </div>
+            </div>
+            <div class="compare-winner" id="compareWinner" style="display:none;"></div>
+          </div>
+
+          <div class="data-card-footer">
+            <div class="source-cite" id="sourceCite">
+              <div class="source-cite-row">
+                <span class="source-cite-label">Source</span>
+                <a class="source-cite-link" id="sourceCiteLink" href="#" target="_blank" rel="noopener noreferrer">—</a>
+                <span class="source-cite-dot">·</span>
+                <span class="source-cite-date" id="sourceCiteDate"></span>
+                <button class="caveat-btn" id="caveatToggle" data-tip="Show a note about data limitations or methodology for this metric." style="display:none;"><i data-lucide="triangle-alert" width="14" height="14" aria-hidden="true"></i></button>
+              </div>
+              <div class="caveat-txt" id="caveatText" style="display:none;"></div>
+            </div>
+          </div>
+
+        </div><!-- /data-card -->
+      </div><!-- /left-stat-block -->
+
+      <!-- metric picker -->
+      <div class="metrics-section" id="metricsSection">
+        <div class="metrics-section-header">
+          <span class="metrics-section-label">Metric</span>
+        </div>
+        <div class="metric-list" id="metricList"></div>
+      </div>
+
+    </aside>
+
+    <section class="map-canvas">
+      <div class="map-header">
+        <div class="map-title-block">
+          <div class="map-eyebrow" id="mapEyebrow">Patient Lens</div>
+          <div class="map-h1-row">
+            <h1 class="map-h1" id="mapH1">Adults reporting fair or poor health</h1>
+            <button class="metric-info-icon map-h1-info" id="mapMetricInfoBtn" title="About this metric">i</button>
+          </div>
+          <div class="map-h1-sub" id="mapH1Sub">Age-adjusted prevalence, % of adult population</div>
+        </div>
+        <div class="grain-toggle" id="grainToggle" data-tip="<strong>Map detail</strong><br>Switch between state and county view. County is available for metrics with county-level source data (population health, income, unemployment, uninsured).">
+          <button class="grain-btn active" data-grain="state">State</button>
+          <button class="grain-btn" data-grain="county" id="grainCountyBtn">County</button>
+        </div>
+        <div class="map-outlook-chips" id="mapOutlookChips" style="display:none">
+          <div class="map-outlook-chip" id="mocLens" style="display:none">
+            <span class="moc-prefix" id="mocLensPrefix"></span>
+            <span class="moc-dot" id="mocLensDot"></span>
+            <span class="moc-label" id="mocLensLabel"></span>
+          </div>
+          <div class="moc-sep" id="mocSep" style="display:none"></div>
+          <div class="map-outlook-chip" id="mocSystem" style="display:none">
+            <span class="moc-prefix">System</span>
+            <span class="moc-dot" id="mocSysDot"></span>
+            <span class="moc-label" id="mocSysLabel"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- mobile color legend strip -->
+      <div class="mob-legend" id="mobLegend">
+        <span class="mob-legend-label">Scale</span>
+        <div class="legend-scale">
+          <div class="legend-step s1"></div>
+          <div class="legend-step s2"></div>
+          <div class="legend-step s3"></div>
+          <div class="legend-step s4"></div>
+          <div class="legend-step s5"></div>
+        </div>
+        <span class="legend-anno mob-legend-anno" id="mobLegendAnno">worse → better</span>
+      </div>
+
+      <div class="county-tip" id="countyTip" hidden></div>
+      <div class="map-stage">
+        <button class="pz-reset-btn" id="mapPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
+        <div class="pz-hint" id="mapPzHint">Pinch to zoom &middot; drag to pan</div>
+        <svg id="mapSvg" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="map-loading" id="mapLoading">
+          <div class="spinner"></div>
+          <div>Loading map data</div>
+        </div>
+        <div class="state-float-card" id="stateFloatCard" style="display:none">
+          <div class="sfc-state" id="sfcState"></div>
+          <div class="sfc-metric" id="sfcMetric"></div>
+          <div class="sfc-value" id="sfcValue"></div>
+          <div class="sfc-band">
+            <span class="sfc-dot" id="sfcDot"></span>
+            <span id="sfcBandLabel"></span>
+          </div>
+          <div class="sfc-vs" id="sfcVs"></div>
+          <div class="sfc-sep"></div>
+          <div class="sfc-outlook-toggle" id="sfcOutlookToggle">
+            <span>System Outlook</span>
+            <span class="sfc-chev" id="sfcChev">›</span>
+          </div>
+          <div class="sfc-outlook-body" id="sfcOutlookBody" style="display:none">
+            <div class="sfc-sys-tier" id="sfcSysTier"></div>
+            <div class="sfc-lens-row" id="sfcLensRow"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+
+      <!-- mobile metric picker handle + section -->
+      <div class="metrics-sheet-handle" id="metricsSheetHandle">
+        <span class="sheet-handle-label">Metric</span>
+        <span class="sheet-handle-chevron">&#8679;</span>
+      </div>
+      <div class="metrics-mob-section" id="metricsMobSection">
+        <div class="metric-list" id="metricListMob"></div>
+      </div>
+
+      <!-- mobile slide-up handle -->
+      <div class="sheet-handle" id="sheetHandle">
+        <span class="sheet-handle-label" id="sheetHandleLabel">State Data</span>
+        <span class="sheet-handle-chevron">&#8679;</span>
+      </div>
+
+      <!-- analysis section: rankings, trends, entities -->
+      <div class="data-section">
+
+        <!-- Rankings card -->
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">State Rankings</span>
+            <div class="data-card-actions">
+              <button class="card-tab active" data-tip="States with the highest raw values on this metric.">Highest</button>
+              <button class="card-tab" data-tip="States with the lowest raw values on this metric.">Lowest</button>
+              <button class="card-tab" data-tip="<strong>Movers</strong><br>States with the largest year-over-year change — biggest improvers and biggest decliners.">Movers</button>
+            </div>
+          </div>
+          <div class="data-card-body" style="padding: 8px 6px;">
+            <div class="rank-list" id="rankList"></div>
+          </div>
+        </div>
+
+        <!-- Trend card -->
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" data-tip="Estimated trend line for this metric from 2018–2024. Dashed = interpolated from the nearest real data year.">Trend · 2018–2024</span>
+          </div>
+          <div class="data-card-body" style="padding: 10px 12px 8px;">
+            <svg class="trend-chart-svg" id="trendChart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <!-- Entity / lens detail card -->
+        <div class="data-card" id="entitySection" style="display:none;">
+          <div class="data-card-header">
+            <span class="data-card-title" id="entitySectionTitle">Largest provider groups</span>
+            <span class="lds-badge"></span>
+          </div>
+          <div class="data-card-body" style="padding: 10px 6px;">
+            <div class="entity-list" id="entityList"></div>
+          </div>
+        </div>
+
+      </div><!-- /data-section -->
+    </aside>
+
+  </div><!-- /.main -->
+
+  <footer class="bottom-bar">
+    <div class="legend" data-tip="<strong>Color scale</strong><br>States are split into 5 equal groups (quintiles). In Snapshot mode: red = worst, green = best. In Change mode: red = most declined, green = most improved.">
+      <span class="legend-label">Scale</span>
+      <div class="legend-scale">
+        <div class="legend-step s1"></div>
+        <div class="legend-step s2"></div>
+        <div class="legend-step s3"></div>
+        <div class="legend-step s4"></div>
+        <div class="legend-step s5"></div>
+      </div>
+      <span class="legend-anno">worse → better</span>
+      <button class="cb-legend-btn" id="cbToggleBtn" data-tip="Toggle colorblind-friendly scale (orange/blue)" aria-label="Colorblind mode">◑</button>
+    </div>
+
+    <div class="time-control">
+      <div class="time-mode-toggle">
+        <button class="time-mode-btn active" data-mapmode="explore" data-tip="<strong>Explore mode</strong><br>Click any state to inspect its detailed metrics. Click again to deselect.">Explore</button>
+        <button class="time-mode-btn" data-mapmode="compare" data-tip="<strong>Compare mode</strong><br>Click a first state, then click a second to compare their values and performance bands side by side.">Compare</button>
+      </div>
+      <div class="mode-divider"></div>
+      <div class="time-mode-toggle">
+        <button class="time-mode-btn active" data-mode="snapshot" data-tip="<strong>Snapshot</strong><br>Color each state by its absolute value in the selected year — who is best and worst right now.">Snapshot</button>
+        <button class="time-mode-btn" data-mode="change" data-tip="<strong>Change</strong><br>Color each state by year-over-year improvement or decline. Green = improving, red = declining relative to other states.">Change</button>
+      </div>
+      <div class="time-slider-wrap">
+        <input type="range" class="time-slider" id="timeSlider" min="0" max="6" value="6" step="1">
+        <button class="year-step-btn" id="yearPrev" data-tip="Previous year">&#8592;</button>
+        <span class="time-current" id="timeCurrent" data-tip="Selected data year. Scrub the slider to step through 2018–2024.">2024</span>
+        <button class="year-step-btn" id="yearNext" data-tip="Next year" disabled>&#8594;</button>
+        <button class="usa-map-btn active" id="usaBtn" data-tip="<strong>Reset to national view</strong><br>Deselects any state and shows the national aggregate.">&#9670; USA</button>
+      </div>
+    </div>
+
+    <div class="attribution tool-attribution" id="dataAttrib">
+      <strong>Healthcare Uncharted</strong> · <span id="attribYear">2024</span> data
+      <span class="attrib-sep">·</span>
+      <button class="sources-btn" id="sourcesBtn">ⓘ Sources</button>
+      <div class="sources-popover" id="sourcesPopover"></div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Outlook hover popover -->
+<div class="moc-popover" id="mocPopover"></div>
+
+<!-- Hidden containers — keep outlook card IDs alive for JS render functions -->
+<div id="overviewBar" style="display:none">
+  <div id="outlookCard" class="outlook-card" style="display:none"></div>
+  <div id="systemOutlookCard" class="system-outlook-card" style="display:none"></div>
+</div>
+
+<!-- Tooltip + Tutorial — must be before <script> so IIFEs can find them -->
+<div id="gtip" class="gtip"></div>
+
+<div class="tutorial-overlay" id="tutorialOverlay">
+  <div class="tutorial-modal">
+    <div class="tutorial-head">
+      <div class="tutorial-head-text">
+        <div class="tutorial-title">How to use this map</div>
+        <div class="tutorial-sub">U.S. Healthcare Multi-Lens Map · Interactive guide</div>
+      </div>
+      <button class="tutorial-close" id="tutorialClose">✕ Close</button>
+    </div>
+    <div class="tutorial-body">
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#1B5FA8">M</div><div class="tut-card-title">The Map</div></div>
+        <div class="tut-card-body">Each state is colored by how it ranks on the selected metric — red to green from worst to best.
+          <ul>
+            <li>Hover any state to preview its value</li>
+            <li>Click a state to load detailed stats in the right panel</li>
+            <li>Click the same state again to deselect back to national view</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#2D9B6F">C</div><div class="tut-card-title">Color Scale</div></div>
+        <div class="tut-card-body">States are split into 5 equal groups (quintiles). The direction of "better" is metric-specific.
+          <ul>
+            <li><span class="tut-tag">Snapshot</span> colors by absolute value in the selected year</li>
+            <li><span class="tut-tag">Change</span> colors by year-over-year improvement vs. decline</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="tut-divider">
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#4ECDC4;color:#0a0f1a">P</div><div class="tut-card-title">Perspective Lenses</div></div>
+        <div class="tut-card-body">Six lenses each show a different angle on state healthcare. Switch lenses to change the entire dataset.
+          <ul>
+            <li><strong>Patient</strong> — population health &amp; chronic disease</li>
+            <li><strong>Clinical</strong> — workforce supply &amp; care delivery</li>
+            <li><strong>Operations</strong> — hospital capacity &amp; infrastructure</li>
+            <li><strong>Payer</strong> — coverage rates &amp; insurance mix</li>
+            <li><strong>Policy</strong> — state laws &amp; Medicaid decisions</li>
+            <li><strong>Baseline</strong> — economic conditions &amp; Census demographics</li>
+          </ul>
+          The bar on each lens button shows its outlook score for the selected state.
+        </div>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#E8A838;color:#0a0f1a">Mx</div><div class="tut-card-title">Metrics</div></div>
+        <div class="tut-card-body">Within each lens, choose a specific metric to display on the map.
+          <ul>
+            <li>The active metric is highlighted in the list</li>
+            <li>Click the <span class="tut-tag blue">ⓘ</span> icon on any metric to read its description</li>
+            <li>The right panel updates to show detailed stats for the selected state</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="tut-divider">
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#1B9A90">E</div><div class="tut-card-title">Explore vs Compare Mode</div></div>
+        <div class="tut-card-body">Switch between map interaction modes in the bottom bar.
+          <ul>
+            <li><span class="tut-tag">Explore</span> — click any state to inspect it one at a time</li>
+            <li><span class="tut-tag">Compare</span> — click a first state, then a second to compare side by side</li>
+            <li>Click <strong>✕ Clear</strong> or switch back to Explore to reset</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#2d4a8a">Y</div><div class="tut-card-title">Year Controls</div></div>
+        <div class="tut-card-body">Scrub through 2018–2024 using the slider or ← → buttons. The map recolors live.
+          <ul>
+            <li><span class="tut-tag">Snapshot</span> — absolute values for the selected year</li>
+            <li><span class="tut-tag amber">Change</span> — improvement or decline vs. prior year; label becomes e.g. <em>2022→2023</em></li>
+            <li>◆ <strong>USA</strong> resets to national view at any time</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="tut-divider">
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#4ECDC4;color:#0a0f1a">S</div><div class="tut-card-title">State Stats Panel</div></div>
+        <div class="tut-card-body">Appears on the right after clicking a state.
+          <ul>
+            <li><strong>Value</strong> — the state's raw figure for the active metric</li>
+            <li><strong>National avg</strong> — comparison to the U.S. average</li>
+            <li><strong>Standing</strong> — how many states do better, with a performance band</li>
+            <li><strong>Data year</strong> — when this data point was actually collected</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#E8A838;color:#0a0f1a">O</div><div class="tut-card-title">Overall System Outlook</div></div>
+        <div class="tut-card-body">An aggregate score across all 6 lenses rating the state's healthcare system from <strong style="color:#DF5752">Challenged</strong> to <strong style="color:#2D9B6F">Strong</strong>.
+          <ul>
+            <li>Requires at least 3 lenses with sufficient data</li>
+            <li>The bar on each lens button shows that lens's individual score</li>
+            <li>Updates when you switch states or change the year</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="tut-divider">
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#DF5752">R</div><div class="tut-card-title">Rankings</div></div>
+        <div class="tut-card-body">Below the stats panel, all states sorted by the active metric.
+          <ul>
+            <li><span class="tut-tag">Highest</span> — states with the largest raw values</li>
+            <li><span class="tut-tag">Lowest</span> — states with the smallest raw values</li>
+            <li><span class="tut-tag amber">Movers</span> — biggest year-over-year changes</li>
+            <li>Click any row to jump to that state</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-card-head"><div class="tut-icon" style="background:#8B5CF6">T</div><div class="tut-card-title">Trend Chart</div></div>
+        <div class="tut-card-body">Estimated trend line for the selected state and metric from 2018–2024.
+          <ul>
+            <li>Teal line = selected state; dashed line = national average</li>
+            <li>Years without real data are interpolated from the nearest actual data point</li>
+            <li>Hover the chart to read exact values at each year</li>
+          </ul>
+        </div>
+      </div>
+
+    </div><!-- /tutorial-body -->
+  </div><!-- /tutorial-modal -->
+</div><!-- /tutorial-overlay -->
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script>
+// ===== TOUCH DETECTION =====
+// Uses the CSS hover media query — more reliable than touch event sniffing.
+// On touch-only devices (hover: none), we suppress position-tracked hover
+// tooltips that get stuck after a tap and suppress mouseover data-tip popups.
+const isTouch = () => window.matchMedia('(hover: none)').matches;
+
+// ===== FIPS → STATE ABBR =====
+const FIPS_TO_ABBR = {
+  '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE',
+  '11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA',
+  '20':'KS','21':'KY','22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN',
+  '28':'MS','29':'MO','30':'MT','31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM',
+  '36':'NY','37':'NC','38':'ND','39':'OH','40':'OK','41':'OR','42':'PA','44':'RI',
+  '45':'SC','46':'SD','47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA',
+  '54':'WV','55':'WI','56':'WY'
+};
+
+const STATE_NAMES = {
+  AL:'Alabama', AK:'Alaska', AZ:'Arizona', AR:'Arkansas', CA:'California',
+  CO:'Colorado', CT:'Connecticut', DE:'Delaware', DC:'District of Columbia',
+  FL:'Florida', GA:'Georgia', HI:'Hawaii', ID:'Idaho', IL:'Illinois',
+  IN:'Indiana', IA:'Iowa', KS:'Kansas', KY:'Kentucky', LA:'Louisiana',
+  ME:'Maine', MD:'Maryland', MA:'Massachusetts', MI:'Michigan', MN:'Minnesota',
+  MS:'Mississippi', MO:'Missouri', MT:'Montana', NE:'Nebraska', NV:'Nevada',
+  NH:'New Hampshire', NJ:'New Jersey', NM:'New Mexico', NY:'New York',
+  NC:'North Carolina', ND:'North Dakota', OH:'Ohio', OK:'Oklahoma',
+  OR:'Oregon', PA:'Pennsylvania', RI:'Rhode Island', SC:'South Carolina',
+  SD:'South Dakota', TN:'Tennessee', TX:'Texas', UT:'Utah', VT:'Vermont',
+  VA:'Virginia', WA:'Washington', WV:'West Virginia', WI:'Wisconsin', WY:'Wyoming'
+};
+
+// ===== STATE DATA — injected from src/_data/stateData.json at build time =====
+const STATE_DATA = {{ stateData | json | safe }};
+
+const DATA_YEARS = {{ dataYears | json | safe }};
+
+// State population estimates (2023 ACS 1-year, in thousands)
+const STATE_POP = {
+  AL:5074, AK:733,  AZ:7431, AR:3045, CA:39029, CO:5877, CT:3605, DE:1031,
+  DC:678,  FL:22757,GA:10908,HI:1435, ID:1964,  IL:12516,IN:6862, IA:3208,
+  KS:2940, KY:4526, LA:4574, ME:1404, MD:6177,  MA:7001, MI:10034,MN:5737,
+  MS:2940, MO:6196, MT:1132, NE:1983, NV:3194,  NH:1402, NJ:9290, NM:2115,
+  NY:19677,NC:10698,ND:783,  OH:11780,OK:4020,  OR:4240, PA:12972,RI:1093,
+  SC:5373, SD:924,  TN:7126, TX:30503,UT:3418,  VT:647,  VA:8715, WA:7812,
+  WV:1770, WI:5910, WY:581
+};
+
+function fmtPop(thousands) {
+  if (thousands >= 10000) return Math.round(thousands / 1000) + 'm';
+  if (thousands >= 1000)  return (thousands / 1000).toFixed(1) + 'm';
+  return Math.round(thousands) + 'k';
+}
+
+// ===== TREND CONFIGURATION =====
+const ALL_YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
+const TREND_CONFIG = {
+  patient: {
+    0: {type:'pct', rate:-0.008},   // fair/poor health: slow decline
+    1: {type:'pct', rate:0.003},    // diabetes: slow rise
+    2: {type:'pct', rate:-0.006},   // CHD: slow decline (treatment advances)
+    3: {type:'pct', rate:0.010},    // obesity: rising ~1%/yr
+    4: {type:'abs', rate:0.20},     // median age: aging population
+    5: {type:'abs', rate:-1.5},     // cancer mortality: ~1.5/100k per yr decline
+    6: {type:'lifeExp'},            // life expectancy: COVID dip model
+    7: {type:'pct', rate:0.003}     // routine checkup: very slow rise
+  },
+  clinical: {
+    0: {type:'abs', rate:0.5},      // PCPs: slow supply growth
+    1: {type:'abs', rate:1.5},      // specialists: slow growth
+    2: {type:'abs', rate:2.5},      // NPs: rapid growth
+    4: {type:'abs', rate:0.15},     // pop in HPSAs: slight increase
+    5: {type:'pct', rate:0.08},     // telehealth: rapid post-COVID growth
+    6: {type:'abs', rate:0.15},     // residents: slow growth
+    7: {type:'abs', rate:12},       // RNs: steady workforce growth
+    8: {type:'abs', rate:0.8}       // RTs: modest growth driven by COPD burden
+  },
+  operations: {
+    0: {type:'abs', rate:-0.03},    // beds/1k: declining
+    1: {type:'abs', rate:-2.0},     // hospital count: consolidating
+    3: {type:'pct', rate:0.005},    // for-profit share: slowly rising
+    4: {type:'abs', rate:1.0},      // ED wait: slowly increasing
+    5: {type:'abs', rate:0.02},     // star rating: slowly improving
+    6: {type:'abs', rate:-0.08}     // readmission: slowly declining
+  },
+  payer: {
+    0: {type:'pct', rate:-0.04},    // uninsured: declining since ACA
+    1: {type:'pct', rate:0.015},    // Medicaid: expanding
+    2: {type:'pct', rate:0.012},    // Medicare: rising with aging
+    3: {type:'pct', rate:0.08},     // marketplace: growing enrollment
+    4: {type:'pct', rate:-0.005},   // ESI: slowly eroding
+    5: {type:'pct', rate:0.040}     // premiums: rising
+  },
+  economics: {
+    0: {type:'abs', rate:2.5},
+    1: {type:'abs', rate:-0.08},
+    2: {type:'abs', rate:0.4},
+    3: {type:'abs', rate:-0.15},
+    4: {type:'abs', rate:1.2}
+  },
+  baseline: {
+    0: {type:'abs', rate:2.5},      // median income
+    1: {type:'abs', rate:-0.08},    // unemployment
+    2: {type:'abs', rate:0.4},      // housing burden
+    3: {type:'abs', rate:-0.15},    // food insecurity
+    4: {type:'abs', rate:1.2},      // cost of living
+    5: {type:'abs', rate:0.12},     // pct 65+: aging population
+    6: {type:'abs', rate:-0.10},    // pct under 18: declining birth rates
+    7: {type:'abs', rate:0.15},     // pct Hispanic: growing share
+    8: {type:'abs', rate:0.05},     // pct Black: modest growth
+    9: {type:'abs', rate:-0.25},    // pct White non-Hispanic: declining share
+    10: {type:'abs', rate:0.10},    // pct Asian/PI: growing share
+    11: {type:'abs', rate:0.10},    // pct foreign-born: growing
+    12: {type:'abs', rate:0.15}     // pct urban: slow urbanization
+  }
+};
+
+function generateTrend(lens, idx, code) {
+  const realVal = getVal(lens, idx, code);
+  const dataYear = DATA_YEARS[lens]?.[idx];
+  if (realVal === null || !dataYear) return null;
+  const cfg = TREND_CONFIG[lens]?.[idx];
+  if (!cfg) return null;
+  return ALL_YEARS.map(y => {
+    const dy = y - dataYear;
+    let v;
+    if (cfg.type === 'lifeExp') {
+      if (y === 2020) v = realVal + dy * 0.20 - 1.2;
+      else if (y === 2021) v = realVal + dy * 0.20 - 2.4;
+      else v = realVal + dy * 0.20;
+    } else if (cfg.type === 'pct') {
+      v = realVal * Math.pow(1 + cfg.rate, dy);
+    } else {
+      v = realVal + cfg.rate * dy;
+    }
+    return { year: y, value: Math.max(0, v), real: y === dataYear };
+  });
+}
+
+// ===== ENTITY DATA =====
+// patient: top 3 causes of hospitalization (AHRQ HCUP 2022, regional patterns)
+// operations: top 3 hospital systems by licensed beds (AHA / AHD 2024)
+// payer: top 3 insurers by commercial market share (KFF / AMA 2023-2024)
+const ENTITY_DATA = {
+  patient: {
+    AL:[['Septicemia & sepsis','~520/100k'],['Heart failure','~380/100k'],['COPD & respiratory failure','~220/100k']],
+    AK:[['Septicemia & sepsis','~380/100k'],['Heart failure','~260/100k'],['Mental health & substance use','~290/100k']],
+    AZ:[['Septicemia & sepsis','~440/100k'],['Heart failure','~290/100k'],['Pneumonia','~185/100k']],
+    AR:[['Septicemia & sepsis','~540/100k'],['Heart failure','~410/100k'],['COPD & pneumonia','~250/100k']],
+    CA:[['Septicemia & sepsis','~420/100k'],['Heart failure','~270/100k'],['Pneumonia','~175/100k']],
+    CO:[['Septicemia & sepsis','~380/100k'],['Heart failure','~240/100k'],['Mental health & mood disorders','~260/100k']],
+    CT:[['Heart failure','~310/100k'],['Osteoarthritis / joint replacement','~235/100k'],['Septicemia & sepsis','~420/100k']],
+    DE:[['Heart failure','~350/100k'],['Septicemia & sepsis','~480/100k'],['Cardiac arrhythmia','~190/100k']],
+    DC:[['Septicemia & sepsis','~580/100k'],['Heart failure','~360/100k'],['Mental health & substance use','~340/100k']],
+    FL:[['Heart failure','~360/100k'],['Septicemia & sepsis','~500/100k'],['Pneumonia','~200/100k']],
+    GA:[['Heart failure','~370/100k'],['Septicemia & sepsis','~510/100k'],['Pneumonia','~200/100k']],
+    HI:[['Septicemia & sepsis','~380/100k'],['Heart failure','~240/100k'],['Pneumonia','~165/100k']],
+    ID:[['Septicemia & sepsis','~390/100k'],['Heart failure','~260/100k'],['Mental health & substance use','~250/100k']],
+    IL:[['Heart failure','~340/100k'],['Septicemia & sepsis','~490/100k'],['COPD','~200/100k']],
+    IN:[['Heart failure','~380/100k'],['Septicemia & sepsis','~510/100k'],['COPD & respiratory failure','~230/100k']],
+    IA:[['Heart failure','~350/100k'],['Septicemia & sepsis','~470/100k'],['COPD','~205/100k']],
+    KS:[['Heart failure','~360/100k'],['Septicemia & sepsis','~480/100k'],['COPD','~210/100k']],
+    KY:[['Septicemia & sepsis','~570/100k'],['Heart failure','~420/100k'],['COPD & pneumonia','~270/100k']],
+    LA:[['Septicemia & sepsis','~590/100k'],['Heart failure','~440/100k'],['COPD & pneumonia','~260/100k']],
+    ME:[['Heart failure','~320/100k'],['Osteoarthritis / joint replacement','~240/100k'],['Septicemia & sepsis','~440/100k']],
+    MD:[['Heart failure','~330/100k'],['Septicemia & sepsis','~470/100k'],['Cardiac arrhythmia','~180/100k']],
+    MA:[['Heart failure','~300/100k'],['Osteoarthritis / joint replacement','~250/100k'],['Coronary artery disease','~170/100k']],
+    MI:[['Heart failure','~370/100k'],['Septicemia & sepsis','~500/100k'],['COPD','~220/100k']],
+    MN:[['Heart failure','~320/100k'],['Septicemia & sepsis','~430/100k'],['Osteoarthritis / joint replacement','~240/100k']],
+    MS:[['Septicemia & sepsis','~620/100k'],['Heart failure','~480/100k'],['COPD & pneumonia','~280/100k']],
+    MO:[['Heart failure','~370/100k'],['Septicemia & sepsis','~510/100k'],['COPD','~230/100k']],
+    MT:[['Septicemia & sepsis','~400/100k'],['Heart failure','~270/100k'],['Mental health & substance use','~265/100k']],
+    NE:[['Heart failure','~340/100k'],['Septicemia & sepsis','~460/100k'],['COPD','~200/100k']],
+    NV:[['Septicemia & sepsis','~460/100k'],['Heart failure','~300/100k'],['Pneumonia','~190/100k']],
+    NH:[['Heart failure','~300/100k'],['Osteoarthritis / joint replacement','~230/100k'],['Septicemia & sepsis','~420/100k']],
+    NJ:[['Heart failure','~330/100k'],['Septicemia & sepsis','~470/100k'],['Coronary artery disease','~165/100k']],
+    NM:[['Septicemia & sepsis','~450/100k'],['Heart failure','~290/100k'],['Mental health & substance use','~300/100k']],
+    NY:[['Heart failure','~310/100k'],['Septicemia & sepsis','~450/100k'],['Coronary artery disease','~160/100k']],
+    NC:[['Heart failure','~360/100k'],['Septicemia & sepsis','~490/100k'],['Pneumonia','~195/100k']],
+    ND:[['Heart failure','~340/100k'],['Septicemia & sepsis','~450/100k'],['COPD','~195/100k']],
+    OH:[['Heart failure','~380/100k'],['Septicemia & sepsis','~510/100k'],['COPD','~225/100k']],
+    OK:[['Septicemia & sepsis','~560/100k'],['Heart failure','~430/100k'],['COPD & pneumonia','~260/100k']],
+    OR:[['Septicemia & sepsis','~400/100k'],['Heart failure','~260/100k'],['Mental health & substance use','~280/100k']],
+    PA:[['Heart failure','~340/100k'],['Septicemia & sepsis','~480/100k'],['Cardiac arrhythmia','~185/100k']],
+    RI:[['Heart failure','~310/100k'],['Osteoarthritis / joint replacement','~230/100k'],['Septicemia & sepsis','~430/100k']],
+    SC:[['Heart failure','~380/100k'],['Septicemia & sepsis','~520/100k'],['Pneumonia','~205/100k']],
+    SD:[['Heart failure','~340/100k'],['Septicemia & sepsis','~450/100k'],['COPD','~200/100k']],
+    TN:[['Septicemia & sepsis','~560/100k'],['Heart failure','~420/100k'],['COPD & pneumonia','~255/100k']],
+    TX:[['Heart failure','~350/100k'],['Septicemia & sepsis','~490/100k'],['Pneumonia','~200/100k']],
+    UT:[['Septicemia & sepsis','~360/100k'],['Heart failure','~230/100k'],['Mental health & substance use','~240/100k']],
+    VT:[['Heart failure','~290/100k'],['Osteoarthritis / joint replacement','~225/100k'],['Septicemia & sepsis','~400/100k']],
+    VA:[['Heart failure','~330/100k'],['Septicemia & sepsis','~460/100k'],['Cardiac arrhythmia','~180/100k']],
+    WA:[['Septicemia & sepsis','~400/100k'],['Heart failure','~255/100k'],['Mental health & substance use','~275/100k']],
+    WV:[['Septicemia & sepsis','~590/100k'],['Heart failure','~450/100k'],['COPD & pneumonia','~280/100k']],
+    WI:[['Heart failure','~350/100k'],['Septicemia & sepsis','~470/100k'],['COPD','~205/100k']],
+    WY:[['Septicemia & sepsis','~400/100k'],['Heart failure','~270/100k'],['Mental health & substance use','~255/100k']]
+  },
+  operations: {
+    AL:[['UAB Health System','~1,157 beds'],['Ascension St. Vincent','~767 beds'],['HCA Healthcare AL','~620 beds']],
+    AK:[['Providence Alaska Medical','~401 beds'],['Alaska Native Medical Ctr','~150 beds'],['Bartlett Regional','~57 beds']],
+    AZ:[['Banner Health','~3,900 system'],['Dignity Health AZ','~1,800 system'],['HonorHealth','~700 beds']],
+    AR:[['Baptist Health AR','~1,100 system'],['CHI St. Vincent / Ascension','~700 beds'],['UAMS Medical Center','~451 beds']],
+    CA:[['Kaiser Permanente CA','~9,000 system'],['Dignity / CommonSpirit CA','~6,500 system'],['Sutter Health','~5,000 system']],
+    CO:[['UCHealth','~1,700 system'],['CommonSpirit / Centura','~1,500 system'],['Intermountain Health CO','~800 beds']],
+    CT:[['Yale New Haven Health','~2,600 system'],['Hartford HealthCare','~2,200 system'],['Trinity Health NE','~500 beds']],
+    DE:[['ChristianaCare','~1,153 beds'],['Bayhealth','~515 beds'],['Beebe Healthcare','~224 beds']],
+    DC:[['MedStar Washington Hosp.','~912 beds'],['GWU Hospital','~395 beds'],['Howard University Hosp.','~238 beds']],
+    FL:[['HCA Healthcare FL','~15,000 system'],['AdventHealth','~7,000 system'],['BayCare Health System','~4,000 beds']],
+    GA:[['Wellstar Health System','~2,800 system'],['Piedmont Healthcare','~2,300 system'],['Emory Healthcare','~1,200 beds']],
+    HI:[['Hawaii Pacific Health','~726 system'],['Queens Health Systems','~505 beds'],['Kaiser Permanente HI','~237 beds']],
+    ID:[['St. Lukes Health System','~655 beds'],['Saint Alphonsus / Trinity','~381 beds'],['Kootenai Health','~254 beds']],
+    IL:[['Advocate Aurora Health IL','~7,500 system'],['Northwestern Medicine','~2,100 beds'],['CommonSpirit / Mercy IL','~2,000 beds']],
+    IN:[['Indiana University Health','~3,500 system'],['Ascension St. Vincent IN','~1,200 beds'],['Community Health Network','~800 beds']],
+    IA:[['UnityPoint Health','~2,100 system'],['Univ. of Iowa Health Care','~811 beds'],['MercyOne','~800 system']],
+    KS:[['Univ. of Kansas Health','~1,000 beds'],['Ascension Via Christi','~900 system'],['Stormont Vail Health','~586 beds']],
+    KY:[['Norton Healthcare','~2,000 system'],['Baptist Health KY','~1,800 system'],['UK HealthCare','~945 beds']],
+    LA:[['Ochsner Health','~4,000 system'],['LCMC Health','~1,800 beds'],['HCA / Tulane LA','~1,200 beds']],
+    ME:[['MaineHealth','~1,600 system'],['Northern Light Health','~1,200 system'],['Central Maine Healthcare','~190 beds']],
+    MD:[['Univ. of Maryland Medical','~2,200 system'],['MedStar Health MD','~2,000 system'],['LifeBridge / Sinai','~2,400 beds']],
+    MA:[['Mass General Brigham','~5,000 system'],['Beth Israel Lahey Health','~3,000 system'],['UMass Memorial Health','~1,100 beds']],
+    MI:[['Corewell Health / Beaumont','~5,500 system'],['Henry Ford Health','~2,500 system'],['Trinity Health MI','~2,000 beds']],
+    MN:[['M Health Fairview','~2,000 system'],['Allina Health','~1,700 system'],['Mayo Clinic MN','~1,200 beds']],
+    MS:[['Merit Health System','~1,500 system'],['UMMC (Univ. of MS)','~775 beds'],['Singing River Health','~485 beds']],
+    MO:[['BJC HealthCare','~2,700 beds'],['Mercy Health MO','~2,100 system'],['CoxHealth','~900 beds']],
+    MT:[['Billings Clinic','~285 beds'],['Logan Health','~280 beds'],['Intermountain Health MT','~250 beds']],
+    NE:[['CHI Health / CommonSpirit','~1,000 system'],['Nebraska Medicine','~720 beds'],['Bryan Health','~640 beds']],
+    NV:[['HCA Healthcare NV','~2,100 system'],['Valley Health System','~900 beds'],['Dignity Health NV','~900 beds']],
+    NH:[['Dartmouth Health','~396 beds'],['Catholic Medical Ctr','~330 beds'],['Concord Hospital','~295 beds']],
+    NJ:[['Hackensack Meridian Health','~4,000 system'],['RWJBarnabas Health','~3,200 system'],['Atlantic Health System','~1,400 beds']],
+    NM:[['Presbyterian Healthcare','~700 beds'],['UNM Health','~537 beds'],['Lovelace Health System','~263 beds']],
+    NY:[['NYC Health + Hospitals','~11 hospitals'],['Northwell Health','~8,000 system'],['NewYork-Presbyterian','~2,600 beds']],
+    NC:[['Atrium Health / Advocate','~6,000 NC system'],['Novant Health','~3,500 system'],['Duke Health','~1,600 beds']],
+    ND:[['Sanford Health ND','~900 system'],['CHI St. Alexius','~505 beds'],['Essentia Health ND','~157 beds']],
+    OH:[['Cleveland Clinic','~3,000 OH system'],['OhioHealth','~2,800 system'],['Kettering Health','~1,200 beds']],
+    OK:[['Mercy Health OK','~1,200 system'],['HCA Healthcare OK','~1,200 system'],['OU Health','~800 beds']],
+    OR:[['Providence Health OR','~2,000 system'],['OHSU Health','~576 beds'],['PeaceHealth OR','~340 beds']],
+    PA:[['UPMC','~5,500 system'],['Jefferson Health','~3,000 system'],['Penn Medicine','~2,300 beds']],
+    RI:[['Lifespan Health System','~700 system'],['Care New England','~350 beds'],['CharterCARE / Prospect','~100 beds']],
+    SC:[['Prisma Health','~5,000 system'],['MUSC Health','~1,500 beds'],['Tidelands Health','~300 beds']],
+    SD:[['Sanford Health SD','~900 system'],['Avera Health SD','~800 system'],['Monument Health','~545 beds']],
+    TN:[['HCA Healthcare TN','~8,000 system'],['Ascension Health TN','~2,000 beds'],['Vanderbilt Health','~1,000 beds']],
+    TX:[['HCA Healthcare TX','~15,000 system'],['Baylor Scott & White','~6,000 system'],['Ascension Health TX','~4,500 beds']],
+    UT:[['Intermountain Health UT','~2,500 system'],['HCA MountainStar UT','~1,200 beds'],['Univ. of Utah Health','~641 beds']],
+    VT:[['UVM Health Network','~562 beds'],['Northwestern Medical Ctr','~70 beds'],['Gifford Medical Center','~25 beds']],
+    VA:[['Sentara Healthcare','~3,500 system'],['HCA Healthcare VA','~3,000 system'],['Inova Health System','~1,800 beds']],
+    WA:[['Providence Health WA','~2,000 system'],['MultiCare Health System','~1,800 system'],['CHI Franciscan','~1,200 beds']],
+    WV:[['WVU Medicine','~800 system'],['CAMC Health System','~800 beds'],['Davis Health System','~90 beds']],
+    WI:[['Advocate Aurora WI','~4,000 system'],['SSM Health WI','~1,200 beds'],['Froedtert Health','~600 beds']],
+    WY:[['Banner Health WY','~250 beds'],['Wyoming Medical Center','~222 beds'],['SageWest Health Care','~177 beds']]
+  },
+  payer: {
+    AL:[['Blue Cross Blue Shield AL','~52% commercial'],['UnitedHealthcare','~17% commercial'],['Aetna / CVS Health','~11% commercial']],
+    AK:[['Premera Blue Cross','~40% commercial'],['Moda Health','~25% commercial'],['Aetna / CVS Health','~15% commercial']],
+    AZ:[['UnitedHealthcare','~30% commercial'],['Aetna / CVS Health','~20% commercial'],['BCBS AZ / Anthem','~18% commercial']],
+    AR:[['BCBS Arkansas','~48% commercial'],['UnitedHealthcare','~20% commercial'],['QualChoice / HCSC','~18% commercial']],
+    CA:[['Kaiser Permanente','~28% commercial'],['Anthem BCBS CA','~22% commercial'],['Blue Shield CA','~18% commercial']],
+    CO:[['Kaiser Permanente','~23% commercial'],['Anthem BCBS CO','~22% commercial'],['Cigna','~15% commercial']],
+    CT:[['Anthem BCBS CT','~38% commercial'],['Cigna','~28% commercial'],['UnitedHealthcare','~20% commercial']],
+    DE:[['Highmark / Independence','~35% commercial'],['Aetna / CVS Health','~25% commercial'],['UnitedHealthcare','~22% commercial']],
+    DC:[['UnitedHealthcare','~30% commercial'],['CareFirst BCBS','~28% commercial'],['Kaiser Permanente','~18% commercial']],
+    FL:[['Florida Blue (BCBS FL)','~30% commercial'],['UnitedHealthcare','~25% commercial'],['Aetna / CVS Health','~18% commercial']],
+    GA:[['Anthem BCBS GA','~27% commercial'],['Kaiser Permanente GA','~22% commercial'],['UnitedHealthcare','~20% commercial']],
+    HI:[['Kaiser Permanente HI','~37% commercial'],['HMSA / BCBS HI','~35% commercial'],['UHA Health Insurance','~12% commercial']],
+    ID:[['Regence BCBS ID','~40% commercial'],['PacificSource Health','~20% commercial'],['Aetna / CVS Health','~15% commercial']],
+    IL:[['HCSC / BCBS IL','~38% commercial'],['UnitedHealthcare','~25% commercial'],['Aetna / CVS Health','~15% commercial']],
+    IN:[['Anthem BCBS IN','~40% commercial'],['UnitedHealthcare','~22% commercial'],['Cigna','~12% commercial']],
+    IA:[['Wellmark BCBS IA','~50% commercial'],['UnitedHealthcare','~20% commercial'],['Aetna / CVS Health','~15% commercial']],
+    KS:[['BCBS Kansas','~40% commercial'],['UnitedHealthcare','~22% commercial'],['Aetna / Coventry','~15% commercial']],
+    KY:[['Anthem BCBS KY','~37% commercial'],['Humana','~22% commercial'],['Aetna / CVS Health','~15% commercial']],
+    LA:[['BCBS Louisiana / HCSC','~40% commercial'],['Humana','~20% commercial'],['UnitedHealthcare','~18% commercial']],
+    ME:[['Anthem BCBS ME','~45% commercial'],['Point32 / Harvard Pilgrim','~25% commercial'],['Cigna','~12% commercial']],
+    MD:[['CareFirst BCBS','~38% commercial'],['UnitedHealthcare','~22% commercial'],['Kaiser Permanente MD','~17% commercial']],
+    MA:[['BCBS Massachusetts','~35% commercial'],['Point32 / Tufts Health','~28% commercial'],['UnitedHealthcare','~15% commercial']],
+    MI:[['BCBS Michigan','~58% commercial'],['Priority Health','~12% commercial'],['Aetna / CVS Health','~10% commercial']],
+    MN:[['BCBS Minnesota','~30% commercial'],['UCare','~20% commercial'],['Medica','~18% commercial']],
+    MS:[['BCBS Mississippi','~50% commercial'],['UnitedHealthcare','~22% commercial'],['Aetna / CVS Health','~12% commercial']],
+    MO:[['Anthem BCBS MO','~35% commercial'],['UnitedHealthcare','~25% commercial'],['Cigna','~15% commercial']],
+    MT:[['BCBS Montana / HCSC','~48% commercial'],['PacificSource Health','~18% commercial'],['UnitedHealthcare','~15% commercial']],
+    NE:[['BCBS Nebraska','~48% commercial'],['Medica','~18% commercial'],['UnitedHealthcare','~16% commercial']],
+    NV:[['UnitedHealthcare','~30% commercial'],['Anthem BCBS NV','~25% commercial'],['Aetna / CVS Health','~20% commercial']],
+    NH:[['Anthem BCBS NH','~48% commercial'],['Point32 / Harvard Pilgrim','~25% commercial'],['Cigna','~12% commercial']],
+    NJ:[['Horizon BCBS NJ','~35% commercial'],['Aetna / CVS Health','~20% commercial'],['UnitedHealthcare','~18% commercial']],
+    NM:[['BCBS NM / HCSC','~38% commercial'],['Presbyterian Health Plan','~28% commercial'],['Molina Healthcare','~12% commercial']],
+    NY:[['UnitedHealthcare','~25% commercial'],['Empire BCBS / Anthem','~22% commercial'],['Aetna / CVS Health','~18% commercial']],
+    NC:[['BCBS North Carolina','~43% commercial'],['UnitedHealthcare','~20% commercial'],['Aetna / CVS Health','~15% commercial']],
+    ND:[['BCBS ND / Sanford Plan','~52% commercial'],['Medica','~20% commercial'],['UnitedHealthcare','~15% commercial']],
+    OH:[['Medical Mutual of Ohio','~28% commercial'],['Anthem BCBS OH','~25% commercial'],['UnitedHealthcare','~22% commercial']],
+    OK:[['BCBS Oklahoma / HCSC','~42% commercial'],['UnitedHealthcare','~22% commercial'],['Aetna / CVS Health','~15% commercial']],
+    OR:[['Regence BCBS OR','~30% commercial'],['Moda Health','~18% commercial'],['Providence Health Plan','~20% commercial']],
+    PA:[['Highmark','~28% commercial'],['Independence Blue Cross','~22% commercial'],['UnitedHealthcare','~18% commercial']],
+    RI:[['BCBS Rhode Island','~45% commercial'],['UnitedHealthcare','~22% commercial'],['Point32 / Tufts Health','~15% commercial']],
+    SC:[['BCBS South Carolina','~45% commercial'],['UnitedHealthcare','~22% commercial'],['Aetna / CVS Health','~15% commercial']],
+    SD:[['Wellmark BCBS SD','~52% commercial'],['Sanford Health Plan','~22% commercial'],['UnitedHealthcare','~15% commercial']],
+    TN:[['BCBS Tennessee','~40% commercial'],['UnitedHealthcare','~22% commercial'],['Cigna','~15% commercial']],
+    TX:[['BCBS Texas / HCSC','~35% commercial'],['UnitedHealthcare','~25% commercial'],['Aetna / CVS Health','~18% commercial']],
+    UT:[['SelectHealth / IHC','~40% commercial'],['UnitedHealthcare','~22% commercial'],['Regence BCBS UT','~18% commercial']],
+    VT:[['BCBS Vermont','~48% commercial'],['MVP Health Care','~28% commercial'],['Cigna','~10% commercial']],
+    VA:[['Anthem BCBS VA','~35% commercial'],['Kaiser Permanente VA','~20% commercial'],['UnitedHealthcare','~18% commercial']],
+    WA:[['Premera Blue Cross','~28% commercial'],['Regence BCBS WA','~22% commercial'],['Kaiser Permanente WA','~18% commercial']],
+    WV:[['Highmark West Virginia','~45% commercial'],['UnitedHealthcare','~22% commercial'],['Aetna / CVS Health','~15% commercial']],
+    WI:[['Common Ground / BCBS WI','~30% commercial'],['Quartz Health','~18% commercial'],['Anthem / WellVersed','~15% commercial']],
+    WY:[['BCBS Wyoming / HCSC','~48% commercial'],['UnitedHealthcare','~25% commercial'],['Aetna / CVS Health','~15% commercial']]
+  }
+};
+
+// ===== DATA HELPERS =====
+function getVal(lens, idx, code) {
+  return STATE_DATA[lens]?.[idx]?.[code] ?? null;
+}
+
+const _qCache = {};
+function getQuintile(lens, idx, code) {
+  const k = `${lens}:${idx}`;
+  if (!_qCache[k]) {
+    const d = STATE_DATA[lens]?.[idx];
+    if (!d) { _qCache[k] = {}; }
+    else {
+      const entries = Object.entries(d).filter(([,v]) => v !== null).sort((a,b) => a[1]-b[1]);
+      const n = entries.length;
+      const r = {};
+      // Group tied values so equal values always land in the same quintile
+      let i = 0;
+      while (i < n) {
+        let j = i;
+        while (j < n && entries[j][1] === entries[i][1]) j++;
+        const midPos = (i + j - 1) / 2;
+        const q = Math.min(5, Math.ceil((midPos + 1) / n * 5));
+        for (let k2 = i; k2 < j; k2++) r[entries[k2][0]] = q;
+        i = j;
+      }
+      _qCache[k] = r;
+    }
+  }
+  return _qCache[k][code] ?? null;
+}
+
+function getNatAvg(lens, idx) {
+  const d = STATE_DATA[lens]?.[idx];
+  if (!d) return null;
+  const vals = Object.values(d).filter(v => v !== null);
+  return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+}
+
+function fmtVal(val, unit) {
+  if (val === null || val === undefined) return '—';
+  if (unit === 'Y/N') return val === 1 ? 'Yes' : 'No';
+  if (unit === 'tier') return val === 3 ? 'Full' : val === 2 ? 'Reduced' : 'Restricted';
+  const v = Math.round(val * 10) / 10;
+  if (unit === '$') return '$' + Math.round(val).toLocaleString();
+  if (unit === '#' || unit === 'HPSAs') return Math.round(val).toLocaleString();
+  return v + ' ' + unit;
+}
+
+const METRICS = {{ metricsConfig | json | safe }};
+
+let activeLens = 'patient';
+let activeMetricIdx = 1;
+let selectedState = null;
+let usFeatures = null;
+let selectedYearIdx = 6;   // ALL_YEARS[6] = 2024
+let sliderMode = 'snapshot';
+let rankMode = 'highest';
+let sysOutlookCollapsed   = false;
+let metricOutlookCollapsed = false;
+let compareState = null;
+let mapMode = 'explore';
+
+// ===== COUNTY GRANULARITY =====
+let mapGrain = 'state';            // 'state' | 'county'
+let countyData = null;             // /assets/data/countyData.json (eager, for toggle availability)
+let countyFeatures = null;         // us-atlas counties (lazy, on first county view)
+let _countyGeoLoading = false;
+// This map's "baseline" lens holds income/unemployment, which countyData stores under "economics".
+const COUNTY_ALIAS = { baseline: 'economics' };
+const countyLensKey = (lens) => COUNTY_ALIAS[lens] || lens;
+// us-atlas draws OLD county shapes (CT counties, AK Valdez-Cordova); county data uses the
+// current units, so map each old shape's FIPS to its current data FIPS (best-fit).
+const COUNTY_FIPS_XWALK = { '09001':'09190','09003':'09110','09005':'09160','09007':'09130','09009':'09170','09011':'09180','09013':'09110','09015':'09150','02261':['02063','02066'] };
+
+function metricHasCounty(lens, idx) { return !!(countyData && countyData[countyLensKey(lens)] && countyData[countyLensKey(lens)][idx]); }
+function countyVal(lens, idx, fips) {
+  if (!countyData) return null;
+  const d = countyData[countyLensKey(lens)] && countyData[countyLensKey(lens)][idx];
+  if (!d) return null;
+  if (d[fips] != null) return d[fips];
+  const x = COUNTY_FIPS_XWALK[fips]; if (!x) return null;
+  if (Array.isArray(x)) { const a = x.map(f => d[f]).filter(v => v != null); return a.length ? Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10 : null; }
+  return d[x] != null ? d[x] : null;
+}
+const _cqCache = {};
+function countyQuintileRaw(lens, idx, fips) {
+  const key = countyLensKey(lens) + ':' + idx;
+  if (!_cqCache[key]) {
+    const d = (countyData && countyData[countyLensKey(lens)] && countyData[countyLensKey(lens)][idx]) || {};
+    const entries = Object.entries(d).filter(([,v]) => v != null).sort((a,b) => a[1]-b[1]);
+    const n = entries.length, r = {};
+    let i = 0;
+    while (i < n) { let j = i; while (j < n && entries[j][1] === entries[i][1]) j++; const mid = (i+j-1)/2; const q = Math.min(5, Math.ceil((mid+1)/n*5)); for (let k=i;k<j;k++) r[entries[k][0]] = q; i = j; }
+    _cqCache[key] = r;
+  }
+  let q = _cqCache[key][fips];
+  if (q == null) { const x = COUNTY_FIPS_XWALK[fips]; if (x) q = _cqCache[key][Array.isArray(x) ? x[0] : x]; }
+  return q != null ? q : null;
+}
+// direction-adjusted bucket, matching displayQuintile's convention (county is single-vintage, no year/change mode)
+function displayCountyQuintile(fips) {
+  const q = countyQuintileRaw(activeLens, activeMetricIdx, fips);
+  if (q == null) return null;
+  const dir = METRICS[activeLens].items[activeMetricIdx]?.dir ?? -1;
+  return dir === 1 ? q : dir === -1 ? (6 - q) : q;
+}
+
+// ===== OVERALL OUTLOOK =====
+const OUTLOOK_CONFIG = {
+  patient: {
+    label: 'Population Health',
+    metrics: [
+      { idx: 0, invert: true  },  // poor health % → high = bad
+      { idx: 1, invert: true  },  // diabetes → high = bad
+      { idx: 2, invert: true  },  // CAD → high = bad
+      { idx: 3, invert: true  },  // obesity → high = bad
+      { idx: 5, invert: true  },  // cancer mortality → high = bad
+      { idx: 6, invert: false },  // life expectancy → high = good
+      { idx: 7, invert: false },  // routine checkup → high = good
+    ]
+  },
+  clinical: {
+    label: 'Workforce Access',
+    metrics: [
+      { idx: 0, invert: false },  // physicians/100k → high = good
+      { idx: 1, invert: false },  // primary care/100k → high = good
+      { idx: 2, invert: false },  // NPs/PAs/100k → high = good
+      { idx: 3, invert: false },  // mental health/100k → high = good
+      { idx: 5, invert: true  },  // shortage area % → high = bad
+      { idx: 6, invert: false },  // specialists/100k → high = good
+      { idx: 7, invert: false },  // RNs/100k → high = good
+      { idx: 8, invert: false },  // RTs/100k → high = good
+    ]
+  },
+  operations: {
+    label: 'System Capacity',
+    metrics: [
+      { idx: 0, invert: false },  // beds/100k → high = good
+      { idx: 4, invert: false },  // telehealth adoption → high = good
+      { idx: 5, invert: false },  // EHR adoption → high = good
+      { idx: 6, invert: true  },  // staff turnover → high = bad
+    ]
+  },
+  payer: {
+    label: 'Coverage & Affordability',
+    metrics: [
+      { idx: 0, invert: true  },  // uninsured → high = bad
+      { idx: 1, invert: false },  // Medicaid/CHIP → high = good
+      { idx: 3, invert: true  },  // avg premium → high = bad
+      { idx: 4, invert: false },  // ESI rate → high = good
+      { idx: 5, invert: false },  // marketplace competition → high = good
+    ]
+  },
+  policy: {
+    label: 'Policy Environment',
+    metrics: [
+      { idx: 0, invert: false },  // Medicaid expansion
+      { idx: 2, invert: false },  // NP scope of practice
+      { idx: 3, invert: false },  // drug price legislation
+      { idx: 4, invert: false },  // telehealth parity
+      { idx: 5, invert: false },  // rural health initiatives
+    ]
+  },
+  economics: {
+    label: 'Economic Health',
+    metrics: [
+      { idx: 0, invert: false },
+      { idx: 1, invert: true  },
+      { idx: 2, invert: true  },
+      { idx: 3, invert: true  },
+      { idx: 4, invert: true  },
+    ]
+  },
+  baseline: {
+    label: 'Economic Conditions',
+    metrics: [
+      { idx: 0, invert: false },  // median income → high = good
+      { idx: 1, invert: true  },  // unemployment → high = bad
+      { idx: 2, invert: true  },  // housing burden → high = bad
+      { idx: 3, invert: true  },  // food insecurity → high = bad
+      { idx: 4, invert: true  },  // cost of living → high = bad
+    ]
+  }
+};
+
+const OUTLOOK_TIERS = [
+  { min: 4.2, label: 'Strong',        color: '#2D9B6F' },
+  { min: 3.4, label: 'Above Average', color: '#4ECDC4' },
+  { min: 2.6, label: 'Average',       color: '#7FAED0' },
+  { min: 1.8, label: 'Below Average', color: '#E8A838' },
+  { min: 0,   label: 'Challenged',    color: '#DF5752' },
+];
+
+function computeOutlookScore(lens, code, yearIdx) {
+  const cfg = OUTLOOK_CONFIG[lens];
+  if (!cfg) return null;
+  const vals = cfg.metrics.map(({ idx, invert }) => {
+    const q = getQuintileForYear(lens, idx, code, yearIdx);
+    if (q === null) return null;
+    return invert ? (6 - q) : q;
+  }).filter(v => v !== null);
+  if (vals.length < 2) return null;
+  return { score: vals.reduce((a, b) => a + b, 0) / vals.length, count: vals.length };
+}
+
+function getOutlookTier(score) {
+  return OUTLOOK_TIERS.find(t => score >= t.min) || OUTLOOK_TIERS[OUTLOOK_TIERS.length - 1];
+}
+
+let _mocLensCache = null;
+let _mocSysCache  = null;
+let _mapHeaderMetricRef = null;
+
+function syncMapOutlookChips() {
+  const chips  = document.getElementById('mapOutlookChips');
+  const lens   = document.getElementById('mocLens');
+  const sys    = document.getElementById('mocSystem');
+  const sep    = document.getElementById('mocSep');
+  if (!chips) return;
+  const lv = lens && lens.style.display !== 'none';
+  const sv = sys  && sys.style.display  !== 'none';
+  chips.style.display = (lv || sv) ? '' : 'none';
+  if (sep) sep.style.display = (lv && sv) ? '' : 'none';
+}
+
+function syncOverviewBar() {
+  const bar = document.getElementById('overviewBar');
+  if (!bar) return;
+  const outlook = document.getElementById('outlookCard');
+  const system  = document.getElementById('systemOutlookCard');
+  const visible = (outlook && outlook.style.display !== 'none') ||
+                  (system  && system.style.display  !== 'none');
+  bar.style.display = visible ? '' : 'none';
+}
+
+function renderOutlook() {
+  const card = document.getElementById('outlookCard');
+  const cfg  = OUTLOOK_CONFIG[activeLens];
+  const lensColor = METRICS[activeLens].color;
+  if (!cfg) { card.style.display = 'none'; return; }
+
+  card.style.setProperty('--accent-color', lensColor);
+
+  let result, scopeText, rankText = '';
+
+  if (selectedState) {
+    result = computeOutlookScore(activeLens, selectedState, selectedYearIdx);
+    if (result) {
+      const all = Object.keys(STATE_NAMES)
+        .map(c => { const r = computeOutlookScore(activeLens, c, selectedYearIdx); return r ? { code: c, score: r.score } : null; })
+        .filter(Boolean)
+        .sort((a, b) => b.score - a.score);
+      const rank = all.findIndex(s => s.code === selectedState) + 1;
+      rankText = ` · #${rank} of ${all.length}`;
+    }
+    scopeText = STATE_NAMES[selectedState];
+  } else {
+    const all = Object.keys(STATE_NAMES)
+      .map(c => { const r = computeOutlookScore(activeLens, c, selectedYearIdx); return r ? r.score : null; })
+      .filter(v => v !== null);
+    if (all.length) result = { score: all.reduce((a, b) => a + b, 0) / all.length, count: cfg.metrics.length };
+    scopeText = 'National average';
+  }
+
+  if (!result) {
+    card.style.display = 'none';
+    const mocLens = document.getElementById('mocLens');
+    if (mocLens) { mocLens.style.display = 'none'; syncMapOutlookChips(); }
+    return;
+  }
+
+  card.style.display = '';
+  const tier = getOutlookTier(result.score);
+  const pct  = Math.round((result.score - 1) / 4 * 100);
+
+  card.innerHTML = `
+    <div class="card-header-row">
+      <div class="outlook-header" style="margin-bottom:0">${cfg.label} · Overall Outlook</div>
+      <button class="card-toggle-btn" aria-label="Toggle outlook">▾</button>
+    </div>
+    <div class="card-body">
+      <div class="outlook-tier-row">
+        <div class="outlook-dot" style="background:${tier.color}"></div>
+        <span class="outlook-tier-label" style="color:${tier.color}">${tier.label}</span>
+      </div>
+      <div class="outlook-meta-row">${scopeText}${rankText} · ${result.count} indicators</div>
+      <div class="outlook-bar-track">
+        <div class="outlook-bar-fill" style="width:${pct}%;background:${tier.color}"></div>
+      </div>
+    </div>
+  `;
+  card.classList.toggle('card-collapsed', metricOutlookCollapsed);
+  card.querySelector('.card-toggle-btn').addEventListener('click', () => {
+    metricOutlookCollapsed = !metricOutlookCollapsed;
+    card.classList.toggle('card-collapsed', metricOutlookCollapsed);
+  });
+  syncOverviewBar();
+
+  // Cache for popover and update lens chip
+  _mocLensCache = { cfg, tier, result, scopeText, rankText, pct };
+  const mocLens = document.getElementById('mocLens');
+  if (mocLens) {
+    document.getElementById('mocLensPrefix').textContent = cfg.label;
+    document.getElementById('mocLensDot').style.background = tier.color;
+    const lbl = document.getElementById('mocLensLabel');
+    lbl.textContent = tier.label; lbl.style.color = tier.color;
+    mocLens.style.display = '';
+    syncMapOutlookChips();
+  }
+}
+
+const SYSTEM_LENSES = [
+  { key: 'patient',    letter: 'P', shortName: 'Patient',  color: '#4ECDC4', bgColor: 'rgba(78,205,196,0.18)' },
+  { key: 'clinical',   letter: 'C', shortName: 'Clinical', color: '#1B5FA8', bgColor: 'rgba(27,95,168,0.25)' },
+  { key: 'operations', letter: 'O', shortName: 'Ops',      color: '#E8A838', bgColor: 'rgba(232,168,56,0.18)' },
+  { key: 'payer',      letter: '$', shortName: 'Payer',    color: '#2D9B6F', bgColor: 'rgba(45,155,111,0.18)' },
+  { key: 'policy',     letter: 'L', shortName: 'Policy',   color: '#DF5752', bgColor: 'rgba(223,87,82,0.18)' },
+  { key: 'baseline',   letter: 'B', shortName: 'Baseline', color: '#0EA5E9', bgColor: 'rgba(14,165,233,0.18)' },
+];
+
+const METRIC_GROUPS = {
+  patient:    [
+    { label: 'Health Status',  indices: [0,1,2,3,5,6] },
+    { label: 'Access & Age',   indices: [4,7] }
+  ],
+  clinical:   [
+    { label: 'Physicians & Staff', indices: [0,1,2,6,7,8] },
+    { label: 'Access',             indices: [3,4,5] }
+  ],
+  operations: [
+    { label: 'Capacity', indices: [0,1,2,3] },
+    { label: 'Quality',  indices: [4,5,6] }
+  ],
+  payer:      [
+    { label: 'Coverage', indices: [0,1,2,3,4] },
+    { label: 'Cost',     indices: [5] }
+  ],
+  policy:     [
+    { label: 'State Policy', indices: [0,1,2,3,4,5] }
+  ],
+  baseline:   [
+    { label: 'Economics',    indices: [0,1,2,3,4] },
+    { label: 'Demographics', indices: [5,6,7,8,9,10,11,12] }
+  ]
+};
+
+const FEATURED_COUNT = 3; // metrics shown before "show more"
+
+// Track collapse/expand state per lens+group: key = "lens|groupIndex"
+const metricGroupState = {};
+function getGroupKey(lens, gi) { return `${lens}|${gi}`; }
+function isGroupCollapsed(lens, gi) {
+  const k = getGroupKey(lens, gi);
+  if (k in metricGroupState) return metricGroupState[k];
+  const groups = METRIC_GROUPS[lens] || [];
+  const activeGroup = groups.findIndex(g => g.indices.includes(activeMetricIdx));
+  return gi !== activeGroup;
+}
+
+function renderSystemOutlook() {
+  const card = document.getElementById('systemOutlookCard');
+  const code = selectedState;
+  const yearIdx = selectedYearIdx;
+
+  // Gather per-lens scores
+  const lensResults = SYSTEM_LENSES.map(l => {
+    const r = computeOutlookScore(l.key, code || Object.keys(STATE_NAMES)[0], yearIdx);
+    if (!r) return null;
+    if (!code) {
+      // national average: average all states
+      const allScores = Object.keys(STATE_NAMES)
+        .map(c => { const rr = computeOutlookScore(l.key, c, yearIdx); return rr ? rr.score : null; })
+        .filter(v => v !== null);
+      const avg = allScores.length ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
+      return avg !== null ? { lens: l, score: avg } : null;
+    }
+    return { lens: l, score: r.score };
+  }).filter(Boolean);
+
+  if (lensResults.length < 3) {
+    card.style.display = 'none';
+    const mocSys = document.getElementById('mocSystem');
+    if (mocSys) { mocSys.style.display = 'none'; syncMapOutlookChips(); }
+    return;
+  }
+
+  const overallScore = lensResults.reduce((a, b) => a + b.score, 0) / lensResults.length;
+  const tier = getOutlookTier(overallScore);
+  const pct  = Math.round((overallScore - 1) / 4 * 100);
+
+  let scopeText, rankText = '';
+  if (code) {
+    scopeText = STATE_NAMES[code];
+    // Rank across all states
+    const allStateScores = Object.keys(STATE_NAMES).map(c => {
+      const lr = SYSTEM_LENSES.map(l => { const r = computeOutlookScore(l.key, c, yearIdx); return r ? r.score : null; }).filter(v => v !== null);
+      return lr.length >= 3 ? { code: c, score: lr.reduce((a, b) => a + b, 0) / lr.length } : null;
+    }).filter(Boolean).sort((a, b) => b.score - a.score);
+    const rank = allStateScores.findIndex(s => s.code === code) + 1;
+    if (rank > 0) rankText = ` · #${rank} of ${allStateScores.length}`;
+  } else {
+    scopeText = 'National average';
+  }
+
+  // Update inline bars on each lens button
+  lensResults.forEach(({ lens, score }) => {
+    const btn = document.querySelector(`.lens-btn[data-lens="${lens.key}"]`);
+    if (!btn) return;
+    const fill = btn.querySelector('.lens-bar-fill');
+    if (!fill) return;
+    const lt = getOutlookTier(score);
+    const lp = Math.round((score - 1) / 4 * 100);
+    fill.style.width = lp + '%';
+    fill.style.background = lt.color;
+  });
+
+  card.style.display = '';
+  card.innerHTML = `
+    <div class="card-header-row">
+      <div class="sys-header" style="margin-bottom:0" data-tip="<strong>Overall System Outlook</strong><br>An aggregate score across all 6 lenses, rating this state's healthcare system from Challenged to Strong. The bar on each lens button shows that lens's individual score.">Overall System Outlook</div>
+      <button class="card-toggle-btn" aria-label="Toggle outlook">▾</button>
+    </div>
+    <div class="card-body">
+      <div class="sys-tier-row">
+        <div class="sys-dot" style="background:${tier.color}"></div>
+        <span class="sys-tier-label" style="color:${tier.color}">${tier.label}</span>
+      </div>
+      <div class="sys-meta">${scopeText}${rankText} · 6 perspectives</div>
+    </div>
+  `;
+  card.classList.toggle('card-collapsed', sysOutlookCollapsed);
+  card.querySelector('.card-toggle-btn').addEventListener('click', () => {
+    sysOutlookCollapsed = !sysOutlookCollapsed;
+    card.classList.toggle('card-collapsed', sysOutlookCollapsed);
+  });
+  syncOverviewBar();
+
+  // Cache for popover and update system chip
+  _mocSysCache = { tier, pct, scopeText, rankText, lensResults };
+  const mocSystem = document.getElementById('mocSystem');
+  if (mocSystem) {
+    document.getElementById('mocSysDot').style.background = tier.color;
+    const lbl = document.getElementById('mocSysLabel');
+    lbl.textContent = tier.label; lbl.style.color = tier.color;
+    mocSystem.style.display = '';
+    syncMapOutlookChips();
+  }
+}
+
+// Year-aware value: uses generateTrend() to extrapolate back in time
+function getValForYear(lens, idx, code, yearIdx) {
+  if (yearIdx === ALL_YEARS.length - 1) return getVal(lens, idx, code);
+  const points = generateTrend(lens, idx, code);
+  if (!points) return getVal(lens, idx, code);
+  const pt = points.find(p => p.year === ALL_YEARS[yearIdx]);
+  return pt ? Math.round(pt.value * 10) / 10 : getVal(lens, idx, code);
+}
+
+// Quintile re-ranked against all states at the same year
+function getQuintileForYear(lens, idx, code, yearIdx) {
+  if (yearIdx === ALL_YEARS.length - 1) return getQuintile(lens, idx, code);
+  const sorted = Object.keys(STATE_NAMES)
+    .map(c => ({ code: c, val: getValForYear(lens, idx, c, yearIdx) }))
+    .filter(e => e.val !== null)
+    .sort((a, b) => a.val - b.val);
+  if (!sorted.length) return null;
+  const pos = sorted.findIndex(e => e.code === code);
+  if (pos === -1) return null;
+  return Math.min(5, Math.ceil((pos + 1) / sorted.length * 5));
+}
+
+function getNatAvgForYear(lens, idx, yearIdx) {
+  if (yearIdx === ALL_YEARS.length - 1) return getNatAvg(lens, idx);
+  const vals = Object.keys(STATE_NAMES)
+    .map(c => getValForYear(lens, idx, c, yearIdx))
+    .filter(v => v !== null);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+const svg = d3.select('#mapSvg');
+let _sfcLastAbbr = null;
+
+async function loadMap() {
+  try {
+    const us = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(r => r.json());
+    usFeatures = topojson.feature(us, us.objects.states).features;
+    document.getElementById('mapLoading').style.display = 'none';
+    drawMap();
+    fetch('/assets/data/countyData.json').then(r => r.json()).then(d => { countyData = d; refreshGrainToggle(); }).catch(() => {});
+    let resizeTimer;
+    const ro = new ResizeObserver(() => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(drawMap, 60);
+    });
+    ro.observe(document.querySelector('.map-stage'));
+  } catch (err) {
+    document.getElementById('mapLoading').innerHTML =
+      '<div style="color: var(--hu-red);">Map data failed to load</div>' +
+      '<div style="font-size: 10px; opacity: 0.7;">Check internet connection</div>';
+    console.error(err);
+  }
+}
+
+function changeQuintile(abbr) {
+  if (selectedYearIdx === 0) return null;
+  const dir = METRICS[activeLens].items[activeMetricIdx]?.dir ?? -1;
+  const deltas = Object.keys(STATE_NAMES)
+    .map(c => {
+      const curr = getValForYear(activeLens, activeMetricIdx, c, selectedYearIdx);
+      const prev = getValForYear(activeLens, activeMetricIdx, c, selectedYearIdx - 1);
+      if (curr === null || prev === null) return null;
+      return { code: c, delta: (curr - prev) * dir };
+    })
+    .filter(d => d !== null)
+    .sort((a, b) => a.delta - b.delta);
+  const pos = deltas.findIndex(d => d.code === abbr);
+  if (pos === -1) return null;
+  return Math.min(5, Math.ceil((pos + 1) / deltas.length * 5));
+}
+
+// The 1-5 color bucket a state's fill uses on the map, direction- and
+// mode-adjusted. The hover card reads the same value, so card and map agree.
+function displayQuintile(abbr) {
+  if (sliderMode === 'change') return changeQuintile(abbr);
+  const bucket = getQuintileForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
+  if (bucket === null) return null;
+  const dir = METRICS[activeLens].items[activeMetricIdx]?.dir ?? -1;
+  return dir === 1 ? bucket : dir === -1 ? (6 - bucket) : bucket;
+}
+
+function refreshTimeLabel() {
+  if (sliderMode === 'change' && selectedYearIdx > 0) {
+    timeCurrentEl.textContent = ALL_YEARS[selectedYearIdx - 1] + '→' + ALL_YEARS[selectedYearIdx];
+  } else {
+    timeCurrentEl.textContent = ALL_YEARS[selectedYearIdx];
+  }
+}
+
+async function ensureCountyGeo() {
+  if (countyFeatures || _countyGeoLoading) return;
+  _countyGeoLoading = true;
+  try {
+    const us = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json').then(r => r.json());
+    countyFeatures = topojson.feature(us, us.objects.counties).features;
+    drawMap();
+  } catch (e) { console.error('county geometry load failed', e); }
+  _countyGeoLoading = false;
+}
+
+function refreshGrainToggle() {
+  const btn = document.getElementById('grainCountyBtn');
+  if (!btn) return;
+  const ok = metricHasCounty(activeLens, activeMetricIdx);
+  btn.disabled = !ok;
+  // if we're in county view but the new metric has no county data, fall back to state
+  if (!ok && mapGrain === 'county') mapGrain = 'state';
+  document.querySelectorAll('#grainToggle .grain-btn').forEach(b => b.classList.toggle('active', b.dataset.grain === mapGrain));
+}
+
+function showCountyTip(fips, name, x, y) {
+  const tip = document.getElementById('countyTip');
+  const v = countyVal(activeLens, activeMetricIdx, fips);
+  const unit = METRICS[activeLens].items[activeMetricIdx]?.unit;
+  tip.innerHTML = '<b>' + name + '</b><span>' + (v == null ? 'no data' : fmtVal(v, unit)) + '</span>';
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x + 14, window.innerWidth - r.width - 8) + 'px';
+  tip.style.top = Math.max(8, y - r.height - 12) + 'px';
+}
+function hideCountyTip() { const t = document.getElementById('countyTip'); if (t) t.hidden = true; }
+
+function drawCountyChoropleth(path) {
+  svg.append('g')
+    .selectAll('path')
+    .data(countyFeatures)
+    .join('path')
+    .attr('d', path)
+    .attr('class', d => { const q = displayCountyQuintile(String(d.id).padStart(5, '0')); return 'county ' + (q === null ? 'no-data' : 'has-val-' + q); })
+    .on('mousemove', function(event, d) { if (isTouch()) return; showCountyTip(String(d.id).padStart(5, '0'), (d.properties && d.properties.name) || 'County', event.clientX, event.clientY); })
+    .on('mouseleave', hideCountyTip);
+  // state borders on top for orientation
+  svg.append('g')
+    .selectAll('path')
+    .data(usFeatures)
+    .join('path')
+    .attr('d', path)
+    .attr('class', 'county-state-border');
+}
+
+function drawMap() {
+  if (!usFeatures) return;
+  const svgEl = document.getElementById('mapSvg');
+  const stage = svgEl.parentElement;
+  const w = stage.clientWidth;
+  const h = stage.clientHeight;
+  if (w <= 0 || h <= 0) return;
+
+  svg.attr('viewBox', `0 0 ${w} ${h}`).attr('width', w).attr('height', h);
+  svg.selectAll('*').remove();
+  refreshGrainToggle();   // keep the State/County toggle in sync with the current metric
+
+  const defs = svg.append('defs');
+  const pat = defs.append('pattern')
+    .attr('id', 'no-data-hatch')
+    .attr('width', 6).attr('height', 6)
+    .attr('patternUnits', 'userSpaceOnUse')
+    .attr('patternTransform', 'rotate(45)');
+  const isLight = document.documentElement.dataset.theme === 'light';
+  pat.append('rect').attr('width', 6).attr('height', 6).attr('fill', isLight ? '#E4EAF3' : '#1c2535');
+  pat.append('line').attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 6)
+    .attr('stroke', isLight ? '#C8D5E4' : '#2e3d54').attr('stroke-width', 2);
+
+  // Update legend and time label to reflect current mode
+  const legendAnnoText = (sliderMode === 'change' && selectedYearIdx === 0)
+    ? 'no prior year'
+    : sliderMode === 'change' ? 'declined → improved'
+    : activeLens === 'baseline' ? 'lower · higher'
+    : 'worse → better';
+  document.querySelectorAll('.legend-anno').forEach(el => { el.textContent = legendAnnoText; });
+  refreshTimeLabel();
+
+  const pad = 20;
+  const projection = d3.geoAlbersUsa()
+    .fitExtent([[pad, pad], [w - pad, h - pad]], { type: 'FeatureCollection', features: usFeatures });
+  const path = d3.geoPath(projection);
+
+  // County view: draw the county choropleth + state borders and stop. (County data
+  // is single-vintage, so the year slider / change mode don't apply here.)
+  if (mapGrain === 'county' && metricHasCounty(activeLens, activeMetricIdx)) {
+    if (countyFeatures) { drawCountyChoropleth(path); return; }
+    ensureCountyGeo();   // not loaded yet → fetch, then redraw; fall through to states this frame
+  }
+
+  function colorClassFor(abbr) {
+    const q = displayQuintile(abbr);
+    return q === null ? 'no-data' : 'has-val-' + q;
+  }
+
+  svg.append('g')
+    .selectAll('path')
+    .data(usFeatures)
+    .join('path')
+    .attr('d', path)
+    .attr('class', d => {
+      const fips = String(d.id).padStart(2, '0');
+      const abbr = FIPS_TO_ABBR[fips];
+      if (!abbr) return 'state has-val-1';
+      let cls = 'state ' + colorClassFor(abbr);
+      if (abbr === selectedState) cls += ' selected';
+      if (abbr === compareState)  cls += ' compare-state';
+      return cls;
+    })
+    .attr('tabindex', d => FIPS_TO_ABBR[String(d.id).padStart(2, '0')] ? '0' : null)
+    .attr('role', d => FIPS_TO_ABBR[String(d.id).padStart(2, '0')] ? 'button' : null)
+    .attr('aria-label', d => {
+      const abbr = FIPS_TO_ABBR[String(d.id).padStart(2, '0')];
+      return abbr ? STATE_NAMES[abbr] : null;
+    })
+    .on('mousemove', function(event, d) {
+      if (isTouch()) return;
+      const fips = String(d.id).padStart(2, '0');
+      const abbr = FIPS_TO_ABBR[fips];
+      if (!abbr) return;
+      // If hovering the already-selected (pinned) state, leave the card where it is
+      if (abbr === selectedState) return;
+      showStateFloatCard(abbr, event.clientX, event.clientY, false);
+    })
+    .on('mouseleave', () => {
+      // Restore pinned card for selected state; otherwise hide
+      if (selectedState && _lastMapClick && _lastMapClick.abbr === selectedState) {
+        showStateFloatCard(selectedState, _lastMapClick.clientX, _lastMapClick.clientY, false);
+      } else {
+        hideStateFloatCard();
+      }
+    })
+    .on('click', function(event, d) {
+      const fips = String(d.id).padStart(2, '0');
+      const abbr = FIPS_TO_ABBR[fips];
+      if (!abbr) return;
+      if (mapMode === 'explore') {
+        if (abbr === selectedState) { selectNation(); hideStateFloatCard(); }
+        else window._onMapClick(abbr, event.clientX, event.clientY);
+      } else {
+        // compare mode
+        if (!selectedState) {
+          window._onMapClick(abbr, event.clientX, event.clientY);
+        } else if (abbr === selectedState) {
+          compareState = null;
+          selectNation();
+        } else if (abbr === compareState) {
+          compareState = null;
+          updateComparePanel();
+          drawMap();
+        } else {
+          compareState = abbr;
+          updateComparePanel();
+          drawMap();
+        }
+      }
+    })
+    .on('keydown', function(event, d) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      const fips = String(d.id).padStart(2, '0');
+      const abbr = FIPS_TO_ABBR[fips];
+      if (!abbr) return;
+      if (mapMode === 'explore') {
+        if (abbr === selectedState) selectNation();
+        else selectState(abbr);
+      } else {
+        if (!selectedState) { selectState(abbr); }
+        else if (abbr === selectedState) { compareState = null; selectNation(); }
+        else if (abbr === compareState) { compareState = null; updateComparePanel(); drawMap(); }
+        else { compareState = abbr; updateComparePanel(); drawMap(); }
+      }
+    });
+}
+
+function makeMetricItem(m, i, lensColor) {
+  const div = document.createElement('div');
+  div.className = 'metric-item' + (i === activeMetricIdx ? ' active' : '');
+  div.style.setProperty('--accent-color', lensColor);
+  const dirLabel = m.dir === 1 ? '↑ better' : m.dir === -1 ? '↓ better' : '';
+  div.innerHTML = `
+    <div class="metric-item-label">
+      <span class="metric-info-icon" data-metric-idx="${i}">i</span>
+      <span class="metric-item-text">${m.name}</span>
+    </div>
+    ${dirLabel ? `<span class="metric-dir-label">${dirLabel}</span>` : ''}
+  `;
+  div.addEventListener('click', (e) => {
+    if (e.target.classList.contains('metric-info-icon')) return;
+    activeMetricIdx = i;
+    renderAll();
+    updateHash();
+  });
+  const icon = div.querySelector('.metric-info-icon');
+  icon.addEventListener('mouseenter', (e) => { if (!isTouch()) showMetricExplainer(e.target, m, lensColor); });
+  icon.addEventListener('mouseleave', () => { if (!isTouch()) hideMetricExplainer(); });
+  icon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const el = getExplainerEl();
+    if (el.classList.contains('visible')) {
+      hideMetricExplainer();
+    } else {
+      showMetricExplainer(e.currentTarget, m, lensColor);
+      if (isTouch()) setTimeout(hideMetricExplainer, 5000);
+    }
+  });
+  return div;
+}
+
+function renderMetricsInto(list) {
+  const lensData = METRICS[activeLens];
+  const groups = METRIC_GROUPS[activeLens] || [];
+  list.innerHTML = '';
+
+  if (!groups.length) {
+    lensData.items.forEach((m, i) => list.appendChild(makeMetricItem(m, i, lensData.color)));
+    return;
+  }
+
+  groups.forEach((group, gi) => {
+    const validIndices = group.indices.filter(i => i < lensData.items.length);
+    if (validIndices.includes(activeMetricIdx)) {
+      metricGroupState[getGroupKey(activeLens, gi)] = false;
+      if (validIndices.indexOf(activeMetricIdx) >= FEATURED_COUNT) {
+        metricGroupState[`${activeLens}|${gi}|more`] = true;
+      }
+    }
+  });
+
+  groups.forEach((group, gi) => {
+    const collapsed = isGroupCollapsed(activeLens, gi);
+    const validIndices = group.indices.filter(i => i < lensData.items.length);
+    const header = document.createElement('div');
+    header.className = 'metric-group-header' + (collapsed ? ' collapsed' : '');
+    header.innerHTML = `
+      <span class="metric-group-label">${group.label}</span>
+      <span class="metric-group-count">${validIndices.length}</span>
+      <span class="metric-group-arrow">›</span>
+    `;
+    header.addEventListener('click', () => {
+      const k = getGroupKey(activeLens, gi);
+      metricGroupState[k] = !isGroupCollapsed(activeLens, gi);
+      renderMetrics();
+    });
+    list.appendChild(header);
+
+    if (collapsed) return;
+
+    const featured = validIndices.slice(0, FEATURED_COUNT);
+    const extra    = validIndices.slice(FEATURED_COUNT);
+    const showMoreKey = `${activeLens}|${gi}|more`;
+    const showingMore = !!metricGroupState[showMoreKey];
+
+    featured.forEach(i => list.appendChild(makeMetricItem(lensData.items[i], i, lensData.color)));
+
+    if (extra.length) {
+      if (showingMore) {
+        extra.forEach(i => list.appendChild(makeMetricItem(lensData.items[i], i, lensData.color)));
+        const lessBtn = document.createElement('div');
+        lessBtn.className = 'metric-show-more';
+        lessBtn.textContent = '↑ show less';
+        lessBtn.addEventListener('click', () => {
+          metricGroupState[showMoreKey] = false;
+          renderMetrics();
+        });
+        list.appendChild(lessBtn);
+      } else {
+        const moreBtn = document.createElement('div');
+        moreBtn.className = 'metric-show-more';
+        moreBtn.textContent = `+ ${extra.length} more`;
+        moreBtn.addEventListener('click', () => {
+          metricGroupState[showMoreKey] = true;
+          renderMetrics();
+        });
+        list.appendChild(moreBtn);
+      }
+    }
+  });
+}
+
+function renderMetrics() {
+  renderMetricsInto(document.getElementById('metricList'));
+  const mobList = document.getElementById('metricListMob');
+  if (mobList) renderMetricsInto(mobList);
+}
+
+// ===== METRIC EXPLAINER TOOLTIP =====
+let explainerEl = null;
+function getExplainerEl() {
+  if (!explainerEl) {
+    explainerEl = document.createElement('div');
+    explainerEl.className = 'metric-explainer';
+    document.body.appendChild(explainerEl);
+  }
+  return explainerEl;
+}
+function showMetricExplainer(iconEl, metric, color) {
+  const el = getExplainerEl();
+  el.style.setProperty('--accent-color', color);
+  el.innerHTML = `
+    <div class="me-title">${metric.name}</div>
+    <div class="me-section">
+      <span class="me-label">Definition</span>
+      ${metric.defn || 'Definition pending.'}
+    </div>
+    ${metric.method ? `
+      <div class="me-section">
+        <span class="me-label">Methodology</span>
+        ${metric.method}
+      </div>
+    ` : ''}
+    <div class="me-section">
+      <span class="me-label">Source · Updated</span>
+      ${metric.source || 'TBD'} · ${metric.updated || 'TBD'}
+    </div>
+    ${metric.caveat ? `<div class="me-caveat">${metric.caveat}</div>` : ''}
+  `;
+  // On narrow screens, anchor to bottom of viewport (above bottom bar)
+  if (window.innerWidth <= 680) {
+    el.style.cssText = 'position:fixed;left:12px;right:12px;width:auto;bottom:70px;top:auto;';
+    el.classList.add('visible');
+    return;
+  }
+  // Desktop: position to the right of the icon, flip left if needed
+  const rect = iconEl.getBoundingClientRect();
+  const elW = 320;
+  const margin = 12;
+  let left = rect.right + margin;
+  if (left + elW > window.innerWidth) left = rect.left - elW - margin;
+  let top = rect.top - 10;
+  if (top + 280 > window.innerHeight) top = window.innerHeight - 290;
+  if (top < 10) top = 10;
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+  el.style.right = 'auto';
+  el.style.width = '320px';
+  el.style.bottom = 'auto';
+  el.classList.add('visible');
+}
+function hideMetricExplainer() {
+  if (explainerEl) explainerEl.classList.remove('visible');
+}
+
+function renderHeader() {
+  const lens = METRICS[activeLens];
+  const metric = lens.items[activeMetricIdx];
+  const eyebrow = document.getElementById('mapEyebrow');
+  const lensLabels = {
+    patient: 'Patient Lens',
+    clinical: 'Provider Clinical Lens',
+    operations: 'Provider Operations Lens',
+    payer: 'Payer Lens',
+    policy: 'Policy Lens'
+  };
+  eyebrow.textContent = lensLabels[activeLens];
+  eyebrow.style.color = lens.color;
+  document.getElementById('mapH1').textContent = metric.name;
+  document.getElementById('mapH1Sub').textContent = metric.sub;
+  document.documentElement.style.setProperty('--accent-color', lens.color);
+  _mapHeaderMetricRef = { metric, color: lens.color };
+}
+
+function renderRanking() {
+  const list = document.getElementById('rankList');
+  list.innerHTML = '';
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+
+  const states = Object.keys(STATE_NAMES);
+
+  let rows;
+
+  if (rankMode === 'movers') {
+    // Compare current year to baseline (2018, idx 0)
+    const baseIdx = 0;
+    rows = states
+      .map(c => {
+        const cur  = getValForYear(activeLens, activeMetricIdx, c, selectedYearIdx);
+        const base = getValForYear(activeLens, activeMetricIdx, c, baseIdx);
+        if (cur === null || base === null || base === 0) return null;
+        const delta = cur - base;
+        return { code: c, val: cur, delta };
+      })
+      .filter(Boolean)
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+      .slice(0, 8);
+
+    if (!rows.length) {
+      list.innerHTML = '<div style="color:var(--hu-text-3);font-size:13px;padding:8px 0">No trend data available for this metric</div>';
+      return;
+    }
+    rows.forEach((r, i) => {
+      const sign  = r.delta >= 0 ? '+' : '';
+      const cls   = r.delta >= 0 ? 'up' : 'down';
+      const row   = document.createElement('div');
+      row.className = 'rank-row';
+      row.innerHTML = `
+        <span class="rank-num">${i + 1}</span>
+        <span class="rank-name">${STATE_NAMES[r.code]}</span>
+        <span class="rank-val stat-vs ${cls}">${sign}${Math.round(r.delta * 10) / 10}</span>
+      `;
+      row.addEventListener('click', () => selectState(r.code));
+      list.appendChild(row);
+    });
+    return;
+  }
+
+  rows = states
+    .map(c => ({ code: c, val: getValForYear(activeLens, activeMetricIdx, c, selectedYearIdx) }))
+    .filter(s => s.val !== null)
+    .sort((a, b) => rankMode === 'lowest' ? a.val - b.val : b.val - a.val)
+    .slice(0, 8);
+
+  if (!rows.length) {
+    list.innerHTML = '<div style="color:var(--hu-text-3);font-size:13px;padding:8px 0">Data pending for this metric</div>';
+    return;
+  }
+  rows.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'rank-row';
+    row.innerHTML = `
+      <span class="rank-num">${i + 1}</span>
+      <span class="rank-name">${STATE_NAMES[r.code]}</span>
+      <span class="rank-val">${fmtVal(r.val, metric.unit)}</span>
+    `;
+    row.addEventListener('click', () => selectState(r.code));
+    list.appendChild(row);
+  });
+}
+
+function fmtRetrievedDate(raw) {
+  if (!raw) return '';
+  const [y, m] = raw.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const label = months[parseInt(m, 10) - 1] || m;
+  return `Retrieved ${label} ${y}`;
+}
+
+function updateSourceCite(metric) {
+  const link = document.getElementById('sourceCiteLink');
+  const date = document.getElementById('sourceCiteDate');
+  const cavBtn = document.getElementById('caveatToggle');
+  const cavTxt = document.getElementById('caveatText');
+  link.textContent = metric.source || '—';
+  if (metric.sourceUrl) {
+    link.href = metric.sourceUrl;
+    link.style.pointerEvents = '';
+  } else {
+    link.removeAttribute('href');
+    link.style.pointerEvents = 'none';
+  }
+  date.textContent = fmtRetrievedDate(metric.retrievedDate);
+  cavTxt.style.display = 'none';
+  if (metric.caveat) {
+    cavBtn.style.display = 'inline';
+    cavTxt.textContent = metric.caveat;
+  } else {
+    cavBtn.style.display = 'none';
+    cavTxt.textContent = '';
+  }
+}
+
+function updateStatPanel() {
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+  const displayYear = ALL_YEARS[selectedYearIdx];
+  const currValEl = document.getElementById('selCurrVal');
+  updateSourceCite(metric);
+
+  if (!selectedState) {
+    // ── National view ──
+    document.getElementById('selCurrLabel').textContent = metric.name;
+    document.getElementById('selNatAvgLabel').textContent = 'State range';
+    document.getElementById('selRankLabel').textContent = 'States reporting';
+    document.getElementById('detailEyebrow').textContent = 'National View';
+
+    const natAvg = getNatAvgForYear(activeLens, activeMetricIdx, selectedYearIdx);
+    if (natAvg === null) {
+      currValEl.textContent = 'No data available';
+      currValEl.classList.add('no-data-val');
+    } else {
+      currValEl.textContent = fmtVal(Math.round(natAvg * 10) / 10, metric.unit);
+      currValEl.classList.remove('no-data-val');
+    }
+
+    const allVals = Object.keys(STATE_NAMES)
+      .map(c => getValForYear(activeLens, activeMetricIdx, c, selectedYearIdx))
+      .filter(v => v !== null);
+    if (allVals.length) {
+      const lo = Math.min(...allVals), hi = Math.max(...allVals);
+      document.getElementById('selNatAvg').textContent = `${fmtVal(lo, metric.unit)} – ${fmtVal(hi, metric.unit)}`;
+    } else {
+      document.getElementById('selNatAvg').textContent = '—';
+    }
+    document.getElementById('selRankLabel').textContent = 'States with data';
+    document.getElementById('selRank').textContent = allVals.length ? `${allVals.length} jurisdictions` : '—';
+    document.getElementById('selDataYear').textContent = displayYear;
+    const attrib = document.getElementById('attribYear');
+    if (attrib) attrib.textContent = String(displayYear);
+    document.getElementById('selRankBand').style.display = 'none';
+    document.getElementById('popContext').style.display = 'none';
+    return;
+  }
+
+  // ── State view ──
+  document.getElementById('selCurrLabel').textContent = metric.name;
+  document.getElementById('selNatAvgLabel').textContent = 'U.S. average';
+  document.getElementById('selRankLabel').textContent = 'Percentile';
+  document.getElementById('detailEyebrow').textContent = 'Selected Region';
+
+  const val = getValForYear(activeLens, activeMetricIdx, selectedState, selectedYearIdx);
+  const natAvg = getNatAvgForYear(activeLens, activeMetricIdx, selectedYearIdx);
+  const isEst = selectedYearIdx < ALL_YEARS.length - 1 && generateTrend(activeLens, activeMetricIdx, selectedState);
+
+  if (val === null) {
+    currValEl.textContent = 'No data available';
+    currValEl.classList.add('no-data-val');
+  } else {
+    currValEl.textContent = fmtVal(val, metric.unit);
+    currValEl.classList.remove('no-data-val');
+  }
+  document.getElementById('selNatAvg').textContent = fmtVal(natAvg, metric.unit);
+  document.getElementById('selDataYear').textContent = displayYear + (isEst ? ' (est.)' : '');
+  const attrib = document.getElementById('attribYear');
+  if (attrib) attrib.textContent = String(displayYear);
+
+  // Direction-aware standing: statesBetter = how many states perform better on this metric
+  const dir = metric.dir ?? -1;
+  const allRanked = Object.keys(STATE_NAMES)
+    .map(c => ({ code: c, val: getValForYear(activeLens, activeMetricIdx, c, selectedYearIdx) }))
+    .filter(s => s.val !== null)
+    .sort((a, b) => b.val - a.val);  // highest value first
+  const rankFromTop = allRanked.findIndex(s => s.code === selectedState) + 1;
+  const bandEl  = document.getElementById('selRankBand');
+  const dotEl   = document.getElementById('selRankDot');
+  const bandLbl = document.getElementById('selBandLabel');
+  if (rankFromTop > 0) {
+    const n = allRanked.length;
+    // statesBetter: how many states have a better outcome (direction-aware)
+    const statesBetter = dir === 1 ? rankFromTop - 1 : n - rankFromTop;
+    const dirWord = dir === 1 ? 'higher' : 'lower';
+    document.getElementById('selRank').textContent =
+      statesBetter === 0
+        ? `Best in the nation on this metric`
+        : `${statesBetter} of ${n} states have a ${dirWord} value`;
+    const ratio = statesBetter / n;
+    let color, band;
+    if      (ratio < 0.20) { color = '#22c55e'; band = 'Top 20%'; }
+    else if (ratio < 0.40) { color = '#84cc16'; band = 'Above avg'; }
+    else if (ratio < 0.60) { color = '#E8A838'; band = 'Average'; }
+    else if (ratio < 0.80) { color = '#f97316'; band = 'Below avg'; }
+    else                   { color = '#ef4444'; band = 'Bottom 20%'; }
+    dotEl.style.background   = color;
+    bandLbl.style.color      = color;
+    bandLbl.textContent      = band;
+    bandEl.style.display     = 'flex';
+  } else {
+    document.getElementById('selRank').textContent = 'No data';
+    bandEl.style.display = 'none';
+  }
+
+  // ── Population context ──
+  const popEl = document.getElementById('popContext');
+  const statePop = STATE_POP[selectedState];
+  const isDemoPct = activeLens === 'baseline' && activeMetricIdx >= 5 && metric.unit === '%';
+  const isPerCap  = metric.unit === '/100k' || metric.unit === '/1k';
+  if (statePop && val !== null && isDemoPct) {
+    const count = statePop * (val / 100);   // thousands × pct → thousands
+    popEl.textContent = '≈ ' + fmtPop(count) + ' people';
+    popEl.style.display = 'inline';
+  } else if (statePop && val !== null && isPerCap) {
+    // statePop is in thousands; convert rate to absolute count (also in thousands for fmtPop)
+    // /1k:   absK = val × statePop / 1000   (beds/1k × Mk people → k beds)
+    // /100k: absK = val × statePop / 100000 × 1000 = val × statePop / 100
+    const absK = metric.unit === '/1k'
+      ? (val * statePop) / 1000
+      : (val * statePop) / 100000 * 1000;
+    popEl.textContent = 'pop. ' + fmtPop(statePop) + ' · ≈ ' + fmtPop(absK) + ' total';
+    popEl.style.display = 'inline';
+  } else {
+    popEl.style.display = 'none';
+  }
+}
+
+function selectState(code) {
+  selectedState = code;
+  compareState = null;
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+  document.getElementById('selStateName').textContent = STATE_NAMES[code];
+  document.getElementById('selStateMeta').textContent = code + ' · ' + metric.name;
+  document.getElementById('usaBtn').classList.remove('active');
+  updateStatPanel();
+  updateComparePanel();
+  drawMap();
+  renderSystemOutlook();
+  renderOutlook();
+  renderEntityPanel();
+  renderTrendChart();
+  updateHash();
+  if (window.innerWidth <= 680) {
+    document.querySelector('.right-panel').classList.add('sheet-open');
+  }
+}
+
+function selectNation() {
+  selectedState = null;
+  compareState = null;
+  document.getElementById('selStateName').textContent = 'United States';
+  document.getElementById('selStateMeta').textContent = 'National aggregate · all 50 states + DC';
+  document.getElementById('usaBtn').classList.add('active');
+  updateStatPanel();
+  updateComparePanel();
+  drawMap();
+  renderSystemOutlook();
+  renderOutlook();
+  renderEntityPanel();
+  renderTrendChart();
+  updateHash();
+}
+
+function getBandForState(code) {
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+  const dir = metric.dir ?? -1;
+  const allRanked = Object.keys(STATE_NAMES)
+    .map(c => ({ code: c, val: getValForYear(activeLens, activeMetricIdx, c, selectedYearIdx) }))
+    .filter(s => s.val !== null)
+    .sort((a, b) => b.val - a.val);
+  const rankFromTop = allRanked.findIndex(s => s.code === code) + 1;
+  if (rankFromTop <= 0) return null;
+  const n = allRanked.length;
+  const statesBetter = dir === 1 ? rankFromTop - 1 : n - rankFromTop;
+  const ratio = statesBetter / n;
+  if      (ratio < 0.20) return { color: '#22c55e', band: 'Top 20%' };
+  else if (ratio < 0.40) return { color: '#84cc16', band: 'Above avg' };
+  else if (ratio < 0.60) return { color: '#E8A838', band: 'Average' };
+  else if (ratio < 0.80) return { color: '#f97316', band: 'Below avg' };
+  else                   return { color: '#ef4444', band: 'Bottom 20%' };
+}
+
+function updateComparePanel() {
+  const panel = document.getElementById('comparePanel');
+  const hint  = document.getElementById('compareHint');
+  if (mapMode !== 'compare' || !selectedState) { panel.style.display = 'none'; hint.style.display = 'none'; return; }
+  if (!compareState) { panel.style.display = 'none'; hint.style.display = 'block'; return; }
+  hint.style.display = 'none';
+  panel.style.display = 'block';
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+  document.getElementById('compareMetricLabel').textContent = metric.name;
+
+  const valA = getValForYear(activeLens, activeMetricIdx, selectedState, selectedYearIdx);
+  const valB = getValForYear(activeLens, activeMetricIdx, compareState, selectedYearIdx);
+  const bandA = getBandForState(selectedState);
+  const bandB = getBandForState(compareState);
+
+  document.getElementById('compareNameA').textContent = STATE_NAMES[selectedState] + ' (' + selectedState + ')';
+  document.getElementById('compareValA').textContent = valA !== null ? fmtVal(valA, metric.unit) : '—';
+  const bandAEl = document.getElementById('compareBandA');
+  bandAEl.innerHTML = bandA
+    ? `<span style="width:7px;height:7px;border-radius:50%;background:${bandA.color};display:inline-block;flex-shrink:0"></span><span style="color:${bandA.color}">${bandA.band}</span>`
+    : '';
+
+  document.getElementById('compareNameB').textContent = STATE_NAMES[compareState] + ' (' + compareState + ')';
+  document.getElementById('compareValB').textContent = valB !== null ? fmtVal(valB, metric.unit) : '—';
+  const bandBEl = document.getElementById('compareBandB');
+  bandBEl.innerHTML = bandB
+    ? `<span style="color:${bandB.color}">${bandB.band}</span><span style="width:7px;height:7px;border-radius:50%;background:${bandB.color};display:inline-block;flex-shrink:0"></span>`
+    : '';
+
+  const winnerEl = document.getElementById('compareWinner');
+  if (valA !== null && valB !== null) {
+    const dir = metric.dir ?? -1;
+    const winnerCode = (dir === 1 ? valA >= valB : valA <= valB) ? selectedState : compareState;
+    const diff = Math.abs(valA - valB);
+    winnerEl.style.display = 'block';
+    winnerEl.textContent = STATE_NAMES[winnerCode] + ' performs better by ' + fmtVal(diff, metric.unit);
+  } else {
+    winnerEl.style.display = 'none';
+  }
+}
+
+// ===== ENTITY PANEL (hidden — real provider/payer data pending) =====
+function renderEntityPanel() {
+  const section   = document.getElementById('entitySection');
+  const titleEl   = document.getElementById('entitySectionTitle');
+  const badgeEl   = section.querySelector('.lds-badge');
+  const listEl    = document.getElementById('entityList');
+  const showFor   = ['patient', 'operations', 'payer'];
+
+  if (!showFor.includes(activeLens) || !selectedState) {
+    section.style.display = 'none';
+    return;
+  }
+
+  const data = ENTITY_DATA[activeLens]?.[selectedState];
+  if (!data || data.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  const color = METRICS[activeLens].color;
+
+  if (activeLens === 'patient') {
+    titleEl.textContent = 'Top causes of hospitalization';
+    badgeEl.textContent = 'AHRQ HCUP 2022';
+    const nums = data.map(([, rate]) => { const m = rate.match(/[\d]+/); return m ? parseInt(m[0], 10) : 0; });
+    const maxN = Math.max(...nums, 1);
+    listEl.innerHTML = data.map(([cause, rate], i) => `
+      <div class="entity-row">
+        <div class="entity-name"><span>${cause}</span><span class="entity-rank">#${i + 1}</span></div>
+        <div class="entity-meta">${rate} discharges</div>
+        <div class="entity-bar"><div class="entity-bar-fill" style="width:${Math.round(nums[i] / maxN * 100)}%;background:${color}"></div></div>
+      </div>`).join('');
+
+  } else if (activeLens === 'operations') {
+    titleEl.textContent = 'Largest hospital systems by beds';
+    badgeEl.textContent = 'AHA / AHD 2024';
+    const nums = data.map(([, beds]) => { const m = beds.match(/[\d,]+/); return m ? parseInt(m[0].replace(/,/g, ''), 10) : 0; });
+    const maxN = Math.max(...nums, 1);
+    listEl.innerHTML = data.map(([name, beds], i) => `
+      <div class="entity-row">
+        <div class="entity-name"><span>${name}</span><span class="entity-rank">#${i + 1}</span></div>
+        <div class="entity-meta">${beds}</div>
+        <div class="entity-bar"><div class="entity-bar-fill" style="width:${Math.round(nums[i] / maxN * 100)}%;background:${color}"></div></div>
+      </div>`).join('');
+
+  } else if (activeLens === 'payer') {
+    titleEl.textContent = 'Top insurers · commercial market share';
+    badgeEl.textContent = 'KFF / AMA 2023-24';
+    const nums = data.map(([, share]) => { const m = share.match(/[\d.]+/); return m ? parseFloat(m[0]) : 0; });
+    const maxN = Math.max(...nums, 1);
+    listEl.innerHTML = data.map(([name, share], i) => `
+      <div class="entity-row">
+        <div class="entity-name"><span>${name}</span><span class="entity-rank">#${i + 1}</span></div>
+        <div class="entity-meta">${share}</div>
+        <div class="entity-bar"><div class="entity-bar-fill" style="width:${Math.round(nums[i] / maxN * 100)}%;background:${color}"></div></div>
+      </div>`).join('');
+  }
+}
+
+function renderTrendChart() {
+  const svgEl   = document.getElementById('trendChart');
+  const lens    = METRICS[activeLens];
+  const metric  = lens.items[activeMetricIdx];
+  const dataYear = DATA_YEARS[activeLens]?.[activeMetricIdx];
+  const code    = selectedState;
+  const label   = code ? STATE_NAMES[code] : 'National avg';
+
+  // For national view: build a trend line from per-year national averages
+  let points = code ? generateTrend(activeLens, activeMetricIdx, code) : null;
+  if (!code) {
+    const natPoints = ALL_YEARS.map((y, yi) => {
+      const avg = getNatAvgForYear(activeLens, activeMetricIdx, yi);
+      return avg !== null ? { year: y, value: avg, real: y === dataYear } : null;
+    }).filter(Boolean);
+    if (natPoints.length >= 2) points = natPoints;
+  }
+
+  if (!points) {
+    const val = code ? getVal(activeLens, activeMetricIdx, code) : getNatAvg(activeLens, activeMetricIdx);
+    if (!dataYear || val === null) {
+      svgEl.innerHTML = `
+        <text x="160" y="40" text-anchor="middle" fill="var(--hu-text-3)" font-size="11" font-family="IBM Plex Mono, monospace">No trend data available</text>
+        <text x="160" y="58" text-anchor="middle" fill="var(--hu-text-3)" font-size="10" font-family="IBM Plex Mono, monospace">Pending: HRSA / CDC / CMS</text>`;
+    } else {
+      svgEl.innerHTML = `
+        <text x="10" y="14" text-anchor="start" fill="${lens.color}" font-size="10" font-family="IBM Plex Mono, monospace">${label}</text>
+        <text x="160" y="52" text-anchor="middle" fill="${lens.color}" font-size="22" font-weight="600" font-family="DM Sans, sans-serif">${fmtVal(val, metric.unit)}</text>
+        <text x="160" y="68" text-anchor="middle" fill="var(--hu-text-3)" font-size="10" font-family="IBM Plex Mono, monospace">${dataYear} · ${metric.source}</text>`;
+    }
+    return;
+  }
+
+  // D3 sparkline
+  const ml = 46, mr = 12, mt = 16, mb = 18;
+  const W = 320 - ml - mr;
+  const H = 100 - mt - mb;
+
+  const xSc = d3.scaleLinear().domain([2018, 2024]).range([0, W]);
+  const yVals = points.map(p => p.value);
+  const yMin = Math.min(...yVals) * 0.96;
+  const yMax = Math.max(...yVals) * 1.04;
+  const ySc = d3.scaleLinear().domain([yMin, yMax]).range([H, 0]);
+
+  const lineGen = d3.line().x(d => xSc(d.year)).y(d => ySc(d.value)).curve(d3.curveMonotoneX);
+  const areaGen = d3.area().x(d => xSc(d.year)).y0(H).y1(d => ySc(d.value)).curve(d3.curveMonotoneX);
+
+  const gradId = 'tcg_' + activeLens;
+  const svg = d3.select(svgEl);
+  svg.selectAll('*').remove();
+
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient').attr('id', gradId).attr('x1','0%').attr('y1','0%').attr('x2','0%').attr('y2','100%');
+  grad.append('stop').attr('offset','0%').attr('stop-color', lens.color).attr('stop-opacity', 0.22);
+  grad.append('stop').attr('offset','100%').attr('stop-color', lens.color).attr('stop-opacity', 0.02);
+
+  const g = svg.append('g').attr('transform', `translate(${ml},${mt})`);
+
+  g.append('path').datum(points).attr('fill', `url(#${gradId})`).attr('d', areaGen);
+  g.append('path').datum(points).attr('fill','none').attr('stroke', lens.color).attr('stroke-width', 1.5).attr('d', lineGen);
+
+  // Estimated dots
+  g.selectAll('.edot').data(points.filter(p => !p.real)).join('circle')
+    .attr('class','edot').attr('cx', d => xSc(d.year)).attr('cy', d => ySc(d.value))
+    .attr('r', 2).attr('fill', lens.color).attr('fill-opacity', 0.4);
+
+  // Real data point
+  const rp = points.find(p => p.real);
+  if (rp) {
+    const rx = xSc(rp.year), ry = ySc(rp.value);
+    g.append('circle').attr('cx', rx).attr('cy', ry).attr('r', 6).attr('fill', lens.color).attr('fill-opacity', 0.15);
+    g.append('circle').attr('class','tc-realdot').attr('cx', rx).attr('cy', ry).attr('r', 3.5).attr('fill', lens.color).attr('stroke','#0d1117').attr('stroke-width', 1.5);
+    const labelY = ry < 12 ? ry + 14 : ry - 7;
+    g.append('text').attr('x', rx).attr('y', labelY).attr('text-anchor','middle')
+      .attr('fill', lens.color).attr('font-size','9').attr('font-family','IBM Plex Mono, monospace')
+      .text(fmtVal(rp.value, metric.unit));
+  }
+
+  // Selected year indicator
+  const selYear = ALL_YEARS[selectedYearIdx];
+  if (selYear > 2018 && selYear < 2024) {
+    g.append('line')
+      .attr('class','tc-selyear')
+      .attr('x1', xSc(selYear)).attr('x2', xSc(selYear))
+      .attr('y1', 0).attr('y2', H)
+      .attr('stroke', 'rgba(255,255,255,0.25)').attr('stroke-width', 1)
+      .attr('stroke-dasharray', '3 2');
+  }
+
+  // X axis year labels
+  [2018, 2024].forEach(yr => {
+    g.append('text').attr('x', xSc(yr)).attr('y', H + 14).attr('text-anchor','middle')
+      .attr('fill','var(--hu-text-3)').attr('font-size','9').attr('font-family','IBM Plex Mono, monospace').text(yr);
+  });
+
+  // Y axis min/max hints — compact format to fit within left margin
+  function fmtAxisLabel(v, unit) {
+    const r = Math.round(v * 10) / 10;
+    if (unit === '$k') return r + 'k';
+    if (unit === '$') return v >= 1000 ? '$' + Math.round(v / 1000) + 'k' : '$' + Math.round(v);
+    if (unit === '%') return r + '%';
+    return String(r);
+  }
+  g.append('text').attr('x', -4).attr('y', 0).attr('text-anchor','end').attr('dominant-baseline','hanging')
+    .attr('fill','var(--hu-text-3)').attr('font-size','8').attr('font-family','IBM Plex Mono, monospace')
+    .text(fmtAxisLabel(yMax, metric.unit));
+  g.append('text').attr('x', -4).attr('y', H).attr('text-anchor','end').attr('dominant-baseline','auto')
+    .attr('fill','var(--hu-text-3)').attr('font-size','8').attr('font-family','IBM Plex Mono, monospace')
+    .text(fmtAxisLabel(yMin, metric.unit));
+
+  // Header label
+  svg.append('text').attr('x', ml).attr('y', 10).attr('fill', lens.color)
+    .attr('font-size','9').attr('font-family','IBM Plex Mono, monospace')
+    .text(`${label} · est. 2018–2024`);
+}
+
+function renderAll() {
+  renderHeader();
+  renderMetrics();
+  renderSystemOutlook();
+  renderOutlook();
+  renderRanking();
+  drawMap();
+  renderEntityPanel();
+  renderTrendChart();
+  updateStatPanel();
+  updateComparePanel();
+}
+
+// ── URL hash state ───────────────────────────────────────────────────────────
+function updateHash() {
+  const state = selectedState || 'USA';
+  history.replaceState(null, '', `#${activeLens}/${activeMetricIdx}/${state}/${selectedYearIdx}`);
+}
+
+function parseHash() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
+  const [lens, idxStr, state, yearStr] = hash.split('/');
+  if (lens && METRICS[lens]) {
+    activeLens = lens;
+    document.querySelectorAll('.lens-btn').forEach(b => b.classList.toggle('active', b.dataset.lens === lens));
+  }
+  const idx = parseInt(idxStr, 10);
+  if (!isNaN(idx) && METRICS[activeLens]?.items[idx]) activeMetricIdx = idx;
+  if (state && state !== 'USA' && STATE_NAMES[state]) {
+    selectedState = state;
+    const metric = METRICS[activeLens].items[activeMetricIdx];
+    document.getElementById('selStateName').textContent = STATE_NAMES[state];
+    document.getElementById('selStateMeta').textContent = state + ' · ' + metric.name;
+    document.getElementById('usaBtn').classList.remove('active');
+  } else {
+    selectedState = null;
+    document.getElementById('usaBtn').classList.add('active');
+  }
+  const yearIdx = parseInt(yearStr, 10);
+  if (!isNaN(yearIdx) && yearIdx >= 0 && yearIdx < ALL_YEARS.length) {
+    selectedYearIdx = yearIdx;
+    sliderEl.value = yearIdx;
+    refreshTimeLabel();
+    yearPrevBtn.disabled = yearIdx === 0;
+    yearNextBtn.disabled = yearIdx === ALL_YEARS.length - 1;
+  }
+}
+
+document.getElementById('usaBtn').addEventListener('click', () => { selectNation(); hideStateFloatCard(); });
+
+document.getElementById('sheetHandle').addEventListener('click', () => {
+  document.querySelector('.right-panel').classList.toggle('sheet-open');
+});
+
+document.getElementById('metricsSheetHandle').addEventListener('click', () => {
+  document.querySelector('.right-panel').classList.toggle('metrics-open');
+});
+
+document.querySelectorAll('.lens-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lens-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeLens = btn.dataset.lens;
+    activeMetricIdx = 0;
+    renderAll();
+    updateHash();
+  });
+});
+
+document.querySelectorAll('.card-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.card-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    rankMode = tab.textContent.trim().toLowerCase();
+    renderRanking();
+  });
+});
+
+// ── Year slider + step buttons ──────────────────────────────────────────────
+const sliderEl      = document.getElementById('timeSlider');
+const timeCurrentEl = document.getElementById('timeCurrent');
+const yearPrevBtn   = document.getElementById('yearPrev');
+const yearNextBtn   = document.getElementById('yearNext');
+yearPrevBtn.disabled = (selectedYearIdx === 0);
+yearNextBtn.disabled = (selectedYearIdx === ALL_YEARS.length - 1);
+
+function applyYearIdx(idx) {
+  selectedYearIdx = idx;
+  sliderEl.value = idx;
+  refreshTimeLabel();
+  yearPrevBtn.disabled = idx === 0;
+  yearNextBtn.disabled = idx === ALL_YEARS.length - 1;
+  drawMap();
+  renderRanking();
+  renderSystemOutlook();
+  renderOutlook();
+  renderTrendChart();
+  updateStatPanel();
+  updateComparePanel();
+  updateHash();
+}
+
+sliderEl.addEventListener('input', () => applyYearIdx(parseInt(sliderEl.value, 10)));
+yearPrevBtn.addEventListener('click', () => { if (selectedYearIdx > 0) applyYearIdx(selectedYearIdx - 1); });
+yearNextBtn.addEventListener('click', () => { if (selectedYearIdx < ALL_YEARS.length - 1) applyYearIdx(selectedYearIdx + 1); });
+
+document.getElementById('caveatToggle').addEventListener('click', () => {
+  const txt = document.getElementById('caveatText');
+  txt.style.display = txt.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('compareClear').addEventListener('click', () => {
+  compareState = null;
+  updateComparePanel();
+  drawMap();
+});
+
+const sourcesBtn     = document.getElementById('sourcesBtn');
+const sourcesPopover = document.getElementById('sourcesPopover');
+function refreshSourcesPopover() {
+  const src = METRICS[activeLens]?.source || '—';
+  sourcesPopover.innerHTML =
+    `<div class="sources-popover-title">${activeLens.charAt(0).toUpperCase() + activeLens.slice(1)} Lens · Data Sources</div>` +
+    `<div class="sources-popover-body">${src}</div>`;
+}
+sourcesBtn.addEventListener('mouseenter', () => { if (!isTouch()) { refreshSourcesPopover(); sourcesPopover.classList.add('visible'); } });
+sourcesBtn.addEventListener('mouseleave', () => { if (!isTouch()) sourcesPopover.classList.remove('visible'); });
+sourcesBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  refreshSourcesPopover();
+  sourcesPopover.classList.toggle('visible');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.attribution')) sourcesPopover.classList.remove('visible');
+  if (!e.target.closest('.metric-info-icon') && !e.target.closest('.metric-explainer')) hideMetricExplainer();
+});
+
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sliderMode = btn.dataset.mode;
+    drawMap();
+  });
+});
+
+document.querySelectorAll('[data-mapmode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mapmode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mapMode = btn.dataset.mapmode;
+    if (mapMode === 'explore') {
+      compareState = null;
+      updateComparePanel();
+      drawMap();
+    } else {
+      updateComparePanel();
+    }
+  });
+});
+
+// ── Theme sync ────────────────────────────────────────────────────────────────
+// The global nav (base.njk) owns data-theme on <html>; CSS reacts automatically.
+// Re-render the map whenever the attribute flips so theme-aware draw code updates.
+new MutationObserver(() => {
+  if (typeof drawMap === 'function') drawMap();
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// ── Tutorial modal ────────────────────────────────────────────────────────────
+(function() {
+  const btn     = document.getElementById('tutorialBtn');
+  const overlay = document.getElementById('tutorialOverlay');
+  const closeBtn = document.getElementById('tutorialClose');
+  function open()  { overlay.classList.add('open');  btn.classList.add('open'); }
+  function close() { overlay.classList.remove('open'); btn.classList.remove('open'); }
+  btn.addEventListener('click', () => overlay.classList.contains('open') ? close() : open());
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+})();
+
+// ── Outlook chip hover popovers ───────────────────────────────────────────────
+(function() {
+  const pop = document.getElementById('mocPopover');
+  if (!pop) return;
+
+  function showPop(chip, html) {
+    pop.innerHTML = html;
+    pop.classList.add('visible');
+    const cr = chip.getBoundingClientRect();
+    let left = cr.left;
+    let top  = cr.bottom + 8;
+    // clamp right edge
+    const pw = 280;
+    if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+    pop.style.left = Math.max(4, left) + 'px';
+    pop.style.top  = top + 'px';
+  }
+  function hidePop() { pop.classList.remove('visible'); }
+
+  const LENS_ICONS = {
+    patient:'P', clinical:'C', operations:'O', payer:'$', policy:'L', baseline:'B'
+  };
+  const LENS_COLORS = {
+    patient:'var(--lens-patient)', clinical:'var(--lens-clinical)',
+    operations:'var(--lens-operations)', payer:'var(--lens-payer)',
+    policy:'var(--lens-policy)', baseline:'var(--lens-baseline)'
+  };
+
+  const mocLens = document.getElementById('mocLens');
+  if (mocLens) {
+    mocLens.addEventListener('mouseenter', () => {
+      if (!_mocLensCache) return;
+      const { cfg, tier, result, scopeText, rankText, pct } = _mocLensCache;
+      showPop(mocLens, `
+        <div class="moc-pop-eyebrow">${cfg.label} · Overall Outlook</div>
+        <div class="moc-pop-tier">
+          <div class="moc-pop-dot" style="background:${tier.color}"></div>
+          <span class="moc-pop-tier-label" style="color:${tier.color}">${tier.label}</span>
+        </div>
+        <div class="moc-pop-bar-track">
+          <div class="moc-pop-bar-fill" style="width:${pct}%;background:${tier.color}"></div>
+        </div>
+        <div class="moc-pop-meta">${scopeText}${rankText} · ${result.count} indicators</div>
+      `);
+    });
+    mocLens.addEventListener('mouseleave', hidePop);
+  }
+
+  const mocSystem = document.getElementById('mocSystem');
+  if (mocSystem) {
+    mocSystem.addEventListener('mouseenter', () => {
+      if (!_mocSysCache) return;
+      const { tier, pct, scopeText, rankText, lensResults } = _mocSysCache;
+      const lensGrid = lensResults.map(({ lens, score }) => {
+        const lt  = getOutlookTier(score);
+        const lp  = Math.round((score - 1) / 4 * 100);
+        const col = LENS_COLORS[lens.key] || 'var(--hu-teal)';
+        return `<div class="moc-pop-lens-cell">
+          <div class="moc-pop-lens-icon" style="background:${col}">${LENS_ICONS[lens.key] || '?'}</div>
+          <div class="moc-pop-bar-track-sm"><div class="moc-pop-bar-fill-sm" style="width:${lp}%;background:${lt.color}"></div></div>
+          <span class="moc-pop-lens-name">${lens.label}</span>
+        </div>`;
+      }).join('');
+      showPop(mocSystem, `
+        <div class="moc-pop-eyebrow">Overall System Outlook</div>
+        <div class="moc-pop-tier">
+          <div class="moc-pop-dot" style="background:${tier.color}"></div>
+          <span class="moc-pop-tier-label" style="color:${tier.color}">${tier.label}</span>
+        </div>
+        <div class="moc-pop-bar-track">
+          <div class="moc-pop-bar-fill" style="width:${pct}%;background:${tier.color}"></div>
+        </div>
+        <div class="moc-pop-meta">${scopeText}${rankText} · 6 perspectives</div>
+        <div class="moc-pop-lens-grid">${lensGrid}</div>
+      `);
+    });
+    mocSystem.addEventListener('mouseleave', hidePop);
+  }
+})();
+
+// ── Map header metric info button ────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('mapMetricInfoBtn');
+  if (!btn) return;
+  btn.addEventListener('mouseenter', () => {
+    if (!isTouch() && _mapHeaderMetricRef)
+      showMetricExplainer(btn, _mapHeaderMetricRef.metric, _mapHeaderMetricRef.color);
+  });
+  btn.addEventListener('mouseleave', () => { if (!isTouch()) hideMetricExplainer(); });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!_mapHeaderMetricRef) return;
+    const el = getExplainerEl();
+    if (el.classList.contains('visible')) hideMetricExplainer();
+    else {
+      showMetricExplainer(btn, _mapHeaderMetricRef.metric, _mapHeaderMetricRef.color);
+      if (isTouch()) setTimeout(hideMetricExplainer, 5000);
+    }
+  });
+})();
+
+// ── Float card outlook toggle ─────────────────────────────────────────────────
+document.getElementById('sfcOutlookToggle').addEventListener('click', () => {
+  const body = document.getElementById('sfcOutlookBody');
+  const tog  = document.getElementById('sfcOutlookToggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  tog.classList.toggle('open', !open);
+});
+
+// ── Global hover tooltip engine ──────────────────────────────────────────────
+(function() {
+  const tip = document.getElementById('gtip');
+  let cur = null;
+  document.addEventListener('mouseover', e => {
+    if (isTouch()) return;
+    const el = e.target.closest('[data-tip]');
+    if (!el || el === cur) return;
+    cur = el;
+    tip.innerHTML = el.dataset.tip;
+    tip.classList.add('visible');
+  });
+  document.addEventListener('mousemove', e => {
+    if (!cur) return;
+    const gap = 14;
+    let x = e.clientX + gap, y = e.clientY + gap;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    if (x + w > window.innerWidth  - 8) x = e.clientX - w - gap;
+    if (y + h > window.innerHeight - 8) y = e.clientY - h - gap;
+    tip.style.left = Math.max(4, x) + 'px';
+    tip.style.top  = Math.max(4, y) + 'px';
+  });
+  document.addEventListener('mouseout', e => {
+    if (cur && !cur.contains(e.relatedTarget)) { cur = null; tip.classList.remove('visible'); }
+  });
+})();
+
+parseHash();
+renderHeader();
+renderMetrics();
+renderSystemOutlook();
+renderOutlook();
+renderRanking();
+renderTrendChart();
+renderEntityPanel();
+updateStatPanel();
+
+// State / County granularity toggle
+document.getElementById('grainToggle').addEventListener('click', (e) => {
+  const b = e.target.closest('.grain-btn');
+  if (!b || b.disabled || b.dataset.grain === mapGrain) return;
+  mapGrain = b.dataset.grain;
+  document.querySelectorAll('#grainToggle .grain-btn').forEach(x => x.classList.toggle('active', x.dataset.grain === mapGrain));
+  if (mapGrain === 'county') { hideCountyTip(); ensureCountyGeo(); }
+  drawMap();
+});
+
+loadMap();
+updateHash();
+
+
+// ── Colorblind mode ────────────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('cbToggleBtn');
+  const KEY = 'hu-colorblind';
+  if (localStorage.getItem(KEY) === 'true') {
+    document.body.dataset.colorblind = 'true';
+    btn.classList.add('active');
+  }
+  btn.addEventListener('click', () => {
+    const on = document.body.dataset.colorblind === 'true';
+    document.body.dataset.colorblind = String(!on);
+    localStorage.setItem(KEY, String(!on));
+    btn.classList.toggle('active', !on);
+    btn.setAttribute('data-tip', on
+      ? 'Toggle colorblind-friendly color scale (orange → blue)'
+      : 'Colorblind mode ON — click to disable');
+    drawMap();
+  });
+})();
+
+// ── Floating state card ────────────────────────────────────────────────
+const BAND_LABELS = ['Bottom 20%','Below avg','Average','Above avg','Top 20%'];
+const Q_COLORS    = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)'];
+
+function showStateFloatCard(abbr, clientX, clientY, forceAnimate = true) {
+  const card = document.getElementById('stateFloatCard');
+  if (!card) return;
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+  const val    = getValForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
+  const q      = displayQuintile(abbr);
+  const natAvg = getNatAvgForYear(activeLens, activeMetricIdx, selectedYearIdx);
+
+  const qColor = q ? Q_COLORS[q - 1] : 'var(--hu-text-3)';
+  const qLabel = q ? BAND_LABELS[q - 1] : 'No data';
+
+  document.getElementById('sfcState').textContent = STATE_NAMES[abbr];
+  document.getElementById('sfcMetric').textContent = metric.name;
+  const valEl = document.getElementById('sfcValue');
+  valEl.textContent = val !== null ? fmtVal(val, metric.unit) : '—';
+  valEl.style.color = qColor;
+  document.getElementById('sfcDot').style.background = qColor;
+  document.getElementById('sfcBandLabel').textContent = qLabel;
+
+  const vsEl = document.getElementById('sfcVs');
+  if (val !== null && natAvg !== null) {
+    const diff = Math.round((val - natAvg) * 10) / 10;
+    const sign = diff > 0 ? '+' : '';
+    vsEl.textContent = sign + fmtVal(diff, metric.unit) + ' vs. national avg';
+  } else {
+    vsEl.textContent = '';
+  }
+
+  // Position near cursor, clamped inside map-stage
+  card.style.display = 'block';
+  const stage = document.querySelector('.map-stage');
+  const rect  = stage.getBoundingClientRect();
+  const cw = card.offsetWidth  || 180;
+  const ch = card.offsetHeight || 110;
+  let x = clientX - rect.left + 18;
+  let y = clientY - rect.top  - 14;
+  if (x + cw > rect.width  - 6) x = clientX - rect.left - cw - 18;
+  if (y + ch > rect.height - 6) y = clientY - rect.top  - ch - 18;
+  card.style.left = Math.max(4, x) + 'px';
+  card.style.top  = Math.max(4, y) + 'px';
+
+  // Only re-trigger animation when state changes or explicitly forced
+  const doAnimate = forceAnimate || abbr !== _sfcLastAbbr;
+  const stateChanged = abbr !== _sfcLastAbbr;
+  _sfcLastAbbr = abbr;
+  if (doAnimate) {
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = '';
+  }
+
+  // Collapse outlook section when showing a new state
+  if (stateChanged) {
+    const body = document.getElementById('sfcOutlookBody');
+    const tog  = document.getElementById('sfcOutlookToggle');
+    if (body) body.style.display = 'none';
+    if (tog)  tog.classList.remove('open');
+  }
+
+  // Populate System Outlook mini section
+  const sfcSysTier = document.getElementById('sfcSysTier');
+  const sfcLensRow = document.getElementById('sfcLensRow');
+  if (sfcSysTier && sfcLensRow) {
+    const lensKeys  = ['patient','clinical','operations','payer','policy','baseline'];
+    const lensLabel = { patient:'Pt', clinical:'Cl', operations:'Op', payer:'Pa', policy:'Po', baseline:'Bl' };
+    const lensResults = lensKeys.map(k => {
+      const r = computeOutlookScore(k, abbr, selectedYearIdx);
+      return r ? { key: k, score: r.score } : null;
+    }).filter(Boolean);
+
+    const togEl = document.getElementById('sfcOutlookToggle');
+    if (lensResults.length >= 2) {
+      const overallScore = lensResults.reduce((a, b) => a + b.score, 0) / lensResults.length;
+      const tier = getOutlookTier(overallScore);
+      sfcSysTier.innerHTML = `<span class="sfc-sys-dot" style="background:${tier.color}"></span><span style="color:${tier.color}">${tier.label}</span>`;
+      sfcLensRow.innerHTML = lensKeys.map(k => {
+        const r = lensResults.find(l => l.key === k);
+        const pct = r ? Math.round((r.score - 1) / 4 * 100) : 0;
+        const color = r ? getOutlookTier(r.score).color : 'var(--hu-border)';
+        return `<div class="sfc-lens-cell"><div class="sfc-lens-bar-track"><div class="sfc-lens-bar-fill" style="width:${pct}%;background:${color}"></div></div><span class="sfc-lens-abbr">${lensLabel[k]}</span></div>`;
+      }).join('');
+      if (togEl) togEl.style.display = '';
+    } else {
+      if (togEl) togEl.style.display = 'none';
+    }
+  }
+}
+
+function hideStateFloatCard() {
+  _sfcLastAbbr = null;
+  const card = document.getElementById('stateFloatCard');
+  if (card) card.style.display = 'none';
+}
+
+// Patch map click handler to show float card with position
+// We capture the last SVG click coords and hook into selectState
+let _lastMapClick = null;
+const _origSelectState = selectState;
+// Override selectState to update float card when called from map
+// (position won't be available from non-map calls, so we check _lastMapClick)
+window._onMapClick = function(abbr, clientX, clientY) {
+  _lastMapClick = { abbr, clientX, clientY };
+  selectState(abbr);
+  showStateFloatCard(abbr, clientX, clientY);
+};
+const _origSelectNation = selectNation;
+// Hide card when deselecting
+const _wrappedSelectNation = function() {
+  _origSelectNation();
+  hideStateFloatCard();
+};
+
+// Update float card when metric/lens changes while a state is selected
+{
+  const _origRenderAll = renderAll;
+  renderAll = function() {
+    _origRenderAll();
+    if (selectedState && _lastMapClick && _lastMapClick.abbr === selectedState) {
+      showStateFloatCard(selectedState, _lastMapClick.clientX, _lastMapClick.clientY);
+    }
+  };
+}
+
+// ── Pinch / pan on tablet & mobile ────────────────────────
+function makePinchZoom(outer, inner, minS, maxS) {
+  let ox = 0, oy = 0, s = 1;
+  let initOx = 0, initOy = 0;
+  let t0 = null;
+  let p0mx = 0, p0my = 0, p0ox = 0, p0oy = 0, p0s = 1;
+  const resetBtn = outer.querySelector('.pz-reset-btn');
+  const hint     = outer.querySelector('.pz-hint');
+
+  inner.style.transformOrigin = '0 0';
+
+  function apply() {
+    inner.style.transform = `translate(${ox}px,${oy}px) scale(${s})`;
+    const atInit = Math.abs(s-1)<0.02 && Math.abs(ox-initOx)<2 && Math.abs(oy-initOy)<2;
+    if (resetBtn) resetBtn.style.display = atInit ? 'none' : 'flex';
+  }
+
+  function mid(e) {
+    const r = outer.getBoundingClientRect();
+    if (e.touches.length < 2) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top, d: 0 };
+    const x1 = e.touches[0].clientX - r.left, y1 = e.touches[0].clientY - r.top;
+    const x2 = e.touches[1].clientX - r.left, y2 = e.touches[1].clientY - r.top;
+    return { x: (x1 + x2) / 2, y: (y1 + y2) / 2, d: Math.hypot(x2 - x1, y2 - y1) };
+  }
+
+  const THRESH = 8;
+
+  outer.addEventListener('touchstart', e => {
+    if (e.touches.length >= 2) {
+      e.preventDefault();
+      const m = mid(e);
+      t0 = { type: 'pinch', d: m.d };
+      p0mx = m.x; p0my = m.y; p0ox = ox; p0oy = oy; p0s = s;
+    } else if (s > 1.02) {
+      // Only pan when zoomed — preserve tap-to-select-state at normal scale
+      t0 = { type: 'maybe', x: e.touches[0].clientX, y: e.touches[0].clientY, ox, oy };
+    }
+  }, { passive: false });
+
+  outer.addEventListener('touchmove', e => {
+    if (!t0) return;
+    if (e.touches.length >= 2 && t0.type !== 'pinch') {
+      e.preventDefault();
+      const m = mid(e);
+      t0 = { type: 'pinch', d: m.d };
+      p0mx = m.x; p0my = m.y; p0ox = ox; p0oy = oy; p0s = s;
+      return;
+    }
+    if (t0.type === 'pinch') {
+      e.preventDefault();
+      const m = mid(e);
+      const ns = Math.min(maxS, Math.max(minS, p0s * m.d / t0.d));
+      ox = m.x - (p0mx - p0ox) * ns / p0s;
+      oy = m.y - (p0my - p0oy) * ns / p0s;
+      s = ns;
+      apply();
+      return;
+    }
+    const dx = e.touches[0].clientX - t0.x;
+    const dy = e.touches[0].clientY - t0.y;
+    if (t0.type === 'maybe' && Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
+    t0.type = 'pan';
+    e.preventDefault();
+    ox = t0.ox + dx;
+    oy = t0.oy + dy;
+    apply();
+  }, { passive: false });
+
+  outer.addEventListener('touchend',    () => { t0 = null; });
+  outer.addEventListener('touchcancel', () => { t0 = null; });
+
+  if (resetBtn) resetBtn.addEventListener('click', () => { ox = initOx; oy = initOy; s = 1; apply(); });
+
+  if (hint && window.innerWidth <= 1024) {
+    hint.style.display = 'flex';
+    setTimeout(() => {
+      hint.style.opacity = '0';
+      setTimeout(() => { hint.style.display = 'none'; hint.style.opacity = '1'; }, 800);
+    }, 2500);
+  }
+}
+
+if (window.innerWidth <= 960) {
+  makePinchZoom(
+    document.querySelector('.map-stage'),
+    document.getElementById('mapSvg'),
+    0.4, 3
+  );
+}
+
+</script>

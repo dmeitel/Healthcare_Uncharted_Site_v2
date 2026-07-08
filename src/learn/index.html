@@ -105,11 +105,38 @@ navPage: learn
 .ai-uses .ai-use{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin:0;padding:3px 8px;border-radius:5px;background:rgba(78,205,196,.10);border:1px solid rgba(78,205,196,.28);color:var(--teal);text-decoration:none;white-space:nowrap;line-height:1.35}
 .ai-uses a.ai-use:hover{background:rgba(78,205,196,.2);border-color:rgba(78,205,196,.55);color:var(--teal)}
 .ai-uses .ai-use-site{background:rgba(140,180,215,.07);border-color:var(--border);color:var(--t3)}
+.ai-desc{display:block;font-size:12px;color:var(--t3);margin-top:3px;line-height:1.5}
+.ai-retrieved{display:block;font-family:var(--mono);font-size:9.5px;color:var(--t3);margin-top:6px;letter-spacing:.04em}
 
 .empty-state{display:none;padding:40px;text-align:center;font-size:14px;color:var(--t3);grid-column:1/-1}
 .empty-state.visible{display:block}
 
 @media(max-width:768px){.page-header{padding:48px 20px 36px}.filter-bar{padding:0 20px}.content-section{padding:48px 20px}.appendix-grid{grid-template-columns:1fr}.map-callout{flex-direction:column;gap:16px}}
+
+/* ── Light mode: light accent text drops to the darker accent tokens ── */
+[data-theme="light"] .page-header h1 em{color:var(--teal-dk)}
+[data-theme="light"] .filter-btn.active{color:var(--teal-dk)}
+[data-theme="light"] .filter-btn.fp-patient.active{color:var(--blue)}
+[data-theme="light"] .filter-btn.fp-provider.active{color:var(--teal-dk)}
+[data-theme="light"] .filter-btn.fp-policy.active{color:var(--purple)}
+[data-theme="light"] .filter-btn.fp-ai.active{color:var(--green)}
+[data-theme="light"] .filter-btn.fp-guest{color:var(--green)!important}
+[data-theme="light"] .fc-p-patient{color:var(--blue)}
+[data-theme="light"] .fc-p-provider{color:var(--teal-dk)}
+[data-theme="light"] .fc-p-policy{color:var(--purple)}
+[data-theme="light"] .tag-patient{color:var(--blue)}
+[data-theme="light"] .tag-provider{color:var(--teal-dk)}
+[data-theme="light"] .tag-policy{color:var(--purple)}
+[data-theme="light"] .tag-ai{color:var(--green)}
+[data-theme="light"] .tag-interop{color:var(--red)}
+[data-theme="light"] .tag-guest{color:var(--green)}
+[data-theme="light"] .cs-badge{background:rgba(0,17,23,.05)}
+[data-theme="light"] .article-card:hover .ac-arrow{color:var(--teal-dk)}
+[data-theme="light"] .talk-card:hover .tc-arrow{color:var(--teal-dk)}
+[data-theme="light"] .mc-badge{color:var(--teal-dk)}
+[data-theme="light"] .appendix-item a{color:var(--teal-dk)}
+[data-theme="light"] .ai-uses .ai-use:not(.ai-use-site){color:var(--teal-dk)}
+[data-theme="light"] .ai-uses a.ai-use:hover{color:var(--teal-dk)}
 </style>
 
 <div class="page-header">
@@ -133,7 +160,7 @@ navPage: learn
     <button class="filter-btn" onclick="filterCards('interop', this)" style="color:var(--t3)">Interoperability</button>
     <button class="filter-btn" onclick="filterCards('talk', this)" style="color:var(--t3)">Talks</button>
     <div class="filter-sep"></div>
-    <button class="filter-btn" onclick="filterCards('guest', this)" style="color:#4ecb8d">Guest</button>
+    <button class="filter-btn fp-guest" onclick="filterCards('guest', this)" style="color:#4ecb8d">Guest</button>
   </div>
 </div>
 
@@ -443,168 +470,30 @@ navPage: learn
     <p class="section-intro">Where the claims on this site come from. Government agencies, standards bodies, health policy research, peer-reviewed studies, and the reporting we cite directly. Every entry is tagged with the tool, map, or article that uses it. Primary sources first, secondary ones labeled as what they are.</p>
 
     <div class="appendix-grid">
+      {%- for group in references.groups %}
       <div class="appendix-col">
-        <h3>Government &amp; Regulatory</h3>
+        <h3>{{ group.label }}</h3>
         <div class="appendix-list">
+          {%- for item in group.items %}
           <div class="appendix-item">
-            <span class="ai-label">ONC</span>
-            <div class="ai-body"><strong>Office of the National Coordinator for Health IT</strong><a href="https://www.healthit.gov" target="_blank" rel="noopener">healthit.gov &rarr;</a><span class="ai-uses"><span class="ai-use ai-use-site">Site-wide</span></span></div>
+            <span class="ai-label">{{ item.tag }}</span>
+            <div class="ai-body">
+              <strong>{{ item.name }}</strong>
+              <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.linkText }} &rarr;</a>
+              {%- if item.desc %}<span class="ai-desc">{{ item.desc }}</span>{% endif %}
+              <span class="ai-uses">
+                {%- for use in item.usedBy -%}
+                  {%- if use.href %}<a class="ai-use" href="{{ use.href }}">{{ use.label }}</a>
+                  {%- else %}<span class="ai-use{% if use.site %} ai-use-site{% endif %}">{{ use.label }}</span>{% endif -%}
+                {%- endfor %}
+              </span>
+              {%- if item.retrieved %}<span class="ai-retrieved">Retrieved {{ item.retrieved }}</span>{% endif %}
+            </div>
           </div>
-          <div class="appendix-item">
-            <span class="ai-label">CMS</span>
-            <div class="ai-body"><strong>Centers for Medicare &amp; Medicaid Services</strong><a href="https://www.cms.gov" target="_blank" rel="noopener">cms.gov &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a><a class="ai-use" href="/learn/4ps-framework/">4Ps Framework</a><a class="ai-use" href="/learn/oxygen-payment-cuts/">Oxygen Payment Cuts</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">HHS</span>
-            <div class="ai-body"><strong>HHS &mdash; HITECH Act Enforcement &amp; EHR Incentive Payments</strong><a href="https://www.hhs.gov/hipaa/for-professionals/special-topics/hitech-act-enforcement-interim-final-rule/index.html" target="_blank" rel="noopener">hhs.gov &rarr;</a><span class="ai-uses"><span class="ai-use ai-use-site">Site-wide</span></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">CDC</span>
-            <div class="ai-body"><strong>Centers for Disease Control and Prevention</strong><a href="https://www.cdc.gov" target="_blank" rel="noopener">cdc.gov &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">FDA</span>
-            <div class="ai-body"><strong>FDA AI/ML-Enabled Medical Device List (1,451 devices cleared)</strong><a href="https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices" target="_blank" rel="noopener">fda.gov &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">FDA</span>
-            <div class="ai-body"><strong>FDA Clinical Decision Support Software Guidance (Jan 2026)</strong><a href="https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software" target="_blank" rel="noopener">fda.gov &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">HRSA</span>
-            <div class="ai-body"><strong>Health Resources &amp; Services Administration</strong><a href="https://www.hrsa.gov" target="_blank" rel="noopener">hrsa.gov &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">Census</span>
-            <div class="ai-body"><strong>U.S. Census Bureau</strong><a href="https://www.census.gov" target="_blank" rel="noopener">census.gov &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">BLS</span>
-            <div class="ai-body"><strong>U.S. Bureau of Labor Statistics</strong><a href="https://www.bls.gov" target="_blank" rel="noopener">bls.gov &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
+          {%- endfor %}
         </div>
       </div>
-      <div class="appendix-col">
-        <h3>Standards &amp; Interoperability</h3>
-        <div class="appendix-list">
-          <div class="appendix-item">
-            <span class="ai-label">HL7</span>
-            <div class="ai-body"><strong>HL7 International &mdash; FHIR R4 Specification</strong><a href="https://hl7.org/fhir/R4/" target="_blank" rel="noopener">hl7.org/fhir/R4/ &rarr;</a><span class="ai-uses"><span class="ai-use ai-use-site">Site-wide</span></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">HL7</span>
-            <div class="ai-body"><strong>HL7 International &mdash; About HL7 (Founded 1987)</strong><a href="https://www.hl7.org/about/index.cfm" target="_blank" rel="noopener">hl7.org &rarr;</a><span class="ai-uses"><span class="ai-use ai-use-site">Site-wide</span></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">Epic</span>
-            <div class="ai-body"><strong>Epic FHIR API Documentation (public)</strong><a href="https://fhir.epic.com" target="_blank" rel="noopener">fhir.epic.com &rarr;</a><span class="ai-uses"><span class="ai-use ai-use-site">Site-wide</span></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">Oracle</span>
-            <div class="ai-body"><strong>Oracle Health (Cerner) FHIR Documentation (public)</strong><a href="https://fhir.cerner.com" target="_blank" rel="noopener">fhir.cerner.com &rarr;</a><span class="ai-uses"><span class="ai-use ai-use-site">Site-wide</span></span></div>
-          </div>
-        </div>
-      </div>
-      <div class="appendix-col">
-        <h3>Health Policy &amp; Research Organizations</h3>
-        <div class="appendix-list">
-          <div class="appendix-item">
-            <span class="ai-label">KFF</span>
-            <div class="ai-body"><strong>KFF (Kaiser Family Foundation) Health Policy Research</strong><a href="https://www.kff.org" target="_blank" rel="noopener">kff.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a><a class="ai-use" href="/learn/oxygen-payment-cuts/">Oxygen Payment Cuts</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">NCSL</span>
-            <div class="ai-body"><strong>National Conference of State Legislatures</strong><a href="https://www.ncsl.org" target="_blank" rel="noopener">ncsl.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">CCHP</span>
-            <div class="ai-body"><strong>Center for Connected Health Policy: State Telehealth Laws</strong><a href="https://telehealthpolicy.us/resources/state-telehealth-laws-and-reimbursement-policies/" target="_blank" rel="noopener">telehealthpolicy.us &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">NRHA</span>
-            <div class="ai-body"><strong>National Rural Health Association</strong><a href="https://www.ruralhealthweb.org" target="_blank" rel="noopener">ruralhealthweb.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-        </div>
-      </div>
-      <div class="appendix-col">
-        <h3>Medical Associations &amp; AI Governance</h3>
-        <div class="appendix-list">
-          <div class="appendix-item">
-            <span class="ai-label">AMA</span>
-            <div class="ai-body"><strong>AMA AI Tool Evaluation Guide (Feb 2026)</strong><a href="https://www.ama-assn.org/practice-management/digital/ama-releases-new-tool-help-physicians-evaluate-ai" target="_blank" rel="noopener">ama-assn.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">AMA</span>
-            <div class="ai-body"><strong>AMA STEPS Forward: AI Governance Toolkit (Aug 2025)</strong><a href="https://edhub.ama-assn.org/steps-forward" target="_blank" rel="noopener">ama-assn.org/steps-forward &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">AMA</span>
-            <div class="ai-body"><strong>AMA Center for Digital Health</strong><a href="https://www.ama-assn.org/amc/ama-center-digital-medicine" target="_blank" rel="noopener">ama-assn.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">ArMA</span>
-            <div class="ai-body"><strong>Arizona Medical Association &mdash; HB 2175 (AI Prior Auth)</strong><a href="https://www.azmed.org" target="_blank" rel="noopener">azmed.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">AHA</span>
-            <div class="ai-body"><strong>American Hospital Association</strong><a href="https://www.aha.org" target="_blank" rel="noopener">aha.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">ACGME</span>
-            <div class="ai-body"><strong>Accreditation Council for Graduate Medical Education</strong><a href="https://www.acgme.org" target="_blank" rel="noopener">acgme.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">AANP</span>
-            <div class="ai-body"><strong>American Association of Nurse Practitioners</strong><a href="https://www.aanp.org" target="_blank" rel="noopener">aanp.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/tools/American-4Ps-Map/">Multi-Lens Map</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">CHAI</span>
-            <div class="ai-body"><strong>Coalition for Health AI &mdash; Quality Framework</strong><a href="https://www.coalitionforhealthai.org" target="_blank" rel="noopener">coalitionforhealthai.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">ECRI</span>
-            <div class="ai-body"><strong>ECRI Top 10 Patient Safety Concerns 2026</strong><a href="https://www.ecri.org/landing-page/top-10-patient-safety-concerns" target="_blank" rel="noopener">ecri.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-        </div>
-      </div>
-      <div class="appendix-col">
-        <h3>Peer-Reviewed Research</h3>
-        <div class="appendix-list">
-          <div class="appendix-item">
-            <span class="ai-label">2025</span>
-            <div class="ai-body"><strong>Olson et al. &mdash; Ambient AI Scribing, Burnout Reduction</strong><a href="https://doi.org/10.1001/jamanetworkopen.2025.34976" target="_blank" rel="noopener">JAMA Network Open &mdash; DOI &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">2024</span>
-            <div class="ai-body"><strong>Goh et al. &mdash; GPT-4 Diagnostic Aid RCT (p=0.60)</strong><a href="https://doi.org/10.1001/jamanetworkopen.2024.40969" target="_blank" rel="noopener">JAMA Network Open &mdash; DOI &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">2024</span>
-            <div class="ai-body"><strong>Ostermayer et al. &mdash; Epic Sepsis Model v2 Multicenter Validation</strong><a href="https://doi.org/10.1093/jamiaopen/ooae133" target="_blank" rel="noopener">JAMIA Open &mdash; DOI &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">2021</span>
-            <div class="ai-body"><strong>Wong et al. &mdash; Epic Sepsis Model External Validation</strong><a href="https://doi.org/10.1001/jamainternmed.2021.2626" target="_blank" rel="noopener">JAMA Internal Medicine &mdash; DOI &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">2019</span>
-            <div class="ai-body"><strong>Obermeyer et al. &mdash; Optum Algorithm Racial Bias</strong><a href="https://doi.org/10.1126/science.aax2342" target="_blank" rel="noopener">Science &mdash; DOI &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-        </div>
-      </div>
-      <div class="appendix-col">
-        <h3>Investigative Journalism &amp; Industry Trackers</h3>
-        <div class="appendix-list">
-          <div class="appendix-item">
-            <span class="ai-label">ProPub</span>
-            <div class="ai-body"><strong>ProPublica &mdash; Cigna PXDX Algorithm: 300K Claims Denied (2023)</strong><a href="https://www.propublica.org/article/cigna-pxdx-medical-health-insurance-rejection-claims" target="_blank" rel="noopener">propublica.org &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/msrc-2026/">MSRC 2026 Talk</a></span></div>
-          </div>
-          <div class="appendix-item">
-            <span class="ai-label">Manatt</span>
-            <div class="ai-body"><strong>Manatt Health AI Policy Tracker (updated weekly)</strong><a href="https://www.manatt.com" target="_blank" rel="noopener">manatt.com &rarr;</a><span class="ai-uses"><a class="ai-use" href="/learn/talks/arma-2026/">ArMA 2026 Talk</a></span></div>
-          </div>
-        </div>
-      </div>
+      {%- endfor %}
     </div>
   </div>
 </section>

@@ -8,7 +8,7 @@ module.exports = [
     featured:    true,
     title:       'U.S. Healthcare Multi-Lens Map',
     desc:        'U.S. state-level healthcare data across six lenses: patient, clinical, operations, payer, policy, and baseline context. One map, every angle.',
-    url:         '/tools/American-4Ps-Map/',
+    url:         '/tools/multi-lens-map/',
     type:        'interactive',
     badge:       'Interactive',
     badgeClass:  'badge-interactive',

@@ -10,49 +10,32 @@ description: A live national map of U.S. healthcare facilities from CMS data —
 tags: [interactive, maps, hospitals, systems, data-viz]
 has_interactive: true
 ---
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <style>
 /* :root vars + nav come from the site (hu-global.css / base.njk) now — this tool uses the standard header + light/dark theme */
 *{box-sizing:border-box}
-.wrap a{color:var(--teal);text-decoration:none}
-/* full-screen app layout: fill the viewport below the sticky nav, no page scroll */
-html,body{height:100%}
-body{overflow:hidden;display:flex;flex-direction:column}
-body>nav{flex:none}
-#main-content{flex:1;min-height:0;display:flex}
-.wrap{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;padding:12px 20px 12px;overflow:hidden}
-.head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none}
-.head h1{font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
-.head h1 em{font-style:normal;color:var(--teal)}
-.head p{display:none}
-.head p strong{color:var(--t1)}
+/* deck rows / ptleg / tap strip carry author display values — make the hidden attribute always win */
+[hidden]{display:none!important}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .src-banner{flex:none;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--teal);background:rgba(78,205,196,.09);border:1px solid rgba(78,205,196,.28);border-radius:8px;padding:7px 13px}
 
-.controls{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;margin:10px 0 0;scrollbar-width:none;flex:none}
-.controls::-webkit-scrollbar{display:none}
-.controls>*{flex:none}
-.controls .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-right:4px}
-.cb{font-size:12.5px;padding:6px 13px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;font-family:var(--font)}
-.cb:hover{color:var(--t2);border-color:var(--border2)}
-.cb.active{color:#06121f;background:var(--teal);border-color:var(--teal);font-weight:600}
+/* deck chips — .cb matches the .toggle-chip standard (teal fill + #062024 when active) */
+.cb{font-size:12.5px;padding:6px 13px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;font-family:var(--font);flex:none}
+.cb:hover{color:var(--t1);border-color:var(--border2)}
+.cb.active{color:#062024;background:var(--teal);border-color:var(--teal);font-weight:600}
+/* keyboard focus — visible teal ring on every interactive control */
+.cb:focus-visible,.backbtn:focus-visible,.numtoggle:focus-visible,.pf-clear:focus-visible,.ti-x:focus-visible,.syslink:focus-visible,#searchInput:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.sr-row:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;background:rgba(78,205,196,.12)}
+.state:focus-visible{outline:none;stroke:var(--teal);stroke-width:2}
+.map-error-msg{max-width:320px;text-align:center;font-family:var(--font);font-size:14px;line-height:1.6;color:var(--t2);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 22px}
 
-.board{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:stretch;flex:1;min-height:0;margin-top:10px}
-@media(max-width:880px){
-  body{overflow:auto;display:block}
-  #main-content{display:block}
-  .wrap{height:auto;overflow:visible;padding:16px}
-  .board{grid-template-columns:1fr;flex:none;min-height:0;margin-top:14px}
-  .map-stage{height:min(70vh,520px)!important;flex:none!important}
-  .side{height:auto!important;overflow:visible!important}
-}
-.map-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px 12px;min-width:0;position:relative;height:100%;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.map-head{margin:-16px -18px 14px;padding:13px 18px 11px;background:var(--raised);border-bottom:2px solid var(--border2);border-radius:13px 13px 0 0}
-.map-eyebrow{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
-.map-title{font-family:var(--display);font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.01em}
-.map-sub{font-size:12px;color:var(--t3);font-family:var(--mono);margin-top:3px}
-.map-stage{position:relative;width:100%;flex:1;min-height:0;overflow:hidden}
-#mapSvg{width:100%;height:100%;display:block}
+/* canvas HUD — map identity + back button overlaid top-left; search top-center; 123 toggle top-right */
+.map-hud{position:absolute;top:12px;left:14px;z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:8px;max-width:min(44%,320px);pointer-events:none}
+.map-hud>*{pointer-events:auto}
+.map-head{background:rgba(13,26,44,.88);border:1px solid var(--border);border-radius:10px;padding:8px 12px;pointer-events:none;backdrop-filter:blur(6px)}
+.map-eyebrow{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:3px}
+.map-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.01em}
+.map-sub{font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:2px}
+#mapSvg{width:100%;height:100%;display:block;touch-action:none}
 .map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--t3)}
 .state{stroke:var(--dark);stroke-width:.6;cursor:pointer;transition:opacity .12s;vector-effect:non-scaling-stroke}
 .state:hover{opacity:.85}
@@ -64,7 +47,7 @@ body>nav{flex:none}
 .clbub:hover{fill:#1d4e6e}
 .cltxt{fill:#eaf6f4;font-family:var(--mono);font-weight:600;pointer-events:none;user-select:none;dominant-baseline:central}
 .spider line{stroke:#9fc6e8;stroke-opacity:.55;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
-.mapsearch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(360px,76%);z-index:30}
+.mapsearch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(360px,48%);z-index:30}
 #searchInput{width:100%;padding:9px 14px;border-radius:9px;border:1px solid var(--border2);background:rgba(13,26,44,.94);color:var(--t1);font-size:13px;font-family:var(--font);outline:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #searchInput::placeholder{color:var(--t3)}
 #searchInput:focus{border-color:var(--teal)}
@@ -82,7 +65,7 @@ body>nav{flex:none}
 .syslink{color:var(--teal);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .syslink:hover{color:#fff}
 .restabs .cb{font-weight:600}
-.restabs .cb.active{background:var(--teal);color:#06222b;border-color:var(--teal)}
+.restabs .cb.active{background:var(--teal);color:#062024;border-color:var(--teal)}
 .counties .c-halo path{fill:none;stroke:#06121f;stroke-opacity:.6;stroke-width:2.2;vector-effect:non-scaling-stroke;pointer-events:none}
 .counties .c-line path{fill:none;stroke:#fff;stroke-opacity:.82;stroke-width:.9;vector-effect:non-scaling-stroke;pointer-events:all;cursor:pointer}
 .counties .c-line path.hot{fill:rgba(255,255,255,.15);stroke-opacity:1}
@@ -92,12 +75,14 @@ body>nav{flex:none}
 .chl-bar{width:120px;height:8px;border-radius:5px}
 .lakes path{fill:#0c2236;stroke:#1f4a6b;stroke-opacity:.7;stroke-width:.6;vector-effect:non-scaling-stroke;pointer-events:none}
 .hosp:hover{stroke:#fff;stroke-width:1.4}
-.backbtn{position:absolute;top:14px;left:18px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--t2);background:rgba(13,26,44,.9);border:1px solid var(--border2);border-radius:7px;padding:6px 12px;cursor:pointer}
+.backbtn{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--t2);background:rgba(13,26,44,.9);border:1px solid var(--border2);border-radius:7px;padding:6px 12px;cursor:pointer}
 .backbtn:hover{border-color:var(--teal);color:#fff}
-.legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--t3);flex-wrap:wrap;flex:none}
-.legend-bar{flex:1;height:9px;border-radius:5px;max-width:240px}
-.ptleg{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--t2);flex:none}
+/* legend + point key live in the shell-foot */
+.legend{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--t3);flex-wrap:wrap}
+.legend-bar{width:clamp(90px,16vw,220px);height:9px;border-radius:5px}
+.ptleg{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--t2)}
 .ptleg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.shell-foot .tool-attribution{margin-left:auto}
 /* per-state value labels on the U.S. choropleth */
 .statenum{font-family:var(--mono);font-size:11px;font-weight:700;fill:#fff;paint-order:stroke;stroke:rgba(8,16,28,.82);stroke-width:2.6px;stroke-linejoin:round}
 .statenum-call{font-family:var(--mono);font-size:10.5px;font-weight:600;paint-order:stroke;stroke:rgba(8,16,28,.9);stroke-width:2.6px;stroke-linejoin:round}
@@ -113,12 +98,14 @@ body>nav{flex:none}
 .tip b{font-size:12.5px;color:#fff;display:block}
 .tip span{font-family:var(--mono);font-size:10.5px;color:var(--t2)}
 
-.side{display:flex;flex-direction:column;gap:14px;height:100%;min-height:0;overflow-y:auto;padding-right:2px}
+/* dock content — the .shell-dock scrolls; .side is just inner spacing now */
+.side{display:flex;flex-direction:column;gap:12px;padding:14px}
+.side a{color:var(--teal);text-decoration:none}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
-.panel h3{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
-.panel>h3{padding-bottom:9px;border-bottom:1px solid var(--border)}
+.panel h2{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);margin:0 0 12px}
+.panel>h2{padding-bottom:9px;border-bottom:1px solid var(--border)}
 .pf-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.pf-head h3{font-family:var(--display);font-size:19px;font-weight:700;color:var(--t1);text-transform:none;letter-spacing:-.01em;margin:0}
+.pf-head h2{font-family:var(--display);font-size:19px;font-weight:700;color:var(--t1);text-transform:none;letter-spacing:-.01em;margin:0}
 .pf-clear{font-family:var(--mono);font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;padding:4px}
 .pf-clear:hover{color:var(--t1)}
 .row{display:flex;justify-content:space-between;font-size:13px;color:var(--t2);padding:4px 0}
@@ -135,51 +122,83 @@ body>nav{flex:none}
 .pill{display:inline-block;font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:11px;margin:0 5px 5px 0}
 .src{font-size:11px;color:var(--t3);line-height:1.6;font-family:var(--mono)}
 .src a{color:var(--t3);border-bottom:1px dotted var(--border2)}
+
+/* tap-info strip — the touch twin of the hover tooltip, pinned to the canvas bottom */
+.tapinfo{position:absolute;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;gap:10px;background:rgba(13,26,44,.94);border-top:1px solid var(--border2);padding:10px 14px;backdrop-filter:blur(6px)}
+.tapinfo .ti-body{flex:1;min-width:0}
+.tapinfo b{font-size:13px;color:#fff;display:block}
+.tapinfo span{font-family:var(--mono);font-size:10.5px;color:var(--t2)}
+.tapinfo .ti-x{flex:none;font-size:12px;color:var(--t2);background:none;border:1px solid var(--border2);border-radius:7px;padding:5px 10px;cursor:pointer}
+
+/* phone: search bar goes full-width on top, HUD + 123 toggle drop below it */
+@media(max-width:699px){
+  .mapsearch{width:calc(100% - 24px)}
+  .map-hud{top:58px;max-width:min(70%,320px)}
+  .numtoggle{top:58px}
+}
 </style>
 
-<div class="wrap">
-  <div class="head">
-    <h1>U.S. Hospital <em>Operations</em> Map</h1>
-    <p>Every hospital in the country, from live CMS data. Color the states by type or ownership, then <strong>click a state to zoom in</strong> and <strong>click any hospital</strong> for its public operational profile.</p>
-    <div class="src-banner" id="srcBanner">Loading CMS hospital data…</div>
+<div class="hu-shell">
+  <div class="tool-bar">
+    <span class="tool-bar-kicker">Tool</span>
+    <span class="tool-bar-title">U.S. Hospital <span>Operations</span> Map</span>
+    <span class="tool-bar-spacer"></span>
+    <div class="src-banner" id="srcBanner" role="status" aria-live="polite">Loading CMS hospital data&hellip;</div>
   </div>
 
-  <div class="controls restabs" id="restabs"><span class="lbl">Resource</span></div>
-  <div class="controls" id="controls"><span class="lbl">Color by</span></div>
-  <div class="controls" id="countyControls" hidden><span class="lbl">County layer</span></div>
+  <h1 class="vh">U.S. Hospital Operations Map</h1>
+  <div class="vh" id="a11yLive" aria-live="polite" aria-atomic="true"></div>
 
-  <div class="board">
-    <div class="map-card">
-      <div class="map-head">
-        <div class="map-eyebrow" id="mapEyebrow">Operations</div>
-        <div class="map-title" id="mapTitle">United States</div>
-        <div class="map-sub" id="mapSub"></div>
-      </div>
-      <div class="map-stage">
-        <button class="backbtn" id="backBtn" hidden>&larr; Back to U.S.</button>
-        <button class="numtoggle" id="numToggle" title="Show or hide per-state numbers">123</button>
-        <div class="mapsearch">
-          <input id="searchInput" type="text" placeholder="Search any hospital — name, city, or initials…" autocomplete="off" spellcheck="false">
-          <div class="search-results" id="searchResults"></div>
+  <div class="shell-deck">
+    <div class="shell-deck-row restabs" id="restabs" role="group" aria-label="Resource"><span class="shell-deck-label">Resource</span></div>
+    <div class="shell-deck-row" id="controls" role="group" aria-label="Color by"><span class="shell-deck-label">Color by</span></div>
+    <div class="shell-deck-row" id="countyControls" role="group" aria-label="County layer" hidden><span class="shell-deck-label">County layer</span></div>
+  </div>
+
+  <div class="shell-main">
+    <div class="shell-canvas map-stage">
+      <div class="map-hud">
+        <div class="map-head">
+          <div class="map-eyebrow" id="mapEyebrow">Operations</div>
+          <div class="map-title" id="mapTitle">United States</div>
+          <div class="map-sub" id="mapSub"></div>
         </div>
-        <svg id="mapSvg"></svg>
-        <div class="map-loading" id="mapLoading">Loading…</div>
+        <button class="backbtn" id="backBtn" hidden>&larr; Back to U.S.</button>
       </div>
-      <div class="legend" id="legend"></div>
-      <div class="ptleg" id="ptleg" hidden></div>
+      <button class="numtoggle" id="numToggle" title="Show or hide per-state numbers" aria-label="Show or hide per-state numbers" aria-pressed="true">123</button>
+      <div class="mapsearch">
+        <input id="searchInput" type="text" placeholder="Search any hospital — name, city, or initials…" aria-label="Search facilities by name, city, or initials" autocomplete="off" spellcheck="false">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <svg id="mapSvg" preserveAspectRatio="xMidYMid meet" aria-label="Interactive map of U.S. healthcare facilities"></svg>
+      <div class="map-loading" id="mapLoading">Loading…</div>
+      <div class="tapinfo" id="tapInfo" hidden>
+        <div class="ti-body" id="tapInfoBody"></div>
+        <button class="ti-x" id="tapInfoX" aria-label="Dismiss">&#10005;</button>
+      </div>
     </div>
-    <aside class="side">
+    <aside class="shell-dock shell-dock--right side">
       <div class="panel" id="sidePanel"></div>
       <div class="panel">
-        <h3>About this data</h3>
+        <h2>About this data</h2>
         <div class="src" id="srcNote"></div>
       </div>
     </aside>
+  </div>
+
+  <div class="shell-foot">
+    <div class="legend" id="legend"></div>
+    <div class="ptleg" id="ptleg" hidden></div>
+    {% set ta_source = 'Live CMS provider data' %}
+    {% set ta_source_href = 'https://data.cms.gov/provider-data/' %}
+    {% include "components/tool-attribution.njk" %}
   </div>
 </div>
 
 <div class="tip" id="tip" hidden></div>
 
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <script>
 const STATE_NAMES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 const FIPS_TO_ABBR={'01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD','47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY'};
@@ -264,14 +283,26 @@ let curT=null, preserveCam=false;   // last camera transform + flag to hold it a
 const metric=()=>METRICS_OF()[activeMetric]||METRICS_OF()[0];
 const fmtM=v=>v==null?'—':(metric().u==='%'?v+'%':metric().u==='★'?v+'★':v.toLocaleString('en-US'));
 
+// ── A11Y HELPERS ──────────────────────────────────────────────────────
+// reduced motion: big camera moves (zoom, fly-to, fan-out) become instant jumps
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+const dur=ms=>RM.matches?0:ms;
+// one polite live region for the whole tool — announce COMMITTED state changes
+// only (selection, state zoom, resource switch, load result). Never hover.
+function announce(msg){
+  const el=document.getElementById('a11yLive'); if(!el) return;
+  el.textContent='';                                  // clear first so repeats re-announce
+  requestAnimationFrame(()=>{el.textContent=msg;});
+}
+
 function buildResTabs(){
   const c=document.getElementById('restabs'); if(!c) return;
-  c.innerHTML='<span class="lbl">Resource</span>'+Object.keys(RES).map(k=>`<button class="cb ${k===activeRes?'active':''}" data-res="${k}">${RES[k].label}</button>`).join('');
+  c.innerHTML='<span class="shell-deck-label">Resource</span>'+Object.keys(RES).map(k=>`<button class="cb ${k===activeRes?'active':''}" data-res="${k}" aria-pressed="${k===activeRes}">${RES[k].label}</button>`).join('');
 }
 function buildControls(){
   const c=document.getElementById('controls');
   const M=METRICS_OF();
-  c.innerHTML='<span class="lbl">Color by</span>'+M.map((m,i)=>`<button class="cb ${i===activeMetric?'active':''}" data-i="${i}">${m.label}</button>`).join('');
+  c.innerHTML='<span class="shell-deck-label">Color by</span>'+M.map((m,i)=>`<button class="cb ${i===activeMetric?'active':''}" data-i="${i}" aria-pressed="${i===activeMetric}">${m.label}</button>`).join('');
 }
 function stateVal(ab){ return metric().f(byState[ab]||[]); }
 
@@ -315,9 +346,9 @@ function countyChoro(){
 function buildCountyControls(){
   const c=document.getElementById('countyControls'); if(!c) return;
   const mets=chMetrics(); if(!mets.length){ c.hidden=true; return; }
-  let html='<span class="lbl">County layer</span>'+
-    `<button class="cb ${countyMetric==null?'active':''}" data-cm="off">Off</button>`+
-    mets.map(m=>`<button class="cb ${m.key===countyMetric?'active':''}" data-cm="${m.key}">${chShort(m.name)}</button>`).join('');
+  let html='<span class="shell-deck-label">County layer</span>'+
+    `<button class="cb ${countyMetric==null?'active':''}" data-cm="off" aria-pressed="${countyMetric==null}">Off</button>`+
+    mets.map(m=>`<button class="cb ${m.key===countyMetric?'active':''}" data-cm="${m.key}" aria-pressed="${m.key===countyMetric}">${chShort(m.name)}</button>`).join('');
   const ch=countyChoro();
   if(ch){
     const dir=ch.meta.dir===-1?'higher = worse':ch.meta.dir===1?'higher = better':'';
@@ -325,7 +356,7 @@ function buildCountyControls(){
   }
   c.innerHTML=html;
 }
-function setCountyMetric(k){ countyMetric=(k==='off')?null:k; buildCountyControls(); paintCounties(); if(view==='state'&&selCounty) renderCounty(selCounty); }
+function setCountyMetric(k){ countyMetric=(k==='off')?null:k; buildCountyControls(); paintCounties(); if(view==='state'&&selCounty) renderCounty(selCounty); const _m=chMeta(countyMetric); announce(_m?'County layer: '+chShort(_m.name):'County layer off'); }
 function countyHealthRows(fips){
   const mets=chMetrics(); if(!mets.length) return '';
   const groups={}; mets.forEach(m=>{(groups[m.lens]=groups[m.lens]||[]).push(m);});
@@ -340,6 +371,7 @@ function countyHealthRows(fips){
 }
 async function switchResource(key){
   if(key===activeRes||!RES[key]) return;
+  const prevRes=activeRes;
   activeRes=key;
   if(activeMetric>=(RES[key].metrics||[]).length) activeMetric=0;   // clamp choropleth metric to the new resource
   // Keep the user where they are: preserve the state/county view across a resource
@@ -348,16 +380,20 @@ async function switchResource(key){
   if(view==='org') view = selState ? 'state' : 'us';
   selHosp=null; selOrg=null; focusH=null; curPts=null; spiderCluster=null;
   const r=RES[key];
-  if(!r._data){ try{ r._data=await fetch(r.file).then(x=>x.json()).then(j=>j.facilities||j.hospitals); }catch(e){ console.error('resource load',e); return; } }
+  if(!r._data){ try{ r._data=await fetch(r.file).then(x=>x.json()).then(j=>j.facilities||j.hospitals); }catch(e){ console.error('resource load',e); activeRes=prevRes; buildResTabs(); announce("Couldn't load "+r.label+" data. Check your connection and try again."); return; } }
   HOSP=r._data; byState={}; HOSP.forEach(h=>{(byState[h.s]=byState[h.s]||[]).push(h);});
   const sc={}; HOSP.forEach(h=>{if(h.sys)sc[h.sys]=(sc[h.sys]||0)+1;}); SYS_LIST=Object.entries(sc).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count);
   buildResTabs();
   document.getElementById('searchInput').value=''; hideSearch();
   preserveCam=true;   // keep the exact camera; only the facility layer changes
   render();
+  announce(view==='state'
+    ? 'Showing '+((byState[selState]||[]).length)+' '+RES[activeRes].noun+' in '+STATE_NAMES[selState]
+    : 'Showing '+HOSP.length.toLocaleString()+' '+RES[activeRes].noun+' nationwide');
 }
 
 function render(animate){
+  hideTapInfo();
   buildControls();
   drawMap(animate);
   document.getElementById('backBtn').hidden = (view==='us');
@@ -370,10 +406,23 @@ function render(animate){
   else if (view==='org') renderOrgProfile(selOrg);
   else renderNational();
   const S={hospitals:['https://data.cms.gov/provider-data/dataset/xubh-q36u','CMS Hospital General Information'],asc:['https://data.cms.gov/provider-data/dataset/4jcv-atw7','CMS Ambulatory Surgical Center Quality'],dialysis:['https://data.cms.gov/provider-data/dataset/23ew-n7w9','CMS Dialysis Facility Listing']}[activeRes]||['https://data.cms.gov/provider-data/dataset/ct36-nrcq','CMS Medical Equipment Suppliers'];
-  document.getElementById('srcBanner').textContent='✓ Live CMS data · '+HOSP.length.toLocaleString()+' '+RES[activeRes].noun+' nationwide';
+  // srcBanner is a live status region — only touch it when the text actually
+  // changes, or every render() would re-fire a screen-reader announcement.
+  const _sb=document.getElementById('srcBanner'), _sbTxt='✓ Live CMS data · '+HOSP.length.toLocaleString()+' '+RES[activeRes].noun+' nationwide';
+  if(_sb.textContent!==_sbTxt) _sb.textContent=_sbTxt;
   document.getElementById('srcNote').innerHTML=
     'Source: <a href="'+S[0]+'" target="_blank" rel="noopener">'+S[1]+' &#8599;</a>, current. '+(RES[activeRes].sup?'Coordinates from the source file.':'Geocoded via U.S. ZIP centroids.')+'<br><br>'+
     (activeRes==='hospitals'?'Beds &amp; trauma via HIFLD / CovidCareMap; system affiliation via AHRQ Compendium 2023.':activeRes==='dialysis'?'Chain operator, stations, modalities &amp; star rating from the CMS dialysis file.':RES[activeRes].sup?'Medicare-enrolled DMEPOS suppliers: durable medical equipment, prosthetics, orthotics, supplies.':'Medicare-certified ambulatory surgery centers (no inpatient beds).');
+}
+
+// one path for mouse AND keyboard state activation; keyboard users land on the
+// back button after the zoom so focus isn't dropped when the svg redraws
+function activateState(ab,fromKeyboard){
+  if(view==='org'||!ab||!STATE_NAMES[ab]||ab===selState) return;
+  selState=ab; selHosp=null; selCounty=null; view='state';
+  render(true);
+  announce('Zoomed to '+STATE_NAMES[ab]+': '+((byState[ab]||[]).length)+' '+RES[activeRes].noun);
+  if(fromKeyboard){ const b=document.getElementById('backBtn'); if(b&&!b.hidden) b.focus(); }
 }
 
 function drawMap(animate){
@@ -394,13 +443,19 @@ function drawMap(animate){
   const g=svg.append('g'); Gcur=g; curProj=proj;
   const statesG=g.append('g'), lakesG=g.append('g').attr('class','lakes'), countiesG=g.append('g').attr('class','counties'), pointsG=g.append('g').attr('class','points'), spiderG=g.append('g').attr('class','spider');
   if(lakeFeatures){ lakesG.selectAll('path').data(lakeFeatures).join('path').attr('d',path); }
+  // On the U.S. view, states are the keyboard path onto the map: focusable
+  // buttons (Tab order = FIPS = alphabetical), Enter/Space = the click handler.
   statesG.selectAll('path').data(usFeatures).join('path')
     .attr('d',path)
     .attr('class',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];return 'state'+(!ab?' none':'')+(view==='state'&&ab===selState?' sel':'');})
     .attr('fill',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];if(!ab)return '#101a2b';if(view==='org')return '#16304a';const v=stateVal(ab);return v==null?'#101a2b':scale(v);})
+    .attr('tabindex',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];return (view==='us'&&ab&&STATE_NAMES[ab])?0:null;})
+    .attr('role',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];return (view==='us'&&ab&&STATE_NAMES[ab])?'button':null;})
+    .attr('aria-label',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];if(!(view==='us'&&ab&&STATE_NAMES[ab]))return null;return STATE_NAMES[ab]+': '+fmtM(stateVal(ab))+' '+metric().label;})
     .on('mousemove',function(e,d){const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];if(view==='us')stateTip(e,ab);})
     .on('mouseleave',hideTip)
-    .on('click',function(e,d){const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];if(view!=='org'&&ab&&STATE_NAMES[ab]&&ab!==selState){selState=ab;selHosp=null;selCounty=null;view='state';render(true);}});
+    .on('click',function(e,d){activateState(FIPS_TO_ABBR[String(d.id).padStart(2,'0')]);})
+    .on('keydown',function(e,d){if(e.key==='Enter'||e.key===' '){e.preventDefault();activateState(FIPS_TO_ABBR[String(d.id).padStart(2,'0')],true);}});
 
   if(view==='us' && showNums) drawStateNumbers(g, path, w, h);
 
@@ -450,7 +505,7 @@ function drawMap(animate){
   if(preserveCam && curT && (view==='state'||view==='org')){ T=curT; animate=false; }
   preserveCam=false; curT=T;
   if(view==='state'||view==='org') renderClusters(T.k,false); // exist during the camera glide-in
-  if(animate){ svg.transition().duration(650).ease(d3.easeCubicInOut).call(Z.transform,T); }
+  if(animate){ svg.transition().duration(dur(650)).ease(d3.easeCubicInOut).call(Z.transform,T); }
   else { svg.call(Z.transform,T); }
 
   document.getElementById('mapEyebrow').textContent = view==='org' ? 'Health system' : RES[activeRes].label;
@@ -520,7 +575,7 @@ function resolveOrgPlacement(pts){
     else { h._plo=h.lo; h._pla=h.la; h._approx=false; }
   });
 }
-function openHosp(h){ selHosp=h; selCounty=null; renderFacility(); markPts(); if(Gcur) Gcur.selectAll('.c-line path').classed('sel',false); }
+function openHosp(h){ selHosp=h; selCounty=null; renderFacility(); markPts(); if(Gcur) Gcur.selectAll('.c-line path').classed('sel',false); showTapInfo(hospTipHTML(h)); announce('Selected: '+titleCase(h.n)+', '+titleCase(h.c||'')+', '+h.s); }
 // ── CLUSTER BADGES + SPIDERFY ─────────────────────────────────────────
 // Crowded spots collapse into one count badge; click a badge to fan its hospitals out on cleanly-spaced rings (with
 // leader lines) so each is clickable. Lone hospitals show as their type shape. Zoom in → groups shrink → badges become shapes.
@@ -543,7 +598,7 @@ function renderClusters(k, animate){
   const ent=sel.enter().append('g').attr('class','cl');
   if(animate) ent.attr('opacity',0);
   ent.merge(sel).attr('transform',d=>`translate(${d.x.toFixed(2)},${d.y.toFixed(2)}) scale(${(1/k).toFixed(4)})`).each(function(d){drawCl(d3.select(this),d);});
-  (animate?ent.transition().duration(260):ent).attr('opacity',1);
+  (animate?ent.transition().duration(dur(260)):ent).attr('opacity',1);
 }
 function drawCl(gsel,d){
   gsel.selectAll('*').remove();
@@ -588,7 +643,7 @@ function spiderfy(cluster){
     .attr('fill',h=>TYPE_COLOR[h.t]||'#8fabcc').attr('stroke',h=>h===selHosp?'#fff':'#0a1320').attr('stroke-width',h=>h===selHosp?2:.9)
     .on('mousemove',(e,h)=>hospTip(e,h)).on('mouseleave',hideTip)
     .on('click',(e,h)=>{e.stopPropagation();openHosp(h);});
-  node.transition().duration(220).ease(d3.easeCubicOut).attr('opacity',1);
+  node.transition().duration(dur(220)).ease(d3.easeCubicOut).attr('opacity',1);
   Gcur.selectAll('g.cl').filter(c=>c===cluster).attr('opacity',.18); // dim the source badge
 }
 function collapseSpider(){
@@ -617,11 +672,13 @@ function renderSearch(q){
   const sys=searchSystems(q), rs=searchHosp(q);
   if(!sys.length && !rs.length){ box.innerHTML='<div class="sr-empty">No matches</div>'; box.style.display='block'; return; }
   let html='';
-  if(sys.length) html+='<div class="sr-head">Health systems</div>'+sys.map((s,i)=>`<div class="sr-row sr-sys" data-s="${i}"><span class="sr-ic sysdot">&#9670;</span><span class="sr-nm">${orgName(s.name)}</span><span class="sr-meta">${s.count} ${RES[activeRes].noun}</span></div>`).join('');
-  if(rs.length) html+=(sys.length?'<div class="sr-head">Hospitals</div>':'')+rs.map((h,i)=>`<div class="sr-row" data-i="${i}"><span class="sr-ic">${legendSym(h.t)}</span><span class="sr-nm">${titleCase(h.n)}</span><span class="sr-meta">${titleCase(h.c)}, ${h.s}</span></div>`).join('');
+  if(sys.length) html+='<div class="sr-head">Health systems</div>'+sys.map((s,i)=>`<div class="sr-row sr-sys" data-s="${i}" tabindex="0" role="button"><span class="sr-ic sysdot">&#9670;</span><span class="sr-nm">${orgName(s.name)}</span><span class="sr-meta">${s.count} ${RES[activeRes].noun}</span></div>`).join('');
+  if(rs.length) html+=(sys.length?'<div class="sr-head">Hospitals</div>':'')+rs.map((h,i)=>`<div class="sr-row" data-i="${i}" tabindex="0" role="button"><span class="sr-ic">${legendSym(h.t)}</span><span class="sr-nm">${titleCase(h.n)}</span><span class="sr-meta">${titleCase(h.c)}, ${h.s}</span></div>`).join('');
   box.innerHTML=html; box.style.display='block';
   box.querySelectorAll('.sr-sys').forEach(r=>r.onclick=()=>gotoOrg(sys[+r.dataset.s].name));
   box.querySelectorAll('.sr-row[data-i]').forEach(r=>r.onclick=()=>gotoHospital(rs[+r.dataset.i]));
+  // rows are Tab-reachable from the input; Enter/Space activates like a click
+  box.querySelectorAll('.sr-row').forEach(r=>r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();r.click();}}));
 }
 function hideSearch(){ const b=document.getElementById('searchResults'); if(b){b.style.display='none';} }
 function gotoHospital(h){
@@ -634,7 +691,8 @@ function gotoHospital(h){
 function revealFocus(){
   if(!focusH) return;
   const h=focusH; focusH=null;
-  selHosp=h; renderFacility();
+  selHosp=h; renderFacility(); showTapInfo(hospTipHTML(h));
+  announce('Selected: '+titleCase(h.n)+', '+titleCase(h.c||'')+', '+h.s);
   if(curClusters){ const c=curClusters.find(c=>c.members.indexOf(h)>=0); if(c && c.members.length>1) spiderfy(c); }
   markPts();
 }
@@ -644,14 +702,14 @@ function searchSystems(q){
   const qn=q.replace(/[^a-z0-9]/g,'');
   return SYS_LIST.filter(s=>{const n=s.name.toLowerCase(); return n.includes(q) || (qn.length>=2 && hInitials(s.name).toLowerCase().startsWith(qn));}).slice(0,5);
 }
-function gotoOrg(sys){ if(!sys) return; hideSearch(); selOrg=sys; selHosp=null; selState=null; selCounty=null; focusH=null; view='org'; render(true); }
+function gotoOrg(sys){ if(!sys) return; hideSearch(); selOrg=sys; selHosp=null; selState=null; selCounty=null; focusH=null; view='org'; render(true); announce('Showing '+orgName(sys)+': '+HOSP.filter(h=>h.sys===sys).length+' '+RES[activeRes].noun+' nationwide'); }
 function renderOrgProfile(sys){
   const hs=HOSP.filter(h=>h.sys===sys);
   const beds=hs.reduce((a,h)=>a+(h.beds||0),0);
   const byst={}; hs.forEach(h=>byst[h.s]=(byst[h.s]||0)+1);
   const topst=Object.entries(byst).sort((a,b)=>b[1]-a[1]).slice(0,6), maxst=topst.length?topst[0][1]:1;
   document.getElementById('sidePanel').innerHTML=
-    `<div class="pf-head"><h3 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">Health system</h3><button class="pf-clear" id="orgClose">U.S. &#10005;</button></div>`+
+    `<div class="pf-head"><h2 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">Health system</h2><button class="pf-clear" id="orgClose">U.S. &#10005;</button></div>`+
     `<div class="card-name">${orgName(sys)}</div>`+
     (activeRes==='dialysis'
       ? `<div class="row"><span>Dialysis centers</span><b>${hs.length}</b></div>`+
@@ -696,16 +754,12 @@ function paintCounties(){
     .classed('sel',d=>selCounty&&d===selCounty)
     .on('mousemove',function(e,d){d3.select(this).classed('hot',true);countyTip(e,d);})
     .on('mouseleave',function(){d3.select(this).classed('hot',false);hideTip();})
-    .on('click',function(e,d){e.stopPropagation();collapseSpider();selHosp=null;selCounty=d;renderCounty(d);line.selectAll('path').classed('sel',x=>x===d);});
+    .on('click',function(e,d){e.stopPropagation();collapseSpider();selHosp=null;selCounty=d;renderCounty(d);line.selectAll('path').classed('sel',x=>x===d);showTapInfo(countyInfoHTML(d));announce('Selected: '+d.properties.name+' County, '+selState);});
 }
 function countyPopOf(feat){const fips=String(feat.id).padStart(5,'0');return countyPop&&countyPop[fips]?countyPop[fips].p:null;}
 function countyTip(e,feat){
   const t=document.getElementById('tip');
-  const pop=countyPopOf(feat);
-  const ch=countyChoro();
-  let extra='';
-  if(ch){ const v=chCountyVal(ch.vals,String(feat.id).padStart(5,'0')); extra=`<span style="color:var(--teal)">${chShort(ch.meta.name)}: ${chFmt(v,ch.meta)}</span>`; }
-  t.innerHTML=`<b>${feat.properties.name} County, ${selState}</b><span>${pop!=null?pop.toLocaleString()+' residents':''}</span>${extra}<span>click for profile</span>`;
+  t.innerHTML=countyInfoHTML(feat)+'<span>click for profile</span>';
   place(e,t);
 }
 function renderCounty(feat){
@@ -727,7 +781,7 @@ function renderCounty(feat){
     secondary=`<div class="row"><span>Dialysis stations</span><b>${stns?stns.toLocaleString():'n/a'}</b></div>`;
   }
   document.getElementById('sidePanel').innerHTML=
-    `<div class="pf-head"><h3 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">County profile</h3><button class="pf-clear" id="cClose">back &#10005;</button></div>`+
+    `<div class="pf-head"><h2 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">County profile</h2><button class="pf-clear" id="cClose">back &#10005;</button></div>`+
     `<div class="card-name">${nm} County</div>`+
     `<div class="card-loc">${STATE_NAMES[selState]}</div>`+
     `<div class="row"><span>Population (2024 est.)</span><b>${pop!=null?pop.toLocaleString():'n/a'}</b></div>`+
@@ -736,7 +790,7 @@ function renderCounty(feat){
     secondary+
     countyHealthRows(fips)+
     `<div class="hint">Population: U.S. Census Bureau 2024 county estimates. ${nounCap} located within the county boundary. Community health: CDC PLACES, crude prevalence.</div>`;
-  document.getElementById('cClose').onclick=()=>{selCounty=null;renderStateProfile(selState);if(Gcur)Gcur.selectAll('.c-line path').classed('sel',false);};
+  document.getElementById('cClose').onclick=()=>{selCounty=null;hideTapInfo();renderStateProfile(selState);if(Gcur)Gcur.selectAll('.c-line path').classed('sel',false);};
 }
 function drawLegend(range,mn,mx){
   const L=document.getElementById('legend');
@@ -765,7 +819,7 @@ function topStatesBars(){
 function renderNational(){
   if(activeRes==='hospitals'){
     document.getElementById('sidePanel').innerHTML=
-      `<h3>National &middot; ${HOSP.length.toLocaleString()} hospitals</h3>`+
+      `<h2>National &middot; ${HOSP.length.toLocaleString()} hospitals</h2>`+
       `<div class="sec-h" style="color:var(--teal)">By type</div>${countBy(HOSP,'t',TYPE_LABEL,TYPE_COLOR)}`+
       `<div class="sec-h" style="color:var(--blue)">By ownership</div>${countBy(HOSP,'o',OWN_LABEL,OWN_COLOR)}`+
       topStatesBars()+
@@ -775,14 +829,14 @@ function renderNational(){
       ? `<div class="sec-h" style="color:var(--teal)">Top chains</div>${chainBars(HOSP)}`+`<div class="sec-h" style="color:var(--blue)">By ownership</div>${countBy(HOSP,'o',OWN_LABEL,OWN_COLOR)}`
       : '';
     document.getElementById('sidePanel').innerHTML=
-      `<h3>National &middot; ${HOSP.length.toLocaleString()} ${RES[activeRes].noun}</h3>`+
+      `<h2>National &middot; ${HOSP.length.toLocaleString()} ${RES[activeRes].noun}</h2>`+
       extra+ topStatesBars()+
       `<div class="hint">Click a state to zoom in, or search by name${activeRes==='dialysis'?' / chain':''}.</div>`;
   }
 }
 function renderStateProfile(ab){
   const hs=byState[ab]||[];
-  const head=`<div class="pf-head"><h3>${STATE_NAMES[ab]}</h3><button class="pf-clear" id="pfClear">U.S. &#10005;</button></div>`;
+  const head=`<div class="pf-head"><h2>${STATE_NAMES[ab]}</h2><button class="pf-clear" id="pfClear">U.S. &#10005;</button></div>`;
   let body;
   if(activeRes==='hospitals') body=
     `<div class="row"><span>Hospitals</span><b>${hs.length}</b></div>`+
@@ -806,9 +860,9 @@ function renderStateProfile(ab){
   document.getElementById('sidePanel').innerHTML=head+body;
   document.getElementById('pfClear').onclick=backToUS;
 }
-const _pfhead=label=>`<div class="pf-head"><h3 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">${label}</h3><button class="pf-clear" id="hClose">back &#10005;</button></div>`;
+const _pfhead=label=>`<div class="pf-head"><h2 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">${label}</h2><button class="pf-clear" id="hClose">back &#10005;</button></div>`;
 const _gmaps=h=>`<a class="pf-clear" style="display:inline-block;margin-top:10px" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.n+' '+h.c+' '+h.s)}" target="_blank" rel="noopener">View on Google Maps &#8599;</a>`;
-function closeFacility(){ selHosp=null; if(view==='org') renderOrgProfile(selOrg); else renderStateProfile(selState); markPts(); }
+function closeFacility(){ selHosp=null; hideTapInfo(); if(view==='org') renderOrgProfile(selOrg); else renderStateProfile(selState); markPts(); }
 function chainBars(hs){
   const c={}; hs.forEach(h=>{const k=h.sys||'Independent';c[k]=(c[k]||0)+1;});
   const rows=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,6), max=rows.length?rows[0][1]:1;
@@ -837,7 +891,7 @@ function renderDialysis(){
     `<div class="card-loc">${titleCase(h.c)}, ${h.s}</div>`+
     `<div style="margin-bottom:12px"><span class="pill" style="background:${TYPE_COLOR.dialysis}22;color:${TYPE_COLOR.dialysis};border:1px solid ${TYPE_COLOR.dialysis}55">Dialysis</span>`+
       `<span class="pill" style="background:${(OWN_COLOR[h.o]||'#888')}22;color:${OWN_COLOR[h.o]||'#aaa'};border:1px solid ${(OWN_COLOR[h.o]||'#888')}55">${OWN_LABEL[h.o]||'—'}</span></div>`+
-    `<div class="row"><span>Chain</span><b style="font-size:11px">${h.sys?`<a class="syslink" id="hsysLink">${orgName(h.sys)} &rsaquo;</a>`:'Independent'}</b></div>`+
+    `<div class="row"><span>Chain</span><b style="font-size:11px">${h.sys?`<a class="syslink" id="hsysLink" role="button" tabindex="0">${orgName(h.sys)} &rsaquo;</a>`:'Independent'}</b></div>`+
     `<div class="row"><span>Dialysis stations</span><b>${h.st||'n/a'}</b></div>`+
     `<div class="row"><span>ESRD network</span><b>${h.net||'n/a'}</b></div>`+
     `<div class="row"><span>Peritoneal dialysis</span><b>${h.pd?'Yes':'No'}</b></div>`+
@@ -847,7 +901,7 @@ function renderDialysis(){
     `<div class="hint">CMS Dialysis Facility data. Chain = corporate operator (click to see all its centers).</div>`+
     _gmaps(h);
   document.getElementById('hClose').onclick=closeFacility;
-  const sl=document.getElementById('hsysLink'); if(sl) sl.onclick=()=>gotoOrg(h.sys);
+  const sl=document.getElementById('hsysLink'); if(sl){ sl.onclick=()=>gotoOrg(h.sys); sl.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();gotoOrg(h.sys);}}; }
 }
 function renderSupplier(){
   const h=selHosp;
@@ -868,12 +922,12 @@ function renderHospital(){
   const h=selHosp;
   const stars=h.r?('★'.repeat(h.r)+'☆'.repeat(5-h.r)):null;
   document.getElementById('sidePanel').innerHTML=
-    `<div class="pf-head"><h3 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">Hospital profile</h3><button class="pf-clear" id="hClose">back &#10005;</button></div>`+
+    `<div class="pf-head"><h2 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">Hospital profile</h2><button class="pf-clear" id="hClose">back &#10005;</button></div>`+
     `<div class="card-name">${titleCase(h.n)}</div>`+
     `<div class="card-loc">${titleCase(h.c)}, ${h.s} &middot; ${titleCase(h.co)} County${h._approx?' &middot; <span style="color:var(--t3)">approx. location</span>':''}</div>`+
     `<div style="margin-bottom:12px"><span class="pill" style="background:${(TYPE_COLOR[h.t])+'22'};color:${TYPE_COLOR[h.t]};border:1px solid ${TYPE_COLOR[h.t]}55">${TYPE_LABEL[h.t]}</span>`+
       `<span class="pill" style="background:${(OWN_COLOR[h.o])+'22'};color:${OWN_COLOR[h.o]};border:1px solid ${OWN_COLOR[h.o]}55">${OWN_LABEL[h.o]}</span></div>`+
-    `<div class="row"><span>Health system</span><b style="font-size:11px">${h.sys?`<a class="syslink" id="hsysLink">${orgName(h.sys)} &rsaquo;</a>`:'Independent / none'}</b></div>`+
+    `<div class="row"><span>Health system</span><b style="font-size:11px">${h.sys?`<a class="syslink" id="hsysLink" role="button" tabindex="0">${orgName(h.sys)} &rsaquo;</a>`:'Independent / none'}</b></div>`+
     `<div class="row"><span>Ownership</span><b style="font-size:11px">${h.od}</b></div>`+
     `<div class="row"><span>Beds</span><b>${h.beds?h.beds.toLocaleString():'n/a'}</b></div>`+
     `<div class="row"><span>Trauma center</span><b>${h.trauma?`<span style="color:var(--amber)">${h.trauma}</span>`:'Not designated / n/a'}</b></div>`+
@@ -883,24 +937,39 @@ function renderHospital(){
     `<div class="hint">Beds, coordinates &amp; trauma level via HIFLD / CovidCareMap (not every facility has all three). System affiliation (AHRQ) is the next pass.</div>`+
     `<a class="pf-clear" style="display:inline-block;margin-top:10px" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.n+' '+h.c+' '+h.s)}" target="_blank" rel="noopener">View on Google Maps &#8599;</a>`;
   document.getElementById('hClose').onclick=closeFacility;
-  const sl=document.getElementById('hsysLink'); if(sl) sl.onclick=()=>gotoOrg(h.sys);
+  const sl=document.getElementById('hsysLink'); if(sl){ sl.onclick=()=>gotoOrg(h.sys); sl.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();gotoOrg(h.sys);}}; }
 }
-function backToUS(){view='us';selState=null;selHosp=null;selCounty=null;selOrg=null;render(true);}
+function backToUS(){view='us';selState=null;selHosp=null;selCounty=null;selOrg=null;render(true);announce('Showing United States: '+HOSP.length.toLocaleString()+' '+RES[activeRes].noun);}
 const titleCase=s=>s.toLowerCase().replace(/\b([a-z])/g,(_,c)=>c.toUpperCase()).replace(/\b(Of|And|The|At|For)\b/g,m=>m.toLowerCase());
 const orgName=s=>titleCase(s||'').replace(/\b(Va|Dod|Hca|Llc|Inc)\b/g,m=>m.toUpperCase());
 
-// ── TOOLTIP ───────────────────────────────────────────────────────────
-function place(e,el){let x=e.clientX+15,y=e.clientY+15;if(x+230>innerWidth)x=e.clientX-230;if(y+70>innerHeight)y=e.clientY-70;el.style.left=x+'px';el.style.top=y+'px';el.hidden=false;}
+// ── TOOLTIP (hover) + TAP-INFO STRIP (its touch twin) ─────────────────
+// Coarse-pointer devices never see the cursor tooltip (emulated mousemove on tap
+// would leave it stuck). Instead, taps route into the side-panel flows, and the
+// facility/county content also lands in a dismissible strip pinned to the canvas
+// bottom, so the same data hover reveals is reachable by touch.
+const COARSE=matchMedia('(hover: none)').matches;
+function place(e,el){if(COARSE)return;let x=e.clientX+15,y=e.clientY+15;if(x+230>innerWidth)x=e.clientX-230;if(y+70>innerHeight)y=e.clientY-70;el.style.left=x+'px';el.style.top=y+'px';el.hidden=false;}
+const hospTipHTML=h=>`<b>${titleCase(h.n)}</b><span>${titleCase(h.c)} · ${TYPE_LABEL[h.t]}${h.r?' · '+h.r+'★':''}</span>`;
+function countyInfoHTML(feat){
+  const pop=countyPopOf(feat), ch=countyChoro();
+  let extra='';
+  if(ch){ const v=chCountyVal(ch.vals,String(feat.id).padStart(5,'0')); extra=`<span style="color:var(--teal)">${chShort(ch.meta.name)}: ${chFmt(v,ch.meta)}</span>`; }
+  return `<b>${feat.properties.name} County, ${selState}</b><span>${pop!=null?pop.toLocaleString()+' residents':''}</span>${extra}`;
+}
 function stateTip(e,ab){const t=document.getElementById('tip');if(!ab||!STATE_NAMES[ab]){hideTip();return;}t.innerHTML=`<b>${STATE_NAMES[ab]}</b><span>${(byState[ab]||[]).length} ${RES[activeRes].noun} · ${metric().label}: ${fmtM(stateVal(ab))}</span>`;place(e,t);}
-function hospTip(e,h){const t=document.getElementById('tip');t.innerHTML=`<b>${titleCase(h.n)}</b><span>${titleCase(h.c)} · ${TYPE_LABEL[h.t]}${h.r?' · '+h.r+'★':''}</span>`;place(e,t);}
+function hospTip(e,h){const t=document.getElementById('tip');t.innerHTML=hospTipHTML(h);place(e,t);}
 function hideTip(){document.getElementById('tip').hidden=true;}
 addEventListener('scroll',hideTip,{passive:true});
+function showTapInfo(html){ if(!COARSE) return; document.getElementById('tapInfoBody').innerHTML=html; document.getElementById('tapInfo').hidden=false; }
+function hideTapInfo(){ document.getElementById('tapInfo').hidden=true; }
+document.getElementById('tapInfoX').addEventListener('click',hideTapInfo);
 
-document.getElementById('controls').addEventListener('click',e=>{const t=e.target.closest('[data-i]');if(!t)return;activeMetric=+t.dataset.i;preserveCam=true;render();});
+document.getElementById('controls').addEventListener('click',e=>{const t=e.target.closest('[data-i]');if(!t)return;activeMetric=+t.dataset.i;preserveCam=true;render();announce('Coloring by '+metric().label);});
 document.getElementById('countyControls').addEventListener('click',e=>{const t=e.target.closest('[data-cm]');if(!t)return;setCountyMetric(t.dataset.cm);});
 document.getElementById('restabs').addEventListener('click',e=>{const t=e.target.closest('[data-res]');if(!t)return;switchResource(t.dataset.res);});
 document.getElementById('backBtn').onclick=backToUS;
-document.getElementById('numToggle').addEventListener('click',function(){showNums=!showNums;this.classList.toggle('off',!showNums);if(view==='us')drawMap(false);});
+document.getElementById('numToggle').addEventListener('click',function(){showNums=!showNums;this.classList.toggle('off',!showNums);this.setAttribute('aria-pressed',String(showNums));if(view==='us')drawMap(false);});
 (function(){
   const si=document.getElementById('searchInput');
   si.addEventListener('input',()=>renderSearch(si.value));
@@ -930,10 +999,14 @@ async function init(){
     SYS_LIST=Object.entries(sc).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count);
     buildResTabs();
     document.getElementById('mapLoading').style.display='none';
-    document.getElementById('srcBanner').textContent='✓ Live CMS data · '+HOSP.length.toLocaleString()+' U.S. hospitals · type, ownership & CMS star ratings';
-    render();
+    render();   // render() sets the srcBanner status line (live region announces the load)
     let tm;new ResizeObserver(()=>{clearTimeout(tm);tm=setTimeout(()=>drawMap(false),60);}).observe(document.querySelector('.map-stage'));
-  }catch(err){document.getElementById('mapLoading').innerHTML='<span style="color:#ff7a7a">Failed to load</span>';console.error(err);}
+  }catch(err){
+    document.getElementById('srcBanner').textContent='Data failed to load';
+    document.getElementById('mapLoading').innerHTML='<div class="map-error-msg">Couldn&rsquo;t load the map data.<br>Check your connection and refresh.</div>';
+    announce("Couldn't load the map data. Check your connection and refresh.");
+    console.error(err);
+  }
 }
 init();
 </script>

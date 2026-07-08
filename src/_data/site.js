@@ -6,6 +6,11 @@ module.exports = {
   credentials: 'RRT, MHA, MSRT, RRT-ACCS',
   url:         'https://healthcareuncharted.com',
 
+  // GoatCounter analytics. Register a code at goatcounter.com, paste it here
+  // (just the subdomain, e.g. 'healthcareuncharted'), and the tracking script
+  // ships on every page. Empty string = no analytics script at all.
+  goatcounter: '',
+
   // ── NAV LINKS ───────────────────────────────────────────────────────────────
   // Order matters — this is the render order in the nav.
 

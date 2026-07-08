@@ -106,10 +106,10 @@ The 4Ps-map metric layer. State-level values keyed `lens -> metricIndex -> state
 
 | File | Shape | Use |
 |------|-------|-----|
-| `assets/data/derived/national-summary.json` | totals + `byType` + `byOwnership` + join stats | macro headline numbers |
-| `assets/data/derived/facilities-by-state.json` | `states[abbr] = { total, byType, byOwnership, beds, population, per100k }` | overlay onto the 4Ps state map |
-| `assets/data/derived/facilities-by-county.json` | `counties[fips] = { total, byType, population, per100k }` | county choropleths |
-| `assets/data/derived/facilities-by-system.json` | systems sorted by facility count | operator views |
+| `data-build/national-summary.json` | totals + `byType` + `byOwnership` + join stats | macro headline numbers |
+| `data-build/facilities-by-state.json` | `states[abbr] = { total, byType, byOwnership, beds, population, per100k }` | overlay onto the 4Ps state map |
+| `data-build/facilities-by-county.json` | `counties[fips] = { total, byType, population, per100k }` | county choropleths |
+| `data-build/facilities-by-system.json` | systems sorted by facility count | operator views |
 
 The same rollups are available **in templates** via `_data/facility.js`
 (e.g. `{{ facility.national.byType.cah }}`), computed by the same `aggregate()`

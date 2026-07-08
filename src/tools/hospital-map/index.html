@@ -32,16 +32,13 @@ no_footer: true
   background: color-mix(in srgb, var(--dark, #0a0f1a) 97%, transparent);
   border-bottom: 1px solid var(--border, #1a2d48);
   backdrop-filter: blur(12px);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 clamp(14px, 2vw, 28px); gap: 16px; flex-shrink: 0;
+  display: flex; align-items: center;
+  padding: 0 clamp(14px, 2vw, 28px); gap: 12px; flex-shrink: 0;
 }
-.hm-subbar-title {
-  font-family: var(--display, 'Outfit', sans-serif);
-  font-size: 12px; font-weight: 700; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--teal, #4ECDC4);
-  white-space: nowrap; flex-shrink: 0;
-}
-.hm-subbar-legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+/* Title/kicker typography comes from the shared .tool-bar-* classes (hu-global.css).
+   The bar keeps its bespoke .hm-subbar shell: the 44px height is load-bearing
+   (108px offsets on .hm-app and .hm-backdrop). */
+.hm-subbar-legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
 .hm-leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px;
   color: var(--t3, #5A7898); font-family: var(--font, 'DM Sans', sans-serif); white-space: nowrap; }
 .hm-leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
@@ -523,6 +520,7 @@ footer { position: relative; z-index: 10; }
 }
 
 .hm-dp-body { flex: 1; overflow-y: auto; padding: 16px 20px 28px; }
+.hm-detail-panel .tool-attribution { flex: none; border-top: 1px solid var(--border); }
 .hm-dp-body::-webkit-scrollbar { width: 3px; }
 .hm-dp-body::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.16); border-radius: 2px; }
 
@@ -626,7 +624,8 @@ footer { position: relative; z-index: 10; }
 .hm-unit-name, .hm-bldg-name, .hm-gz-label { text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.5); }
 [data-theme="light"] .hm-unit-name,
 [data-theme="light"] .hm-bldg-name,
-[data-theme="light"] .hm-gz-label { text-shadow: 0 1px 2px rgba(255,255,255,0.95), 0 0 4px rgba(255,255,255,0.75); }
+[data-theme="light"] .hm-gz-label,
+[data-theme="light"] .hm-hosp-marquee-abbr { text-shadow: 0 1px 2px rgba(255,255,255,0.95), 0 0 4px rgba(255,255,255,0.75); }
 
 /* ── LIGHT MODE ─────────────────────────────────────────────── */
 
@@ -776,6 +775,7 @@ footer { position: relative; z-index: 10; }
 [data-theme="light"] .hm-gz-amb .hm-gz-sub { color: rgba(175,55,52,0.58); }
 [data-theme="light"] .hm-gz-parking .hm-gz-label { color: rgba(5,120,110,0.78); }
 [data-theme="light"] .hm-gz-loading .hm-gz-label { color: rgba(27,95,168,0.78); }
+[data-theme="light"] .hm-gz-label { color: rgba(30,65,110,0.82); }
 
 /* Public wing (Patient Services) */
 [data-theme="light"] .hm-campus-bldg--pub { border-left-color: rgba(232,168,56,0.38); }
@@ -855,6 +855,10 @@ footer { position: relative; z-index: 10; }
   box-shadow: 0 8px 24px rgba(0,30,80,0.14);
 }
 [data-theme="light"] .hm-tooltip strong { color: var(--t1); }
+
+/* Cat badge gets its accent color inline from JS (dark-tuned);
+   darken the whole badge on light so teal/amber text passes contrast */
+[data-theme="light"] .hm-dp-cat-badge { filter: brightness(.72) saturate(1.35); }
 
 /* ── Drag handle + mobile hint (base, hidden on desktop) ──── */
 .hm-panel-handle {
@@ -966,9 +970,19 @@ footer { position: relative; z-index: 10; }
   font-family: 'IBM Plex Mono', monospace;
   transition: opacity 0.8s ease;
 }
+[data-theme="light"] .pz-reset-btn {
+  background: rgba(240,250,255,0.96); border-color: rgba(78,205,196,0.5);
+  color: rgba(5,120,110,0.92);
+}
+[data-theme="light"] .pz-hint {
+  background: rgba(240,250,255,0.92); border-color: rgba(78,205,196,0.35);
+  color: rgba(5,120,110,0.85);
+}
 </style>
 <div class="hm-subbar">
-  <span class="hm-subbar-title">Hospital Blueprint</span>
+  <span class="tool-bar-kicker">Tool</span>
+  <span class="tool-bar-title">Hospital <span>Blueprint</span></span>
+  <span class="tool-bar-spacer"></span>
   <div class="hm-subbar-legend">
     <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-critical)"></div>Critical Care</div>
     <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-procedural)"></div>Procedural</div>
@@ -1239,6 +1253,7 @@ footer { position: relative; z-index: 10; }
     <div class="hm-panel-handle" id="panelHandle"></div>
     <div class="hm-dp-header" id="dpHeader"></div>
     <div class="hm-dp-body" id="dpBody"></div>
+    {% include "components/tool-attribution.njk" %}
   </div>
 
 </div>

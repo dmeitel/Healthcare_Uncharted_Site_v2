@@ -2,13 +2,15 @@
 'use strict';
 /**
  * build-entities.js — run every dataset adapter, merge into the canonical node
- * graph, validate the links, and write two derived artifacts:
+ * graph, validate the links, and write the derived artifacts:
  *
- *   src/assets/data/derived/entities.json      the typed graph (nodes + edges)
- *   src/assets/data/derived/search-index.json  flat: uid, type, layer, label, search, href
+ *   data-build/entities.json                    the typed graph (nodes + edges) — build
+ *   data-build/search-index.json                intermediate only, NOT deployed
+ *   src/assets/data/derived/search-graph.json   the one artifact pages fetch (Atlas search)
  *
- * Purely additive. Nothing reads these yet. The Atlas is untouched. This step
- * exists so you can OPEN the output and judge the shape before wiring any tool.
+ * entities/search-index live outside src/ on purpose: everything under
+ * src/assets is passthrough-copied into the deploy, and these two are ~19.6MB
+ * of dead weight no page loads.
  *
  * Add a new dataset by writing one adapter and adding it to ADAPTERS below.
  *
@@ -65,17 +67,23 @@ xlSkipped.forEach((s) => console.log('    skip: ' + s));
 
 const v = validateNodes(all);
 
-const OUT = P('src/assets/data/derived');
+const OUT = P('src/assets/data/derived');          // deployed artifacts (fetched by pages)
+const OUT_BUILD = P('data-build');                  // build intermediates (not deployed)
 fs.mkdirSync(OUT, { recursive: true });
+fs.mkdirSync(OUT_BUILD, { recursive: true });
 const stamp = { generated_by: 'scripts/build-entities.js', adapters: ADAPTERS.map((a) => a.name), nodeCount: all.length };
 
 const write = (name, obj) => {
   fs.writeFileSync(path.join(OUT, name), JSON.stringify(obj) + '\n');
   console.log('  wrote derived/' + name);
 };
+const writeBuild = (name, obj) => {
+  fs.writeFileSync(path.join(OUT_BUILD, name), JSON.stringify(obj) + '\n');
+  console.log('  wrote data-build/' + name);
+};
 
-write('entities.json', { _meta: stamp, nodes: all });
-write('search-index.json', {
+writeBuild('entities.json', { _meta: stamp, nodes: all });
+writeBuild('search-index.json', {
   _meta: stamp,
   items: all.map((n) => ({ uid: n.uid, type: n.type, layer: n.facets.layer || null, label: n.label, search: n.search, href: n.href })),
 });
