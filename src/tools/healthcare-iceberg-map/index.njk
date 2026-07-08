@@ -23,7 +23,7 @@ permalink: /tools/healthcare-iceberg-map/
 #hf{position:absolute;inset:0;pointer-events:none;z-index:99;border:1px solid rgba(78,205,196,0.2)}
 #hf::before{content:'';position:absolute;top:0;left:6%;right:6%;height:1px;background:linear-gradient(90deg,transparent,rgba(78,205,196,0.6),transparent)}
 #hf::after{content:'';position:absolute;bottom:0;left:6%;right:6%;height:1px;background:linear-gradient(90deg,transparent,rgba(78,205,196,0.45),transparent)}
-.hc{position:absolute;width:22px;height:22px;border-style:solid;border-color:#4ECDC4;opacity:0.65;z-index:100}
+.hc{position:absolute;width:14px;height:14px;border-style:solid;border-color:#4ECDC4;opacity:0.65;z-index:100}
 .hc.tl{top:0;left:0;border-width:2px 0 0 2px}.hc.tr{top:0;right:0;border-width:2px 2px 0 0}
 .hc.bl{bottom:0;left:0;border-width:0 0 2px 2px}.hc.br{bottom:0;right:0;border-width:0 2px 2px 0}
 .hlbl{position:absolute;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;pointer-events:none;z-index:100;color:rgba(78,205,196,0.25);font-family:var(--font)}
@@ -405,6 +405,24 @@ permalink: /tools/healthcare-iceberg-map/
 /* Shared attribution strip: slimmer + tucked into the shell's bottom padding
    so it clears the frame corner bracket and the right panel's bottom edge */
 .tool-attribution--fixed{bottom:4px;right:16px;padding:4px 10px}
+
+/* ── EXPEDITION INSTRUMENT — field-cartography chrome ──────
+   Ruler-tick toolbar edge, tabular numerals, standard icon sizing.
+   Decorative layers are pointer-events:none; scene palette untouched.
+   Note: #tb is position:absolute (its own scheme, NOT the global sticky
+   .tool-bar), so the ::after needs no top:0 guard here. */
+#tb::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--teal) 42%,transparent) 0 1px,transparent 1px 8px);pointer-events:none}
+[data-theme="light"] #tb::after{background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--teal-dk) 55%,transparent) 0 1px,transparent 1px 8px)}
+@media (max-width: 768px){ #tb::after{display:none} } /* #tb goes position:static on phone — the tick would escape to #wrap's bottom. NB: an open-brace directly followed by a hash opens a Nunjucks comment in .njk files — keep the space */
+
+/* instrument numerals: the right detail panel's stats read in tabular figures */
+#rp{font-variant-numeric:tabular-nums}
+
+/* standard icon sizing on the (static) control-section labels + reset buttons */
+.rh svg{width:11px;height:11px;stroke-width:2;color:rgba(78,205,196,0.8);vertical-align:-1.5px;margin-right:5px}
+[data-theme="light"] .rh svg{color:var(--teal-dk)}
+.hi svg{width:16px;height:16px;stroke-width:1.75}
+.pz-reset-btn svg{width:14px;height:14px;stroke-width:1.75;flex:none}
 </style>
 
 <div class="lab-shell">
@@ -421,7 +439,7 @@ permalink: /tools/healthcare-iceberg-map/
     <div class="sp"></div>
     <div id="bc"></div>
     <div class="hics">
-      <div class="hi" title="Reset to start" onclick="sel='H';subSel=null;activeFilter='all';hiddenLayers.clear();go();renderLayerToggles();updateFilterBtns();">&#x21BA;</div>
+      <div class="hi" title="Reset to start" role="button" aria-label="Reset to start" onclick="sel='H';subSel=null;activeFilter='all';hiddenLayers.clear();go();renderLayerToggles();updateFilterBtns();"><i data-lucide="rotate-ccw" aria-hidden="true"></i></div>
     </div>
   </div>
   <div id="ct">
@@ -436,7 +454,7 @@ permalink: /tools/healthcare-iceberg-map/
         <div id="lpf"></div>
       </div>
       <div class="rs">
-        <div class="rh">Layer Filter</div>
+        <div class="rh"><i data-lucide="layers" aria-hidden="true"></i>Layer Filter</div>
         <div class="vm" id="filter-btns">
           <button class="vb va" title="Show all 8 layers of the map" onclick="setFilter('all')">All</button>
           <button class="vb" title="Patient Experience, Care Settings & Metrics layers" onclick="setFilter('Experience')">Patient</button>
@@ -476,7 +494,7 @@ permalink: /tools/healthcare-iceberg-map/
         <div id="layers"></div>
       </div>
       <svg id="svg-lines" width="0" height="0"></svg>
-      <button class="pz-reset-btn" id="maPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
+      <button class="pz-reset-btn" id="maPzReset" aria-label="Reset zoom"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Reset view</button>
       <div class="pz-hint" id="maPzHint">Pinch to zoom &middot; drag to pan</div>
     </div>
     <div class="dh" id="dh-r"></div>

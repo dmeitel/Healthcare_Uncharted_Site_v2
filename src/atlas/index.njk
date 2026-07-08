@@ -23,6 +23,18 @@ permalink: /atlas/
   box-shadow: 0 2px 16px rgba(0,0,0,0.4);
   display: flex; align-items: center;
   padding: 0 16px; gap: 10px; flex-shrink: 0; z-index: 20;
+  /* instrument chrome needs an anchor; #atlas-tb is NOT .tool-bar, so there is
+     no global sticky top:64px to neutralize — top:0 is belt-and-braces only */
+  position: relative; top: 0;
+}
+/* instrument header: ruler-tick bottom edge, scene-tinted (decorative) */
+#atlas-tb::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: repeating-linear-gradient(90deg, rgba(78,205,196,0.30) 0 1px, transparent 1px 8px);
+  pointer-events: none;
+}
+[data-theme='light'] #atlas-tb::after {
+  background: repeating-linear-gradient(90deg, rgba(27,95,168,0.30) 0 1px, transparent 1px 8px);
 }
 /* logo rides the shared .tool-bar-title (Outfit 13px 700, teal span);
    this rule only keeps the scene's uppercase tracking */
@@ -49,6 +61,30 @@ permalink: /atlas/
 #atlas-canvas { flex: 1; position: relative; overflow: hidden; }
 #atlas-svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
 #atlas-svg:active { cursor: grabbing; }
+
+/* ── EXPEDITION INSTRUMENT CHROME ─────────────────────────────────────────
+   Corner brackets + chart stamp on the map canvas. Decorative only:
+   aria-hidden + pointer-events:none, and z-index sits BELOW every overlay
+   (legend z-10, hint z-10, find z-30, panels z-40, legend button z-140).
+   NO graticule here — the scene already draws its own hex terrain texture
+   and a grid overlay would fight it. */
+.chart-corners { position: absolute; inset: 8px; z-index: 4; pointer-events: none; }
+.chart-corners i { position: absolute; width: 14px; height: 14px; border: 0 solid rgba(78,205,196,0.35); }
+.chart-corners i:nth-child(1) { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; border-color: var(--teal); }
+.chart-corners i:nth-child(2) { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+.chart-corners i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.chart-corners i:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+/* stamp lives bottom-right: the only free corner (legend top-left, find panel
+   top-right, attribution chip bottom-left, pan hint bottom-center) */
+#atlas-stamp {
+  position: absolute; right: 16px; bottom: 12px; z-index: 4;
+  pointer-events: none; user-select: none; text-align: right;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; line-height: 1.8;
+  color: rgba(140,180,215,0.34);
+}
+[data-theme='light'] .chart-corners i { border-color: rgba(27,95,168,0.30); }
+[data-theme='light'] .chart-corners i:nth-child(1) { border-color: var(--teal-dk); }
+[data-theme='light'] #atlas-stamp { color: rgba(15,30,50,0.40); }
 
 #atlas-legend {
   position: absolute; top: 16px; left: 16px; z-index: 10;
@@ -155,7 +191,7 @@ permalink: /atlas/
 .hud-drow[data-uid] { cursor: pointer; }
 .hud-drow[data-uid]:hover .hud-dlabel { color: #4ECDC4; }
 .hud-dlabel { color: #cfe0ea; flex: 1; line-height: 1.35; }
-.hud-dval { font-family: var(--mono); color: #fff; font-weight: 600; white-space: nowrap; }
+.hud-dval { font-family: var(--mono); color: #fff; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .hud-dsub { font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; color: rgba(140,180,200,0.6); text-transform: uppercase; }
 [data-theme='light'] #hud-data { border-top-color: rgba(27,95,168,0.16); }
 [data-theme='light'] .hud-dlabel { color: #22405c; }
@@ -205,6 +241,17 @@ permalink: /atlas/
 [data-theme='light'] .tool-attribution--fixed { background: rgba(255,255,255,0.92); border-color: rgba(27,95,168,0.15); }
 /* Filter toggle buttons */
 .atlas-flt-wrap { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+/* group label for the layer toggles — static markup so the lucide icon renders
+   once and survives the sheet re-parent (appendChild moves live nodes) */
+.atlas-flt-label {
+  display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(78,205,196,0.55); white-space: nowrap;
+}
+.atlas-flt-label svg { width: 11px; height: 11px; stroke-width: 2; color: var(--teal); flex: none; }
+[data-theme='light'] .atlas-flt-label { color: rgba(27,95,168,0.65); }
+[data-theme='light'] .atlas-flt-label svg { color: var(--teal-dk); }
 .atlas-flt {
   height: 28px; padding: 0 13px; border-radius: 999px;
   background: transparent; border: 1px solid rgba(78,205,196,0.14);
@@ -272,6 +319,7 @@ permalink: /atlas/
    so one set of nodes (and one set of listeners) serves both layouts. */
 #atlas-legend-sheet { display: none; }
 #atlas-legend-btn { display: none; }
+#atlas-legend-btn svg { width: 13px; height: 13px; stroke-width: 2; flex: none; }
 #atlas-desk-hint { display: none; }
 #als-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 #als-title {
@@ -286,6 +334,8 @@ permalink: /atlas/
 }
 
 @media (max-width: 768px) {
+  /* instrument chrome steps back on small screens */
+  #atlas-stamp { display: none; }
   /* hidden in their desktop homes until JS moves them into the sheet */
   #atlas-legend { display: none; }
   .atlas-flt-wrap { display: none; }
@@ -490,10 +540,10 @@ permalink: /atlas/
 /* ── Unified entity search (the whole dataset, attached to the atlas) ─── */
 #atlas-find { position: absolute; top: 64px; right: 16px; width: min(400px, calc(100% - 32px)); z-index: 30; font-family: var(--font); }
 #find-bar { display: flex; align-items: center; gap: 9px; background: rgba(8,14,20,0.92); border: 1px solid rgba(78,205,196,0.30); border-radius: 11px; padding: 9px 13px; backdrop-filter: blur(8px); box-shadow: 0 10px 34px rgba(0,0,0,0.45); }
-#find-bar svg { flex: none; opacity: .6; }
+#find-bar svg { flex: none; opacity: .6; width: 16px; height: 16px; stroke-width: 2; color: #4ECDC4; }
 #find-input { flex: 1; background: none; border: none; outline: none; color: #dcefe9; font-size: 14px; font-family: inherit; }
 #find-input::placeholder { color: rgba(140,180,200,0.45); }
-#find-count { font-family: var(--mono); font-size: 10px; color: rgba(140,180,200,0.55); white-space: nowrap; }
+#find-count { font-family: var(--mono); font-size: 10px; color: rgba(140,180,200,0.55); white-space: nowrap; font-variant-numeric: tabular-nums; }
 #find-results { margin-top: 7px; max-height: min(58vh, 540px); overflow-y: auto; background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.18); border-radius: 11px; display: none; }
 #find-results.open { display: block; }
 #find-results::-webkit-scrollbar { width: 4px; } #find-results::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.18); }
@@ -522,8 +572,9 @@ permalink: /atlas/
 [data-theme='light'] .find-sub { color: rgba(40,70,100,0.6); }
 [data-theme='light'] .find-on { color: var(--teal-dk); border-color: rgba(27,154,144,0.45); }
 [data-theme='light'] .find-more { color: rgba(40,70,100,0.55); }
-/* search-result detail summary (the entity card, on the atlas) */
-#find-detail { margin-top: 7px; max-height: min(62vh, 580px); overflow-y: auto; background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.18); border-radius: 11px; display: none; padding: 14px 15px; }
+/* search-result detail summary (the entity card, on the atlas) —
+   instrument inspector: tabular numerals + hairline section dividers */
+#find-detail { margin-top: 7px; max-height: min(62vh, 580px); overflow-y: auto; background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.18); border-radius: 11px; display: none; padding: 14px 15px; font-variant-numeric: tabular-nums; }
 #find-detail.open { display: block; }
 #find-detail::-webkit-scrollbar { width: 4px; } #find-detail::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.18); }
 .fd-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
@@ -535,7 +586,7 @@ permalink: /atlas/
 .fd-facets { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px; margin-bottom: 4px; }
 .fd-facets .fk { color: rgba(140,180,200,0.55); font-family: var(--mono); font-size: 10.5px; }
 .fd-facets .fv { color: rgba(200,222,235,0.9); }
-.fd-sec { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(140,180,200,0.55); margin: 13px 0 7px; }
+.fd-sec { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(140,180,200,0.55); margin: 13px 0 7px; border-top: 1px solid rgba(78,205,196,0.10); padding-top: 10px; }
 .fd-rel { margin-bottom: 9px; }
 .fd-rv { font-family: var(--mono); font-size: 10.5px; color: #7fead9; margin-bottom: 5px; }
 .fd-rv.inc { color: #E8C36B; }
@@ -556,7 +607,7 @@ permalink: /atlas/
 [data-theme='light'] .fd-type { filter: brightness(.72) saturate(1.3); }
 [data-theme='light'] .fd-uid { color: rgba(40,70,100,0.55); }
 [data-theme='light'] .fd-facets .fk { color: rgba(40,70,100,0.6); }
-[data-theme='light'] .fd-sec { color: rgba(40,70,100,0.6); }
+[data-theme='light'] .fd-sec { color: rgba(40,70,100,0.6); border-top-color: rgba(27,95,168,0.12); }
 [data-theme='light'] .fd-rv { color: var(--teal-dk); }
 [data-theme='light'] .fd-rv.inc { color: #946905; }
 [data-theme='light'] .fd-cv { color: var(--teal-dk); }
@@ -573,7 +624,8 @@ permalink: /atlas/
     <div class="atlas-sep"></div>
     <div id="atlas-bc"><span class="abc-item active" id="bc-ov">Overview</span></div>
     <div class="atlas-sep"></div>
-    <div class="atlas-flt-wrap">
+    <div class="atlas-flt-wrap" role="group" aria-label="Map layers">
+      <span class="atlas-flt-label"><i data-lucide="layers" aria-hidden="true"></i>Layers</span>
       <button class="atlas-flt on" id="af-labels">Zone Labels</button>
       <button class="atlas-flt on" id="af-routes">Routes</button>
       <button class="atlas-flt" id="af-expand-all">Expand All</button>
@@ -595,7 +647,9 @@ permalink: /atlas/
   </div>
   <div id="atlas-canvas">
     <svg id="atlas-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-    <button class="toggle-chip" id="atlas-legend-btn" aria-controls="atlas-legend-sheet" aria-expanded="false">Legend</button>
+    <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div id="atlas-stamp" aria-hidden="true">HU ATLAS &middot; UNIFIED DATASET</div>
+    <button class="toggle-chip" id="atlas-legend-btn" aria-controls="atlas-legend-sheet" aria-expanded="false"><i data-lucide="map" aria-hidden="true"></i>Legend</button>
     <div id="atlas-hint">Scroll to zoom · Drag to pan · Click any hex to explore</div>
     <div id="conn-tooltip"><div class="ctt-label" id="ctt-label"></div><div class="ctt-desc" id="ctt-desc"></div></div>
     <div id="atlas-legend">
@@ -666,7 +720,7 @@ permalink: /atlas/
 
   <div id="atlas-find">
     <div id="find-bar">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <i data-lucide="search" aria-hidden="true"></i>
       <input id="find-input" type="text" placeholder="Search the whole atlas — roles, facilities, metrics, suppliers, concepts…" autocomplete="off" spellcheck="false">
       <span id="find-count"></span>
     </div>

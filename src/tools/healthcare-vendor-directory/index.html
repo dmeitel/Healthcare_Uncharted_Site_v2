@@ -61,8 +61,13 @@ no_footer: true
 .vd-board { max-width:1240px; margin:0 auto; padding:6px clamp(16px,4vw,40px) 64px; display:grid; grid-template-columns:228px 1fr; gap:26px; align-items:start; }
 .vd-searchbar { max-width:1240px; margin:0 auto; padding:8px clamp(16px,4vw,40px) 0; }
 .vd-sidebar { position:sticky; top:72px; display:flex; flex-direction:column; gap:12px; }
+/* static sector-list header — stays OUT of the JS-rebuilt #vdNav so the icon survives re-renders */
+.vd-side-head { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--t3); padding:0 10px; }
+.vd-side-head svg { width:11px; height:11px; stroke-width:2; color:var(--teal); flex-shrink:0; }
+[data-theme="light"] .vd-side-head svg { color:var(--teal-dk); }
 .vd-search { position:relative; display:block; width:100%; }
-.vd-search .search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--t3); font-size:14px; pointer-events:none; }
+/* operators-map .mapsearch-ico pattern: lucide search inside the input */
+.vd-search .search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); width:15px; height:15px; stroke-width:1.75; color:var(--t3); pointer-events:none; }
 .vd-search input { width:100%; box-sizing:border-box; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:11px 14px 11px 34px; color:var(--t1); font-size:14px; font-family:var(--font); }
 .vd-search input:focus { outline:none; border-color:var(--teal); }
 .vd-nav { display:flex; flex-direction:column; gap:1px; max-height:calc(100vh - 150px); overflow-y:auto; padding-right:4px; }
@@ -134,14 +139,12 @@ no_footer: true
 .detail-panel { display:none; position:fixed; top:0; right:0; height:100vh; width:420px; background:var(--surface); border-left:1px solid var(--border); z-index:200; overflow-y:auto; box-shadow:-8px 0 32px rgba(0,0,0,.4); }
 .detail-panel.open { display:block; }
 .dp-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; position:sticky; top:0; background:var(--surface); z-index:1; }
-.dp-close { background:none; border:1px solid var(--border); border-radius:6px; color:var(--t3); cursor:pointer; font-size:16px; padding:4px 10px; font-family:var(--font); transition:all .15s; }
-.dp-close:hover { border-color:var(--border2); color:var(--t1); }
 .dp-body { padding:24px; }
 .dp-section { margin-bottom:24px; }
 .dp-label { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); margin-bottom:8px; }
 .dp-text { font-size:13px; color:var(--t2); line-height:1.7; }
-.dp-stat { display:flex; flex-direction:column; gap:8px; }
-.dp-stat-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.dp-stat { display:flex; flex-direction:column; gap:8px; font-variant-numeric:tabular-nums; }
+.dp-stat-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent); font-size:12px; }
 .dp-stat-row:last-child { border-bottom:none; }
 .dp-stat-key { color:var(--t3); }
 .dp-stat-val { color:var(--t1); font-weight:500; text-align:right; }
@@ -164,7 +167,9 @@ no_footer: true
 }
 /* EHR market-share charts */
 .ehr-market{max-width:760px;margin:0 auto;padding:30px 40px 10px}
-.ehr-market h2{font-family:var(--display);font-size:clamp(20px,2.4vw,26px);font-weight:800;letter-spacing:-.02em;color:var(--t1);margin-bottom:6px}
+.ehr-market h2{display:flex;align-items:center;gap:9px;font-family:var(--display);font-size:clamp(20px,2.4vw,26px);font-weight:800;letter-spacing:-.02em;color:var(--t1);margin-bottom:6px}
+.ehr-market h2 svg{width:17px;height:17px;stroke-width:2;color:var(--teal);flex-shrink:0}
+[data-theme="light"] .ehr-market h2 svg{color:var(--teal-dk)}
 .ehr-market .ehr-sub{font-size:13.5px;color:var(--t2);max-width:680px;line-height:1.6}
 .ms-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:6px}
 .ms-nav{display:flex;align-items:center;gap:10px}
@@ -214,7 +219,7 @@ no_footer: true
 <div class="ehr-market">
   <div class="ms-head">
     <div>
-      <h2>Market Share by Sector</h2>
+      <h2><i data-lucide="bar-chart-2" aria-hidden="true"></i>Market Share by Sector</h2>
       <p class="ehr-sub">Who leads each corner of the healthcare-tech map. Auto-rotating. Use the dots or arrows to jump between sectors.</p>
     </div>
     <div class="ms-nav">
@@ -235,13 +240,14 @@ no_footer: true
 
 <div class="vd-searchbar">
   <div class="vd-search">
-    <span class="search-icon">&#9906;</span>
+    <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
     <input type="text" id="searchInput" aria-label="Search vendors" placeholder="Search vendors, owners, or sectors..." oninput="render()">
   </div>
 </div>
 
 <div class="vd-board">
   <aside class="vd-sidebar">
+    <div class="vd-side-head"><i data-lucide="layers" aria-hidden="true"></i>Sectors</div>
     <div class="vd-nav" id="vdNav"></div>
   </aside>
   <div class="vd-main">
@@ -271,7 +277,7 @@ no_footer: true
       <div id="dp-name" style="font-size:16px;font-weight:600;color:var(--t1);margin-bottom:4px;"></div>
       <div id="dp-owner" style="font-size:12px;color:var(--t3);"></div>
     </div>
-    <button class="dp-close" onclick="closeDetail()">&#10005;</button>
+    <button class="icon-btn" onclick="closeDetail()" aria-label="Close vendor details"><i data-lucide="x" aria-hidden="true"></i></button>
   </div>
   <div class="dp-body">
     <div class="dp-section">

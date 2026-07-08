@@ -38,7 +38,20 @@ no_footer: true
 /* Title/kicker typography comes from the shared .tool-bar-* classes (hu-global.css).
    The bar keeps its bespoke .hm-subbar shell: the 44px height is load-bearing
    (108px offsets on .hm-app and .hm-backdrop). */
+/* Instrument ruler-tick bottom edge — absolutely positioned OVER the existing
+   border-bottom (the sub-bar is sticky = positioned), so the 44px height and
+   the 108px calc() family are untouched. */
+.hm-subbar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: repeating-linear-gradient(90deg, var(--border, #1a2d48) 0 1px, transparent 1px 8px);
+  pointer-events: none;
+}
 .hm-subbar-legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.hm-leg-label { display: flex; align-items: center; gap: 5px; font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--t3, #5A7898); padding-right: 2px; white-space: nowrap; }
+.hm-leg-label svg { width: 11px; height: 11px; stroke-width: 2; color: var(--teal); flex-shrink: 0; }
+[data-theme="light"] .hm-leg-label svg { color: var(--teal-dk); }
 .hm-leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px;
   color: var(--t3, #5A7898); font-family: var(--font, 'DM Sans', sans-serif); white-space: nowrap; }
 .hm-leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
@@ -452,6 +465,7 @@ footer { position: relative; z-index: 10; }
   overflow: hidden;
   box-shadow: 0 0 0 1px rgba(78,205,196,0.08) inset, -4px 0 24px rgba(0,0,0,0.5);
   position: relative; z-index: 2;
+  font-variant-numeric: tabular-nums; /* instrument standard: numerals align in stat rows/metrics */
 }
 /* default (welcome) state */
 .hm-dp-welcome {
@@ -895,7 +909,8 @@ footer { position: relative; z-index: 10; }
 @media (max-width: 899px) {
   .hm-app { grid-template-columns: 1fr 300px; }
   .hm-backdrop { right: 300px; }
-  .hm-leg-item:nth-child(n+5) { display: none; }
+  /* n+6: the static "Key" label is now child 1, so the first four category items stay */
+  .hm-leg-item:nth-child(n+6) { display: none; }
 }
 
 /* ── MOBILE ≤767px ───────────────────────────────────────── */
@@ -958,6 +973,7 @@ footer { position: relative; z-index: 10; }
   cursor: pointer; white-space: nowrap;
   backdrop-filter: blur(10px);
 }
+.pz-reset-btn svg { width: 13px; height: 13px; stroke-width: 2; flex-shrink: 0; }
 .pz-hint {
   position: absolute; bottom: 50px; left: 50%;
   transform: translateX(-50%); z-index: 90;
@@ -984,6 +1000,7 @@ footer { position: relative; z-index: 10; }
   <span class="tool-bar-title">Hospital <span>Blueprint</span></span>
   <span class="tool-bar-spacer"></span>
   <div class="hm-subbar-legend">
+    <span class="hm-leg-label"><i data-lucide="map" aria-hidden="true"></i>Key</span>
     <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-critical)"></div>Critical Care</div>
     <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-procedural)"></div>Procedural</div>
     <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-clinical)"></div>Clinical</div>
@@ -1080,7 +1097,7 @@ footer { position: relative; z-index: 10; }
 
   <!-- Building scroll container -->
   <div class="hm-building-scroll">
-    <button class="pz-reset-btn" id="hmPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
+    <button class="pz-reset-btn" id="hmPzReset" aria-label="Reset zoom"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Reset view</button>
     <div class="pz-hint" id="hmPzHint">Pinch to zoom &middot; drag to pan</div>
     <div class="hm-campus-col">
     <div class="hm-campus-wrap">

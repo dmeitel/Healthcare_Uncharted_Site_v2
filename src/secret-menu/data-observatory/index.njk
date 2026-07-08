@@ -26,6 +26,16 @@ eleventyExcludeFromCollections: true
   --dmap-tool: #2f9c6a;              /* tools          */
 }
 
+/* instrument header: ruler-tick bottom edge. top:0 is REQUIRED, not decoration:
+   the global .tool-bar rule carries sticky top:64px, and position:relative
+   would obey that top and displace the bar 64px down. */
+.obs-shell .tool-bar { position: relative; top: 0; }
+.obs-shell .tool-bar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: repeating-linear-gradient(90deg, var(--border) 0 1px, transparent 1px 8px);
+  pointer-events: none;
+}
+
 .obs-shell .shell-canvas { background: var(--dmap-canvas); overflow: auto; }
 #obsWrap { position: relative; min-height: 100%; }
 #obsSvg { display: block; font-family: var(--mono); }
@@ -66,7 +76,7 @@ eleventyExcludeFromCollections: true
 .obs-kind-badge i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .obs-meta { display: grid; grid-template-columns: 84px 1fr; gap: 5px 10px; margin-bottom: 14px; }
 .obs-meta dt { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--t3); padding-top: 2px; }
-.obs-meta dd { margin: 0; font-family: var(--mono); font-size: 11px; color: var(--t1); overflow-wrap: anywhere; }
+.obs-meta dd { margin: 0; font-family: var(--mono); font-size: 11px; color: var(--t1); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .obs-detail { font-size: 12.5px; line-height: 1.65; color: var(--t2); margin-bottom: 16px; }
 .obs-sec {
   font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .14em;
@@ -88,14 +98,22 @@ eleventyExcludeFromCollections: true
 .obs-hint { padding: 28px 8px; text-align: center; color: var(--t3); font-size: 12px; line-height: 1.7; }
 .obs-hint .glyph { font-size: 22px; display: block; margin-bottom: 10px; opacity: .6; }
 
-/* foot legend */
+/* foot legend — static label + icon beside the JS-rendered swatches
+   (the icon lives OUTSIDE #obsLegend, which legend() rebuilds via innerHTML) */
+.obs-leg-label {
+  display: inline-flex; align-items: center; gap: 5px; margin-right: 2px;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--t3); white-space: nowrap;
+}
+.obs-leg-label svg { width: 11px; height: 11px; stroke-width: 2; color: var(--teal); flex: none; }
+[data-theme="light"] .obs-leg-label svg { color: var(--teal-dk); }
 .obs-legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-family: var(--mono); font-size: 10px; color: var(--t2); }
 .obs-legend .sw { display: inline-flex; align-items: center; gap: 5px; }
 .obs-legend .sw i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; border: 1.5px solid; }
 .obs-legend .ek { display: inline-flex; align-items: center; gap: 5px; }
 .obs-legend .ek svg { display: block; }
 .obs-legend .sep { width: 1px; height: 14px; background: var(--border); }
-#obsTotals { font-family: var(--mono); font-size: 10px; color: var(--t3); }
+#obsTotals { font-family: var(--mono); font-size: 10px; color: var(--t3); font-variant-numeric: tabular-nums; }
 
 /* phone: the DAG can't reflow — fixed-width svg inside a scroll strip */
 @media (max-width: 699px) {
@@ -133,6 +151,7 @@ eleventyExcludeFromCollections: true
   </div>
 
   <footer class="shell-foot">
+    <span class="obs-leg-label"><i data-lucide="map" aria-hidden="true"></i>Legend</span>
     <div class="obs-legend" id="obsLegend"></div>
     <span class="tool-bar-spacer"></span>
     <span id="obsTotals"></span>
@@ -187,8 +206,10 @@ fetch('/assets/data/derived/datamap.json')
   .then(function (r) { return r.json(); })
   .then(init)
   .catch(function (err) {
+    /* human sentence on the canvas, per the shell a11y rule; no live region
+       exists on this page, so the visible message is the whole story */
     wrap.insertAdjacentHTML('beforeend',
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9db0c4;font-family:var(--mono);font-size:12px">Could not load datamap.json (' + esc(err.message) + ')</div>');
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#9db0c4;font-family:var(--mono);font-size:12px;line-height:1.7">Couldn’t load the data map. Check your connection and refresh.<br>(' + esc(err.message) + ')</div>');
   });
 
 function init(data) {

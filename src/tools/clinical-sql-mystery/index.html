@@ -58,8 +58,12 @@ no_footer: true
 .toast-s{color:var(--sql-text2);font-size:12px}
 
 /* HEADER — shared .tool-bar frame from hu-global.css; only the badge internals live here */
+/* Instrument ruler-tick bottom edge. The global .tool-bar is sticky (= positioned),
+   so the ::after anchors to it without any position/top change (gotcha: adding
+   position:relative here would need top:0 to dodge the global sticky top:64px). */
+.sqlm .tool-bar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:repeating-linear-gradient(90deg,var(--sql-border) 0 1px,transparent 1px 8px);pointer-events:none}
 .hdr-stat{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sql-text2);white-space:nowrap}
-.badge{background:var(--sql-surface2);border:1px solid var(--sql-border);padding:3px 10px;border-radius:999px;font-size:11px;color:var(--sql-text2)}
+.badge{background:var(--sql-surface2);border:1px solid var(--sql-border);padding:3px 10px;border-radius:999px;font-size:11px;color:var(--sql-text2);font-variant-numeric:tabular-nums}
 .badge.win{background:var(--sql-green-dim);border-color:var(--semantic-success);color:var(--sql-green-text)}
 
 /* LAYOUT */
@@ -69,6 +73,10 @@ no_footer: true
 /* CASE SIDEBAR */
 .case-sidebar{background:var(--sql-surface);border-right:1px solid var(--sql-border);overflow-y:auto;padding:12px 0}
 .side-lbl{font-size:10px;font-weight:600;color:var(--sql-text3);text-transform:uppercase;letter-spacing:.1em;padding:0 14px 8px}
+/* instrument label icons — 11px, teal, beside the text (static markup only) */
+.side-lbl,.schema-lbl{display:flex;align-items:center;gap:6px}
+.side-lbl svg,.schema-lbl svg{width:11px;height:11px;stroke-width:2;color:var(--teal);flex-shrink:0}
+[data-theme="light"] .side-lbl svg,[data-theme="light"] .schema-lbl svg{color:var(--teal-dk)}
 .case-btn{padding:10px 14px;cursor:pointer;border-left:3px solid transparent;transition:all .12s;position:relative}
 .case-btn:hover{background:var(--sql-surface2)}
 .case-btn.active{background:var(--sql-surface2);border-left-color:var(--sql-blue-text)}
@@ -89,7 +97,8 @@ no_footer: true
 .case-desc{background:var(--sql-surface);border-bottom:1px solid var(--sql-border);padding:14px 18px;flex-shrink:0;max-height:190px;overflow-y:auto}
 .desc-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;gap:12px}
 .desc-title{font-size:14px;font-weight:600;color:var(--sql-text);flex:1}
-.hint-btn{background:none;border:1px solid var(--sql-border);color:var(--sql-text2);padding:4px 12px;border-radius:999px;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .12s;font-family:var(--font)}
+.hint-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid var(--sql-border);color:var(--sql-text2);padding:4px 12px;border-radius:999px;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .12s;font-family:var(--font)}
+.hint-btn .hint-ico{width:12px;height:12px;flex-shrink:0}
 .hint-btn:hover{border-color:var(--sql-amber-text);color:var(--sql-amber-text)}
 .hint-btn:disabled{opacity:.4;cursor:default}
 .desc-story{font-size:12px;color:var(--sql-text2);line-height:1.65;margin-bottom:10px}
@@ -107,6 +116,7 @@ no_footer: true
 .bar-acts{display:flex;gap:7px;align-items:center}
 .btn-run{background:var(--semantic-success);border:none;color:#fff;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:filter .12s;font-family:var(--font)}
 .btn-run:hover{filter:brightness(1.12)}
+.btn-run svg{width:12px;height:12px;stroke-width:2.25;flex-shrink:0}
 .btn-sec{background:none;border:1px solid var(--sql-border);color:var(--sql-text2);padding:5px 12px;border-radius:999px;font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--font)}
 .btn-sec:hover{border-color:rgba(78,205,196,.5);color:var(--sql-text)}
 .shortcut{font-size:10px;color:var(--sql-text3);padding:2px 6px;background:var(--sql-surface2);border:1px solid var(--sql-border);border-radius:4px}
@@ -122,7 +132,7 @@ textarea#editor::placeholder{color:var(--sql-text3)}
 #res-container{flex:1;overflow:auto}
 .res-placeholder{padding:24px;text-align:center;color:var(--sql-text3);font-size:13px}
 .res-placeholder span{font-size:28px;display:block;margin-bottom:8px}
-.res-table{width:100%;border-collapse:collapse;font-size:12px}
+.res-table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
 .res-table th{padding:7px 12px;text-align:left;background:var(--sql-surface);color:var(--sql-text2);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--sql-border);position:sticky;top:0;white-space:nowrap}
 .res-table td{padding:7px 12px;border-bottom:1px solid var(--sql-border);color:var(--sql-text);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .res-table tr:hover td{background:var(--sql-surface2)}
@@ -203,12 +213,8 @@ textarea#editor::placeholder{color:var(--sql-text3)}
     flex-shrink:0;
   }
   .mob-panel-title { font-size:13px; font-weight:600; color:var(--sql-text); }
-  .mob-panel-close {
-    background:none; border:1px solid var(--sql-border2); color:var(--sql-text2);
-    padding:7px 14px; border-radius:8px; font-size:12px;
-    font-family:var(--font); cursor:pointer; min-height:36px;
-  }
-  .mob-panel-close:hover { border-color:var(--sql-text2); color:var(--sql-text); }
+  /* close buttons are the shared .icon-btn primitive; bump to a 36px touch target here */
+  .mob-panel-close { width:36px; height:36px; }
 
   /* Larger tap targets */
   .case-btn { padding:14px 16px; }
@@ -245,9 +251,9 @@ textarea#editor::placeholder{color:var(--sql-text3)}
   <div class="case-sidebar">
     <div class="mob-panel-hdr">
       <span class="mob-panel-title">Cases</span>
-      <button class="mob-panel-close" onclick="mobClose()">✕ Close</button>
+      <button class="icon-btn mob-panel-close" onclick="mobClose()" aria-label="Close panel"><i data-lucide="x" aria-hidden="true"></i></button>
     </div>
-    <div class="side-lbl">Cases</div>
+    <div class="side-lbl"><i data-lucide="list-ordered" aria-hidden="true"></i>Cases</div>
     <div id="case-list"></div>
   </div>
 
@@ -265,7 +271,7 @@ textarea#editor::placeholder{color:var(--sql-text3)}
         <div class="bar-acts">
           <span class="shortcut">Ctrl+Enter</span>
           <button class="btn-sec" onclick="clearEditor()">Clear</button>
-          <button class="btn-run" onclick="runQuery()">▶ Run</button>
+          <button class="btn-run" onclick="runQuery()"><i data-lucide="play" aria-hidden="true"></i>Run</button>
         </div>
       </div>
       <textarea id="editor" aria-label="SQL query editor" placeholder="-- Write your SQL query here&#10;-- Ctrl+Enter to run&#10;-- Start with: SELECT * FROM patient LIMIT 5;"></textarea>
@@ -285,9 +291,9 @@ textarea#editor::placeholder{color:var(--sql-text3)}
   <div class="schema-panel">
     <div class="mob-panel-hdr">
       <span class="mob-panel-title">Schema Reference</span>
-      <button class="mob-panel-close" onclick="mobClose()">✕ Close</button>
+      <button class="icon-btn mob-panel-close" onclick="mobClose()" aria-label="Close panel"><i data-lucide="x" aria-hidden="true"></i></button>
     </div>
-    <div class="schema-lbl">Schema Reference</div>
+    <div class="schema-lbl"><i data-lucide="layers" aria-hidden="true"></i>Schema Reference</div>
     <div class="quick-wrap">
       <div class="quick-lbl">Quick explore →</div>
       <button class="quick-btn" onclick="fillQuery('SELECT * FROM patient LIMIT 5;')">SELECT * FROM patient</button>
@@ -576,7 +582,7 @@ function loadCase(i){
     <div class="desc-hdr">
       <div class="desc-title">📋 Case ${c.id}: ${c.title} <span style="font-size:11px;font-weight:400;margin-left:8px"><span class="lvl-tag lvl-${c.level}">${c.levelLabel}</span></span></div>
       <button class="hint-btn" onclick="showHint(${i})" id="hbtn-${i}" ${hc>=c.hints.length?'disabled':''}>
-        💡 Hint ${hc>=c.hints.length?'(all used)':`(${hc}/${c.hints.length})`}
+        <svg class="hint-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span id="hbtn-lbl-${i}">Hint ${hc>=c.hints.length?'(all used)':`(${hc}/${c.hints.length})`}</span>
       </button>
     </div>
     <p class="desc-story">${c.story}</p>
@@ -595,9 +601,11 @@ function showHint(i){
     document.getElementById(`h-${i}-${hc}`).classList.add('on');
     hints[i]=(hc+1);
     const btn=document.getElementById(`hbtn-${i}`);
+    const lbl=document.getElementById(`hbtn-lbl-${i}`);
     if(btn){
       const nc=hints[i];
-      btn.textContent=nc>=c.hints.length?'💡 Hint (all used)':`💡 Hint (${nc}/${c.hints.length})`;
+      // update the label span only — keeps the inline help-circle icon intact
+      if(lbl)lbl.textContent=nc>=c.hints.length?'Hint (all used)':`Hint (${nc}/${c.hints.length})`;
       if(nc>=c.hints.length)btn.disabled=true;
     }
   }

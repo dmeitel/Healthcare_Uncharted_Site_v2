@@ -37,6 +37,14 @@ header.tool-bar{
   background:rgba(3,7,6,0.99);border-bottom:2px solid rgba(78,205,196,0.2);z-index:20;
   box-shadow:0 2px 16px rgba(0,0,0,0.4);backdrop-filter:none;
 }
+/* instrument header: ruler-tick bottom edge (decorative; the bar above is
+   already position:relative + top:0, which neutralizes the global sticky
+   top:64px that a bare position:relative would otherwise obey) */
+header.tool-bar::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+  background:repeating-linear-gradient(90deg,rgba(78,205,196,0.30) 0 1px,transparent 1px 8px);
+  pointer-events:none;
+}
 header.tool-bar .tool-bar-title{color:var(--craft-t1);letter-spacing:.12em}
 header.tool-bar .tool-bar-crumb{font-size:10.5px;color:var(--craft-t3);letter-spacing:.04em}
 .legend{display:flex;gap:10px;align-items:center;font-family:var(--mono);font-size:9.5px;color:var(--craft-t3);flex-wrap:nowrap}
@@ -57,10 +65,16 @@ header.tool-bar .tool-bar-crumb{font-size:10.5px;color:var(--craft-t3);letter-sp
   width:280px;flex:0 0 280px;background:var(--craft-surface);border-right:1px solid var(--craft-border);
   display:flex;flex-direction:column;min-height:0;z-index:15;
 }
-#searchWrap{padding:12px 12px 8px}
+#searchWrap{padding:12px 12px 8px;position:relative}
+/* static lucide search glyph over the input (never touched by the JS that
+   rebuilds #chips/#results, so it renders once and stays) */
+#searchWrap svg{
+  position:absolute;left:24px;top:calc(50% + 2px);transform:translateY(-50%);
+  width:14px;height:14px;stroke-width:2;color:var(--craft-t3);pointer-events:none;
+}
 #search{
   width:100%;background:var(--craft-raised);border:1px solid var(--craft-border2);border-radius:8px;
-  color:var(--craft-t1);font-family:var(--font);font-size:13px;padding:9px 12px;outline:none;
+  color:var(--craft-t1);font-family:var(--font);font-size:13px;padding:9px 12px 9px 34px;outline:none;
 }
 #search::placeholder{color:var(--craft-t3)}
 #search:focus{border-color:var(--teal)}
@@ -247,10 +261,12 @@ header.tool-bar .tool-bar-crumb{font-size:10.5px;color:var(--craft-t3);letter-sp
 #right{
   width:260px;flex:0 0 260px;background:var(--craft-surface);border-left:1px solid var(--craft-border);
   display:flex;flex-direction:column;min-height:0;transition:margin-right .2s;z-index:15;
+  font-variant-numeric:tabular-nums; /* instrument inspector: lining figures in #stats and the link rows */
 }
 #right.closed{margin-right:-260px}
 #rightHead{display:flex;align-items:center;gap:8px;padding:12px;border-bottom:1px solid var(--craft-border)}
-#rightHead h2{font-family:var(--display);font-size:12px;letter-spacing:.14em;color:var(--craft-t2);font-weight:700}
+#rightHead h2{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-size:12px;letter-spacing:.14em;color:var(--craft-t2);font-weight:700}
+#rightHead h2 svg{width:11px;height:11px;stroke-width:2;color:var(--teal);flex:none}
 #stats{font-family:var(--mono);font-size:9.5px;color:var(--craft-t3);margin-left:auto;white-space:nowrap}
 #linksSel{padding:11px 12px;border-bottom:1px solid var(--craft-border);display:none}
 #linksSel .name{font-family:var(--display);font-weight:600;font-size:14px;color:var(--craft-t1);line-height:1.3}
@@ -364,6 +380,7 @@ header.tool-bar .tool-bar-crumb{font-size:10.5px;color:var(--craft-t3);letter-sp
   <div id="main">
     <aside id="palette">
       <div id="searchWrap">
+        <i data-lucide="search" aria-hidden="true"></i>
         <input id="search" type="text" autocomplete="off" spellcheck="false"
                placeholder="Search the atlas… roles, metrics, concepts, vendors">
       </div>
@@ -390,7 +407,7 @@ header.tool-bar .tool-bar-crumb{font-size:10.5px;color:var(--craft-t3);letter-sp
       <div id="nodata">NO DATA INJECTED<br>this template expects GRAPH to be filled by the build step</div>
     </div>
     <aside id="right">
-      <div id="rightHead"><h2>LINKS</h2><span id="stats">0 nodes, 0 links</span></div>
+      <div id="rightHead"><h2><i data-lucide="layers" aria-hidden="true"></i>LINKS</h2><span id="stats">0 nodes, 0 links</span></div>
       <div id="linksSel"></div>
       <div id="linksList"><div id="linksHint">Click the glowing + on the grid to place your first card. Then select any tile to see its real atlas links, or drag from a tile's handle to draw your own line.</div></div>
     </aside>

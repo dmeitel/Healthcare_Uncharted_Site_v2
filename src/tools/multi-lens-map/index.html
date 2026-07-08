@@ -576,16 +576,28 @@ body[data-colorblind="true"] {
 
 .map-stage {
   flex: 1; position: relative;
+  /* instrument chart: faint 48px graticule under the radial wash */
   background:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--hu-text-3) 7%, transparent) 0 1px, transparent 1px 48px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--hu-text-3) 7%, transparent) 0 1px, transparent 1px 48px),
     radial-gradient(ellipse at center, rgba(27, 95, 168, 0.06) 0%, transparent 70%),
     var(--hu-dark);
   overflow: hidden;
 }
-#mapSvg { position: absolute; inset: 0; display: block; }
+[data-theme="light"] .map-stage {
+  background:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--hu-text-3) 13%, transparent) 0 1px, transparent 1px 48px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--hu-text-3) 13%, transparent) 0 1px, transparent 1px 48px),
+    radial-gradient(ellipse at center, rgba(27, 95, 168, 0.06) 0%, transparent 70%),
+    var(--hu-dark);
+}
+/* fixed logical canvas: viewBox is the constant 0 0 975 610 (markup); the browser scales the vector */
+#mapSvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 .state {
   stroke: var(--hu-border);
   stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
   cursor: pointer;
   transition: opacity 0.12s, stroke-width 0.12s, filter 0.12s;
 }
@@ -803,6 +815,8 @@ body[data-colorblind="true"] {
 }
 
 .bottom-bar {
+  position: relative; /* anchors the ruler-tick ::before; mobile MQ re-declares sticky later and wins */
+  font-variant-numeric: tabular-nums;
   background: color-mix(in srgb, var(--hu-dark) 96%, transparent);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--hu-border);
@@ -1153,8 +1167,9 @@ body[data-colorblind="true"] {
   gap: 5px;
 }
 .sys-lens-icon {
-  width: 24px; height: 24px;
-  border-radius: 6px;
+  /* standardized to the 22px/5px lens-badge geometry used everywhere else */
+  width: 22px; height: 22px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1259,6 +1274,104 @@ body[data-colorblind="true"] {
 .left-panel::-webkit-scrollbar-thumb, .right-panel::-webkit-scrollbar-thumb { background: var(--hu-border-2); border-radius: 4px; }
 
 /* ================================================================
+   EXPEDITION INSTRUMENT — field-cartography chrome (HU tool standard)
+   Hairlines, ruler ticks, corner brackets, chart stamp. Every
+   decorative layer is aria-hidden + pointer-events:none. Token-driven,
+   with [data-theme="light"] ink-on-paper overrides.
+================================================================ */
+
+/* ruler ticks: bottom edge of the lens strip (drawn on the top edge of .main
+   so they don't collide with the active-lens underline that owns the strip's
+   own bottom edge) + top edge of the bottom bar */
+.main { position: relative; }
+.main::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: repeating-linear-gradient(90deg, var(--hu-border) 0 1px, transparent 1px 8px);
+  pointer-events: none; z-index: 60;
+}
+.bottom-bar::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: repeating-linear-gradient(90deg, var(--hu-border) 0 1px, transparent 1px 8px);
+  pointer-events: none;
+}
+
+/* the chart: corner brackets + stamp + compass rose (graticule lives on .map-stage) */
+.chart-corners { position: absolute; inset: 8px; z-index: 1; pointer-events: none; }
+.chart-corners i { position: absolute; width: 14px; height: 14px; border: 0 solid var(--hu-border-2); }
+.chart-corners i:nth-child(1) { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; border-color: var(--hu-teal); }
+.chart-corners i:nth-child(2) { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+.chart-corners i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.chart-corners i:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+.chart-stamp {
+  position: absolute; left: 16px; bottom: 12px; z-index: 1;
+  pointer-events: none; user-select: none;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em; line-height: 1.8;
+  color: var(--hu-text-3); opacity: .55;
+}
+.chart-rose { position: absolute; right: 18px; bottom: 12px; z-index: 1; pointer-events: none; color: var(--hu-text-2); opacity: .07; }
+[data-theme="light"] .chart-corners i:nth-child(1) { border-color: var(--hu-teal-dark); }
+[data-theme="light"] .chart-stamp { opacity: .6; }
+[data-theme="light"] .chart-rose { color: var(--hu-text-3); opacity: .14; }
+
+/* the inspector panels: mono header strip, indexed headings, tabular numbers, hairlines */
+.left-panel, .right-panel { font-variant-numeric: tabular-nums; }
+.dock-head {
+  display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+  padding: 9px 14px 8px; border-bottom: 1px solid var(--hu-border);
+  background: var(--hu-surface);
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--hu-text-3);
+}
+.dock-head b { font-weight: 600; color: var(--hu-teal); }
+[data-theme="light"] .dock-head b { color: var(--hu-teal-dark); }
+.data-section { counter-reset: dsec; }
+.data-section .data-card-title::before {
+  counter-increment: dsec; content: counter(dsec, decimal-leading-zero) " · ";
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .08em; color: var(--hu-teal);
+}
+[data-theme="light"] .data-section .data-card-title::before { color: var(--hu-teal-dark); }
+.rank-row + .rank-row { border-top: 1px solid color-mix(in srgb, var(--hu-border) 55%, transparent); }
+
+/* control banks: inset module + fieldset-style mono label (grain toggle);
+   compact mono labels for the bottom-bar mode/time clusters */
+.ctl-bank { position: relative; display: flex; align-items: center; flex-shrink: 0; border: 1px solid var(--hu-border); border-radius: 6px; padding: 6px 8px; }
+.ctl-bank-label {
+  position: absolute; top: -7px; left: 9px;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 0 5px; background: var(--hu-raised); line-height: 14px;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--hu-text-3); white-space: nowrap;
+}
+.metric-group-header { border: 1px solid var(--hu-border); border-radius: 6px; background: color-mix(in srgb, var(--hu-surface) 55%, var(--hu-dark)); margin: 8px 2px 2px; }
+.ctl-group { display: flex; align-items: center; gap: 7px; }
+.ctl-label {
+  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--hu-text-3); white-space: nowrap;
+}
+
+/* exploration-semantics icons: 11px, teal ink, always beside the text label */
+.metrics-section-label, .sheet-handle-label, .data-card-title { display: inline-flex; align-items: center; gap: 5px; }
+.sources-btn { display: inline-flex; align-items: center; gap: 4px; }
+.metrics-section-label svg, .sheet-handle-label svg, .ctl-bank-label svg, .ctl-label svg,
+.dock-head svg, .data-card-title svg, .sources-btn svg, .tutorial-btn svg {
+  width: 11px; height: 11px; stroke-width: 2; color: var(--hu-teal); flex: none;
+}
+[data-theme="light"] .metrics-section-label svg, [data-theme="light"] .sheet-handle-label svg,
+[data-theme="light"] .ctl-bank-label svg, [data-theme="light"] .ctl-label svg,
+[data-theme="light"] .dock-head svg, [data-theme="light"] .data-card-title svg,
+[data-theme="light"] .sources-btn svg, [data-theme="light"] .tutorial-btn svg {
+  color: var(--hu-teal-dark);
+}
+
+/* legend keeps its bottom-bar home but takes the chart-scale treatment: end ticks + mono tabular labels */
+.legend-scale { position: relative; }
+.legend-scale::before, .legend-scale::after { content: ""; position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--hu-border-2); }
+.legend-scale::before { left: -1px; }
+.legend-scale::after { right: -1px; }
+
+/* ================================================================
    TABLET  700px – 1099px  (HU shell standard breakpoints)
 ================================================================ */
 @media (min-width: 700px) and (max-width: 1099px) {
@@ -1358,11 +1471,16 @@ body[data-colorblind="true"] {
   /* Metric list: constrained height */
   .metric-item { padding: 7px 10px; font-size: 13px; }
 
-  /* ── Map: tall enough to tap states accurately ── */
+  /* ── Map: the drawing is a fixed 975×610 viewBox (~1.6:1), so shape the
+        stage to match instead of a generic clamp — no letterbox bands ── */
   .map-canvas {
-    min-height: 280px;
-    height: clamp(280px, 75vw, 380px);
+    height: auto;
     flex-shrink: 0;
+  }
+  .map-stage {
+    flex: none;
+    aspect-ratio: 975 / 610;
+    max-height: 58dvh;
   }
   .map-header {
     padding: 8px 12px 6px;
@@ -1447,6 +1565,12 @@ body[data-colorblind="true"] {
   .mob-legend-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hu-text-3); }
   .mob-legend .legend-step { width: 22px; height: 12px; }
   .mob-legend .legend-anno { font-size: 10px; color: var(--hu-text-3); font-family: var(--mono); }
+
+  /* ── Instrument chrome steps back on small screens ── */
+  .chart-stamp, .chart-rose { display: none; }
+  .dock-head { display: none; }
+  .ctl-bank { border: none; border-radius: 0; padding: 0; gap: 6px; }
+  .ctl-bank-label { position: static; background: none; padding: 0; }
 }
 
 /* ── Pinch-zoom UI (shared) ─────────────────────────────── */
@@ -1519,7 +1643,7 @@ body[data-colorblind="true"] {
     </div>
     <span class="tool-bar-spacer"></span>
     <div class="lens-strip-guide tool-bar-actions">
-      <button class="tutorial-btn" id="tutorialBtn">? Guide</button>
+      <button class="tutorial-btn" id="tutorialBtn"><i data-lucide="help-circle" aria-hidden="true"></i>Guide</button>
     </div>
   </div>
 
@@ -1613,7 +1737,7 @@ body[data-colorblind="true"] {
       <!-- metric picker -->
       <div class="metrics-section" id="metricsSection">
         <div class="metrics-section-header">
-          <span class="metrics-section-label">Metric</span>
+          <span class="metrics-section-label"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Metric</span>
         </div>
         <div class="metric-list" id="metricList"></div>
       </div>
@@ -1630,9 +1754,12 @@ body[data-colorblind="true"] {
           </div>
           <div class="map-h1-sub" id="mapH1Sub">Age-adjusted prevalence, % of adult population</div>
         </div>
-        <div class="grain-toggle" id="grainToggle" data-tip="<strong>Map detail</strong><br>Switch between state and county view. County is available for metrics with county-level source data (population health, income, unemployment, uninsured).">
-          <button class="grain-btn active" data-grain="state">State</button>
-          <button class="grain-btn" data-grain="county" id="grainCountyBtn">County</button>
+        <div class="ctl-bank">
+          <span class="ctl-bank-label"><i data-lucide="layout-grid" aria-hidden="true"></i>Grain</span>
+          <div class="grain-toggle" id="grainToggle" data-tip="<strong>Map detail</strong><br>Switch between state and county view. County is available for metrics with county-level source data (population health, income, unemployment, uninsured).">
+            <button class="grain-btn active" data-grain="state">State</button>
+            <button class="grain-btn" data-grain="county" id="grainCountyBtn">County</button>
+          </div>
         </div>
         <div class="map-outlook-chips" id="mapOutlookChips" style="display:none">
           <div class="map-outlook-chip" id="mocLens" style="display:none">
@@ -1666,7 +1793,18 @@ body[data-colorblind="true"] {
       <div class="map-stage">
         <button class="pz-reset-btn" id="mapPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
         <div class="pz-hint" id="mapPzHint">Pinch to zoom &middot; drag to pan</div>
-        <svg id="mapSvg" preserveAspectRatio="xMidYMid meet"></svg>
+        <svg id="mapSvg" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet" aria-label="Interactive map of U.S. states colored by the selected metric"></svg>
+        <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="chart-stamp" aria-hidden="true">HU SURVEY &middot; CDC/CMS/CENSUS DATA</div>
+        <svg class="chart-rose" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true" focusable="false">
+          <circle cx="22" cy="22" r="16" fill="none" stroke="currentColor" stroke-width="1"/>
+          <line x1="22" y1="2" x2="22" y2="42" stroke="currentColor" stroke-width="1"/>
+          <line x1="2" y1="22" x2="42" y2="22" stroke="currentColor" stroke-width="1"/>
+          <line x1="10.7" y1="10.7" x2="33.3" y2="33.3" stroke="currentColor" stroke-width=".6"/>
+          <line x1="33.3" y1="10.7" x2="10.7" y2="33.3" stroke="currentColor" stroke-width=".6"/>
+          <polygon points="22,2 19.6,14 22,11.6 24.4,14" fill="currentColor"/>
+          <circle cx="22" cy="22" r="1.6" fill="currentColor"/>
+        </svg>
         <div class="map-loading" id="mapLoading">
           <div class="spinner"></div>
           <div>Loading map data</div>
@@ -1695,9 +1833,12 @@ body[data-colorblind="true"] {
 
     <aside class="right-panel">
 
+      <!-- instrument header strip (desktop/tablet; sheet handles own the mobile top edge) -->
+      <div class="dock-head" aria-hidden="true"><span>Rankings</span><b id="dockScope">US</b></div>
+
       <!-- mobile metric picker handle + section -->
       <div class="metrics-sheet-handle" id="metricsSheetHandle">
-        <span class="sheet-handle-label">Metric</span>
+        <span class="sheet-handle-label"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Metric</span>
         <span class="sheet-handle-chevron">&#8679;</span>
       </div>
       <div class="metrics-mob-section" id="metricsMobSection">
@@ -1716,7 +1857,7 @@ body[data-colorblind="true"] {
         <!-- Rankings card -->
         <div class="data-card">
           <div class="data-card-header">
-            <span class="data-card-title">State Rankings</span>
+            <span class="data-card-title"><i data-lucide="list-ordered" aria-hidden="true"></i>State Rankings</span>
             <div class="data-card-actions">
               <button class="card-tab active" data-tip="States with the highest raw values on this metric.">Highest</button>
               <button class="card-tab" data-tip="States with the lowest raw values on this metric.">Lowest</button>
@@ -1731,7 +1872,7 @@ body[data-colorblind="true"] {
         <!-- Trend card -->
         <div class="data-card">
           <div class="data-card-header">
-            <span class="data-card-title" data-tip="Estimated trend line for this metric from 2018–2024. Dashed = interpolated from the nearest real data year.">Trend · 2018–2024</span>
+            <span class="data-card-title" data-tip="Estimated trend line for this metric from 2018–2024. Dashed = interpolated from the nearest real data year."><i data-lucide="trending-up" aria-hidden="true"></i>Trend · 2018–2024</span>
           </div>
           <div class="data-card-body" style="padding: 10px 12px 8px;">
             <svg class="trend-chart-svg" id="trendChart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
@@ -1769,16 +1910,23 @@ body[data-colorblind="true"] {
     </div>
 
     <div class="time-control">
-      <div class="time-mode-toggle">
-        <button class="time-mode-btn active" data-mapmode="explore" data-tip="<strong>Explore mode</strong><br>Click any state to inspect its detailed metrics. Click again to deselect.">Explore</button>
-        <button class="time-mode-btn" data-mapmode="compare" data-tip="<strong>Compare mode</strong><br>Click a first state, then click a second to compare their values and performance bands side by side.">Compare</button>
+      <div class="ctl-group">
+        <span class="ctl-label"><i data-lucide="arrow-left-right" aria-hidden="true"></i>Mode</span>
+        <div class="time-mode-toggle">
+          <button class="time-mode-btn active" data-mapmode="explore" data-tip="<strong>Explore mode</strong><br>Click any state to inspect its detailed metrics. Click again to deselect.">Explore</button>
+          <button class="time-mode-btn" data-mapmode="compare" data-tip="<strong>Compare mode</strong><br>Click a first state, then click a second to compare their values and performance bands side by side.">Compare</button>
+        </div>
       </div>
       <div class="mode-divider"></div>
-      <div class="time-mode-toggle">
-        <button class="time-mode-btn active" data-mode="snapshot" data-tip="<strong>Snapshot</strong><br>Color each state by its absolute value in the selected year — who is best and worst right now.">Snapshot</button>
-        <button class="time-mode-btn" data-mode="change" data-tip="<strong>Change</strong><br>Color each state by year-over-year improvement or decline. Green = improving, red = declining relative to other states.">Change</button>
+      <div class="ctl-group">
+        <span class="ctl-label"><i data-lucide="trending-up" aria-hidden="true"></i>View</span>
+        <div class="time-mode-toggle">
+          <button class="time-mode-btn active" data-mode="snapshot" data-tip="<strong>Snapshot</strong><br>Color each state by its absolute value in the selected year — who is best and worst right now.">Snapshot</button>
+          <button class="time-mode-btn" data-mode="change" data-tip="<strong>Change</strong><br>Color each state by year-over-year improvement or decline. Green = improving, red = declining relative to other states.">Change</button>
+        </div>
       </div>
       <div class="time-slider-wrap">
+        <span class="ctl-label"><i data-lucide="calendar" aria-hidden="true"></i>Year</span>
         <input type="range" class="time-slider" id="timeSlider" min="0" max="6" value="6" step="1">
         <button class="year-step-btn" id="yearPrev" data-tip="Previous year">&#8592;</button>
         <span class="time-current" id="timeCurrent" data-tip="Selected data year. Scrub the slider to step through 2018–2024.">2024</span>
@@ -1790,7 +1938,7 @@ body[data-colorblind="true"] {
     <div class="attribution tool-attribution" id="dataAttrib">
       <strong>Healthcare Uncharted</strong> · <span id="attribYear">2024</span> data
       <span class="attrib-sep">·</span>
-      <button class="sources-btn" id="sourcesBtn">ⓘ Sources</button>
+      <button class="sources-btn" id="sourcesBtn"><i data-lucide="book-open" aria-hidden="true"></i>Sources</button>
       <div class="sources-popover" id="sourcesPopover"></div>
     </div>
   </footer>
@@ -1955,6 +2103,12 @@ body[data-colorblind="true"] {
 // On touch-only devices (hover: none), we suppress position-tracked hover
 // tooltips that get stuck after a tap and suppress mouseover data-tip popups.
 const isTouch = () => window.matchMedia('(hover: none)').matches;
+
+// ===== NARROW-VIEWPORT POLICY (not geometry) =====
+// Map geometry never re-measures (fixed viewBox); only presentation policy keys
+// off the viewport, through matchMedia instead of ad-hoc innerWidth reads.
+const MQ_PHONE = matchMedia('(max-width: 680px)');     // overlay placement + auto-open data sheet
+const MQ_TOUCHPAN = matchMedia('(max-width: 960px)');  // pinch/pan gesture layer
 
 // ===== FIPS → STATE ABBR =====
 const FIPS_TO_ABBR = {
@@ -2743,12 +2897,8 @@ async function loadMap() {
     document.getElementById('mapLoading').style.display = 'none';
     drawMap();
     fetch('/assets/data/countyData.json').then(r => r.json()).then(d => { countyData = d; refreshGrainToggle(); }).catch(() => {});
-    let resizeTimer;
-    const ro = new ResizeObserver(() => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(drawMap, 60);
-    });
-    ro.observe(document.querySelector('.map-stage'));
+    // No resize handling: the viewBox is a constant (0 0 975 610) and the browser
+    // scales the vector, so container resizes cost zero JS.
   } catch (err) {
     document.getElementById('mapLoading').innerHTML =
       '<div style="color: var(--hu-red);">Map data failed to load</div>' +
@@ -2843,15 +2993,13 @@ function drawCountyChoropleth(path) {
     .attr('class', 'county-state-border');
 }
 
+// ── FIXED LOGICAL CANVAS ──────────────────────────────────────────────
+// The svg draws in one constant coordinate space (AlbersUsa native aspect,
+// viewBox="0 0 975 610" set once in the markup) and the browser scales the
+// vector to the container. Resizing costs zero JS — no re-measure, no redraw.
+const VW = 975, VH = 610;
 function drawMap() {
   if (!usFeatures) return;
-  const svgEl = document.getElementById('mapSvg');
-  const stage = svgEl.parentElement;
-  const w = stage.clientWidth;
-  const h = stage.clientHeight;
-  if (w <= 0 || h <= 0) return;
-
-  svg.attr('viewBox', `0 0 ${w} ${h}`).attr('width', w).attr('height', h);
   svg.selectAll('*').remove();
   refreshGrainToggle();   // keep the State/County toggle in sync with the current metric
 
@@ -2877,7 +3025,7 @@ function drawMap() {
 
   const pad = 20;
   const projection = d3.geoAlbersUsa()
-    .fitExtent([[pad, pad], [w - pad, h - pad]], { type: 'FeatureCollection', features: usFeatures });
+    .fitExtent([[pad, pad], [VW - pad, VH - pad]], { type: 'FeatureCollection', features: usFeatures });
   const path = d3.geoPath(projection);
 
   // County view: draw the county choropleth + state borders and stop. (County data
@@ -3115,7 +3263,7 @@ function showMetricExplainer(iconEl, metric, color) {
     ${metric.caveat ? `<div class="me-caveat">${metric.caveat}</div>` : ''}
   `;
   // On narrow screens, anchor to bottom of viewport (above bottom bar)
-  if (window.innerWidth <= 680) {
+  if (MQ_PHONE.matches) {
     el.style.cssText = 'position:fixed;left:12px;right:12px;width:auto;bottom:70px;top:auto;';
     el.classList.add('visible');
     return;
@@ -3149,9 +3297,11 @@ function renderHeader() {
     clinical: 'Provider Clinical Lens',
     operations: 'Provider Operations Lens',
     payer: 'Payer Lens',
-    policy: 'Policy Lens'
+    policy: 'Policy Lens',
+    baseline: 'Baseline Context',
+    economics: 'Economics Lens'
   };
-  eyebrow.textContent = lensLabels[activeLens];
+  eyebrow.textContent = lensLabels[activeLens] || (activeLens.charAt(0).toUpperCase() + activeLens.slice(1) + ' Lens');
   eyebrow.style.color = lens.color;
   document.getElementById('mapH1').textContent = metric.name;
   document.getElementById('mapH1Sub').textContent = metric.sub;
@@ -3263,6 +3413,10 @@ function updateStatPanel() {
   const displayYear = ALL_YEARS[selectedYearIdx];
   const currValEl = document.getElementById('selCurrVal');
   updateSourceCite(metric);
+
+  // instrument readout: rankings-dock scope (visual-only; the strip is aria-hidden)
+  const _dockScope = document.getElementById('dockScope');
+  if (_dockScope) _dockScope.textContent = selectedState || 'US';
 
   if (!selectedState) {
     // ── National view ──
@@ -3394,7 +3548,7 @@ function selectState(code) {
   renderEntityPanel();
   renderTrendChart();
   updateHash();
-  if (window.innerWidth <= 680) {
+  if (MQ_PHONE.matches) {
     document.querySelector('.right-panel').classList.add('sheet-open');
   }
 }
@@ -4214,7 +4368,7 @@ function makePinchZoom(outer, inner, minS, maxS) {
 
   if (resetBtn) resetBtn.addEventListener('click', () => { ox = initOx; oy = initOy; s = 1; apply(); });
 
-  if (hint && window.innerWidth <= 1024) {
+  if (hint && MQ_TOUCHPAN.matches) {
     hint.style.display = 'flex';
     setTimeout(() => {
       hint.style.opacity = '0';
@@ -4223,12 +4377,20 @@ function makePinchZoom(outer, inner, minS, maxS) {
   }
 }
 
-if (window.innerWidth <= 960) {
+// Gesture layer keys off the one MQ_TOUCHPAN threshold. Attach once when the
+// viewport first qualifies (covers desktop→narrow rotation, which the old
+// load-time innerWidth check missed). Layout policy only — never announces.
+let _pzAttached = false;
+function attachPinchZoom() {
+  if (_pzAttached) return;
+  _pzAttached = true;
   makePinchZoom(
     document.querySelector('.map-stage'),
     document.getElementById('mapSvg'),
     0.4, 3
   );
 }
+if (MQ_TOUCHPAN.matches) attachPinchZoom();
+else MQ_TOUCHPAN.addEventListener('change', e => { if (e.matches) attachPinchZoom(); });
 
 </script>

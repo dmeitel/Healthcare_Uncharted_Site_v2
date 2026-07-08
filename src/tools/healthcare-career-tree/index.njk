@@ -879,6 +879,48 @@ permalink: /tools/healthcare-career-tree/
      lives at bottom:8px, so lift the strip clear of it there. */
   .tool-attribution--fixed { bottom: 6px; right: 12px; padding: 4px 10px; z-index: 25; }
   #hct-shell:has(#hct-tb[data-view="atlas"]) ~ .tool-attribution--fixed { bottom: 52px; }
+
+  /* ── EXPEDITION INSTRUMENT — field-cartography chrome ──────
+     Ruler-tick toolbar edge, tabular numerals, hairline dividers,
+     standard icon sizing. Token-driven with light-mode overrides; the
+     green-black terrain palette stays untouched. #hct-tb is already
+     position:relative under its own scheme (not the global sticky
+     .tool-bar), so the ::after tick needs no top:0 guard. Ticks layer
+     just above the toolbar's existing 2px teal border (kept). */
+  #hct-tb::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+    background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--teal) 42%, transparent) 0 1px, transparent 1px 8px);
+    pointer-events: none; }
+  [data-theme='light'] #hct-tb::after { background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--teal-dk) 55%, transparent) 0 1px, transparent 1px 8px); }
+
+  /* instrument numerals: BLS pay/growth readouts, the detail panel, the heatmap legend */
+  #hct-panel, .hct-bls, .hct-clegend { font-variant-numeric: tabular-nums; }
+
+  /* hairline dividers on stacked rows (Education detail sections, My Path key) */
+  .edu-d-sec + .edu-d-sec { border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); padding-top: 12px; }
+  .bp-legend-row + .bp-legend-row { border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+
+  /* standard 11px teal icons beside STATIC labels only (never inside JS-rebuilt chip hosts) */
+  .hct-lbl svg, .hct-tabs button svg, .bp-h svg { width: 11px; height: 11px; stroke-width: 2; color: var(--teal); vertical-align: -1.5px; margin-right: 5px; flex: none; }
+  .bp-h svg { margin-right: 0; }                 /* .bp-h is flex + gap — no extra margin */
+  .hct-tabs button.on svg { color: #062024; }    /* active tab is teal-filled — icon flips to the chip ink */
+  [data-theme='light'] .hct-lbl svg, [data-theme='light'] .hct-tabs button svg, [data-theme='light'] .bp-h svg { color: var(--teal-dk); }
+  [data-theme='light'] .hct-tabs button.on svg { color: #062024; }
+
+  /* search fields: inset icon (the operators-map .mapsearch-ico pattern) */
+  .hct-search-box { position: relative; display: inline-flex; min-width: 0; }
+  .hct-search-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--t3); pointer-events: none; }
+  .hct-search-ico svg { width: 15px; height: 15px; stroke-width: 1.75; }
+  .hct-search-box .edu-search { padding-left: 33px; }
+
+  /* static close buttons adopt the .icon-btn primitive (ids + JS untouched);
+     re-assert the primitive over the earlier scene rules that zeroed the border */
+  .hct-p-close.icon-btn, .bp-modal-x.icon-btn { border: 1px solid var(--border); background: transparent; color: var(--t2); font-size: 0; }
+  .hct-p-close.icon-btn:hover, .bp-modal-x.icon-btn:hover { border-color: rgba(78,205,196,0.5); color: var(--t1); }
+
+  @media (max-width: 600px) {
+    .hct-search-box { flex: 1 1 auto; }
+    .hct-p-close.icon-btn, .bp-modal-x.icon-btn { width: 34px; height: 34px; padding: 0; }
+  }
   </style>
 
 <div id="hct-shell">
@@ -889,7 +931,7 @@ permalink: /tools/healthcare-career-tree/
 
     <!-- PRIMARY TABS: which view is on screen -->
     <div class="hct-seg hct-tabs" id="hct-tabs">
-      <button data-view="path" class="on">My Path<span class="tab-badge" id="hct-mp-count">0</span></button>
+      <button data-view="path" class="on"><i data-lucide="pin" aria-hidden="true"></i>My Path<span class="tab-badge" id="hct-mp-count">0</span></button>
       <button data-view="career">Career Matrix</button>
       <button data-view="edu" id="hct-tab-edu">Education Matrix</button>
       <button data-view="atlas" id="hct-tab-atlas">Areas of Expertise</button>
@@ -921,7 +963,7 @@ permalink: /tools/healthcare-career-tree/
       <button class="hct-btn" id="hct-fit">Fit</button>
       <span class="hct-sep" id="hct-cmode-sep"></span>
       <span class="hct-cmode-wrap" id="hct-cmode-wrap">
-        <span class="hct-lbl">Color</span>
+        <span class="hct-lbl"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Color</span>
         <div class="hct-seg" id="hct-colormode">
           <button data-cmode="fam" class="on" title="Color hexes by job family">Family</button>
           <button data-cmode="pay" title="Heatmap by BLS median pay">Pay</button>
@@ -954,7 +996,7 @@ permalink: /tools/healthcare-career-tree/
 
     <!-- Education Matrix view — iceberg-style stacked degree layers + Node Details panel -->
     <section id="hct-schooling" class="hct-view" data-view="edu">
-      <div class="view-head"><span class="view-ttl">Education Matrix</span><span class="view-hint">degrees stacked by level — click one to see the jobs it opens, add it to Education Growth</span><span class="edu-search-wrap"><input id="hct-edu-search" class="edu-search" type="text" placeholder="Search a credential, role, or what you think is a degree…" autocomplete="off"><span id="hct-edu-searchnote" class="edu-searchnote"></span></span></div>
+      <div class="view-head"><span class="view-ttl">Education Matrix</span><span class="view-hint">degrees stacked by level — click one to see the jobs it opens, add it to Education Growth</span><span class="edu-search-wrap"><span class="hct-search-box"><i data-lucide="search" class="hct-search-ico" aria-hidden="true"></i><input id="hct-edu-search" class="edu-search" type="text" placeholder="Search a credential, role, or what you think is a degree…" autocomplete="off"></span><span id="hct-edu-searchnote" class="edu-searchnote"></span></span></div>
       <div class="edu-hud">
         <div id="hct-edu-layers" class="edu-layers"></div>
         <aside id="hct-edu-detail" class="edu-detail"></aside>
@@ -963,7 +1005,7 @@ permalink: /tools/healthcare-career-tree/
 
     <!-- Areas of Expertise Matrix view — one map, three zones (Skills · Specializations · Experience) -->
     <section id="hct-atlas" class="hct-view" data-view="atlas">
-      <div class="view-head"><span class="view-ttl">Areas of Expertise Matrix</span><span class="view-hint">click a hex for detail, or turn on Select to add several at once</span><span class="atlas-tools"><button id="hct-atlas-multi" class="atlas-multibtn" type="button">✓ Select</button><input id="hct-atlas-search" class="edu-search" type="text" placeholder="Search a skill, specialty, setting, or population…" autocomplete="off"><span id="hct-atlas-searchnote" class="edu-searchnote"></span></span></div>
+      <div class="view-head"><span class="view-ttl">Areas of Expertise Matrix</span><span class="view-hint">click a hex for detail, or turn on Select to add several at once</span><span class="atlas-tools"><button id="hct-atlas-multi" class="atlas-multibtn" type="button">✓ Select</button><span class="hct-search-box"><i data-lucide="search" class="hct-search-ico" aria-hidden="true"></i><input id="hct-atlas-search" class="edu-search" type="text" placeholder="Search a skill, specialty, setting, or population…" autocomplete="off"></span><span id="hct-atlas-searchnote" class="edu-searchnote"></span></span></div>
       <div id="hct-atlas-board">
         <svg id="hct-atlas-svg"></svg>
         <div class="sch-zoombar">
@@ -1012,7 +1054,7 @@ permalink: /tools/healthcare-career-tree/
             <div class="bp-grid" id="bp-grid-career"></div>
           </div>
           <div class="bp-panel bp-panel-trunk">
-            <div class="bp-h">Education</div>
+            <div class="bp-h"><i data-lucide="calendar" aria-hidden="true"></i>Education</div>
             <p class="bp-hint">Degrees, licenses, and certs — earned or in progress. Hit + and type a name to search credentials, or * for all.</p>
             <div class="bp-grid" id="bp-grid-education"></div>
           </div>
@@ -1026,7 +1068,7 @@ permalink: /tools/healthcare-career-tree/
       <!-- Save / Load (export-import the whole build as a code/file) -->
       <div id="bp-data-modal" class="bp-modal">
         <div class="bp-modal-card">
-          <button class="bp-modal-x" id="bp-data-x" type="button" title="Close" aria-label="Close">×</button>
+          <button class="bp-modal-x icon-btn" id="bp-data-x" type="button" title="Close" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button>
           <div class="bp-modal-h">Save / Load your path</div>
           <div class="bp-modal-sec">
             <div class="bp-modal-lbl">Start from LinkedIn. On your profile, click <b>More → Save to PDF</b>, then load that file here to auto-build your path. <b>This replaces your current path.</b> The file is read in your browser. Nothing is uploaded.</div>
@@ -1057,7 +1099,7 @@ permalink: /tools/healthcare-career-tree/
     <!-- Detail panel overlay (slides in from the right) -->
     <aside id="hct-panel">
       <div class="hct-p-head">
-        <button class="hct-p-close" id="hct-p-close" type="button" aria-label="Close detail panel">×</button>
+        <button class="hct-p-close icon-btn" id="hct-p-close" type="button" aria-label="Close detail panel"><i data-lucide="x" aria-hidden="true"></i></button>
         <span class="hct-p-badge" id="hct-p-badge"><span class="hct-p-dot"></span><span class="lbl"></span></span>
         <h2 class="hct-p-title" id="hct-p-title"></h2>
         <div class="hct-p-abbr" id="hct-p-abbr"></div>
