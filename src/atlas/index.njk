@@ -65,7 +65,7 @@ permalink: /atlas/
 /* ── EXPEDITION INSTRUMENT CHROME ─────────────────────────────────────────
    Corner brackets + chart stamp on the map canvas. Decorative only:
    aria-hidden + pointer-events:none, and z-index sits BELOW every overlay
-   (legend z-10, hint z-10, find z-30, panels z-40, legend button z-140).
+   (hint z-10, find z-30, panels z-40; the layers popover rides z-350 from hu-global).
    NO graticule here — the scene already draws its own hex terrain texture
    and a grid overlay would fight it. */
 .chart-corners { position: absolute; inset: 8px; z-index: 4; pointer-events: none; }
@@ -74,8 +74,8 @@ permalink: /atlas/
 .chart-corners i:nth-child(2) { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
 .chart-corners i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
 .chart-corners i:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
-/* stamp lives bottom-right: the only free corner (legend top-left, find panel
-   top-right, attribution chip bottom-left, pan hint bottom-center) */
+/* stamp lives bottom-right: the only free corner (find panel top-right,
+   attribution chip bottom-left, pan hint bottom-center) */
 #atlas-stamp {
   position: absolute; right: 16px; bottom: 12px; z-index: 4;
   pointer-events: none; user-select: none; text-align: right;
@@ -86,61 +86,27 @@ permalink: /atlas/
 [data-theme='light'] .chart-corners i:nth-child(1) { border-color: var(--teal-dk); }
 [data-theme='light'] #atlas-stamp { color: rgba(15,30,50,0.40); }
 
-#atlas-legend {
-  position: absolute; top: 16px; left: 16px; z-index: 10;
-  display: flex; flex-direction: column;
-  background: #0f1a14; border: 1px solid rgba(78,205,196,0.38);
-  min-width: 158px; box-shadow: 0 6px 30px rgba(0,0,0,0.74);
-}
-.leg-hdr {
-  font-family: var(--mono);
-  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(78,205,196,0.65); padding: 10px 14px 8px;
-  border-bottom: 1px solid rgba(78,205,196,0.12);
-}
-.leg-section { padding: 9px 14px 8px; }
-.leg-section + .leg-section { border-top: 1px solid rgba(78,205,196,0.08); padding-top: 10px; }
-.leg-sec-label {
-  font-family: var(--mono);
-  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: rgba(78,205,196,0.35); margin-bottom: 8px;
-}
-.leg-row { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
-.leg-row:last-child { margin-bottom: 0; }
+/* ── LAYERS PANEL — layer toggles + legend, one surface (Control Architecture v2)
+   Primitives (.selector, .selector-pop, .pop-head, .pop-sec, .pop-opt,
+   .applied-strip) come from hu-global.css; under 700px the popover renders as
+   a bottom sheet automatically. This block only styles the toggle check state
+   (options here are multi-select, aria-pressed) and the legend key rows. */
+#atlas-layers-pop .pop-opt[aria-pressed="true"] { color: var(--t1); font-weight: 600; }
+#atlas-layers-pop .pop-opt[aria-pressed="true"]::after { color: var(--teal); }
+[data-theme='light'] #atlas-layers-pop .pop-opt[aria-pressed="true"]::after { color: var(--teal-dk); }
+#atlas-layers-pop .pop-opt svg { width: 14px; height: 14px; stroke-width: 1.75; color: var(--teal); flex: none; }
+[data-theme='light'] #atlas-layers-pop .pop-opt svg { color: var(--teal-dk); }
+/* legend key rows (zones/nodes) — non-interactive, aligned with .pop-opt padding */
+.leg-row { display: flex; align-items: center; gap: 9px; padding: 3px 10px; }
 .leg-line {
   width: 22px; height: 1px; flex-shrink: 0;
   background: repeating-linear-gradient(90deg, currentColor 0, currentColor 4px, transparent 4px, transparent 8px);
   opacity: 0.75;
 }
 .leg-dot { width: 7px; height: 7px; border-radius: 1px; flex-shrink: 0; opacity: 0.75; }
-.leg-lbl { font-family: var(--font); font-size: 11.5px; color: rgba(140,180,215,0.65); }
-.leg-sec-row { display: flex; align-items: center; justify-content: space-between; }
-#leg-conn-popout {
-  background: transparent; border: 1px solid rgba(78,205,196,0.22);
-  color: rgba(78,205,196,0.6); cursor: pointer; padding: 0;
-  width: 16px; height: 14px; font-size: 10px; line-height: 1;
-  display: flex; align-items: center; justify-content: center; transition: all .12s;
-}
-#leg-conn-popout:hover { color: #4ECDC4; border-color: rgba(78,205,196,0.5); }
-.leg-check { cursor: pointer; }
-.leg-cbx {
-  width: 11px; height: 11px; flex-shrink: 0; position: relative;
-  border: 1px solid rgba(78,205,196,0.4); background: transparent; transition: all .12s;
-}
-.leg-check:hover .leg-cbx { border-color: rgba(78,205,196,0.72); }
-.leg-check.on .leg-cbx { background: var(--teal); border-color: var(--teal); }
-.leg-check.on .leg-cbx::after {
-  content: ''; position: absolute; left: 3px; top: 0.5px;
-  width: 3px; height: 6px; border: solid #062024;
-  border-width: 0 1.6px 1.6px 0; transform: rotate(45deg);
-}
-.leg-check:hover .leg-lbl, .leg-check.on .leg-lbl { color: rgba(200,222,235,0.95); }
-[data-theme='light'] #leg-conn-popout { border-color: rgba(27,95,168,0.25); color: rgba(27,95,168,0.6); }
-[data-theme='light'] #leg-conn-popout:hover { color: #1B5FA8; border-color: rgba(27,95,168,0.5); }
-[data-theme='light'] .leg-cbx { border-color: rgba(27,95,168,0.4); }
-[data-theme='light'] .leg-check.on .leg-cbx { background: #1B5FA8; border-color: #1B5FA8; }
-[data-theme='light'] .leg-check.on .leg-cbx::after { border-color: #fff; }
-[data-theme='light'] .leg-check:hover .leg-lbl, [data-theme='light'] .leg-check.on .leg-lbl { color: #0d1117; }
+.leg-lbl { font-family: var(--font); font-size: 12px; color: var(--t2); }
+/* visually-hidden utility (tool h1 + the polite live region) */
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ── BOTTOM HUD ────────────────────────────────────────────────────────── */
 /* node detail HUD — flows directly under the search field, inside the right-side panel column */
@@ -232,36 +198,13 @@ permalink: /atlas/
   letter-spacing: 0.06em; pointer-events: none; white-space: nowrap;
   z-index: 10; transition: opacity .4s; font-family: var(--font);
 }
-/* shared attribution chip: bottom-left, clear of the centered hint,
-   the top-left legend, and the right-side find/help panels */
+/* shared attribution chip: bottom-left, clear of the centered hint
+   and the right-side find/help panels */
 .tool-attribution--fixed {
   left: 16px; right: auto; bottom: 12px;
   background: rgba(3,8,6,0.85); border-color: rgba(78,205,196,0.18);
 }
 [data-theme='light'] .tool-attribution--fixed { background: rgba(255,255,255,0.92); border-color: rgba(27,95,168,0.15); }
-/* Filter toggle buttons */
-.atlas-flt-wrap { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
-/* group label for the layer toggles — static markup so the lucide icon renders
-   once and survives the sheet re-parent (appendChild moves live nodes) */
-.atlas-flt-label {
-  display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;
-  font-family: var(--mono); font-size: 9px; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: rgba(78,205,196,0.55); white-space: nowrap;
-}
-.atlas-flt-label svg { width: 11px; height: 11px; stroke-width: 2; color: var(--teal); flex: none; }
-[data-theme='light'] .atlas-flt-label { color: rgba(27,95,168,0.65); }
-[data-theme='light'] .atlas-flt-label svg { color: var(--teal-dk); }
-.atlas-flt {
-  height: 28px; padding: 0 13px; border-radius: 999px;
-  background: transparent; border: 1px solid rgba(78,205,196,0.14);
-  color: rgba(140,180,215,0.40); cursor: pointer;
-  font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase;
-  font-family: var(--mono); transition: all .15s; white-space: nowrap;
-}
-.atlas-flt:hover { border-color: rgba(78,205,196,0.32); color: rgba(140,180,215,0.70); background: rgba(78,205,196,0.04); }
-.atlas-flt.on { border-color: var(--teal); color: #062024; background: var(--teal); font-weight: 600; }
-
 /* ── HELP PANEL ──────────────────────────────────────────────────────────── */
 #atlas-help {
   position: absolute; top: 0; right: 0; bottom: 0; z-index: 40;
@@ -313,56 +256,24 @@ permalink: /atlas/
 }
 .help-text strong { color: rgba(200,220,240,0.90); font-weight: 600; }
 
-/* ── MOBILE LEGEND SHEET + DESKTOP HINT ──────────────────────────────────── */
-/* Desktop: sheet, its toggle button, and the hint strip stay out of the way.
-   <=768px: JS re-parents #atlas-legend + .atlas-flt-wrap into the sheet body,
-   so one set of nodes (and one set of listeners) serves both layouts. */
-#atlas-legend-sheet { display: none; }
-#atlas-legend-btn { display: none; }
-#atlas-legend-btn svg { width: 13px; height: 13px; stroke-width: 2; flex: none; }
+/* ── MOBILE ──────────────────────────────────────────────────────────────── */
+/* The layers panel is the same surface at every width — the .selector-pop
+   primitive renders as a bottom sheet under 700px on its own. Only the
+   one-time desktop hint is viewport-conditional. */
 #atlas-desk-hint { display: none; }
-#als-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-#als-title {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--t3);
-}
-#als-close {
-  width: 28px; height: 28px; flex-shrink: 0;
-  background: transparent; border: 1px solid var(--border); border-radius: 8px;
-  color: var(--t2); cursor: pointer; font-size: 15px; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-}
 
 @media (max-width: 768px) {
   /* instrument chrome steps back on small screens */
   #atlas-stamp { display: none; }
-  /* hidden in their desktop homes until JS moves them into the sheet */
-  #atlas-legend { display: none; }
-  .atlas-flt-wrap { display: none; }
   .atlas-logo { font-size: 12px; }
+  /* the Layers trigger compacts to its icon in the crowded phone toolbar */
+  #atlas-layers-btn .sel-val, #atlas-layers-btn .sel-caret { display: none; }
   #hud-inner { grid-template-columns: 1fr; }
   #hud-id { border-right: none; border-bottom: 1px solid rgba(78,205,196,0.10); }
   #hud-desc-col { border-right: none; }
   #hud-links-col.has-links { min-width: unset; }
   #atlas-help { width: 100%; }
 
-  #atlas-legend-sheet { display: block; }
-  /* inside the sheet, the legend and filter chips become plain flow content */
-  #atlas-legend-sheet #atlas-legend {
-    display: flex; position: static; min-width: 0;
-    background: transparent; border: none; box-shadow: none;
-  }
-  /* sheet header already reads "Map Key & Layers" */
-  #atlas-legend-sheet .leg-hdr { display: none; }
-  #atlas-legend-sheet .atlas-flt-wrap {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    padding: 0 0 4px; border-bottom: 1px solid rgba(78,205,196,0.10); margin-bottom: 4px;
-  }
-  #atlas-legend-btn {
-    display: inline-flex; position: absolute; left: 12px; bottom: 46px; z-index: 140;
-    background: rgba(3,8,6,0.88);
-  }
-  #atlas-legend-btn.on { background: var(--teal); }
   #atlas-desk-hint:not([hidden]) {
     display: flex; align-items: center; gap: 10px; flex-shrink: 0;
     padding: 5px 14px;
@@ -376,9 +287,6 @@ permalink: /atlas/
     font-size: 14px; line-height: 1; padding: 0 2px; font-family: inherit;
   }
 }
-[data-theme='light'] #atlas-legend-btn { background: rgba(255,255,255,0.92); }
-[data-theme='light'] #atlas-legend-btn.on { background: var(--teal); }
-[data-theme='light'] #atlas-legend-sheet #atlas-legend { background: transparent; border: none; box-shadow: none; }
 
 /* ── LIGHT MODE ──────────────────────────────────────────────────────────── */
 [data-theme='light'] #atlas-shell { background: #eaf0eb; }
@@ -391,14 +299,6 @@ permalink: /atlas/
 [data-theme='light'] .abc-sep { color: rgba(27,95,168,0.28); }
 [data-theme='light'] .atlas-btn { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.60); }
 [data-theme='light'] .atlas-btn:hover { background: rgba(27,95,168,0.12); border-color: rgba(27,95,168,0.45); color: #1B5FA8; }
-[data-theme='light'] .atlas-flt { border-color: rgba(27,95,168,0.14); color: rgba(15,30,50,0.40); }
-[data-theme='light'] .atlas-flt:hover { border-color: rgba(27,95,168,0.35); color: rgba(15,30,50,0.72); background: rgba(27,95,168,0.04); }
-/* active state is the standard teal pill in both themes (no light override) */
-[data-theme='light'] #atlas-legend { background: rgba(255,255,255,0.97); border-color: rgba(27,95,168,0.15); box-shadow: 0 4px 20px rgba(0,0,0,0.10); }
-[data-theme='light'] .leg-hdr { color: rgba(27,95,168,0.70); border-bottom-color: rgba(27,95,168,0.12); }
-[data-theme='light'] .leg-sec-label { color: rgba(15,30,50,0.38); }
-[data-theme='light'] .leg-lbl { color: rgba(15,30,50,0.72); }
-[data-theme='light'] .leg-section + .leg-section { border-top-color: rgba(27,95,168,0.08); }
 [data-theme='light'] #atlas-hud { background: rgba(249,252,250,0.98); border-color: rgba(27,95,168,0.20); box-shadow: 0 14px 36px rgba(0,0,0,0.14); }
 [data-theme='light'] #hud-grip { background: rgba(27,95,168,0.025); border-bottom-color: rgba(27,95,168,0.10); }
 [data-theme='light'] #hud-grip::after { background: rgba(27,95,168,0.20); }
@@ -624,13 +524,9 @@ permalink: /atlas/
     <div class="atlas-sep"></div>
     <div id="atlas-bc"><span class="abc-item active" id="bc-ov">Overview</span></div>
     <div class="atlas-sep"></div>
-    <div class="atlas-flt-wrap" role="group" aria-label="Map layers">
-      <span class="atlas-flt-label"><i data-lucide="layers" aria-hidden="true"></i>Layers</span>
-      <button class="atlas-flt on" id="af-labels">Zone Labels</button>
-      <button class="atlas-flt on" id="af-routes">Routes</button>
-      <button class="atlas-flt" id="af-expand-all">Expand All</button>
-      <button class="atlas-flt" id="af-tools">Tool Nodes</button>
-    </div>
+    <button class="selector" id="atlas-layers-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="atlas-layers-pop" aria-label="Layers">
+      <i data-lucide="layers" aria-hidden="true"></i><span class="sel-val">Layers</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
+    </button>
     <div class="atlas-sep"></div>
     <a class="atlas-craft-link" href="/atlas/craft/" title="Atlas Craft — search the atlas and wire your own relationship diagrams">Craft &#8599;</a>
     <div class="atlas-sep"></div>
@@ -641,65 +537,61 @@ permalink: /atlas/
       <button class="atlas-btn" id="a-help" style="font-size:13px" title="How to use">?</button>
     </div>
   </div>
+  <h1 class="vh">Healthcare Atlas</h1>
+  <div class="vh" id="a11yLive" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="selector-pop" id="atlas-layers-pop" role="dialog" aria-label="Layers and legend" hidden>
+    <div class="pop-head"><span class="pop-head-title"><i data-lucide="layers" aria-hidden="true"></i>Layers</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+    <div class="pop-body">
+      <div class="pop-sec">Layers</div>
+      <button class="pop-opt" id="af-labels" aria-pressed="true">Zone labels</button>
+      <button class="pop-opt" id="af-routes" aria-pressed="true">Routes</button>
+      <button class="pop-opt" id="af-expand-all" aria-pressed="false">Expand all</button>
+      <button class="pop-opt" id="af-tools" aria-pressed="false">Tool nodes</button>
+      <div class="pop-sec">Legend &middot; Connections</div>
+      <button class="pop-opt" data-type="clinical" aria-pressed="false"><span class="leg-line" style="color:#4ECDC4"></span>Clinical</button>
+      <button class="pop-opt" data-type="financial" aria-pressed="false"><span class="leg-line" style="color:#E8A838"></span>Financial</button>
+      <button class="pop-opt" data-type="regulatory" aria-pressed="false"><span class="leg-line" style="color:#8B5CF6"></span>Regulatory</button>
+      <button class="pop-opt" data-type="population" aria-pressed="false"><span class="leg-line" style="color:#5DBF87"></span>Population</button>
+      <button class="pop-opt" id="leg-conn-popout"><i data-lucide="arrow-up-right" aria-hidden="true"></i>Open connections list</button>
+      <div class="pop-sec">Legend &middot; Zones</div>
+      <div class="leg-row"><span class="leg-dot" style="background:#FF6B6B"></span><span class="leg-lbl">Med Science</span></div>
+      <div class="leg-row"><span class="leg-dot" style="background:#6aabff"></span><span class="leg-lbl">Provider</span></div>
+      <div class="leg-row"><span class="leg-dot" style="background:#4ECDC4"></span><span class="leg-lbl">Patient</span></div>
+      <div class="leg-row"><span class="leg-dot" style="background:#0EA5E9"></span><span class="leg-lbl">Tech/Eco</span></div>
+      <div class="leg-row"><span class="leg-dot" style="background:#8B5CF6"></span><span class="leg-lbl">Policy</span></div>
+      <div class="leg-row"><span class="leg-dot" style="background:#5DBF87"></span><span class="leg-lbl">Pub Health</span></div>
+      <div class="leg-row"><span class="leg-dot" style="background:#E8A838"></span><span class="leg-lbl">Payer</span></div>
+      <div class="pop-sec">Legend &middot; Nodes</div>
+      <div class="leg-row">
+        <svg width="16" height="16" viewBox="-8 -8 16 16" style="flex-shrink:0;opacity:0.75">
+          <polyline points="-2.5,-2.5 0,-6 2.5,-2.5" fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="-2.5,2.5 0,6 2.5,2.5"   fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="2.5,-2.5 6,0 2.5,2.5"   fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="-2.5,-2.5 -6,0 -2.5,2.5" fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="leg-lbl">Expandable</span>
+      </div>
+      <div class="leg-row">
+        <svg width="16" height="16" viewBox="-8 -8 16 16" style="flex-shrink:0;opacity:0.75">
+          <path d="M-3.5,-3.5 L3.5,3.5 M3.5,-3.5 L-3.5,3.5" fill="none" stroke="rgba(140,180,215,0.5)" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="leg-lbl">&#9670; Landmark</span>
+      </div>
+    </div>
+  </div>
+
   <div id="atlas-desk-hint" hidden>
     <span>Full Atlas experience is best on a desktop screen.</span>
     <button id="adh-x" aria-label="Dismiss">×</button>
   </div>
+  <div class="applied-strip" id="atlas-applied" hidden></div>
   <div id="atlas-canvas">
     <svg id="atlas-svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div id="atlas-stamp" aria-hidden="true">HU ATLAS &middot; UNIFIED DATASET</div>
-    <button class="toggle-chip" id="atlas-legend-btn" aria-controls="atlas-legend-sheet" aria-expanded="false"><i data-lucide="map" aria-hidden="true"></i>Legend</button>
     <div id="atlas-hint">Scroll to zoom · Drag to pan · Click any hex to explore</div>
     <div id="conn-tooltip"><div class="ctt-label" id="ctt-label"></div><div class="ctt-desc" id="ctt-desc"></div></div>
-    <div id="atlas-legend">
-      <div class="leg-hdr">Map Key</div>
-      <div class="leg-section">
-        <div class="leg-sec-label leg-sec-row">
-          <span>Connections</span>
-          <button id="leg-conn-popout" title="Open connections list">&#8599;</button>
-        </div>
-        <div class="leg-row leg-check" data-type="clinical"><span class="leg-cbx"></span><div class="leg-line" style="color:#4ECDC4"></div><span class="leg-lbl">Clinical</span></div>
-        <div class="leg-row leg-check" data-type="financial"><span class="leg-cbx"></span><div class="leg-line" style="color:#E8A838"></div><span class="leg-lbl">Financial</span></div>
-        <div class="leg-row leg-check" data-type="regulatory"><span class="leg-cbx"></span><div class="leg-line" style="color:#8B5CF6"></div><span class="leg-lbl">Regulatory</span></div>
-        <div class="leg-row leg-check" data-type="population"><span class="leg-cbx"></span><div class="leg-line" style="color:#5DBF87"></div><span class="leg-lbl">Population</span></div>
-      </div>
-      <div class="leg-section">
-        <div class="leg-sec-label">Zones</div>
-        <div class="leg-row"><div class="leg-dot" style="background:#FF6B6B"></div><span class="leg-lbl">Med Science</span></div>
-        <div class="leg-row"><div class="leg-dot" style="background:#6aabff"></div><span class="leg-lbl">Provider</span></div>
-        <div class="leg-row"><div class="leg-dot" style="background:#4ECDC4"></div><span class="leg-lbl">Patient</span></div>
-        <div class="leg-row"><div class="leg-dot" style="background:#0EA5E9"></div><span class="leg-lbl">Tech/Eco</span></div>
-        <div class="leg-row"><div class="leg-dot" style="background:#8B5CF6"></div><span class="leg-lbl">Policy</span></div>
-        <div class="leg-row"><div class="leg-dot" style="background:#5DBF87"></div><span class="leg-lbl">Pub Health</span></div>
-        <div class="leg-row"><div class="leg-dot" style="background:#E8A838"></div><span class="leg-lbl">Payer</span></div>
-      </div>
-      <div class="leg-section">
-        <div class="leg-sec-label">Nodes</div>
-        <div class="leg-row">
-          <svg width="16" height="16" viewBox="-8 -8 16 16" style="flex-shrink:0;opacity:0.75">
-            <polyline points="-2.5,-2.5 0,-6 2.5,-2.5" fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="-2.5,2.5 0,6 2.5,2.5"   fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="2.5,-2.5 6,0 2.5,2.5"   fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="-2.5,-2.5 -6,0 -2.5,2.5" fill="none" stroke="rgba(140,180,215,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="leg-lbl">Expandable</span>
-        </div>
-        <div class="leg-row">
-          <svg width="16" height="16" viewBox="-8 -8 16 16" style="flex-shrink:0;opacity:0.75">
-            <path d="M-3.5,-3.5 L3.5,3.5 M3.5,-3.5 L-3.5,3.5" fill="none" stroke="rgba(140,180,215,0.5)" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          <span class="leg-lbl">◆ Landmark</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="shell-sheet" id="atlas-legend-sheet" aria-hidden="true">
-    <div id="als-hdr">
-      <span id="als-title">Map Key &amp; Layers</span>
-      <button id="als-close" aria-label="Close legend">×</button>
-    </div>
-    <div id="als-body"></div>
   </div>
   <div id="atlas-conn">
     <div id="conn-hdr">
@@ -770,10 +662,11 @@ permalink: /atlas/
         <div class="help-item"><span class="help-icon">◉</span><span class="help-text">Route colors indicate type: <strong>teal</strong> = clinical, <strong>gold</strong> = financial, <strong>purple</strong> = regulatory, <strong>green</strong> = population.</span></div>
       </div>
       <div class="help-section">
-        <div class="help-section-title">Toolbar Filters</div>
-        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Zone Labels</strong> toggles the zone name overlays on the map.</span></div>
-        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Routes</strong> shows or hides all connection lines between zones.</span></div>
-        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Tool Nodes</strong> highlights hexes that link to interactive tools on this site.</span></div>
+        <div class="help-section-title">Layers &amp; Legend</div>
+        <div class="help-item"><span class="help-icon">≡</span><span class="help-text">The <strong>Layers</strong> button in the toolbar opens one panel with every layer toggle plus the map legend.</span></div>
+        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Zone labels</strong> toggles the zone name overlays. <strong>Routes</strong> shows or hides all connection lines between zones.</span></div>
+        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Tool nodes</strong> highlights hexes that link to interactive tools on this site.</span></div>
+        <div class="help-item"><span class="help-icon">≡</span><span class="help-text">Anything switched away from its default shows as a chip under the toolbar — hit its ✕ to restore.</span></div>
       </div>
     </div>
   </div>
@@ -1645,6 +1538,7 @@ function expandExpansion(nodeId) {
   if (btn) btn.classList.add('on');
   if (typeof updateExpandIndicator === 'function') updateExpandIndicator(nodeId);
   if (typeof window.updateRoutes === 'function') window.updateRoutes();
+  if (typeof renderAppliedStrip === 'function') renderAppliedStrip();
 }
 
 function collapseExpansion(nodeId) {
@@ -1696,6 +1590,7 @@ function collapseExpansion(nodeId) {
   if (btn) btn.classList.remove('on');
   if (typeof updateExpandIndicator === 'function') updateExpandIndicator(nodeId);
   if (typeof window.updateRoutes === 'function') window.updateRoutes();
+  if (typeof renderAppliedStrip === 'function') renderAppliedStrip();
 }
 
 function initExpansion(cfg) {
@@ -2471,7 +2366,7 @@ ZONE_DEFS.forEach(z => {
   });
 
   // ── Route selection & highlighting ─────────────────────────────────────────
-  // Visual state from three inputs: the selected route (HUD), the Map Key type
+  // Visual state from three inputs: the selected route (HUD), the legend type
   // checkboxes (multi-select), and a hovered/previewed route. A hovered route
   // ISOLATES — it overrides the type highlight so a single link can be traced
   // out of the tangle. Glow + body width scale down as more routes light up so
@@ -2549,7 +2444,7 @@ ZONE_DEFS.forEach(z => {
     endpointHlG.raise();
   }
 
-  // Toggle a connection type in the Map Key highlight set. Returns new on-state.
+  // Toggle a connection type in the legend highlight set. Returns new on-state.
   window._toggleRouteType = function(type) {
     if (checkedTypes.has(type)) checkedTypes.delete(type);
     else checkedTypes.add(type);
@@ -2695,15 +2590,18 @@ ZONE_DEFS.forEach(z => {
     refreshRouteVis();
   };
 
-  // ── Map Key connection checkboxes + popout ─────────────────────────────────
-  document.querySelectorAll('#atlas-legend .leg-check').forEach(rowEl => {
-    rowEl.addEventListener('click', () => {
-      const on = window._toggleRouteType(rowEl.dataset.type);
-      rowEl.classList.toggle('on', on);
+  // ── Legend connection toggles (in the layers panel) + popout ──────────────
+  document.querySelectorAll('#atlas-layers-pop .pop-opt[data-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const on = window._toggleRouteType(btn.dataset.type);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      renderAppliedStrip();
+      announce(btn.textContent.trim() + ' routes ' + (on ? 'highlighted' : 'highlight cleared'));
     });
   });
   const connPopout = document.getElementById('leg-conn-popout');
   if (connPopout) connPopout.addEventListener('click', () => {
+    closePop(true);   // the connections panel takes over from the layers panel
     document.getElementById('atlas-conn').classList.toggle('open');
   });
 }
@@ -3233,39 +3131,85 @@ svg.on('wheel.hint',hideHint);
   grip.addEventListener('touchstart', startResize, {passive:false});
 }
 
-// ── FILTERS ───────────────────────────────────────────────────────────────────
-document.getElementById('af-labels').addEventListener('click', function(){
-  zoneLabelsOn = !zoneLabelsOn;
-  this.classList.toggle('on', zoneLabelsOn);
+// ── LAYERS PANEL — toggles + legend behind one trigger (Control Architecture v2)
+// Popover contract per the Operators Map reference: one open at a time, Esc
+// closes and refocuses the trigger, outside click closes, arrows walk options.
+let openPop=null;
+function closePop(refocus){
+  if(!openPop) return;
+  const p=openPop; openPop=null;
+  p.pop.hidden=true; p.btn.setAttribute('aria-expanded','false');
+  if(refocus) p.btn.focus();
+}
+function openPopover(btn,pop,build){
+  if(openPop&&openPop.pop===pop){ closePop(true); return; }
+  closePop(false);
+  build();
+  pop.hidden=false; btn.setAttribute('aria-expanded','true');
+  // desktop anchor: under the toolbar, left-aligned to the trigger; the phone
+  // sheet CSS (hu-global, <700px) overrides both with !important
+  const tb=document.getElementById('atlas-tb');
+  pop.style.left=btn.offsetLeft+'px';
+  pop.style.top=(tb.offsetTop+tb.offsetHeight+6)+'px';
+  // right-edge clamp: the popover must never overflow the shell
+  const host=pop.offsetParent;
+  if(host){ const max=host.clientWidth-pop.offsetWidth-8; if(max>0&&btn.offsetLeft>max) pop.style.left=max+'px'; }
+  openPop={pop,btn};
+  const f=pop.querySelector('.pop-opt');
+  if(f) f.focus();
+}
+document.addEventListener('click',e=>{ if(openPop&&!e.target.closest('.selector-pop')&&!e.target.closest('.selector')) closePop(false); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&openPop) closePop(true); });
+const layersBtn=document.getElementById('atlas-layers-btn');
+const layersPop=document.getElementById('atlas-layers-pop');
+layersPop.addEventListener('keydown',e=>{
+  const opts=[...layersPop.querySelectorAll('.pop-opt')], i=opts.indexOf(document.activeElement);
+  if(!opts.length) return;
+  if(e.key==='ArrowDown'){e.preventDefault();(opts[i+1]||opts[0]).focus();}
+  else if(e.key==='ArrowUp'){e.preventDefault();(opts[i-1]||opts[opts.length-1]).focus();}
+  else if(e.key==='Home'){e.preventDefault();opts[0].focus();}
+  else if(e.key==='End'){e.preventDefault();opts[opts.length-1].focus();}
+});
+layersPop.querySelector('[data-close]').addEventListener('click',()=>closePop(true));
+layersBtn.addEventListener('click',()=>openPopover(layersBtn,layersPop,syncLayersPop));
+
+// one polite live region for the tool — announce COMMITTED layer/legend
+// changes only, never hover
+function announce(msg){
+  const el=document.getElementById('a11yLive'); if(!el) return;
+  el.textContent='';                                  // clear first so repeats re-announce
+  requestAnimationFrame(()=>{el.textContent=msg;});
+}
+
+const anyExpanded=()=>expandedSet.size>0;
+function setOpt(id,on){ const b=document.getElementById(id); if(b) b.setAttribute('aria-pressed',on?'true':'false'); }
+// faces sync from live state on every open — expansion state can change from
+// the map itself (landmark clicks) between opens
+function syncLayersPop(){
+  setOpt('af-labels',zoneLabelsOn); setOpt('af-routes',routesOn);
+  setOpt('af-expand-all',anyExpanded()); setOpt('af-tools',toolNodesOn);
+}
+
+function setZoneLabels(on){
+  zoneLabelsOn=on; setOpt('af-labels',on);
   updateLOD(d3.zoomTransform(svgEl).k);
-});
-
-document.getElementById('af-routes').addEventListener('click', function(){
-  routesOn = !routesOn;
-  this.classList.toggle('on', routesOn);
+  renderAppliedStrip(); announce('Zone labels '+(on?'on':'off'));
+}
+function setRoutes(on){
+  routesOn=on; setOpt('af-routes',on);
   updateLOD(d3.zoomTransform(svgEl).k);
-});
-
-document.getElementById('af-expand-all').addEventListener('click', function(){
-  const allIds = Object.keys(EXPANSION_REGISTRY);
-  const anyOpen = allIds.some(id => expandedSet.has(id));
-  if (anyOpen) {
-    allIds.filter(id => expandedSet.has(id)).forEach(collapseExpansion);
-    this.classList.remove('on');
-  } else {
-    allIds.forEach(expandExpansion);
-    this.classList.add('on');
-  }
-});
-
-document.getElementById('conn-panel-close').addEventListener('click', () => {
-  document.getElementById('atlas-conn').classList.remove('open');
-});
-
-let toolNodesOn = false;
-document.getElementById('af-tools').addEventListener('click', function(){
-  toolNodesOn = !toolNodesOn;
-  this.classList.toggle('on', toolNodesOn);
+  renderAppliedStrip(); announce('Routes '+(on?'on':'off'));
+}
+function setExpandAll(open){
+  const allIds=Object.keys(EXPANSION_REGISTRY);
+  if(open) allIds.forEach(expandExpansion);
+  else allIds.filter(id=>expandedSet.has(id)).forEach(collapseExpansion);
+  setOpt('af-expand-all',anyExpanded());
+  renderAppliedStrip(); announce(open?'All landmark nodes expanded':'All landmark nodes collapsed');
+}
+let toolNodesOn=false;
+function setToolNodes(on){
+  toolNodesOn=on; setOpt('af-tools',on);
   d3.selectAll('.az-node-cell').each(function(){
     const el=d3.select(this), zid=el.attr('data-zoneid'), nid=el.attr('data-nodeid');
     const z2=ZONE_DEFS.find(z=>z.id===zid), c2=z2&&z2.cells.find(c=>c.nodeId===nid);
@@ -3278,52 +3222,51 @@ document.getElementById('af-tools').addEventListener('click', function(){
       el.select('.hex-body').attr('fill-opacity',isLM?0.18:0.08).attr('stroke-opacity',isLM?0.78:0.32);
     }
   });
+  renderAppliedStrip(); announce(on?'Tool nodes highlighted':'Tool node highlight off');
+}
+document.getElementById('af-labels').addEventListener('click',()=>setZoneLabels(!zoneLabelsOn));
+document.getElementById('af-routes').addEventListener('click',()=>setRoutes(!routesOn));
+document.getElementById('af-expand-all').addEventListener('click',()=>setExpandAll(!anyExpanded()));
+document.getElementById('af-tools').addEventListener('click',()=>setToolNodes(!toolNodesOn));
+
+// applied strip: once the panel closes, non-default layer/legend state is
+// invisible — surface it as removable chips. Everything at defaults = no strip.
+function renderAppliedStrip(){
+  const s=document.getElementById('atlas-applied'); if(!s) return;
+  const chips=[];
+  if(!zoneLabelsOn) chips.push('<span class="applied-chip">Zone labels: <b>off</b><button class="ac-x" data-clear="labels" aria-label="Turn zone labels back on">&#10005;</button></span>');
+  if(!routesOn) chips.push('<span class="applied-chip">Routes: <b>off</b><button class="ac-x" data-clear="routes" aria-label="Turn routes back on">&#10005;</button></span>');
+  if(expandedSet.size) chips.push('<span class="applied-chip">Expanded: <b>'+expandedSet.size+(expandedSet.size===1?' node':' nodes')+'</b><button class="ac-x" data-clear="expand" aria-label="Collapse all expanded nodes">&#10005;</button></span>');
+  if(toolNodesOn) chips.push('<span class="applied-chip">Tool nodes: <b>on</b><button class="ac-x" data-clear="tools" aria-label="Turn off the tool node highlight">&#10005;</button></span>');
+  document.querySelectorAll('#atlas-layers-pop .pop-opt[data-type][aria-pressed="true"]').forEach(b=>{
+    const lbl=b.textContent.trim();
+    chips.push('<span class="applied-chip">Highlight: <b>'+lbl+'</b><button class="ac-x" data-clear="conn:'+b.dataset.type+'" aria-label="Stop highlighting '+lbl.toLowerCase()+' routes">&#10005;</button></span>');
+  });
+  s.innerHTML=chips.join('');
+  s.hidden=!chips.length;
+}
+document.getElementById('atlas-applied').addEventListener('click',e=>{
+  const x=e.target.closest('[data-clear]'); if(!x) return;
+  const k=x.dataset.clear;
+  if(k==='labels') setZoneLabels(true);
+  else if(k==='routes') setRoutes(true);
+  else if(k==='expand') setExpandAll(false);
+  else if(k==='tools') setToolNodes(false);
+  else if(k.indexOf('conn:')===0){
+    const b=document.querySelector('#atlas-layers-pop .pop-opt[data-type="'+k.slice(5)+'"]');
+    if(b&&b.getAttribute('aria-pressed')==='true') b.click();   // reuse the toggle path
+  }
 });
 
-// ── MOBILE: legend sheet + one-time desktop hint ──────────────────────────────
-// One source of truth: the same #atlas-legend and .atlas-flt-wrap nodes are
-// re-parented into the bottom sheet on phones (appendChild preserves their
-// listeners) and moved back to their desktop homes when the viewport widens.
+document.getElementById('conn-panel-close').addEventListener('click', () => {
+  document.getElementById('atlas-conn').classList.remove('open');
+});
+
+// ── MOBILE: one-time desktop hint ─────────────────────────────────────────────
+// The layers panel needs no per-viewport JS — the .selector-pop primitive
+// renders as a bottom sheet under 700px on its own.
 {
-  const mq       = window.matchMedia('(max-width: 768px)');
-  const legend   = document.getElementById('atlas-legend');
-  const fltWrap  = document.querySelector('.atlas-flt-wrap');
-  const sheet    = document.getElementById('atlas-legend-sheet');
-  const sheetBody= document.getElementById('als-body');
-  const legBtn   = document.getElementById('atlas-legend-btn');
-
-  const legendHome = legend.parentNode;   // #atlas-canvas
-  const legendNext = legend.nextSibling;
-  const fltHome    = fltWrap.parentNode;  // #atlas-tb
-  const fltNext    = fltWrap.nextSibling;
-
-  function openSheet(){
-    sheet.classList.add('open'); sheet.setAttribute('aria-hidden','false');
-    legBtn.classList.add('on'); legBtn.setAttribute('aria-expanded','true');
-  }
-  function closeSheet(){
-    sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true');
-    legBtn.classList.remove('on'); legBtn.setAttribute('aria-expanded','false');
-  }
-  function place(mobile){
-    if (mobile) {
-      sheetBody.appendChild(fltWrap);
-      sheetBody.appendChild(legend);
-    } else {
-      closeSheet();
-      fltHome.insertBefore(fltWrap, fltNext);
-      legendHome.insertBefore(legend, legendNext);
-    }
-  }
-  legBtn.addEventListener('click', () => sheet.classList.contains('open') ? closeSheet() : openSheet());
-  document.getElementById('als-close').addEventListener('click', closeSheet);
-  // the connections popout opens a panel that lives under the sheet; get out of its way
-  sheet.addEventListener('click', e => { if (e.target.closest('#leg-conn-popout')) closeSheet(); });
-  place(mq.matches);
-  if (mq.addEventListener) mq.addEventListener('change', e => place(e.matches));
-  else if (mq.addListener) mq.addListener(e => place(e.matches));
-
-  // one-time "best on desktop" strip under the toolbar
+  const mq = window.matchMedia('(max-width: 768px)');
   const strip = document.getElementById('atlas-desk-hint');
   if (strip) {
     let seen = false;

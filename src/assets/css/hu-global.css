@@ -587,6 +587,117 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
 .pop-head-title svg { width:14px; height:14px; stroke-width:1.75; color:var(--teal); }
 .pop-head .icon-btn { margin-left:auto; width:24px; height:24px; }
 
+/* ================================================================
+   HU CONTROL ARCHITECTURE v2 — selector, popover, applied strip
+   Progressive disclosure with visible state: hide the CONTROLS,
+   never hide the CHOICES. The current choice IS the selector face.
+   Popover contract: one open at a time, Esc closes + refocuses the
+   trigger, outside click closes, phone renders as a bottom sheet.
+   Z: selector popover 350.
+================================================================ */
+.selector {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:6px 11px; border-radius:8px;
+  border:1px solid var(--border); background:transparent;
+  font-family:var(--font); font-size:12.5px;
+  color:var(--t2); line-height:1.3; cursor:pointer;
+  transition:border-color .15s, color .15s, background .15s;
+  min-width:0;
+}
+.selector > svg { width:14px; height:14px; stroke-width:1.75; color:var(--teal); flex:none; }
+[data-theme="light"] .selector > svg { color:var(--teal-dk); }
+.selector .sel-val { font-weight:600; color:var(--t1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.selector .sel-caret { width:12px; height:12px; color:var(--t3); flex:none; transition:transform .15s; }
+.selector:hover { border-color:rgba(78,205,196,.5); }
+.selector[aria-expanded="true"] { border-color:var(--teal); background:rgba(78,205,196,.07); }
+.selector[aria-expanded="true"] .sel-caret { transform:rotate(180deg); }
+.selector:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+
+.selector-pop {
+  position:absolute; z-index:350;
+  min-width:220px; max-width:300px; max-height:min(420px,58vh);
+  display:flex; flex-direction:column;
+  background:var(--surface); border:1px solid var(--border2); border-radius:10px;
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.selector-pop[hidden] { display:none; }
+.selector-pop .pop-body { overflow-y:auto; padding:6px; }
+.pop-sec {
+  font-family:var(--mono); font-size:9px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--t3);
+  padding:10px 8px 4px;
+}
+.pop-opt {
+  display:flex; align-items:center; gap:8px; width:100%;
+  padding:7px 10px; border:none; border-radius:6px; background:none;
+  font-family:var(--font); font-size:12.5px; color:var(--t2);
+  text-align:left; cursor:pointer;
+}
+.pop-opt:hover, .pop-opt:focus-visible { background:rgba(78,205,196,.08); color:var(--t1); outline:none; }
+.pop-opt::after { content:"\2713"; margin-left:auto; font-family:var(--mono); font-size:11px; color:transparent; }
+/* single-select rows mark via aria-selected; multi-select toggle rows via aria-pressed */
+.pop-opt[aria-selected="true"], .pop-opt[aria-pressed="true"] { color:var(--t1); font-weight:600; }
+.pop-opt[aria-selected="true"]::after, .pop-opt[aria-pressed="true"]::after { color:var(--teal); }
+[data-theme="light"] .pop-opt[aria-selected="true"]::after,
+[data-theme="light"] .pop-opt[aria-pressed="true"]::after { color:var(--teal-dk); }
+/* motion grammar: popovers scale-fade from their trigger, 200ms ease-out */
+@media (prefers-reduced-motion: no-preference) {
+  .selector-pop { transform-origin:top left; animation:hu-pop-in .2s ease-out; }
+}
+@keyframes hu-pop-in { from { opacity:0; transform:scale(.96); } }
+
+/* Applied strip — removable-chip readout of non-default state that is not
+   visible on a selector face. No non-default state = the strip is gone. */
+.applied-strip {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:6px clamp(12px,2.5vw,20px);
+  border-bottom:1px solid var(--border); background:var(--surface);
+  flex-shrink:0;
+}
+.applied-strip[hidden] { display:none; }
+.applied-chip {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:3px 4px 3px 11px; border-radius:999px;
+  border:1px solid rgba(78,205,196,.4); background:rgba(78,205,196,.09);
+  font-family:var(--font); font-size:11.5px; color:var(--t1);
+}
+.applied-chip b { font-weight:600; color:var(--teal); }
+[data-theme="light"] .applied-chip b { color:var(--teal-dk); }
+.applied-chip .ac-x {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:18px; height:18px; border-radius:50%; flex:none;
+  border:none; background:transparent; color:var(--t3);
+  font-size:11px; line-height:1; cursor:pointer; padding:0;
+}
+.applied-chip .ac-x:hover { background:rgba(78,205,196,.2); color:var(--t1); }
+.applied-chip .ac-x:focus-visible { outline:2px solid var(--teal); outline-offset:1px; }
+
+/* Phone: the popover becomes a bottom sheet in the thumb zone; sheets slide, 300ms */
+@media (max-width:699px) {
+  .selector-pop {
+    position:fixed; left:0 !important; right:0; top:auto !important; bottom:0;
+    min-width:0; max-width:none; max-height:72dvh;
+    border:none; border-top:1px solid var(--border2); border-radius:16px 16px 0 0;
+    box-shadow:0 -12px 40px rgba(0,0,0,.45);
+  }
+  .selector-pop::before {
+    content:""; display:block; width:44px; height:4px; border-radius:2px;
+    background:var(--border2); margin:8px auto 4px; flex:none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .selector-pop { animation:hu-sheet-in .3s cubic-bezier(.2,.8,.2,1); }
+  }
+}
+@keyframes hu-sheet-in { from { transform:translateY(24%); opacity:.4; } }
+
+/* 44px touch-target floor on coarse pointers (design crit 2026-07) */
+@media (hover:none) {
+  .selector { min-height:44px; padding:10px 14px; }
+  .pop-opt { min-height:44px; padding:11px 12px; }
+  .toggle-chip { min-height:44px; padding:11px 16px; }
+  .icon-btn { width:44px; height:44px; }
+}
+
 /* Compact attribution strip for tools (site footer is suppressed there) */
 .tool-attribution {
   display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;
@@ -620,7 +731,7 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
            > .shell-dock--right  (optional)
        > .shell-foot          (legend / status / attribution)
    Z-scale: nav 200, tool-bar 150, shell-gate 180, attribution 120,
-            docks 50, bottom sheet 300, modal 400.
+            docks 50, bottom sheet 300, selector popover 350, modal 400.
 ================================================================ */
 .hu-shell {
   display:flex; flex-direction:column;

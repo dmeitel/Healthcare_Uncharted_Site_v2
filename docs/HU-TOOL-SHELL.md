@@ -36,6 +36,7 @@ All classes live in `src/assets/css/hu-global.css` (HU TOOL SHELL section). Tool
 6. **Chips are `.toggle-chip`.** Active = teal fill + #062024 text. No new pill inventions.
 7. **Z-scale:** nav 200, tool-bar 150, shell-gate 180, attribution 120, docks 50, sheet 300, modal 400. Don't freelance z-indexes above 400.
 8. **No page-level token redefinitions.** Scene palettes use scoped names (`--craft-*`, `--sql-*`). Global names (`--dark`, `--teal`, `--font`, ...) always mean what hu-global.css says.
+9. **Chrome never impersonates data.** Framing that is honest about being framing stays: corner brackets, ruler ticks, hairlines, mono readouts, tabular numerals. Decoration that mimics instrumentation goes: no graticules (they imply coordinates that don't exist), no compass roses (no meaningful north on these projections), no chart stamps. Cut 2026-07 per the Apple-lens crit; don't reintroduce. The instrument identity lives in precision, not props.
 
 ## Icons — one vocabulary, everywhere
 
@@ -59,7 +60,7 @@ These name the CONCEPTS a data tool exposes. A concept keeps its icon across too
 | Concept | Lucide | Appears as |
 |---|---|---|
 | Dataset / resource ("what am I looking at") | `layers` | deck-row label icon |
-| Metric / color-by ("what colors the map") | `bar-chart-2` | deck-row label icon, metric pickers |
+| Metric ("what colors the map") | `bar-chart-2` | deck-row label icon, metric pickers |
 | Granularity (state ↔ county grain) | `layout-grid` | deck-row label icon, grain segmented control |
 | Time (year, snapshot ↔ change) | `calendar` | time controls |
 | Trend / change mode | `trending-up` | change-mode toggle, trend panels |
@@ -70,6 +71,44 @@ These name the CONCEPTS a data tool exposes. A concept keeps its icon across too
 | Pin / save a selection | `pin` | career-tree path, saved views |
 
 Exception that proves the rule: the Multi-Lens Map's lens badges (P/C/O/S/L/B letter-in-color) are brand iconography for the lens system itself — they stay letters, standardized in shape/size, not replaced with Lucide. Icons on labels render 11px, teal (`--teal-dk` on light), and always sit BESIDE the text label, never instead of it.
+
+## Control Architecture v2 — STANDARD (reviewed + approved 2026-07-09)
+
+Full rationale, migration table, and the URL serializer convention live in HU-CONTROL-ARCHITECTURE-V2.md; the Operators Map is the reference implementation. The load-bearing rules:
+
+- **Three primitives, all in hu-global.css:** `.selector` (icon + current value + chevron; the current choice IS the face), `.selector-pop` (popover with `.pop-head`, `.pop-sec` section headers, `.pop-opt` option rows; renders as a bottom sheet under 700px), `.applied-strip` (removable chips for non-default state no selector face shows; empty = not rendered).
+- **Rule of Two.** At most two always-visible control clusters per tool: the primary mode switcher + one context control. Everything else lives in selectors/panels. A tool's identity-level switch (lens tabs, view tabs) earns permanent chrome.
+- **Same concept, same position:** wordmark → dataset selector → metric selector → spacer → view/time controls → help.
+- **State always visible** — on a selector face or in the applied strip. Never a mystery why the canvas looks the way it does.
+- **Popover contract:** one open at a time; Esc closes and returns focus to the trigger; outside click closes (keyed on `[aria-haspopup]` triggers, not a class — icon-btn triggers are legitimate); arrows walk the options; role="listbox"/"option" + aria-expanded on the trigger; single-select rows mark with `aria-selected`, multi-select toggle rows with `aria-pressed` (the .pop-opt check supports both); phone = bottom sheet; z 350. FLAT lists over 12 options get search-within; well-grouped panels can defer to roughly double that.
+- **Phone:** a DEDICATED selector strip docks to the BOTTOM (thumb zone, z 250, `.hu-shell` gets bottom clearance) — the Operators deck is the model. A toolbar that mixes selectors with identity chrome (tabs, breadcrumb, My Path) stays where it is; its popovers still open as bottom sheets, which is where the thumb interaction happens. The 44px coarse-pointer floor is already global (`(hover:none)` bumps on selector/pop-opt/toggle-chip/icon-btn).
+- **Direct manipulation:** every readout that CAN be a control SHOULD be — legend buckets isolate, type legends filter, inspector rows filter where it makes sense.
+- **URL-addressable views:** query params, short names, stable keys, defaults omitted; push history on scope change, replace on tweak; restore before first paint; popstate = reset → re-apply → render. Presets are just named URLs behind a `pin` icon-btn ("Views" popover).
+- **Exemption:** SQL Mystery is an editor, not a data explorer — case list and schema stay put.
+
+## Lexicon — one word per concept, every tool
+
+The words users see next to those icons. A concept gets ONE name; synonyms in UI copy are bugs. Applied sitewide 2026-07 ("Color by" and "Color" → Metric; "Key" → Legend; Multi-Lens Snapshot/Change toggle → Trend, freeing View).
+
+| Word | Means | Never call it |
+|---|---|---|
+| Dataset | what am I looking at (hospitals, dialysis, suppliers) | resource*, source, data |
+| Lens | what angle on the data (Multi-Lens P/C/O/S/L/B) | view, perspective, mode |
+| Metric | what number colors the canvas | color by, color, measure, indicator |
+| Layer | what's drawn on top (county overlay, atlas layers) | overlay, toggle |
+| Grain | state ↔ county granularity | granularity, level, detail |
+| Trend | snapshot ↔ change-over-time treatment | view, time mode |
+| Mode | how interaction works (explore ↔ compare) | tool, state |
+| View | a CONFIGURED STATE of a tool — reserved for URL-addressable views and presets | (don't spend it on toggles) |
+| Inspector | the detail dock | details, info panel, sidebar |
+| Legend | categorical key of what marks mean | key, map key |
+| Scale | the continuous color ramp for a metric | legend (when continuous), gradient |
+
+*Resolved 2026-07-09: the Operators "Resource" row became the Dataset selector in the v2 pilot.
+
+## Type roles — mono is metadata, never content
+
+Mono-uppercase-tracked text (`var(--mono)` + uppercase + letter-spacing) is reserved for TRUE metadata: control-group labels, dock heads, source lines, live readouts, axis/scale annotations. It is never body content and never a heading in disguise; if a string is a sentence someone reads, it's `var(--font)`. If it's a title, it's `var(--display)`. Floor: 10px — mono below 10px is texture, not text, and texture pretending to be text is ornament (rule 9).
 
 ## Accessibility — required on every tool
 

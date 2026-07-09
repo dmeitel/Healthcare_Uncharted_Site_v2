@@ -19,12 +19,8 @@ has_interactive: true
 .src-banner{flex:none;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--teal);background:rgba(78,205,196,.09);border:1px solid rgba(78,205,196,.28);border-radius:8px;padding:7px 13px}
 .src-banner.quiet{display:none}
 
-/* deck chips — .cb matches the .toggle-chip standard (teal fill + #062024 when active) */
-.cb{font-size:11px;padding:4px 11px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;font-family:var(--font);flex:none}
-.cb:hover{color:var(--t1);border-color:var(--border2)}
-.cb.active{color:#062024;background:var(--teal);border-color:var(--teal);font-weight:600;box-shadow:inset 0 0 0 1px rgba(6,32,36,.35)}
 /* keyboard focus — visible teal ring on every interactive control */
-.cb:focus-visible,.backbtn:focus-visible,.numtoggle:focus-visible,.pf-clear:focus-visible,.ti-x:focus-visible,.syslink:focus-visible,#searchInput:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.backbtn:focus-visible,.numtoggle:focus-visible,.pf-clear:focus-visible,.ti-x:focus-visible,.syslink:focus-visible,#searchInput:focus-visible,.ptleg button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .sr-row:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;background:rgba(78,205,196,.12)}
 .state:focus-visible{outline:none;stroke:var(--teal);stroke-width:2}
 .map-error-msg{max-width:320px;text-align:center;font-family:var(--font);font-size:14px;line-height:1.6;color:var(--t2);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 22px}
@@ -68,8 +64,6 @@ has_interactive: true
 .sr-sys .sr-nm{font-weight:600}
 .syslink{color:var(--teal);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .syslink:hover{color:#fff}
-.restabs .cb{font-weight:600}
-.restabs .cb.active{background:var(--teal);color:#062024;border-color:var(--teal)}
 .counties .c-halo path{fill:none;stroke:#06121f;stroke-opacity:.6;stroke-width:2.2;vector-effect:non-scaling-stroke;pointer-events:none}
 .counties .c-line path{fill:none;stroke:#fff;stroke-opacity:.82;stroke-width:.9;vector-effect:non-scaling-stroke;pointer-events:all;cursor:pointer}
 .counties .c-line path.hot{fill:rgba(255,255,255,.15);stroke-opacity:1}
@@ -86,8 +80,22 @@ has_interactive: true
 [data-theme="light"] .chart-scale{background:color-mix(in srgb,var(--surface) 86%,transparent)}
 .legend{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--t3);flex-wrap:wrap;justify-content:center}
 .legend-bar{width:clamp(90px,16vw,220px);height:9px;border-radius:5px}
-.ptleg{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--t2)}
+/* direct-manipulation scale: each quintile band is a button — tap to isolate its states */
+.legend-buckets{display:flex}
+.lb{flex:1;border:none;padding:0;background:none;cursor:pointer;pointer-events:auto;transition:transform .12s}
+.lb:first-child{border-radius:5px 0 0 5px}
+.lb:last-child{border-radius:0 5px 5px 0}
+.lb:hover{transform:scaleY(1.4)}
+.lb[aria-pressed="true"]{transform:scaleY(1.4);box-shadow:0 0 0 1.5px var(--t1)}
+.lb:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.state.dim{opacity:.18}
+@media(hover:none){.legend-bar{height:16px}}
+.ptleg{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--t2)}
 .ptleg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+/* type legend entries are buttons — tap to hide/show that type on the map */
+.ptleg button{display:inline-flex;align-items:center;gap:5px;background:none;border:none;padding:2px 6px;border-radius:6px;font:inherit;color:inherit;cursor:pointer;pointer-events:auto;transition:opacity .15s,background .15s}
+.ptleg button:hover{background:rgba(78,205,196,.1)}
+.ptleg button[aria-pressed="false"]{opacity:.32}
 .shell-foot .tool-attribution{margin-left:auto}
 /* per-state value labels on the U.S. choropleth */
 .statenum{font-family:var(--mono);font-size:11px;font-weight:700;fill:#fff;paint-order:stroke;stroke:rgba(8,16,28,.82);stroke-width:2.6px;stroke-linejoin:round}
@@ -147,25 +155,18 @@ has_interactive: true
 .hu-shell .tool-bar{position:relative;top:0} /* top:0 required: the global .tool-bar rule carries sticky top:64px, and position:relative would obey it */
 .hu-shell .tool-bar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:repeating-linear-gradient(90deg,var(--border) 0 1px,transparent 1px 8px);pointer-events:none}
 
-/* control banks: each deck row is an inset instrument module; the deck
-   itself drops to the page bg so the banks read as separate units */
-.shell-deck{background:var(--dark);gap:12px;padding-top:14px;padding-bottom:10px}
-.shell-deck-row{position:relative;border:1px solid var(--border);border-radius:6px;background:color-mix(in srgb,var(--surface) 55%,var(--dark));padding:10px 10px 8px}
-.shell-deck-label{position:absolute;top:-7px;left:9px;display:inline-flex;align-items:center;gap:5px;min-width:0;padding:0 6px;background:color-mix(in srgb,var(--surface) 55%,var(--dark));line-height:14px}
-.shell-deck-label svg{width:11px;height:11px;stroke-width:2;color:var(--teal);flex:none}
-[data-theme="light"] .shell-deck-label svg{color:var(--teal-dk)}
-.deck-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;width:100%}
+/* v2 control deck: dataset + metric selectors on one slim row (was 3 chip rows).
+   Popovers anchor under their trigger (JS sets left/top; phone CSS overrides to sheet). */
+.ctrl-deck{position:relative;display:flex;flex-direction:row;align-items:center;gap:10px;flex-wrap:nowrap}
+.ctrl-deck .selector{max-width:46%}
 
-/* the chart: corner brackets, faint graticule, chart stamp, compass rose */
-.map-stage{background-image:repeating-linear-gradient(0deg,color-mix(in srgb,var(--t3) 7%,transparent) 0 1px,transparent 1px 48px),repeating-linear-gradient(90deg,color-mix(in srgb,var(--t3) 7%,transparent) 0 1px,transparent 1px 48px)}
+/* the chart: corner brackets only — no ornament competing with the data */
 .chart-corners{position:absolute;inset:8px;z-index:1;pointer-events:none}
 .chart-corners i{position:absolute;width:14px;height:14px;border:0 solid var(--border2)}
 .chart-corners i:nth-child(1){top:0;left:0;border-top-width:2px;border-left-width:2px;border-color:var(--teal)}
 .chart-corners i:nth-child(2){top:0;right:0;border-top-width:2px;border-right-width:2px}
 .chart-corners i:nth-child(3){bottom:0;left:0;border-bottom-width:2px;border-left-width:2px}
 .chart-corners i:nth-child(4){bottom:0;right:0;border-bottom-width:2px;border-right-width:2px}
-.chart-stamp{position:absolute;left:16px;bottom:14px;z-index:1;pointer-events:none;user-select:none;font-family:var(--mono);font-size:9px;letter-spacing:.1em;line-height:1.8;color:var(--t4)}
-.chart-rose{position:absolute;right:18px;bottom:14px;z-index:1;pointer-events:none;color:var(--t2);opacity:.07}
 
 /* the inspector: header strip, indexed headings, tabular numbers, hairlines */
 .shell-dock--right{font-variant-numeric:tabular-nums;counter-reset:sec}
@@ -183,13 +184,9 @@ has_interactive: true
 .legend-bar::after{right:-1px}
 
 /* daylight chart: the same structures in ink-on-paper tints */
-[data-theme="light"] .map-stage{background-image:repeating-linear-gradient(0deg,color-mix(in srgb,var(--t3) 13%,transparent) 0 1px,transparent 1px 48px),repeating-linear-gradient(90deg,color-mix(in srgb,var(--t3) 13%,transparent) 0 1px,transparent 1px 48px)}
 [data-theme="light"] .chart-corners i:nth-child(1){border-color:var(--teal-dk)}
-[data-theme="light"] .chart-stamp{color:var(--t3);opacity:.6}
-[data-theme="light"] .chart-rose{color:var(--t3);opacity:.14}
 [data-theme="light"] .dock-head b{color:var(--teal-dk)}
 [data-theme="light"] .side .panel h2::before{color:var(--teal-dk)}
-[data-theme="light"] .shell-deck-label::before{background:var(--teal-dk)}
 
 /* phone: search bar goes full-width on top, HUD + 123 toggle drop below it */
 @media(max-width:699px){
@@ -205,16 +202,15 @@ has_interactive: true
   .map-sub{display:none}
   /* instrument chrome steps back on small screens */
   .ti-readout{display:none}
-  .chart-stamp,.chart-rose{display:none}
   .chart-scale{bottom:8px;padding:4px 10px}
   /* the live-status banner must SHRINK, not push the page wider than the screen */
   .src-banner{display:block;flex:0 1 auto;min-width:0;max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 10px;font-size:10px}
-  .shell-deck{gap:6px;padding-top:8px}
-  .shell-deck-row{border:none;border-radius:0;background:none;padding:0;overflow:visible;flex-wrap:nowrap}
-  .shell-deck-label{position:static;background:none;padding:0;min-width:72px}
-  /* the scroll lives on the chips, so the label stays pinned */
-  .deck-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .deck-chips::-webkit-scrollbar{display:none}
+  /* selectors dock BOTTOM in the thumb zone (crit: Safari/Maps precedent);
+     their popovers open as sheets right above them */
+  .ctrl-deck{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:250;border-top:1px solid var(--border2);border-bottom:none;background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(12px);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+  .ctrl-deck .selector{flex:1;max-width:none}
+  /* clearance so the foot/attribution never hides behind the dock */
+  .hu-shell{padding-bottom:68px}
 }
 </style>
 
@@ -230,20 +226,29 @@ has_interactive: true
   <h1 class="vh">U.S. Hospital Operations Map</h1>
   <div class="vh" id="a11yLive" aria-live="polite" aria-atomic="true"></div>
 
-  <div class="shell-deck">
-    <div class="shell-deck-row" role="group" aria-label="Resource">
-      <span class="shell-deck-label"><i data-lucide="layers" aria-hidden="true"></i>Resource</span>
-      <div class="deck-chips restabs" id="restabs"></div>
+  <div class="shell-deck ctrl-deck">
+    <button class="selector" id="selRes" aria-haspopup="listbox" aria-expanded="false" aria-controls="popRes" aria-label="Dataset">
+      <i data-lucide="layers" aria-hidden="true"></i><span class="sel-val" id="selResVal">Hospitals</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
+    </button>
+    <button class="selector" id="selMetric" aria-haspopup="listbox" aria-expanded="false" aria-controls="popMetric" aria-label="Metric">
+      <i data-lucide="bar-chart-2" aria-hidden="true"></i><span class="sel-val" id="selMetricVal">Total hospitals</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
+    </button>
+    <div class="selector-pop" id="popRes" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="layers" aria-hidden="true"></i>Dataset</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="pop-body" id="popResList" role="listbox" aria-label="Dataset"></div>
     </div>
-    <div class="shell-deck-row" role="group" aria-label="Color by">
-      <span class="shell-deck-label"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Color by</span>
-      <div class="deck-chips" id="controls"></div>
+    <div class="selector-pop" id="popMetric" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Metric</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="pop-body" id="popMetricList" role="listbox" aria-label="Metric"></div>
     </div>
-    <div class="shell-deck-row" id="countyRow" role="group" aria-label="County layer" hidden>
-      <span class="shell-deck-label"><i data-lucide="layout-grid" aria-hidden="true"></i>County layer</span>
-      <div class="deck-chips" id="countyControls"></div>
+    <span style="flex:1"></span>
+    <button class="icon-btn" id="selViews" aria-haspopup="listbox" aria-expanded="false" aria-controls="popViews" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
+    <div class="selector-pop" id="popViews" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="pin" aria-hidden="true"></i>Views</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="pop-body" id="popViewsList" role="listbox" aria-label="Preset views"></div>
     </div>
   </div>
+  <div class="applied-strip" id="appliedStrip" hidden></div>
 
   <div class="shell-main">
     <div class="shell-canvas map-stage">
@@ -263,20 +268,10 @@ has_interactive: true
       </div>
       <svg id="mapSvg" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet" aria-label="Interactive map of U.S. healthcare facilities"></svg>
       <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      <div class="chart-stamp" aria-hidden="true">HU SURVEY &middot; CMS PROVIDER DATA</div>
       <div class="chart-scale">
         <div class="legend" id="legend"></div>
         <div class="ptleg" id="ptleg" hidden></div>
       </div>
-      <svg class="chart-rose" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true" focusable="false">
-        <circle cx="22" cy="22" r="16" fill="none" stroke="currentColor" stroke-width="1"/>
-        <line x1="22" y1="2" x2="22" y2="42" stroke="currentColor" stroke-width="1"/>
-        <line x1="2" y1="22" x2="42" y2="22" stroke="currentColor" stroke-width="1"/>
-        <line x1="10.7" y1="10.7" x2="33.3" y2="33.3" stroke="currentColor" stroke-width=".6"/>
-        <line x1="33.3" y1="10.7" x2="10.7" y2="33.3" stroke="currentColor" stroke-width=".6"/>
-        <polygon points="22,2 19.6,14 22,11.6 24.4,14" fill="currentColor"/>
-        <circle cx="22" cy="22" r="1.6" fill="currentColor"/>
-      </svg>
       <div class="map-loading" id="mapLoading">Loading…</div>
       <div class="tapinfo" id="tapInfo" hidden>
         <div class="ti-body" id="tapInfoBody"></div>
@@ -357,6 +352,7 @@ const DIALYSIS_METRICS=[
   {k:'stations',label:'Total stations',f:hs=>hs.reduce((a,h)=>a+(h.st||0),0)},
   {k:'star',label:'Avg CMS star',u:'★',f:_avgStarF},
   {k:'np',label:'% nonprofit',u:'%',f:hs=>hs.length?Math.round(hs.filter(h=>h.o==='np').length/hs.length*100):0},
+  {k:'fp',label:'% for-profit',u:'%',f:hs=>hs.length?Math.round(hs.filter(h=>h.o==='fp').length/hs.length*100):0},
 ];
 const SUPPLIER_METRICS=[
   {k:'total',label:'Total suppliers',f:hs=>hs.length},
@@ -395,6 +391,8 @@ let countyFeatures=null, countyLoading=false, lakeFeatures=null, countyPop=null,
 let countyHealth=null, countyMetric=null;   // countyData.json (county-grain metrics) + active patient metric index (string) or null=off
 let curSvg=null, curZ=null, focusH=null, curClusters=null, SYS_LIST=[];
 let curT=null, preserveCam=false;   // last camera transform + flag to hold it across an in-place redraw
+let legendIso=null;                 // U.S. view: isolated quintile index (tap a scale band), or null
+let typeFilter=null;                // state/org view: Set of HIDDEN facility types (tap the type legend), or null
 
 const metric=()=>METRICS_OF()[activeMetric]||METRICS_OF()[0];
 const fmtM=v=>v==null?'—':(metric().u==='%'?v+'%':metric().u==='★'?v+'★':v.toLocaleString('en-US'));
@@ -423,15 +421,165 @@ function updateViewReadout(){
   const ds=document.getElementById('dockScope'); if(ds) ds.textContent=scope;
 }
 
-function buildResTabs(){
-  const c=document.getElementById('restabs'); if(!c) return;
-  c.innerHTML=Object.keys(RES).map(k=>`<button class="cb ${k===activeRes?'active':''}" data-res="${k}" aria-pressed="${k===activeRes}">${RES[k].label}</button>`).join('');
+// ── v2 SELECTORS — the popover contract (HU-CONTROL-ARCHITECTURE-V2) ─────
+// One popover open at a time; Esc closes and returns focus to the trigger;
+// outside click closes; arrows walk the options; the phone renders the
+// popover as a bottom sheet (CSS). The face always shows the current choice.
+let openPop=null;
+function closePop(refocus){
+  if(!openPop) return;
+  const p=openPop; openPop=null;
+  p.pop.hidden=true; p.btn.setAttribute('aria-expanded','false');
+  if(refocus) p.btn.focus();
 }
-function buildControls(){
-  const c=document.getElementById('controls');
-  const M=METRICS_OF();
-  c.innerHTML=M.map((m,i)=>`<button class="cb ${i===activeMetric?'active':''}" data-i="${i}" aria-pressed="${i===activeMetric}">${m.label}</button>`).join('');
+function openPopover(btn,pop,build){
+  if(openPop&&openPop.pop===pop){ closePop(true); return; }
+  closePop(false);
+  build();
+  pop.hidden=false; btn.setAttribute('aria-expanded','true');
+  pop.style.left=btn.offsetLeft+'px'; pop.style.top=(btn.offsetTop+btn.offsetHeight+6)+'px'; // desktop anchor; the phone sheet CSS overrides both
+  // right-edge clamp: a trigger flush right (the Views pin) must not overflow the deck
+  const deck=pop.offsetParent;
+  if(deck){ const max=deck.clientWidth-pop.offsetWidth-8; if(max>0&&btn.offsetLeft>max) pop.style.left=max+'px'; }
+  openPop={pop,btn};
+  const f=pop.querySelector('[aria-selected="true"]')||pop.querySelector('.pop-opt');
+  if(f) f.focus();
 }
+document.addEventListener('click',e=>{ if(openPop&&!e.target.closest('.selector-pop')&&!e.target.closest('[aria-haspopup]')) closePop(false); });   // [aria-haspopup] not .selector: the Views pin is an .icon-btn trigger
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&openPop) closePop(true); });
+document.querySelectorAll('.selector-pop').forEach(pop=>{
+  pop.addEventListener('keydown',e=>{
+    const opts=[...pop.querySelectorAll('.pop-opt')], i=opts.indexOf(document.activeElement);
+    if(!opts.length) return;
+    if(e.key==='ArrowDown'){e.preventDefault();(opts[i+1]||opts[0]).focus();}
+    else if(e.key==='ArrowUp'){e.preventDefault();(opts[i-1]||opts[opts.length-1]).focus();}
+    else if(e.key==='Home'){e.preventDefault();opts[0].focus();}
+    else if(e.key==='End'){e.preventDefault();opts[opts.length-1].focus();}
+  });
+  pop.querySelector('[data-close]').addEventListener('click',()=>closePop(true));
+});
+document.getElementById('selRes').addEventListener('click',()=>openPopover(document.getElementById('selRes'),document.getElementById('popRes'),buildResPop));
+document.getElementById('selMetric').addEventListener('click',()=>openPopover(document.getElementById('selMetric'),document.getElementById('popMetric'),buildMetricPop));
+function buildResPop(){
+  document.getElementById('popResList').innerHTML=Object.keys(RES).map(k=>
+    `<button class="pop-opt" role="option" aria-selected="${k===activeRes}" data-res="${k}">${RES[k].label}</button>`).join('');
+}
+function buildMetricPop(){
+  let html='<div class="pop-sec">State metric</div>'+METRICS_OF().map((m,i)=>
+    `<button class="pop-opt" role="option" aria-selected="${i===activeMetric}" data-i="${i}">${m.label}</button>`).join('');
+  // the county overlay lives in the metric popover in state view — one popover, both grains
+  if(view==='state'&&countyHealth&&chMetrics().length){
+    html+='<div class="pop-sec">County overlay</div>'+
+      `<button class="pop-opt" role="option" aria-selected="${countyMetric==null}" data-cm="off">Off</button>`+
+      chMetrics().map(m=>`<button class="pop-opt" role="option" aria-selected="${m.key===countyMetric}" data-cm="${m.key}">${chShort(m.name)}</button>`).join('');
+  }
+  document.getElementById('popMetricList').innerHTML=html;
+}
+function updateSelectorFaces(){
+  document.getElementById('selResVal').textContent=RES[activeRes].label;
+  document.getElementById('selMetricVal').textContent=metric().label;
+}
+// applied strip: non-default state that no selector face shows (the county overlay)
+function renderAppliedStrip(){
+  const s=document.getElementById('appliedStrip'); if(!s) return;
+  const chips=[];
+  const cm=chMeta(countyMetric);
+  if(cm&&view==='state') chips.push(`<span class="applied-chip">County overlay: <b>${chShort(cm.name)}</b><button class="ac-x" data-clear="county" aria-label="Turn off the county overlay">&#10005;</button></span>`);
+  s.innerHTML=chips.join('');
+  s.hidden=!chips.length;
+}
+
+// ── URL-ADDRESSABLE VIEWS (design crit #3) ────────────────────────────
+// Every configured view is a URL: ?res=dialysis&metric=star&state=TX
+// &org=…&county=patient:2&band=3&hide=psych,ltac&fac=450057
+// Defaults are omitted so the bare path stays the default view. Scope
+// changes (us↔state↔org) PUSH history; in-view tweaks REPLACE — back
+// walks views, not every metric flip. County SELECTION (the profile
+// panel) is not serialized; the overlay metric is.
+let applyingURL=false, lastURLScope='';
+function stateToParams(){
+  const p=new URLSearchParams();
+  if(activeRes!=='hospitals') p.set('res',activeRes);
+  if(metric().k!=='total') p.set('metric',metric().k);
+  if(view==='state'&&selState) p.set('state',selState);
+  if(view==='org'&&selOrg) p.set('org',selOrg);
+  if(countyMetric!=null) p.set('county',countyMetric);
+  if(legendIso!=null) p.set('band',String(legendIso));
+  if(typeFilter&&typeFilter.size) p.set('hide',[...typeFilter].join(','));
+  if(selHosp&&selHosp.id!=null) p.set('fac',String(selHosp.id));
+  return p;
+}
+function syncURL(){
+  if(applyingURL) return;
+  const q=stateToParams().toString();
+  const scope=view+':'+(selState||selOrg||'');
+  const method=(scope!==lastURLScope)?'pushState':'replaceState';
+  lastURLScope=scope;
+  try{ history[method](null,'',q?('?'+q):location.pathname); }catch(e){}
+}
+// Idempotent: resets nothing itself — callers zero the state first (popstate)
+// or start from the defaults (init), then this layers the URL on top.
+async function applyURLState(){
+  const p=new URLSearchParams(location.search);
+  const res=(p.get('res')&&RES[p.get('res')])?p.get('res'):'hospitals';
+  if(res!==activeRes){
+    const r=RES[res];
+    if(!r._data) r._data=await fetch(r.file).then(x=>x.json()).then(j=>j.facilities||j.hospitals);
+    activeRes=res;
+    HOSP=r._data; byState={}; HOSP.forEach(h=>{(byState[h.s]=byState[h.s]||[]).push(h);});
+    const sc={}; HOSP.forEach(h=>{if(h.sys)sc[h.sys]=(sc[h.sys]||0)+1;});
+    SYS_LIST=Object.entries(sc).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count);
+  }
+  const mk=p.get('metric');
+  if(mk){ const i=METRICS_OF().findIndex(m=>m.k===mk); if(i>=0) activeMetric=i; }
+  const st=(p.get('state')||'').toUpperCase(), org=p.get('org');
+  if(st&&STATE_NAMES[st]){ view='state'; selState=st; }
+  else if(org&&SYS_LIST.some(s=>s.name===org)){ view='org'; selOrg=org; }
+  const cm=p.get('county'); if(cm&&view==='state') countyMetric=cm;   // validated lazily once countyData arrives
+  const band=p.get('band'); if(band!=null&&/^[0-4]$/.test(band)) legendIso=+band;
+  const hide=p.get('hide'); if(hide){ const s=new Set(hide.split(',').filter(t=>TYPE_LABEL[t])); if(s.size) typeFilter=s; }
+  const fac=p.get('fac');
+  if(fac&&(view==='state'||view==='org')){
+    const pool=view==='org'?HOSP.filter(h=>h.sys===selOrg):(byState[selState]||[]);
+    const h=pool.find(x=>String(x.id)===fac);
+    if(h){ selHosp=h; if(view==='state') focusH=h; }   // state view also flies the camera to it
+  }
+  lastURLScope=view+':'+(selState||selOrg||'');
+}
+async function resetAndApplyURL(){
+  applyingURL=true;
+  try{
+    view='us'; selState=null; selOrg=null; selHosp=null; selCounty=null; focusH=null;
+    activeMetric=0; countyMetric=null; legendIso=null; typeFilter=null;
+    await applyURLState();
+  }catch(e){ console.warn('url state',e); }
+  applyingURL=false;
+}
+window.addEventListener('popstate',async()=>{
+  await resetAndApplyURL();
+  render(true);
+  announce(view==='state'?'Back to '+STATE_NAMES[selState]:view==='org'?'Back to '+orgName(selOrg):'Back to the United States view');
+});
+
+// ── PRESET VIEWS (crit #4): authored starting points, each just a URL ──
+const PRESETS=[
+  {name:'Where hospitals run for profit',q:'?metric=fp'},
+  {name:'Critical access country',q:'?metric=cah'},
+  {name:'For-profit dialysis nation',q:'?res=dialysis&metric=fp'},
+];
+function buildViewsPop(){
+  document.getElementById('popViewsList').innerHTML=PRESETS.map(p=>
+    `<button class="pop-opt" role="option" data-view-q="${p.q}">${p.name}</button>`).join('');
+}
+document.getElementById('selViews').addEventListener('click',()=>openPopover(document.getElementById('selViews'),document.getElementById('popViews'),buildViewsPop));
+document.getElementById('popViewsList').addEventListener('click',async e=>{
+  const t=e.target.closest('[data-view-q]'); if(!t) return;
+  closePop(true);
+  try{ history.pushState(null,'',t.dataset.viewQ); }catch(err){}
+  await resetAndApplyURL();
+  render(true);
+  announce('View: '+t.textContent);
+});
 function stateVal(ab){ return metric().f(byState[ab]||[]); }
 
 // ── County choropleth (countyData.json — any lens with county-grain data) ───
@@ -471,19 +619,7 @@ function countyChoro(){
   const range=d3.quantize(d3.interpolateRgb('#1d3350','#4ECDC4'),5);
   return {scale:d3.scaleQuantize().domain([mn,mx]).range(range),mn,mx,range,meta,vals};
 }
-function buildCountyControls(){
-  const c=document.getElementById('countyControls'); if(!c) return;
-  const mets=chMetrics(); if(!mets.length){ document.getElementById('countyRow').hidden=true; return; }
-  let html=`<button class="cb ${countyMetric==null?'active':''}" data-cm="off" aria-pressed="${countyMetric==null}">Off</button>`+
-    mets.map(m=>`<button class="cb ${m.key===countyMetric?'active':''}" data-cm="${m.key}" aria-pressed="${m.key===countyMetric}">${chShort(m.name)}</button>`).join('');
-  const ch=countyChoro();
-  if(ch){
-    const dir=ch.meta.dir===-1?'higher = worse':ch.meta.dir===1?'higher = better':'';
-    html+=`<span class="chl"><span>${chFmt(ch.mn,ch.meta)}</span><span class="chl-bar" style="background:linear-gradient(90deg,${ch.range.join(',')})"></span><span>${chFmt(ch.mx,ch.meta)}</span>${dir?`<span style="opacity:.65">· ${dir}</span>`:''}</span>`;
-  }
-  c.innerHTML=html;
-}
-function setCountyMetric(k){ countyMetric=(k==='off')?null:k; buildCountyControls(); paintCounties(); if(view==='state'&&selCounty) renderCounty(selCounty); const _m=chMeta(countyMetric); announce(_m?'County layer: '+chShort(_m.name):'County layer off'); }
+function setCountyMetric(k){ countyMetric=(k==='off')?null:k; renderAppliedStrip(); paintCounties(); if(view==='state'){ drawLegend(); if(selCounty) renderCounty(selCounty); } syncURL(); const _m=chMeta(countyMetric); announce(_m?'County overlay: '+chShort(_m.name):'County overlay off'); }
 function countyHealthRows(fips){
   const mets=chMetrics(); if(!mets.length) return '';
   const groups={}; mets.forEach(m=>{(groups[m.lens]=groups[m.lens]||[]).push(m);});
@@ -506,11 +642,12 @@ async function switchResource(key){
   // system-specific selections reset (org view falls back to its state, else US).
   if(view==='org') view = selState ? 'state' : 'us';
   selHosp=null; selOrg=null; focusH=null; curPts=null; spiderCluster=null;
+  legendIso=null; typeFilter=null;   // scale bands and type sets differ per dataset
   const r=RES[key];
-  if(!r._data){ try{ r._data=await fetch(r.file).then(x=>x.json()).then(j=>j.facilities||j.hospitals); }catch(e){ console.error('resource load',e); activeRes=prevRes; buildResTabs(); announce("Couldn't load "+r.label+" data. Check your connection and try again."); return; } }
+  if(!r._data){ try{ r._data=await fetch(r.file).then(x=>x.json()).then(j=>j.facilities||j.hospitals); }catch(e){ console.error('resource load',e); activeRes=prevRes; updateSelectorFaces(); announce("Couldn't load "+r.label+" data. Check your connection and try again."); return; } }
   HOSP=r._data; byState={}; HOSP.forEach(h=>{(byState[h.s]=byState[h.s]||[]).push(h);});
   const sc={}; HOSP.forEach(h=>{if(h.sys)sc[h.sys]=(sc[h.sys]||0)+1;}); SYS_LIST=Object.entries(sc).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count);
-  buildResTabs();
+  updateSelectorFaces();
   document.getElementById('searchInput').value=''; hideSearch();
   preserveCam=true;   // keep the exact camera; only the facility layer changes
   render();
@@ -521,12 +658,12 @@ async function switchResource(key){
 
 function render(animate){
   hideTapInfo();
-  buildControls();
+  updateSelectorFaces();
   drawMap(animate);
   document.getElementById('backBtn').hidden = (view==='us');
   document.getElementById('numToggle').hidden = (view!=='us');
   document.getElementById('ptleg').hidden = (view==='us');
-  const cc=document.getElementById('countyRow'); if(cc){ if(view==='state'&&countyHealth){ buildCountyControls(); cc.hidden=false; } else cc.hidden=true; }
+  renderAppliedStrip();
   if (selHosp && (view==='state'||view==='org')) renderFacility();
   else if (view==='state' && selCounty) renderCounty(selCounty);
   else if (view==='state') renderStateProfile(selState);
@@ -544,6 +681,7 @@ function render(animate){
   document.getElementById('srcNote').innerHTML=
     'Source: <a href="'+S[0]+'" target="_blank" rel="noopener">'+S[1]+' &#8599;</a>, current. '+(RES[activeRes].sup?'Coordinates from the source file.':'Geocoded via U.S. ZIP centroids.')+'<br><br>'+
     (activeRes==='hospitals'?'Beds &amp; trauma via HIFLD / CovidCareMap; system affiliation via AHRQ Compendium 2023.':activeRes==='dialysis'?'Chain operator, stations, modalities &amp; star rating from the CMS dialysis file.':RES[activeRes].sup?'Medicare-enrolled DMEPOS suppliers: durable medical equipment, prosthetics, orthotics, supplies.':'Medicare-certified ambulatory surgery centers (no inpatient beds).');
+  syncURL();
 }
 
 // one path for mouse AND keyboard state activation; keyboard users land on the
@@ -568,6 +706,9 @@ function drawMap(animate){
   const range=d3.quantize(d3.interpolateRgb('#1d3350','#4ECDC4'),5);
   const scale=d3.scaleQuantize().domain([mn,mx]).range(range);
   drawLegend(range,mn,mx);
+  // legend isolation (U.S. view): states outside the selected quintile dim
+  const isoOn=(view==='us'&&legendIso!=null);
+  const inIso=ab=>{const v=stateVal(ab);return v!=null&&scale(v)===range[legendIso];};
 
   const g=svg.append('g'); Gcur=g; curProj=proj;
   const statesG=g.append('g'), lakesG=g.append('g').attr('class','lakes'), countiesG=g.append('g').attr('class','counties'), pointsG=g.append('g').attr('class','points'), spiderG=g.append('g').attr('class','spider');
@@ -576,7 +717,7 @@ function drawMap(animate){
   // buttons (Tab order = FIPS = alphabetical), Enter/Space = the click handler.
   statesG.selectAll('path').data(usFeatures).join('path')
     .attr('d',path)
-    .attr('class',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];return 'state'+(!ab?' none':'')+(view==='state'&&ab===selState?' sel':'');})
+    .attr('class',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];return 'state'+(!ab?' none':'')+(view==='state'&&ab===selState?' sel':'')+(isoOn&&ab&&STATE_NAMES[ab]&&!inIso(ab)?' dim':'');})
     .attr('fill',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];if(!ab)return '#101a2b';if(view==='org')return '#16304a';const v=stateVal(ab);return v==null?'#101a2b':scale(v);})
     .attr('tabindex',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];return (view==='us'&&ab&&STATE_NAMES[ab])?0:null;})
     .attr('role',d=>{const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];return (view==='us'&&ab&&STATE_NAMES[ab])?'button':null;})
@@ -586,7 +727,7 @@ function drawMap(animate){
     .on('click',function(e,d){activateState(FIPS_TO_ABBR[String(d.id).padStart(2,'0')]);})
     .on('keydown',function(e,d){if(e.key==='Enter'||e.key===' '){e.preventDefault();activateState(FIPS_TO_ABBR[String(d.id).padStart(2,'0')],true);}});
 
-  if(view==='us' && showNums) drawStateNumbers(g, path);
+  if(view==='us' && showNums) drawStateNumbers(g, path, isoOn?inIso:null);
 
   if(view==='state' || view==='org'){
     let pts;
@@ -598,10 +739,13 @@ function drawMap(animate){
       curPts=pts; resolveOrgPlacement(pts);
     }
     const _sup=RES[activeRes].sup;
-    const _types=[...new Set(pts.map(h=>h.t))].map(t=>`<span>${legendSym(t)} ${TYPE_LABEL[t]||RES[activeRes].label}</span>`).join(' ');
+    // type legend entries are buttons: tap a type to hide/show it on the map
+    const _typesArr=[...new Set(pts.map(h=>h.t))];
+    const _types=_typesArr.map(t=>`<button data-t="${t}" aria-pressed="${!(typeFilter&&typeFilter.has(t))}" title="Show or hide ${TYPE_LABEL[t]||RES[activeRes].label} on the map">${legendSym(t)} ${TYPE_LABEL[t]||RES[activeRes].label}</button>`).join('');
+    const _filterHint=_typesArr.length>1?' tap a type to filter &middot;':'';
     // suppliers (DME / pharmacy / optical / orthotics) are one type at one size — only the hospital view has shape-by-type + size-by-beds
-    const _pre=_sup ? '<span style="opacity:.75">⬤ number = group (click to fan) &middot;</span> '
-                    : '<span style="opacity:.75">shape = type · size = beds · ⬤ number = group (click to fan) &middot;</span> ';
+    const _pre=_sup ? `<span style="opacity:.75">⬤ number = group (click to fan) &middot;${_filterHint}</span> `
+                    : `<span style="opacity:.75">shape = type · size = beds · ⬤ number = group (click to fan) &middot;${_filterHint}</span> `;
     document.getElementById('ptleg').innerHTML=_pre+_types;
   }
 
@@ -651,12 +795,13 @@ function drawMap(animate){
 // On narrow viewports (MQ_NARROW) there is no room for the callout column — skip
 // it entirely; the states stay tappable and the tap strip / inspector carry their numbers.
 const SMALL_STATES=new Set(['VT','NH','MA','RI','CT','NJ','DE','MD','DC']);
-function drawStateNumbers(g, path){
+function drawStateNumbers(g, path, keep){
   const lg=g.append('g').attr('class','statenums').style('pointer-events','none');
   const small=[];
   usFeatures.forEach(d=>{
     const ab=FIPS_TO_ABBR[String(d.id).padStart(2,'0')];
     if(!ab||!STATE_NAMES[ab]) return;
+    if(keep&&!keep(ab)) return;   // legend isolation: dimmed states drop their numbers too
     const v=stateVal(ab); if(v==null) return;
     const c=path.centroid(d); if(!c||isNaN(c[0])||isNaN(c[1])) return;
     if(SMALL_STATES.has(ab)){ if(!MQ_NARROW.matches) small.push({ab,v,c}); return; }
@@ -706,13 +851,14 @@ function resolveOrgPlacement(pts){
     else { h._plo=h.lo; h._pla=h.la; h._approx=false; }
   });
 }
-function openHosp(h){ selHosp=h; selCounty=null; renderFacility(); markPts(); if(Gcur) Gcur.selectAll('.c-line path').classed('sel',false); showTapInfo(hospTipHTML(h)); announce('Selected: '+titleCase(h.n)+', '+titleCase(h.c||'')+', '+h.s); }
+function openHosp(h){ selHosp=h; selCounty=null; renderFacility(); markPts(); if(Gcur) Gcur.selectAll('.c-line path').classed('sel',false); showTapInfo(hospTipHTML(h)); syncURL(); announce('Selected: '+titleCase(h.n)+', '+titleCase(h.c||'')+', '+h.s); }
 // ── CLUSTER BADGES + SPIDERFY ─────────────────────────────────────────
 // Crowded spots collapse into one count badge; click a badge to fan its hospitals out on cleanly-spaced rings (with
 // leader lines) so each is clickable. Lone hospitals show as their type shape. Zoom in → groups shrink → badges become shapes.
 const CLUSTER_R=22; // screen px: hospitals within this of a (bigger) neighbor join one badge
 function clusterAt(k){
-  const items=curPts.map(h=>{const p=curProj([placeLo(h),placeLa(h)]);return p?{h,x:p[0],y:p[1]}:null;}).filter(Boolean);
+  const vis=typeFilter?curPts.filter(h=>!typeFilter.has(h.t)):curPts;   // type-legend filter
+  const items=vis.map(h=>{const p=curProj([placeLo(h),placeLa(h)]);return p?{h,x:p[0],y:p[1]}:null;}).filter(Boolean);
   items.sort((a,b)=>(b.h.beds||0)-(a.h.beds||0));
   const t2=Math.pow(CLUSTER_R/k,2), cl=[];
   for(const it of items){let best=null,bd=t2;for(const c of cl){const dx=c.x-it.x,dy=c.y-it.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=c;}}if(best)best.members.push(it.h);else cl.push({x:it.x,y:it.y,lead:it.h,members:[it.h]});}
@@ -815,6 +961,7 @@ function hideSearch(){ const b=document.getElementById('searchResults'); if(b){b
 function gotoHospital(h){
   hideSearch();
   focusH=h; selHosp=h; selCounty=null;
+  typeFilter=null;   // never fly to a marker the type filter would hide
   if(view!=='state' || selState!==h.s){ selState=h.s; view='state'; }
   render(true);
 }
@@ -826,6 +973,7 @@ function revealFocus(){
   announce('Selected: '+titleCase(h.n)+', '+titleCase(h.c||'')+', '+h.s);
   if(curClusters){ const c=curClusters.find(c=>c.members.indexOf(h)>=0); if(c && c.members.length>1) spiderfy(c); }
   markPts();
+  syncURL();
 }
 // ── ORG (national health-system) VIEW ─────────────────────────────────
 function searchSystems(q){
@@ -926,12 +1074,25 @@ function renderCounty(feat){
 function drawLegend(range,mn,mx){
   const L=document.getElementById('legend');
   if(view==='state'||view==='org'){
-    L.innerHTML = RES[activeRes].sup ? `<span>${legendSym(activeRes)} ${RES[activeRes].label} — Medicare-enrolled suppliers</span>`
+    let html = RES[activeRes].sup ? `<span>${legendSym(activeRes)} ${RES[activeRes].label} — Medicare-enrolled suppliers</span>`
       : activeRes==='hospitals' ? '<span>Points colored by hospital type</span>'
       : `<span>${legendSym(activeRes)} ${RES[activeRes].label}</span>`;
+    // an active county overlay puts its scale on the chart, next to the type key
+    const ch=(view==='state')?countyChoro():null;
+    if(ch){
+      const dir=ch.meta.dir===-1?'higher = worse':ch.meta.dir===1?'higher = better':'';
+      html+=`<span class="chl"><span>${chFmt(ch.mn,ch.meta)}</span><span class="chl-bar" style="background:linear-gradient(90deg,${ch.range.join(',')})"></span><span>${chFmt(ch.mx,ch.meta)}</span><span style="opacity:.65">${chShort(ch.meta.name)}${dir?' · '+dir:''}</span></span>`;
+    }
+    L.innerHTML=html;
     return;
   }
-  L.innerHTML=`<span>${fmtM(mn)}</span><div class="legend-bar" style="background:linear-gradient(90deg,${range.join(',')})"></div><span>${fmtM(mx)}</span><span style="margin-left:auto">${metric().label}</span>`;
+  // U.S. view: the scale is a control — tap a quintile band to isolate its states
+  const scale=d3.scaleQuantize().domain([mn,mx]).range(range);
+  const fmtB=v=>metric().u==='★'?(+v.toFixed(2))+'★':fmtM(Math.round(v));
+  L.innerHTML=`<span>${fmtM(mn)}</span>`+
+    `<div class="legend-bar legend-buckets" role="group" aria-label="Color scale. Select a band to isolate its states.">`+
+    range.map((c,i)=>{const e=scale.invertExtent(c);return `<button class="lb" style="background:${c}" data-b="${i}" data-range="${fmtB(e[0])} to ${fmtB(e[1])}" aria-pressed="${legendIso===i}" aria-label="Isolate states at ${fmtB(e[0])} to ${fmtB(e[1])}"></button>`;}).join('')+
+    `</div><span>${fmtM(mx)}</span><span style="margin-left:auto">${metric().label}${legendIso!=null?' · isolated':''}</span>`;
 }
 
 // ── SIDE PANELS ───────────────────────────────────────────────────────
@@ -993,7 +1154,7 @@ function renderStateProfile(ab){
 }
 const _pfhead=label=>`<div class="pf-head"><h2 style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)">${label}</h2><button class="pf-clear" id="hClose">back &#10005;</button></div>`;
 const _gmaps=h=>`<a class="pf-clear" style="display:inline-block;margin-top:10px" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.n+' '+h.c+' '+h.s)}" target="_blank" rel="noopener">View on Google Maps &#8599;</a>`;
-function closeFacility(){ selHosp=null; hideTapInfo(); if(view==='org') renderOrgProfile(selOrg); else renderStateProfile(selState); markPts(); }
+function closeFacility(){ selHosp=null; hideTapInfo(); if(view==='org') renderOrgProfile(selOrg); else renderStateProfile(selState); markPts(); syncURL(); }
 function chainBars(hs){
   const c={}; hs.forEach(h=>{const k=h.sys||'Independent';c[k]=(c[k]||0)+1;});
   const rows=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,6), max=rows.length?rows[0][1]:1;
@@ -1096,9 +1257,34 @@ function showTapInfo(html){ if(!COARSE) return; document.getElementById('tapInfo
 function hideTapInfo(){ document.getElementById('tapInfo').hidden=true; }
 document.getElementById('tapInfoX').addEventListener('click',hideTapInfo);
 
-document.getElementById('controls').addEventListener('click',e=>{const t=e.target.closest('[data-i]');if(!t)return;activeMetric=+t.dataset.i;preserveCam=true;render();announce('Coloring by '+metric().label);});
-document.getElementById('countyControls').addEventListener('click',e=>{const t=e.target.closest('[data-cm]');if(!t)return;setCountyMetric(t.dataset.cm);});
-document.getElementById('restabs').addEventListener('click',e=>{const t=e.target.closest('[data-res]');if(!t)return;switchResource(t.dataset.res);});
+document.getElementById('popResList').addEventListener('click',e=>{const t=e.target.closest('[data-res]');if(!t)return;closePop(true);switchResource(t.dataset.res);});
+document.getElementById('popMetricList').addEventListener('click',e=>{
+  const m=e.target.closest('[data-i]');
+  if(m){ closePop(true); legendIso=null; activeMetric=+m.dataset.i; preserveCam=true; render(); announce('Metric: '+metric().label); return; }
+  const c=e.target.closest('[data-cm]');
+  if(c){ closePop(true); setCountyMetric(c.dataset.cm); }
+});
+document.getElementById('appliedStrip').addEventListener('click',e=>{const t=e.target.closest('[data-clear]');if(!t)return;if(t.dataset.clear==='county')setCountyMetric('off');});
+// direct manipulation: the U.S. color scale isolates; the type legend filters
+document.getElementById('legend').addEventListener('click',e=>{
+  const b=e.target.closest('.lb'); if(!b||view!=='us') return;
+  const i=+b.dataset.b;
+  legendIso=(legendIso===i)?null:i;
+  drawMap(false);
+  syncURL();
+  announce(legendIso!=null?'Isolating states at '+b.dataset.range:'Showing all states');
+});
+document.getElementById('ptleg').addEventListener('click',e=>{
+  const b=e.target.closest('[data-t]'); if(!b) return;
+  const t=b.dataset.t;
+  typeFilter=typeFilter||new Set();
+  typeFilter.has(t)?typeFilter.delete(t):typeFilter.add(t);
+  if(!typeFilter.size) typeFilter=null;
+  b.setAttribute('aria-pressed',String(!(typeFilter&&typeFilter.has(t))));
+  collapseSpider(); renderClusters(curK,true);
+  syncURL();
+  announce((TYPE_LABEL[t]||t)+((typeFilter&&typeFilter.has(t))?' hidden':' shown'));
+});
 document.getElementById('backBtn').onclick=backToUS;
 document.getElementById('numToggle').addEventListener('click',function(){numsTouched=true;showNums=!showNums;this.classList.toggle('off',!showNums);this.setAttribute('aria-pressed',String(showNums));if(view==='us')drawMap(false);});
 // Narrow-threshold crossing: one cheap re-render so the NE callout column appears/
@@ -1142,7 +1328,11 @@ async function init(){
     HOSP.forEach(h=>{(byState[h.s]=byState[h.s]||[]).push(h);});
     const sc={}; HOSP.forEach(h=>{if(h.sys)sc[h.sys]=(sc[h.sys]||0)+1;});
     SYS_LIST=Object.entries(sc).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count);
-    buildResTabs();
+    // URL-addressable views: restore a shared/bookmarked view before first paint
+    applyingURL=true;
+    try{ await applyURLState(); }catch(e){ console.warn('url state',e); }
+    applyingURL=false;
+    updateSelectorFaces();
     document.getElementById('mapLoading').style.display='none';
     if(MQ_NARROW.matches){
       // phone: state numbers collide at this scale — default them off. The 123

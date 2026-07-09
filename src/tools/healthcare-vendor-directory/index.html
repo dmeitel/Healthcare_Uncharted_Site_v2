@@ -82,16 +82,23 @@ no_footer: true
 .vd-cat.active .ct { color:var(--teal); }
 .vd-all { font-weight:600; color:var(--t1); border-bottom:1px solid var(--border); border-radius:0; padding-bottom:9px; margin-bottom:2px; }
 .vd-main { min-width:0; }
-.vd-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
-.vd-tools { display:flex; gap:8px; align-items:center; }
+.vd-toolbar { position:relative; display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.vd-tools { display:flex; gap:8px; align-items:center; margin-left:auto; }
 .vd-select { background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--t2); font-size:12px; font-family:var(--font); padding:6px 10px; cursor:pointer; }
 .vd-select:focus { outline:none; border-color:var(--teal); }
-.vd-cat-mobile { display:none; }
-@media(max-width:860px){
+/* Sector selector + applied strip (Control Architecture v2) — the sidebar's
+   narrow-width twin. Wide desktop keeps the sidebar (it's a browsing surface);
+   below 1100px the selector face + applied chip carry sector state instead. */
+#selSector { max-width:min(320px,58vw); }
+#vdApplied { border:1px solid var(--border); border-radius:10px; margin-bottom:12px; }
+@media(min-width:1100px){
+  #selSector, #popSector, #vdApplied { display:none; }
+}
+@media(max-width:1099px){
   .vd-board { grid-template-columns:1fr; gap:14px; }
   .vd-sidebar { display:none; }
-  .vd-cat-mobile { display:inline-block; max-width:48vw; }
 }
+.vh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .vendor-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; cursor:pointer; transition:all .2s; }
 .vendor-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.3); }
 .vendor-card.hidden { display:none; }
@@ -238,6 +245,8 @@ no_footer: true
   </div>
 </div>
 
+<div class="vh" id="a11yLive" aria-live="polite" aria-atomic="true"></div>
+
 <div class="vd-searchbar">
   <div class="vd-search">
     <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
@@ -251,15 +260,22 @@ no_footer: true
     <div class="vd-nav" id="vdNav"></div>
   </aside>
   <div class="vd-main">
+    <div class="applied-strip" id="vdApplied" hidden></div>
     <div class="vd-toolbar">
+      <button class="selector" id="selSector" aria-haspopup="listbox" aria-expanded="false" aria-controls="popSector" aria-label="Sector">
+        <i data-lucide="layers" aria-hidden="true"></i><span class="sel-val" id="selSectorVal">All sectors</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
+      </button>
       <span class="result-count" id="resultCount">116 vendors</span>
       <div class="vd-tools">
-        <select class="vd-select vd-cat-mobile" id="catMobile" onchange="setSector(this.value)" aria-label="Filter by category"></select>
         <select class="vd-select" id="sortSel" onchange="setSort(this.value)" aria-label="Sort vendors">
           <option value="az">Sort: A-Z</option>
           <option value="sector">Sort: Category</option>
           <option value="status">Sort: Status</option>
         </select>
+      </div>
+      <div class="selector-pop" id="popSector" hidden>
+        <div class="pop-head"><span class="pop-head-title"><i data-lucide="layers" aria-hidden="true"></i>Sector</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+        <div class="pop-body" id="popSectorList" role="listbox" aria-label="Sector"></div>
       </div>
     </div>
     <div class="vendor-grid" id="vendorGrid"></div>
@@ -323,27 +339,31 @@ function sectorCounts() { const c = {}; vendors.forEach(v => c[v.sector] = (c[v.
 
 function buildSidebar() {
   const counts = sectorCounts();
-  let h = `<button class="vd-cat vd-all" data-sector="all"><span>All sectors</span><span class="ct">${vendors.length}</span></button>`;
+  let h = `<button class="vd-cat vd-all" data-sector="all" aria-pressed="false"><span>All sectors</span><span class="ct">${vendors.length}</span></button>`;
   for (const g of SECTOR_GROUPS) {
     h += `<div class="vd-group-label">${g.label}</div>`;
     for (const s of g.sectors) {
-      h += `<button class="vd-cat" data-sector="${s}"><span class="vd-catname"><span class="vd-dot" style="background:${SECTOR_COLOR[s]}"></span>${SECTOR_LABEL[s]}</span><span class="ct">${counts[s] || 0}</span></button>`;
+      h += `<button class="vd-cat" data-sector="${s}" aria-pressed="false"><span class="vd-catname"><span class="vd-dot" style="background:${SECTOR_COLOR[s]}"></span>${SECTOR_LABEL[s]}</span><span class="ct">${counts[s] || 0}</span></button>`;
     }
   }
   const nav = document.getElementById('vdNav');
   nav.innerHTML = h;
   nav.querySelectorAll('.vd-cat').forEach(b => b.onclick = () => setSector(b.dataset.sector));
-  let o = `<option value="all">All sectors (${vendors.length})</option>`;
-  for (const g of SECTOR_GROUPS) {
-    o += `<optgroup label="${g.label}">`;
-    for (const s of g.sectors) o += `<option value="${s}">${SECTOR_LABEL[s]} (${counts[s] || 0})</option>`;
-    o += `</optgroup>`;
-  }
-  document.getElementById('catMobile').innerHTML = o;
 }
 
-function setSector(s) { activeSector = s; render(); }
+const sectorName = s => s === 'all' ? 'All sectors' : (SECTOR_LABEL[s] || s);
+
+// One commit path for BOTH sector surfaces (sidebar and selector): render()
+// repaints the sidebar active state, the selector face, and the applied strip.
+function setSector(s) { activeSector = s; render(); syncURL(); announce('Sector: ' + sectorName(s)); }
 function setSort(s) { activeSort = s; render(); }
+
+// one polite live region — announce COMMITTED changes only, never keystrokes
+function announce(msg) {
+  const el = document.getElementById('a11yLive'); if (!el) return;
+  el.textContent = '';                                // clear first so repeats re-announce
+  requestAnimationFrame(() => { el.textContent = msg; });
+}
 
 function sortList(list) {
   return list.slice().sort((a, b) => {
@@ -377,9 +397,89 @@ function render() {
   const grid = document.getElementById('vendorGrid');
   grid.innerHTML = list.length ? list.map(({ v, i }) => cardHTML(v, i)).join('') : '<div class="empty-state"><strong>No vendors found</strong>Try a different search or filter</div>';
   document.getElementById('resultCount').textContent = list.length + (list.length === 1 ? ' vendor' : ' vendors');
-  document.querySelectorAll('#vdNav .vd-cat').forEach(b => b.classList.toggle('active', b.dataset.sector === activeSector));
-  const sel = document.getElementById('catMobile'); if (sel) sel.value = activeSector;
+  document.querySelectorAll('#vdNav .vd-cat').forEach(b => { const on = b.dataset.sector === activeSector; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
+  document.getElementById('selSectorVal').textContent = sectorName(activeSector);
+  renderAppliedStrip();
 }
+
+// ── v2 selector — the popover contract (HU-CONTROL-ARCHITECTURE-V2) ──────
+// One popover open at a time; Esc closes and returns focus to the trigger;
+// outside click closes; arrows walk the options; under 700px the popover
+// renders as a bottom sheet (CSS). The face always shows the current sector.
+let openPop = null;
+function closePop(refocus) {
+  if (!openPop) return;
+  const p = openPop; openPop = null;
+  p.pop.hidden = true; p.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) p.btn.focus();
+}
+function openPopover(btn, pop, build) {
+  if (openPop && openPop.pop === pop) { closePop(true); return; }
+  closePop(false);
+  build();
+  pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
+  pop.style.left = btn.offsetLeft + 'px'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 6) + 'px'; // desktop anchor; the phone sheet CSS overrides both
+  // right-edge clamp: never overflow the toolbar the popover is anchored in
+  const bar = pop.offsetParent;
+  if (bar) { const max = bar.clientWidth - pop.offsetWidth - 8; if (max > 0 && btn.offsetLeft > max) pop.style.left = max + 'px'; }
+  openPop = { pop, btn };
+  const f = pop.querySelector('[aria-selected="true"]') || pop.querySelector('.pop-opt');
+  if (f) f.focus();
+}
+document.addEventListener('click', e => { if (openPop && !e.target.closest('.selector-pop') && !e.target.closest('.selector')) closePop(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && openPop) closePop(true); });
+document.querySelectorAll('.selector-pop').forEach(pop => {
+  pop.addEventListener('keydown', e => {
+    const opts = [...pop.querySelectorAll('.pop-opt')], i = opts.indexOf(document.activeElement);
+    if (!opts.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); (opts[i + 1] || opts[0]).focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); (opts[i - 1] || opts[opts.length - 1]).focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); opts[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); opts[opts.length - 1].focus(); }
+  });
+  pop.querySelector('[data-close]').addEventListener('click', () => closePop(true));
+});
+function buildSectorPop() {
+  const counts = sectorCounts();
+  let h = `<button class="pop-opt" role="option" aria-selected="${activeSector === 'all'}" data-sector="all">All sectors (${vendors.length})</button>`;
+  for (const g of SECTOR_GROUPS) {
+    h += `<div class="pop-sec">${g.label}</div>`;
+    for (const s of g.sectors) h += `<button class="pop-opt" role="option" aria-selected="${s === activeSector}" data-sector="${s}">${SECTOR_LABEL[s]} (${counts[s] || 0})</button>`;
+  }
+  document.getElementById('popSectorList').innerHTML = h;
+}
+document.getElementById('selSector').addEventListener('click', () => openPopover(document.getElementById('selSector'), document.getElementById('popSector'), buildSectorPop));
+document.getElementById('popSectorList').addEventListener('click', e => { const t = e.target.closest('[data-sector]'); if (!t) return; closePop(true); setSector(t.dataset.sector); });
+
+// applied strip: the active sector when the sidebar isn't there to show it.
+// CSS hides the strip at >=1100px, where the sidebar already IS the state.
+function renderAppliedStrip() {
+  const strip = document.getElementById('vdApplied'); if (!strip) return;
+  strip.innerHTML = activeSector === 'all' ? '' :
+    `<span class="applied-chip">Sector: <b>${SECTOR_LABEL[activeSector]}</b><button class="ac-x" data-clear="sector" aria-label="Clear the sector filter">&#10005;</button></span>`;
+  strip.hidden = activeSector === 'all';
+}
+document.getElementById('vdApplied').addEventListener('click', e => { if (e.target.closest('[data-clear]')) setSector('all'); });
+
+// ── URL-addressable views: ?sector=<key>, default (all) omitted ──────────
+// Sector keys are stable slugs (scribing, ehr, rcm...), so shared links
+// survive reordering. A sector flip is an in-view tweak — replaceState
+// only; back walks pages, not filter changes.
+function stateToParams() {
+  const p = new URLSearchParams();
+  if (activeSector !== 'all') p.set('sector', activeSector);
+  return p;
+}
+function syncURL() {
+  const q = stateToParams().toString();
+  try { history.replaceState(null, '', q ? ('?' + q) : location.pathname); } catch (e) {}
+}
+function applyURLState() {
+  const s = new URLSearchParams(location.search).get('sector');
+  activeSector = (s && SECTOR_LABEL[s]) ? s : 'all';  // invalid params degrade silently to the default
+}
+// popstate = reset to defaults, re-apply from the URL, render — one path
+window.addEventListener('popstate', () => { activeSector = 'all'; applyURLState(); render(); });
 
 function openDetail(idx) {
   const v = vendors[idx];
@@ -398,7 +498,13 @@ function openDetail(idx) {
 
 function closeDetail() { document.getElementById('detailPanel').classList.remove('open'); }
 
-fetch('/assets/data/vendors.json').then(function(r){return r.json();}).then(function(d){ vendors = d.vendors || d; buildSidebar(); render(); }).catch(function(e){ console.error('vendor data load failed', e); });
+// restore the URL view before the first paint — a shared ?sector link lands
+// filtered; the re-serialize after render self-normalizes a mangled param
+fetch('/assets/data/vendors.json').then(function(r){return r.json();}).then(function(d){ vendors = d.vendors || d; buildSidebar(); applyURLState(); render(); syncURL(); }).catch(function(e){
+  console.error('vendor data load failed', e);
+  document.getElementById('vendorGrid').innerHTML = '<div class="empty-state"><strong>Couldn&#39;t load the vendor directory</strong>Check your connection and refresh.</div>';
+  announce('Couldn\'t load the vendor directory. Check your connection and refresh.');
+});
 
 // ── Market-share carousel ────────────────────────────────────────────────
 // One slide per sector that has credible, sourced single-vendor market share.

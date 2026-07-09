@@ -56,6 +56,9 @@ has_interactive: true
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
+/* the search-filtered popover options rely on [hidden] beating class display values */
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 body {
   font-family: var(--font);
   background: var(--hu-dark);
@@ -170,8 +173,29 @@ body[data-colorblind="true"] {
 .usa-map-btn.active { border-color: var(--hu-teal); color: var(--hu-teal); }
 
 /* .shell-main provides flex:1/min-height:0; re-stated here since this
-   rule overrides its display:flex with the bespoke 3-column grid. */
-.main { display: grid; grid-template-columns: 340px 1fr 340px; overflow: hidden; flex: 1; min-height: 0; }
+   rule overrides its display:flex with the bespoke 2-column grid.
+   (v2: the 340px left metric panel became the Metric selector in the
+   control deck — the canvas takes the reclaimed column.) */
+.main { display: grid; grid-template-columns: 1fr 340px; overflow: hidden; flex: 1; min-height: 0; }
+
+/* ── v2 control deck: Metric selector + Views pin on one slim row ──
+   Popover anchors under its trigger (JS sets left/top; the phone CSS in
+   hu-global.css re-renders it as a bottom sheet). */
+.ctrl-deck { position: relative; display: flex; flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; }
+.ctrl-deck .selector { max-width: min(420px, 60%); }
+.ctrl-deck .selector-pop { min-width: 280px; }
+/* search-within: the metric popover carries ~48 options (>12 threshold) */
+.pop-search {
+  flex: none; margin: 8px 8px 2px; padding: 7px 10px;
+  border: 1px solid var(--hu-border); border-radius: 7px;
+  background: var(--hu-raised); color: var(--hu-text-1);
+  font-family: var(--font); font-size: 12.5px; outline: none;
+}
+.pop-search::placeholder { color: var(--hu-text-3); }
+.pop-search:focus { border-color: var(--hu-teal); }
+.pop-opt .opt-name { flex: 1; min-width: 0; }
+.pop-opt .opt-dir { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); white-space: nowrap; flex-shrink: 0; }
+.pop-empty { padding: 10px; font-size: 12px; color: var(--hu-text-3); }
 
 /* ── Data cards ──────────────────────────────────────────────────── */
 .data-card {
@@ -270,27 +294,14 @@ body[data-colorblind="true"] {
 .sfc-lens-bar-fill  { height: 100%; border-radius: 2px; }
 .sfc-lens-abbr { font-family: var(--mono); font-size: 8px; color: var(--hu-text-3); letter-spacing: 0.04em; }
 
-.left-panel {
-  background: var(--hu-surface);
-  border-right: 1px solid var(--hu-border);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.left-panel .metrics-section {
-  flex: 1 1 0; min-height: 0;
-  max-height: none; border-top: 1px solid var(--hu-border-2);
-}
-.left-stat-block {
-  flex-shrink: 0;
-  overflow-y: auto;
-}
-.left-stat-block .data-card-body { padding: 10px 14px 6px; }
-.left-stat-block .detail-state { font-size: 20px; }
-.left-stat-block .detail-stats { padding: 0; border-bottom: none; }
-.left-stat-block .stat-row { padding: 8px 14px; }
-.left-stat-block .source-cite { padding: 0; border-bottom: none; }
-.left-stat-block .compare-hint { padding: 8px 14px; font-size: 11px; color: var(--hu-text-3); font-family: var(--mono); border-top: 1px solid var(--hu-border); }
-.left-stat-block .compare-panel { padding: 10px 14px 12px; border-top: 1px solid var(--hu-border); }
+/* detail card (relocated from the old left panel into the inspector dock) */
+.detail-card .data-card-body { padding: 10px 14px 6px; }
+.detail-card .detail-state { font-size: 20px; }
+.detail-card .detail-stats { padding: 0; border-bottom: none; }
+.detail-card .stat-row { padding: 8px 14px; }
+.detail-card .source-cite { padding: 0; border-bottom: none; }
+.detail-card .compare-hint { padding: 8px 14px; font-size: 11px; color: var(--hu-text-3); font-family: var(--mono); border-top: 1px solid var(--hu-border); }
+.detail-card .compare-panel { padding: 10px 14px 12px; border-top: 1px solid var(--hu-border); }
 
 /* ── Lens strip (doubles as the shell .tool-bar) ────────────────── */
 .lens-strip {
@@ -412,58 +423,6 @@ body[data-colorblind="true"] {
 .lens-bar-wrap { width: 44px; height: 3px; background: var(--hu-border); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
 .lens-bar-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 0.35s ease, background 0.35s ease; }
 
-.metric-list { display: flex; flex-direction: column; gap: 3px; }
-.metric-item {
-  padding: 7px 10px 7px 9px; border-radius: 8px; cursor: pointer;
-  font-size: 13px; color: var(--hu-text-2);
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 6px;
-  border: 1px solid transparent;
-  border-left: 3px solid transparent;
-  transition: all 0.12s;
-}
-.metric-item:hover { background: var(--hu-raised); color: var(--hu-text-1); }
-.metric-item.active {
-  background: var(--hu-raised);
-  border-color: var(--hu-border-2);
-  border-left-color: var(--accent-color, var(--hu-teal));
-  color: var(--hu-text-1);
-}
-.metric-unit { font-family: var(--mono); font-size: 11px; color: var(--hu-text-3); }
-.metric-dir-label { font-family: var(--mono); font-size: 10px; color: var(--hu-text-3); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
-
-.metric-group-header {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 10px 5px; cursor: pointer; user-select: none;
-  border-radius: 5px; transition: background 0.12s; margin-top: 2px;
-}
-.metric-group-header:first-child { margin-top: 0; }
-.metric-group-header:hover { background: var(--hu-raised); }
-.metric-group-label {
-  font-family: var(--mono); font-size: 9px; font-weight: 700;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--hu-text-3); flex: 1;
-}
-.metric-group-count {
-  font-family: var(--mono); font-size: 9px; color: var(--hu-text-3);
-  background: var(--hu-raised); border: 1px solid var(--hu-border);
-  border-radius: 3px; padding: 1px 5px; line-height: 1.5;
-}
-.metric-group-arrow {
-  font-size: 10px; color: var(--hu-text-3);
-  transition: transform 0.15s; line-height: 1; flex-shrink: 0;
-  transform: rotate(90deg); /* default: expanded = arrow points down */
-}
-.metric-group-header.collapsed .metric-group-arrow { transform: rotate(0deg); } /* collapsed = arrow points right */
-.metric-show-more {
-  width: 100%; text-align: left;
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
-  color: var(--hu-text-3); background: none; border: none;
-  padding: 4px 10px 6px 38px; cursor: pointer; border-radius: 4px;
-  transition: color 0.12s, background 0.12s;
-}
-.metric-show-more:hover { color: var(--hu-text-2); background: var(--hu-raised); }
-
 .source-note { font-size: 12px; color: var(--hu-text-3); line-height: 1.5; font-family: var(--mono); }
 .source-note strong { color: var(--hu-text-2); font-weight: 500; }
 
@@ -576,20 +535,10 @@ body[data-colorblind="true"] {
 
 .map-stage {
   flex: 1; position: relative;
-  /* instrument chart: faint 48px graticule under the radial wash */
   background:
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--hu-text-3) 7%, transparent) 0 1px, transparent 1px 48px),
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--hu-text-3) 7%, transparent) 0 1px, transparent 1px 48px),
     radial-gradient(ellipse at center, rgba(27, 95, 168, 0.06) 0%, transparent 70%),
     var(--hu-dark);
   overflow: hidden;
-}
-[data-theme="light"] .map-stage {
-  background:
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--hu-text-3) 13%, transparent) 0 1px, transparent 1px 48px),
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--hu-text-3) 13%, transparent) 0 1px, transparent 1px 48px),
-    radial-gradient(ellipse at center, rgba(27, 95, 168, 0.06) 0%, transparent 70%),
-    var(--hu-dark);
 }
 /* fixed logical canvas: viewBox is the constant 0 0 975 610 (markup); the browser scales the vector */
 #mapSvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -711,26 +660,7 @@ body[data-colorblind="true"] {
   display: flex; flex-direction: column;
 }
 .sheet-handle { display: none; }
-.metrics-sheet-handle { display: none; }
-.metrics-mob-section { display: none; }
 .mob-legend { display: none; }
-.metrics-section {
-  flex: 0 0 auto; max-height: 44%;
-  overflow-y: auto; border-bottom: 2px solid var(--hu-border);
-  display: flex; flex-direction: column;
-}
-.metrics-section-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px 6px;
-  position: sticky; top: 0; background: var(--hu-surface); z-index: 2;
-  border-bottom: 1px solid var(--hu-border);
-}
-.metrics-section-label {
-  font-family: var(--mono); font-size: 9px; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--hu-text-3);
-}
-.metrics-section .metric-list { padding: 6px 10px 8px; }
-.metrics-section .outlook-card { margin: 6px 10px 0; }
 .data-section { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; padding-bottom: 8px; }
 .detail-header { padding: 20px; border-bottom: 1px solid var(--hu-border); }
 .detail-eyebrow {
@@ -867,8 +797,7 @@ body[data-colorblind="true"] {
 .sources-popover-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--hu-text-3); margin-bottom: 5px; }
 .sources-popover-body { color: var(--hu-text-1); }
 
-/* Metric info tooltip */
-.metric-item { position: relative; }
+/* Metric info tooltip (the map-header ⓘ button reuses this) */
 .metric-info-icon {
   display: inline-flex;
   align-items: center;
@@ -884,11 +813,6 @@ body[data-colorblind="true"] {
   flex-shrink: 0;
   transition: all 0.12s;
 }
-.metric-item:hover .metric-info-icon { background: var(--accent-color, var(--hu-teal)); color: var(--hu-dark); }
-.metric-item-label { display: flex; align-items: flex-start; flex: 1; min-width: 0; gap: 6px; }
-.metric-item-text { white-space: normal; overflow: visible; line-height: 1.35; }
-.metric-info-icon { margin-top: 1px; }
-
 .metric-explainer {
   position: fixed;
   background: var(--hu-raised);
@@ -1269,9 +1193,9 @@ body[data-colorblind="true"] {
 [data-theme="light"] .rank-band-label,
 [data-theme="light"] .compare-col-band { filter: brightness(.72) saturate(1.3); }
 
-.left-panel::-webkit-scrollbar, .right-panel::-webkit-scrollbar { width: 8px; }
-.left-panel::-webkit-scrollbar-track, .right-panel::-webkit-scrollbar-track { background: var(--hu-surface); }
-.left-panel::-webkit-scrollbar-thumb, .right-panel::-webkit-scrollbar-thumb { background: var(--hu-border-2); border-radius: 4px; }
+.right-panel::-webkit-scrollbar { width: 8px; }
+.right-panel::-webkit-scrollbar-track { background: var(--hu-surface); }
+.right-panel::-webkit-scrollbar-thumb { background: var(--hu-border-2); border-radius: 4px; }
 
 /* ================================================================
    EXPEDITION INSTRUMENT — field-cartography chrome (HU tool standard)
@@ -1295,26 +1219,17 @@ body[data-colorblind="true"] {
   pointer-events: none;
 }
 
-/* the chart: corner brackets + stamp + compass rose (graticule lives on .map-stage) */
+/* the chart: corner brackets only — no ornament competing with the data */
 .chart-corners { position: absolute; inset: 8px; z-index: 1; pointer-events: none; }
 .chart-corners i { position: absolute; width: 14px; height: 14px; border: 0 solid var(--hu-border-2); }
 .chart-corners i:nth-child(1) { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; border-color: var(--hu-teal); }
 .chart-corners i:nth-child(2) { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
 .chart-corners i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
 .chart-corners i:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
-.chart-stamp {
-  position: absolute; left: 16px; bottom: 12px; z-index: 1;
-  pointer-events: none; user-select: none;
-  font-family: var(--mono); font-size: 9px; letter-spacing: .1em; line-height: 1.8;
-  color: var(--hu-text-3); opacity: .55;
-}
-.chart-rose { position: absolute; right: 18px; bottom: 12px; z-index: 1; pointer-events: none; color: var(--hu-text-2); opacity: .07; }
 [data-theme="light"] .chart-corners i:nth-child(1) { border-color: var(--hu-teal-dark); }
-[data-theme="light"] .chart-stamp { opacity: .6; }
-[data-theme="light"] .chart-rose { color: var(--hu-text-3); opacity: .14; }
 
-/* the inspector panels: mono header strip, indexed headings, tabular numbers, hairlines */
-.left-panel, .right-panel { font-variant-numeric: tabular-nums; }
+/* the inspector panel: mono header strip, indexed headings, tabular numbers, hairlines */
+.right-panel { font-variant-numeric: tabular-nums; }
 .dock-head {
   display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
   padding: 9px 14px 8px; border-bottom: 1px solid var(--hu-border);
@@ -1343,7 +1258,6 @@ body[data-colorblind="true"] {
   font-family: var(--mono); font-size: 9px; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase; color: var(--hu-text-3); white-space: nowrap;
 }
-.metric-group-header { border: 1px solid var(--hu-border); border-radius: 6px; background: color-mix(in srgb, var(--hu-surface) 55%, var(--hu-dark)); margin: 8px 2px 2px; }
 .ctl-group { display: flex; align-items: center; gap: 7px; }
 .ctl-label {
   display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
@@ -1352,13 +1266,13 @@ body[data-colorblind="true"] {
 }
 
 /* exploration-semantics icons: 11px, teal ink, always beside the text label */
-.metrics-section-label, .sheet-handle-label, .data-card-title { display: inline-flex; align-items: center; gap: 5px; }
+.sheet-handle-label, .data-card-title { display: inline-flex; align-items: center; gap: 5px; }
 .sources-btn { display: inline-flex; align-items: center; gap: 4px; }
-.metrics-section-label svg, .sheet-handle-label svg, .ctl-bank-label svg, .ctl-label svg,
+.sheet-handle-label svg, .ctl-bank-label svg, .ctl-label svg,
 .dock-head svg, .data-card-title svg, .sources-btn svg, .tutorial-btn svg {
   width: 11px; height: 11px; stroke-width: 2; color: var(--hu-teal); flex: none;
 }
-[data-theme="light"] .metrics-section-label svg, [data-theme="light"] .sheet-handle-label svg,
+[data-theme="light"] .sheet-handle-label svg,
 [data-theme="light"] .ctl-bank-label svg, [data-theme="light"] .ctl-label svg,
 [data-theme="light"] .dock-head svg, [data-theme="light"] .data-card-title svg,
 [data-theme="light"] .sources-btn svg, [data-theme="light"] .tutorial-btn svg {
@@ -1386,27 +1300,25 @@ body[data-colorblind="true"] {
 
   .overview-bar { display: none; }
 
-  /* tablet: stack left panel + map side by side, right panel below */
+  /* tablet: map full width, inspector stacks below (the metric panel is
+     gone — the Metric selector in the control deck carries picking) */
   .main {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    grid-template-rows: 1fr auto;
+    display: flex; flex-direction: column;
     overflow: visible;
     flex: 1;
   }
 
-  .left-panel { grid-column: 1; grid-row: 1 / 3; border-right: 1px solid var(--hu-border); border-bottom: none; }
-  .map-canvas { grid-column: 2; grid-row: 1; }
+  /* the drawing is a fixed 975×610 viewBox (~1.6:1): shape the stage to
+     match so the full-width canvas doesn't collapse in the flex column */
+  .map-canvas { flex: none; height: auto; }
+  .map-stage { flex: none; aspect-ratio: 975 / 610; max-height: 64dvh; }
 
   .right-panel {
-    grid-column: 2; grid-row: 2;
     border-left: none; border-top: 1px solid var(--hu-border);
     overflow: visible; height: auto; max-height: none;
     display: flex; flex-direction: column;
   }
   .data-section { overflow: visible; }
-
-  .metric-item { padding: 7px 10px; font-size: 13px; }
 
   /* Bottom bar */
   .bottom-bar { height: auto; flex-wrap: wrap; gap: 8px; padding: 8px 16px 10px; }
@@ -1442,9 +1354,17 @@ body[data-colorblind="true"] {
 
   /* ── Main: single column ── */
   .main { display: flex; flex-direction: column; overflow: visible; flex: 1; }
-  .left-panel { display: none; }
 
-  /* ── Right panel: slide-up sheet (holds metrics + data on mobile).
+  /* ── Control deck: sticks under the 64px global nav so the Metric
+        selector stays reachable while the page scrolls; its popover
+        opens as a bottom sheet (hu-global.css) in the thumb zone.
+        The tool's bottom bar already owns the fixed bottom edge. ── */
+  .ctrl-deck { position: sticky; top: 64px; z-index: 140; }
+  .ctrl-deck .selector { flex: 1; max-width: none; }
+  .pop-search { font-size: 16px; } /* <16px would trigger iOS focus zoom inside the sheet */
+
+  /* ── Right panel: slide-up sheet (holds the state data on mobile;
+        metric picking lives in the Metric selector's bottom sheet).
         In-flow collapsible, but styled to .shell-sheet conventions:
         16px top radius, drag pill, upward shadow. ── */
   .right-panel {
@@ -1467,9 +1387,6 @@ body[data-colorblind="true"] {
   .right-panel.sheet-open .data-section { display: flex; flex-direction: column; }
   #systemOutlookCard, #outlookCard { display: none !important; }
   .overview-bar { display: none; }
-
-  /* Metric list: constrained height */
-  .metric-item { padding: 7px 10px; font-size: 13px; }
 
   /* ── Map: the drawing is a fixed 975×610 viewBox (~1.6:1), so shape the
         stage to match instead of a generic clamp — no letterbox bands ── */
@@ -1494,7 +1411,9 @@ body[data-colorblind="true"] {
   .map-h1-sub { font-size: 11px; display: none; }
   /* Stack chips below title, hide on very narrow screens */
   .map-outlook-chips { display: none !important; }
-  .map-h1-info { display: none; }
+  /* keep the ⓘ visible: with the metric list gone it is the phone's only
+     path to the metric explainer (tap anchors it above the bottom bar) */
+  .map-h1-info { display: inline-flex; }
 
   /* ── Right panel: natural height, no fixed scroll ── */
   .right-panel {
@@ -1540,20 +1459,16 @@ body[data-colorblind="true"] {
   /* ── Pinch-zoom: lock map scroll on mobile ── */
   .map-stage { touch-action: none; }
 
-  /* ── Mobile metric handle (topmost grip: carries the sheet drag pill) ── */
-  .metrics-sheet-handle {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 16px 10px; cursor: pointer; border-bottom: 1px solid var(--hu-border);
-    background: var(--hu-surface); flex-shrink: 0;
+  /* ── The sheet handle is the panel's top edge now (the old mobile
+        metric sheet unified into the Metric selector's bottom sheet) ── */
+  .sheet-handle {
     position: relative; border-radius: 16px 16px 0 0;
+    padding-top: 16px;
   }
-  .metrics-sheet-handle::before {
+  .sheet-handle::before {
     content: ""; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
     width: 44px; height: 4px; border-radius: 2px; background: var(--hu-border-2);
   }
-  .right-panel.metrics-open .metrics-sheet-handle .sheet-handle-chevron { transform: rotate(180deg); }
-  .metrics-mob-section { display: none; max-height: 45vh; overflow-y: auto; border-bottom: 1px solid var(--hu-border); }
-  .right-panel.metrics-open .metrics-mob-section { display: block; }
 
   /* ── Mobile color legend ── */
   .mob-legend {
@@ -1567,7 +1482,6 @@ body[data-colorblind="true"] {
   .mob-legend .legend-anno { font-size: 10px; color: var(--hu-text-3); font-family: var(--mono); }
 
   /* ── Instrument chrome steps back on small screens ── */
-  .chart-stamp, .chart-rose { display: none; }
   .dock-head { display: none; }
   .ctl-bank { border: none; border-radius: 0; padding: 0; gap: 6px; }
   .ctl-bank-label { position: static; background: none; padding: 0; }
@@ -1647,15 +1561,123 @@ body[data-colorblind="true"] {
     </div>
   </div>
 
+  <!-- v2 control deck: the Metric selector (was the 340px left panel) + preset Views -->
+  <div class="shell-deck ctrl-deck">
+    <button class="selector" id="selMetric" aria-haspopup="listbox" aria-expanded="false" aria-controls="popMetric" aria-label="Metric" data-tip="<strong>Metric</strong><br>The number that colors the map. Every lens's metrics in one searchable list.">
+      <i data-lucide="bar-chart-2" aria-hidden="true"></i><span class="sel-val" id="selMetricVal">Diabetes prevalence</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
+    </button>
+    <div class="selector-pop" id="popMetric" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Metric</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <input class="pop-search" id="popMetricSearch" type="text" placeholder="Search metrics&hellip;" aria-label="Search metrics" autocomplete="off" spellcheck="false">
+      <div class="pop-body" id="popMetricList" role="listbox" aria-label="Metric"></div>
+    </div>
+    <span style="flex:1"></span>
+    <button class="icon-btn" id="selViews" aria-haspopup="listbox" aria-expanded="false" aria-controls="popViews" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
+    <div class="selector-pop" id="popViews" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="pin" aria-hidden="true"></i>Views</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="pop-body" id="popViewsList" role="listbox" aria-label="Preset views"></div>
+    </div>
+  </div>
+
+  <div class="vh" id="a11yLive" aria-live="polite" aria-atomic="true"></div>
+
   <!-- div, not <main>: base.njk already provides <main id="main-content"> -->
   <div class="main shell-main">
 
-    <aside class="left-panel">
+    <section class="map-canvas">
+      <div class="map-header">
+        <div class="map-title-block">
+          <div class="map-eyebrow" id="mapEyebrow">Patient Lens</div>
+          <div class="map-h1-row">
+            <h1 class="map-h1" id="mapH1">Adults reporting fair or poor health</h1>
+            <button class="metric-info-icon map-h1-info" id="mapMetricInfoBtn" title="About this metric">i</button>
+          </div>
+          <div class="map-h1-sub" id="mapH1Sub">Age-adjusted prevalence, % of adult population</div>
+        </div>
+        <div class="ctl-bank">
+          <span class="ctl-bank-label"><i data-lucide="layout-grid" aria-hidden="true"></i>Grain</span>
+          <div class="grain-toggle" id="grainToggle" data-tip="<strong>Map detail</strong><br>Switch between state and county view. County is available for metrics with county-level source data (population health, income, unemployment, uninsured).">
+            <button class="grain-btn active" data-grain="state">State</button>
+            <button class="grain-btn" data-grain="county" id="grainCountyBtn">County</button>
+          </div>
+        </div>
+        <div class="map-outlook-chips" id="mapOutlookChips" style="display:none">
+          <div class="map-outlook-chip" id="mocLens" style="display:none">
+            <span class="moc-prefix" id="mocLensPrefix"></span>
+            <span class="moc-dot" id="mocLensDot"></span>
+            <span class="moc-label" id="mocLensLabel"></span>
+          </div>
+          <div class="moc-sep" id="mocSep" style="display:none"></div>
+          <div class="map-outlook-chip" id="mocSystem" style="display:none">
+            <span class="moc-prefix">System</span>
+            <span class="moc-dot" id="mocSysDot"></span>
+            <span class="moc-label" id="mocSysLabel"></span>
+          </div>
+        </div>
+      </div>
 
-      <!-- metric value context for selected state -->
-      <div class="left-stat-block">
+      <!-- mobile color legend strip -->
+      <div class="mob-legend" id="mobLegend">
+        <span class="mob-legend-label">Scale</span>
+        <div class="legend-scale">
+          <div class="legend-step s1"></div>
+          <div class="legend-step s2"></div>
+          <div class="legend-step s3"></div>
+          <div class="legend-step s4"></div>
+          <div class="legend-step s5"></div>
+        </div>
+        <span class="legend-anno mob-legend-anno" id="mobLegendAnno">worse → better</span>
+      </div>
 
-        <div class="data-card">
+      <div class="county-tip" id="countyTip" hidden></div>
+      <div class="map-stage">
+        <button class="pz-reset-btn" id="mapPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
+        <div class="pz-hint" id="mapPzHint">Pinch to zoom &middot; drag to pan</div>
+        <svg id="mapSvg" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet" aria-label="Interactive map of U.S. states colored by the selected metric"></svg>
+        <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="map-loading" id="mapLoading">
+          <div class="spinner"></div>
+          <div>Loading map data</div>
+        </div>
+        <div class="state-float-card" id="stateFloatCard" style="display:none">
+          <div class="sfc-state" id="sfcState"></div>
+          <div class="sfc-metric" id="sfcMetric"></div>
+          <div class="sfc-value" id="sfcValue"></div>
+          <div class="sfc-band">
+            <span class="sfc-dot" id="sfcDot"></span>
+            <span id="sfcBandLabel"></span>
+          </div>
+          <div class="sfc-vs" id="sfcVs"></div>
+          <div class="sfc-sep"></div>
+          <div class="sfc-outlook-toggle" id="sfcOutlookToggle">
+            <span>System Outlook</span>
+            <span class="sfc-chev" id="sfcChev">›</span>
+          </div>
+          <div class="sfc-outlook-body" id="sfcOutlookBody" style="display:none">
+            <div class="sfc-sys-tier" id="sfcSysTier"></div>
+            <div class="sfc-lens-row" id="sfcLensRow"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+
+      <!-- instrument header strip (desktop/tablet; the sheet handle owns the mobile top edge) -->
+      <div class="dock-head" aria-hidden="true"><span>Inspector</span><b id="dockScope">US</b></div>
+
+      <!-- mobile slide-up handle -->
+      <div class="sheet-handle" id="sheetHandle">
+        <span class="sheet-handle-label" id="sheetHandleLabel">State Data</span>
+        <span class="sheet-handle-chevron">&#8679;</span>
+      </div>
+
+      <!-- analysis section: detail, rankings, trends, entities -->
+      <div class="data-section">
+
+        <!-- Detail card (relocated from the old left panel): metric value
+             context for the selected state, compare panel, source cite -->
+        <div class="data-card detail-card">
 
           <div class="data-card-header">
             <span class="data-card-title" id="detailEyebrow">National View</span>
@@ -1731,128 +1753,7 @@ body[data-colorblind="true"] {
             </div>
           </div>
 
-        </div><!-- /data-card -->
-      </div><!-- /left-stat-block -->
-
-      <!-- metric picker -->
-      <div class="metrics-section" id="metricsSection">
-        <div class="metrics-section-header">
-          <span class="metrics-section-label"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Metric</span>
-        </div>
-        <div class="metric-list" id="metricList"></div>
-      </div>
-
-    </aside>
-
-    <section class="map-canvas">
-      <div class="map-header">
-        <div class="map-title-block">
-          <div class="map-eyebrow" id="mapEyebrow">Patient Lens</div>
-          <div class="map-h1-row">
-            <h1 class="map-h1" id="mapH1">Adults reporting fair or poor health</h1>
-            <button class="metric-info-icon map-h1-info" id="mapMetricInfoBtn" title="About this metric">i</button>
-          </div>
-          <div class="map-h1-sub" id="mapH1Sub">Age-adjusted prevalence, % of adult population</div>
-        </div>
-        <div class="ctl-bank">
-          <span class="ctl-bank-label"><i data-lucide="layout-grid" aria-hidden="true"></i>Grain</span>
-          <div class="grain-toggle" id="grainToggle" data-tip="<strong>Map detail</strong><br>Switch between state and county view. County is available for metrics with county-level source data (population health, income, unemployment, uninsured).">
-            <button class="grain-btn active" data-grain="state">State</button>
-            <button class="grain-btn" data-grain="county" id="grainCountyBtn">County</button>
-          </div>
-        </div>
-        <div class="map-outlook-chips" id="mapOutlookChips" style="display:none">
-          <div class="map-outlook-chip" id="mocLens" style="display:none">
-            <span class="moc-prefix" id="mocLensPrefix"></span>
-            <span class="moc-dot" id="mocLensDot"></span>
-            <span class="moc-label" id="mocLensLabel"></span>
-          </div>
-          <div class="moc-sep" id="mocSep" style="display:none"></div>
-          <div class="map-outlook-chip" id="mocSystem" style="display:none">
-            <span class="moc-prefix">System</span>
-            <span class="moc-dot" id="mocSysDot"></span>
-            <span class="moc-label" id="mocSysLabel"></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- mobile color legend strip -->
-      <div class="mob-legend" id="mobLegend">
-        <span class="mob-legend-label">Scale</span>
-        <div class="legend-scale">
-          <div class="legend-step s1"></div>
-          <div class="legend-step s2"></div>
-          <div class="legend-step s3"></div>
-          <div class="legend-step s4"></div>
-          <div class="legend-step s5"></div>
-        </div>
-        <span class="legend-anno mob-legend-anno" id="mobLegendAnno">worse → better</span>
-      </div>
-
-      <div class="county-tip" id="countyTip" hidden></div>
-      <div class="map-stage">
-        <button class="pz-reset-btn" id="mapPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
-        <div class="pz-hint" id="mapPzHint">Pinch to zoom &middot; drag to pan</div>
-        <svg id="mapSvg" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet" aria-label="Interactive map of U.S. states colored by the selected metric"></svg>
-        <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <div class="chart-stamp" aria-hidden="true">HU SURVEY &middot; CDC/CMS/CENSUS DATA</div>
-        <svg class="chart-rose" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true" focusable="false">
-          <circle cx="22" cy="22" r="16" fill="none" stroke="currentColor" stroke-width="1"/>
-          <line x1="22" y1="2" x2="22" y2="42" stroke="currentColor" stroke-width="1"/>
-          <line x1="2" y1="22" x2="42" y2="22" stroke="currentColor" stroke-width="1"/>
-          <line x1="10.7" y1="10.7" x2="33.3" y2="33.3" stroke="currentColor" stroke-width=".6"/>
-          <line x1="33.3" y1="10.7" x2="10.7" y2="33.3" stroke="currentColor" stroke-width=".6"/>
-          <polygon points="22,2 19.6,14 22,11.6 24.4,14" fill="currentColor"/>
-          <circle cx="22" cy="22" r="1.6" fill="currentColor"/>
-        </svg>
-        <div class="map-loading" id="mapLoading">
-          <div class="spinner"></div>
-          <div>Loading map data</div>
-        </div>
-        <div class="state-float-card" id="stateFloatCard" style="display:none">
-          <div class="sfc-state" id="sfcState"></div>
-          <div class="sfc-metric" id="sfcMetric"></div>
-          <div class="sfc-value" id="sfcValue"></div>
-          <div class="sfc-band">
-            <span class="sfc-dot" id="sfcDot"></span>
-            <span id="sfcBandLabel"></span>
-          </div>
-          <div class="sfc-vs" id="sfcVs"></div>
-          <div class="sfc-sep"></div>
-          <div class="sfc-outlook-toggle" id="sfcOutlookToggle">
-            <span>System Outlook</span>
-            <span class="sfc-chev" id="sfcChev">›</span>
-          </div>
-          <div class="sfc-outlook-body" id="sfcOutlookBody" style="display:none">
-            <div class="sfc-sys-tier" id="sfcSysTier"></div>
-            <div class="sfc-lens-row" id="sfcLensRow"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <aside class="right-panel">
-
-      <!-- instrument header strip (desktop/tablet; sheet handles own the mobile top edge) -->
-      <div class="dock-head" aria-hidden="true"><span>Rankings</span><b id="dockScope">US</b></div>
-
-      <!-- mobile metric picker handle + section -->
-      <div class="metrics-sheet-handle" id="metricsSheetHandle">
-        <span class="sheet-handle-label"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Metric</span>
-        <span class="sheet-handle-chevron">&#8679;</span>
-      </div>
-      <div class="metrics-mob-section" id="metricsMobSection">
-        <div class="metric-list" id="metricListMob"></div>
-      </div>
-
-      <!-- mobile slide-up handle -->
-      <div class="sheet-handle" id="sheetHandle">
-        <span class="sheet-handle-label" id="sheetHandleLabel">State Data</span>
-        <span class="sheet-handle-chevron">&#8679;</span>
-      </div>
-
-      <!-- analysis section: rankings, trends, entities -->
-      <div class="data-section">
+        </div><!-- /detail-card -->
 
         <!-- Rankings card -->
         <div class="data-card">
@@ -1919,7 +1820,7 @@ body[data-colorblind="true"] {
       </div>
       <div class="mode-divider"></div>
       <div class="ctl-group">
-        <span class="ctl-label"><i data-lucide="trending-up" aria-hidden="true"></i>View</span>
+        <span class="ctl-label"><i data-lucide="trending-up" aria-hidden="true"></i>Trend</span>
         <div class="time-mode-toggle">
           <button class="time-mode-btn active" data-mode="snapshot" data-tip="<strong>Snapshot</strong><br>Color each state by its absolute value in the selected year — who is best and worst right now.">Snapshot</button>
           <button class="time-mode-btn" data-mode="change" data-tip="<strong>Change</strong><br>Color each state by year-over-year improvement or decline. Green = improving, red = declining relative to other states.">Change</button>
@@ -2008,11 +1909,11 @@ body[data-colorblind="true"] {
 
       <div class="tut-card">
         <div class="tut-card-head"><div class="tut-icon" style="background:#E8A838;color:#0a0f1a">Mx</div><div class="tut-card-title">Metrics</div></div>
-        <div class="tut-card-body">Within each lens, choose a specific metric to display on the map.
+        <div class="tut-card-body">The <strong>Metric</strong> selector under the lens tabs picks what colors the map.
           <ul>
-            <li>The active metric is highlighted in the list</li>
-            <li>Click the <span class="tut-tag blue">ⓘ</span> icon on any metric to read its description</li>
-            <li>The right panel updates to show detailed stats for the selected state</li>
+            <li>The button face always shows the active metric</li>
+            <li>Open it and type to search all ~48 metrics across every lens — picking one switches lens too</li>
+            <li>Click the <span class="tut-tag blue">ⓘ</span> icon next to the map title to read the metric's definition</li>
           </ul>
         </div>
       </div>
@@ -2472,6 +2373,7 @@ let mapMode = 'explore';
 
 // ===== COUNTY GRANULARITY =====
 let mapGrain = 'state';            // 'state' | 'county'
+let pendingGrain = null;           // URL-restored county grain parked until countyData arrives
 let countyData = null;             // /assets/data/countyData.json (eager, for toggle availability)
 let countyFeatures = null;         // us-atlas counties (lazy, on first county view)
 let _countyGeoLoading = false;
@@ -2728,45 +2630,6 @@ const SYSTEM_LENSES = [
   { key: 'baseline',   letter: 'B', shortName: 'Baseline', color: '#0EA5E9', bgColor: 'rgba(14,165,233,0.18)' },
 ];
 
-const METRIC_GROUPS = {
-  patient:    [
-    { label: 'Health Status',  indices: [0,1,2,3,5,6] },
-    { label: 'Access & Age',   indices: [4,7] }
-  ],
-  clinical:   [
-    { label: 'Physicians & Staff', indices: [0,1,2,6,7,8] },
-    { label: 'Access',             indices: [3,4,5] }
-  ],
-  operations: [
-    { label: 'Capacity', indices: [0,1,2,3] },
-    { label: 'Quality',  indices: [4,5,6] }
-  ],
-  payer:      [
-    { label: 'Coverage', indices: [0,1,2,3,4] },
-    { label: 'Cost',     indices: [5] }
-  ],
-  policy:     [
-    { label: 'State Policy', indices: [0,1,2,3,4,5] }
-  ],
-  baseline:   [
-    { label: 'Economics',    indices: [0,1,2,3,4] },
-    { label: 'Demographics', indices: [5,6,7,8,9,10,11,12] }
-  ]
-};
-
-const FEATURED_COUNT = 3; // metrics shown before "show more"
-
-// Track collapse/expand state per lens+group: key = "lens|groupIndex"
-const metricGroupState = {};
-function getGroupKey(lens, gi) { return `${lens}|${gi}`; }
-function isGroupCollapsed(lens, gi) {
-  const k = getGroupKey(lens, gi);
-  if (k in metricGroupState) return metricGroupState[k];
-  const groups = METRIC_GROUPS[lens] || [];
-  const activeGroup = groups.findIndex(g => g.indices.includes(activeMetricIdx));
-  return gi !== activeGroup;
-}
-
 function renderSystemOutlook() {
   const card = document.getElementById('systemOutlookCard');
   const code = selectedState;
@@ -2896,7 +2759,13 @@ async function loadMap() {
     usFeatures = topojson.feature(us, us.objects.states).features;
     document.getElementById('mapLoading').style.display = 'none';
     drawMap();
-    fetch('/assets/data/countyData.json').then(r => r.json()).then(d => { countyData = d; refreshGrainToggle(); }).catch(() => {});
+    fetch('/assets/data/countyData.json').then(r => r.json()).then(d => {
+      countyData = d;
+      // a URL-restored county grain waits here for its data (metricHasCounty is false until it lands)
+      if (pendingGrain === 'county' && metricHasCounty(activeLens, activeMetricIdx)) { mapGrain = 'county'; ensureCountyGeo(); }
+      pendingGrain = null;
+      refreshGrainToggle();
+    }).catch(() => {});
     // No resize handling: the viewBox is a constant (0 0 975 610) and the browser
     // scales the vector, so container resizes cost zero JS.
   } catch (err) {
@@ -3095,10 +2964,12 @@ function drawMap() {
           compareState = null;
           updateComparePanel();
           drawMap();
+          syncURL();
         } else {
           compareState = abbr;
           updateComparePanel();
           drawMap();
+          syncURL();
         }
       }
     })
@@ -3114,121 +2985,123 @@ function drawMap() {
       } else {
         if (!selectedState) { selectState(abbr); }
         else if (abbr === selectedState) { compareState = null; selectNation(); }
-        else if (abbr === compareState) { compareState = null; updateComparePanel(); drawMap(); }
-        else { compareState = abbr; updateComparePanel(); drawMap(); }
+        else if (abbr === compareState) { compareState = null; updateComparePanel(); drawMap(); syncURL(); }
+        else { compareState = abbr; updateComparePanel(); drawMap(); syncURL(); }
       }
     });
 }
 
-function makeMetricItem(m, i, lensColor) {
-  const div = document.createElement('div');
-  div.className = 'metric-item' + (i === activeMetricIdx ? ' active' : '');
-  div.style.setProperty('--accent-color', lensColor);
-  const dirLabel = m.dir === 1 ? '↑ better' : m.dir === -1 ? '↓ better' : '';
-  div.innerHTML = `
-    <div class="metric-item-label">
-      <span class="metric-info-icon" data-metric-idx="${i}">i</span>
-      <span class="metric-item-text">${m.name}</span>
-    </div>
-    ${dirLabel ? `<span class="metric-dir-label">${dirLabel}</span>` : ''}
-  `;
-  div.addEventListener('click', (e) => {
-    if (e.target.classList.contains('metric-info-icon')) return;
-    activeMetricIdx = i;
-    renderAll();
-    updateHash();
-  });
-  const icon = div.querySelector('.metric-info-icon');
-  icon.addEventListener('mouseenter', (e) => { if (!isTouch()) showMetricExplainer(e.target, m, lensColor); });
-  icon.addEventListener('mouseleave', () => { if (!isTouch()) hideMetricExplainer(); });
-  icon.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const el = getExplainerEl();
-    if (el.classList.contains('visible')) {
-      hideMetricExplainer();
-    } else {
-      showMetricExplainer(e.currentTarget, m, lensColor);
-      if (isTouch()) setTimeout(hideMetricExplainer, 5000);
-    }
-  });
-  return div;
+// ===== A11Y LIVE REGION =====
+// One polite live region for the whole tool — announce COMMITTED state
+// changes only (metric commit, preset view, history walk). Never hover.
+function announce(msg) {
+  const el = document.getElementById('a11yLive'); if (!el) return;
+  el.textContent = '';                                  // clear first so repeats re-announce
+  requestAnimationFrame(() => { el.textContent = msg; });
 }
 
-function renderMetricsInto(list) {
-  const lensData = METRICS[activeLens];
-  const groups = METRIC_GROUPS[activeLens] || [];
-  list.innerHTML = '';
+// ===== v2 SELECTORS — the popover contract (HU-CONTROL-ARCHITECTURE-V2) =====
+// One popover open at a time; Esc closes and returns focus to the trigger;
+// outside click closes; arrows walk the (visible) options; the phone renders
+// the popover as a bottom sheet (CSS). The face always shows the current choice.
+const LENS_ORDER = ['patient', 'clinical', 'operations', 'payer', 'policy', 'baseline'];
+const LENS_LABELS = { patient: 'Patient', clinical: 'Clinical', operations: 'Operations', payer: 'Payer', policy: 'Policy', baseline: 'Baseline' };
 
-  if (!groups.length) {
-    lensData.items.forEach((m, i) => list.appendChild(makeMetricItem(m, i, lensData.color)));
-    return;
+let openPop = null;
+function closePop(refocus) {
+  if (!openPop) return;
+  const p = openPop; openPop = null;
+  p.pop.hidden = true; p.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) p.btn.focus();
+}
+function openPopover(btn, pop, build) {
+  if (openPop && openPop.pop === pop) { closePop(true); return; }
+  closePop(false);
+  build();
+  pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
+  pop.style.left = btn.offsetLeft + 'px'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 6) + 'px'; // desktop anchor; the phone sheet CSS overrides both
+  // right-edge clamp: a trigger flush right (the Views pin) must not overflow the deck
+  const deck = pop.offsetParent;
+  if (deck) { const max = deck.clientWidth - pop.offsetWidth - 8; if (max > 0 && btn.offsetLeft > max) pop.style.left = max + 'px'; }
+  openPop = { pop, btn };
+  const f = pop.querySelector('[aria-selected="true"]') || pop.querySelector('.pop-opt');
+  if (f) f.focus();
+}
+document.addEventListener('click', e => { if (openPop && !e.target.closest('.selector-pop') && !e.target.closest('.selector') && !e.target.closest('#selViews')) closePop(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && openPop) closePop(true); });
+document.querySelectorAll('.selector-pop').forEach(pop => {
+  pop.addEventListener('keydown', e => {
+    // Home/End inside the search field move the caret, not the option list
+    if ((e.key === 'Home' || e.key === 'End') && e.target.classList.contains('pop-search')) return;
+    const opts = [...pop.querySelectorAll('.pop-opt:not([hidden])')], i = opts.indexOf(document.activeElement);
+    if (!opts.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); (opts[i + 1] || opts[0]).focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); (opts[i - 1] || opts[opts.length - 1]).focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); opts[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); opts[opts.length - 1].focus(); }
+  });
+  pop.querySelector('[data-close]').addEventListener('click', () => closePop(true));
+});
+document.getElementById('selMetric').addEventListener('click', () => openPopover(document.getElementById('selMetric'), document.getElementById('popMetric'), buildMetricPop));
+
+// the metric popover: every lens is a .pop-sec, its metrics are .pop-opt rows —
+// picking a metric from another lens switches the lens too (tabs stay in sync)
+function buildMetricPop() {
+  let html = '';
+  LENS_ORDER.forEach(lens => {
+    const L = METRICS[lens]; if (!L || !L.items) return;
+    html += `<div class="pop-sec">${LENS_LABELS[lens] || lens}</div>` + L.items.map((m, i) => {
+      const dir = m.dir === 1 ? '&#8593; better' : m.dir === -1 ? '&#8595; better' : '';
+      const label = ((LENS_LABELS[lens] || lens) + ' ' + m.name).toLowerCase().replace(/"/g, '');
+      return `<button class="pop-opt" role="option" aria-selected="${lens === activeLens && i === activeMetricIdx}" data-lens="${lens}" data-i="${i}" data-label="${label}">` +
+        `<span class="opt-name">${m.name}</span>${dir ? `<span class="opt-dir">${dir}</span>` : ''}</button>`;
+    }).join('');
+  });
+  html += '<div class="pop-empty" hidden>No metrics match</div>';
+  document.getElementById('popMetricList').innerHTML = html;
+  const s = document.getElementById('popMetricSearch');
+  if (s) s.value = '';   // fresh open = full list
+}
+// search-within (~48 options is past the >12 threshold): filter rows by label,
+// hide section headers whose options are all filtered out. Esc still closes.
+function filterMetricPop(q) {
+  q = q.trim().toLowerCase();
+  const list = document.getElementById('popMetricList');
+  let any = false;
+  list.querySelectorAll('.pop-opt').forEach(o => {
+    const hit = !q || o.dataset.label.includes(q);
+    o.hidden = !hit; if (hit) any = true;
+  });
+  list.querySelectorAll('.pop-sec').forEach(sec => {
+    let el = sec.nextElementSibling, vis = false;
+    while (el && !el.classList.contains('pop-sec')) {
+      if (el.classList.contains('pop-opt') && !el.hidden) { vis = true; break; }
+      el = el.nextElementSibling;
+    }
+    sec.hidden = !vis;
+  });
+  const empty = list.querySelector('.pop-empty');
+  if (empty) empty.hidden = any;
+}
+document.getElementById('popMetricSearch').addEventListener('input', e => filterMetricPop(e.target.value));
+document.getElementById('popMetricList').addEventListener('click', e => {
+  const t = e.target.closest('[data-i]'); if (!t) return;
+  const lens = t.dataset.lens, i = parseInt(t.dataset.i, 10);
+  closePop(true);
+  if (lens !== activeLens) {
+    activeLens = lens;
+    document.querySelectorAll('.lens-btn').forEach(b => b.classList.toggle('active', b.dataset.lens === lens));
   }
+  activeMetricIdx = i;
+  renderAll();
+  syncURL();
+  announce('Metric: ' + METRICS[lens].items[i].name);
+});
 
-  groups.forEach((group, gi) => {
-    const validIndices = group.indices.filter(i => i < lensData.items.length);
-    if (validIndices.includes(activeMetricIdx)) {
-      metricGroupState[getGroupKey(activeLens, gi)] = false;
-      if (validIndices.indexOf(activeMetricIdx) >= FEATURED_COUNT) {
-        metricGroupState[`${activeLens}|${gi}|more`] = true;
-      }
-    }
-  });
-
-  groups.forEach((group, gi) => {
-    const collapsed = isGroupCollapsed(activeLens, gi);
-    const validIndices = group.indices.filter(i => i < lensData.items.length);
-    const header = document.createElement('div');
-    header.className = 'metric-group-header' + (collapsed ? ' collapsed' : '');
-    header.innerHTML = `
-      <span class="metric-group-label">${group.label}</span>
-      <span class="metric-group-count">${validIndices.length}</span>
-      <span class="metric-group-arrow">›</span>
-    `;
-    header.addEventListener('click', () => {
-      const k = getGroupKey(activeLens, gi);
-      metricGroupState[k] = !isGroupCollapsed(activeLens, gi);
-      renderMetrics();
-    });
-    list.appendChild(header);
-
-    if (collapsed) return;
-
-    const featured = validIndices.slice(0, FEATURED_COUNT);
-    const extra    = validIndices.slice(FEATURED_COUNT);
-    const showMoreKey = `${activeLens}|${gi}|more`;
-    const showingMore = !!metricGroupState[showMoreKey];
-
-    featured.forEach(i => list.appendChild(makeMetricItem(lensData.items[i], i, lensData.color)));
-
-    if (extra.length) {
-      if (showingMore) {
-        extra.forEach(i => list.appendChild(makeMetricItem(lensData.items[i], i, lensData.color)));
-        const lessBtn = document.createElement('div');
-        lessBtn.className = 'metric-show-more';
-        lessBtn.textContent = '↑ show less';
-        lessBtn.addEventListener('click', () => {
-          metricGroupState[showMoreKey] = false;
-          renderMetrics();
-        });
-        list.appendChild(lessBtn);
-      } else {
-        const moreBtn = document.createElement('div');
-        moreBtn.className = 'metric-show-more';
-        moreBtn.textContent = `+ ${extra.length} more`;
-        moreBtn.addEventListener('click', () => {
-          metricGroupState[showMoreKey] = true;
-          renderMetrics();
-        });
-        list.appendChild(moreBtn);
-      }
-    }
-  });
-}
-
-function renderMetrics() {
-  renderMetricsInto(document.getElementById('metricList'));
-  const mobList = document.getElementById('metricListMob');
-  if (mobList) renderMetricsInto(mobList);
+// the face IS the state readout — keep it current on every render
+function updateSelectorFaces() {
+  const m = METRICS[activeLens].items[activeMetricIdx] || METRICS[activeLens].items[0];
+  document.getElementById('selMetricVal').textContent = m.name;
 }
 
 // ===== METRIC EXPLAINER TOOLTIP =====
@@ -3547,7 +3420,7 @@ function selectState(code) {
   renderOutlook();
   renderEntityPanel();
   renderTrendChart();
-  updateHash();
+  syncURL();
   if (MQ_PHONE.matches) {
     document.querySelector('.right-panel').classList.add('sheet-open');
   }
@@ -3566,7 +3439,7 @@ function selectNation() {
   renderOutlook();
   renderEntityPanel();
   renderTrendChart();
-  updateHash();
+  syncURL();
 }
 
 function getBandForState(code) {
@@ -3807,7 +3680,7 @@ function renderTrendChart() {
 
 function renderAll() {
   renderHeader();
-  renderMetrics();
+  updateSelectorFaces();
   renderSystemOutlook();
   renderOutlook();
   renderRanking();
@@ -3818,50 +3691,152 @@ function renderAll() {
   updateComparePanel();
 }
 
-// ── URL hash state ───────────────────────────────────────────────────────────
-function updateHash() {
-  const state = selectedState || 'USA';
-  history.replaceState(null, '', `#${activeLens}/${activeMetricIdx}/${state}/${selectedYearIdx}`);
-}
+// ── URL-ADDRESSABLE VIEWS (HU-CONTROL-ARCHITECTURE-V2 serializer) ────────────
+// Every configured view is a URL: ?lens=payer&metric=uninsured-rate&state=TX
+// &year=2021&trend=change&mode=compare&vs=UT&grain=county
+// Defaults are omitted so the bare path stays the default view. Metrics
+// serialize by a slug of their config name (metricsConfig.json carries no id
+// field), so reordering a lens's item list doesn't break shared links.
+// Selecting / deselecting a state PUSHES history; in-view tweaks (metric,
+// lens, year, trend, mode, grain, compare partner) REPLACE — back walks
+// state selections, not every metric flip. The colorblind toggle is a
+// session preference (localStorage), not view config — out of the URL.
+const DEF_LENS = 'patient';
+const defMetricIdx = lens => lens === DEF_LENS ? 1 : 0;   // patient boots on diabetes (idx 1); lens tabs land on idx 0
+const metricKey = m => m.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-function parseHash() {
-  const hash = window.location.hash.slice(1);
-  if (!hash) return;
-  const [lens, idxStr, state, yearStr] = hash.split('/');
-  if (lens && METRICS[lens]) {
-    activeLens = lens;
-    document.querySelectorAll('.lens-btn').forEach(b => b.classList.toggle('active', b.dataset.lens === lens));
+let applyingURL = false, lastURLScope = '';
+function stateToParams() {
+  const p = new URLSearchParams();
+  if (activeLens !== DEF_LENS) p.set('lens', activeLens);
+  if (activeMetricIdx !== defMetricIdx(activeLens)) {
+    const m = METRICS[activeLens].items[activeMetricIdx];
+    if (m) p.set('metric', metricKey(m));
   }
-  const idx = parseInt(idxStr, 10);
-  if (!isNaN(idx) && METRICS[activeLens]?.items[idx]) activeMetricIdx = idx;
-  if (state && state !== 'USA' && STATE_NAMES[state]) {
-    selectedState = state;
-    const metric = METRICS[activeLens].items[activeMetricIdx];
-    document.getElementById('selStateName').textContent = STATE_NAMES[state];
-    document.getElementById('selStateMeta').textContent = state + ' · ' + metric.name;
+  if (selectedYearIdx !== ALL_YEARS.length - 1) p.set('year', String(ALL_YEARS[selectedYearIdx]));
+  if (sliderMode !== 'snapshot') p.set('trend', sliderMode);
+  if (mapMode !== 'explore') p.set('mode', mapMode);
+  if (mapGrain !== 'state' || pendingGrain === 'county') p.set('grain', 'county');
+  if (selectedState) p.set('state', selectedState);
+  if (compareState) p.set('vs', compareState);
+  return p;
+}
+function syncURL() {
+  if (applyingURL) return;
+  const q = stateToParams().toString();
+  const scope = selectedState || '';
+  const method = (scope !== lastURLScope) ? 'pushState' : 'replaceState';
+  lastURLScope = scope;
+  try { history[method](null, '', q ? ('?' + q) : location.pathname); } catch (e) {}
+}
+// Idempotent: resets nothing itself — callers zero the state first (popstate)
+// or start from the defaults (init), then this layers the URL on top.
+// Invalid params degrade silently; the first syncURL re-serializes, so a
+// mangled shared link self-normalizes.
+function applyURLState() {
+  const p = new URLSearchParams(location.search);
+  const lens = p.get('lens');
+  if (lens && LENS_ORDER.includes(lens) && METRICS[lens]) activeLens = lens;
+  activeMetricIdx = defMetricIdx(activeLens);   // per-lens default before the metric param layers on
+  const mk = p.get('metric');
+  if (mk) { const i = METRICS[activeLens].items.findIndex(m => metricKey(m) === mk); if (i >= 0) activeMetricIdx = i; }
+  const yi = ALL_YEARS.indexOf(parseInt(p.get('year'), 10));
+  if (yi >= 0) selectedYearIdx = yi;
+  if (p.get('trend') === 'change') sliderMode = 'change';
+  if (p.get('mode') === 'compare') mapMode = 'compare';
+  const st = (p.get('state') || '').toUpperCase();
+  if (STATE_NAMES[st]) selectedState = st;
+  const vs = (p.get('vs') || '').toUpperCase();
+  if (mapMode === 'compare' && selectedState && STATE_NAMES[vs] && vs !== selectedState) compareState = vs;
+  if (p.get('grain') === 'county') {
+    // validated lazily: countyData loads async, so park the intent if it isn't here yet
+    if (countyData && metricHasCounty(activeLens, activeMetricIdx)) { mapGrain = 'county'; ensureCountyGeo(); }
+    else if (!countyData) pendingGrain = 'county';
+  }
+  lastURLScope = selectedState || '';
+}
+function resetAndApplyURL() {
+  applyingURL = true;
+  try {
+    activeLens = DEF_LENS; activeMetricIdx = defMetricIdx(DEF_LENS);
+    selectedState = null; compareState = null;
+    selectedYearIdx = ALL_YEARS.length - 1; sliderMode = 'snapshot'; mapMode = 'explore';
+    mapGrain = 'state'; pendingGrain = null;
+    applyURLState();
+  } catch (e) { console.warn('url state', e); }
+  applyingURL = false;
+}
+// Sync every control face that lives outside renderAll (lens tabs, year
+// slider, trend/mode toggles, USA button, state name header), then render.
+// One code path for init, back/forward, and preset views.
+function applyRestoredState() {
+  document.querySelectorAll('.lens-btn').forEach(b => b.classList.toggle('active', b.dataset.lens === activeLens));
+  sliderEl.value = selectedYearIdx;
+  refreshTimeLabel();   // drawMap also does this, but no-ops before the geometry loads
+  yearPrevBtn.disabled = selectedYearIdx === 0;
+  yearNextBtn.disabled = selectedYearIdx === ALL_YEARS.length - 1;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === sliderMode));
+  document.querySelectorAll('[data-mapmode]').forEach(b => b.classList.toggle('active', b.dataset.mapmode === mapMode));
+  const metric = METRICS[activeLens].items[activeMetricIdx];
+  if (selectedState) {
+    document.getElementById('selStateName').textContent = STATE_NAMES[selectedState];
+    document.getElementById('selStateMeta').textContent = selectedState + ' · ' + metric.name;
     document.getElementById('usaBtn').classList.remove('active');
   } else {
-    selectedState = null;
+    document.getElementById('selStateName').textContent = 'United States';
+    document.getElementById('selStateMeta').textContent = 'National aggregate · all 50 states + DC';
     document.getElementById('usaBtn').classList.add('active');
   }
-  const yearIdx = parseInt(yearStr, 10);
-  if (!isNaN(yearIdx) && yearIdx >= 0 && yearIdx < ALL_YEARS.length) {
-    selectedYearIdx = yearIdx;
-    sliderEl.value = yearIdx;
-    refreshTimeLabel();
-    yearPrevBtn.disabled = yearIdx === 0;
-    yearNextBtn.disabled = yearIdx === ALL_YEARS.length - 1;
-  }
+  hideStateFloatCard();
+  renderAll();
 }
+window.addEventListener('popstate', () => {
+  resetAndApplyURL();
+  applyRestoredState();
+  announce(selectedState ? 'View: ' + STATE_NAMES[selectedState] : 'Back to the national view');
+});
+// legacy #lens/metricIndex/state/yearIndex links (pre-v2) upgrade to query params once
+function upgradeLegacyHash() {
+  const h = location.hash.slice(1);
+  if (!h) return;
+  const [lens, idxStr, state, yearStr] = h.split('/');
+  const L = (lens && METRICS[lens] && LENS_ORDER.includes(lens)) ? lens : DEF_LENS;
+  const p = new URLSearchParams();
+  if (L !== DEF_LENS) p.set('lens', L);
+  const idx = parseInt(idxStr, 10);
+  if (!isNaN(idx) && METRICS[L].items[idx] && idx !== defMetricIdx(L)) p.set('metric', metricKey(METRICS[L].items[idx]));
+  if (state && state !== 'USA' && STATE_NAMES[state]) p.set('state', state);
+  const yi = parseInt(yearStr, 10);
+  if (!isNaN(yi) && yi >= 0 && yi < ALL_YEARS.length - 1) p.set('year', String(ALL_YEARS[yi]));
+  const q = p.toString();
+  try { history.replaceState(null, '', q ? ('?' + q) : location.pathname); } catch (e) {}
+}
+
+// ── PRESET VIEWS: authored starting points, each just a URL ──────────────────
+const PRESETS = [
+  { name: 'The uninsured map', q: '?lens=payer&metric=uninsured-rate' },
+  { name: 'Obesity, county grain', q: '?metric=obesity-prevalence&grain=county' },
+  { name: 'Where the respiratory therapists are', q: '?lens=clinical&metric=respiratory-therapists-per-100k' },
+  { name: 'Life expectancy, 2018 vs now', q: '?metric=life-expectancy-at-birth&trend=change' },
+];
+function buildViewsPop() {
+  document.getElementById('popViewsList').innerHTML = PRESETS.map(p =>
+    `<button class="pop-opt" role="option" data-view-q="${p.q}">${p.name}</button>`).join('');
+}
+document.getElementById('selViews').addEventListener('click', () => openPopover(document.getElementById('selViews'), document.getElementById('popViews'), buildViewsPop));
+document.getElementById('popViewsList').addEventListener('click', e => {
+  const t = e.target.closest('[data-view-q]'); if (!t) return;
+  closePop(true);
+  try { history.pushState(null, '', t.dataset.viewQ); } catch (err) {}
+  resetAndApplyURL();
+  applyRestoredState();
+  announce('View: ' + t.textContent);
+});
 
 document.getElementById('usaBtn').addEventListener('click', () => { selectNation(); hideStateFloatCard(); });
 
 document.getElementById('sheetHandle').addEventListener('click', () => {
   document.querySelector('.right-panel').classList.toggle('sheet-open');
-});
-
-document.getElementById('metricsSheetHandle').addEventListener('click', () => {
-  document.querySelector('.right-panel').classList.toggle('metrics-open');
 });
 
 document.querySelectorAll('.lens-btn').forEach(btn => {
@@ -3871,7 +3846,7 @@ document.querySelectorAll('.lens-btn').forEach(btn => {
     activeLens = btn.dataset.lens;
     activeMetricIdx = 0;
     renderAll();
-    updateHash();
+    syncURL();
   });
 });
 
@@ -3905,7 +3880,7 @@ function applyYearIdx(idx) {
   renderTrendChart();
   updateStatPanel();
   updateComparePanel();
-  updateHash();
+  syncURL();
 }
 
 sliderEl.addEventListener('input', () => applyYearIdx(parseInt(sliderEl.value, 10)));
@@ -3921,6 +3896,7 @@ document.getElementById('compareClear').addEventListener('click', () => {
   compareState = null;
   updateComparePanel();
   drawMap();
+  syncURL();
 });
 
 const sourcesBtn     = document.getElementById('sourcesBtn');
@@ -3949,6 +3925,7 @@ document.querySelectorAll('[data-mode]').forEach(btn => {
     btn.classList.add('active');
     sliderMode = btn.dataset.mode;
     drawMap();
+    syncURL();
   });
 });
 
@@ -3964,6 +3941,7 @@ document.querySelectorAll('[data-mapmode]').forEach(btn => {
     } else {
       updateComparePanel();
     }
+    syncURL();
   });
 });
 
@@ -4124,28 +4102,29 @@ document.getElementById('sfcOutlookToggle').addEventListener('click', () => {
   });
 })();
 
-parseHash();
-renderHeader();
-renderMetrics();
-renderSystemOutlook();
-renderOutlook();
-renderRanking();
-renderTrendChart();
-renderEntityPanel();
-updateStatPanel();
+// ── INIT: restore the URL view before first paint. Legacy #hash links
+// upgrade to query params first; then defaults → URL layers on top → every
+// control face syncs → one render. The map itself paints when its geometry
+// arrives (drawMap no-ops until usFeatures loads).
+upgradeLegacyHash();
+resetAndApplyURL();
+applyRestoredState();
 
 // State / County granularity toggle
 document.getElementById('grainToggle').addEventListener('click', (e) => {
   const b = e.target.closest('.grain-btn');
   if (!b || b.disabled || b.dataset.grain === mapGrain) return;
   mapGrain = b.dataset.grain;
+  pendingGrain = null;   // an explicit choice wins over any parked URL restore
   document.querySelectorAll('#grainToggle .grain-btn').forEach(x => x.classList.toggle('active', x.dataset.grain === mapGrain));
   if (mapGrain === 'county') { hideCountyTip(); ensureCountyGeo(); }
   drawMap();
+  syncURL();
 });
 
 loadMap();
-updateHash();
+// first render re-serializes, so a mangled shared link self-normalizes
+syncURL();
 
 
 // ── Colorblind mode ────────────────────────────────────────────────────
