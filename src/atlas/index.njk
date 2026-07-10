@@ -96,6 +96,10 @@ permalink: /atlas/
 [data-theme='light'] #atlas-layers-pop .pop-opt[aria-pressed="true"]::after { color: var(--teal-dk); }
 #atlas-layers-pop .pop-opt svg { width: 14px; height: 14px; stroke-width: 1.75; color: var(--teal); flex: none; }
 [data-theme='light'] #atlas-layers-pop .pop-opt svg { color: var(--teal-dk); }
+/* node-legend glyphs carry inline steel-blue stroke attrs (fine on dark, ~1.4:1 on the
+   white popover); presentation attributes lose to any CSS rule, so this flips them */
+[data-theme='light'] .leg-row svg polyline,
+[data-theme='light'] .leg-row svg path { stroke: #4A5568; }
 /* legend key rows (zones/nodes) — non-interactive, aligned with .pop-opt padding */
 .leg-row { display: flex; align-items: center; gap: 9px; padding: 3px 10px; }
 .leg-line {
@@ -3006,6 +3010,16 @@ function fillHudData(nodeId){
   el.querySelectorAll('.hud-drow[data-uid]').forEach(r => { r.onclick = () => { if (window.__atlasSelect) window.__atlasSelect(r.getAttribute('data-uid')); }; });
 }
 
+// ── CONTENT LINKS ─────────────────────────────────────────────────────────────
+// Published site content that deep-links to atlas tiles, inverted at build time
+// from _data/rounds.js atlasLinks. Keys are 'zoneId/nodeId' (the hash format).
+// Kept OUTSIDE the ZONE_DEFS span that scripts/lib/adapters/atlas-concepts.js
+// text-slices — do not move this above ZONE_DEFS.
+const CONTENT_LINKS = {};
+{%- for entry in rounds.entries %}{% if entry.status == 'published' and entry.atlasLinks %}{% for lnk in entry.atlasLinks %}
+(CONTENT_LINKS[{{ lnk.to | dump | safe }}] = CONTENT_LINKS[{{ lnk.to | dump | safe }}] || []).push({ label: {{ entry.title | dump | safe }}, url: '/rounds/{{ entry.slug }}/', icon: '📋' });
+{%- endfor %}{% endif %}{% endfor %}
+
 function selectNode(zone,cell) {
   activeNode=cell; activeZone=zone;
   if (typeof window._deselectRoute === 'function') window._deselectRoute();
@@ -3023,7 +3037,9 @@ function selectNode(zone,cell) {
   const linksEl=document.getElementById('hud-links');
   const linksCol=document.getElementById('hud-links-col');
   linksEl.innerHTML='';
-  const links=cell.links||[];
+  const seen=new Set();
+  const links=[...(cell.links||[]),...(CONTENT_LINKS[zone.id+'/'+cell.nodeId]||[])]
+    .filter(l=>!seen.has(l.url)&&seen.add(l.url));
   linksCol.classList.toggle('has-links', links.length>0);
   links.forEach(lk=>{
     const a=document.createElement('a');

@@ -155,7 +155,13 @@ genuine typos in the CMS source and are logged on every run.
 
 - **Metric identity is array index**, not a stable `metricId`. Reordering
   `metricsConfig` items silently breaks `stateData`. Migrate to `lens/slug` ids.
-- **map_node / map_connections are defined but unwired.** The atlas graph does not
-  yet read them. Activating this links rounds + tools to atlas nodes.
+- **map_node / map_connections are defined but unwired** — and superseded. The
+  linking rule became "content deep-links to existing tiles, never its own node",
+  and `atlasLinks` (in `_data/rounds.js`) is the wired mechanism as of 2026-07-09:
+  index-card pills and post-meta pills link INTO `/atlas/#zone/node`, and the atlas
+  HUD's Connected column lists linking content back OUT (`CONTENT_LINKS`, emitted
+  at build time in `src/atlas/index.njk`). Remove map_node/map_connections or
+  repurpose them when article-level nodes are revisited. Learn modules and talks
+  still need `atlasLinks`-style authoring to join the loop.
 - **Atlas zone data is hardcoded in `src/atlas/index.njk`**, not in a registry.
 - **~9 CMS county typos** unmatched; add an alias patch to `normCounty` if needed.
