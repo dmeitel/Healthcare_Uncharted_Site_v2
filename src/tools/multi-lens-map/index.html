@@ -660,7 +660,18 @@ body[data-colorblind="true"] {
   display: flex; flex-direction: column;
 }
 .sheet-handle { display: none; }
-.mob-legend { display: none; }
+/* map-canvas legend strip: hidden only at >=1360px where the bottom-bar legend lives.
+   Under 1360px this strip IS the scale (the bottom-bar legend is display:none there),
+   which also restores a visible+tappable scale to the 700-1359px band that had none. */
+.mob-legend {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 4px; flex-shrink: 0;
+  border-bottom: 1px solid var(--hu-border);
+  background: var(--hu-surface);
+}
+.mob-legend-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hu-text-3); }
+.mob-legend .legend-anno { font-size: 10px; color: var(--hu-text-3); font-family: var(--mono); }
+@media (min-width: 1360px) { .mob-legend { display: none; } }
 .data-section { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; padding-bottom: 8px; }
 .detail-header { padding: 20px; border-bottom: 1px solid var(--hu-border); }
 .detail-eyebrow {
@@ -764,6 +775,14 @@ body[data-colorblind="true"] {
 .legend-step.s3 { background: var(--c3); }
 .legend-step.s4 { background: var(--c4); }
 .legend-step.s5 { background: var(--c5); }
+/* direct-manipulation scale (rolled out from Operators): each band is a button —
+   tap to isolate its states, tap again to release. Session state, never in the URL. */
+.legend-scale .lb { border: none; padding: 0; cursor: pointer; transition: transform .12s; }
+.legend-scale .lb:hover { transform: scaleY(1.35); }
+.legend-scale .lb[aria-pressed="true"] { transform: scaleY(1.35); box-shadow: 0 0 0 1.5px var(--hu-text-1); }
+.legend-scale .lb:focus-visible { outline: 2px solid var(--hu-teal); outline-offset: 1px; }
+@media (hover: none) { .legend-scale button.lb { height: 18px; } }
+.state.dim { opacity: 0.18; }
 .legend-anno { font-size: 12px; color: var(--hu-text-3); font-family: var(--mono); }
 
 .time-control { display: flex; align-items: center; gap: 12px; justify-self: center; }
@@ -1342,6 +1361,17 @@ body[data-colorblind="true"] {
 }
 
 /* ================================================================
+   COARSE-POINTER FLOOR — bespoke controls join the 44px touch
+   standard (hu-global already covers selector/pop-opt/icon-btn/
+   toggle-chip). Desktop bar is 56px tall so 44px buttons fit;
+   tablet/phone bars are height:auto and wrap.
+================================================================ */
+@media (hover: none) {
+  .grain-btn, .time-mode-btn, .card-tab { min-height: 44px; display: inline-flex; align-items: center; }
+  .year-step-btn { width: 44px; height: 44px; }
+}
+
+/* ================================================================
    MOBILE  ≤ 699px  (HU shell standard breakpoint)
 ================================================================ */
 @media (max-width: 699px) {
@@ -1482,16 +1512,8 @@ body[data-colorblind="true"] {
     width: 44px; height: 4px; border-radius: 2px; background: var(--hu-border-2);
   }
 
-  /* ── Mobile color legend ── */
-  .mob-legend {
-    display: flex; align-items: center; gap: 8px;
-    padding: 5px 12px 4px; flex-shrink: 0;
-    border-bottom: 1px solid var(--hu-border);
-    background: var(--hu-surface);
-  }
-  .mob-legend-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hu-text-3); }
+  /* ── Mobile color legend: base styles live near .legend-step; phone just shrinks the swatches ── */
   .mob-legend .legend-step { width: 22px; height: 12px; }
-  .mob-legend .legend-anno { font-size: 10px; color: var(--hu-text-3); font-family: var(--mono); }
 
   /* ── Instrument chrome steps back on small screens ── */
   .dock-head { display: none; }
@@ -1631,12 +1653,12 @@ body[data-colorblind="true"] {
       <!-- mobile color legend strip -->
       <div class="mob-legend" id="mobLegend">
         <span class="mob-legend-label">Scale</span>
-        <div class="legend-scale">
-          <div class="legend-step s1"></div>
-          <div class="legend-step s2"></div>
-          <div class="legend-step s3"></div>
-          <div class="legend-step s4"></div>
-          <div class="legend-step s5"></div>
+        <div class="legend-scale" role="group" aria-label="Color scale. Select a band to isolate its states.">
+          <button class="legend-step lb s1" data-band="1" aria-pressed="false" aria-label="Isolate states in band 1 of 5"></button>
+          <button class="legend-step lb s2" data-band="2" aria-pressed="false" aria-label="Isolate states in band 2 of 5"></button>
+          <button class="legend-step lb s3" data-band="3" aria-pressed="false" aria-label="Isolate states in band 3 of 5"></button>
+          <button class="legend-step lb s4" data-band="4" aria-pressed="false" aria-label="Isolate states in band 4 of 5"></button>
+          <button class="legend-step lb s5" data-band="5" aria-pressed="false" aria-label="Isolate states in band 5 of 5"></button>
         </div>
         <span class="legend-anno mob-legend-anno" id="mobLegendAnno">worse → better</span>
       </div>
@@ -1809,14 +1831,14 @@ body[data-colorblind="true"] {
   </div><!-- /.main -->
 
   <footer class="bottom-bar">
-    <div class="legend" data-tip="<strong>Color scale</strong><br>States are split into 5 equal groups (quintiles). In Snapshot mode: red = worst, green = best. In Change mode: red = most declined, green = most improved.">
+    <div class="legend" data-tip="<strong>Color scale</strong><br>States are split into 5 equal groups (quintiles). In Snapshot mode: red = worst, green = best. In Change mode: red = most declined, green = most improved. Tap a band to isolate its states.">
       <span class="legend-label">Scale</span>
-      <div class="legend-scale">
-        <div class="legend-step s1"></div>
-        <div class="legend-step s2"></div>
-        <div class="legend-step s3"></div>
-        <div class="legend-step s4"></div>
-        <div class="legend-step s5"></div>
+      <div class="legend-scale" role="group" aria-label="Color scale. Select a band to isolate its states.">
+        <button class="legend-step lb s1" data-band="1" aria-pressed="false" aria-label="Isolate states in band 1 of 5"></button>
+        <button class="legend-step lb s2" data-band="2" aria-pressed="false" aria-label="Isolate states in band 2 of 5"></button>
+        <button class="legend-step lb s3" data-band="3" aria-pressed="false" aria-label="Isolate states in band 3 of 5"></button>
+        <button class="legend-step lb s4" data-band="4" aria-pressed="false" aria-label="Isolate states in band 4 of 5"></button>
+        <button class="legend-step lb s5" data-band="5" aria-pressed="false" aria-label="Isolate states in band 5 of 5"></button>
       </div>
       <span class="legend-anno">worse → better</span>
       <button class="cb-legend-btn" id="cbToggleBtn" data-tip="Toggle colorblind-friendly scale (orange/blue)" aria-label="Colorblind mode">◑</button>
@@ -2382,6 +2404,7 @@ let sysOutlookCollapsed   = false;
 let metricOutlookCollapsed = false;
 let compareState = null;
 let mapMode = 'explore';
+let legendIso = null;   // isolated quintile band 1-5 (tap a scale band), or null — session state, never in the URL (colorblind precedent)
 
 // ===== COUNTY GRANULARITY =====
 let mapGrain = 'state';            // 'state' | 'county'
@@ -2902,6 +2925,8 @@ function drawMap() {
     : activeLens === 'baseline' ? 'lower · higher'
     : 'worse → better';
   document.querySelectorAll('.legend-anno').forEach(el => { el.textContent = legendAnnoText; });
+  // scale-band buttons reflect the isolate everywhere they render (bottom bar + canvas strip)
+  document.querySelectorAll('.legend-scale .lb').forEach(b => b.setAttribute('aria-pressed', String(legendIso === +b.dataset.band)));
   refreshTimeLabel();
 
   const pad = 20;
@@ -2931,6 +2956,7 @@ function drawMap() {
       const abbr = FIPS_TO_ABBR[fips];
       if (!abbr) return 'state has-val-1';
       let cls = 'state ' + colorClassFor(abbr);
+      if (legendIso != null && displayQuintile(abbr) !== legendIso) cls += ' dim';  // scale-band isolation: everything outside the band dims, no-data included
       if (abbr === selectedState) cls += ' selected';
       if (abbr === compareState)  cls += ' compare-state';
       return cls;
@@ -3105,6 +3131,7 @@ document.getElementById('popMetricList').addEventListener('click', e => {
     document.querySelectorAll('.lens-btn').forEach(b => b.classList.toggle('active', b.dataset.lens === lens));
   }
   activeMetricIdx = i;
+  legendIso = null;   // bands re-rank per metric — a held isolate would lie
   renderAll();
   syncURL();
   announce('Metric: ' + METRICS[lens].items[i].name);
@@ -3773,7 +3800,7 @@ function resetAndApplyURL() {
     activeLens = DEF_LENS; activeMetricIdx = defMetricIdx(DEF_LENS);
     selectedState = null; compareState = null;
     selectedYearIdx = ALL_YEARS.length - 1; sliderMode = 'snapshot'; mapMode = 'explore';
-    mapGrain = 'state'; pendingGrain = null;
+    mapGrain = 'state'; pendingGrain = null; legendIso = null;
     applyURLState();
   } catch (e) { console.warn('url state', e); }
   applyingURL = false;
@@ -3857,6 +3884,7 @@ document.querySelectorAll('.lens-btn').forEach(btn => {
     btn.classList.add('active');
     activeLens = btn.dataset.lens;
     activeMetricIdx = 0;
+    legendIso = null;
     renderAll();
     syncURL();
   });
@@ -3881,6 +3909,7 @@ yearNextBtn.disabled = (selectedYearIdx === ALL_YEARS.length - 1);
 
 function applyYearIdx(idx) {
   selectedYearIdx = idx;
+  legendIso = null;   // ranks are per-year
   sliderEl.value = idx;
   refreshTimeLabel();
   yearPrevBtn.disabled = idx === 0;
@@ -3936,6 +3965,7 @@ document.querySelectorAll('[data-mode]').forEach(btn => {
     document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     sliderMode = btn.dataset.mode;
+    legendIso = null;   // snapshot and change rank differently
     drawMap();
     syncURL();
   });
@@ -4128,11 +4158,26 @@ document.getElementById('grainToggle').addEventListener('click', (e) => {
   if (!b || b.disabled || b.dataset.grain === mapGrain) return;
   mapGrain = b.dataset.grain;
   pendingGrain = null;   // an explicit choice wins over any parked URL restore
+  legendIso = null;      // band isolation is a state-view feature
   document.querySelectorAll('#grainToggle .grain-btn').forEach(x => x.classList.toggle('active', x.dataset.grain === mapGrain));
   if (mapGrain === 'county') { hideCountyTip(); ensureCountyGeo(); }
   drawMap();
   syncURL();
 });
+
+// direct manipulation (rolled out from Operators): tap a scale band to isolate
+// its states; tap again to release. Both legend instances (bottom bar + canvas
+// strip) share the handler. State grain only, and no-op when Change mode has
+// no prior year (every band would be empty). Never serialized — session state.
+document.querySelectorAll('.legend-scale').forEach(sc => sc.addEventListener('click', e => {
+  const b = e.target.closest('.lb'); if (!b) return;
+  if (mapGrain === 'county') return;
+  if (sliderMode === 'change' && selectedYearIdx === 0) return;
+  const band = +b.dataset.band;
+  legendIso = (legendIso === band) ? null : band;
+  drawMap();
+  announce(legendIso != null ? 'Isolating states in color band ' + band + ' of 5' : 'Showing all states');
+}));
 
 loadMap();
 // first render re-serializes, so a mangled shared link self-normalizes

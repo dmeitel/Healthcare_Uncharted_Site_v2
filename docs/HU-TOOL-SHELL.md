@@ -108,7 +108,7 @@ The words users see next to those icons. A concept gets ONE name; synonyms in UI
 
 ## Type roles — mono is metadata, never content
 
-Mono-uppercase-tracked text (`var(--mono)` + uppercase + letter-spacing) is reserved for TRUE metadata: control-group labels, dock heads, source lines, live readouts, axis/scale annotations. It is never body content and never a heading in disguise; if a string is a sentence someone reads, it's `var(--font)`. If it's a title, it's `var(--display)`. Floor: 10px — mono below 10px is texture, not text, and texture pretending to be text is ornament (rule 9).
+Mono-uppercase-tracked text (`var(--mono)` + uppercase + letter-spacing) is reserved for TRUE metadata: control-group labels, dock heads, source lines, live readouts, axis/scale annotations. It is never body content and never a heading in disguise; if a string is a sentence someone reads, it's `var(--font)`. If it's a title, it's `var(--display)`. Floor (ratified 2026-07-10): 10px for body and INTERACTIVE text; uppercase mono micro-labels may sit at 9-9.5px — caps + tracking make them read larger than their point size, and the sitewide de facto passed repeated visual QA. Below 9px is texture, not text, and texture pretending to be text is ornament (rule 9).
 
 ## Accessibility — required on every tool
 

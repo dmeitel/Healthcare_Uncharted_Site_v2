@@ -202,6 +202,24 @@ module.exports = {
     },
 
     {
+      id:       'ehr-architecture',
+      num:      '03',
+      category: 'The Provider',
+      ps:       'P2a / P2b / P3 / P4',
+      title:    'The Provider: EHR Architecture and Clinical Workflow',
+      desc:     'The screen you fight with every shift is the visible tip of a data architecture older than most of the people using it. Patient, encounter, event, data point. Why the EHR is shaped the way it is, and why the workflows follow.',
+      url:      '/learn/ehr-architecture/',
+      tags:     ['EHR', 'Architecture', 'Workflow'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'EHR Systems',          zone: 'provider', to: 'provider/ehr' },
+        { label: 'Clinical Informatics', zone: 'provider', to: 'provider/informatics' },
+        { label: 'FHIR & Interop',       zone: 'medsci',   to: 'medsci/fhir' }
+      ]
+    },
+
+    {
       id:       'healthcare-gap',
       num:      '08',
       category: 'Workforce & Access',

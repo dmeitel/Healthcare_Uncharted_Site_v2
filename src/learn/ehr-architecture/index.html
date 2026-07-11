@@ -1,0 +1,343 @@
+---
+layout: base.njk
+section: learn
+title: "The Provider: EHR Architecture and Clinical Workflow"
+description: "The screen you fight with every shift is the visible tip of a data architecture older than most of the people using it. Patient, encounter, event, data point: why the EHR is shaped the way it is, and why the workflows follow."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial palette + DM Serif Display: the Provider chapter of the player series. The filing system under the interface."
+---
+{% block extraHead %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+{% endblock %}
+
+<style>
+  /* ── Editorial palette layered on HU tokens (same idiom as Articles 07/08) ── */
+  .ai3{
+    --jp-bg:        var(--dark);
+    --jp-surface:   var(--surface);
+    --jp-raised:    var(--raised);
+    --jp-line:      var(--border);
+    --jp-line-2:    var(--border2);
+    --jp-ink-1:     var(--t1);
+    --jp-ink-2:     var(--t2);
+    --jp-ink-3:     var(--t3);
+    --jp-ink-4:     var(--t4);
+    --jp-accent:    var(--teal);
+    --jp-accent-d:  var(--teal-dk);
+    --jp-blue:      #6aadff;
+    --jp-amber:     var(--amber);
+    --jp-red:       var(--red);
+    --jp-serif:     'DM Serif Display', Georgia, serif;
+    --jp-sans:      var(--font);
+    --jp-mono:      var(--mono);
+  }
+  [data-theme="light"] .ai3{
+    --jp-accent: var(--teal-dk);
+    --jp-blue:   var(--blue);
+  }
+
+  .ai3{ background:var(--jp-bg); color:var(--jp-ink-2); font-family:var(--jp-sans); line-height:1.65; }
+  .ai3 *,.ai3 *::before,.ai3 *::after{ box-sizing:border-box; }
+
+  /* ── HERO ── */
+  .a3-hero{ position:relative; overflow:hidden; border-bottom:1px solid var(--jp-line);
+            background: linear-gradient(135deg, var(--jp-bg) 0%, var(--jp-surface) 55%, var(--jp-bg) 100%); }
+  .a3-hero::before{ content:""; position:absolute; top:-160px; right:-120px; width:520px; height:520px;
+                    background:radial-gradient(circle, rgba(78,205,196,.14) 0%, transparent 65%); pointer-events:none; }
+  .a3-hero::after{ content:""; position:absolute; bottom:-220px; left:-160px; width:560px; height:560px;
+                   background:radial-gradient(circle, rgba(27,95,168,.10) 0%, transparent 65%); pointer-events:none; }
+  .a3-hero-inner{ max-width:1100px; margin:0 auto; padding:80px 36px 64px; position:relative; z-index:1;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:780px){ .a3-hero-inner{ grid-template-columns:1fr; gap:32px; padding:56px 24px 44px; } }
+
+  .jp-eyebrow{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--jp-accent); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .jp-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--jp-accent);
+                    box-shadow:0 0 14px var(--jp-accent); flex-shrink:0; }
+  .jp-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--jp-ink-4); }
+
+  .jp-h1{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(44px, 7vw, 86px);
+          line-height:1.02; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 22px; }
+  .jp-h1 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-hero-sub{ font-size:19px; line-height:1.55; color:var(--jp-ink-2); max-width:640px; margin:0 0 32px; }
+  .jp-hero-sub strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-thesis{ background: linear-gradient(135deg, rgba(78,205,196,.09), rgba(27,95,168,.04));
+              border:1px solid rgba(78,205,196,.22); border-left:4px solid var(--jp-accent);
+              border-radius:6px; padding:18px 22px; max-width:680px; }
+  .jp-thesis-label{ color:var(--jp-accent); font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .jp-thesis-text{ font-size:15px; line-height:1.6; color:var(--jp-ink-2); display:inline; }
+  .jp-thesis-text strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-byline{ margin-top:24px; font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3);
+              letter-spacing:.06em; display:flex; gap:14px; flex-wrap:wrap; }
+  .jp-byline span strong{ color:var(--jp-ink-2); font-weight:500; }
+
+  /* hero viz: the data chain, drawn as the hierarchy it is */
+  .a3-hero-viz{ width:300px; max-width:100%; }
+  @media (max-width:780px){ .a3-hero-viz{ width:100%; max-width:340px; } }
+  .a3v{ width:100%; height:auto; display:block; overflow:visible; }
+  .a3v-node{ fill:var(--jp-surface); stroke:var(--jp-accent); stroke-width:1.5; }
+  .a3v-node.root{ fill:rgba(78,205,196,.14); }
+  .a3v-line{ stroke:var(--jp-ink-4); stroke-width:1.2; }
+  .a3v-lab{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; fill:var(--jp-ink-2); }
+  .a3v-cap{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; fill:var(--jp-ink-3); }
+
+  /* ── BODY ── */
+  .jp-body{ max-width:880px; margin:0 auto; padding:64px 36px 96px; }
+  @media (max-width:780px){ .jp-body{ padding:48px 24px 72px; } }
+  .jp-section + .jp-section{ margin-top:60px; }
+
+  .jp-kicker{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+              color:var(--jp-accent); margin-bottom:14px; display:flex; align-items:center; gap:9px; }
+  .jp-kicker::before{ content:""; width:22px; height:1px; background:var(--jp-accent); }
+
+  .jp-h2{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(28px, 4vw, 42px);
+          line-height:1.15; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 18px; }
+  .jp-h2 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-p{ font-size:17px; line-height:1.78; color:var(--jp-ink-2); margin:0 0 18px; }
+  .jp-p strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-p em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  .jp-p a{ color:var(--jp-accent); text-decoration:none; border-bottom:1px dotted var(--jp-accent); }
+  .jp-p a:hover{ border-bottom-style:solid; }
+
+  .jp-pull{ font-family:var(--jp-serif); font-size:25px; line-height:1.4; color:var(--jp-ink-1);
+            margin:30px 0; padding:8px 0 8px 28px; border-left:3px solid var(--jp-accent); font-style:italic; }
+
+  /* ── TLDR cards ── */
+  .a3-tldr{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:36px 0 0; }
+  @media (max-width:680px){ .a3-tldr{ grid-template-columns:1fr; } }
+  .a3-tldr-card{ background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:18px 20px; }
+  .a3-tldr-tag{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+                font-weight:600; margin-bottom:8px; }
+  .a3-tldr-tag.shape{ color:var(--jp-accent); }
+  .a3-tldr-tag.split{ color:var(--jp-blue); }
+  .a3-tldr-tag.cost{ color:var(--jp-amber); }
+  [data-theme="light"] .a3-tldr-tag.cost{ color:var(--amber-dk); }
+  .a3-tldr-card p{ font-size:13.5px; line-height:1.6; color:var(--jp-ink-2); margin:0; }
+  .a3-tldr-card p strong{ color:var(--jp-ink-1); }
+
+  /* ── the chain, rendered inline ── */
+  .a3-chain{ display:flex; align-items:stretch; gap:10px; margin:26px 0; flex-wrap:wrap; }
+  .a3-link{ flex:1; min-width:150px; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:14px 16px; position:relative; }
+  .a3-link .cl{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--jp-accent); margin-bottom:6px; }
+  .a3-link .ct{ font-family:var(--jp-serif); font-size:19px; color:var(--jp-ink-1); margin-bottom:6px; }
+  .a3-link p{ font-size:12.5px; line-height:1.55; color:var(--jp-ink-3); margin:0; }
+
+  /* ── verdict strip ── */
+  .a3-verdict{ display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:22px 0 0;
+               background:var(--jp-raised); border:1px solid var(--jp-line); border-radius:8px; padding:14px 18px; }
+  .a3-verdict b{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+                 color:var(--jp-accent); font-weight:600; flex-shrink:0; }
+  .a3-verdict span{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); }
+  .a3-verdict span strong{ color:var(--jp-ink-1); }
+
+  /* ── go-deeper cards ── */
+  .a3-go{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:28px 0 0; }
+  @media (max-width:680px){ .a3-go{ grid-template-columns:1fr; } }
+  .a3-go a{ display:block; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px;
+            padding:16px 18px; text-decoration:none; transition:border-color .15s, transform .15s; }
+  .a3-go a:hover{ border-color:var(--jp-accent); transform:translateY(-2px); }
+  .a3-go .t{ font-size:14px; font-weight:600; color:var(--jp-ink-1); margin-bottom:4px; }
+  .a3-go .d{ font-size:12.5px; line-height:1.55; color:var(--jp-ink-3); }
+  .a3-go .k{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--jp-accent); margin-bottom:6px; }
+
+  /* ── sources ── */
+  .jp-source{ font-size:13px; line-height:1.7; color:var(--jp-ink-3); margin-bottom:10px; padding-left:18px; position:relative; }
+  .jp-source::before{ content:"·"; position:absolute; left:4px; color:var(--jp-accent); }
+  .jp-source a{ color:var(--jp-accent); text-decoration:none; }
+  .jp-source a:hover{ text-decoration:underline; }
+  .jp-source em{ font-style:normal; color:var(--jp-ink-2); }
+</style>
+
+<div class="ai3">
+
+  <!-- ── HERO ── -->
+  <header class="a3-hero">
+    <div class="a3-hero-inner">
+      <div>
+        <div class="jp-eyebrow">
+          <span class="dot"></span>
+          <span>Article 03</span>
+          <span class="sep"></span>
+          <span>The Provider</span>
+        </div>
+
+        <h1 class="jp-h1">It's not the interface. It's the <em>filing system</em>.</h1>
+
+        <p class="jp-hero-sub">Every clinician has a moment, usually around click forty of documenting one visit, of asking who designed this thing and whether they ever met a patient. Fair question. The answer is that the screen you fight with every shift is the visible tip of a data architecture that is older than most of the people using it, and that <strong>almost none of it is arbitrary.</strong></p>
+
+        <div class="jp-thesis">
+          <span class="jp-thesis-label">Principle</span>
+          <span class="jp-thesis-text">The EHR is not a documentation tool that happens to bill. It is a <strong>billing and legal record system that happens to document care.</strong> Every "why does it work this way" answer starts there.</span>
+        </div>
+
+        <div class="jp-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~12 min read</span>
+          <span>ONC · HL7 · Arndt</span>
+        </div>
+
+        <div class="card-fps" style="margin-top:18px;margin-bottom:0">
+          <a class="fp fp-provider" href="/atlas/#provider/ehr">EHR Systems</a>
+          <a class="fp fp-provider" href="/atlas/#provider/informatics">Clinical Informatics</a>
+          <a class="fp fp-medsci" href="/atlas/#medsci/fhir">FHIR &amp; Interop</a>
+        </div>
+      </div>
+
+      <div class="a3-hero-viz" aria-hidden="true">
+        <svg class="a3v" viewBox="0 0 300 260">
+          <text class="a3v-cap" x="150" y="16" text-anchor="middle">the chain</text>
+          <line class="a3v-line" x1="150" y1="46" x2="150" y2="74"/>
+          <line class="a3v-line" x1="150" y1="106" x2="150" y2="134"/>
+          <line class="a3v-line" x1="150" y1="166" x2="150" y2="194"/>
+          <rect class="a3v-node root" x="90" y="26" width="120" height="30" rx="6"/>
+          <text class="a3v-lab" x="150" y="45" text-anchor="middle">Patient</text>
+          <rect class="a3v-node" x="90" y="76" width="120" height="30" rx="6"/>
+          <text class="a3v-lab" x="150" y="95" text-anchor="middle">Encounter</text>
+          <rect class="a3v-node" x="90" y="136" width="120" height="30" rx="6"/>
+          <text class="a3v-lab" x="150" y="155" text-anchor="middle">Order · Event</text>
+          <rect class="a3v-node" x="90" y="196" width="120" height="30" rx="6"/>
+          <text class="a3v-lab" x="150" y="215" text-anchor="middle">Data point</text>
+          <text class="a3v-cap" x="150" y="252" text-anchor="middle">everything hangs off something</text>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="jp-body">
+
+    <!-- ── TLDR ── -->
+    <section class="jp-section">
+      <div class="a3-tldr">
+        <div class="a3-tldr-card">
+          <div class="a3-tldr-tag shape">The shape</div>
+          <p><strong>Patient, encounter, event, data point.</strong> The chain isn't a design choice. It's forced by medicine, billing law, and thirty years of regulation stacking up.</p>
+        </div>
+        <div class="a3-tldr-card">
+          <div class="a3-tldr-tag split">The split</div>
+          <p><strong>The database clinicians write to is not the database analysts read from.</strong> That gap, and the overnight bridge across it, is why your dashboard describes yesterday.</p>
+        </div>
+        <div class="a3-tldr-card">
+          <div class="a3-tldr-tag cost">The cost</div>
+          <p><strong>Primary care physicians spend over half the workday inside the EHR.</strong> The workflow is the architecture, surfaced one click at a time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── THE CHAIN ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The chain</div>
+      <h2 class="jp-h2">Everything hangs off <em>something</em></h2>
+
+      <p class="jp-p">Start with the structure, because every screen you have ever used is a window onto it. When registration turns a person into a record, the process I walked through in <a href="/learn/patient-data-record/">Article 02</a>, that record becomes the root of a tree. Everything else in the chart hangs off it in a strict order.</p>
+
+      <div class="a3-chain">
+        <div class="a3-link"><div class="cl">Level 1</div><div class="ct">Patient</div><p>One identity, one root. The thing the whole tree exists to keep straight.</p></div>
+        <div class="a3-link"><div class="cl">Level 2</div><div class="ct">Encounter</div><p>The visit container. Nothing clinical exists without one, because nothing BILLABLE exists without one.</p></div>
+        <div class="a3-link"><div class="cl">Level 3</div><div class="ct">Order / Event</div><p>The med, the lab, the imaging study. Each one hangs off exactly one encounter.</p></div>
+        <div class="a3-link"><div class="cl">Level 4</div><div class="ct">Data point</div><p>The result, the vital, the note. Each one hangs off the event that produced it.</p></div>
+      </div>
+
+      <p class="jp-p">Why an encounter, though? Why can't a lab result just belong to the patient? Because the payment system needs to know which VISIT to attach the claim to, and the legal record needs to know under whose care and on whose authority everything happened. The encounter is where medicine, billing, and liability all agree to meet. Once you see that, half the EHR's rigidity explains itself: the system will fight you to the death before it lets clinical data float free of its container.</p>
+
+      <p class="jp-p">And here's <a href="/learn/laws-and-paradoxes/">Conway's law</a> doing pushups in the background: the software shipped the org chart. Registration owns level one, clinical departments own level three, and the seams between them are exactly where your workflow gets weird.</p>
+    </section>
+
+    <!-- ── THE FILING CABINET ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The filing cabinet</div>
+      <h2 class="jp-h2">Older than <em>relational</em></h2>
+
+      <p class="jp-p">Now the part almost nobody tells clinicians. The major EHRs are not built like modern web apps, and they are not built like the relational databases every analyst learns first. Their roots go back to MUMPS, a hierarchical database and language built at Massachusetts General Hospital in the 1960s, DESIGNED for medical records before "database" was even a settled idea. The dominant systems in American hospitals still carry that lineage in their bones.</p>
+
+      <p class="jp-p">A hierarchical store is built for one question: give me EVERYTHING about THIS patient, fast. Top of the tree, straight down, whole chart, milliseconds. That is exactly the question a clinician at the bedside asks, and it is why the chart opens instantly at 3 AM even when the hospital's network is having a bad night. I work in this architecture every day on the informatics side, and for its intended question it remains ruthlessly good.</p>
+
+      <p class="jp-p">But flip the question sideways, "every patient whose creatinine doubled in 48 hours," and the filing cabinet becomes the wrong tool. That question wants to cut ACROSS every tree at once, and a chart-shaped store answers it badly. So the industry evolved a standard pattern: keep the fast hierarchical chart for care, and copy everything out, on a schedule, into relational databases built for exactly those sideways questions.</p>
+
+      <div class="a3-verdict"><b>The point</b><span>The EHR isn't slow-minded. It's <strong>optimized for a different question than the one analysts ask.</strong> One patient deep, not all patients wide. Every reporting frustration you've ever had lives in that difference.</span></div>
+    </section>
+
+    <!-- ── THE SPLIT ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The split</div>
+      <h2 class="jp-h2">Why your dashboard describes <em>yesterday</em></h2>
+
+      <p class="jp-p">That copy-out is the split brain of every hospital's data life, and it is the single most useful thing a clinician can know about reporting. The chart you documented in at 2 PM is the operational system. The report your manager pulls is running against the relational copy, and that copy was refreshed overnight. Between the two sits an extract pipeline with a schedule, a lag, and occasionally a bad morning.</p>
+
+      <p class="jp-p">So when the unit dashboard contradicts what you KNOW happened on your shift, nobody is lying to you. You are looking at two different databases, one of which is describing yesterday. Ask which one your report runs against. Watch how few people can answer.</p>
+
+      <div class="jp-pull">The chart is real time. The report is a photograph of the chart, developed overnight.</div>
+
+      <p class="jp-p">This split is also why the site's <a href="/tools/#sql-mystery">SQL Mystery game</a> exists, it teaches the reporting side's shape, and why <a href="/learn/healthcare-data-sources/">Method 02</a> spends so much time on where numbers actually come from. If you work WITH healthcare data rather than IN the chart, the relational copy is your whole world, encounter-grained, and it inherits every quirk of the chain above.</p>
+    </section>
+
+    <!-- ── WHY THE WORKFLOW ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The workflow</div>
+      <h2 class="jp-h2">Regulation, rendered in <em>buttons</em></h2>
+
+      <p class="jp-p">So the architecture explains the shape. What explains the CLICKS? Mostly law, arriving in layers. In 2009 the HITECH Act put $25.9 billion behind EHR adoption, and it worked; nearly every American hospital went digital in half a decade. But the money came with Meaningful Use criteria, and the criteria came with ONC certification requirements, and every one of those requirements had to land somewhere in the interface. A measurable share of the screens you click through exist because a regulation said the system must capture that field, and a certification test verified the button was there.</p>
+
+      <p class="jp-p">Layer on billing. For decades, evaluation-and-management coding rules tied reimbursement to what was DOCUMENTED, so documentation grew to serve the claim. The 4Ps lens from <a href="/learn/4ps-framework/">Article 01</a> earns its keep right here: the Provider holds the keyboard, but the screen serves the Payer and the Policymaker too. Three masters, one interface, and the clinician pays the integration cost.</p>
+
+      <p class="jp-p">That cost is measured. Arndt and colleagues instrumented primary care physicians' EHR use and found they spend more than half the workday in the system, a finding that has anchored the documentation-burden literature since. It is also why ambient scribes stuck when so much health tech didn't, which is a story I told in <a href="/learn/ai-in-healthcare/">Article 07</a>.</p>
+
+      <div class="a3-verdict"><b>The point</b><span>The system is not gaslighting you. It is <strong>faithfully serving customers who aren't in the room:</strong> the claim, the auditor, the certification test. Name the customer behind a screen and the screen starts making sense.</span></div>
+    </section>
+
+    <!-- ── THE DOOR ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The door</div>
+      <h2 class="jp-h2">FHIR, and what's <em>opening</em></h2>
+
+      <p class="jp-p">One more piece, because it's the hopeful one. For most of EHR history, getting data OUT meant proprietary interfaces and expensive middleware. The FHIR standard changed the posture: both major vendors now publish public API documentation, at fhir.epic.com and fhir.cerner.com, describing standardized resources any authorized app can request. The 21st Century Cures Act's information-blocking rules put federal weight behind that openness. The <a href="/atlas/#policy/info-blocking">atlas has a tile for it</a>, because the fight over that door is one of the quiet big stories in health IT.</p>
+
+      <p class="jp-p">It does not rewrite the filing cabinet. The chain is still the chain; FHIR resources mirror it almost exactly, which by this point in the article should not surprise you. What it changes is who gets to ask the cabinet questions. That is new, and it is why this era of health IT is more interesting than the decade before it.</p>
+
+      <p class="jp-p">If you work in a hospital: the system you fight is a forty-year-old answer to a question that hasn't changed, wrapped in twenty years of regulation, finally growing standard doors. Fight it less. Learn its grain. The grain is learnable, and once you have it, you stop being the person the system happens TO.</p>
+
+      <div class="a3-go">
+        <a href="/learn/patient-data-record/">
+          <div class="k">Article 02 · The Patient</div>
+          <div class="t">How You Become a Data Record</div>
+          <div class="d">The registration-to-discharge journey that creates the root of the tree this article climbs.</div>
+        </a>
+        <a href="/tools/#sql-mystery">
+          <div class="k">Tool · Game</div>
+          <div class="t">Clinical SQL Mystery</div>
+          <div class="d">Learn the reporting side by solving a case against realistic encounter-grained tables.</div>
+        </a>
+        <a href="/learn/healthcare-data-sources/">
+          <div class="k">Method 02</div>
+          <div class="t">Where Healthcare Data Lives</div>
+          <div class="d">The warehouse blueprint: how numbers get from systems like these into everything on this site.</div>
+        </a>
+        <a href="/learn/laws-and-paradoxes/">
+          <div class="k">Field Guide 01</div>
+          <div class="t">Healthcare Laws &amp; Paradoxes</div>
+          <div class="d">Conway's law and the Productivity Paradox, both of which this article kept tripping over.</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── SOURCES ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Sources</div>
+      <h2 class="jp-h2">The receipts</h2>
+      <p class="jp-p">Every claim above traces to one of these. Full citations, with everything else this site cites, live in the <a href="/learn/#appendix">Reference Appendix</a>. Vendor specifics stay at the level of their public documentation, per this site's source policy.</p>
+      <div class="jp-source"><em>ONC / HealthIT.gov</em> · <a href="https://www.healthit.gov" target="_blank" rel="noopener">EHR certification criteria and federal health IT policy</a>.</div>
+      <div class="jp-source"><em>HHS</em> · <a href="https://www.hhs.gov/hipaa/for-professionals/special-topics/hitech-act-enforcement-interim-final-rule/index.html" target="_blank" rel="noopener">HITECH Act and the $25.9B EHR incentive program</a>.</div>
+      <div class="jp-source"><em>HL7 International</em> · <a href="https://hl7.org/fhir/R4/resourcelist.html" target="_blank" rel="noopener">FHIR R4 resource model</a> · Patient, Encounter, ServiceRequest, Observation: the chain, standardized.</div>
+      <div class="jp-source"><em>Epic</em> · <a href="https://fhir.epic.com" target="_blank" rel="noopener">Public FHIR API documentation</a> · the only Epic source used on this site.</div>
+      <div class="jp-source"><em>Oracle Health</em> · <a href="https://fhir.cerner.com" target="_blank" rel="noopener">Public FHIR API documentation</a>.</div>
+      <div class="jp-source"><em>Arndt et al., Annals of Family Medicine (2017)</em> · <a href="https://www.annfammed.org/content/15/5/419" target="_blank" rel="noopener">Tethered to the EHR</a> · over half the physician workday in the system.</div>
+    </section>
+
+  </div>
+</div>

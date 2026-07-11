@@ -49,14 +49,14 @@ permalink: /tools/healthcare-career-tree/
   .hct-btn:hover { color: #E2EEF4; border-color: rgba(78,205,196,0.5); }
   .hct-btn.reset { border-color: rgba(232,120,120,0.35); color: rgba(240,170,170,0.9); }
   .hct-btn.reset:hover { border-color: rgba(232,120,120,0.7); background: rgba(232,120,120,0.12); color: #ffb3b3; }
-  .hct-phead-txt { font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; pointer-events: none; }
+  .hct-phead-txt { font-family: var(--display); font-size: 15px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; pointer-events: none; }
   .hct-phead-bar { opacity: 0.8; pointer-events: none; }
-  .hct-fhead { font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; pointer-events: none; opacity: 0.82; }
+  .hct-fhead { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; pointer-events: none; opacity: 0.95; }
   .hct-dcontainer { fill-opacity: 0.05; stroke-width: 1.3; stroke-opacity: 0.5; pointer-events: none; }
   .hct-pcontainer { fill-opacity: 0.02; stroke-width: 1.7; stroke-opacity: 0.7; pointer-events: none; }
   .hct-rcontainer { fill: rgba(255,255,255,0.01); stroke: rgba(255,255,255,0.09); stroke-width: 1.3; pointer-events: none; }
   .hct-region-div { stroke: rgba(255,255,255,0.16); stroke-width: 1.5; stroke-dasharray: 3 6; pointer-events: none; }
-  .hct-region-lbl { font-family: var(--display); font-size: 15px; font-weight: 800; letter-spacing: 0.12em; pointer-events: none; }
+  .hct-region-lbl { font-family: var(--display); font-size: 16px; font-weight: 800; letter-spacing: 0.12em; pointer-events: none; }
   .hct-region-clin { fill: rgba(120,210,200,0.65); }
   .hct-region-biz { fill: rgba(232,197,71,0.62); }
   /* ── Canvas: one full-bleed area, three stacked views, ONE active at a time ─── */
@@ -173,6 +173,9 @@ permalink: /tools/healthcare-career-tree/
   .hct-node { cursor: pointer; }
   .hct-node .hx-back { fill: #08120e; }
   .hct-node .hx-body { transition: fill-opacity .15s, stroke-opacity .15s; }
+  /* free-look toggle lit state (career-line focus is the default; pressed = free look) */
+  .hct-btn[aria-pressed="true"] { background: rgba(78,205,196,0.14); border-color: rgba(78,205,196,0.5); color: var(--teal); }
+  [data-theme='light'] .hct-btn[aria-pressed="true"] { color: var(--teal-dk); }
   /* fill:none is load-bearing: a filled ring would tint the semi-transparent .hx-body above it */
   .hct-node .hx-pinring { fill: none; stroke: #E8C547; stroke-width: 3; pointer-events: none; }
   .hct-node .hx-title { font-family: var(--font); font-weight: 600; fill: #EDF6F4; pointer-events: none; }
@@ -248,6 +251,12 @@ permalink: /tools/healthcare-career-tree/
   .hct-edu-req-face { font-family: var(--mono); font-weight: 700; font-size: 14px; color: #6FE3D8; }
   .hct-edu-req-deg { font-size: 12px; color: rgba(180,205,215,0.72); }
   .hct-edu-add { width: 100%; margin-top: 4px; padding: 9px; cursor: pointer; border-radius: 9px; font-family: var(--display); font-size: 12.5px; font-weight: 700; background: rgba(78,205,196,0.14); border: 1px solid rgba(78,205,196,0.42); color: #8FE8DC; transition: all .14s; }
+  /* explicit-layer add pairs: Current vs Future chosen at the moment of adding */
+  .hct-add-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--t3); margin: 16px 0 6px; }
+  .hct-add-lbl.gold { color: rgba(232,197,71,0.65); }
+  [data-theme='light'] .hct-add-lbl.gold { color: #8A6A15; }
+  .hct-add-pair { display: flex; gap: 8px; }
+  .hct-add-pair .hct-pin-btn, .hct-add-pair .hct-edu-add { flex: 1; width: auto; margin-top: 0; }
   .hct-edu-add:hover { background: rgba(78,205,196,0.24); color: #fff; }
   .hct-edu-add.added { background: rgba(93,191,135,0.18); border-color: #5DBF87; color: #BFF0CE; cursor: default; }
   /* ── My Path builder (top container) ───────────────────── */
@@ -901,6 +910,32 @@ permalink: /tools/healthcare-career-tree/
   .hct-search-ico svg { width: 15px; height: 15px; stroke-width: 1.75; }
   .hct-search-box .edu-search { padding-left: 33px; }
 
+  /* ── global search popover: input pinned above the results list ── */
+  .hct-gs-box { padding: 8px 10px 4px; flex-shrink: 0; }
+  .hct-gs-box .hct-search-box { display: flex; }
+  .hct-gs-box .edu-search { width: 100%; box-sizing: border-box; }
+  #hct-pop-search-list .gs-meta { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--t3); margin-top: 2px; letter-spacing: .03em; }
+  #hct-pop-search-list .gs-none { padding: 10px 13px; font-size: 12px; color: var(--t3); }
+
+  /* ── first-run welcome (My Path, empty build only) ── */
+  .hct-welcome { max-width: 980px; margin: 18px auto 6px; padding: 20px 22px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .hw-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--teal); font-weight: 600; margin-bottom: 8px; }
+  [data-theme="light"] .hw-kicker { color: var(--teal-dk); }
+  .hw-title { font-family: var(--display); font-size: clamp(19px, 2.6vw, 25px); font-weight: 800; letter-spacing: -.015em; color: var(--t1); margin-bottom: 6px; }
+  .hw-sub { font-size: 13.5px; line-height: 1.6; color: var(--t2); margin: 0 0 16px; max-width: 640px; }
+  .hw-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 900px) { .hw-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .hw-grid { grid-template-columns: 1fr; } }
+  .hw-card { display: flex; flex-direction: column; gap: 5px; text-align: left; background: var(--raised); border: 1px solid var(--border); border-radius: 9px; padding: 13px 14px; cursor: pointer; font-family: var(--font); transition: border-color .15s, transform .15s; }
+  .hw-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .hw-card:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .hw-card b { font-size: 13px; font-weight: 700; color: var(--t1); }
+  .hw-card span { font-size: 11.5px; line-height: 1.5; color: var(--t3); }
+  .hw-card.hw-search { border-style: dashed; }
+
+  /* ── career matrix usage hint (parity with the other views' .view-hint) ── */
+  .hct-blurb-hint { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--t3); padding: 0 14px 6px; }
+
   /* static close buttons adopt the .icon-btn primitive (ids + JS untouched);
      re-assert the primitive over the earlier scene rules that zeroed the border */
   .hct-p-close.icon-btn, .bp-modal-x.icon-btn { border: 1px solid var(--border); background: transparent; color: var(--t2); font-size: 0; }
@@ -920,10 +955,10 @@ permalink: /tools/healthcare-career-tree/
 
     <!-- PRIMARY TABS: which view is on screen -->
     <div class="hct-seg hct-tabs" id="hct-tabs">
-      <button data-view="path" class="on"><i data-lucide="pin" aria-hidden="true"></i>My Path<span class="tab-badge" id="hct-mp-count">0</span></button>
-      <button data-view="career">Career Matrix</button>
-      <button data-view="edu" id="hct-tab-edu">Education Matrix</button>
-      <button data-view="atlas" id="hct-tab-atlas">Areas of Expertise</button>
+      <button data-view="path" class="on" title="Your buildable career sheet — pin roles, degrees, and skills; saves in your browser"><i data-lucide="pin" aria-hidden="true"></i>My Path<span class="tab-badge" id="hct-mp-count">0</span></button>
+      <button data-view="career" title="153 real roles across 8 pathways — click a hex for detail, ☆ pins it to your path">Career Matrix</button>
+      <button data-view="edu" id="hct-tab-edu" title="Degrees, licenses, and certs stacked by level — see what each one unlocks">Education Matrix</button>
+      <button data-view="atlas" id="hct-tab-atlas" title="The skills layer — clinical and operational expertise areas to tag onto your path">Areas of Expertise</button>
     </div>
 
     <span class="hct-spacer"></span>
@@ -953,6 +988,7 @@ permalink: /tools/healthcare-career-tree/
       <button class="hct-btn" id="hct-zoomout" title="Zoom out">−</button>
       <button class="hct-btn" id="hct-zoomin" title="Zoom in">+</button>
       <button class="hct-btn" id="hct-fit">Fit</button>
+      <button class="hct-btn" id="hct-freelook" aria-pressed="false" title="Free look: keep the whole board lit while a role is selected">Free look</button>
     </span>
 
     <!-- CONTEXTUAL CONTROLS — My Path tab (visibility driven by #hct-tb[data-view]) -->
@@ -962,6 +998,8 @@ permalink: /tools/healthcare-career-tree/
       <button class="mp-fbtn" id="hct-mp-clear">Reset build</button>
     </span>
 
+    <!-- global search — persistent across tabs: roles + expertise areas, jump on pick -->
+    <button class="icon-btn" id="hct-sel-search" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="hct-pop-search" aria-label="Search roles and expertise" title="Search roles &amp; expertise"><i data-lucide="search" aria-hidden="true"></i></button>
     <!-- preset views pin — persistent across tabs (a preset can jump to any view) -->
     <button class="icon-btn" id="hct-sel-views" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="hct-pop-views" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
 
@@ -983,6 +1021,11 @@ permalink: /tools/healthcare-career-tree/
       <div class="pop-head"><span class="pop-head-title"><i data-lucide="pin" aria-hidden="true"></i>Views</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
       <div class="pop-body" id="hct-pop-views-list" role="listbox" aria-label="Preset views"></div>
     </div>
+    <div class="selector-pop" id="hct-pop-search" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="search" aria-hidden="true"></i>Search</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="hct-gs-box"><span class="hct-search-box"><i data-lucide="search" class="hct-search-ico" aria-hidden="true"></i><input class="edu-search" id="hct-global-search" type="text" placeholder="Role, family, or expertise…" autocomplete="off" aria-label="Search roles and expertise"></span></div>
+      <div class="pop-body" id="hct-pop-search-list" role="listbox" aria-label="Search results"></div>
+    </div>
   </div>
   <div class="applied-strip" id="hct-applied" hidden></div>
   <div class="vh" id="hct-live" aria-live="polite" aria-atomic="true"></div>
@@ -993,6 +1036,7 @@ permalink: /tools/healthcare-career-tree/
     <!-- Career Matrix view -->
     <section id="hct-career" class="hct-view" data-view="career">
       <div class="hct-blurb" id="hct-blurb"></div>
+      <div class="hct-blurb-hint">click a hex for detail · ☆ adds it to your path · drag to pan, scroll to zoom</div>
       <div id="hct-board">
         <svg id="hct-svg"></svg>
         <div id="hct-tip"></div>
@@ -1031,6 +1075,19 @@ permalink: /tools/healthcare-career-tree/
 
     <!-- My Path view — career "character sheet": identity bar + trunk-centric 3-column layout -->
     <section id="hct-mypath" class="hct-view active" data-view="path">
+      <!-- FIRST-RUN WELCOME — state-driven: renderMyPath shows it only while the build is empty.
+           No dismissal cookie, no tour. Pin one thing and it's gone. -->
+      <div class="hct-welcome" id="hct-welcome" hidden>
+        <div class="hw-kicker">Start here</div>
+        <div class="hw-title">Map where you are. Pin where you're going.</div>
+        <p class="hw-sub">This is your career sheet. It starts empty and fills as you pin things from the three matrices, and it saves in your browser as you go.</p>
+        <div class="hw-grid">
+          <button class="hw-card" type="button" data-hw="career"><b>Career Matrix</b><span>153 real roles across 8 pathways. Click a hex for detail, ☆ pins it here.</span></button>
+          <button class="hw-card" type="button" data-hw="edu"><b>Education Matrix</b><span>Degrees, licenses, and certs, stacked by level. See what each one unlocks.</span></button>
+          <button class="hw-card" type="button" data-hw="atlas"><b>Areas of Expertise</b><span>The skills layer. Tag what you know, from vent management to revenue cycle.</span></button>
+          <button class="hw-card hw-search" type="button" data-hw="search"><b>Or just search</b><span>Know the role already? Type it and jump straight to it.</span></button>
+        </div>
+      </div>
       <!-- IDENTITY BAR -->
       <div class="bp-id">
         <div class="bp-id-block">
@@ -1040,9 +1097,9 @@ permalink: /tools/healthcare-career-tree/
         </div>
         <div class="bp-id-center">
           <span class="mp-shift" id="mp-shift" title="Switch between the career you HAVE and the one you WANT">
-            <button data-layer="current" class="on">Current</button>
+            <button data-layer="both" class="on">All</button>
+            <button data-layer="current">Current</button>
             <button data-layer="future">Future</button>
-            <button data-layer="both">All</button>
           </span>
           <div class="bp-id-vitals" id="bp-vitals"></div>
         </div>
@@ -1138,6 +1195,19 @@ permalink: /tools/healthcare-career-tree/
   let curFamilyInfo = [];          // [{pathway,family,left,right,cx}] discipline sub-lanes
   let nodeById = new Map();        // id -> node (current class)
   let edgesAll = [];               // [ [src,tgt], ... ] current class
+  // career-line focus: while a role is selected (and Free look is off), everything not on
+  // its line drops back so the connections read. The line = ancestors + descendants along
+  // leadsTo — NOT cousins (a shared parent's other children stay dim).
+  let lineageFocus = true, lineageSet = null;
+  function lineageOf(id){
+    const down = new Set([id]), up = new Set([id]);
+    let grew = true;
+    while (grew){ grew = false; for (const [s,t] of edgesAll){ if (down.has(s) && !down.has(t)){ down.add(t); grew = true; } } }
+    grew = true;
+    while (grew){ grew = false; for (const [s,t] of edgesAll){ if (up.has(t) && !up.has(s)){ up.add(s); grew = true; } } }
+    up.forEach(x => down.add(x));
+    return down;
+  }
   let posMap = new Map();          // id -> {x,y}
   let boardRendered = false, eduRendered = false;   // lazy-render the heavy Career Matrix board + Education Matrix only when first opened
   let selectedId = null;
@@ -1159,7 +1229,7 @@ permalink: /tools/healthcare-career-tree/
     notes:      { title:'Notes',            kind:'text', field:'notes', ph:'Anything you want to remember…' },
     other:      { title:'Other',            kind:'text', field:'other', ph:'Anything else — awards, languages, volunteer work, links…' }
   };
-  function blankBuild(){ return { budget: 30, view: 'current', name: '', goal: '', layout: { order: ['skill','spec','experience','population','notes','sw','next','other'], hidden: ['other'], sizes: {}, titles: {} }, career: [], education: [], skill: [], spec: [], experience: [], population: [], sw: '', notes: '', other: '', tagline: '' }; }
+  function blankBuild(){ return { budget: 30, view: 'both', name: '', goal: '', layout: { order: ['skill','spec','experience','population','notes','sw','next','other'], hidden: ['other'], sizes: {}, titles: {} }, career: [], education: [], skill: [], spec: [], experience: [], population: [], sw: '', notes: '', other: '', tagline: '' }; }   // new builds start in All — see everything, quick-adds land as Future goals; Current/Future become view filters
   // "Other" sections are dynamic: 'other', 'other-2', 'other-3'… each a renamable text card
   function isOtherKey(k){ return k === 'other' || /^other-\d+$/.test(k); }
   function panelOf(key){ return PANELS[key] || (isOtherKey(key) ? { title:'Other', kind:'text', field:key, ph:'Anything else — awards, languages, volunteer work, links…' } : null); }
@@ -1481,13 +1551,22 @@ permalink: /tools/healthcare-career-tree/
   // ── Render ─────────────────────────────────────────────
   function render(animate){
     boardRendered = true;   // any render means the board (+ curFamilyInfo) exists now
-    const visSet = new Set(filteredNodes().map(n=>n.id));   // whole board, always visible
+    lineageSet = (lineageFocus && selectedId) ? lineageOf(selectedId) : null;   // career-line focus follows the selection
+    // snap-together: in focus mode only the families the line touches stay on the board, so a
+    // cross-specialty link reads side-by-side instead of spanning the whole matrix. The layout
+    // already compacts around missing families (the Pathways filter relies on it).
+    let visNodes = filteredNodes();
+    if (lineageSet){
+      const fams = new Set(); lineageSet.forEach(i => { const n = nodeById.get(i); if (n) fams.add(n.family); });
+      visNodes = visNodes.filter(n => fams.has(n.family));
+    }
+    const visSet = new Set(visNodes.map(n=>n.id));
     posMap = layout(visSet);
     const allEdges = filteredEdges().filter(([s,t]) => visSet.has(s) && visSet.has(t));
     // lines WITHIN a profession (same family/discipline container) always show; lines that go SIDEWAYS into another
     // container only show for the selected tile's own connections.
     const edges = allEdges.filter(e => sameContainer(e) || (selectedId && (e[0]===selectedId || e[1]===selectedId)));
-    const dur = animate ? 480 : 0;
+    const dur = animate ? 520 : 0;   // matches every camera fit (fitToBounds default) so layout + camera tween as ONE motion
 
     // level bands + numbered chips (clearly defined level markers)
     const meta = DATA.meta;
@@ -1541,6 +1620,7 @@ permalink: /tools/healthcare-career-tree/
     if (gTopBg) gTopBg.attr('x', navMinX - 8000).attr('y', headPinY - 200).attr('width', (navMaxX - navMinX) + 16000).attr('height', (headBandY - headPinY) + 200);
     applyNavLimits();
     updateHeadClip(d3.zoomTransform(svg.node()).k);
+    syncAxisPos();   // relayout may have moved the field's left edge (snap/expand) with no camera event
 
     // nested containers (roles only): region > pathway > a box per sub-career discipline
     if (curClass === 'roles' && curLaneInfo && curLaneInfo.length){
@@ -1616,10 +1696,11 @@ permalink: /tools/healthcare-career-tree/
     rgA.select('.hct-region-biz').attr('x', d=>d.businessCx).attr('y', regY).attr('text-anchor','middle')
       .style('cursor','pointer').style('pointer-events','all')
       .on('click', (e) => { e.stopPropagation(); const b=regionBounds('business'); if(b) fitGroup(b[0],b[1],true); });
+    syncHeadType(d3.zoomTransform(svg.node()).k);   // fresh header labels pick up the zoom-floored type size
 
     // edges
     const edgeSel = gEdges.selectAll('path.hct-edge').data(edges, d => d[0]+'>'+d[1]);
-    edgeSel.exit().transition().duration(dur).style('opacity',0).remove();
+    edgeSel.exit().transition().duration(Math.min(dur,160)).style('opacity',0).remove();   // same fast clear as tiles
     edgeSel.enter().append('path').attr('class','hct-edge').style('opacity',0)
       .merge(edgeSel)
       .attr('stroke', d => famColor(d[1]))
@@ -1630,7 +1711,7 @@ permalink: /tools/healthcare-career-tree/
 
     // nodes
     const nodeSel = gNodes.selectAll('g.hct-node').data([...visSet], d=>d);
-    nodeSel.exit().transition().duration(dur).style('opacity',0).remove();
+    nodeSel.exit().transition().duration(Math.min(dur,160)).style('opacity',0).remove();   // departing tiles clear FAST so they don't ghost through the slide
 
     const enter = nodeSel.enter().append('g').attr('class','hct-node')
       .attr('transform', d => {
@@ -1653,7 +1734,7 @@ permalink: /tools/healthcare-career-tree/
 
     const all = enter.merge(nodeSel);
     all.transition().duration(dur)
-      .style('opacity', 1)
+      .style('opacity', d => (lineageSet && !lineageSet.has(d)) ? 0.12 : 1)   // off the selected career line = collapsed back
       .attr('transform', d => { const p = posMap.get(d); return `translate(${p.x},${p.y})`; });
 
     paintHexBodies(all.select('.hx-body'));   // colorMode-aware: family palette, or BLS pay/growth heatmap
@@ -1685,10 +1766,20 @@ permalink: /tools/healthcare-career-tree/
 
   function syncLOD(){ lodFar = d3.zoomTransform(svg.node()).k < 0.5; styleTiles(); }
 
-  // frozen left axis for the Career board — numbered level chips that stay pinned left while you slide
+  // the axis hugs the field: its right edge rides the content's left edge, pinning to the
+  // viewport's left only when the field scrolls underneath it. Re-synced on zoom AND on
+  // relayout (the snap changes navMinX without a camera move).
+  function syncAxisPos(t){
+    if (!gAxis || !svg.node()) return;
+    t = t || d3.zoomTransform(svg.node());
+    const fieldL = t.x + t.k * (navMinX - 70);
+    gAxis.attr('transform', 'translate(' + Math.max(0, fieldL - t.k * AXIS_W) + ',' + t.y + ') scale(' + t.k + ')');
+  }
+  // left axis for the Career board — floating level NAMES (no chips, no L-numbers) that hug
+  // the field's left edge and only pin to the viewport when the field scrolls past it
   function drawFrozenAxis(tiers, numFn, txtFn){
     if (!gAxis) return;
-    const W = 232;
+    const W = AXIS_W;
     const top = (tiers.length ? tiers[0] : 0) * ROWH - ROWH/2;
     const bot = (tiers.length ? tiers[tiers.length-1] : 0) * ROWH + ROWH/2;
     let bg = gAxis.select('rect.axis-bg');
@@ -1700,14 +1791,12 @@ permalink: /tools/healthcare-career-tree/
     const sel = gAxis.selectAll('g.axis-chip').data(tiers, d=>d);
     sel.exit().remove();
     const en = sel.enter().append('g').attr('class','axis-chip');
-    en.append('rect').attr('class','hct-band-chip');
-    en.append('text').attr('class','hct-band-num');
     en.append('text').attr('class','hct-band-txt');
     const all = en.merge(sel);
+    all.select('.hct-band-chip').remove();   // legacy chip boxes + L-numbers from earlier renders
+    all.select('.hct-band-num').remove();
     all.attr('transform', d => 'translate(0,' + (d*ROWH).toFixed(1) + ')');
-    all.select('.hct-band-chip').attr('x', 10).attr('y', -15).attr('width', W-22).attr('height', 30).attr('rx', 7);
-    all.select('.hct-band-num').attr('x', 22).attr('y', 5).text(numFn);
-    all.select('.hct-band-txt').attr('x', 50).attr('y', 5).text(txtFn);
+    all.select('.hct-band-txt').attr('x', W - 14).attr('y', 5).attr('text-anchor','end').text(txtFn);
   }
 
   // greedy word-wrap so titles fit a small tile (ignores authored line breaks)
@@ -1752,6 +1841,10 @@ permalink: /tools/healthcare-career-tree/
   // an edge stays WITHIN a profession container when both ends share a family (discipline); else it crosses sideways
   function sameContainer(e){ const a = nodeById.get(e[0]), b = nodeById.get(e[1]); return !!(a && b && a.family && a.family === b.family); }
   function edgeOpacity(d){
+    if (lineageSet){                                                          // career-line focus: the line lights, the rest collapses
+      if (!(lineageSet.has(d[0]) && lineageSet.has(d[1]))) return 0.04;
+      return (d[0]===selectedId || d[1]===selectedId) ? 0.95 : 0.7;
+    }
     if (selectedId && (d[0]===selectedId || d[1]===selectedId)) return 0.9;   // the clicked tile's connections, bright
     if (pinned.has(d[0]) && pinned.has(d[1])) return 0.9;
     if (sameContainer(d)) return 0.4;                                          // within-profession lines, always visible
@@ -1760,9 +1853,12 @@ permalink: /tools/healthcare-career-tree/
 
   // ── Interaction ────────────────────────────────────────
   function onNodeClick(id){
+    const wasSnapped = !!lineageSet;
     selectedId = (selectedId === id) ? null : id;   // toggle; click again to clear
     if (selectedId) openPanel(id); else closePanel();
     render(true);                                    // reveals this tile's connections
+    if (selectedId && lineageSet){ userZoomed = true; fit(true, 520); }   // frame the whole snapped FIELD, not the node — same tick + same duration as the layout tween
+    else if (!selectedId && wasSnapped){ fitDefaultGroup(true); }         // expanded back — return to the default framing so the camera isn't stranded
   }
 
   function onHover(id, on, e){
@@ -1850,6 +1946,21 @@ permalink: /tools/healthcare-career-tree/
       kids.forEach(k => h += '<span class="hct-chip" data-go="'+k+'">'+esc(nodeById.get(k).abbr)+' · '+esc(nodeById.get(k).label.replace(/\n/g,' '))+'</span>');
       h += '</div>';
     }
+    // sideways moves — a RULE, not edges: at any rung you can jump into informatics, industry,
+    // administration, government, or education. Same-tier landings shown as doors in the panel,
+    // so the board's drawn lines stay meaningful (LEADS TO = the ladder; this = the doors).
+    if (curClass === 'roles' && n.tier >= 1){
+      const LATERAL_PW = ['informatics','biotech','admin','government','education'];
+      const doors = DATA.classes[curClass].nodes
+        .filter(x => x.pathway !== n.pathway && LATERAL_PW.includes(x.pathway) && x.tier === n.tier && x.id !== n.id && !kids.includes(x.id))
+        .sort((a,b) => LATERAL_PW.indexOf(a.pathway) - LATERAL_PW.indexOf(b.pathway))
+        .slice(0, 6);
+      if (doors.length){
+        h += '<div class="hct-list-h">Sideways moves · every rung has doors</div><div class="hct-leads">';
+        doors.forEach(x => h += '<span class="hct-chip" data-go="'+x.id+'">'+esc(x.abbr)+' · '+esc(x.label.replace(/\n/g,' '))+'</span>');
+        h += '</div>';
+      }
+    }
     // educational requirement → one click drops it into your Education Growth (and updates Next Steps)
     if (curClass === 'roles'){
       const reqFace = credForNode(n) || (DATA.meta.degrees[n.degree]||{}).label || '';
@@ -1858,21 +1969,30 @@ permalink: /tools/healthcare-career-tree/
         const degLbl = (DATA.meta.degrees[reqDeg]||{}).label || reqDeg;
         h += '<div class="hct-list-h">Educational requirement</div>';
         h += '<div class="hct-edu-req"><span class="hct-edu-req-face">'+esc(reqFace)+'</span>'+(reqFace!==degLbl?'<span class="hct-edu-req-deg">'+esc(degLbl)+'</span>':'')+'</div>';
-        h += have ? '<button class="hct-edu-add added" disabled>✓ In your Education Growth</button>'
-                  : '<button class="hct-edu-add" id="hct-edu-add" data-face="'+esc(reqFace)+'" data-deg="'+esc(reqDeg)+'" data-col="'+esc((DATA.meta.degrees[reqDeg]||{}).color||'')+'">+ Add to Education Growth</button>';
+        h += have ? '<button class="hct-edu-add added" disabled>✓ This credential is on your path</button>'
+                  : '<div class="hct-add-lbl">This credential · do you have it?</div>'
+                  + '<div class="hct-add-pair">'
+                  + '<button class="hct-edu-add" data-edu-layer="current" data-face="'+esc(reqFace)+'" data-deg="'+esc(reqDeg)+'" data-col="'+esc((DATA.meta.degrees[reqDeg]||{}).color||'')+'">I have it</button>'
+                  + '<button class="hct-edu-add" data-edu-layer="future" data-face="'+esc(reqFace)+'" data-deg="'+esc(reqDeg)+'" data-col="'+esc((DATA.meta.degrees[reqDeg]||{}).color||'')+'">Working toward it</button>'
+                  + '</div>';
       }
     }
-    const isPin = pinned.has(id);
-    h += '<button class="hct-pin-btn'+(isPin?' pinned':'')+'" id="hct-pin">'+(isPin?'★ On your path — remove':'☆ Add to my path')+'</button>';
+    const isPin = pinned.has(id), pinLayer = isPin ? roleLayerInBuild(id) : null;
+    h += '<div class="hct-add-lbl gold">'+(isPin ? 'This role is on your path · tap the lit one to remove' : 'This role · where does it fit your story?')+'</div>';
+    h += '<div class="hct-add-pair">'
+       + '<button class="hct-pin-btn'+(pinLayer==='current'?' pinned':'')+'" data-pin-layer="current">'+(pinLayer==='current'?'★':'☆')+' I’ve held this role</button>'
+       + '<button class="hct-pin-btn'+(pinLayer==='future'?' pinned':'')+'" data-pin-layer="future">'+(pinLayer==='future'?'★':'☆')+' I’m aiming for it</button>'
+       + '</div>';
 
     document.getElementById('hct-p-body').innerHTML = h;
     const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = curView;   // belongs to whatever view opened it (docks right on My Path, right edge on the Career Matrix)
 
-    document.getElementById('hct-pin').onclick = () => togglePin(id);
-    const eduAdd = document.getElementById('hct-edu-add');
-    if (eduAdd) eduAdd.onclick = () => { addReqCred(eduAdd.dataset.face, eduAdd.dataset.deg, eduAdd.dataset.col, roleLayerInBuild(id) || activeLayer()); openPanel(id); };   // cred follows the role's layer (current role → current cred); refresh panel
+    document.querySelectorAll('#hct-p-body [data-pin-layer]').forEach(b => { b.onclick = () => pinToLayer(id, b.dataset.pinLayer); });
+    document.querySelectorAll('#hct-p-body [data-edu-layer]').forEach(b => {
+      b.onclick = () => { addReqCred(b.dataset.face, b.dataset.deg, b.dataset.col, b.dataset.eduLayer); openPanel(id); };   // explicit layer choice at the moment of adding; refresh panel
+    });
     document.querySelectorAll('#hct-p-body .hct-chip').forEach(ch => {
-      ch.onclick = () => { const g = ch.getAttribute('data-go'); selectedId=g; openPanel(g); render(true); };
+      ch.onclick = () => selectCareer(ch.getAttribute('data-go'));   // full treatment: un-hides, reframes the snap, pans — LEADS TO and Sideways chips alike
     });
     revealNode(id);   // make sure the panel didn't just open on top of the tile you clicked
   }
@@ -2255,6 +2375,16 @@ permalink: /tools/healthcare-career-tree/
     syncPinned(); saveBuild(); renderMyPath(); updateBoardPins();
     if (selectedId===id) openPanel(id);
   }
+  // panel pair: explicit layer choice — tapping the lit layer removes, the other layer moves, unpinned adds there
+  function pinToLayer(id, layer){
+    const s = build.career.find(x => x.roleId === id);
+    if (s && nodeLayer(s) === layer){ togglePin(id); return; }
+    if (s){ s.layer = layer; }
+    else { const n = nodeById.get(id);
+      build.career.push({ id:newId(), roleId:id, abbr:(n?n.abbr:''), family:(n?n.family:''), name:(n ? n.label.replace(/\n/g,' ') : 'Role'), years:'', layer }); }
+    syncPinned(); saveBuild(); renderMyPath(); updateBoardPins();
+    if (selectedId===id) openPanel(id);
+  }
   // Education Growth picker → real credentials from the Education Matrix pool (deduped cert/degree faces)
   let credIndex = [];
   // generic academic degrees (not tied to one job) — colored by DEGREE level in the matrix; everything else by FAMILY
@@ -2462,7 +2592,7 @@ permalink: /tools/healthcare-career-tree/
     stage('Roles to land',
       futureOf('career').map(n => itemRow(n,'career')).concat(plan.midRoles.map(s => sugRow(s.label, s.action))));
 
-    if (!any) h += '<div class="bp-next-empty">No future goals yet. Flip to <b>Future</b> and drop in a role you want, and the plan to reach it shows up here.</div>';
+    if (!any) h += '<div class="bp-next-empty">No future goals yet. Pin a role you’re aiming for and the plan to reach it shows up here.</div>';
     host.innerHTML = h;
     host.querySelectorAll('.bp-next-item[data-id]').forEach(el => el.onclick = () => {
       const n = (build[el.dataset.k]||[]).find(x => x.id === el.dataset.id);
@@ -2737,6 +2867,7 @@ permalink: /tools/healthcare-career-tree/
   function renderMyPath(){
     enforcePanelOwner();   // a role/atlas panel can never linger on My Path — drop it if its owning view isn't this one
     const badge = document.getElementById('hct-mp-count'); if (badge) badge.textContent = totalNodes();
+    const hw = document.getElementById('hct-welcome'); if (hw) hw.hidden = totalNodes() > 0;   // welcome is the empty state — pin one thing and it's gone
     if (!document.getElementById('bp-grid-career')) return;   // planner not in the DOM yet
     syncShift();
     renderSheetHeader();
@@ -3414,9 +3545,9 @@ permalink: /tools/healthcare-career-tree/
     if (curView === 'edu') setView('career');   // the Education Matrix has no center column → jump to the Career Matrix (My Path keeps it in-place)
     eduSelId = null;
     selectedId = id;
-    render(false);
+    render(curView === 'career');   // animate when the board is visible — chip/search jumps relayout in step with the camera
     openPanel(id);   // detail opens IN the current view, docked to the right of the center column on My Path (dockPanel + the [data-view] nest CSS)
-    if (curView === 'career') setTimeout(() => focusNode(id), 90);   // only pan the board when it's the visible view
+    if (curView === 'career') setTimeout(() => { if (lineageSet){ userZoomed = true; fit(true, 520); } else focusNode(id); }, 90);   // snap mode frames the whole field; free look pans to the node
   }
 
   function renderSchooling(){ if (DATA.meta.schooling){ renderEducationMatrix(); eduRendered = true; } }   // Education Matrix (time + exams ride inside each level band)
@@ -3826,6 +3957,15 @@ permalink: /tools/healthcare-career-tree/
   // vertical framing for every fit: headers at the top, content bottom at the base (falls back before first render)
   function navY(){ return (navBotY > navTopY) ? [navTopY, navBotY] : (() => { const ys=[...posMap.values()].map(p=>p.y); return [ (ys.length?Math.min(...ys):0)-150, (ys.length?Math.max(...ys):0)+50 ]; })(); }
   // clip the content/axis to start just below the pinned header band (screen-space rect, follows zoom)
+  // header type never renders below a readable floor: the band scales with zoom, so at low k
+  // the labels grow in board units to hold a constant screen size (they used to vanish at fit zooms)
+  function syncHeadType(k){
+    k = k || 1;
+    if (!gHeaders) return;
+    gHeaders.selectAll('.hct-phead-txt').style('font-size', Math.max(15, 13/k) + 'px');
+    gHeaders.selectAll('.hct-fhead').style('font-size', Math.max(11, 10/k) + 'px');
+    gHeaders.selectAll('.hct-region-lbl').style('font-size', Math.max(16, 12/k) + 'px');
+  }
   function updateHeadClip(k){
     if (!clipRect) return;
     const el = document.getElementById('hct-board'); if (!el) return;
@@ -3834,7 +3974,8 @@ permalink: /tools/healthcare-career-tree/
     const bandBottom = HEAD_TOP + (k || 1) * (headBandY - headPinY);
     clipRect.attr('x', 0).attr('y', bandBottom).attr('width', w).attr('height', Math.max(0, h - bandBottom));
   }
-  const AXIS_RESERVE = 240;   // screen px to reserve for the frozen left axis (so content sits just right of it)
+  const AXIS_W = 176;         // axis strip width in board units (names only — the L-number chips are gone)
+  const AXIS_RESERVE = 190;   // screen px to reserve for the axis when fits anchor content left of it
   function fitToBounds(x0, x1, y0, y1, animate, dur, anchorLeft){
     applyNavLimits();
     const wrap = document.getElementById('hct-board').getBoundingClientRect();
@@ -4129,10 +4270,11 @@ permalink: /tools/healthcare-career-tree/
       .extent(() => { const el = document.getElementById('hct-board'); const w = el?el.clientWidth:1, h = el?el.clientHeight:1; return [[0,0],[w||1, h||1]]; })
       .on('zoom', e => {
       gZoom.attr('transform', e.transform);
-      gAxis.attr('transform', 'translate(0,' + e.transform.y + ') scale(' + e.transform.k + ')');
+      syncAxisPos(e.transform);
       // pin the header band to the top: same horizontal pan + zoom as the content, but a fixed top offset
       gTop.attr('transform', 'translate(' + e.transform.x + ',' + (HEAD_TOP - e.transform.k*headPinY) + ') scale(' + e.transform.k + ')');
       updateHeadClip(e.transform.k);
+      syncHeadType(e.transform.k);
       if (e.sourceEvent) userZoomed = true;     // a real wheel/drag, not a programmatic fit
       const far = e.transform.k < 0.5;
       if (far !== lodFar){ lodFar = far; styleTiles(); }
@@ -4146,7 +4288,7 @@ permalink: /tools/healthcare-career-tree/
     }
     svg.on('mousedown', () => svg.classed('grabbing', true));
     window.addEventListener('mouseup', () => svg.classed('grabbing', false));
-    svg.on('click', () => { if (selectedId){ selectedId=null; closePanel(); render(false); } });
+    svg.on('click', () => { if (selectedId){ const wasSnapped = !!lineageSet; selectedId=null; closePanel(); render(wasSnapped); if (wasSnapped) fitDefaultGroup(true); } });   // snapped boards EXPAND animated, in step with the camera return
 
     document.querySelectorAll('#hct-class button').forEach(b => b.onclick = () => setClass(b.dataset.class));
 
@@ -4205,6 +4347,62 @@ permalink: /tools/healthcare-career-tree/
       applyingURL = false;
       announce('View: ' + t.textContent);
     });
+
+    // ── global search: roles + expertise areas, jump on pick ──
+    // Roles ride selectCareer (un-hides, pans, opens the panel); expertise rides
+    // openGrowthPanel with the node straight from DATA.growth (works even before
+    // the atlas view has rendered — setView('atlas') lazy-builds it).
+    const selGS = document.getElementById('hct-sel-search'), popGS = document.getElementById('hct-pop-search');
+    const gsInput = document.getElementById('hct-global-search'), gsList = document.getElementById('hct-pop-search-list');
+    function buildGsList(){
+      const q = (gsInput.value || '').trim().toLowerCase();
+      if (!q){ gsList.innerHTML = '<div class="gs-none">Type to search ' + DATA.classes[curClass].nodes.length + ' roles and the expertise pool.</div>'; return; }
+      const roles = DATA.classes[curClass].nodes
+        .filter(n => (n.label + ' ' + (n.abbr||'') + ' ' + n.family + ' ' + n.pathway).toLowerCase().includes(q)).slice(0, 12);
+      const grow = ((DATA.growth && DATA.growth.nodes) || [])
+        .filter(n => ((n.label||'') + ' ' + (n.group||'') + ' ' + (n.zone||'')).toLowerCase().includes(q)).slice(0, 8);
+      let h = '';
+      if (roles.length){
+        h += '<div class="pop-sec">Roles</div>' + roles.map(n =>
+          `<button class="pop-opt" role="option" data-gs-kind="role" data-gs-id="${n.id}">${n.label.replace(/\n/g,' ')}<span class="gs-meta">${n.family} · ${n.pathway}</span></button>`).join('');
+      }
+      if (grow.length){
+        h += '<div class="pop-sec">Areas of Expertise</div>' + grow.map(n =>
+          `<button class="pop-opt" role="option" data-gs-kind="growth" data-gs-id="${n.id}">${(n.label||'').replace(/\n/g,' ')}<span class="gs-meta">${n.group || n.zone}</span></button>`).join('');
+      }
+      gsList.innerHTML = h || '<div class="gs-none">No matches. Try a shorter word, or a family like "nursing" or "informatics".</div>';
+    }
+    selGS.addEventListener('click', () => {
+      if (!DATA) return;
+      openPopover(selGS, popGS, buildGsList);
+      setTimeout(() => gsInput.focus(), 0);   // the input owns first focus, not the first option
+    });
+    gsInput.addEventListener('input', buildGsList);
+    gsInput.addEventListener('keydown', e => {
+      if (e.key === 'Home' || e.key === 'End') e.stopPropagation();   // caret keys stay caret keys inside the input
+      if (e.key === 'Enter'){ const f = gsList.querySelector('[data-gs-id]'); if (f) f.click(); }
+    });
+    gsList.addEventListener('click', e => {
+      const t = e.target.closest('[data-gs-id]'); if (!t) return;
+      closePop(true);
+      const id = t.dataset.gsId;
+      if (t.dataset.gsKind === 'role'){
+        if (curView !== 'career' && curView !== 'edu') setView('career');   // selectCareer handles the edu → career jump itself
+        selectCareer(id);
+      } else {
+        const n = (DATA.growth && DATA.growth.nodes || []).find(x => x.id === id); if (!n) return;
+        if (curView !== 'atlas') setView('atlas');
+        requestAnimationFrame(() => openGrowthPanel(n));
+      }
+      announce('Selected: ' + t.textContent.trim());
+    });
+
+    // ── first-run welcome cards: jump straight into a section, or open search ──
+    document.getElementById('hct-welcome').addEventListener('click', e => {
+      const c = e.target.closest('[data-hw]'); if (!c) return;
+      if (c.dataset.hw === 'search'){ selGS.click(); return; }
+      setView(c.dataset.hw);
+    });
     // Pathways panel: multi-select, immediate apply, stays open. A pathway row
     // toggles its whole category (the old per-pathway Show/Hide all); a specialty
     // row toggles just itself. Turning a specialty on inside a hidden pathway
@@ -4254,7 +4452,13 @@ permalink: /tools/healthcare-career-tree/
     };
     document.getElementById('hct-zoomin').onclick  = () => { userZoomed = true; svg.transition().duration(180).call(zoom.scaleBy, 1.4); };
     document.getElementById('hct-zoomout').onclick = () => { userZoomed = true; svg.transition().duration(180).call(zoom.scaleBy, 1/1.4); };
-    document.getElementById('hct-p-close').onclick = () => { selectedId=null; eduSelId=null; closePanel(); render(false); renderMyPath(); };
+    document.getElementById('hct-freelook').onclick = () => {
+      lineageFocus = !lineageFocus;
+      document.getElementById('hct-freelook').setAttribute('aria-pressed', String(!lineageFocus));   // pressed = free look ON = focus OFF
+      render(false);
+      announce(lineageFocus ? 'Career-line focus on' : 'Free look: whole board stays lit');
+    };
+    document.getElementById('hct-p-close').onclick = () => { const wasSnapped = !!lineageSet; selectedId=null; eduSelId=null; closePanel(); render(wasSnapped && curView==='career'); renderMyPath(); if (wasSnapped && curView==='career') fitDefaultGroup(true); };   // animated expand, in step with the camera
     document.querySelectorAll('#hct-tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));   // setView resets any open detail on a view change
     // click ANYWHERE off the open panel → dismiss it. Global (not scoped to one view) so a click in any empty area works.
     // The Career Matrix board has its own background-click handler; here we cover My Path + Areas of Expertise.

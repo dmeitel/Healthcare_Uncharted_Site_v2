@@ -55,6 +55,14 @@ no_footer: true
 .hm-leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px;
   color: var(--t3, #5A7898); font-family: var(--font, 'DM Sans', sans-serif); white-space: nowrap; }
 .hm-leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+/* legend entries are buttons (direct-manipulation, the Operators type-legend pattern):
+   tap a category to spotlight its units across every floor, tap again to release */
+button.hm-leg-item { background: none; border: none; padding: 3px 7px; margin: -3px -2px; border-radius: 6px; cursor: pointer; transition: background .15s, color .15s; }
+button.hm-leg-item:hover { background: rgba(78,205,196,0.1); color: var(--t2, #b8cfe8); }
+button.hm-leg-item[aria-pressed="true"] { background: rgba(78,205,196,0.14); color: var(--t1, #fff); box-shadow: inset 0 0 0 1px rgba(78,205,196,0.4); }
+button.hm-leg-item:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+@media (hover: none) { button.hm-leg-item { min-height: 44px; } }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* ── App shell ────────────────────────────────────────────── */
 .hm-app {
@@ -275,9 +283,10 @@ footer { position: relative; z-index: 10; }
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 4px; padding: 6px 6px 4px;
   cursor: pointer; border-right: 1px solid rgba(78,205,196,0.08);
-  transition: background .12s, box-shadow .12s; position: relative; overflow: hidden; min-width: 0;
+  transition: background .12s, box-shadow .12s, opacity .15s; position: relative; overflow: hidden; min-width: 0;
   background: color-mix(in srgb, var(--unit-color, transparent) 5%, rgba(6,14,28,0.5));
 }
+.hm-unit.dim { opacity: .18; }
 .hm-unit:last-child { border-right: none; }
 .hm-unit::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -999,18 +1008,19 @@ footer { position: relative; z-index: 10; }
   <span class="tool-bar-kicker">Tool</span>
   <span class="tool-bar-title">Hospital <span>Blueprint</span></span>
   <span class="tool-bar-spacer"></span>
-  <div class="hm-subbar-legend">
+  <div class="hm-subbar-legend" role="group" aria-label="Category legend. Select a category to spotlight its units.">
     <span class="hm-leg-label"><i data-lucide="map" aria-hidden="true"></i>Legend</span>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-critical)"></div>Critical Care</div>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-procedural)"></div>Procedural</div>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-clinical)"></div>Clinical</div>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-support)"></div>Support</div>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-maternal)"></div>Maternal / Peds</div>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-rehab)"></div>Rehab</div>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-behavioral)"></div>Behavioral</div>
-    <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--cat-admin)"></div>Admin</div>
+    <button class="hm-leg-item" data-cat="critical" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-critical)"></span>Critical Care</button>
+    <button class="hm-leg-item" data-cat="procedural" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-procedural)"></span>Procedural</button>
+    <button class="hm-leg-item" data-cat="clinical" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-clinical)"></span>Clinical</button>
+    <button class="hm-leg-item" data-cat="support" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-support)"></span>Support</button>
+    <button class="hm-leg-item" data-cat="maternal" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-maternal)"></span>Maternal / Peds</button>
+    <button class="hm-leg-item" data-cat="rehab" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-rehab)"></span>Rehab</button>
+    <button class="hm-leg-item" data-cat="behavioral" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-behavioral)"></span>Behavioral</button>
+    <button class="hm-leg-item" data-cat="admin" aria-pressed="false"><span class="hm-leg-dot" style="background:var(--cat-admin)"></span>Admin</button>
   </div>
 </div>
+<div class="vh" id="a11yLive" aria-live="polite" aria-atomic="true"></div>
 
 <!-- Mountain backdrop -->
 <div class="hm-backdrop" aria-hidden="true">
@@ -2396,6 +2406,7 @@ function buildBuilding(floors, floorInfra, stackEl, labelsEl, facadeEl) {
       const block = document.createElement('div');
       block.className = 'hm-unit' + (unit.isNode ? ' is-node' : '');
       block.dataset.unitId = unit.id;
+      if (unit.cat) block.dataset.cat = unit.cat;   // legend spotlight keys on this
       block.style.setProperty('--unit-color', catColor);
       block.style.flex = unit.size;
       block.innerHTML = `<div class="hm-unit-icon">${unit.icon}</div><div class="hm-unit-name">${unit.short}</div>`;
@@ -3006,4 +3017,24 @@ if (window.innerWidth < 768) {
     true  // auto-center the building on init
   );
 }
+
+// ── direct manipulation (the Operators type-legend pattern): tap a legend
+// category to spotlight its units on every floor; tap again to release.
+// Session state only — the blueprint has no URL serializer and doesn't need one.
+let catIso = null;
+function announce(msg) {
+  const el = document.getElementById('a11yLive'); if (!el) return;
+  el.textContent = '';                                  // clear first so repeats re-announce
+  requestAnimationFrame(() => { el.textContent = msg; });
+}
+function applyCatIso() {
+  document.querySelectorAll('.hm-unit').forEach(u => u.classList.toggle('dim', catIso != null && u.dataset.cat !== catIso));
+  document.querySelectorAll('.hm-leg-item[data-cat]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cat === catIso)));
+}
+document.querySelector('.hm-subbar-legend').addEventListener('click', e => {
+  const b = e.target.closest('[data-cat]'); if (!b) return;
+  catIso = (catIso === b.dataset.cat) ? null : b.dataset.cat;
+  applyCatIso();
+  announce(catIso ? 'Spotlighting ' + b.textContent.trim() + ' units' : 'Showing all units');
+});
 </script>
