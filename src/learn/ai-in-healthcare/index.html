@@ -1,0 +1,402 @@
+---
+layout: base.njk
+section: learn
+title: "AI in Healthcare: What Works, What Doesn't, and Why"
+description: "Ambient scribes stuck. The sepsis model missed sepsis. The Optum algorithm learned the wrong thing. The pattern behind every healthcare AI success and failure, with the receipts."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial palette + DM Serif Display: the evidence long-read behind the ArMA/MSRC talks. Case studies over vendor claims."
+---
+{% block extraHead %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+{% endblock %}
+
+<style>
+  /* ── Editorial palette layered on HU tokens (same idiom as Method 01 / FG01) ── */
+  .ai7{
+    --jp-bg:        var(--dark);
+    --jp-surface:   var(--surface);
+    --jp-raised:    var(--raised);
+    --jp-line:      var(--border);
+    --jp-line-2:    var(--border2);
+    --jp-ink-1:     var(--t1);
+    --jp-ink-2:     var(--t2);
+    --jp-ink-3:     var(--t3);
+    --jp-ink-4:     var(--t4);
+    --jp-accent:    var(--teal);
+    --jp-accent-d:  var(--teal-dk);
+    --jp-blue:      #6aadff;
+    --jp-amber:     var(--amber);
+    --jp-red:       var(--red);
+    --jp-serif:     'DM Serif Display', Georgia, serif;
+    --jp-sans:      var(--font);
+    --jp-mono:      var(--mono);
+  }
+  [data-theme="light"] .ai7{
+    --jp-accent: var(--teal-dk);
+    --jp-blue:   var(--blue);
+  }
+
+  .ai7{ background:var(--jp-bg); color:var(--jp-ink-2); font-family:var(--jp-sans); line-height:1.65; }
+  .ai7 *,.ai7 *::before,.ai7 *::after{ box-sizing:border-box; }
+
+  /* ── HERO ── */
+  .a7-hero{ position:relative; overflow:hidden; border-bottom:1px solid var(--jp-line);
+            background: linear-gradient(135deg, var(--jp-bg) 0%, var(--jp-surface) 55%, var(--jp-bg) 100%); }
+  .a7-hero::before{ content:""; position:absolute; top:-160px; right:-120px; width:520px; height:520px;
+                    background:radial-gradient(circle, rgba(78,205,196,.14) 0%, transparent 65%); pointer-events:none; }
+  .a7-hero::after{ content:""; position:absolute; bottom:-220px; left:-160px; width:560px; height:560px;
+                   background:radial-gradient(circle, rgba(27,95,168,.10) 0%, transparent 65%); pointer-events:none; }
+  .a7-hero-inner{ max-width:1100px; margin:0 auto; padding:80px 36px 64px; position:relative; z-index:1;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:780px){ .a7-hero-inner{ grid-template-columns:1fr; gap:32px; padding:56px 24px 44px; } }
+
+  .jp-eyebrow{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--jp-accent); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .jp-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--jp-accent);
+                    box-shadow:0 0 14px var(--jp-accent); flex-shrink:0; }
+  .jp-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--jp-ink-4); }
+
+  .jp-h1{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(44px, 7vw, 86px);
+          line-height:1.02; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 22px; }
+  .jp-h1 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-hero-sub{ font-size:19px; line-height:1.55; color:var(--jp-ink-2); max-width:640px; margin:0 0 32px; }
+  .jp-hero-sub strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-thesis{ background: linear-gradient(135deg, rgba(78,205,196,.09), rgba(27,95,168,.04));
+              border:1px solid rgba(78,205,196,.22); border-left:4px solid var(--jp-accent);
+              border-radius:6px; padding:18px 22px; max-width:680px; }
+  .jp-thesis-label{ color:var(--jp-accent); font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .jp-thesis-text{ font-size:15px; line-height:1.6; color:var(--jp-ink-2); display:inline; }
+  .jp-thesis-text strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-byline{ margin-top:24px; font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3);
+              letter-spacing:.06em; display:flex; gap:14px; flex-wrap:wrap; }
+  .jp-byline span strong{ color:var(--jp-ink-2); font-weight:500; }
+
+  /* hero viz: dots sorting themselves across the line */
+  .a7-hero-viz{ width:300px; max-width:100%; }
+  @media (max-width:780px){ .a7-hero-viz{ width:100%; max-width:340px; } }
+  .a7v{ width:100%; height:auto; display:block; overflow:visible; }
+  .a7v-line{ stroke:var(--jp-accent); stroke-width:2; stroke-dasharray:6 6; }
+  .a7v-dot-g{ fill:var(--jp-accent); }
+  .a7v-dot-a{ fill:var(--jp-amber); }
+  .a7v-lab{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; }
+  .a7v-lab.g{ fill:var(--jp-accent); }
+  .a7v-lab.a{ fill:var(--jp-amber); }
+  .a7v-lab.m{ fill:var(--jp-ink-3); }
+  [data-theme="light"] .a7v-lab.a{ fill:var(--amber-dk); }
+  [data-theme="light"] .a7v-dot-a{ fill:var(--amber-dk); }
+
+  /* ── BODY ── */
+  .jp-body{ max-width:880px; margin:0 auto; padding:64px 36px 96px; }
+  @media (max-width:780px){ .jp-body{ padding:48px 24px 72px; } }
+  .jp-section + .jp-section{ margin-top:60px; }
+
+  .jp-kicker{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+              color:var(--jp-accent); margin-bottom:14px; display:flex; align-items:center; gap:9px; }
+  .jp-kicker::before{ content:""; width:22px; height:1px; background:var(--jp-accent); }
+
+  .jp-h2{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(28px, 4vw, 42px);
+          line-height:1.15; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 18px; }
+  .jp-h2 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+  .jp-h3{ font-family:var(--jp-serif); font-weight:400; font-size:24px; line-height:1.25;
+          color:var(--jp-ink-1); margin:32px 0 14px; }
+
+  .jp-p{ font-size:17px; line-height:1.78; color:var(--jp-ink-2); margin:0 0 18px; }
+  .jp-p strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-p em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  .jp-p a{ color:var(--jp-accent); text-decoration:none; border-bottom:1px dotted var(--jp-accent); }
+  .jp-p a:hover{ border-bottom-style:solid; }
+
+  .jp-pull{ font-family:var(--jp-serif); font-size:25px; line-height:1.4; color:var(--jp-ink-1);
+            margin:30px 0; padding:8px 0 8px 28px; border-left:3px solid var(--jp-accent); font-style:italic; }
+
+  /* ── TLDR cards ── */
+  .a7-tldr{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:36px 0 0; }
+  @media (max-width:680px){ .a7-tldr{ grid-template-columns:1fr; } }
+  .a7-tldr-card{ background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:18px 20px; }
+  .a7-tldr-tag{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+                font-weight:600; margin-bottom:8px; }
+  .a7-tldr-tag.works{ color:var(--jp-accent); }
+  .a7-tldr-tag.promise{ color:var(--jp-amber); }
+  .a7-tldr-tag.tell{ color:var(--jp-blue); }
+  [data-theme="light"] .a7-tldr-tag.promise{ color:var(--amber-dk); }
+  .a7-tldr-card p{ font-size:13.5px; line-height:1.6; color:var(--jp-ink-2); margin:0; }
+  .a7-tldr-card p strong{ color:var(--jp-ink-1); }
+
+  /* ── case verdict strip ── */
+  .a7-verdict{ display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:22px 0 0;
+               background:var(--jp-raised); border:1px solid var(--jp-line); border-radius:8px; padding:14px 18px; }
+  .a7-verdict b{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+                 color:var(--jp-accent); font-weight:600; flex-shrink:0; }
+  .a7-verdict span{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); }
+  .a7-verdict span strong{ color:var(--jp-ink-1); }
+
+  /* ── big stat row ── */
+  .a7-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0; }
+  @media (max-width:680px){ .a7-stats{ grid-template-columns:1fr; } }
+  .a7-stat{ border:1px solid var(--jp-line); border-radius:10px; padding:16px 18px; background:var(--jp-surface); }
+  .a7-stat .n{ font-family:var(--jp-serif); font-size:38px; line-height:1; color:var(--jp-ink-1); margin-bottom:6px; }
+  .a7-stat .n em{ font-style:italic; color:var(--jp-accent); }
+  .a7-stat .l{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+               color:var(--jp-ink-3); line-height:1.5; }
+
+  /* ── the four questions ── */
+  .a7-qgrid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:28px 0; }
+  @media (max-width:680px){ .a7-qgrid{ grid-template-columns:1fr; } }
+  .a7-q{ background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:20px 22px; }
+  .a7-q-num{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em; color:var(--jp-accent);
+             font-weight:600; margin-bottom:8px; }
+  .a7-q-t{ font-family:var(--jp-serif); font-size:20px; color:var(--jp-ink-1); margin-bottom:8px; line-height:1.3; }
+  .a7-q p{ font-size:13.5px; line-height:1.65; color:var(--jp-ink-2); margin:0; }
+  .a7-q p strong{ color:var(--jp-ink-1); }
+
+  /* ── go-deeper cards ── */
+  .a7-go{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:28px 0 0; }
+  @media (max-width:680px){ .a7-go{ grid-template-columns:1fr; } }
+  .a7-go a{ display:block; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px;
+            padding:16px 18px; text-decoration:none; transition:border-color .15s, transform .15s; }
+  .a7-go a:hover{ border-color:var(--jp-accent); transform:translateY(-2px); }
+  .a7-go .t{ font-size:14px; font-weight:600; color:var(--jp-ink-1); margin-bottom:4px; }
+  .a7-go .d{ font-size:12.5px; line-height:1.55; color:var(--jp-ink-3); }
+  .a7-go .k{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--jp-accent); margin-bottom:6px; }
+
+  /* ── sources ── */
+  .jp-source{ font-size:13px; line-height:1.7; color:var(--jp-ink-3); margin-bottom:10px; padding-left:18px; position:relative; }
+  .jp-source::before{ content:"·"; position:absolute; left:4px; color:var(--jp-accent); }
+  .jp-source a{ color:var(--jp-accent); text-decoration:none; }
+  .jp-source a:hover{ text-decoration:underline; }
+  .jp-source em{ font-style:normal; color:var(--jp-ink-2); }
+</style>
+
+<div class="ai7">
+
+  <!-- ── HERO ── -->
+  <header class="a7-hero">
+    <div class="a7-hero-inner">
+      <div>
+        <div class="jp-eyebrow">
+          <span class="dot"></span>
+          <span>Article 07</span>
+          <span class="sep"></span>
+          <span>AI in healthcare</span>
+        </div>
+
+        <h1 class="jp-h1">Where the line <em>actually</em> is.</h1>
+
+        <p class="jp-hero-sub">Ambient scribes became the fastest-adopted clinical software in a generation. The most widely deployed sepsis model missed two thirds of the sepsis it existed to catch. Both of those are true, both are recent, and if you can explain why one stuck and one collapsed, you can evaluate ANY pitch that lands on your desk.</p>
+
+        <div class="jp-thesis">
+          <span class="jp-thesis-label">Principle</span>
+          <span class="jp-thesis-text">AI works in healthcare where the task is narrow, the output gets checked at the point of use, and a human still owns the risk. It fails where the training label was a proxy for the real thing <strong>and nobody asked what the model actually saw.</strong></span>
+        </div>
+
+        <div class="jp-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~12 min read</span>
+          <span>Wong · Obermeyer · Goh · FDA</span>
+        </div>
+
+        <div class="card-fps" style="margin-top:18px;margin-bottom:0">
+          <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
+          <a class="fp fp-medsci" href="/atlas/#medsci/predictive">Predictive Analytics</a>
+          <a class="fp fp-techeco" href="/atlas/#techeco/ai-vendors">AI Vendor Landscape</a>
+        </div>
+      </div>
+
+      <div class="a7-hero-viz" aria-hidden="true">
+        <svg class="a7v" viewBox="0 0 300 260">
+          <text class="a7v-lab m" x="150" y="16" text-anchor="middle">the line</text>
+          <line class="a7v-line" x1="150" y1="28" x2="150" y2="218"/>
+          <text class="a7v-lab g" x="70" y="44" text-anchor="middle">shipped</text>
+          <text class="a7v-lab a" x="228" y="44" text-anchor="middle">still promise</text>
+          <circle class="a7v-dot-g" cx="58" cy="82" r="7"/>
+          <circle class="a7v-dot-g" cx="102" cy="110" r="5"/>
+          <circle class="a7v-dot-g" cx="74" cy="146" r="9"/>
+          <circle class="a7v-dot-g" cx="118" cy="178" r="4"/>
+          <circle class="a7v-dot-g" cx="52" cy="196" r="5"/>
+          <circle class="a7v-dot-a" cx="212" cy="92" r="6"/>
+          <circle class="a7v-dot-a" cx="248" cy="132" r="8"/>
+          <circle class="a7v-dot-a" cx="196" cy="168" r="4"/>
+          <circle class="a7v-dot-a" cx="236" cy="198" r="5"/>
+          <text class="a7v-lab m" x="70" y="242" text-anchor="middle">scribes · imaging</text>
+          <text class="a7v-lab m" x="226" y="242" text-anchor="middle">diagnosis</text>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="jp-body">
+
+    <!-- ── TLDR ── -->
+    <section class="jp-section">
+      <div class="a7-tldr">
+        <div class="a7-tldr-card">
+          <div class="a7-tldr-tag works">Working now</div>
+          <p><strong>Ambient documentation, narrow imaging reads, coding assists.</strong> Small tasks, checkable outputs, a human signature at the end. Boring on purpose.</p>
+        </div>
+        <div class="a7-tldr-card">
+          <div class="a7-tldr-tag promise">Still promise</div>
+          <p><strong>Autonomous diagnosis.</strong> In a randomized trial, giving physicians GPT-4 did not make them better diagnosticians. The gap is the interface, not the benchmark.</p>
+        </div>
+        <div class="a7-tldr-card">
+          <div class="a7-tldr-tag tell">The tell</div>
+          <p><strong>Ask what the training label was.</strong> Cost is not sickness. Billing codes are not biology. The label is where every quiet failure in this article started.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SCOREBOARD ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The scoreboard</div>
+      <h2 class="jp-h2">Deployed vs. <em>demoed</em></h2>
+
+      <p class="jp-p">Start with what is actually running in production, because the deployed list looks nothing like the keynote list. The FDA has cleared more than 1,400 AI-enabled medical devices, and the overwhelming majority read images. Radiology took AI the same way it took PACS: a narrow read, a flagged study, and a radiologist who still signs. Nobody calls that revolutionary anymore. That is what adoption looks like after the hype burns off.</p>
+
+      <p class="jp-p">Then there is ambient documentation, a roughly $600 million market that came out of nowhere. Scribes listen to the visit and draft the note. Randomized and deployment evidence ties them to real reductions in documentation burden and burnout. Clinicians fought for access to these tools. When did you last see a clinician fight FOR a piece of software?</p>
+
+      <p class="jp-p">Now the other column. In a randomized trial, physicians given GPT-4 access diagnosed complex cases no better than physicians without it. Here is the uncomfortable wrinkle: the model alone outperformed both groups. Whatever is broken there, it is not the benchmark. It is the seam between the model and the human, and that seam is where healthcare AI actually lives.</p>
+
+      <div class="a7-stats">
+        <div class="a7-stat"><div class="n">1,400<em>+</em></div><div class="l">FDA-cleared AI devices, mostly imaging</div></div>
+        <div class="a7-stat"><div class="n">~$600<em>M</em></div><div class="l">Ambient scribe market, still climbing</div></div>
+        <div class="a7-stat"><div class="n">p=0.60</div><div class="l">GPT-4 access vs. none, physician diagnostic accuracy</div></div>
+      </div>
+
+      <p class="jp-p">And one asterisk before anyone books the savings: the same scribes that cut documentation time did not raise billing productivity in a large follow-up study. Time came back. Money did not. If that sounds familiar, it is the <a href="/learn/laws-and-paradoxes/">Productivity Paradox</a> running on schedule, and Jevons is loaded right behind it.</p>
+
+      <div class="jp-pull">Nobody bought a scribe because a benchmark went up. They bought it because the note was done before the clinician reached the parking lot.</div>
+    </section>
+
+    <!-- ── CASE 01 ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Case study 01</div>
+      <h2 class="jp-h2">The sepsis model that missed <em>sepsis</em></h2>
+
+      <p class="jp-p">The Epic Sepsis Model shipped inside an EHR that hundreds of hospitals already owned, which means it had the best distribution channel in the history of clinical software. The vendor's internal numbers looked respectable. Hospitals turned it on.</p>
+
+      <p class="jp-p">Then Michigan Medicine did the thing almost nobody had done: they validated it on their own patients. Externally, the model's discrimination fell to an AUC of 0.63. It missed <strong>67% of the sepsis</strong> it existed to catch, while generating alerts on 18% of ALL hospitalized patients. Read that pairing again. Most of the disease missed, a fifth of the house alarmed. That is not decision support. That is alert fatigue with a licensing agreement.</p>
+
+      <p class="jp-p">Credit where due: Epic rebuilt the model, and the revised version validates considerably better in prospective multicenter testing. The tool got fixed. The lesson did not change.</p>
+
+      <div class="a7-verdict"><b>Lesson</b><span>A vendor AUC is a claim, not a measurement. <strong>Validation on YOUR patients, run silent before it alerts anyone,</strong> is the price of admission. The sepsis model failed at exactly the seam nobody was checking.</span></div>
+    </section>
+
+    <!-- ── CASE 02 ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Case study 02</div>
+      <h2 class="jp-h2">The algorithm that learned the <em>wrong thing</em></h2>
+
+      <p class="jp-p">A family of commercial risk tools, applied to something like 200 million Americans a year, ranked patients for extra care management. The math was fine. The label was not. The model predicted future <em>cost</em> as a stand-in for future <em>need</em>, and in American healthcare those are not the same number. Black patients generate lower costs at the same level of illness, for reasons that have nothing to do with how sick they are and everything to do with access.</p>
+
+      <p class="jp-p">So at any given risk score, Black patients were substantially sicker than white patients with the identical score. When the researchers re-labeled the model on actual health instead of cost, the share of Black patients flagged for extra care went from <strong>17.7% to 46.5%</strong>.</p>
+
+      <p class="jp-p">Sit with the mechanics. Nobody wrote a biased rule. The model did precisely what it was trained to do, accurately, at scale, on the wrong question. Labels are where the values hide.</p>
+
+      <div class="a7-verdict"><b>Lesson</b><span>Ask what the model was actually trained to predict, not what the brochure says it predicts. <strong>Cost is not need.</strong> The proxy IS the product.</span></div>
+    </section>
+
+    <!-- ── CASE 03 ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Case study 03</div>
+      <h2 class="jp-h2">The scribe that <em>stuck</em></h2>
+
+      <p class="jp-p">Why did ambient documentation succeed where a decade of diagnose-you-with-AI demos went nowhere? Walk it through the pattern.</p>
+
+      <p class="jp-p">The task is narrow: turn THIS conversation into a draft of THIS note. The output is checked at the point of use, because the clinician reads and signs the note exactly as they always did. The check was already in the workflow; the AI just moved upstream of it. Failure is visible, a wrong sentence sitting in front of the person who said the right one. And the risk owner never changed. The signature on the note is still a human with a license.</p>
+
+      <p class="jp-p">It is not a clean win. The failure-mode literature on ambient scribes documents fabricated details and quiet omissions, which is why the review-and-sign step is a safety control and not a formality. And the productivity money has not shown up. But notice what kind of problems those are: known, watched, owned. That is what a survivable AI deployment looks like.</p>
+
+      <div class="a7-verdict"><b>Lesson</b><span>The scribe did not win because the model was smarter. It won because <strong>the workflow already contained the check.</strong> Deploy AI upstream of an existing human verification and you inherit its safety for free.</span></div>
+    </section>
+
+    <!-- ── THE PATTERN ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The pattern</div>
+      <h2 class="jp-h2">Four questions that sort <em>every</em> pitch</h2>
+
+      <p class="jp-p">Line the three cases up and the pattern falls out. You do not need to read a single model card to use it. You need four questions, asked out loud, in the demo meeting.</p>
+
+      <div class="a7-qgrid">
+        <div class="a7-q">
+          <div class="a7-q-num">Q1</div>
+          <div class="a7-q-t">How narrow is the task?</div>
+          <p>"Transcribe this conversation" is narrow. "Assess deterioration risk" is not. The wider the task, the more of the job is context the model never saw.</p>
+        </div>
+        <div class="a7-q">
+          <div class="a7-q-num">Q2</div>
+          <div class="a7-q-t">Is the output checked where it's used?</div>
+          <p>A drafted note gets read and signed. A silent risk score fires an alert at 3 AM with nobody reviewing its reasoning. <strong>One of these inherits a safety system. The other bypasses it.</strong></p>
+        </div>
+        <div class="a7-q">
+          <div class="a7-q-num">Q3</div>
+          <div class="a7-q-t">Who owns the failure?</div>
+          <p>If the answer in the room is "the algorithm," walk. Algorithms do not carry licenses, and they do not sit in front of review boards. Someone with a name owns every miss.</p>
+        </div>
+        <div class="a7-q">
+          <div class="a7-q-num">Q4</div>
+          <div class="a7-q-t">What was the training label, really?</div>
+          <p>Cost stood in for need and quietly redistributed care away from sicker patients. Ask what the model literally predicted during training. Then ask who checked the gap between that and the brochure.</p>
+        </div>
+      </div>
+
+      <p class="jp-p">The regulators are converging on the same questions from the other side. The FDA's clinical decision support guidance draws its device line partly on whether the clinician can independently review the basis for a recommendation, which is Q2 wearing a regulatory badge. And when a measure becomes the target, <a href="/learn/laws-and-paradoxes/">Goodhart</a> collects. He always does.</p>
+    </section>
+
+    <!-- ── DO THIS ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Do this</div>
+      <h2 class="jp-h2">What to do with the <em>next</em> pitch</h2>
+
+      <p class="jp-p">So the next vendor deck lands on your desk. Here is the move, in order.</p>
+
+      <p class="jp-p">Ask for external validation at more than one site, then run the tool SILENT on your own population before a single alert fires. That one step would have caught the sepsis model before it trained a thousand nurses to ignore it. Ask the label question, out loud, and watch the room. Treat "FDA-cleared" as a floor, not a verdict; more than 1,400 things are cleared. And write down who owns the failure before go-live, because after go-live everyone remembers differently.</p>
+
+      <p class="jp-p">None of this requires a data science degree. It requires being the person in the room willing to ask boring questions about a shiny thing. That has always been the job.</p>
+
+      <div class="a7-go">
+        <a href="/learn/talks/arma-2026/">
+          <div class="k">Talk · CME</div>
+          <div class="t">AI in Healthcare: Value vs. Hype</div>
+          <div class="d">The 5-question evaluation framework this article grew out of, with slides and a take-home card.</div>
+        </a>
+        <a href="/learn/laws-and-paradoxes/">
+          <div class="k">Field Guide 01</div>
+          <div class="t">Healthcare Laws &amp; Paradoxes</div>
+          <div class="d">Jevons, Goodhart, and the Productivity Paradox. The patterns this article keeps bumping into.</div>
+        </a>
+        <a href="/tools/healthcare-vendor-directory/?sector=scribing">
+          <div class="k">Vendor Directory · Preset</div>
+          <div class="t">The ambient scribe boom</div>
+          <div class="d">Every scribe vendor we track, in one preset view of the directory.</div>
+        </a>
+        <a href="/tools/healthcare-vendor-directory/?sector=cautionary">
+          <div class="k">Vendor Directory · Preset</div>
+          <div class="t">Proceed with caution</div>
+          <div class="d">The cautionary tales sector. Some of the names in this article live here.</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── SOURCES ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Sources</div>
+      <h2 class="jp-h2">The receipts</h2>
+      <p class="jp-p">Every claim above traces to one of these. Full citations, with everything else this site cites, live in the <a href="/learn/#appendix">Reference Appendix</a>.</p>
+      <div class="jp-source"><em>Wong et al., JAMA Internal Medicine (2021)</em> · <a href="https://doi.org/10.1001/jamainternmed.2021.2626" target="_blank" rel="noopener">External validation of the Epic Sepsis Model</a> · AUC 0.63, 67% of sepsis missed, alerts on 18% of hospitalized patients.</div>
+      <div class="jp-source"><em>Ostermayer et al., JAMIA Open (2024)</em> · <a href="https://doi.org/10.1093/jamiaopen/ooae133" target="_blank" rel="noopener">Multicenter prospective validation of the revised Epic sepsis model</a>.</div>
+      <div class="jp-source"><em>Obermeyer et al., Science (2019)</em> · <a href="https://doi.org/10.1126/science.aax2342" target="_blank" rel="noopener">Dissecting racial bias in an algorithm used to manage the health of populations</a> · 17.7% to 46.5% when the label was corrected.</div>
+      <div class="jp-source"><em>Goh et al., JAMA Network Open (2024)</em> · <a href="https://doi.org/10.1001/jamanetworkopen.2024.40969" target="_blank" rel="noopener">GPT-4 as a diagnostic aid, randomized trial</a> · no improvement with access, p=0.60.</div>
+      <div class="jp-source"><em>Olson et al., JAMA Network Open (2025)</em> · <a href="https://doi.org/10.1001/jamanetworkopen.2025.34976" target="_blank" rel="noopener">Ambient AI scribing and burnout reduction</a>.</div>
+      <div class="jp-source"><em>Topaz et al., npj Digital Medicine (2025)</em> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12460601/" target="_blank" rel="noopener">Ambient AI scribe risks and safeguards</a>.</div>
+      <div class="jp-source"><em>Holmgren et al., JAMA Network Open (2026)</em> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12789954/" target="_blank" rel="noopener">Ambient AI scribes and financial productivity</a> · documentation improved, billing productivity flat.</div>
+      <div class="jp-source"><em>U.S. FDA</em> · <a href="https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices" target="_blank" rel="noopener">AI/ML-enabled medical device list</a> and <a href="https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software" target="_blank" rel="noopener">clinical decision support software guidance</a>.</div>
+      <div class="jp-source"><em>Becker's / Menlo Ventures (2025)</em> · <a href="https://www.beckershospitalreview.com/healthcare-information-technology/ai/ambient-ai-scribes-by-market-share/" target="_blank" rel="noopener">Ambient scribe market sizing</a>.</div>
+    </section>
+
+  </div>
+</div>

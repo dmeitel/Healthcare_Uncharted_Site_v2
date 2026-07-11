@@ -962,6 +962,9 @@ permalink: /tools/healthcare-career-tree/
       <button class="mp-fbtn" id="hct-mp-clear">Reset build</button>
     </span>
 
+    <!-- preset views pin — persistent across tabs (a preset can jump to any view) -->
+    <button class="icon-btn" id="hct-sel-views" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="hct-pop-views" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
+
     <!-- v2 selector popovers — static shells (icons render once via base.njk createIcons);
          JS rebuilds only the plain-text option lists inside .pop-body -->
     <div class="selector-pop" id="hct-pop-paths" hidden>
@@ -975,6 +978,10 @@ permalink: /tools/healthcare-career-tree/
     <div class="selector-pop" id="hct-pop-metric" hidden>
       <div class="pop-head"><span class="pop-head-title"><i data-lucide="bar-chart-2" aria-hidden="true"></i>Metric</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
       <div class="pop-body" id="hct-pop-metric-list" role="listbox" aria-label="Metric"></div>
+    </div>
+    <div class="selector-pop" id="hct-pop-views" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="pin" aria-hidden="true"></i>Views</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="pop-body" id="hct-pop-views-list" role="listbox" aria-label="Preset views"></div>
     </div>
   </div>
   <div class="applied-strip" id="hct-applied" hidden></div>
@@ -4148,7 +4155,7 @@ permalink: /tools/healthcare-career-tree/
     const selMetric = document.getElementById('hct-sel-metric'), popMetric = document.getElementById('hct-pop-metric');
     selPaths.addEventListener('click', () => { if (DATA) openPopover(selPaths, popPaths, buildPathsPop); });
     selMetric.addEventListener('click', () => openPopover(selMetric, popMetric, buildMetricPop));
-    document.addEventListener('click', e => { if (openPop && !e.target.closest('.selector-pop') && !e.target.closest('.selector')) closePop(false); });
+    document.addEventListener('click', e => { if (openPop && !e.target.closest('.selector-pop') && !e.target.closest('[aria-haspopup]')) closePop(false); });   // keyed on [aria-haspopup], not .selector — icon-btn triggers (the Views pin) are legitimate
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && openPop) closePop(true); });
     document.querySelectorAll('.selector-pop').forEach(pop => {
       pop.addEventListener('keydown', e => {
@@ -4167,6 +4174,36 @@ permalink: /tools/healthcare-career-tree/
       closePop(true);
       setColorMode(t.dataset.cmode);
       announce('Metric: ' + (CMODE_LABEL[t.dataset.cmode] || t.dataset.cmode));
+    });
+    // ── preset views (crit #4): authored starting points, each just a URL ──
+    const PRESETS = [
+      { name: 'Follow the money',         q: '?view=career&metric=pay' },
+      { name: 'Where the jobs are going', q: '?view=career&metric=growth' },
+      { name: 'The clinical core',        q: '?view=career&hidepw=informatics,biotech,admin,government,education' },
+    ];
+    const selViews = document.getElementById('hct-sel-views'), popViews = document.getElementById('hct-pop-views');
+    function buildViewsPop(){
+      document.getElementById('hct-pop-views-list').innerHTML = PRESETS.map(p =>
+        `<button class="pop-opt" role="option" data-view-q="${p.q}">${p.name}</button>`).join('');
+    }
+    selViews.addEventListener('click', () => { if (DATA) openPopover(selViews, popViews, buildViewsPop); });
+    // a preset click is the popstate path with the URL pushed first: reset → re-apply → render
+    document.getElementById('hct-pop-views-list').addEventListener('click', e => {
+      const t = e.target.closest('[data-view-q]'); if (!t || !DATA) return;
+      closePop(true);
+      try{ history.pushState(null, '', t.dataset.viewQ); }catch(err){}
+      applyingURL = true;
+      hiddenPathways = new Set(); hiddenFamilies = new Set(); colorMode = 'fam';
+      const v = applyURLState();
+      setColorMode(colorMode);
+      refreshPathwayControls();
+      selectedId = null; eduSelId = null; eduMatrixSel = null; closePanel();
+      if (boardRendered) render(false);
+      const sameTab = (v === curView);
+      setView(v);
+      if (sameTab && v === 'career'){ userZoomed = false; fit(false); }
+      applyingURL = false;
+      announce('View: ' + t.textContent);
     });
     // Pathways panel: multi-select, immediate apply, stays open. A pathway row
     // toggles its whole category (the old per-pathway Show/Hide all); a specialty

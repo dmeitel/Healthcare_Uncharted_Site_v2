@@ -6,9 +6,9 @@
 - **Operators Map** (reference): Dataset + Metric selectors, county overlay in the metric popover + applied strip, quintile-band legend isolates, type legend filters, URL views, 3 preset Views behind the pin.
 - **Multi-Lens Map**: left metric panel gone at all widths (canvas takes the column); Metric selector with lens sections + search-within (~48 options); detail card relocated to the Inspector dock (now reachable on phone, it wasn't before); bespoke mobile metric sheet deleted; URL views (lens/metric-slug/year/trend/mode/grain/state/vs) with legacy #hash upgrade; 4 preset Views.
 - **Atlas**: chip row + separate legend unified into ONE Layers panel (toggles + connections + legend key), same surface every width; applied strip tracks layer state incl. "Expanded: N nodes"; hash deep-links untouched by design.
-- **Vendor Directory**: sidebar stays ≥1100px; Sector selector below (replacing a native mobile <select>, and covering the 860-1099 squeeze band); applied sector chip; ?sector= URLs.
-- **Career Tree**: Metric selector; 8 pathway dropdowns → one Pathways filter panel with live face count; "Pathways: N hidden" chip; ?view/metric/hide/hidepw URLs (hide and hidepw split because three slugs are both family and pathway).
-- **Iceberg Map**: Focus + Visibility merged into one popover (both were desktop-only before — phones had NO filter access); hidden-layer chips; ?n/sub/focus/hide URLs.
+- **Vendor Directory**: sidebar stays ≥1100px; Sector selector below (replacing a native mobile <select>, and covering the 860-1099 squeeze band); applied sector chip; ?sector= URLs; 3 preset Views behind the pin (2026-07-10).
+- **Career Tree**: Metric selector; 8 pathway dropdowns → one Pathways filter panel with live face count; "Pathways: N hidden" chip; ?view/metric/hide/hidepw URLs (hide and hidepw split because three slugs are both family and pathway); 3 preset Views behind the pin (2026-07-10 — also normalized the outside-click closer to [aria-haspopup], it was still keyed on .selector).
+- **Iceberg Map**: Focus + Visibility merged into one popover (both were desktop-only before — phones had NO filter access); hidden-layer chips; ?n/sub/focus/hide URLs; 3 preset Views behind the pin (2026-07-10).
 - **Hospital Blueprint**: no structural change needed (legend-only chrome). **SQL Mystery**: exempt (editor).
 
 **Convention clarifications from the rollout** (now canonical, also reflected in the shell doc):

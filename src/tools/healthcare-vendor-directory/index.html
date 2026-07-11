@@ -273,6 +273,11 @@ no_footer: true
           <option value="status">Sort: Status</option>
         </select>
       </div>
+      <button class="icon-btn" id="selViews" aria-haspopup="listbox" aria-expanded="false" aria-controls="popViews" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
+      <div class="selector-pop" id="popViews" hidden>
+        <div class="pop-head"><span class="pop-head-title"><i data-lucide="pin" aria-hidden="true"></i>Views</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+        <div class="pop-body" id="popViewsList" role="listbox" aria-label="Preset views"></div>
+      </div>
       <div class="selector-pop" id="popSector" hidden>
         <div class="pop-head"><span class="pop-head-title"><i data-lucide="layers" aria-hidden="true"></i>Sector</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
         <div class="pop-body" id="popSectorList" role="listbox" aria-label="Sector"></div>
@@ -450,6 +455,25 @@ function buildSectorPop() {
 }
 document.getElementById('selSector').addEventListener('click', () => openPopover(document.getElementById('selSector'), document.getElementById('popSector'), buildSectorPop));
 document.getElementById('popSectorList').addEventListener('click', e => { const t = e.target.closest('[data-sector]'); if (!t) return; closePop(true); setSector(t.dataset.sector); });
+
+// ── preset views (crit #4): authored starting points, each just a URL ────
+const PRESETS = [
+  { name: 'The ambient scribe boom', q: '?sector=scribing' },
+  { name: 'The EHR incumbents',      q: '?sector=ehr' },
+  { name: 'Proceed with caution',    q: '?sector=cautionary' },
+];
+function buildViewsPop() {
+  document.getElementById('popViewsList').innerHTML = PRESETS.map(p =>
+    `<button class="pop-opt" role="option" data-view-q="${p.q}">${p.name}</button>`).join('');
+}
+document.getElementById('selViews').addEventListener('click', () => openPopover(document.getElementById('selViews'), document.getElementById('popViews'), buildViewsPop));
+document.getElementById('popViewsList').addEventListener('click', e => {
+  const t = e.target.closest('[data-view-q]'); if (!t) return;
+  closePop(true);
+  try { history.pushState(null, '', t.dataset.viewQ); } catch (err) {}
+  activeSector = 'all'; applyURLState(); render();
+  announce('View: ' + t.textContent);
+});
 
 // applied strip: the active sector when the sidebar isn't there to show it.
 // CSS hides the strip at >=1100px, where the sidebar already IS the state.

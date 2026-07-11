@@ -162,6 +162,10 @@ genuine typos in the CMS source and are logged on every run.
   HUD's Connected column lists linking content back OUT (`CONTENT_LINKS`, emitted
   at build time in `src/atlas/index.njk`). Remove map_node/map_connections or
   repurpose them when article-level nodes are revisited. Learn modules and talks
-  still need `atlasLinks`-style authoring to join the loop.
+  joined the loop 2026-07-10: `atlasLinks` authored in `_data/learn.js` (live
+  modules 📘 + talks 🎤 now emit into CONTENT_LINKS alongside rounds 📋), with
+  hand-placed pill rows in each page hero. `learn.js` modules[] was synced to
+  the live pages for this (the coming-soon entries are still the old aspirational
+  list); the file remains unconsumed by templates otherwise.
 - **Atlas zone data is hardcoded in `src/atlas/index.njk`**, not in a registry.
 - **~9 CMS county typos** unmatched; add an alias patch to `normCounty` if needed.

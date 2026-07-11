@@ -3012,12 +3012,20 @@ function fillHudData(nodeId){
 
 // ── CONTENT LINKS ─────────────────────────────────────────────────────────────
 // Published site content that deep-links to atlas tiles, inverted at build time
-// from _data/rounds.js atlasLinks. Keys are 'zoneId/nodeId' (the hash format).
+// from _data/rounds.js atlasLinks (📋), _data/learn.js modules (📘) and talks (🎤).
+// Keys are 'zoneId/nodeId' (the hash format). selectNode dedups by url, so a
+// tile whose built-in links already point at a module won't double-list it.
 // Kept OUTSIDE the ZONE_DEFS span that scripts/lib/adapters/atlas-concepts.js
 // text-slices — do not move this above ZONE_DEFS.
 const CONTENT_LINKS = {};
 {%- for entry in rounds.entries %}{% if entry.status == 'published' and entry.atlasLinks %}{% for lnk in entry.atlasLinks %}
 (CONTENT_LINKS[{{ lnk.to | dump | safe }}] = CONTENT_LINKS[{{ lnk.to | dump | safe }}] || []).push({ label: {{ entry.title | dump | safe }}, url: '/rounds/{{ entry.slug }}/', icon: '📋' });
+{%- endfor %}{% endif %}{% endfor %}
+{%- for m in learn.modules %}{% if m.status == 'live' and m.atlasLinks %}{% for lnk in m.atlasLinks %}
+(CONTENT_LINKS[{{ lnk.to | dump | safe }}] = CONTENT_LINKS[{{ lnk.to | dump | safe }}] || []).push({ label: {{ m.title | dump | safe }}, url: {{ m.url | dump | safe }}, icon: '📘' });
+{%- endfor %}{% endif %}{% endfor %}
+{%- for t in learn.talks %}{% if t.atlasLinks %}{% for lnk in t.atlasLinks %}
+(CONTENT_LINKS[{{ lnk.to | dump | safe }}] = CONTENT_LINKS[{{ lnk.to | dump | safe }}] || []).push({ label: {{ t.title | dump | safe }}, url: {{ t.url | dump | safe }}, icon: '🎤' });
 {%- endfor %}{% endif %}{% endfor %}
 
 function selectNode(zone,cell) {

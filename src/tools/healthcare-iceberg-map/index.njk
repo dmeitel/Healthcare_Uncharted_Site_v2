@@ -455,6 +455,11 @@ permalink: /tools/healthcare-iceberg-map/
     </div>
     <div class="sp"></div>
     <div id="bc"></div>
+    <button class="icon-btn" id="selViews" aria-haspopup="listbox" aria-expanded="false" aria-controls="popViews" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
+    <div class="selector-pop" id="popViews" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="pin" aria-hidden="true"></i>Views</span><button class="icon-btn" data-close aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="pop-body" id="popViewsList" role="listbox" aria-label="Preset views"></div>
+    </div>
     <div class="hics">
       <div class="hi" title="Reset to start" role="button" aria-label="Reset to start" onclick="resetAll()"><i data-lucide="rotate-ccw" aria-hidden="true"></i></div>
     </div>
@@ -1481,6 +1486,29 @@ document.getElementById('popLayerList').addEventListener('click',e=>{
   if(f){closePop(true);setFilter(f.dataset.focus);return;}
   const t=e.target.closest('[data-layer]');
   if(t){const n=+t.dataset.layer;toggleLayer(n);t.setAttribute('aria-selected',String(!hiddenLayers.has(n)));} // immediate-apply; the panel stays open
+});
+
+// ── preset views (crit #4): authored starting points, each just a URL ──
+const PRESETS=[
+  {name:'What the patient feels',q:'?focus=patient'},
+  {name:'The money underneath',q:'?focus=financial'},
+  {name:'Where the ED sits',q:'?n=ED&focus=ops'},
+];
+function buildViewsPop(){
+  document.getElementById('popViewsList').innerHTML=PRESETS.map(p=>
+    `<button class="pop-opt" role="option" data-view-q="${p.q}">${p.name}</button>`).join('');
+}
+document.getElementById('selViews').addEventListener('click',()=>openPopover(document.getElementById('selViews'),document.getElementById('popViews'),buildViewsPop));
+document.getElementById('popViewsList').addEventListener('click',e=>{
+  const t=e.target.closest('[data-view-q]');if(!t)return;
+  closePop(true);
+  try{history.pushState(null,'',t.dataset.viewQ);}catch(err){}
+  applyingURL=true;
+  sel='H';subSel=null;activeFilter='all';hiddenLayers=new Set();
+  applyURLState();
+  applyingURL=false;
+  updateSelectorFace();renderAppliedStrip();go();
+  announce('View: '+t.textContent);
 });
 
 function setFilter(f){

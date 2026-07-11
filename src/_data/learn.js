@@ -3,8 +3,65 @@ module.exports = {
   // ── MODULES ─────────────────────────────────────────────────────────────────
   // Add new modules here. status: 'live' | 'coming'
   // featured: true = shown on homepage
+  // atlasLinks: [{label, zone, to:'zoneId/nodeId'}] — same shape as rounds.js;
+  // emitted into the atlas CONTENT_LINKS block at build time (src/atlas/index.njk).
 
   modules: [
+
+    {
+      id:       '4ps-framework',
+      num:      '01',
+      category: 'Framework',
+      ps:       'P1 / P2a / P2b / P3 / P4',
+      title:    'The Four Players of U.S. Healthcare',
+      desc:     'The framework everything else on this site hangs off of. Patients, Providers, Payers, and Policymakers. Each one sees the system through a different lens, and the same relationship can mean four different things depending on which side you’re standing on.',
+      url:      '/learn/4ps-framework/',
+      tags:     ['Framework', 'Mental Model', 'Interactive'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Clinical Encounter',   zone: 'patient',  to: 'patient/encounter' },
+        { label: 'Acute Care Hospital',  zone: 'provider', to: 'provider/acute' },
+        { label: 'Commercial Insurance', zone: 'payer',    to: 'payer/commercial' },
+        { label: 'CMS & Fed Agencies',   zone: 'policy',   to: 'policy/cms' }
+      ]
+    },
+
+    {
+      id:       'laws-and-paradoxes',
+      num:      'FG01',
+      category: 'Field Guide',
+      ps:       'P2a / P2b / P3 / P4',
+      title:    'Healthcare Laws & Paradoxes',
+      desc:     'The recurring patterns that shape healthcare and health IT. Jevons, Goodhart, Roemer, the Productivity Paradox, Conway, Amara, the Bullwhip Effect, and Jensen. One tabbed field guide, one law per tab.',
+      url:      '/learn/laws-and-paradoxes/',
+      tags:     ['Jevons', 'Goodhart', 'Roemer', 'Conway'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Certificate of Need',  zone: 'policy',   to: 'policy/con' },
+        { label: 'Quality Measurement',  zone: 'policy',   to: 'policy/quality-meas' },
+        { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' }
+      ]
+    },
+
+    {
+      id:       'patient-data-record',
+      num:      '02',
+      category: 'Patient',
+      ps:       'P1',
+      title:    'The Patient: How You Become a Data Record',
+      desc:     'From registration to discharge: how patient identity is created, maintained, and shared across every system in a health network.',
+      url:      '/learn/patient-data-record/',
+      tags:     ['Identity', 'Registration', 'Data'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Clinical Encounter',   zone: 'patient',  to: 'patient/encounter' },
+        { label: 'EHR Systems',          zone: 'provider', to: 'provider/ehr' },
+        { label: 'Health Info Exchange', zone: 'techeco',  to: 'techeco/hie' }
+      ]
+    },
 
     {
       id:       'process-engineering',
@@ -17,7 +74,12 @@ module.exports = {
       tags:     ['Lean', 'DMAIC', 'Workflow Mapping', 'PDSA'],
       status:   'live',
       featured: true,
-      labNode:  'process-engineering'
+      labNode:  'process-engineering',
+      atlasLinks: [
+        { label: 'Clinical Informatics', zone: 'provider', to: 'provider/informatics' },
+        { label: 'Emergency Dept',       zone: 'provider', to: 'provider/ed' },
+        { label: 'Care Transitions',     zone: 'patient',  to: 'patient/care-transitions' }
+      ]
     },
 
     {
@@ -31,7 +93,48 @@ module.exports = {
       tags:     ['Data', 'Sourcing', 'Architecture'],
       status:   'live',
       featured: false,
-      labNode:  'data-warehouse'
+      labNode:  'data-warehouse',
+      atlasLinks: [
+        { label: 'Data Warehousing',     zone: 'techeco',   to: 'techeco/data-warehouse' },
+        { label: 'CMS & Fed Agencies',   zone: 'policy',    to: 'policy/cms' },
+        { label: 'Epidemiology & Surveillance', zone: 'pubhealth', to: 'pubhealth/epidemiology' }
+      ]
+    },
+
+    {
+      id:       'oxygen-payment-cuts',
+      num:      'G01',
+      category: 'Guest — Chrysalis Ashton',
+      ps:       'P2b / P3 / P4',
+      title:    'The Erosion of Home Oxygen Reimbursement',
+      desc:     'How 36 years of successive legislation dismantled the financial foundation of home respiratory therapy, cutting Medicare oxygen reimbursement by over 75% in real terms and eliminating the economic model that funded RT clinical services in the home.',
+      url:      '/learn/oxygen-payment-cuts/',
+      tags:     ['Medicare', 'Home Oxygen', 'Reimbursement'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Medicare',             zone: 'payer',    to: 'payer/medicare' },
+        { label: 'Respiratory Therapy',  zone: 'provider', to: 'provider/resp-therapy' },
+        { label: 'Federal Legislation',  zone: 'policy',   to: 'policy/fed-law' }
+      ]
+    },
+
+    {
+      id:       'home-respiratory-timeline',
+      num:      'G02',
+      category: 'Guest — Chrysalis Ashton',
+      ps:       'P2a / P2b / P4',
+      title:    'History of Home Respiratory Therapy',
+      desc:     'From oxygen orderlies in the 1940s to modern PAP therapy, home ventilation, and the fight for clinical recognition. A century of evolution in the home care setting.',
+      url:      '/learn/home-respiratory-timeline/',
+      tags:     ['Home Care', 'Respiratory', 'History'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Respiratory Therapy',  zone: 'provider', to: 'provider/resp-therapy' },
+        { label: 'Post-Acute Care',      zone: 'provider', to: 'provider/post-acute' },
+        { label: 'Scope of Practice',    zone: 'policy',   to: 'policy/scope' }
+      ]
     },
 
     {
@@ -81,17 +184,39 @@ module.exports = {
 
     {
       id:       'ai-in-healthcare',
-      num:      '04',
+      num:      '07',
       category: 'AI in Healthcare',
       ps:       'P2a / P2b / P3',
-      title:    'What\u2019s Actually Working vs. What\u2019s Still Promise',
-      desc:     'Ambient documentation is real. Autonomous diagnosis is not. A candid, evidence-based assessment of where the healthcare AI line actually is \u2014 so you can make better decisions about what to adopt.',
-      url:      '#',
-      tags:     ['AI', 'Strategy', 'Evidence'],
-      tagAmber: 'Coming soon',
-      status:   'coming',
+      title:    'AI in Healthcare: What Works, What Doesn\u2019t, and Why',
+      desc:     'Ambient documentation is real. Autonomous diagnosis is not. The evidence behind the healthcare AI line: the sepsis model that missed sepsis, the algorithm that learned the wrong thing, the scribe that stuck, and the four questions that sort every pitch.',
+      url:      '/learn/ai-in-healthcare/',
+      tags:     ['AI', 'Evidence', 'Case Studies'],
+      status:   'live',
+      featured: true,
+      labNode:  'ai-in-healthcare',
+      atlasLinks: [
+        { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' },
+        { label: 'Predictive Analytics', zone: 'medsci',   to: 'medsci/predictive' },
+        { label: 'AI Vendor Landscape',  zone: 'techeco',  to: 'techeco/ai-vendors' }
+      ]
+    },
+
+    {
+      id:       'healthcare-gap',
+      num:      '08',
+      category: 'Workforce & Access',
+      ps:       'P1 / P2a / P4',
+      title:    'The U.S. Healthcare Gap: Rural, Workforce, and Access',
+      desc:     'Where the system breaks down for real people. One in five Americans lives rural, one in ten physicians practices there, and more than a hundred rural hospitals have closed since 2010. The workforce gap wearing a geography costume, and why technology alone has not closed it.',
+      url:      '/learn/healthcare-gap/',
+      tags:     ['Workforce', 'Rural', 'Access'],
+      status:   'live',
       featured: false,
-      labNode:  'ai-in-healthcare'
+      atlasLinks: [
+        { label: 'Rural Health Access',  zone: 'pubhealth', to: 'pubhealth/rural' },
+        { label: 'Physician Workforce',  zone: 'provider',  to: 'provider/physicians' },
+        { label: 'Access & Navigation',  zone: 'patient',   to: 'patient/access' }
+      ]
     },
 
     {
@@ -145,7 +270,12 @@ module.exports = {
         takeHome:  '/downloads/2026_ArMA_AI-Healthcare-Take-Home.pdf'
       },
       ps:       ['p2a', 'p2b', 'p3', 'p4'],
-      labNode:  'arma-2026-talk'
+      labNode:  'arma-2026-talk',
+      atlasLinks: [
+        { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' },
+        { label: 'AI Vendor Landscape',  zone: 'techeco',  to: 'techeco/ai-vendors' },
+        { label: 'Predictive Analytics', zone: 'medsci',   to: 'medsci/predictive' }
+      ]
     },
 
     {
@@ -161,7 +291,12 @@ module.exports = {
         slides:        '/downloads/2026-msrc-ai-in-healthcare-slides.pdf'
       },
       ps:       ['p2a', 'p2b', 'p3', 'p4'],
-      labNode:  'msrc-2026-talk'
+      labNode:  'msrc-2026-talk',
+      atlasLinks: [
+        { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' },
+        { label: 'Prior Authorization',  zone: 'patient',  to: 'patient/prior-auth' },
+        { label: 'Respiratory Therapy',  zone: 'provider', to: 'provider/resp-therapy' }
+      ]
     }
 
   ],
