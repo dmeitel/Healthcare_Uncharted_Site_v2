@@ -934,6 +934,13 @@ const SEARCH_DATA = [
   // four-point blue/teal star, N/E/S/W labels and the HU monogram at the centre.
   // Sits in a clean hex clearing so the honeycomb and routes don't show through.
   // Geometry is scaled from the SVG, whose hex has a 182-unit vertex radius.
+
+  // HU monogram paths lifted verbatim from the brand SVG's monogram group
+  // (origin 318.75,203.72 relative to the 340,218 centre; drawn at scale 0.34).
+  const MONO_H1 = new Path2D('M0,4 Q0,0 4,0 L15,0 Q19,0 19,4 L19,23 Q19,27 15.7,29.26 L3.3,37.74 Q0,40 0,36 Z');
+  const MONO_H2 = new Path2D('M0,50 Q0,46 3.38,43.86 L15.62,36.14 Q19,34 23,34 L46,34 Q50,34 50,38 L50,49 Q50,53 46,53 L23,53 Q19,53 19,57 L19,80 Q19,84 15,84 L4,84 Q0,84 0,80 Z');
+  const MONO_U  = new Path2D('M57,1.5 Q57,-2.5 61,-2.5 L72,-2.5 Q76,-2.5 76,1.5 L76,52.5 Q76,67.5 91,67.5 Q106,67.5 106,52.5 L106,1.5 Q106,-2.5 110,-2.5 L121,-2.5 Q125,-2.5 125,1.5 L125,52.5 Q125,86.5 91,86.5 Q57,86.5 57,52.5 Z');
+
   function drawCompass(cx, cy, dark, bg, s) {
     const R = 2.7 * s;            // hex-frame vertex radius
     const k = R / 182;            // scale from the SVG's 182-unit hex
@@ -1047,16 +1054,17 @@ const SEARCH_DATA = [
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    const mf = Math.max(11, Math.round(chR * 0.95));
-    ctx.font = `800 ${mf}px Outfit, sans-serif`;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
-    const hW = ctx.measureText('H').width, uW = ctx.measureText('U').width;
-    const gap = mf * 0.04, tot = hW + uW + gap, x0 = cx - tot / 2;
-    ctx.fillStyle = BLUE_LT;
-    ctx.fillText('H', x0, cy);
+    // HU monogram from the brand paths (same geometry as the Atlas hub),
+    // not typed letters: the H is the angled brand mark, not a font glyph.
+    ctx.save();
+    ctx.translate(cx - 21.25 * k, cy - 14.28 * k);
+    ctx.scale(0.34 * k, 0.34 * k);
+    ctx.fillStyle = BLUE;
+    ctx.fill(MONO_H1);
+    ctx.fill(MONO_H2);
     ctx.fillStyle = TEAL;
-    ctx.fillText('U', x0 + hW + gap, cy);
+    ctx.fill(MONO_U);
+    ctx.restore();
 
     ctx.restore();
   }

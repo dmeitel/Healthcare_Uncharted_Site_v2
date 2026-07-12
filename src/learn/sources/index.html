@@ -1,0 +1,183 @@
+---
+layout: base.njk
+title: "Sources & Standards — Healthcare Uncharted"
+description: "The reference ledger as a searchable database: every government dataset, standards body, peer-reviewed study, and credentialing board cited on Healthcare Uncharted, filterable by group and by the tool or article that uses it."
+navPage: learn
+---
+
+<style>
+.page-header{max-width:1080px;margin:0 auto;padding:64px 40px 36px}
+.page-header h1{font-family:var(--display);font-size:clamp(28px,4vw,46px);font-weight:800;letter-spacing:-.025em;line-height:1.1;margin-bottom:14px}
+.page-header h1 em{font-style:normal;color:var(--teal)}
+.page-header p{font-size:16px;color:var(--t2);max-width:680px;line-height:1.75}
+.src-back{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);text-decoration:none;margin-bottom:18px}
+.src-back:hover{color:var(--teal)}
+
+/* ── filter bar: search + group chips + live count (sticky) ── */
+.src-bar{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:0 40px;position:sticky;top:0;z-index:20}
+.src-bar-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 0}
+.src-q{flex:1 1 240px;min-width:180px;background:var(--raised);border:1px solid var(--border);border-radius:8px;color:var(--t1);font-family:var(--font);font-size:13px;padding:8px 12px;outline:none}
+.src-q:focus{border-color:rgba(78,205,196,.5)}
+.src-q::placeholder{color:var(--t3)}
+.src-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.src-chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--t3);cursor:pointer;white-space:nowrap;font-family:var(--font)}
+.src-chip b{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--t3);margin-left:2px}
+.src-chip:hover{color:var(--t2);border-color:var(--border2)}
+.src-chip[aria-pressed="true"]{background:rgba(78,205,196,.12);border-color:rgba(78,205,196,.35);color:var(--teal)}
+.src-chip[aria-pressed="true"] b{color:var(--teal)}
+.src-count{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--t3);margin-left:auto;white-space:nowrap}
+
+/* ── used-by row: the inverted index, most-cited first ── */
+.src-used{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px;max-width:1080px;margin:0 auto 22px}
+.src-used-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-right:4px}
+.src-chip-sm{padding:4px 10px;font-size:11.5px}
+
+/* ── the ledger rows ── */
+.content-section{padding:40px 40px 56px}
+.content-inner{max-width:1080px;margin:0 auto}
+.appendix-section{background:var(--surface);border-top:1px solid var(--border)}
+.src-list{display:flex;flex-direction:column;gap:8px}
+.src-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--t2);line-height:1.55;padding:9px 13px;background:var(--raised);border:1px solid var(--border);border-radius:8px}
+.src-row[hidden]{display:none}
+.src-row a{color:var(--teal);font-family:var(--mono);font-size:11px;display:block;margin-top:2px}
+.src-row a:hover{color:var(--t1)}
+.ai-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);font-family:var(--mono);flex-shrink:0;padding-top:2px;width:44px}
+.ai-body{flex:1 1 auto;min-width:0}
+.ai-body strong{color:var(--t1);font-weight:500;font-size:13px}
+.ai-uses{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.ai-uses .ai-use{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin:0;padding:3px 8px;border-radius:5px;background:rgba(78,205,196,.10);border:1px solid rgba(78,205,196,.28);color:var(--teal);text-decoration:none;white-space:nowrap;line-height:1.35}
+.ai-uses a.ai-use:hover{background:rgba(78,205,196,.2);border-color:rgba(78,205,196,.55);color:var(--teal)}
+.ai-uses .ai-use-site{background:rgba(140,180,215,.07);border-color:var(--border);color:var(--t3)}
+.ai-desc{display:block;font-size:12px;color:var(--t3);margin-top:3px;line-height:1.5}
+.src-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px;padding-top:2px}
+.src-meta span{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--t3);white-space:nowrap}
+.src-empty{padding:36px 0;text-align:center;font-size:13.5px;color:var(--t3)}
+
+@media(max-width:768px){
+  .page-header{padding:48px 20px 28px}
+  .src-bar{padding:0 20px}
+  .content-section{padding:32px 20px 48px}
+  .src-count{margin-left:0;flex-basis:100%}
+  .src-row{flex-wrap:wrap}
+  .src-meta{flex-direction:row;gap:10px;width:100%;align-items:center;justify-content:flex-start;padding-left:54px}
+}
+@media(hover:none){.src-chip{min-height:38px}}
+
+[data-theme="light"] .src-row a{color:var(--teal-dk)}
+[data-theme="light"] .ai-uses .ai-use:not(.ai-use-site){color:var(--teal-dk)}
+[data-theme="light"] .ai-uses a.ai-use:hover{color:var(--teal-dk)}
+[data-theme="light"] .src-back:hover{color:var(--teal-dk)}
+[data-theme="light"] .src-chip[aria-pressed="true"]{color:var(--teal-dk)}
+[data-theme="light"] .src-chip[aria-pressed="true"] b{color:var(--teal-dk)}
+</style>
+
+<div class="page-header">
+  <a class="src-back" href="/learn/">&larr; Explore</a>
+  <h1>Sources, Standards <em>&amp;</em> External References</h1>
+  <p>Where the claims on this site come from: {{ references.items | length }} sources across government data, standards bodies, policy research, peer-reviewed studies, credentialing boards, and the reporting we cite directly. Search it, cut it by group, or flip it around and ask what any one tool or article stands on.</p>
+</div>
+
+<div class="src-bar">
+  <div class="src-bar-inner">
+    <input id="src-q" class="src-q" type="search" placeholder="Search the ledger&hellip;" autocomplete="off" aria-label="Search sources">
+    <div class="src-chips" id="src-groups" role="group" aria-label="Filter by group">
+      <button class="src-chip" type="button" data-group="" aria-pressed="true">All</button>
+      {%- for g in references.groups %}
+      <button class="src-chip" type="button" data-group="{{ g.key }}" aria-pressed="false">{{ g.short }} <b>{{ g.items | length }}</b></button>
+      {%- endfor %}
+    </div>
+    <span class="src-count" id="src-count" aria-live="polite">{{ references.items | length }} sources</span>
+  </div>
+</div>
+
+<section class="content-section appendix-section">
+  <div class="content-inner">
+    <div class="src-used" id="src-used" role="group" aria-label="Filter by what uses the source">
+      <span class="src-used-lbl">Used by</span>
+      {%- for c in references.consumers %}
+      <button class="src-chip src-chip-sm" type="button" data-used="{{ c.slug }}" aria-pressed="false">{{ c.label }} <b>{{ c.count }}</b></button>
+      {%- endfor %}
+    </div>
+
+    <div class="src-list" id="src-list">
+      {%- for item in references.items %}
+      <div class="src-row" data-group="{{ item.org }}" data-used="{% for u in item.usedBy %}{{ u.slug }} {% endfor %}" data-search="{{ item.search }}">
+        <span class="ai-label">{{ item.tag }}</span>
+        <div class="ai-body">
+          <strong>{{ item.name }}</strong>
+          <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.linkText }} &rarr;</a>
+          {%- if item.desc %}<span class="ai-desc">{{ item.desc }}</span>{% endif %}
+          <span class="ai-uses">
+            {%- for use in item.usedBy -%}
+              {%- if use.href %}<a class="ai-use" href="{{ use.href }}">{{ use.label }}</a>
+              {%- else %}<span class="ai-use{% if use.site %} ai-use-site{% endif %}">{{ use.label }}</span>{% endif -%}
+            {%- endfor %}
+          </span>
+        </div>
+        <div class="src-meta">
+          <span>{{ item.groupShort }}</span>
+          {%- if item.retrieved %}<span>ret. {{ item.retrieved }}</span>{% endif %}
+        </div>
+      </div>
+      {%- endfor %}
+    </div>
+    <div class="src-empty" id="src-empty" hidden>Nothing matches. Clear a filter, or try a shorter word.</div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var rows = [].slice.call(document.querySelectorAll('.src-row'));
+  var qEl = document.getElementById('src-q');
+  var countEl = document.getElementById('src-count');
+  var emptyEl = document.getElementById('src-empty');
+  var groupChips = [].slice.call(document.querySelectorAll('#src-groups .src-chip'));
+  var usedChips = [].slice.call(document.querySelectorAll('#src-used .src-chip'));
+  var state = { q: '', group: '', used: '' };
+
+  function apply(){
+    var toks = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+    var n = 0;
+    rows.forEach(function(r){
+      var hit = (!state.group || r.dataset.group === state.group)
+        && (!state.used || (' ' + r.dataset.used + ' ').indexOf(' ' + state.used + ' ') >= 0)
+        && toks.every(function(t){ return r.dataset.search.indexOf(t) >= 0; });
+      r.hidden = !hit;
+      if (hit) n++;
+    });
+    var filtered = state.q || state.group || state.used;
+    countEl.textContent = filtered ? (n + ' of ' + rows.length) : (rows.length + ' sources');
+    emptyEl.hidden = n > 0;
+    groupChips.forEach(function(c){ c.setAttribute('aria-pressed', String(c.dataset.group === state.group)); });
+    usedChips.forEach(function(c){ c.setAttribute('aria-pressed', String(!!state.used && c.dataset.used === state.used)); });
+    // URL is the state (replace, never push — filter tweaks aren't history)
+    var p = new URLSearchParams();
+    if (state.q) p.set('q', state.q);
+    if (state.group) p.set('group', state.group);
+    if (state.used) p.set('used', state.used);
+    var qs = p.toString();
+    try{ history.replaceState(null, '', qs ? ('?' + qs) : location.pathname); }catch(e){}
+  }
+
+  qEl.addEventListener('input', function(){ state.q = qEl.value.trim(); apply(); });
+  groupChips.forEach(function(c){ c.addEventListener('click', function(){
+    state.group = (state.group === c.dataset.group) ? '' : c.dataset.group;
+    apply();
+  }); });
+  usedChips.forEach(function(c){ c.addEventListener('click', function(){
+    state.used = (state.used === c.dataset.used) ? '' : c.dataset.used;   // tap the lit one to clear
+    apply();
+  }); });
+
+  // restore from URL — unknown values degrade to no filter
+  try{
+    var p0 = new URLSearchParams(location.search);
+    var g0 = p0.get('group') || '', u0 = p0.get('used') || '';
+    state.q = (p0.get('q') || '').trim();
+    if (groupChips.some(function(c){ return c.dataset.group === g0; })) state.group = g0;
+    if (usedChips.some(function(c){ return c.dataset.used === u0; })) state.used = u0;
+    qEl.value = state.q;
+  }catch(e){}
+  apply();
+})();
+</script>

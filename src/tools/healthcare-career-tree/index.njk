@@ -165,9 +165,15 @@ permalink: /tools/healthcare-career-tree/
   /* frozen left axis (level / degree labels pinned to the left while you slide) */
   .axis-frozen { pointer-events: none; }
   .top-frozen-bg { fill: #081310; pointer-events: none; }
-  .axis-bg { fill: #081310; }
+  .axis-bg { fill: url(#axisFade); }   /* fades into the field — the axis is part of the map, not a slab beside it */
+  .axis-fade-a { stop-color: #081310; }
+  .axis-fade-b { stop-color: #081310; stop-opacity: 0; }
+  [data-theme='light'] .axis-fade-a { stop-color: #eef3f1; }
+  [data-theme='light'] .axis-fade-b { stop-color: #eef3f1; stop-opacity: 0; }
+  .hct-band-txt { paint-order: stroke; stroke: #0A1016; stroke-width: 3px; stroke-linejoin: round; }   /* halo: names stay readable when tiles slide beneath the pinned axis */
+  [data-theme='light'] .hct-band-txt { stroke: #F3F7F6; }
   .axis-div { stroke: rgba(78,205,196,0.22); stroke-width: 1; }
-  [data-theme='light'] .axis-bg, [data-theme='light'] .top-frozen-bg { fill: #eef3f1; }
+  [data-theme='light'] .top-frozen-bg { fill: #eef3f1; }
   [data-theme='light'] .axis-div { stroke: rgba(27,95,168,0.22); }
   /* Hex node */
   .hct-node { cursor: pointer; }
@@ -177,7 +183,7 @@ permalink: /tools/healthcare-career-tree/
   .hct-btn[aria-pressed="true"] { background: rgba(78,205,196,0.14); border-color: rgba(78,205,196,0.5); color: var(--teal); }
   [data-theme='light'] .hct-btn[aria-pressed="true"] { color: var(--teal-dk); }
   /* fill:none is load-bearing: a filled ring would tint the semi-transparent .hx-body above it */
-  .hct-node .hx-pinring { fill: none; stroke: #E8C547; stroke-width: 3; pointer-events: none; }
+  .hct-node .hx-pinring { fill: none; stroke: #F6F9FC; stroke-width: 2.6; pointer-events: none; }   /* unified on-path ring: solid = have, dashed = aiming (set per-node) */
   .hct-node .hx-title { font-family: var(--font); font-weight: 600; fill: #EDF6F4; pointer-events: none; }
   .hct-node .hx-abbr { font-family: var(--mono); font-weight: 700; fill: rgba(150,225,215,0.92); text-anchor: middle; pointer-events: none; }
   .hct-edge { fill: none; pointer-events: none; }
@@ -232,6 +238,12 @@ permalink: /tools/healthcare-career-tree/
   .hct-bls-src { font-family: var(--mono); font-size: 9.5px; color: var(--t3); margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border); }
   .hct-bls-src a { color: var(--teal); text-decoration: none; }
   .hct-bls-src a:hover { text-decoration: underline; }
+  /* credential reality block (career-tree-creds.json): pass rate · exam fee · program length */
+  .hct-cred { background: var(--raised); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; margin: 2px 0 8px; }
+  .hct-cred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hct-cred-stat .v { font-family: var(--display); font-size: 22px; font-weight: 800; color: var(--t1); line-height: 1.05; }
+  .hct-cred-stat .k { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-top: 4px; }
+  .hct-cred-len { font-size: 11.5px; color: var(--t2); margin-top: 11px; }
   .hct-list-h { font-family: var(--display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(78,205,196,0.85); margin: 14px 0 7px; }
   .hct-list { list-style: none; padding: 0; margin: 0; }
   .hct-list li { font-size: 12.5px; line-height: 1.45; color: rgba(220,235,240,0.88); padding-left: 16px; position: relative; margin-bottom: 5px; }
@@ -575,10 +587,66 @@ permalink: /tools/healthcare-career-tree/
   #hct-atlas-svg.grabbing { cursor: grabbing; }
   #hct-atlas-svg text { user-select: none; -webkit-user-select: none; }
   .atlas-bg-hex { fill: rgba(255,255,255,0.012); stroke: rgba(255,255,255,0.05); stroke-width: 1; pointer-events: none; }
-  .atlas-region-hex { fill-opacity: 0.05; stroke-opacity: 0.20; stroke-width: 1; pointer-events: none; }
-  .atlas-hub-hex { fill: rgba(78,205,196,0.05); stroke: #4ECDC4; stroke-width: 1.6; pointer-events: none; }
-  .atlas-hub-t1 { font-family: var(--display); font-weight: 800; letter-spacing: 0.02em; fill: #7FEAD9; pointer-events: none; }
-  .atlas-hub-t2 { font-family: var(--mono); letter-spacing: 0.06em; fill: rgba(127,234,217,0.7); pointer-events: none; }
+  .atlas-node-back { fill: #08120e; }
+  [data-theme='light'] .atlas-node-back { fill: #FBFDFC; }
+  .atlas-abbr { fill: #EAF6F4; }
+  [data-theme='light'] .atlas-abbr { fill: #22333B; }
+  .atlas-region-hex { fill-opacity: 0.02; stroke-opacity: 0.07; stroke-width: 1; pointer-events: none; }   /* filler whispers — the hull draws the shape now */
+  .atlas-zone-hull { fill: none; stroke-width: 2; stroke-opacity: 0.55; stroke-linecap: round; pointer-events: none; }
+  .atlas-grp-sep { fill: none; stroke: rgba(180,205,215,0.22); stroke-width: 1; pointer-events: none; }
+  [data-theme='light'] .atlas-grp-sep { stroke: rgba(40,70,80,0.20); }
+  /* floating map text gets a knockout halo in the canvas color — readable over any tile */
+  .atlas-grp-lbl { paint-order: stroke; stroke: #0A1016; stroke-width: 3.5px; stroke-linejoin: round; }
+  [data-theme='light'] .atlas-grp-lbl { stroke: #F3F7F6; }
+  /* corner depth key — the radial axis in words, docked above the zoom buttons */
+  .atlas-depthkey { position: absolute; right: 8px; bottom: 52px; z-index: 3; pointer-events: none; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.05em; color: var(--t3); background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 5px 10px; }
+  .atlas-depthkey b { color: var(--teal); font-weight: 700; letter-spacing: 0.12em; }
+  [data-theme='light'] .atlas-depthkey b { color: var(--teal-dk); }
+  @media (max-width: 700px) { .atlas-depthkey { display: none; } }   /* phone: pips still tell the story per tile */
+  /* multi-select owns the bottom edge — the corner widgets step aside so the selbar never covers them */
+  #hct-atlas-selbar.on ~ .atlas-hud, #hct-atlas-selbar.on ~ .atlas-depthkey { opacity: 0; transition: opacity .15s; }
+  @media (max-width: 640px) { .atlas-selbar { bottom: 60px; } }   /* clear of the zoom buttons on phones */
+  .atlas-grp-lbl { font-family: var(--mono); font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; opacity: 0; pointer-events: none; transition: opacity .18s; }
+  .atlas-grp-lbl.show { opacity: 0.95; }
+  .atlas-zone-lbl { transition: opacity .18s; }
+  #hct-atlas-svg.atlas-grpfocus .atlas-zone-lbl { opacity: 0.05; }   /* the zone word all but leaves while a territory speaks (they can share rim space) */
+  .atlas-node { transition: opacity .18s; }
+  .atlas-node.atlas-grpdim { opacity: 0.28; }
+  /* Education Matrix cards speak the same on-path ring language */
+  .edu-card.ec-have { outline: 2px solid #F6F9FC; outline-offset: 2px; border-radius: 10px; }
+  .edu-card.ec-goal { outline: 2px dashed #F6F9FC; outline-offset: 2px; border-radius: 10px; }
+  [data-theme='light'] .edu-card.ec-have { outline-color: #2E4450; }
+  [data-theme='light'] .edu-card.ec-goal { outline-color: #2E4450; }
+  .lg-ring { stroke: #F6F9FC; }
+  [data-theme='light'] .lg-ring { stroke: #2E4450; }
+  .lg-teal { fill: var(--teal); }
+  [data-theme='light'] .lg-teal { fill: var(--teal-dk); }
+  /* ── light-mode sweep (QA audit 2026-07-12): dark-tuned leftovers that never flipped ── */
+  [data-theme='light'] .bp-hex-tx, [data-theme='light'] .bp-sp-tx, [data-theme='light'] .edu-hex-tx { fill: #22333B; stroke: rgba(246,249,252,0.65); }
+  [data-theme='light'] .atlas-node.atlas-sel .atlas-hex { stroke: #2E4450; }
+  [data-theme='light'] .hct-clegend .cl-nd i { background: #d7dee5; border-color: #b9c3cd; }
+  [data-theme='light'] .atlas-selbar { background: var(--surface); border-color: var(--border); }
+  [data-theme='light'] #hct-atlas-selcount { color: var(--t2); }
+  [data-theme='light'] .atlas-selbtn { color: var(--t2); }
+  [data-theme='light'] input::placeholder, [data-theme='light'] textarea::placeholder { color: var(--t3); }
+  [data-theme='light'] .bp-grip { color: var(--t3); }
+  [data-theme='light'] .hct-phead-txt, [data-theme='light'] .hct-fhead { filter: brightness(0.62) saturate(1.35); }   /* pathway/family headers: attr colors deepened the badge way */
+  [data-theme='light'] .atlas-zone-lbl { filter: brightness(0.62) saturate(1.35); }
+  [data-theme='light'] #hct-tip .tip-fam { filter: brightness(0.7) saturate(1.35); }
+  [data-theme='light'] .bp-next-add:hover .bp-next-chk { color: #8A6A15; }
+  [data-theme='light'] .bp-sp-add:hover .bp-sp-addhex { stroke: #8A6A15; }
+  [data-theme='light'] .hct-band-rect { fill: rgba(20,40,45,0.04); }   /* zebra: white-alpha attr fill vanished on light — repaint dark-alpha */
+  .atlas-name { fill: #DCEBF0; font-family: var(--font); font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .15s; }
+  [data-theme='light'] .atlas-name { fill: #2A3B44; }
+  .atlas-abbr { transition: transform .15s; }
+  #hct-atlas-svg.atlas-zoomed .atlas-name { opacity: 0.95; }
+  #hct-atlas-svg.atlas-zoomed .atlas-abbr { transform: translateY(-8px); }   /* abbr up, names in the wide band — block stays centered */
+  #hct-atlas-svg.atlas-zoomed .atlas-pip { opacity: 0; }
+  .atlas-pip { transition: opacity .15s; }
+  /* what's on your path is the loudest thing on the board */
+  .atlas-node.installed-cur .atlas-hex { fill-opacity: 0.5; }
+  .atlas-node.installed-fut .atlas-hex { fill-opacity: 0.34; }
+  /* (hub hex/text styles retired — the hub is the brand compass rose, painted inline per theme) */
   .atlas-zone-lbl { font-family: var(--display); font-size: 16px; font-weight: 800; letter-spacing: 0.12em; pointer-events: none; }
   .atlas-hex { transition: fill-opacity .12s; }
   .atlas-node { transition: opacity .15s ease; }
@@ -594,7 +662,28 @@ permalink: /tools/healthcare-career-tree/
   .atlas-node.atlas-sel .atlas-check { opacity: 1; }
   .atlas-check circle { fill: #7FEAD9; stroke: #042018; stroke-width: 1; }
   .atlas-check text { font-family: var(--font); font-size: 9px; font-weight: 800; fill: #042018; pointer-events: none; }
-  .atlas-tools { margin-left: auto; display: flex; align-items: center; gap: 9px; }
+  /* seniority band guides: dashed hex-ring borders + names on the top seam */
+  /* (band border + seam label styles retired — depth reads from pips + the corner key) */
+  /* on-your-path rings — WHITE, not gold (gold is the Specializations zone color).
+     Solid = you have it (Current); dashed = you're aiming (Future, the goal grammar). */
+  .atlas-inst-ring { fill: none; stroke: #F6F9FC; stroke-width: 2; opacity: 0; pointer-events: none; }
+  .atlas-node.installed-cur .atlas-inst-ring { opacity: 0.95; }
+  .atlas-node.installed-fut .atlas-inst-ring { opacity: 0.85; stroke-dasharray: 5 4; }
+  [data-theme='light'] .atlas-inst-ring { stroke: #2E4450; }
+  .ah-g { font-style: normal; font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--t3); margin-left: 3px; letter-spacing: 0; }
+  /* the have/want pair inside the Education Matrix detail foot */
+  .edu-d-foot .hct-add-lbl { margin: 0 0 7px; }
+  .edu-d-foot .hct-add-pair { display: flex; gap: 8px; }
+  .edu-d-foot .hct-add-pair .edu-d-add { flex: 1; width: auto; }
+  /* the 4-zone tally: what you've installed, by zone — stacked, one column */
+  .atlas-hud { position: absolute; left: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 5; pointer-events: none; }
+  .ah-box { display: flex; align-items: center; gap: 8px; padding: 6px 11px; min-width: 168px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--zc, var(--teal)); border-radius: 8px; }
+  .ah-n { font-family: var(--display); font-size: 17px; font-weight: 800; color: var(--t1); line-height: 1; }
+  .ah-w { display: flex; flex-direction: column; gap: 1px; }
+  .ah-lbl { font-family: var(--mono); font-size: 8.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--t2); }
+  .ah-t { font-family: var(--mono); font-size: 8px; letter-spacing: 0.05em; color: var(--t3); }
+  @media (max-width: 700px) { .ah-t { display: none; } .ah-box { padding: 6px 9px; } }
+  .atlas-tools { margin-left: auto; margin-right: auto; display: flex; align-items: center; gap: 9px; }   /* centered in the head bar */
   .atlas-multibtn { padding: 6px 12px; font-size: 11.5px; font-weight: 700; border-radius: 7px; cursor: pointer; white-space: nowrap;
     background: rgba(176,123,214,0.12); border: 1px solid rgba(176,123,214,0.4); color: #C9A6E6; font-family: var(--font); transition: all .12s; }
   .atlas-multibtn:hover { background: rgba(176,123,214,0.22); color: #E6D6F4; }
@@ -638,7 +727,7 @@ permalink: /tools/healthcare-career-tree/
   [data-theme='light'] #hct-tb { background: rgba(255,255,255,0.96); border-bottom-color: rgba(27,95,168,0.18); }
   [data-theme='light'] #hct-panel, [data-theme='light'] #hct-mypath { background: rgba(255,255,255,0.99); }
   [data-theme='light'] .hct-node .hx-back { fill: #eef3f1; }
-  [data-theme='light'] .hct-node .hx-pinring { stroke: #8A6A15; }
+  [data-theme='light'] .hct-node .hx-pinring { stroke: #2E4450; }
   [data-theme='light'] .hct-node .hx-abbr { fill: #102a30; }
   [data-theme='light'] .hct-p-summary, [data-theme='light'] .hct-list li, [data-theme='light'] .hct-meta .v { color: #1d3b42; }
   [data-theme='light'] #hct-tip { background: #fff; color: #14323a; border-color: rgba(27,95,168,0.3); }
@@ -670,7 +759,7 @@ permalink: /tools/healthcare-career-tree/
   .bp-panel-next { background: var(--surface); }
   .edu-row, .edu-row:hover { background: var(--raised); border-color: var(--border); }
   .bp-legend-head, .hct-p-head, .bp-id { border-bottom-color: var(--border); }
-  .axis-bg, .top-frozen-bg, .hct-band-chip { fill: var(--surface); }
+  .top-frozen-bg, .hct-band-chip { fill: var(--surface); }   /* .axis-bg rides the #axisFade gradient */
   .hct-node .hx-back { fill: var(--dark); }
   .hct-band-txt, .hct-node .hx-title { fill: var(--t1); }
 
@@ -808,7 +897,9 @@ permalink: /tools/healthcare-career-tree/
   [data-theme='light'] .sch-zoombar button:hover { border-color: #1E7A48; color: #14532D; }
   /* Areas of Expertise board: hex styling is dark-tuned (white-literal grid,
      pale hub/zone ink) — pin the board itself dark; its chrome stays themed */
-  [data-theme='light'] #hct-atlas-board { background: rgba(9,17,14,0.97); }
+  /* the atlas board FLIPS in light mode (it was pinned dark — that's why the theme "didn't work") */
+  [data-theme='light'] #hct-atlas-board { background: var(--surface); border-color: var(--border); }
+  [data-theme='light'] .atlas-bg-hex { fill: rgba(20,40,45,0.02); stroke: rgba(20,40,45,0.07); }
 
   /* ═══════════════════════════════════════════════════════════════
      TOUCH · KEYBOARD · SMALL-SCREEN pass (placed last so it wins).
@@ -911,6 +1002,7 @@ permalink: /tools/healthcare-career-tree/
   .hct-search-box .edu-search { padding-left: 33px; }
 
   /* ── global search popover: input pinned above the results list ── */
+  .hct-help-wrap { max-height: min(62vh, 540px); overflow-y: auto; padding: 4px 4px 8px; }
   .hct-gs-box { padding: 8px 10px 4px; flex-shrink: 0; }
   .hct-gs-box .hct-search-box { display: flex; }
   .hct-gs-box .edu-search { width: 100%; box-sizing: border-box; }
@@ -923,15 +1015,65 @@ permalink: /tools/healthcare-career-tree/
   [data-theme="light"] .hw-kicker { color: var(--teal-dk); }
   .hw-title { font-family: var(--display); font-size: clamp(19px, 2.6vw, 25px); font-weight: 800; letter-spacing: -.015em; color: var(--t1); margin-bottom: 6px; }
   .hw-sub { font-size: 13.5px; line-height: 1.6; color: var(--t2); margin: 0 0 16px; max-width: 640px; }
-  .hw-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  @media (max-width: 900px) { .hw-grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 480px) { .hw-grid { grid-template-columns: 1fr; } }
-  .hw-card { display: flex; flex-direction: column; gap: 5px; text-align: left; background: var(--raised); border: 1px solid var(--border); border-radius: 9px; padding: 13px 14px; cursor: pointer; font-family: var(--font); transition: border-color .15s, transform .15s; }
-  .hw-card:hover { border-color: var(--teal); transform: translateY(-2px); }
-  .hw-card:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
-  .hw-card b { font-size: 13px; font-weight: 700; color: var(--t1); }
-  .hw-card span { font-size: 11.5px; line-height: 1.5; color: var(--t3); }
-  .hw-card.hw-search { border-style: dashed; }
+  /* intake survey — question rows of single-select chips + one commit button */
+  .hw-form { display: flex; flex-direction: column; gap: 13px; margin-bottom: 15px; }
+  .hw-q { display: flex; flex-direction: column; gap: 6px; }
+  .hw-q-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--t2); font-weight: 600; }
+  .hw-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .hw-chip { font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--t2); background: var(--raised); border: 1px solid var(--border); border-radius: 999px; padding: 7px 13px; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+  .hw-chip:hover { border-color: var(--teal); color: var(--t1); }
+  .hw-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .hw-chip[aria-pressed="true"] { background: rgba(78,205,196,0.14); border-color: rgba(78,205,196,0.5); color: var(--teal); }
+  [data-theme='light'] .hw-chip[aria-pressed="true"] { color: var(--teal-dk); }
+  /* conditional follow-up fields (status-dependent) */
+  .hw-cond { margin-top: 9px; display: flex; flex-direction: column; gap: 6px; }
+  /* our display:flex would beat the UA's [hidden] rule — reassert it */
+  .hw-cond[hidden], .hw-suggest[hidden], .hw-strip[hidden], .hw-preview[hidden] { display: none; }
+  .hw-cond-lbl i { font-style: normal; color: var(--t3); text-transform: none; letter-spacing: .02em; font-weight: 400; }
+  .hw-search-in { width: min(360px, 100%); box-sizing: border-box; background: var(--raised); border: 1px solid var(--border); border-radius: 8px; color: var(--t1); font-family: var(--font); font-size: 12.5px; padding: 8px 12px; outline: none; }
+  .hw-search-in:focus { border-color: rgba(78,205,196,0.5); }
+  .hw-search-in::placeholder { color: var(--t3); }
+  .hw-search-in.picked { border-color: rgba(78,205,196,0.55); }
+  .hw-suggest { display: flex; flex-direction: column; gap: 4px; max-height: 190px; overflow-y: auto; width: min(360px, 100%); }
+  .hw-sg { text-align: left; background: var(--raised); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--t1); cursor: pointer; }
+  .hw-sg:hover { border-color: var(--teal); }
+  .hw-sg:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  .hw-sg-meta { display: block; font-family: var(--mono); font-size: 9.5px; font-weight: 600; color: var(--t3); margin-top: 2px; letter-spacing: .03em; }
+  @media (hover: none) { .hw-sg { min-height: 44px; } }
+  .hw-preview { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; line-height: 1.6; color: var(--teal); background: rgba(78,205,196,0.07); border: 1px solid rgba(78,205,196,0.22); border-radius: 8px; padding: 8px 12px; }
+  [data-theme='light'] .hw-preview { color: var(--teal-dk); }
+  .hw-go-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 2px; }
+  .hw-go { font-family: var(--font); font-size: 13px; font-weight: 700; color: #062024; background: var(--teal); border: 1px solid var(--teal); border-radius: 9px; padding: 9px 18px; cursor: pointer; transition: opacity .15s, transform .15s; }
+  .hw-go:hover:not(:disabled) { transform: translateY(-1px); }
+  .hw-go:disabled { opacity: .35; cursor: default; }
+  .hw-go:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .hw-go-hint { font-size: 11.5px; color: var(--t3); }
+  .hw-skip { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding-top: 12px; border-top: 1px dashed var(--border); }
+  .hw-skip-lbl { font-size: 11.5px; color: var(--t3); }
+  .hw-skip-btn { font-family: var(--font); font-size: 11.5px; font-weight: 600; color: var(--t2); background: transparent; border: 1px dashed var(--border); border-radius: 7px; padding: 5px 10px; cursor: pointer; transition: border-color .15s, color .15s; }
+  .hw-skip-btn:hover { border-color: var(--teal); color: var(--t1); }
+  .hw-skip-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  @media (hover: none) { .hw-chip, .hw-skip-btn, .hw-go { min-height: 44px; } }   /* coarse-pointer floor */
+  /* the welcome rides the bp-modal primitive — size the card for the survey */
+  .hw-modal .hct-welcome { width: min(740px, 96%); max-width: none; margin: 0; }
+  /* expertise suggestion strip on the sheet — offers keyed to your current role's family */
+  .bp-suggest-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 11px 14px; background: var(--surface); border: 1px dashed var(--border); border-radius: 10px; margin: 2px 0 4px; }
+  .bp-suggest-strip[hidden] { display: none; }
+  .bp-sgs-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--t3); font-weight: 600; margin-right: 4px; }
+  .bp-sgs-chip { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--t2); background: var(--raised); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; cursor: pointer; transition: border-color .15s, color .15s; }
+  .bp-sgs-chip::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--zc, #5AC8BE); flex-shrink: 0; }
+  .bp-sgs-chip i { font-style: normal; font-family: var(--mono); font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: var(--t3); }
+  .bp-sgs-chip:hover { border-color: var(--zc, var(--teal)); color: var(--t1); }
+  .bp-sgs-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  @media (hover: none) { .bp-sgs-chip { min-height: 44px; } }
+  /* re-entry strip in the old welcome slot (empty build + dismissed modal only) */
+  .hw-strip { max-width: 980px; margin: 18px auto 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px dashed var(--border); border-radius: 10px; }
+  .hw-strip-txt { font-size: 12.5px; color: var(--t3); }
+  .hw-strip-txt b { color: var(--t1); font-weight: 700; }
+  .hw-strip-btn { font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--t2); background: transparent; border: 1px solid var(--border); border-radius: 7px; padding: 6px 12px; cursor: pointer; transition: border-color .15s, color .15s; }
+  .hw-strip-btn:hover { border-color: var(--teal); color: var(--t1); }
+  .hw-strip-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  @media (hover: none) { .hw-strip-btn { min-height: 44px; } }
 
   /* ── career matrix usage hint (parity with the other views' .view-hint) ── */
   .hct-blurb-hint { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--t3); padding: 0 14px 6px; }
@@ -1002,6 +1144,8 @@ permalink: /tools/healthcare-career-tree/
     <button class="icon-btn" id="hct-sel-search" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="hct-pop-search" aria-label="Search roles and expertise" title="Search roles &amp; expertise"><i data-lucide="search" aria-hidden="true"></i></button>
     <!-- preset views pin — persistent across tabs (a preset can jump to any view) -->
     <button class="icon-btn" id="hct-sel-views" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="hct-pop-views" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
+    <!-- how-it-works is persistent chrome — every view has grammar worth explaining -->
+    <button class="icon-btn" id="hct-help" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="hct-pop-help" aria-label="How this works" title="How this works"><i data-lucide="help-circle" aria-hidden="true"></i></button>
 
     <!-- v2 selector popovers — static shells (icons render once via base.njk createIcons);
          JS rebuilds only the plain-text option lists inside .pop-body -->
@@ -1020,6 +1164,10 @@ permalink: /tools/healthcare-career-tree/
     <div class="selector-pop" id="hct-pop-views" hidden>
       <div class="pop-head"><span class="pop-head-title"><i data-lucide="pin" aria-hidden="true"></i>Views</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
       <div class="pop-body" id="hct-pop-views-list" role="listbox" aria-label="Preset views"></div>
+    </div>
+    <div class="selector-pop" id="hct-pop-help" hidden>
+      <div class="pop-head"><span class="pop-head-title"><i data-lucide="help-circle" aria-hidden="true"></i>How this sheet works</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
+      <div class="pop-body hct-help-wrap"><div class="bp-legend-body" id="bp-legend-body"></div></div>
     </div>
     <div class="selector-pop" id="hct-pop-search" hidden>
       <div class="pop-head"><span class="pop-head-title"><i data-lucide="search" aria-hidden="true"></i>Search</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
@@ -1070,6 +1218,10 @@ permalink: /tools/healthcare-career-tree/
           <button id="hct-atlas-seladd" class="atlas-selbtn add" type="button">Add to My Path</button>
           <button id="hct-atlas-selclear" class="atlas-selbtn" type="button">Clear</button>
         </div>
+        <!-- your build, tallied by zone — the ringed tiles are yours -->
+        <div class="atlas-hud" id="hct-atlas-hud" aria-hidden="true"></div>
+        <!-- depth key: what the pips + radius mean -->
+        <div class="atlas-depthkey" aria-hidden="true"><b>·</b> entry at the hub&ensp;<b>··</b> experienced&ensp;<b>···</b> expert at the rim</div>
       </div>
     </section>
 
@@ -1077,16 +1229,84 @@ permalink: /tools/healthcare-career-tree/
     <section id="hct-mypath" class="hct-view active" data-view="path">
       <!-- FIRST-RUN WELCOME — state-driven: renderMyPath shows it only while the build is empty.
            No dismissal cookie, no tour. Pin one thing and it's gone. -->
-      <div class="hct-welcome" id="hct-welcome" hidden>
+      <div class="bp-modal hw-modal" id="hct-welcome-modal">
+      <div class="hct-welcome bp-modal-card" id="hct-welcome">
+        <button class="bp-modal-x icon-btn" id="hw-x" type="button" title="Close" aria-label="Close the start-here questions"><i data-lucide="x" aria-hidden="true"></i></button>
         <div class="hw-kicker">Start here</div>
         <div class="hw-title">Map where you are. Pin where you're going.</div>
-        <p class="hw-sub">This is your career sheet. It starts empty and fills as you pin things from the three matrices, and it saves in your browser as you go.</p>
-        <div class="hw-grid">
-          <button class="hw-card" type="button" data-hw="career"><b>Career Matrix</b><span>153 real roles across 8 pathways. Click a hex for detail, ☆ pins it here.</span></button>
-          <button class="hw-card" type="button" data-hw="edu"><b>Education Matrix</b><span>Degrees, licenses, and certs, stacked by level. See what each one unlocks.</span></button>
-          <button class="hw-card" type="button" data-hw="atlas"><b>Areas of Expertise</b><span>The skills layer. Tag what you know, from vent management to revenue cycle.</span></button>
-          <button class="hw-card hw-search" type="button" data-hw="search"><b>Or just search</b><span>Know the role already? Type it and jump straight to it.</span></button>
+        <p class="hw-sub">Four quick questions start your career sheet and cut the map down to the part that's yours. Nothing leaves this browser.</p>
+        <!-- INTAKE SURVEY — a preset generator wearing a questionnaire (doctrine: Profile).
+             Answers configure the map, then get thrown away; only the seeded build + the URL persist. -->
+        <div class="hw-form">
+          <div class="hw-q">
+            <span class="hw-q-lbl">Where are you right now?</span>
+            <div class="hw-chips" data-q="status">
+              <button class="hw-chip" type="button" data-v="working" aria-pressed="false">I work in healthcare</button>
+              <button class="hw-chip" type="button" data-v="school" aria-pressed="false">I'm in school for it</button>
+              <button class="hw-chip" type="button" data-v="looking" aria-pressed="false">Just scouting</button>
+            </div>
+            <!-- conditional follow-ups: each status answer earns its own question -->
+            <div class="hw-cond" id="hw-cond-working" hidden>
+              <span class="hw-q-lbl hw-cond-lbl">What's the job? <i>optional, but it lights your line</i></span>
+              <input id="hw-role-in" class="hw-search-in" type="text" placeholder="Search 153 real roles&hellip;" autocomplete="off" aria-label="Search roles">
+              <div class="hw-suggest" id="hw-role-list" hidden></div>
+            </div>
+            <div class="hw-cond" id="hw-cond-school" hidden>
+              <span class="hw-q-lbl hw-cond-lbl">Studying toward what? <i>optional</i></span>
+              <input id="hw-cred-in" class="hw-search-in" type="text" placeholder="RN, RRT, MLS, coding&hellip;" autocomplete="off" aria-label="Search credentials">
+              <div class="hw-suggest" id="hw-cred-list" hidden></div>
+            </div>
+          </div>
+          <div class="hw-q">
+            <span class="hw-q-lbl">What pulls you?</span>
+            <div class="hw-chips" data-q="pull">
+              <button class="hw-chip" type="button" data-v="patients" aria-pressed="false">Taking care of patients</button>
+              <button class="hw-chip" type="button" data-v="data" aria-pressed="false">The data behind the care</button>
+              <button class="hw-chip" type="button" data-v="ops" aria-pressed="false">Running the operation</button>
+              <button class="hw-chip" type="button" data-v="hands" aria-pressed="false">Labs, imaging, machines</button>
+            </div>
+          </div>
+          <div class="hw-q">
+            <span class="hw-q-lbl">Education so far?</span>
+            <div class="hw-chips" data-q="edu">
+              <button class="hw-chip" type="button" data-v="HS" aria-pressed="false">HS / GED</button>
+              <button class="hw-chip" type="button" data-v="Cert" aria-pressed="false">Certificate</button>
+              <button class="hw-chip" type="button" data-v="AS" aria-pressed="false">Associate</button>
+              <button class="hw-chip" type="button" data-v="BS" aria-pressed="false">Bachelor's</button>
+              <button class="hw-chip" type="button" data-v="MS" aria-pressed="false">Master's</button>
+              <button class="hw-chip" type="button" data-v="Doc" aria-pressed="false">Doctoral</button>
+            </div>
+          </div>
+          <div class="hw-q">
+            <span class="hw-q-lbl">How far are you taking this?</span>
+            <div class="hw-chips" data-q="reach">
+              <button class="hw-chip" type="button" data-v="next" aria-pressed="false">The next rung</button>
+              <button class="hw-chip" type="button" data-v="lead" aria-pressed="false">Leadership, eventually</button>
+              <button class="hw-chip" type="button" data-v="unsure" aria-pressed="false">No idea. Show me everything</button>
+            </div>
+          </div>
+          <div class="hw-preview" id="hw-preview" hidden></div>
+          <div class="hw-go-row">
+            <button class="hw-go" id="hw-go" type="button" disabled>Start my sheet</button>
+            <span class="hw-go-hint" id="hw-go-hint">Answer all four and this lights up.</span>
+          </div>
         </div>
+        <div class="hw-skip">
+          <span class="hw-skip-lbl">Already on LinkedIn?</span>
+          <button class="hw-skip-btn" type="button" data-hw="linkedin">Import your profile PDF</button>
+          <span class="hw-skip-lbl" style="margin-left:8px">Or jump straight in:</span>
+          <button class="hw-skip-btn" type="button" data-hw="career">Career Matrix</button>
+          <button class="hw-skip-btn" type="button" data-hw="edu">Education Matrix</button>
+          <button class="hw-skip-btn" type="button" data-hw="atlas">Areas of Expertise</button>
+          <button class="hw-skip-btn" type="button" data-hw="search">Search</button>
+        </div>
+      </div>
+      </div>
+      <!-- slim re-entry strip: sits in the old welcome slot while the build is
+           empty AFTER the modal was dismissed (session-only, no cookie) -->
+      <div class="hw-strip" id="hct-welcome-strip" hidden>
+        <span class="hw-strip-txt"><b>Start here.</b> Four questions set up your map.</span>
+        <button class="hw-strip-btn" id="hw-reopen" type="button">Open the questions</button>
       </div>
       <!-- IDENTITY BAR -->
       <div class="bp-id">
@@ -1122,6 +1342,8 @@ permalink: /tools/healthcare-career-tree/
             <p class="bp-hint">Degrees, licenses, and certs — earned or in progress. Hit + and type a name to search credentials, or * for all.</p>
             <div class="bp-grid" id="bp-grid-education"></div>
           </div>
+          <!-- expertise starter: suggestions keyed off your current role's family — offers, never auto-adds -->
+          <div class="bp-suggest-strip" id="bp-suggest" hidden></div>
           <div class="bp-dash-bar">
             <span class="bp-dash-lbl">Sections — drag to rearrange</span>
             <div class="bp-addwrap"><button class="bp-addbtn" id="bp-add-section">+ Add section</button><div class="bp-addmenu" id="bp-add-menu"></div></div>
@@ -1150,14 +1372,8 @@ permalink: /tools/healthcare-career-tree/
           </div>
         </div>
       </div>
-      <!-- Legend / key — always-on panel docked in the left margin, collapsible -->
-      <aside id="bp-legend" class="bp-legend">
-        <div class="bp-legend-inner">
-          <div class="bp-legend-head"><span class="bp-legend-h">Legend</span><button class="bp-legend-min" id="bp-legend-min" title="Minimize">–</button></div>
-          <div class="bp-legend-body" id="bp-legend-body"></div>
-        </div>
-        <button class="bp-legend-tab" id="bp-legend-tab" title="Show the legend">⊞ Legend</button>
-      </aside>
+      <!-- the legend now lives in the "How it works" popover (sheet on phone) — the
+           docked aside fought the sheet for width and never worked at phone size -->
     </section>
 
     <!-- Detail panel overlay (slides in from the right) -->
@@ -1175,7 +1391,7 @@ permalink: /tools/healthcare-career-tree/
 </div>
 
 {% set ta_fixed = true %}
-{% set ta_source = 'BLS Occupational Outlook · May 2024' %}
+{% set ta_source = 'BLS Occupational Outlook · May 2024 · exam pass rates from the credentialing boards (NCSBN, NBRC, ARRT, NCCPA and peers)' %}
 {% include "components/tool-attribution.njk" %}
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -1184,7 +1400,7 @@ permalink: /tools/healthcare-career-tree/
   'use strict';
 
   // ── State ──────────────────────────────────────────────
-  let DATA = null, BLS = null;
+  let DATA = null, BLS = null, CREDS = null;   // CREDS = credential reality (pass rate / length / fee), optional enrichment
   let curClass = 'roles';
   let curView = 'career';   // 'career' | 'edu' | 'path' — the active main-panel view
   let hiddenPathways = new Set();  // whole pathways toggled off (roles only)
@@ -1213,6 +1429,7 @@ permalink: /tools/healthcare-career-tree/
   let selectedId = null;
   let pinned = new Set();          // role ids referenced by skill nodes (for board rings)
   let build = blankBuild();        // the My Path build planner (freeform skill tree + side panels)
+  let hwDismissed = false;         // welcome-survey modal dismissed this SESSION (never persisted — doctrine: no dismissal cookies)
   let exportMode = false;          // when true, the career trunk renders roomier (bigger cells, full wrapping titles) for the JPEG export
   const BUILD_KEY = c => 'hct-build-' + c;
   let uid = 0; const newId = () => 'b' + (++uid) + '-' + Date.now();
@@ -1557,12 +1774,17 @@ permalink: /tools/healthcare-career-tree/
     // already compacts around missing families (the Pathways filter relies on it).
     let visNodes = filteredNodes();
     if (lineageSet){
+      // the LINE never shows with gaps: members living in filtered-out pathways get
+      // revealed while the selection holds (selection is focus — the map answers the
+      // question you just asked); deselect and the filter is back exactly as set
+      const visIds = new Set(visNodes.map(n => n.id));
+      lineageSet.forEach(i => { if (!visIds.has(i)){ const n = nodeById.get(i); if (n) visNodes.push(n); } });
       const fams = new Set(); lineageSet.forEach(i => { const n = nodeById.get(i); if (n) fams.add(n.family); });
       visNodes = visNodes.filter(n => fams.has(n.family));
     }
     const visSet = new Set(visNodes.map(n=>n.id));
     posMap = layout(visSet);
-    const allEdges = filteredEdges().filter(([s,t]) => visSet.has(s) && visSet.has(t));
+    const allEdges = edgesAll.filter(([s,t]) => visSet.has(s) && visSet.has(t));   // visSet is the one truth — filteredEdges would re-drop revealed line members
     // lines WITHIN a profession (same family/discipline container) always show; lines that go SIDEWAYS into another
     // container only show for the selected tile's own connections.
     const edges = allEdges.filter(e => sameContainer(e) || (selectedId && (e[0]===selectedId || e[1]===selectedId)));
@@ -1760,7 +1982,8 @@ permalink: /tools/healthcare-career-tree/
       d3.select(this).attr('text-anchor','middle').attr('y', n.__abbrY || 12).text(n.abbr);
     });
 
-    all.select('.hx-pinring').transition().duration(dur).style('opacity', d => pinned.has(d) ? 1 : 0);
+    all.select('.hx-pinring').style('stroke-dasharray', d => roleLayerInBuild(d) === 'future' ? '7 5' : null)
+      .transition().duration(dur).style('opacity', d => pinned.has(d) ? 1 : 0);
     styleTiles();   // uses current lodFar (kept in sync by zoom events + syncLOD after fit)
   }
 
@@ -1912,6 +2135,26 @@ permalink: /tools/healthcare-career-tree/
     h += '<div class="hct-bls-src">Source: <a href="' + esc(o.url) + '" target="_blank" rel="noopener">BLS &middot; ' + esc(o.occ) + ' ↗</a> &middot; ' + esc(BLS.wageYear) + '</div></div>';
     return h;
   }
+  // ── credential reality (career-tree-creds.json): national first-time pass rate,
+  // typical program length, exam fee — keyed by credFace via faceMap. Reality data
+  // on the CREDENTIAL, never odds on a person. Empty string when nothing maps.
+  function credStats(face){
+    if (!CREDS || !CREDS.faceMap || !face) return null;
+    const k = CREDS.faceMap[face];
+    return k ? (CREDS.credentials||{})[k] : null;
+  }
+  function credStatsHTML(face){
+    const s = credStats(face); if (!s) return '';
+    let grid = '';
+    if (s.pass != null) grid += '<div class="hct-cred-stat"><div class="v">'+esc(String(s.pass))+'%</div><div class="k">'+esc(s.passLabel || 'First-try pass')+(s.passYear ? ' &middot; '+esc(String(s.passYear)) : '')+'</div></div>';
+    if (s.fee) grid += '<div class="hct-cred-stat"><div class="v">'+esc(s.fee)+'</div><div class="k">Exam fee</div></div>';
+    let h = '<div class="hct-cred">' + (grid ? '<div class="hct-cred-grid">'+grid+'</div>' : '');
+    if (s.length) h += '<div class="hct-cred-len">Typical program: '+esc(s.length)+'</div>';
+    if (s.chain) h += '<div class="hct-cred-len">The usual road: '+esc(s.chain)+'</div>';   // prereq chain — sequences, not shelves
+    if (s.note) h += '<div class="hct-bls-note">'+esc(s.note)+'</div>';
+    h += '<div class="hct-bls-src">Source: <a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.org)+' &middot; '+esc(s.exam)+' ↗</a>'+(s.cohort ? ' &middot; '+esc(s.cohort) : '')+'</div></div>';
+    return h;
+  }
   function openPanel(id){
     const n = nodeById.get(id);
     const c = DATA.classes[curClass];
@@ -1969,6 +2212,7 @@ permalink: /tools/healthcare-career-tree/
         const degLbl = (DATA.meta.degrees[reqDeg]||{}).label || reqDeg;
         h += '<div class="hct-list-h">Educational requirement</div>';
         h += '<div class="hct-edu-req"><span class="hct-edu-req-face">'+esc(reqFace)+'</span>'+(reqFace!==degLbl?'<span class="hct-edu-req-deg">'+esc(degLbl)+'</span>':'')+'</div>';
+        h += credStatsHTML(reqFace);   // the exam in numbers, when we have them
         h += have ? '<button class="hct-edu-add added" disabled>✓ This credential is on your path</button>'
                   : '<div class="hct-add-lbl">This credential · do you have it?</div>'
                   + '<div class="hct-add-pair">'
@@ -2360,7 +2604,9 @@ permalink: /tools/healthcare-career-tree/
   }
 
   function updateBoardPins(){
-    gNodes.selectAll('g.hct-node').select('.hx-pinring').style('opacity', d => pinned.has(d) ? 1 : 0);
+    gNodes.selectAll('g.hct-node').select('.hx-pinring')
+      .style('stroke-dasharray', d => roleLayerInBuild(d) === 'future' ? '7 5' : null)
+      .style('opacity', d => pinned.has(d) ? 1 : 0);
     gEdges.selectAll('path.hct-edge').style('opacity', d => edgeOpacity(d));
   }
 
@@ -2451,6 +2697,7 @@ permalink: /tools/healthcare-career-tree/
   }
   function resetBuild(){
     if (!confirm('Clear this build?\n\nEvery growth track (career, education, skills, specialization, experience) plus notes for the current view will be wiped.')) return;
+    hwDismissed = true;   // an intentional clear gets the quiet strip, not the popup
     build = blankBuild(); syncPinned(); saveBuild(); renderMyPath(); updateBoardPins();
   }
 
@@ -2755,22 +3002,37 @@ permalink: /tools/healthcare-career-tree/
   function renderLegend(){
     const body = document.getElementById('bp-legend-body'); if (!body || body.dataset.built) return;
     const teal = '#4ECDC4', gold = '#E8C547';
+    // swatches for the expertise map's grammar (ring color rides a class so it theme-flips)
+    const hexPts = (cx,cy,r) => { let s=''; for (let k=0;k<6;k++){ const a=Math.PI/3*k+Math.PI/6; s+=(k?'L':'M')+(cx+r*Math.cos(a)).toFixed(1)+' '+(cy+r*Math.sin(a)).toFixed(1); } return s+'Z'; };
+    const ringHex = dashed => '<svg width="56" height="28"><path d="'+hexPts(28,14,9)+'" fill="'+hexA(teal,0.4)+'" stroke="'+teal+'" stroke-width="1.2"/>'
+      + '<path d="'+hexPts(28,14,12)+'" class="lg-ring" fill="none" stroke-width="1.7"'+(dashed?' stroke-dasharray="4 3"':'')+'/></svg>';
+    const pipsHex = '<svg width="56" height="20"><circle cx="19" cy="10" r="2.2" fill="'+teal+'"/><circle cx="27" cy="10" r="2.2" fill="'+teal+'"/><circle cx="35" cy="10" r="2.2" fill="'+teal+'"/></svg>';
+    const terrSw = '<svg width="56" height="20"><text x="28" y="13" text-anchor="middle" font-size="7" letter-spacing="1.5" class="lg-teal" style="font-family:var(--mono);font-weight:700">CLINICAL</text></svg>';
+    const pctSw = '<svg width="56" height="20"><text x="28" y="14" text-anchor="middle" font-size="12" font-weight="800" class="lg-teal" style="font-family:var(--display)">91%</text></svg>';
     const rows = [
-      ['grp','Tiles'],
+      ['grp','My Path — tiles'],
       [legendHex(hexA(teal,0.2), teal), '<b>Have</b> — a role, credential, or skill you hold. Solid, colored by field.'],
       [legendHex(hexA(gold,0.12), gold, true), '<b>Goal</b> — something you want next. Gold, dashed, hollow.'],
       [legendHex(hexA(teal,0.07), hexA(teal,0.4)), '<b>Context</b> — faint tiles are current items, shown while you view Future.'],
       [legendHex(hexA(gold,0.2), gold, false, '★', '#0d1117'), '<b>Milestones</b> — gold markers: ★ Start of Career, ⚑ Retirement, ◆ Other.'],
-      ['grp','Lines'],
+      ['grp','My Path — lines'],
       [legendLine('solid'), 'Your path from one role to the next.'],
       [legendLine('step'), 'A change in job type — the trunk steps up or down.'],
       [legendLine('dashed'), 'Connects to a <b>goal</b> you haven’t reached yet.'],
       [legendLine('fork'), 'A <b>fork</b> — two roles at the same time (e.g. work + teach).'],
-      ['grp','Buttons (hover a tile)'],
+      ['grp','Tile buttons (hover)'],
       [legendBadge('✓','#7FE3A0'), 'Mark a goal as something you now <b>have</b>.'],
       [legendBadge('◇','#F0CF6B'), 'Mark something you have as a <b>goal</b>.'],
       [legendBadge('×','#ff8080'), 'Remove the tile.'],
       [legendForkBadge('#C9A6E6'), '<b>Fork</b> — add a concurrent role (you can stack more than one).'],
+      ['grp','On every map'],
+      [ringHex(false), '<b>On your path</b> — a solid ring means you have it. Same ring on the Career Matrix, the Education Matrix, and the expertise map.'],
+      [ringHex(true), '<b>Aiming for it</b> — a dashed ring is a goal you set.'],
+      ['grp','Areas of Expertise map'],
+      [pipsHex, '<b>Depth</b> — · entry, ·· experienced, ··· expert. The deeper it is, the farther it sits from the center.'],
+      [terrSw, '<b>Territories</b> — hover a tile and its cluster names itself while the rest grey back. Zoom in and every tile shows its full name.'],
+      ['grp','The numbers'],
+      [pctSw, '<b>Pass rates, fees, pay</b> — straight from each credentialing board and the BLS, with the source linked at the bottom of every block.'],
       ['grp','View'],
       ['<svg width="56" height="20"><rect x="3" y="4" width="50" height="13" rx="4" style="fill:rgba(78,205,196,0.16);stroke:rgba(78,205,196,0.45)"/></svg>', '<b>Current / Future / All</b> — switch between what you have, what you want, and all of it layered.']
     ];
@@ -2779,11 +3041,6 @@ permalink: /tools/healthcare-career-tree/
       : '<div class="bp-legend-row"><span class="bp-legend-sw">'+r[0]+'</span><span class="bp-legend-tx">'+r[1]+'</span></div>'
     ).join('');
     body.dataset.built = '1';
-  }
-  function setLegendMin(min){
-    const el = document.getElementById('bp-legend'); if (!el) return;
-    el.classList.toggle('min', min);
-    try { localStorage.setItem('hct-legend-min', min ? '1' : '0'); } catch(e){}
   }
 
   // build the movable dashboard cards (rebuilds only when the layout/order changes, to preserve focus + inputs)
@@ -2867,15 +3124,50 @@ permalink: /tools/healthcare-career-tree/
   function renderMyPath(){
     enforcePanelOwner();   // a role/atlas panel can never linger on My Path — drop it if its owning view isn't this one
     const badge = document.getElementById('hct-mp-count'); if (badge) badge.textContent = totalNodes();
-    const hw = document.getElementById('hct-welcome'); if (hw) hw.hidden = totalNodes() > 0;   // welcome is the empty state — pin one thing and it's gone
+    // welcome is the empty state — pin one thing and it's gone. It pops as a modal;
+    // a session dismissal swaps it for the slim re-entry strip in the same slot.
+    const hwEmpty = totalNodes() === 0;
+    const hwm = document.getElementById('hct-welcome-modal'); if (hwm) hwm.classList.toggle('open', hwEmpty && !hwDismissed);
+    const hws = document.getElementById('hct-welcome-strip'); if (hws) hws.hidden = !(hwEmpty && hwDismissed);
     if (!document.getElementById('bp-grid-career')) return;   // planner not in the DOM yet
     syncShift();
     renderSheetHeader();
+    renderSuggest();
     renderDash();
     TRACKS.forEach(renderTrack);
     renderNextSteps();
+    if (atlasBuilt) updateAtlasHud();   // keep the atlas tally + rings honest when the build changes from here
+    updateEduPins();                    // and the Education Matrix card rings
     const sw = document.getElementById('bp-sw');     if (sw && document.activeElement !== sw) sw.value = build.sw || '';
     const nt = document.getElementById('bp-notes');  if (nt && document.activeElement !== nt) nt.value = build.notes || '';
+  }
+
+  // ── "Common around your family" — expertise suggestions keyed off your current role.
+  // Data: growth.familySuggest (authored, per role family). The strip only OFFERS —
+  // nothing is auto-added; a person's expertise is theirs to claim (doctrine: no
+  // predictions about a person). Tap = added to the zone's track on the Current layer.
+  function renderSuggest(){
+    const host = document.getElementById('bp-suggest'); if (!host || !DATA) return;
+    const start = currentRoleNode();
+    const ids = (start && DATA.growth && DATA.growth.familySuggest && DATA.growth.familySuggest[start.family]) || [];
+    const have = new Set(); TRACKS.forEach(t => (build[t.key]||[]).forEach(n => { if (n.atlasId) have.add(n.atlasId); }));
+    const byId = new Map(((DATA.growth && DATA.growth.nodes) || []).map(n => [n.id, n]));
+    const sugg = ids.map(id => byId.get(id)).filter(n => n && !have.has(n.id));
+    host.hidden = !sugg.length;
+    if (!sugg.length){ host.innerHTML = ''; return; }
+    const famLbl = (DATA.classes[curClass].families[start.family]||{}).label || start.family;
+    host.innerHTML = '<span class="bp-sgs-lbl">Common around ' + esc(famLbl) + ' · tap what you already have</span>'
+      + sugg.map(n => { const z = (DATA.growth.zones||{})[n.zone] || {};
+          return '<button type="button" class="bp-sgs-chip" data-sg="' + esc(n.id) + '" style="--zc:' + esc(z.color || '#5AC8BE') + '">' + esc(n.label) + '<i>' + esc(z.label || n.zone) + '</i></button>'; }).join('');
+    host.querySelectorAll('[data-sg]').forEach(b => b.onclick = (e) => {
+      e.stopPropagation();
+      const gn = byId.get(b.dataset.sg); if (!gn) return;
+      const z = (DATA.growth.zones||{})[gn.zone]; if (!z || !z.track || !build[z.track]) return;
+      if (build[z.track].some(s => s.atlasId === gn.id)) return;
+      build[z.track].push({ id:newId(), atlasId:gn.id, name:gn.label, abbr:gn.abbr, zcol:z.color, years:'', layer:'current' });
+      saveBuild(); renderMyPath();
+      announce(gn.label + ' added to ' + (z.label || z.track));
+    });
   }
 
   // short hex face from typed text (first token, ≤5 chars, uppercased)
@@ -3243,7 +3535,8 @@ permalink: /tools/healthcare-career-tree/
     const entry = credIndex.find(c => c.face === node.label);
     const sch = DATA.meta.schooling || {};
     const ladder = (sch.ladder||[]).find(L => L.degree === deg);
-    const exams = (sch.exams||[]).filter(e => String(e.level||'').split(' / ').map(s=>s.trim()).includes(deg));
+    // a GENERIC degree tile ("Bachelor") can be named here — the sheet handles details the survey doesn't ask
+    const genericDeg = node.kind === 'real' && (GENERIC_FACES.has(node.label) || node.namedDeg);
     document.querySelector('#hct-p-badge .hct-p-dot').style.background = col;
     document.querySelector('#hct-p-badge .lbl').textContent = degMeta.label || deg;
     document.querySelector('#hct-p-badge').style.background = hexA(col, 0.14);
@@ -3251,10 +3544,20 @@ permalink: /tools/healthcare-career-tree/
     document.getElementById('hct-p-title').textContent = node.kind==='real' ? node.label : (node.label || 'Custom credential');
     document.getElementById('hct-p-abbr').textContent = (degMeta.label||deg) + (ladder && ladder.time ? ' · ' + ladder.time : '');
 
-    let h = '<p class="hct-p-summary">'+esc(node.kind==='real'
-      ? ('A '+(degMeta.label||deg)+'-level credential, straight from the Education Matrix.')
-      : 'Your own credential.')+'</p>';
+    let h = '<p class="hct-p-summary">'+esc(node.kind!=='real' ? 'Your own credential.'
+      : genericDeg ? ('A '+(degMeta.label||deg)+' on your education line. Name what it’s in, so two degrees never read as the same tile.')
+      : ('A '+(degMeta.label||deg)+'-level credential, straight from the Education Matrix.'))+'</p>';
     h += '<div class="hct-list-h">Years</div><input class="bp-years" id="cred-years" style="width:130px;text-align:left" placeholder="when / how long" value="'+esc(node.years||'')+'">';
+    if (genericDeg){
+      const PH = { Cert:'CPhT, coding, phlebotomy…', AS:'ADN, respiratory, radiography…', BS:'BSN, biology, health science…', MS:'MHA, MSN, MPH, MBA…', Doc:'DNP, PhD, PharmD…' };
+      h += '<div class="hct-list-h">What’s it in?</div>'
+         + '<input class="bp-years" id="cred-name" style="width:90%;text-align:left" maxlength="40" placeholder="'+esc(PH[deg]||'Name it…')+'" value="'+esc(node.namedDeg ? node.label : '')+'">';
+      // tap-to-name suggestions: named academic faces + the credential pool at this level
+      const GENERIC_ONLY = new Set(['Master', "Master's", 'Bachelor', "Bachelor's", 'Associate', 'Certificate', 'Doctoral', 'HS / GED', 'GED', 'MD/DO']);
+      const named = Object.keys(DEG_FACE_LEVEL).filter(f => DEG_FACE_LEVEL[f] === deg);
+      const pool = [...new Set(named.concat(credIndex.filter(c => c.degree === deg).map(c => c.face)))].filter(f => !GENERIC_ONLY.has(f)).slice(0, 6);
+      if (pool.length) h += '<div class="hct-leads">' + pool.map(f => '<span class="hct-chip" data-namechip="'+esc(f)+'">'+esc(f)+'</span>').join('') + '</div>';
+    }
     if (node.kind !== 'real')
       h += '<div class="hct-list-h">Code</div><input class="bp-cred-in" id="cred-code" style="width:150px" placeholder="CODE" value="'+esc(node.label||'')+'">';
     if (entry && entry.roleIds && entry.roleIds.length){
@@ -3263,16 +3566,29 @@ permalink: /tools/healthcare-career-tree/
       if (entry.roleIds.length > 16) h += '<span class="hct-chip" style="opacity:.6;cursor:default">+'+(entry.roleIds.length-16)+' more</span>';
       h += '</div>';
     }
-    if (exams.length){
-      h += '<div class="hct-list-h">Exams / Licensure</div><ul class="hct-list">';
-      exams.forEach(e => h += '<li>'+esc(e.name)+'</li>'); h += '</ul>';
-    }
+    // (the old level-wide "Exams / Licensure" list is gone — it hung NCLEX on a CEN.
+    //  Specific credentials get their real numbers from credStatsHTML instead.)
+    h += credStatsHTML(node.label);   // the exam in numbers, when we have them
     h += '<button class="hct-pin-btn" id="cred-remove" style="background:rgba(232,120,120,0.14);border-color:rgba(232,120,120,0.4);color:#f0a8a8">Remove from Education Growth</button>';
 
     document.getElementById('hct-p-body').innerHTML = h;
     const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = 'path';
     const yr = document.getElementById('cred-years'); if (yr) yr.oninput = () => { node.years = yr.value; saveBuild(); };
     const cc = document.getElementById('cred-code'); if (cc) cc.oninput = () => { node.label = cc.value; saveBuild(); renderMyPath(); };
+    const cn = document.getElementById('cred-name');
+    if (cn){
+      const applyName = v => {
+        v = (v||'').trim();
+        node.label = v || (degMeta.label || deg);   // cleared = back to the bare level
+        node.namedDeg = !!v;
+        saveBuild(); renderMyPath();
+        document.getElementById('hct-p-title').textContent = node.label;
+      };
+      cn.oninput = () => applyName(cn.value);
+      document.querySelectorAll('#hct-p-body [data-namechip]').forEach(ch => {
+        ch.onclick = () => { cn.value = ch.dataset.namechip; applyName(cn.value); };
+      });
+    }
     document.getElementById('cred-remove').onclick = () => { const i = build.education.indexOf(node); if (i>=0) build.education.splice(i,1); eduSelId = null; closePanel(); saveBuild(); renderMyPath(); };
     document.querySelectorAll('#hct-p-body .hct-chip[data-go]').forEach(ch => ch.onclick = () => selectCareer(ch.getAttribute('data-go')));
   }
@@ -3534,7 +3850,15 @@ permalink: /tools/healthcare-career-tree/
     const p = posMap.get(id); if (!p) return;
     const wrap = document.getElementById('hct-board').getBoundingClientRect();
     if (wrap.width < 120) return;
-    const k = 1.0, tx = wrap.width/2 - k*p.x, ty = wrap.height/2 - k*p.y;
+    // center in the EXPOSED strip between the frozen axis and the open panel — a free-look
+    // focus must never park the node under either (same availW rule as fitToBounds)
+    let availW = wrap.width;
+    const pEl = document.getElementById('hct-panel');
+    if (pEl && pEl.classList.contains('open') && pEl.dataset.owner === 'career'){
+      const pw = pEl.getBoundingClientRect().width;
+      if (pw < wrap.width * 0.9) availW = wrap.width - pw;
+    }
+    const k = 1.0, tx = AXIS_RESERVE + (availW - AXIS_RESERVE)/2 - k*p.x, ty = wrap.height/2 - k*p.y;
     userZoomed = true;
     svg.transition().duration(520).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k)).on('end', syncLOD);
   }
@@ -3667,7 +3991,18 @@ permalink: /tools/healthcare-career-tree/
     });
     host.innerHTML = html || '<div class="edu-detail-empty">No credential data.</div>';
     host.querySelectorAll('.edu-card').forEach(el => { el.onclick = () => selectEduCred(parseInt(el.dataset.ec,10)); });
+    updateEduPins();
     if (eduMatrixSel != null && eduCards[eduMatrixSel]) selectEduCred(eduMatrixSel); else eduDetailEmpty();
+  }
+  // on-your-path rings for the Education Matrix cards — the same solid/dashed language every map speaks
+  function updateEduPins(){
+    if (!eduRendered && !document.querySelector('#hct-edu-layers .edu-card')) return;
+    document.querySelectorAll('#hct-edu-layers .edu-card').forEach(el => {
+      const c = eduCards[parseInt(el.dataset.ec,10)]; if (!c) return;
+      const e = build.education.find(x => x.kind==='real' && x.label===c.face && x.degree===c.degree);
+      el.classList.toggle('ec-have', !!e && nodeLayer(e) !== 'future');
+      el.classList.toggle('ec-goal', !!e && nodeLayer(e) === 'future');
+    });
   }
 
   function eduDetailEmpty(){
@@ -3721,6 +4056,8 @@ permalink: /tools/healthcare-career-tree/
       '<div class="edu-d-sub" style="color:'+hexA(col,0.85)+'">'+esc(c.kind==='degree' ? (c.label||dmeta.label||c.degree) : (dmeta.label||c.degree))+'</div></div>'+
       '<div class="edu-d-body">';
     if (ladder && ladder.time) h += sec('Typical time to reach', '<div class="edu-d-time">'+esc(ladder.time)+'</div>'+(ladder.note?'<div class="edu-d-ex" style="margin-top:6px">'+esc(ladder.note)+'</div>':''));
+    const credReal = credStatsHTML(c.face);
+    if (credReal) h += sec('The exam, in numbers', credReal);
     // credential-SPECIFIC requirement from the role's own node — NOT the level-wide exam pool (that wrongly hung NCLEX on a doula)
     if (c.kind === 'cert' && c.role){
       const cred = metaV(c.role, 'Credential'), edu = metaV(c.role, 'Education');
@@ -3731,12 +4068,65 @@ permalink: /tools/healthcare-career-tree/
     }
     if (roles.length){ let ch=''; roles.forEach(r => ch += '<span class="edu-d-chip" data-go="'+esc(r.id)+'">'+esc(r.label.replace(/\n/g,' '))+'</span>'); h += sec(c.kind==='degree'?('Jobs this degree helps you get · '+roles.length):'Opens this role', '<div class="edu-d-chips">'+ch+'</div>'); }
     h += '</div>';
-    const already = build.education.some(e => e.kind==='real' && e.label===c.face && e.degree===c.degree);
-    h += '<div class="edu-d-foot"><button class="edu-d-add'+(already?' added':'')+'" style="--lc:'+col+'">'+(already?'✓ In Education Growth':'+ Add to Education Growth')+'</button></div>';
+    // the have-it / working-toward-it pair, matrix-side — same grammar as the role panel's credential ask
+    const eNode = build.education.find(e => e.kind==='real' && e.label===c.face && e.degree===c.degree);
+    const eLayer = eNode ? nodeLayer(eNode) : null;
+    h += '<div class="edu-d-foot"><div class="hct-add-lbl">'+(eNode ? 'On your path · tap the lit one to remove' : 'This credential · do you have it?')+'</div><div class="hct-add-pair">'
+       + '<button class="edu-d-add'+(eLayer==='current'?' added':'')+'" data-el="current" style="--lc:'+col+'">'+(eLayer==='current'?'★':'☆')+' I have it</button>'
+       + '<button class="edu-d-add'+(eLayer==='future'?' added':'')+'" data-el="future" style="--lc:'+col+'">'+(eLayer==='future'?'★':'☆')+' Working toward it</button>'
+       + '</div></div>';
     host.innerHTML = h;
     host.querySelectorAll('.edu-d-chip[data-go]').forEach(el => el.onclick = () => selectCareer(el.getAttribute('data-go')));
-    const btn = host.querySelector('.edu-d-add');
-    btn.onclick = () => { addCredFromMatrix(c.face, c.degree, c.color); btn.textContent = '✓ Added to Education Growth'; btn.classList.add('added'); };
+    host.querySelectorAll('[data-el]').forEach(b => { b.onclick = () => { pinCredToLayer(c.face, c.degree, c.color, b.dataset.el); openEduMatrixPanel(c); }; });
+  }
+  // matrix pair for credentials: explicit layer — lit layer removes, other layer moves, unpinned adds there
+  function pinCredToLayer(face, degree, col, layer){
+    const e = build.education.find(x => x.kind==='real' && x.label===face && x.degree===degree);
+    if (e && nodeLayer(e) === layer) build.education.splice(build.education.indexOf(e), 1);
+    else if (e) e.layer = layer;
+    else build.education.push({ id:newId(), kind:'real', label:face, degree, col:col||null, sub:(DATA.meta.degrees[degree]||{}).label||'', years:'', layer });
+    syncPinned(); saveBuild(); renderMyPath();
+  }
+
+  // ── the brand compass rose (verbatim geometry from the Atlas hub / home page) ──
+  function hctIsLight(){ return document.documentElement.getAttribute('data-theme') === 'light'; }
+  function hctCompassInner(dark){
+    const BLUE    = dark ? '#3585cc' : '#1B5FA8';
+    const BLUE_LT = dark ? '#5aa6e6' : '#3585cc';
+    const TEAL    = dark ? '#4ecdc4' : '#2FA79E';
+    const TEAL_LT = dark ? '#7ff0e6' : '#4ecdc4';
+    const TEAL_DK = dark ? '#3fa9a2' : '#1f7d76';
+    const CENTER  = dark ? '#0d1117' : '#ffffff';
+    const BG      = dark ? '#06100a' : '#f2f7f5';
+    let ticks = '';
+    for (let i = 0; i < 36; i++) {
+      const a = (-90 + i * 10) * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
+      const major = i % 9 === 0, sec = i % 3 === 0;
+      const len = major ? 12 : sec ? 8 : 5;
+      const w = major ? 2 : sec ? 1.5 : 1, op = major ? 0.9 : sec ? 0.6 : 0.4;
+      ticks += `<line x1="${(340 + c*115).toFixed(1)}" y1="${(218 + sn*115).toFixed(1)}" x2="${(340 + c*(115-len)).toFixed(1)}" y2="${(218 + sn*(115-len)).toFixed(1)}" stroke="${TEAL}" stroke-width="${w}" opacity="${op}"/>`;
+    }
+    const lblStyle = 'font-family:Poppins,sans-serif;font-size:21px;font-weight:bold';
+    return `<polygon points="340,36 497.6,127 497.6,309 340,400 182.4,309 182.4,127" fill="${BG}"/>`
+      + `<polygon points="340,36 497.6,127 497.6,309 340,400 182.4,309 182.4,127" fill="none" stroke="${BLUE}" stroke-width="2.5" opacity="0.85"/>`
+      + `<circle cx="340" cy="218" r="115" fill="none" stroke="${TEAL}" stroke-width="2" opacity="0.9"/>`
+      + ticks
+      + `<polygon points="340,203 350,203 355,162 340,118" fill="${TEAL_LT}"/><polygon points="340,203 330,203 325,162 340,118" fill="${TEAL_DK}"/>`
+      + `<polygon points="355,218 355,228 394,233 440,218" fill="${BLUE_LT}"/><polygon points="355,218 355,208 394,203 440,218" fill="${BLUE}"/>`
+      + `<polygon points="340,233 330,233 325,274 340,318" fill="${TEAL_LT}"/><polygon points="340,233 350,233 355,274 340,318" fill="${TEAL_DK}"/>`
+      + `<polygon points="325,218 325,208 286,203 240,218" fill="${BLUE_LT}"/><polygon points="325,218 325,228 286,233 240,218" fill="${BLUE}"/>`
+      + `<text x="340" y="86" text-anchor="middle" fill="${TEAL_LT}" style="${lblStyle}" dominant-baseline="middle">N</text>`
+      + `<text x="340" y="350" text-anchor="middle" fill="${TEAL}" style="${lblStyle}" dominant-baseline="middle">S</text>`
+      + `<text x="474" y="218" text-anchor="middle" fill="${BLUE_LT}" style="${lblStyle}" dominant-baseline="middle">E</text>`
+      + `<text x="206" y="218" text-anchor="middle" fill="${BLUE_LT}" style="${lblStyle}" dominant-baseline="middle">W</text>`
+      + `<polygon points="340,186 367.7,202 367.7,234 340,250 312.3,234 312.3,202" fill="${CENTER}"/>`
+      + (dark ? `<circle cx="340" cy="218" r="27" fill="${BLUE}" opacity="0.20"/>` : '')
+      + `<polygon points="340,186 367.7,202 367.7,234 340,250 312.3,234 312.3,202" fill="none" stroke="${BLUE}" stroke-width="2.5" opacity="0.9" stroke-linejoin="round"/>`
+      + `<g transform="translate(318.75,203.72) scale(0.34)">`
+      +   `<path d="M0.00,4.00 Q0.00,0.00 4.00,0.00 L15.00,0.00 Q19.00,0.00 19.00,4.00 L19.00,23.00 Q19.00,27.00 15.70,29.26 L3.30,37.74 Q0.00,40.00 0.00,36.00 Z" fill="${BLUE}"/>`
+      +   `<path d="M0.00,50.00 Q0.00,46.00 3.38,43.86 L15.62,36.14 Q19.00,34.00 23.00,34.00 L46.00,34.00 Q50.00,34.00 50.00,38.00 L50.00,49.00 Q50.00,53.00 46.00,53.00 L23.00,53.00 Q19.00,53.00 19.00,57.00 L19.00,80.00 Q19.00,84.00 15.00,84.00 L4.00,84.00 Q0.00,84.00 0.00,80.00 Z" fill="${BLUE}"/>`
+      +   `<path d="M57,1.5 Q57,-2.5 61,-2.5 L72,-2.5 Q76,-2.5 76,1.5 L76,52.5 Q76,67.5 91,67.5 Q106,67.5 106,52.5 L106,1.5 Q106,-2.5 110,-2.5 L121,-2.5 Q125,-2.5 125,1.5 L125,52.5 Q125,86.5 91,86.5 Q57,86.5 57,52.5 Z" fill="${TEAL}"/>`
+      + `</g>`;
   }
 
   // ── Areas of Expertise Matrix: ONE big honeycomb grid, zones as colored wedges around a hub (Atlas look) ──
@@ -3759,65 +4149,198 @@ permalink: /tools/healthcare-career-tree/
       const p = px(c); let a = Math.atan2(p.y, p.x) + Math.PI/2; a = (a % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
       sector[zonesArr[Math.floor(a/(2*Math.PI/zonesArr.length)) % zonesArr.length]].push(c); });
 
-    const pos = new Map(); const regionCells = []; const zoneLabel = [];
+    const pos = new Map(); const regionCells = []; const zoneLabel = []; const placedCells = {};
+    const zoneSepData = []; const grpLabels = [];   // group seams + rim names, rendered after gGuide exists
+    const TAU = 2*Math.PI, WEDGE = TAU/zonesArr.length;
     zonesArr.forEach(zk => {
       const zn = g.zones[zk];
       const znodes = g.nodes.filter(n => n.zone === zk);
       const groups = [...new Set(znodes.map(n => n.group))];
-      znodes.sort((a,b) => groups.indexOf(a.group)-groups.indexOf(b.group) || (a.label<b.label?-1:1));
-      const sc = sector[zk].slice().sort((a,b)=>{ const ra=ringOf(a),rb=ringOf(b); if(ra!==rb) return ra-rb;
-        const pa=px(a),pb=px(b); return Math.atan2(pa.y,pa.x)-Math.atan2(pb.y,pb.x); });
-      znodes.forEach((n,i) => { const c = sc[i]; if (c){ const p = px(c); pos.set(n.id, { x:p.x, y:p.y, color: zn.color }); } });
-      sc.slice(znodes.length).forEach(c => regionCells.push({ c, color: zn.color }));
-      const ps = sc.map(px), mx = d3.mean(ps,p=>p.x)||0, my = d3.mean(ps,p=>p.y)||0, mag = Math.hypot(mx,my)||1, RAD = N*1.5*CELL + 42;
+      const wedgeStart = zonesArr.indexOf(zk) * WEDGE;
+      // wedge-relative angle (wrap-safe) — the angular axis groups divide up
+      const relA = c => { const p = px(c); let a = Math.atan2(p.y,p.x) + Math.PI/2; a = (a%TAU+TAU)%TAU;
+        let r = a - wedgeStart; return (r%TAU+TAU)%TAU; };
+      const sc = sector[zk].slice().sort((a,b)=>{ const ra=ringOf(a),rb=ringOf(b); if(ra!==rb) return ra-rb; return relA(a)-relA(b); });
+      // ── GROUP TERRITORIES: each group gets an angular slice proportional to its size;
+      //    tier still runs hub → rim INSIDE each slice (groups are angular, seniority is radial)
+      const counts = groups.map(gr => znodes.filter(n => n.group === gr).length);
+      const totalN = counts.reduce((s,x)=>s+x,0) || 1;
+      let acc = 0; const slices = counts.map(ct => { const s0 = acc; acc += ct/totalN*WEDGE; return [s0, acc]; });
+      const pools = groups.map(() => []);
+      sc.forEach(c => { const r = relA(c);
+        let gi = slices.findIndex(([s0,s1]) => r >= s0 && r < s1); if (gi < 0) gi = groups.length-1;
+        pools[gi].push(c); });
+      const key = c => c.q + ',' + c.r;
+      const cellGroup = new Map(); const usedArr = []; const overflow = [];
+      groups.forEach((gr, gi) => {
+        const gn = znodes.filter(n => n.group === gr).sort((a,b) => (a.tier||0)-(b.tier||0) || (a.label<b.label?-1:1));
+        gn.forEach((n,i) => { const c = pools[gi][i];
+          if (c){ usedArr.push(c); cellGroup.set(key(c), gi); const p = px(c); pos.set(n.id, { x:p.x, y:p.y, color: zn.color }); }
+          else overflow.push(n); });
+      });
+      // a slice too thin for its headcount spills into the wedge's spare cells (ring order)
+      const usedSet = new Set(usedArr.map(key));
+      const spare = sc.filter(c => !usedSet.has(key(c)));
+      overflow.forEach(n => { const c = spare.shift(); if (!c) return;
+        usedArr.push(c); cellGroup.set(key(c), groups.indexOf(n.group)); const p = px(c); pos.set(n.id, { x:p.x, y:p.y, color: zn.color }); });
+      placedCells[zk] = usedArr;
+      spare.forEach(c => regionCells.push({ c, color: zn.color }));
+      zoneSepData.push({ cells: usedArr, cellGroup });
+      // rim names: each territory labels itself along the rim at its mean angle
+      groups.forEach((gr, gi) => {
+        const cells = usedArr.filter(c => cellGroup.get(key(c)) === gi); if (!cells.length) return;
+        const pts = cells.map(px);
+        const mx = d3.mean(pts,p=>p.x)||0, my = d3.mean(pts,p=>p.y)||0, mag = Math.hypot(mx,my)||1;
+        const R = Math.max(...pts.map(p=>Math.hypot(p.x,p.y))) + 36;   // clear of the outermost tiles
+        const lx = mx/mag*R, ly = my/mag*R;
+        let rot = Math.atan2(ly, lx)*180/Math.PI + 90;
+        if (rot > 90 && rot < 270) rot -= 180;   // never upside down
+        grpLabels.push({ label: gr.toUpperCase(), g: gr, color: zn.color, x: lx, y: ly, rot });
+      });
+      const ps = sc.map(px), mx = d3.mean(ps,p=>p.x)||0, my = d3.mean(ps,p=>p.y)||0, mag = Math.hypot(mx,my)||1, RAD = N*1.5*CELL + 96;
       zoneLabel.push({ label: zn.label, color: zn.color, x: mx/mag*RAD, y: my/mag*RAD });
     });
 
-    const allPx = cellsAll.map(px), lblR = N*1.5*CELL + 64, LPAD = 96;   // LPAD = room for wide zone words
+    const allPx = cellsAll.map(px), lblR = N*1.5*CELL + 122, LPAD = 96;   // room for rim group names + the pushed-out zone words
     const minX = Math.min(-lblR-LPAD, ...allPx.map(p=>p.x))-HR, maxX = Math.max(lblR+LPAD, ...allPx.map(p=>p.x))+HR;
     const minY = Math.min(-lblR, ...allPx.map(p=>p.y))-HR, maxY = Math.max(lblR, ...allPx.map(p=>p.y))+HR;
     atlasDims = { w: maxX-minX, h: maxY-minY };
     svgSel.attr('viewBox', minX.toFixed(1)+' '+minY.toFixed(1)+' '+atlasDims.w.toFixed(1)+' '+atlasDims.h.toFixed(1));
 
     gAtlasZoom = svgSel.append('g').attr('class','atlas-zoom');
-    const gBg = gAtlasZoom.append('g'), gRg = gAtlasZoom.append('g'), gHub = gAtlasZoom.append('g'), gN = gAtlasZoom.append('g'), gL = gAtlasZoom.append('g');
+    const gBg = gAtlasZoom.append('g'), gRg = gAtlasZoom.append('g'), gGuide = gAtlasZoom.append('g'), gHub = gAtlasZoom.append('g'), gN = gAtlasZoom.append('g'), gL = gAtlasZoom.append('g');
 
     bgCells.forEach(c => { const p = px(c); gBg.append('path').attr('class','atlas-bg-hex').attr('d', hexPath(p.x, p.y, HR)); });
     regionCells.forEach(rc => { const p = px(rc.c);
       gRg.append('path').attr('class','atlas-region-hex').attr('d', hexPath(p.x, p.y, HR)).style('fill', rc.color).style('stroke', rc.color); });
 
     const HUBR = 30;   // a touch larger than a cell (still inside its honeycomb slot — no neighbor overlap)
-    // fit text to the hex's flat width (√3·R) with margin; ~0.72em/char for Outfit bold, no letter-spacing
-    const hubFit = (txt, max) => Math.min(max, (Math.sqrt(3)*HUBR - 14) / (txt.length*0.72));
-    gHub.append('path').attr('class','atlas-hub-hex').attr('d', hexPath(0,0,HUBR));
-    gHub.append('text').attr('class','atlas-hub-t1').attr('text-anchor','middle').attr('y',-3).style('font-size', hubFit('AREAS OF',10).toFixed(1)+'px').text('AREAS OF');
-    gHub.append('text').attr('class','atlas-hub-t2').attr('text-anchor','middle').attr('y',8).style('font-size', hubFit('EXPERTISE',9).toFixed(1)+'px').text('EXPERTISE');
+    // the hub is the BRAND compass rose — the same one the Atlas and home page carry,
+    // shrunk onto the hub cell as a nested svg (brand geometry lives in a 364² viewBox)
+    const ROSE = 2*HR + 4;   // tile-scale: the rose is a landmark, not a bigger hex than everyone else's
+    const roseSvg = gHub.append('svg').attr('class','hub-compass')
+      .attr('x', -ROSE/2).attr('y', -ROSE/2).attr('width', ROSE).attr('height', ROSE)
+      .attr('viewBox', '158 36 364 364').attr('overflow', 'visible').attr('pointer-events', 'none');
+    roseSvg.node().innerHTML = hctCompassInner(!hctIsLight());
 
     zoneLabel.forEach(z => gL.append('text').attr('class','atlas-zone-lbl').attr('x', z.x).attr('y', z.y).attr('text-anchor','middle').attr('fill', z.color).text(z.label.toUpperCase()));
+
+    // (the old ENTRY/EXPERIENCED/EXPERT seam text never survived the tiles — depth
+    //  now reads from the corner key overlay + the pips on every tile)
+
+    // ── zone hulls: one crisp outline around each wedge's OCCUPIED tiles, so the four
+    //    regions read as four shapes. Boundary = every hex edge with no neighbor inside.
+    const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+    zonesArr.forEach(zk => {
+      const cells = placedCells[zk]; if (!cells || !cells.length) return;
+      const inSet = new Set(cells.map(c => c.q + ',' + c.r));
+      let dPath = '';
+      cells.forEach(c => {
+        const A = px(c);
+        DIRS.forEach(dd => {
+          if (inSet.has((c.q + dd[0]) + ',' + (c.r + dd[1]))) return;
+          const B = px({ q: c.q + dd[0], r: c.r + dd[1] });
+          const th = Math.atan2(B.y - A.y, B.x - A.x);   // the boundary edge = the two hex corners flanking the missing neighbor
+          dPath += 'M' + (A.x + CELL*Math.cos(th - Math.PI/6)).toFixed(1) + ' ' + (A.y + CELL*Math.sin(th - Math.PI/6)).toFixed(1)
+                 + 'L' + (A.x + CELL*Math.cos(th + Math.PI/6)).toFixed(1) + ' ' + (A.y + CELL*Math.sin(th + Math.PI/6)).toFixed(1);
+        });
+      });
+      gGuide.append('path').attr('class','atlas-zone-hull').attr('d', dPath).attr('stroke', (g.zones[zk]||{}).color || '#5AC8BE');
+    });
+    // group seams: thin neutral lines where two territories touch inside a wedge
+    const SEP_DIRS = DIRS.slice(0, 3);   // half the directions = each shared edge drawn once
+    zoneSepData.forEach(({ cells, cellGroup }) => {
+      let sp = '';
+      cells.forEach(c => {
+        const gi = cellGroup.get(c.q + ',' + c.r);
+        SEP_DIRS.forEach(dd => {
+          const nk = (c.q + dd[0]) + ',' + (c.r + dd[1]);
+          if (!cellGroup.has(nk) || cellGroup.get(nk) === gi) return;
+          const A = px(c), B = px({ q: c.q + dd[0], r: c.r + dd[1] });
+          const th = Math.atan2(B.y - A.y, B.x - A.x);
+          sp += 'M' + (A.x + CELL*Math.cos(th - Math.PI/6)).toFixed(1) + ' ' + (A.y + CELL*Math.sin(th - Math.PI/6)).toFixed(1)
+              + 'L' + (A.x + CELL*Math.cos(th + Math.PI/6)).toFixed(1) + ' ' + (A.y + CELL*Math.sin(th + Math.PI/6)).toFixed(1);
+        });
+      });
+      if (sp) gGuide.append('path').attr('class','atlas-grp-sep').attr('d', sp);
+    });
+    // territory names along the rim — HIDDEN until you hover a member tile; the
+    // name lights while everything outside the territory greys (the edu-tab pattern)
+    grpLabels.forEach(l => gGuide.append('text').attr('class','atlas-grp-lbl')
+      .attr('data-group', l.g)
+      .attr('transform', 'translate(' + l.x.toFixed(1) + ',' + l.y.toFixed(1) + ') rotate(' + l.rot.toFixed(1) + ')')
+      .attr('text-anchor', 'middle').attr('fill', l.color).text(l.label));
 
     g.nodes.forEach(n => {
       const p = pos.get(n.id); if (!p) return;
       const searchStr = (n.label+' '+n.abbr+' '+(n.group||'')+' '+(g.zones[n.zone]?g.zones[n.zone].label:'')+' '+(n.summary||'')+' '+(n.seen||'')).toLowerCase();
-      const node = gN.append('g').attr('class','atlas-node'+(atlasSel.has(n.id)?' atlas-sel':'')).attr('data-id', n.id).attr('data-search', searchStr).attr('transform','translate('+p.x.toFixed(1)+','+p.y.toFixed(1)+')')
-        .style('cursor','pointer').on('click', (e) => { e.stopPropagation(); if (atlasMultiMode) toggleAtlasSel(n.id, e.currentTarget); else openGrowthPanel(n); });
-      node.append('path').attr('d', hexPath(0,0,HR)).attr('fill','#08120e');
+      const node = gN.append('g').attr('class','atlas-node'+(atlasSel.has(n.id)?' atlas-sel':'')).attr('data-id', n.id).attr('data-grp', n.group||'').attr('data-search', searchStr).attr('transform','translate('+p.x.toFixed(1)+','+p.y.toFixed(1)+')')
+        .style('cursor','pointer').on('click', (e) => { e.stopPropagation(); if (atlasMultiMode) toggleAtlasSel(n.id, e.currentTarget); else openGrowthPanel(n); })
+        .on('mouseenter', () => atlasGroupFocus(n.group)).on('mouseleave', () => atlasGroupFocus(null));
+      node.append('path').attr('class','atlas-node-back').attr('d', hexPath(0,0,HR));   // theme-aware backing (was hardcoded dark)
+      // CALM FIELD: every tile identical — one fill, one border. Tier speaks through
+      // the pips alone; the only LOUD thing on this board is what's on your path.
       node.append('path').attr('class','atlas-hex').attr('d', hexPath(0,0,HR))
-        .attr('fill', p.color).attr('fill-opacity', 0.26).attr('stroke', p.color).attr('stroke-width', 1.6);
+        .attr('fill', p.color).attr('fill-opacity', 0.20)
+        .attr('stroke', p.color).attr('stroke-width', 1.4).attr('stroke-opacity', 0.9);
       node.append('text').attr('class','atlas-abbr').attr('text-anchor','middle').attr('y', 4)
-        .attr('font-size', n.abbr.length>4 ? 7.5 : 10).attr('font-weight', 800).attr('fill', '#EAF6F4').text(n.abbr);
+        .attr('font-size', n.abbr.length>4 ? 7.5 : 10).attr('font-weight', 800).text(n.abbr);
+      // tier pips: one dot per depth level — the single tier encoding
+      const np = (n.tier||0) + 1;
+      for (let pi = 0; pi < np; pi++)
+        node.append('circle').attr('class','atlas-pip').attr('cx', (pi - (np-1)/2) * 5).attr('cy', 13.5).attr('r', 1.4).attr('fill', p.color);
+      // real names fade in when you zoom close (the pips step aside; the abbr slides up via CSS
+      // so the whole block re-centers). Up to 3 lines — "Cerner / Oracle Health" must never
+      // truncate to "Cerner / Oracle". 3-line blocks compress to stay inside the hex band.
+      const nameLines = wrapLabel(n.label, 12).slice(0, 3);
+      const nY0 = nameLines.length === 3 ? 1.5 : 4.5, nLH = nameLines.length === 3 ? 5.5 : 6;
+      nameLines.forEach((ln, li) =>
+        node.append('text').attr('class','atlas-name').attr('text-anchor','middle')
+          .attr('y', nY0 + li*nLH).attr('font-size', 4.4).text(ln));
       const chk = node.append('g').attr('class','atlas-check');   // ✓ badge shown when selected
       chk.append('circle').attr('cx', HR*0.6).attr('cy', -HR*0.6).attr('r', 6.5);
       chk.append('text').attr('x', HR*0.6).attr('y', -HR*0.6+3.2).attr('text-anchor','middle').text('✓');
+      node.append('path').attr('class','atlas-inst-ring').attr('d', hexPath(0,0,HR+2.6));   // on-your-path ring (solid = have, dashed = aiming; lit via installed-cur/-fut)
       node.append('title').text(n.label + (n.group ? ' · ' + n.group : ''));
     });
 
-    if (!atlasZoom) atlasZoom = d3.zoom().scaleExtent([0.3, 3]).on('zoom', e => gAtlasZoom.attr('transform', e.transform));
+    if (!atlasZoom) atlasZoom = d3.zoom().scaleExtent([0.3, 3]).on('zoom', e => {
+      gAtlasZoom.attr('transform', e.transform);
+      d3.select('#hct-atlas-svg').classed('atlas-zoomed', e.transform.k >= 1.15);   // close zoom: real names in, pips out
+    });
     svgSel.call(atlasZoom).on('dblclick.zoom', null)
       .on('mousedown.cur', () => svgSel.classed('grabbing', true))
       .on('mouseup.cur',   () => svgSel.classed('grabbing', false));
     atlasBuilt = true;
+    updateAtlasHud();
     fitAtlas();
     const aS = document.getElementById('hct-atlas-search'); if (aS && aS.value) atlasFilter(aS.value);   // keep an active search highlighted after a rebuild
+  }
+  // hover a tile → its territory names itself on the rim and everything outside greys,
+  // INCLUDING the big zone words (so the territory name never fights them for the rim)
+  function atlasGroupFocus(gr){
+    const s = d3.select('#hct-atlas-svg'); if (s.empty()) return;
+    s.classed('atlas-grpfocus', !!gr);
+    s.selectAll('.atlas-node').classed('atlas-grpdim', gr ? function(){ return this.getAttribute('data-grp') !== gr; } : false);
+    s.selectAll('.atlas-grp-lbl').classed('show', gr ? function(){ return this.getAttribute('data-group') === gr; } : false);
+  }
+
+  // ── "what you've installed": rings on claimed tiles (solid = have, dashed = aiming)
+  //    + the 4-zone tally boxes. White rings — gold belongs to the Specializations zone.
+  function updateAtlasHud(){
+    if (!DATA || !DATA.growth) return;
+    const haveCur = new Set(), haveFut = new Set();
+    TRACKS.forEach(t => (build[t.key]||[]).forEach(x => { if (x.atlasId) (nodeLayer(x) === 'future' ? haveFut : haveCur).add(x.atlasId); }));
+    if (atlasBuilt) d3.selectAll('#hct-atlas-svg .atlas-node')
+      .classed('installed-cur', function(){ return haveCur.has(this.getAttribute('data-id')); })
+      .classed('installed-fut', function(){ const id = this.getAttribute('data-id'); return haveFut.has(id) && !haveCur.has(id); });
+    const host = document.getElementById('hct-atlas-hud'); if (!host) return;
+    host.innerHTML = DATA.growth.zoneOrder.map(zk => {
+      const z = DATA.growth.zones[zk] || {};
+      let total = 0, cur = 0, fut = 0;
+      DATA.growth.nodes.forEach(n => { if (n.zone === zk){ total++; if (haveCur.has(n.id)) cur++; else if (haveFut.has(n.id)) fut++; } });
+      return '<div class="ah-box" style="--zc:'+esc(z.color||'#5AC8BE')+'"><span class="ah-n">'+cur+(fut?'<i class="ah-g">+'+fut+'</i>':'')+'</span><span class="ah-w"><span class="ah-lbl">'+esc(z.label||zk)+'</span><span class="ah-t">of '+total+' on your path</span></span></div>';
+    }).join('');
   }
   function fitAtlas(){
     // the SVG viewBox is centered on the hub (0,0) and already fits-to-contain via preserveAspectRatio,
@@ -3907,12 +4430,28 @@ permalink: /tools/healthcare-career-tree/
       pairs.forEach(p => h += '<span class="hct-chip" data-grow="'+esc(p.id)+'">'+esc(p.abbr)+' · '+esc(p.label)+'</span>');
       h += '</div>';
     }
-    const already = (build[z.track]||[]).some(s => s.atlasId === n.id);
-    h += '<button class="hct-pin-btn'+(already?' pinned':'')+'" id="growth-add">'+(already?'★ On your path — remove':'☆ Add to '+esc(z.label==='Skills'?'Skill Growth':z.label==='Specializations'?'Specialization':z.label==='Populations'?'Populations':'Experience'))+'</button>';
+    // the same ask-at-the-moment-of-adding pair the career panel uses — have it, or building toward it?
+    const gItem = (build[z.track]||[]).find(s => s.atlasId === n.id);
+    const gLayer = gItem ? nodeLayer(gItem) : null;
+    h += '<div class="hct-add-lbl">'+(gItem ? 'This area is on your path · tap the lit one to remove' : 'This area · where does it fit?')+'</div>';
+    h += '<div class="hct-add-pair">'
+       + '<button class="hct-pin-btn'+(gLayer==='current'?' pinned':'')+'" data-gp-layer="current">'+(gLayer==='current'?'★':'☆')+' I have this</button>'
+       + '<button class="hct-pin-btn'+(gLayer==='future'?' pinned':'')+'" data-gp-layer="future">'+(gLayer==='future'?'★':'☆')+' Building toward it</button>'
+       + '</div>';
     document.getElementById('hct-p-body').innerHTML = h;
     const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = 'atlas';
-    document.getElementById('growth-add').onclick = () => toggleGrowthNode(n);
+    document.querySelectorAll('#hct-p-body [data-gp-layer]').forEach(b => { b.onclick = () => pinGrowthToLayer(n, b.dataset.gpLayer); });
     panel.querySelectorAll('.hct-chip[data-grow]').forEach(ch => ch.onclick = () => { const gn = growthById.get(ch.getAttribute('data-grow')); if (gn) openGrowthPanel(gn); });
+  }
+  // panel pair for expertise: explicit layer — lit layer removes, other layer moves, unpinned adds there
+  function pinGrowthToLayer(n, layer){
+    const z = DATA.growth.zones[n.zone], list = build[z.track]; if (!list) return;
+    const item = list.find(s => s.atlasId === n.id);
+    if (item && nodeLayer(item) === layer) list.splice(list.indexOf(item), 1);
+    else if (item) item.layer = layer;
+    else list.push({ id:newId(), atlasId:n.id, name:n.label, abbr:n.abbr, zcol:z.color, years:'', layer });
+    saveBuild(); renderMyPath();
+    if (curView === 'atlas') openGrowthPanel(n);   // refresh the pair's lit state on the matrix
   }
   function toggleGrowthNode(n){
     const z = DATA.growth.zones[n.zone], list = build[z.track];
@@ -3979,14 +4518,25 @@ permalink: /tools/healthcare-career-tree/
   function fitToBounds(x0, x1, y0, y1, animate, dur, anchorLeft){
     applyNavLimits();
     const wrap = document.getElementById('hct-board').getBoundingClientRect();
+    // the docked detail panel eats the board's right edge — fit into the EXPOSED strip,
+    // not the full window, or a snapped field strands a dead plain on the left
+    let availW = wrap.width;
+    const pEl = document.getElementById('hct-panel');
+    if (pEl && pEl.classList.contains('open') && pEl.dataset.owner === 'career'){
+      const pw = pEl.getBoundingClientRect().width;
+      if (pw < wrap.width * 0.9) availW = wrap.width - pw;   // phone sheet (full-width) keeps the whole board
+    }
     const w = x1 - x0, h = y1 - y0;
     if (w <= 0 || h <= 0 || wrap.width < 120 || wrap.height < 120) return;   // not sized yet; a later re-fit handles it
     const ext = zoom.scaleExtent();
-    let k = Math.min(wrap.width/w, wrap.height/h);
+    // anchored fits RESERVE the frozen-axis strip up front, so k can never be so large
+    // that anchoring overflows — the old silent fallback-to-centering slid lane 1 under the axis
+    const reserve = anchorLeft ? AXIS_RESERVE : 0;
+    let k = Math.min((availW - reserve)/w, wrap.height/h);
     k = Math.max(ext[0], Math.min(k, ext[1]));   // respect the blueprint zoom limits
     // LEFT-ANCHOR horizontally (content's x0 just right of the frozen axis) so a narrow group can't float to the middle and
     // leave a gap; only center when explicitly NOT anchoring. (Mirrors the vertical top-align below.)
-    const tx = (anchorLeft && k*w < wrap.width) ? (AXIS_RESERVE - k*x0) : (wrap.width/2 - k*(x0+x1)/2);
+    const tx = anchorLeft ? (AXIS_RESERVE - k*x0) : (availW/2 - k*(x0+x1)/2);
     // top-align the board content so it sits right under My Path (only center if it overflows)
     const ty = (k*h < wrap.height) ? (14 - k*y0) : (wrap.height/2 - k*(y0+y1)/2);
     const t = d3.zoomIdentity.translate(tx, ty).scale(k);
@@ -4019,7 +4569,7 @@ permalink: /tools/healthcare-career-tree/
   function fitGroup(left, right, animate){
     userZoomed = true;   // zooming to a region/pathway is an intentional view; don't auto-refit over it
     const yr = navY();
-    fitToBounds(left-50, right+50, yr[0], yr[1], animate, 520);
+    fitToBounds(left-300, right+50, yr[0], yr[1], animate, 520);   // 300 board units of left pad clears the k-scaled axis strip (50 didn't)
   }
   function regionBounds(side){
     const gs = curLaneInfo.filter(g=>g.side===side);
@@ -4136,8 +4686,8 @@ permalink: /tools/healthcare-career-tree/
     const s = document.getElementById('hct-applied'); if (!s) return;
     const chips = [];
     if (curView === 'career' && DATA){
-      const { hidden } = pathsSummary();
-      if (hidden > 0) chips.push('<span class="applied-chip">Pathways: <b>'+hidden+' hidden</b><button class="ac-x" type="button" data-clear="paths" aria-label="Show all pathways">&#10005;</button></span>');
+      const { total, hidden } = pathsSummary();
+      if (hidden > 0) chips.push('<span class="applied-chip">Showing <b>'+(total-hidden)+' of '+total+'</b> specialties<button class="ac-x" type="button" data-clear="paths" aria-label="Show all pathways">&#10005;</button></span>');
     }
     s.innerHTML = chips.join('');
     s.hidden = !chips.length;
@@ -4183,10 +4733,10 @@ permalink: /tools/healthcare-career-tree/
     lastURLScope = v;
     return v;
   }
-  window.addEventListener('popstate', () => {
-    if (!DATA) return;
+  // the one "URL is the state" path: zero the in-view state, re-apply the URL, land the view.
+  // Shared by popstate, the preset Views, and the intake survey — they differ only in who pushed the URL.
+  function resetToURL(announceText){
     applyingURL = true;
-    closePop(false);
     hiddenPathways = new Set(); hiddenFamilies = new Set(); colorMode = 'fam';
     const v = applyURLState();
     setColorMode(colorMode);              // face + legend reflect the restored metric
@@ -4197,7 +4747,13 @@ permalink: /tools/healthcare-career-tree/
     setView(v);
     if (sameTab && v === 'career'){ userZoomed = false; fit(false); }
     applyingURL = false;
-    announce('View: ' + (VIEW_LABEL[v] || v));
+    announce(announceText || ('View: ' + (VIEW_LABEL[v] || v)));
+    return v;
+  }
+  window.addEventListener('popstate', () => {
+    if (!DATA) return;
+    closePop(false);
+    resetToURL();
   });
 
 
@@ -4223,7 +4779,7 @@ permalink: /tools/healthcare-career-tree/
       if (v === 'career'){ userZoomed = false; fitDefaultGroup(false); requestAnimationFrame(() => fitDefaultGroup(false));
         setTimeout(() => { if (curView === 'career' && !userZoomed) fitDefaultGroup(false); }, 180); }   // settle re-fit: catch the final board size after the tab finishes showing (skips if the user already moved the view)
       else if (v === 'edu'){ /* Education Matrix is static HTML layers — nothing to fit */ }
-      else if (v === 'atlas'){ if (!atlasBuilt) renderGrowthAtlas(); else { fitAtlas(); requestAnimationFrame(fitAtlas); } }
+      else if (v === 'atlas'){ if (!atlasBuilt) renderGrowthAtlas(); else { updateAtlasHud(); fitAtlas(); requestAnimationFrame(fitAtlas); } }   // re-tally on entry — the build may have changed since the last visit
       else { renderMyPath(); }
     });
   }
@@ -4248,7 +4804,13 @@ permalink: /tools/healthcare-career-tree/
   // ── Init ───────────────────────────────────────────────
   function init(){
     // clip so the scrolling content + left axis can never bleed up into the pinned header band (screen-space rect)
-    clipRect = svg.append('defs').append('clipPath').attr('id','hctBelowHead').append('rect').attr('x',0).attr('y',0).attr('width',5000).attr('height',5000);
+    const svgDefs = svg.append('defs');
+    clipRect = svgDefs.append('clipPath').attr('id','hctBelowHead').append('rect').attr('x',0).attr('y',0).attr('width',5000).attr('height',5000);
+    // the level axis fades INTO the field instead of ending in a slab — stops carry the theme via CSS
+    const axisFade = svgDefs.append('linearGradient').attr('id','axisFade')
+      .attr('gradientUnits','userSpaceOnUse').attr('x1', AXIS_W - 110).attr('x2', AXIS_W).attr('y1', 0).attr('y2', 0);
+    axisFade.append('stop').attr('offset', '0').attr('class', 'axis-fade-a');
+    axisFade.append('stop').attr('offset', '1').attr('class', 'axis-fade-b');
     const gClip = svg.append('g').attr('clip-path','url(#hctBelowHead)');
     gZoom  = gClip.append('g');
     gBands = gZoom.append('g').attr('class','bands');
@@ -4334,18 +4896,7 @@ permalink: /tools/healthcare-career-tree/
       const t = e.target.closest('[data-view-q]'); if (!t || !DATA) return;
       closePop(true);
       try{ history.pushState(null, '', t.dataset.viewQ); }catch(err){}
-      applyingURL = true;
-      hiddenPathways = new Set(); hiddenFamilies = new Set(); colorMode = 'fam';
-      const v = applyURLState();
-      setColorMode(colorMode);
-      refreshPathwayControls();
-      selectedId = null; eduSelId = null; eduMatrixSel = null; closePanel();
-      if (boardRendered) render(false);
-      const sameTab = (v === curView);
-      setView(v);
-      if (sameTab && v === 'career'){ userZoomed = false; fit(false); }
-      applyingURL = false;
-      announce('View: ' + t.textContent);
+      resetToURL('View: ' + t.textContent);
     });
 
     // ── global search: roles + expertise areas, jump on pick ──
@@ -4358,7 +4909,7 @@ permalink: /tools/healthcare-career-tree/
       const q = (gsInput.value || '').trim().toLowerCase();
       if (!q){ gsList.innerHTML = '<div class="gs-none">Type to search ' + DATA.classes[curClass].nodes.length + ' roles and the expertise pool.</div>'; return; }
       const roles = DATA.classes[curClass].nodes
-        .filter(n => (n.label + ' ' + (n.abbr||'') + ' ' + n.family + ' ' + n.pathway).toLowerCase().includes(q)).slice(0, 12);
+        .filter(n => (n.label.replace(/\n/g,' ') + ' ' + (n.abbr||'') + ' ' + n.family + ' ' + n.pathway).toLowerCase().includes(q)).slice(0, 12);   // \n → space: "nurse anesthetist" must match the two-line label
       const grow = ((DATA.growth && DATA.growth.nodes) || [])
         .filter(n => ((n.label||'') + ' ' + (n.group||'') + ' ' + (n.zone||'')).toLowerCase().includes(q)).slice(0, 8);
       let h = '';
@@ -4397,9 +4948,172 @@ permalink: /tools/healthcare-career-tree/
       announce('Selected: ' + t.textContent.trim());
     });
 
-    // ── first-run welcome cards: jump straight into a section, or open search ──
+    // ── first-run intake survey: four answers become a seeded build + a preset URL ──
+    // The answers themselves are thrown away. What persists: your education level on the
+    // Current layer, and the view/filter the URL names. Skip buttons jump straight in.
+    const svAns = { status:null, pull:null, edu:null, reach:null };
+    // affinity → the pathways that STAY on the board; everything else rides ?hidepw=
+    const SV_SHOW = {
+      patients: ['therapeutic','diagnostic','support'],
+      data:     ['informatics','biotech'],
+      ops:      ['admin','government'],
+      hands:    ['diagnostic','biotech']
+    };
+    // optional conditional picks — each status answer earns a follow-up field
+    let svRole = null;   // roleId, when "I work in healthcare" names the job
+    let svCred = null;   // {face, degree}, when "I'm in school for it" names the target
+    // the pathways that STAY LIT, from pull + reach + your own picks. One function for
+    // the preview AND the finish so they can never disagree. Rule: your pinned role
+    // (or your target credential's home pathway) is never filtered off your own map.
+    function svShowSet(){
+      if (svAns.reach === 'unsure') return [];                    // empty = no filter, the whole wall
+      const show = (SV_SHOW[svAns.pull] || []).slice();
+      if (svAns.reach === 'lead' && show.indexOf('admin') < 0) show.push('admin');
+      if (svAns.status === 'working' && svRole && nodeById.has(svRole)){
+        const pw = nodeById.get(svRole).pathway;
+        if (pw && show.indexOf(pw) < 0) show.push(pw);
+      }
+      if (svAns.status === 'school' && svCred){
+        const en = credIndex.find(c => c.face === svCred.face);
+        const r0 = en && en.roleIds && en.roleIds.length ? nodeById.get(en.roleIds[0]) : null;
+        if (r0 && show.indexOf(r0.pathway) < 0) show.push(r0.pathway);
+      }
+      return show;
+    }
+    function svSync(){
+      const done = Object.values(svAns).every(Boolean);
+      const go = document.getElementById('hw-go'); if (go) go.disabled = !done;
+      const hint = document.getElementById('hw-go-hint');
+      if (hint) hint.textContent = done ? 'All of it undoable.' : 'Answer all four and this lights up.';
+      // live readout — every answer shows what it puts on your sheet
+      const pv = document.getElementById('hw-preview');
+      if (!pv || !DATA) return;
+      const bits = [];
+      if (svAns.status === 'working' && svRole && nodeById.has(svRole))
+        bits.push(nodeById.get(svRole).label.replace(/\n/g,' ') + ' pinned as your current role');
+      if (svAns.status === 'school' && svCred)
+        bits.push('Working toward ' + svCred.face);
+      if (svAns.edu)
+        bits.push(((DATA.meta.degrees[svAns.edu]||{}).label || svAns.edu) + ' on your education line');
+      if (svAns.pull){
+        const show = svShowSet();
+        const pws = DATA.classes[curClass].pathways || {};
+        bits.push(show.length ? ('Career Matrix pre-filtered to ' + show.length + ' of 8 pathways: ' + show.map(p => (pws[p]||{}).label || p).join(', '))
+                              : 'Career Matrix stays the whole wall');
+      }
+      pv.hidden = !bits.length;
+      pv.textContent = bits.length ? ('Your sheet starts with · ' + bits.join('  ·  ')) : '';
+    }
+    // show the follow-ups the answers earn; leaving an answer clears its pick
+    // (naming the degree happens on the SHEET — click the tile, the panel asks)
+    function svCondSync(){
+      const w = document.getElementById('hw-cond-working'), s = document.getElementById('hw-cond-school');
+      if (w) w.hidden = svAns.status !== 'working';
+      if (s) s.hidden = svAns.status !== 'school';
+      if (svAns.status !== 'working' && (svRole || svRoleIn.value)){ svRole = null; svRoleIn.value = ''; svRoleIn.classList.remove('picked'); svRoleList.hidden = true; svRoleList.innerHTML = ''; }
+      if (svAns.status !== 'school' && (svCred || svCredIn.value)){ svCred = null; svCredIn.value = ''; svCredIn.classList.remove('picked'); svCredList.hidden = true; svCredList.innerHTML = ''; }
+    }
+    const svRoleIn = document.getElementById('hw-role-in'), svRoleList = document.getElementById('hw-role-list');
+    const svCredIn = document.getElementById('hw-cred-in'), svCredList = document.getElementById('hw-cred-list');
+    function svRenderRoles(){
+      const q = (svRoleIn.value || '').trim().toLowerCase();
+      const m = !q || !DATA ? [] : DATA.classes[curClass].nodes
+        .filter(n => (n.label.replace(/\n/g,' ') + ' ' + (n.abbr||'') + ' ' + n.family + ' ' + n.pathway).toLowerCase().includes(q)).slice(0, 8);   // \n → space: multi-line hex labels must match phrase queries
+      svRoleList.hidden = !m.length;
+      svRoleList.innerHTML = m.map(n =>
+        `<button type="button" class="hw-sg" data-role="${n.id}">${esc(n.label.replace(/\n/g,' '))}<span class="hw-sg-meta">${esc(n.abbr||'')} · ${esc(n.family)} · ${esc(n.pathway)}</span></button>`).join('');
+    }
+    function svRenderCreds(){
+      const q = (svCredIn.value || '').trim().toLowerCase();
+      const m = !q ? [] : credIndex.filter(c => c.search.indexOf(q) >= 0).slice(0, 8);
+      svCredList.hidden = !m.length;
+      svCredList.innerHTML = m.map(c =>
+        `<button type="button" class="hw-sg" data-face="${esc(c.face)}" data-deg="${esc(c.degree)}">${esc(c.face)}<span class="hw-sg-meta">${esc(c.degreeLabel)} · opens ${c.roleIds.length} role${c.roleIds.length !== 1 ? 's' : ''}</span></button>`).join('');
+    }
+    svRoleIn.addEventListener('input', () => { if (svRole){ svRole = null; svRoleIn.classList.remove('picked'); } svRenderRoles(); svSync(); });
+    svCredIn.addEventListener('input', () => { if (svCred){ svCred = null; svCredIn.classList.remove('picked'); } svRenderCreds(); svSync(); });
+    [ [svRoleIn, svRoleList], [svCredIn, svCredList] ].forEach(([inp, list]) => {
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter'){ e.preventDefault(); const f = list.querySelector('.hw-sg'); if (f) f.click(); }
+        if (e.key === 'Escape' && !list.hidden){ e.stopPropagation(); list.hidden = true; }   // Esc closes the list before it closes the modal
+      });
+    });
+    svRoleList.addEventListener('click', e => {
+      const b = e.target.closest('[data-role]'); if (!b) return;
+      svRole = b.dataset.role;
+      const n = nodeById.get(svRole);
+      svRoleIn.value = n ? n.label.replace(/\n/g,' ') : '';
+      svRoleIn.classList.add('picked');
+      svRoleList.hidden = true; svRoleList.innerHTML = '';
+      svSync();
+    });
+    svCredList.addEventListener('click', e => {
+      const b = e.target.closest('[data-face]'); if (!b) return;
+      svCred = { face: b.dataset.face, degree: b.dataset.deg };
+      svCredIn.value = svCred.face;
+      svCredIn.classList.add('picked');
+      svCredList.hidden = true; svCredList.innerHTML = '';
+      svSync();
+    });
+    function svFinish(){
+      if (!DATA || Object.values(svAns).some(v => !v)) return;
+      // 1) seed the sheet: your education level on the Current layer (name WHAT it's
+      //    in from the tile's own panel — the sheet handles details, not the survey)
+      const degLbl = (DATA.meta.degrees[svAns.edu]||{}).label || svAns.edu;
+      if (!build.education.some(e => e.kind==='real' && e.degree===svAns.edu))
+        build.education.push({ id:newId(), kind:'real', label:degLbl, degree:svAns.edu, sub:degLbl, years:'', layer:'current' });
+      // 1b) the conditional picks: your job on the Current layer, your target credential on Future
+      if (svAns.status === 'working' && svRole && nodeById.has(svRole) && !build.career.some(s => s.roleId === svRole)){
+        const rn = nodeById.get(svRole);
+        build.career.push({ id:newId(), roleId:svRole, abbr:(rn.abbr||''), family:(rn.family||''), name:rn.label.replace(/\n/g,' '), years:'', layer:'current' });
+      }
+      if (svAns.status === 'school' && svCred && !build.education.some(e => e.kind==='real' && e.label===svCred.face && e.degree===svCred.degree))
+        build.education.push({ id:newId(), kind:'real', label:svCred.face, degree:svCred.degree, sub:(DATA.meta.degrees[svCred.degree]||{}).label||'', years:'', layer:'future' });
+      syncPinned(); saveBuild(); renderMyPath();
+      // 2) the Career Matrix filter rides the URL for whenever they open that tab;
+      //    the survey itself STAYS PUT on the sheet — character creation ends at the character
+      const show = svShowSet();   // same set the preview promised — including the never-hide-your-own-pin rule
+      const hide = show.length ? (DATA.classes[curClass].pathwayOrder||[]).filter(pw => show.indexOf(pw) < 0) : [];
+      const p = new URLSearchParams();
+      if (hide.length) p.set('hidepw', hide.join(','));                       // no view param — My Path IS the default
+      try{ history.pushState(null, '', p.toString() ? ('?' + p.toString()) : location.pathname); }catch(err){}
+      resetToURL('Sheet started. ' + (hide.length ? (8 - hide.length) + ' of 8 pathways lit when you open the Career Matrix.' : 'The whole map stays lit.'));
+      // 3) the next natural keystroke is your name
+      setTimeout(() => { const nm = document.getElementById('bp-name'); if (nm) nm.focus(); }, 350);
+    }
+    // the survey is a MODAL: dismissal is session-only (no cookie); while the build
+    // stays empty a slim strip holds its place so there's always a way back in
+    const hwModal = document.getElementById('hct-welcome-modal');
+    function hwDismiss(){
+      hwDismissed = true;
+      if (hwModal) hwModal.classList.remove('open');
+      const s = document.getElementById('hct-welcome-strip'); if (s) s.hidden = totalNodes() > 0;
+    }
+    document.getElementById('hw-x').onclick = hwDismiss;
+    if (hwModal) hwModal.addEventListener('click', e => { if (e.target === hwModal) hwDismiss(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !openPop && hwModal && hwModal.classList.contains('open')) hwDismiss();
+    });
+    document.getElementById('hw-reopen').onclick = () => {
+      hwDismissed = false;
+      const s = document.getElementById('hct-welcome-strip'); if (s) s.hidden = true;
+      if (hwModal) hwModal.classList.add('open');
+    };
     document.getElementById('hct-welcome').addEventListener('click', e => {
+      const chip = e.target.closest('.hw-chip');
+      if (chip){
+        const q = chip.closest('[data-q]').dataset.q;
+        svAns[q] = (svAns[q] === chip.dataset.v) ? null : chip.dataset.v;   // tap the lit one to un-pick
+        chip.closest('.hw-chips').querySelectorAll('.hw-chip').forEach(b =>
+          b.setAttribute('aria-pressed', String(b === chip && svAns[q] !== null)));
+        svCondSync();   // status and education answers earn their follow-up fields
+        svSync();
+        return;
+      }
+      if (e.target.closest('#hw-go')){ hwDismiss(); svFinish(); return; }
       const c = e.target.closest('[data-hw]'); if (!c) return;
+      hwDismiss();   // jumping in IS a dismissal — don't re-pop on the way back this session
+      if (c.dataset.hw === 'linkedin'){ openDataModal(); return; }   // the import is the survey's fast path — same sheet, same shapes
       if (c.dataset.hw === 'search'){ selGS.click(); return; }
       setView(c.dataset.hw);
     });
@@ -4497,10 +5211,9 @@ permalink: /tools/healthcare-career-tree/
     const dFile = document.getElementById('bp-data-file'); if (dFile) dFile.onchange = (e) => { loadBuildFile(e.target.files && e.target.files[0]); e.target.value = ''; };
     const liFile = document.getElementById('bp-li-file'); if (liFile) liFile.onchange = (e) => { importLinkedInPdf(e.target.files && e.target.files[0]); e.target.value = ''; };
     const dModal = document.getElementById('bp-data-modal'); if (dModal) dModal.addEventListener('click', (e) => { if (e.target === dModal) closeDataModal(); });
-    renderLegend();   // the key is always on — build it once at load
-    const legMin = document.getElementById('bp-legend-min'); if (legMin) legMin.onclick = (e) => { e.stopPropagation(); setLegendMin(true); };
-    const legTab = document.getElementById('bp-legend-tab'); if (legTab) legTab.onclick = (e) => { e.stopPropagation(); setLegendMin(false); };
-    try { if (localStorage.getItem('hct-legend-min')==='1') setLegendMin(true); } catch(e){}
+    // the legend rides the popover contract now: build once on first open, sheet on phone
+    const selHelp = document.getElementById('hct-help'), popHelp = document.getElementById('hct-pop-help');
+    if (selHelp && popHelp) selHelp.addEventListener('click', () => openPopover(selHelp, popHelp, renderLegend));
     document.getElementById('bp-name').oninput  = (e) => { build.name = e.target.value; saveBuild(); };
     document.getElementById('bp-goal').oninput  = (e) => { build.goal = e.target.value; saveBuild(); renderNextSteps(); };
     // sw/notes textareas + the section search bars are inside the movable dashboard cards → wired in renderDash()
@@ -4511,7 +5224,14 @@ permalink: /tools/healthcare-career-tree/
 
     window.addEventListener('resize', () => { fit(false); renderMyPath(); });
 
+    // theme flips repaint the brand rose (its palette is inline SVG, CSS can't reach it)
+    new MutationObserver(() => {
+      const el = document.querySelector('#hct-atlas-svg .hub-compass');
+      if (el) el.innerHTML = hctCompassInner(!hctIsLight());
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
     fetch('/assets/data/career-tree-bls.json').then(r=>r.ok?r.json():null).then(b => { BLS = b; }).catch(()=>{});   // BLS pay/outlook enrichment; optional
+    fetch('/assets/data/career-tree-creds.json').then(r=>r.ok?r.json():null).then(c => { CREDS = c; }).catch(()=>{});   // credential reality (pass rate / length / fee); optional
     fetch('/assets/data/career-tree-growth-detail.json').then(r=>r.ok?r.json():null).then(d => { growthDetail = (d && d.detail) || {}; if (curView==='path') renderNextSteps(); }).catch(()=>{});   // per-tile how/show enrichment; optional
     fetch('/assets/data/career-tree.json').then(r=>r.json()).then(d => {
       DATA = d;

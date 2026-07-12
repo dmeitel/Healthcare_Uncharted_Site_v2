@@ -31,12 +31,12 @@
 const metricsConfig = require('./metricsConfig.json');
 
 const GROUPS = [
-  { key: 'government', label: 'Government & Regulatory' },
-  { key: 'standards',  label: 'Standards & Interoperability' },
-  { key: 'policy',     label: 'Health Policy & Research Organizations' },
-  { key: 'clinical',   label: 'Medical Associations & AI Governance' },
-  { key: 'research',   label: 'Peer-Reviewed Research' },
-  { key: 'industry',   label: 'Investigative Journalism & Industry Trackers' },
+  { key: 'government', label: 'Government & Regulatory',                       short: 'Government' },
+  { key: 'standards',  label: 'Standards & Interoperability',                 short: 'Standards' },
+  { key: 'policy',     label: 'Health Policy & Research Organizations',       short: 'Policy orgs' },
+  { key: 'clinical',   label: 'Medical Associations & AI Governance',         short: 'Clinical & boards' },
+  { key: 'research',   label: 'Peer-Reviewed Research',                       short: 'Peer-reviewed' },
+  { key: 'industry',   label: 'Investigative Journalism & Industry Trackers', short: 'Journalism' },
 ];
 
 // ── URL normalization ────────────────────────────────────────────────────────
@@ -369,6 +369,104 @@ const CURATED = [
     desc: 'National nursing workforce survey: recovery, burnout, staffing.',
     usedBy: [USE.wound, USE.gap08] },
 
+  // — Credentialing boards (Career Tree exam reality data: pass rates, fees) —
+  { name: 'NCSBN · NCLEX Examination Statistics', tag: 'NCSBN', org: 'clinical',
+    url: 'https://www.ncsbn.org/public-files/2024_NCLEXExamStats_Final.pdf',
+    desc: 'Official NCLEX-RN and NCLEX-PN pass-rate statistics.',
+    usedBy: [USE.career] },
+  { name: 'NBRC · Examinations in Review', tag: 'NBRC', org: 'clinical',
+    url: 'https://www.nbrc.org/wp-content/uploads/2025/02/2024-Exams-in-Review-Info-Sheet.pdf',
+    desc: 'Respiratory therapy TMC and CSE exam pass rates.',
+    usedBy: [USE.career] },
+  { name: 'ARRT · Annual Exam Report', tag: 'ARRT', org: 'clinical',
+    url: 'https://www.arrt.org/pages/arrt-reference-documents/by-document-type/exam-statistics',
+    desc: 'Radiologic technology certification exam statistics.',
+    usedBy: [USE.career] },
+  { name: 'ARDMS · Exam Performance Summary', tag: 'ARDMS', org: 'clinical',
+    url: 'https://web.archive.org/web/20250302003525/https://www.ardms.org/wp-content/uploads/pdf/2024-Global-Exam-Performance-Summary.pdf',
+    desc: 'Sonography exam pass rates (archived copy after the Inteleos site migration).',
+    usedBy: [USE.career] },
+  { name: 'NCCPA · PANCE Pass Rates', tag: 'NCCPA', org: 'clinical',
+    url: 'https://www.nccpa.net/wp-content/uploads/PANCEPassRates.pdf',
+    desc: 'Physician assistant national certifying exam five-year pass rates.',
+    usedBy: [USE.career] },
+  { name: 'AANPCB · Certification Statistics', tag: 'AANPCB', org: 'clinical',
+    url: 'https://www.aanpcert.org/wp-content/uploads/AANPCB-2025-Certification-Statistics.pdf',
+    desc: 'Nurse practitioner certification exam statistics.',
+    usedBy: [USE.career] },
+  { name: 'NBCRNA · NCE Annual Report', tag: 'NBCRNA', org: 'clinical',
+    url: 'https://www.nbcrna.com/docs/default-source/initial-certification/program-administration/nce-and-see-annual-report-2024.pdf?sfvrsn=fc7daea4_2',
+    desc: 'Nurse anesthetist National Certification Examination report.',
+    usedBy: [USE.career] },
+  { name: 'AMCB · Annual Report', tag: 'AMCB', org: 'clinical',
+    url: 'https://www.amcbmidwife.org/docs/default-source/annual-reports/2024-amcb-annual-report.pdf',
+    desc: 'Certified nurse-midwife exam pass rates.',
+    usedBy: [USE.career] },
+  { name: 'AACN · Certification Exam Statistics', tag: 'AACN', org: 'clinical',
+    url: 'https://www.aacn.org/certification/preparation-tools-and-handbooks/exam-stats-and-scores',
+    desc: 'CCRN and other critical-care nursing certification statistics.',
+    usedBy: [USE.career] },
+  { name: 'FSBPT · NPTE Pass Rate Reports', tag: 'FSBPT', org: 'clinical',
+    url: 'https://www.fsbpt.org/Free-Resources/NPTE-Pass-Rate-Reports/NPTE-Exam-Year-Reports',
+    desc: 'Physical therapy licensure exam pass rates, PT and PTA.',
+    usedBy: [USE.career] },
+  { name: 'NBCOT · Certification Activities', tag: 'NBCOT', org: 'clinical',
+    url: 'https://www.nbcot.org/certification-activities',
+    desc: 'Occupational therapy OTR and COTA exam pass rates.',
+    usedBy: [USE.career] },
+  { name: 'ASHA · Praxis SLP National Summary', tag: 'ASHA', org: 'clinical',
+    url: 'https://www.asha.org/siteassets/certification/national-summary-report-for-praxis-data-in-speech-language-pathology.pdf',
+    desc: 'Speech-language pathology Praxis exam summary data.',
+    usedBy: [USE.career] },
+  { name: 'NABP · NAPLEX Pass Rates', tag: 'NABP', org: 'clinical',
+    url: 'https://nabp.pharmacy/wp-content/uploads/2025/10/Ten-Year-NAPLEX-and-MPJE-Pass-Rates.pdf',
+    desc: 'Pharmacist licensure exam ten-year pass-rate report.',
+    usedBy: [USE.career] },
+  { name: 'PTCB · Credentials by the Numbers', tag: 'PTCB', org: 'clinical',
+    url: 'https://ptcb.org/history/credentials-by-the-numbers/',
+    desc: 'Pharmacy technician certification exam volume and pass rates.',
+    usedBy: [USE.career] },
+  { name: 'ASCP Board of Certification · Exam Statistics', tag: 'ASCP', org: 'clinical',
+    url: 'https://web.archive.org/web/20250401043424/https://www.ascp.org/content/docs/default-source/boc-pdfs/boc_statistical_reports/exam-stats-2024.pdf',
+    desc: 'Laboratory science MLS and MLT exam pass rates (archived copy).',
+    usedBy: [USE.career] },
+  { name: 'NHA · Annual Pass Rates', tag: 'NHA', org: 'clinical',
+    url: 'https://www.nhanow.com/docs/default-source/annual-pass-rates/nha-annual-pass-rates.pdf',
+    desc: 'Allied health certification pass rates, phlebotomy included.',
+    usedBy: [USE.career] },
+  { name: 'NREMT · Maps & Data', tag: 'NREMT', org: 'clinical',
+    url: 'https://www.nremt.org/maps',
+    desc: 'EMT and paramedic first-attempt pass rates by year.',
+    usedBy: [USE.career] },
+  { name: 'NBSTSA · Certification Data', tag: 'NBSTSA', org: 'clinical',
+    url: 'https://www.nbstsa.org/uploads/NBSTSA-Certification-Data.pdf',
+    desc: 'Surgical technologist CST exam pass rates.',
+    usedBy: [USE.career] },
+  { name: 'HSPA · Certification Statistics', tag: 'HSPA', org: 'clinical',
+    url: 'https://myhspa.org/certification/statistics/',
+    desc: 'Sterile processing CRCST exam counts.',
+    usedBy: [USE.career] },
+  { name: 'CCI · Student Pass Rates', tag: 'CCI', org: 'clinical',
+    url: 'https://cci-online.org/communities/students/',
+    desc: 'Cardiovascular credentialing first-time pass rates.',
+    usedBy: [USE.career] },
+  { name: 'AAPC · CPC Certification', tag: 'AAPC', org: 'clinical',
+    url: 'https://www.aapc.com/support/training/how-many-graduates-successfully-attain-their-cpc',
+    desc: 'Medical coding CPC exam; AAPC publishes no national pass rate.',
+    usedBy: [USE.career] },
+  { name: 'AHIMA · Certification Overview', tag: 'AHIMA', org: 'clinical',
+    url: 'https://www.ahima.org/certification-careers/certifications-overview/rhit/',
+    desc: 'Health information RHIT and RHIA exam pass rates.',
+    usedBy: [USE.career] },
+  { name: 'BOC · AT Exam Reports', tag: 'BOC', org: 'clinical',
+    url: 'https://bocatc.org/about-us/reports/exam-reports/current',
+    desc: 'Athletic trainer certification exam reports.',
+    usedBy: [USE.career] },
+  { name: 'CDR · Registration Exam Pass Rates', tag: 'CDR', org: 'clinical',
+    url: 'https://www.cdrnet.org/vault/2459/web//First%20Time%20Pass%20Rate%20Jan-June%202024.pdf',
+    desc: 'Registered dietitian nutritionist exam first-time pass rates.',
+    usedBy: [USE.career] },
+
   // — Peer-Reviewed Research —
   { name: 'Olson et al. · Ambient AI Scribing, Burnout Reduction', tag: '2025', org: 'research',
     url: 'https://doi.org/10.1001/jamanetworkopen.2025.34976', linkText: 'JAMA Network Open · DOI',
@@ -568,7 +666,33 @@ const items = [...byKey.values()]
 const groups = GROUPS.map(g => ({
   key: g.key,
   label: g.label,
+  short: g.short,
   items: items.filter(i => i.org === g.key),
 }));
 
-module.exports = { groups, items };
+// ── Database-view enrichment (the /learn/sources/ ledger page) ───────────────
+// Each usedBy chip gets a stable slug (the ?used= URL param), each item gets a
+// precomputed search string and its group's short label, and `consumers` is the
+// inverted index: every consumer with its source count, most-cited first.
+function consumerSlug(label) {
+  return String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+const groupMeta = Object.fromEntries(GROUPS.map(g => [g.key, g]));
+for (const item of items) {
+  item.usedBy = item.usedBy.map(u => ({ ...u, slug: consumerSlug(u.label) }));
+  item.groupShort = (groupMeta[item.org] || {}).short || item.org;
+  item.search = [item.tag, item.name, item.desc, item.linkText, (groupMeta[item.org] || {}).label]
+    .concat(item.usedBy.map(u => u.label))
+    .filter(Boolean).join(' ').toLowerCase();
+}
+const consumerMap = new Map();
+for (const item of items) for (const u of item.usedBy) {
+  if (!consumerMap.has(u.slug)) consumerMap.set(u.slug, { slug: u.slug, label: u.label, href: u.href || null, site: !!u.site, count: 0 });
+  const c = consumerMap.get(u.slug);
+  c.count++;
+  if (!c.href && u.href) c.href = u.href;
+}
+const consumers = [...consumerMap.values()]
+  .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+module.exports = { groups, items, consumers };
