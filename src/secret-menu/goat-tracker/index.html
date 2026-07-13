@@ -1,0 +1,457 @@
+---
+layout: base.njk
+title: "Goat Tracker"
+description: "The site's traffic, pulled straight from GoatCounter into the Secret Menu."
+noindex: true
+eleventyExcludeFromCollections: true
+---
+{% raw %}
+<style>
+.gt-wrap{--gt-accent:#4ecb8d;--gt-mark:#2D9B6F;--gt-mark-hi:#4ecb8d;max-width:1080px;margin:0 auto;padding:40px 40px 90px}
+[data-theme="light"] .gt-wrap{--gt-accent:#1d7a54;--gt-mark-hi:#1d7a54}
+.gt-wrap [hidden]{display:none!important}
+
+.gt-back{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none;margin-bottom:20px;border-bottom:none}
+.gt-back:hover{color:var(--gt-accent)}
+
+.gt-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:24px}
+.gt-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gt-accent)}
+.gt-eyebrow-line{width:28px;height:1px;background:var(--gt-mark)}
+.gt-head h1{font-family:var(--display);font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1.05}
+.gt-head h1 em{font-style:normal;color:var(--gt-accent)}
+.gt-head .gt-sub{font-size:13px;color:var(--t3);margin-top:6px;font-family:var(--mono)}
+
+.gt-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gt-pills{display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.gt-pill{background:var(--surface);border:none;padding:8px 14px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--t3);cursor:pointer}
+.gt-pill+.gt-pill{border-left:1px solid var(--border)}
+.gt-pill[aria-pressed="true"]{background:rgba(45,155,111,.16);color:var(--gt-accent)}
+.gt-pill:hover{color:var(--t1)}
+.gt-btn{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 13px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--t2);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-bottom:1px solid var(--border)}
+.gt-btn:hover{border-color:var(--gt-mark);color:var(--gt-accent)}
+
+.gt-gate{max-width:640px;background:linear-gradient(135deg,rgba(45,155,111,.14) 0%,rgba(78,205,196,.04) 100%);border:1px solid var(--border);border-left:3px solid var(--gt-mark);border-radius:0 14px 14px 0;padding:26px 30px}
+.gt-gate h2{font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:10px}
+.gt-gate p{font-size:13.5px;color:var(--t2);line-height:1.7;margin-bottom:12px}
+.gt-gate ol{margin:0 0 16px 18px;font-size:13.5px;color:var(--t2);line-height:1.9}
+.gt-gate a{color:var(--gt-accent);border-bottom:1px solid transparent}
+.gt-gate a:hover{border-bottom-color:var(--gt-accent)}
+.gt-token-row{display:flex;gap:8px}
+.gt-token-row input{flex:1;background:var(--dark);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-family:var(--mono);font-size:12px;color:var(--t1);min-width:0}
+.gt-token-row input:focus{outline:none;border-color:var(--gt-mark)}
+.gt-connect{background:var(--gt-mark);border:none;border-radius:9px;padding:10px 18px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;cursor:pointer}
+.gt-connect:hover{filter:brightness(1.12)}
+.gt-connect:disabled{opacity:.5;cursor:wait}
+.gt-gate-err{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--red)}
+.gt-gate-note{margin-top:14px;font-size:11.5px;color:var(--t3);line-height:1.6}
+
+.gt-status{font-family:var(--mono);font-size:11.5px;color:var(--t3);margin:8px 0 20px}
+.gt-status.err{color:var(--red)}
+
+.gt-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.gt-tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+.gt-tile .t-lbl{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.gt-tile .t-val{font-family:var(--display);font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.gt-tile .t-sub{font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:5px}
+
+.gt-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;min-width:0}
+.gt-panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.gt-panel-h .h-note{font-weight:400;letter-spacing:.04em;text-transform:none}
+
+#gtChartWrap{position:relative}
+#gtChart{display:block;width:100%}
+#gtChart .gt-grid{stroke:var(--border);stroke-width:1}
+#gtChart .gt-axis{fill:var(--t3);font-family:var(--mono);font-size:10px}
+#gtChart .gt-bar{fill:var(--gt-mark)}
+#gtChart .gt-bar.hi{fill:var(--gt-mark-hi)}
+#gtChart .gt-peak{fill:var(--t2);font-family:var(--mono);font-size:10px;font-variant-numeric:tabular-nums}
+#gtTip{position:absolute;z-index:40;pointer-events:none;display:none;padding:7px 10px;border-radius:8px;background:var(--raised);border:1px solid var(--border2);box-shadow:0 6px 18px rgba(0,0,0,.35);font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--t2);white-space:nowrap}
+#gtTip b{color:var(--t1);font-variant-numeric:tabular-nums}
+
+.gt-table-details{margin-top:10px}
+.gt-table-details summary{font-family:var(--mono);font-size:10.5px;color:var(--t3);cursor:pointer}
+.gt-table-details summary:hover{color:var(--gt-accent)}
+.gt-table{width:100%;margin-top:10px;border-collapse:collapse;font-family:var(--mono);font-size:11px;color:var(--t2)}
+.gt-table th{text-align:left;font-weight:600;color:var(--t3);padding:4px 8px;border-bottom:1px solid var(--border);font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.gt-table td{padding:3px 8px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+.gt-table td:last-child,.gt-table th:last-child{text-align:right}
+
+.gt-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:800px){.gt-cols{grid-template-columns:1fr}.gt-wrap{padding:32px 20px 70px}}
+
+.gt-row{padding:6px 0}
+.gt-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+.gt-row .r-name{font-family:var(--mono);font-size:11.5px;color:var(--t1);overflow-wrap:anywhere;min-width:0}
+.gt-row .r-name a{color:var(--t1);border-bottom:none}
+.gt-row .r-name a:hover{color:var(--gt-accent)}
+.gt-row .r-val{font-family:var(--mono);font-size:11.5px;color:var(--t2);font-variant-numeric:tabular-nums;flex-shrink:0}
+.gt-row .r-bar{height:4px;border-radius:3px;background:rgba(127,144,164,.14);overflow:hidden}
+.gt-row .r-bar span{display:block;height:100%;border-radius:3px;background:var(--gt-mark)}
+.gt-badge{display:inline-block;margin-left:7px;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:1px 6px;border-radius:7px;background:rgba(232,168,56,.14);border:1px solid rgba(232,168,56,.35);color:var(--amber);font-family:var(--mono);vertical-align:1px}
+[data-theme="light"] .gt-badge{color:var(--amber-dk);border-color:rgba(148,105,5,.4);background:rgba(232,168,56,.18)}
+.gt-empty{font-family:var(--mono);font-size:11.5px;color:var(--t3);padding:8px 0}
+
+.gt-foot{font-family:var(--mono);font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:6px}
+</style>
+
+<div class="gt-wrap">
+  <a class="gt-back" href="/secret-menu/">&larr; Secret Menu</a>
+
+  <div class="gt-head">
+    <div>
+      <div class="gt-eyebrow"><div class="gt-eyebrow-line"></div><span>Off the Map &middot; Instrument</span></div>
+      <h1>Goat <em>Tracker</em></h1>
+      <p class="gt-sub">healthcareuncharted.goatcounter.com, without leaving the site.</p>
+    </div>
+    <div class="gt-controls" id="gtControls" hidden>
+      <div class="gt-pills" role="group" aria-label="Time window">
+        <button class="gt-pill" data-days="7" aria-pressed="false">7D</button>
+        <button class="gt-pill" data-days="30" aria-pressed="false">30D</button>
+        <button class="gt-pill" data-days="90" aria-pressed="false">90D</button>
+      </div>
+      <button class="gt-btn" id="gtRefresh" title="Refresh">&#8635; Refresh</button>
+      <a class="gt-btn" href="https://healthcareuncharted.goatcounter.com" target="_blank" rel="noopener">Dashboard &#8599;</a>
+      <button class="gt-btn" id="gtDisconnect" title="Forget the token stored in this browser">Disconnect</button>
+    </div>
+  </div>
+
+  <section class="gt-gate" id="gtGate" hidden>
+    <h2>The built-in token stopped working</h2>
+    <p>This page ships with a read-only token baked in, so normally you never see this card. If you're reading it, that token got revoked or GoatCounter rejected it. Mint a replacement, then update EMBEDDED_TOKEN in the page source so it sticks for every browser, or paste it below for a this-browser-only fix (lives in localStorage).</p>
+    <ol>
+      <li>Open <a href="https://healthcareuncharted.goatcounter.com/user/api" target="_blank" rel="noopener">GoatCounter &rarr; API tokens</a></li>
+      <li>New token. Check only "Read statistics".</li>
+      <li>Paste it below.</li>
+    </ol>
+    <div class="gt-token-row">
+      <input type="password" id="gtToken" placeholder="paste API token" autocomplete="off" spellcheck="false" aria-label="GoatCounter API token">
+      <button class="gt-connect" id="gtConnect">Connect</button>
+    </div>
+    <div class="gt-gate-err" id="gtGateErr" hidden></div>
+    <div class="gt-gate-note">The stats here are visit counts, not visitor identities. GoatCounter doesn't collect personal data, which is why a face-up read token is a reasonable trade.</div>
+  </section>
+
+  <div class="gt-status" id="gtStatus" hidden></div>
+
+  <section id="gtDash" hidden>
+    <div class="gt-tiles">
+      <div class="gt-tile"><div class="t-lbl">Pageviews</div><div class="t-val" id="tTotal">&ndash;</div><div class="t-sub" id="tRange"></div></div>
+      <div class="gt-tile"><div class="t-lbl">Today</div><div class="t-val" id="tToday">&ndash;</div><div class="t-sub">site timezone</div></div>
+      <div class="gt-tile"><div class="t-lbl">Avg / day</div><div class="t-val" id="tAvg">&ndash;</div><div class="t-sub" id="tAvgSub"></div></div>
+      <div class="gt-tile"><div class="t-lbl">Busiest day</div><div class="t-val" id="tPeak">&ndash;</div><div class="t-sub" id="tPeakSub"></div></div>
+      <div class="gt-tile"><div class="t-lbl">Events</div><div class="t-val" id="tEvents">&ndash;</div><div class="t-sub">custom triggers</div></div>
+    </div>
+
+    <div class="gt-panel">
+      <div class="gt-panel-h"><span>Pageviews per day</span><span class="h-note" id="gtChartNote"></span></div>
+      <div id="gtChartWrap">
+        <svg id="gtChart" role="img"></svg>
+        <div id="gtTip"></div>
+      </div>
+      <details class="gt-table-details">
+        <summary>Data as table</summary>
+        <table class="gt-table"><thead><tr><th>Day</th><th>Pageviews</th></tr></thead><tbody id="gtTableBody"></tbody></table>
+      </details>
+    </div>
+
+    <div class="gt-cols">
+      <div class="gt-panel"><div class="gt-panel-h"><span>Top pages</span></div><div id="gtPages"></div></div>
+      <div class="gt-panel"><div class="gt-panel-h"><span>Top referrers</span></div><div id="gtRefs"></div></div>
+    </div>
+    <div class="gt-cols">
+      <div class="gt-panel"><div class="gt-panel-h"><span>Locations</span></div><div id="gtLocs"></div></div>
+      <div class="gt-panel"><div class="gt-panel-h"><span>Browsers</span></div><div id="gtBrowsers"></div></div>
+    </div>
+
+    <div class="gt-foot">Days follow the site's timezone as configured in GoatCounter. The API allows 4 requests a second and this page paces itself under that. Data is fetched live on load, on refresh, and when the window changes.</div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+var SITE = 'healthcareuncharted';
+var API = 'https://' + SITE + '.goatcounter.com/api/v0';
+var LS_TOKEN = 'hu-goat-token', LS_PERIOD = 'hu-goat-period';
+
+var $ = function(id){ return document.getElementById(id); };
+// Read-only stats token, shipped face-up on purpose: this page IS the dashboard,
+// and the token can't do anything but read statistics. Rotate by revoking in
+// GoatCounter and pasting a fresh one here. A localStorage paste overrides it.
+var EMBEDDED_TOKEN = 'hi0s4v09socmdl8tzqruui3v131szb2yjri7i1r2568z3ith7c';
+var stored = localStorage.getItem(LS_TOKEN) || '';
+var token = stored || EMBEDDED_TOKEN;
+var period = parseInt(localStorage.getItem(LS_PERIOD) || '30', 10);
+if ([7,30,90].indexOf(period) === -1) period = 30;
+var series = [];      // [{day:'2026-07-05', count:n}]
+var loadSeq = 0;      // guards against out-of-order renders
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function fmtNum(n){ return (n == null ? 0 : n).toLocaleString('en-US'); }
+function fmtDay(iso){
+  var d = new Date(iso + 'T00:00:00Z');
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'UTC' });
+}
+
+/* ── paced API queue: stays under the 4 req/s limit, one retry on 429 ── */
+var gate = Promise.resolve(), lastCall = 0;
+function api(path){
+  var p = gate.then(function(){ return call(path); });
+  gate = p.then(null, function(){});
+  return p;
+}
+function call(path, isRetry){
+  var wait = Math.max(0, lastCall + 300 - Date.now());
+  return new Promise(function(r){ setTimeout(r, wait); }).then(function(){
+    lastCall = Date.now();
+    // Content-Type is required: /me answers with an HTML error page without it
+    return fetch(API + path, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' } });
+  }).then(function(res){
+    if (res.status === 429 && !isRetry) {
+      return new Promise(function(r){ setTimeout(r, 1300); }).then(function(){ return call(path, true); });
+    }
+    if (!res.ok) { var e = new Error('GoatCounter said HTTP ' + res.status); e.status = res.status; throw e; }
+    return res.json();
+  });
+}
+
+/* ── views ── */
+function showGate(msg){
+  $('gtGate').hidden = false;
+  $('gtDash').hidden = true;
+  $('gtControls').hidden = true;
+  $('gtStatus').hidden = true;
+  var err = $('gtGateErr');
+  err.hidden = !msg;
+  if (msg) err.textContent = msg;
+}
+function showDash(){
+  $('gtGate').hidden = true;
+  $('gtDash').hidden = false;
+  $('gtControls').hidden = false;
+  $('gtDisconnect').hidden = !stored;   // only shown when a pasted token overrides the built-in
+  document.querySelectorAll('.gt-pill').forEach(function(b){
+    b.setAttribute('aria-pressed', String(parseInt(b.dataset.days,10) === period));
+  });
+}
+function status(msg, isErr){
+  var el = $('gtStatus');
+  el.hidden = !msg;
+  el.textContent = msg || '';
+  el.className = 'gt-status' + (isErr ? ' err' : '');
+}
+
+/* ── data ──
+   The API buckets days in the site's GoatCounter timezone and treats the end
+   date as a boundary, so: end = tomorrow to pull today's bucket in, start gets
+   a padding day, and the series is trimmed to the last `period` entries. */
+function range(){
+  var end = new Date(), start = new Date();
+  end.setUTCDate(end.getUTCDate() + 1);
+  start.setUTCDate(start.getUTCDate() - period);
+  return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10) };
+}
+function buildSeries(total){
+  return (total.stats || []).map(function(s){
+    var n = s.daily != null ? s.daily : (s.hourly || []).reduce(function(a,b){ return a+b; }, 0);
+    return { day: String(s.day || '').slice(0,10), count: n };
+  }).slice(-period);
+}
+
+function load(){
+  var seq = ++loadSeq, r = range(), qs = '?start=' + r.start + '&end=' + r.end;
+  status('Fetching from GoatCounter…');
+  Promise.all([
+    api('/stats/total' + qs),
+    api('/stats/hits' + qs + '&limit=12'),
+    api('/stats/toprefs' + qs + '&limit=12'),
+    api('/stats/locations' + qs + '&limit=8'),
+    api('/stats/browsers' + qs + '&limit=8')
+  ]).then(function(res){
+    if (seq !== loadSeq) return;
+    status('');
+    render(res[0], res[1], res[2], res[3], res[4], r);
+  }).catch(function(e){
+    if (seq !== loadSeq) return;
+    if (e.status === 401 || e.status === 403) {
+      localStorage.removeItem(LS_TOKEN);
+      if (stored && stored !== EMBEDDED_TOKEN && EMBEDDED_TOKEN) {
+        stored = ''; token = EMBEDDED_TOKEN;   // pasted override went bad; fall back to the built-in
+        showDash(); load();
+        return;
+      }
+      stored = ''; token = '';
+      showGate('The token was rejected (HTTP ' + e.status + '). If the built-in one got revoked, mint a fresh Read-statistics token and paste it.');
+      return;
+    }
+    if (e.message && /failed to fetch|networkerror|load failed/i.test(e.message)) {
+      status('The browser never reached GoatCounter. That is almost always an ad blocker or privacy shield, goatcounter.com is on the common blocklists. Allow it for this page, then hit Refresh.', true);
+    } else {
+      status('Fetch failed: ' + e.message + '. GoatCounter might be down, or the network is. Try Refresh.', true);
+    }
+  });
+}
+
+function render(total, hits, refs, locs, browsers, r){
+  series = buildSeries(total);
+  var sum = 0, peak = series[0] || { day: r.start, count: 0 };
+  series.forEach(function(s){ sum += s.count; if (s.count > peak.count) peak = s; });
+
+  $('tTotal').textContent = fmtNum(sum);
+  $('tRange').textContent = series.length ? fmtDay(series[0].day) + ' → ' + fmtDay(series[series.length-1].day) : '';
+  $('tToday').textContent = fmtNum(series.length ? series[series.length-1].count : 0);
+  var avg = sum / period;
+  $('tAvg').textContent = avg >= 10 ? fmtNum(Math.round(avg)) : String(Math.round(avg * 10) / 10);
+  $('tAvgSub').textContent = 'over ' + period + ' days';
+  $('tPeak').textContent = fmtNum(peak.count);
+  $('tPeakSub').textContent = fmtDay(peak.day);
+  $('tEvents').textContent = fmtNum(total.total_events);
+
+  drawChart();
+
+  $('gtTableBody').innerHTML = series.map(function(s){
+    return '<tr><td>' + esc(s.day) + '</td><td>' + fmtNum(s.count) + '</td></tr>';
+  }).join('');
+
+  var pages = (hits.hits || []).slice(0, 12).map(function(h){
+    return { name: h.path, count: h.count, event: !!h.event, title: h.title };
+  });
+  list('gtPages', pages, true);
+  list('gtRefs', (refs.stats || []).map(function(s){ return { name: s.name || s.id || '(direct)', count: s.count }; }));
+  list('gtLocs', (locs.stats || []).map(function(s){ return { name: s.name || s.id || 'Unknown', count: s.count }; }));
+  list('gtBrowsers', (browsers.stats || []).map(function(s){ return { name: s.name || s.id || 'Unknown', count: s.count }; }));
+}
+
+function list(id, items, linkPaths){
+  var el = $(id);
+  if (!items.length) { el.innerHTML = '<div class="gt-empty">Nothing in this window.</div>'; return; }
+  var max = items.reduce(function(m,i){ return Math.max(m, i.count || 0); }, 1);
+  el.innerHTML = items.map(function(i){
+    var name = esc(i.name);
+    if (linkPaths && !i.event && String(i.name).charAt(0) === '/') {
+      name = '<a href="' + esc(i.name) + '" title="' + esc(i.title || i.name) + '">' + esc(i.name) + '</a>';
+    }
+    var badge = i.event ? '<span class="gt-badge">event</span>' : '';
+    return '<div class="gt-row"><div class="gt-row-top"><span class="r-name">' + name + badge +
+      '</span><span class="r-val">' + fmtNum(i.count) + '</span></div>' +
+      '<div class="r-bar"><span style="width:' + Math.max(1, Math.round((i.count || 0) / max * 100)) + '%"></span></div></div>';
+  }).join('');
+}
+
+/* ── daily bar chart, hand-rolled SVG ── */
+function niceCeil(n){
+  if (n <= 5) return 5;
+  var p = Math.pow(10, Math.floor(Math.log(n) / Math.LN10));
+  var u = n / p;
+  return (u <= 1 ? 1 : u <= 2 ? 2 : u <= 5 ? 5 : 10) * p;
+}
+function drawChart(){
+  var svg = $('gtChart'), wrap = $('gtChartWrap'), tip = $('gtTip');
+  if (!series.length) { svg.innerHTML = ''; return; }
+  var W = wrap.clientWidth || 600, H = 210, padL = 40, padR = 8, padT = 18, padB = 22;
+  var pw = W - padL - padR, ph = H - padT - padB;
+  var n = series.length;
+  var gap = n > 60 ? 1 : 2;
+  var barW = Math.max(1.5, pw / n - gap);
+  var yMax = niceCeil(series.reduce(function(m,s){ return Math.max(m, s.count); }, 0));
+  var y = function(v){ return padT + ph - (v / yMax) * ph; };
+  var x = function(i){ return padL + i * (pw / n) + gap / 2; };
+
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.setAttribute('height', H);
+  svg.setAttribute('aria-label', 'Daily pageviews, ' + fmtDay(series[0].day) + ' to ' + fmtDay(series[n-1].day));
+
+  var parts = [];
+  [0, 0.5, 1].forEach(function(f){
+    var gy = y(yMax * f);
+    parts.push('<line class="gt-grid" x1="' + padL + '" x2="' + (W - padR) + '" y1="' + gy + '" y2="' + gy + '"/>');
+    parts.push('<text class="gt-axis" x="' + (padL - 6) + '" y="' + (gy + 3) + '" text-anchor="end">' + fmtNum(Math.round(yMax * f)) + '</text>');
+  });
+
+  var ticks = Math.min(5, n), peakIdx = 0;
+  series.forEach(function(s,i){ if (s.count > series[peakIdx].count) peakIdx = i; });
+  for (var t = 0; t < ticks; t++) {
+    var ti = Math.round(t * (n - 1) / Math.max(1, ticks - 1));
+    parts.push('<text class="gt-axis" x="' + (x(ti) + barW/2) + '" y="' + (H - 6) + '" text-anchor="middle">' + fmtDay(series[ti].day) + '</text>');
+  }
+  series.forEach(function(s,i){
+    var by = y(s.count), bh = Math.max(s.count > 0 ? 1 : 0, padT + ph - by);
+    parts.push('<rect class="gt-bar" data-i="' + i + '" x="' + x(i) + '" y="' + (padT + ph - bh) + '" width="' + barW + '" height="' + bh + '" rx="' + Math.min(2, barW/2) + '"/>');
+  });
+  if (series[peakIdx].count > 0) {
+    var px = x(peakIdx) + barW/2, anchor = px < padL + 24 ? 'start' : (px > W - padR - 24 ? 'end' : 'middle');
+    parts.push('<text class="gt-peak" x="' + px + '" y="' + (y(series[peakIdx].count) - 5) + '" text-anchor="' + anchor + '">' + fmtNum(series[peakIdx].count) + '</text>');
+  }
+  // invisible full-height hover targets, one per day, wider than the bars
+  series.forEach(function(s,i){
+    parts.push('<rect data-hover="' + i + '" x="' + (padL + i * (pw/n)) + '" y="' + padT + '" width="' + (pw/n) + '" height="' + ph + '" fill="transparent"/>');
+  });
+  svg.innerHTML = parts.join('');
+
+  svg.querySelectorAll('[data-hover]').forEach(function(hz){
+    var i = parseInt(hz.dataset.hover, 10);
+    hz.addEventListener('mouseenter', function(){
+      var bar = svg.querySelector('.gt-bar[data-i="' + i + '"]');
+      if (bar) bar.classList.add('hi');
+      tip.innerHTML = esc(fmtDay(series[i].day)) + ' &middot; <b>' + fmtNum(series[i].count) + '</b> views';
+      tip.style.display = 'block';
+      var cx = (x(i) + barW/2) / W * wrap.clientWidth;
+      tip.style.left = Math.max(0, Math.min(wrap.clientWidth - 130, cx - 55)) + 'px';
+      tip.style.top = (y(series[i].count) / H * svg.clientHeight - 44) + 'px';
+    });
+    hz.addEventListener('mouseleave', function(){
+      var bar = svg.querySelector('.gt-bar[data-i="' + i + '"]');
+      if (bar) bar.classList.remove('hi');
+      tip.style.display = 'none';
+    });
+  });
+}
+var rT;
+window.addEventListener('resize', function(){ clearTimeout(rT); rT = setTimeout(drawChart, 150); });
+
+/* ── wiring ── */
+$('gtConnect').addEventListener('click', connect);
+$('gtToken').addEventListener('keydown', function(e){ if (e.key === 'Enter') connect(); });
+function connect(){
+  var t = $('gtToken').value.trim();
+  if (!t) { $('gtGateErr').hidden = false; $('gtGateErr').textContent = 'Paste a token first.'; return; }
+  var btn = $('gtConnect');
+  btn.disabled = true;
+  token = t;
+  api('/me').then(function(){
+    localStorage.setItem(LS_TOKEN, t);
+    stored = t;
+    btn.disabled = false; $('gtToken').value = '';
+    showDash(); load();
+  }).catch(function(e){
+    token = ''; btn.disabled = false;
+    $('gtGateErr').hidden = false;
+    $('gtGateErr').textContent = (e.status === 401 || e.status === 403)
+      ? 'GoatCounter rejected that token. Check it was copied whole, with Read statistics permission.'
+      : (e.message && /failed to fetch|networkerror|load failed/i.test(e.message))
+        ? 'The browser never reached GoatCounter, which usually means an ad blocker is eating the request. Allow goatcounter.com for this page and try again.'
+        : 'Could not reach GoatCounter (' + e.message + ').';
+  });
+}
+$('gtDisconnect').addEventListener('click', function(){
+  localStorage.removeItem(LS_TOKEN); stored = '';
+  token = EMBEDDED_TOKEN;
+  if (token) { showDash(); load(); } else { showGate(); }
+});
+$('gtRefresh').addEventListener('click', load);
+document.querySelectorAll('.gt-pill').forEach(function(b){
+  b.addEventListener('click', function(){
+    period = parseInt(b.dataset.days, 10);
+    localStorage.setItem(LS_PERIOD, String(period));
+    showDash(); load();
+  });
+});
+
+if (token) { showDash(); load(); } else { showGate(); }
+})();
+</script>
+{% endraw %}
