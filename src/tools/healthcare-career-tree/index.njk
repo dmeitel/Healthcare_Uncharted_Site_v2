@@ -62,7 +62,9 @@ permalink: /tools/healthcare-career-tree/
   /* ── Canvas: one full-bleed area, three stacked views, ONE active at a time ─── */
   #hct-canvas-wrap { flex: 1; min-height: 0; position: relative; overflow: hidden; }
   .hct-view { position: absolute; inset: 0; display: none; flex-direction: column; }
-  .hct-view.active { display: flex; }
+  .hct-view.active { display: flex; animation: hctViewIn .26s ease; }
+  @keyframes hctViewIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce){ .hct-view.active, .st-arrow, .bp-secn.guide-flash { animation: none; } }
   /* Primary tabs in the top bar */
   .hct-tabs button { padding: 7px 14px; font-size: 13px; }
   .tab-badge { font-family: var(--mono); font-size: 10px; font-weight: 700;
@@ -313,6 +315,9 @@ permalink: /tools/healthcare-career-tree/
   .bp-addmenu.open { display: block; }
   .bp-addmenu-item { padding: 6px 10px; font-size: 12px; color: rgba(214,234,238,0.88); cursor: pointer; border-radius: 6px; font-family: var(--font); }
   .bp-addmenu-item:hover { background: rgba(120,200,190,0.14); color: #fff; }
+  /* the toolbar's ⋯ More overflow reuses the addmenu dress, anchored under its button */
+  .mp-more { margin-left: 0; display: inline-flex; }
+  .mp-more .bp-addmenu { top: calc(100% + 6px); z-index: 60; }
   .bp-dash { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
   .bp-dash.bp-dash-dragging { outline: 2px dashed rgba(78,205,196,0.45); outline-offset: 10px; border-radius: 16px; }
   /* shuffling: frame the whole sections area */
@@ -346,7 +351,9 @@ permalink: /tools/healthcare-career-tree/
   .bp-card-x:hover { color: #ff8080; }
   .bp-card-dragging { opacity: 0.45; }
   .bp-card-over { outline: 2px dashed rgba(78,205,196,0.55); outline-offset: 2px; }
-  .bp-panel { background: rgba(8,16,13,0.6); border: 1px solid rgba(78,205,196,0.18); border-radius: 12px; padding: 12px; }
+  .bp-panel { background: rgba(8,16,13,0.6); border: 1px solid rgba(78,205,196,0.18); border-radius: 12px; padding: 12px; transition: border-color .18s; }
+  .bp-sec:hover { border-color: rgba(78,205,196,0.34); }
+  .bp-sec[data-sec="plan"]:hover { border-color: rgba(232,197,71,0.45); }
   /* ── Save / Load modal ── */
   .bp-modal { position: absolute; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center; background: rgba(2,7,5,0.74); padding: 24px; }
   .bp-modal.open { display: flex; }
@@ -440,23 +447,42 @@ permalink: /tools/healthcare-career-tree/
     font-family: var(--display); font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
     text-transform: uppercase; color: #6FE3D8; margin-bottom: 10px; }
   .bp-hint { font-size: 11px; color: rgba(180,205,215,0.5); margin: 0 0 10px; line-height: 1.4; }
-  /* the cycle rail — slim, always-on chrome under the toolbar; the lit beat is where you are */
-  #hct-flowrail { display: flex; align-items: center; gap: 2px; padding: 3px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; }
-  #hct-flowrail .fr-lbl { color: var(--t3); margin-right: 8px; }
-  #hct-flowrail button { background: none; border: none; cursor: pointer; color: var(--t3); padding: 2px 8px; font: inherit; letter-spacing: inherit; text-transform: inherit; border-radius: 5px; }
-  #hct-flowrail button:hover { color: var(--t1); }
-  #hct-flowrail button.done { color: color-mix(in srgb, var(--teal) 60%, var(--t3)); }
-  #hct-flowrail button.on { background: var(--teal); color: #062024; font-weight: 700; }
-  [data-theme='light'] #hct-flowrail button.on { background: var(--teal); color: #062024; }
-  #hct-flowrail i { font-style: normal; color: var(--t3); opacity: 0.5; }
-  @media (max-width: 700px) { #hct-flowrail { display: none; } }   /* phone: the compass strip carries the guidance */
-  /* the compass strip — one quiet line, one action */
-  .bp-compass { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 8px 14px 0; padding: 7px 13px; background: color-mix(in srgb, var(--teal) 7%, transparent); border: 1px solid color-mix(in srgb, var(--teal) 22%, transparent); border-radius: 9px; font-size: 12px; color: var(--t2); }
-  .bp-compass b { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); flex-shrink: 0; }
-  [data-theme='light'] .bp-compass b { color: var(--teal-dk); }
-  .bp-compass button { margin-left: auto; background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 10.5px; font-weight: 700; color: var(--teal); padding: 0; white-space: nowrap; }
-  .bp-compass button:hover { text-decoration: underline; }
-  [data-theme='light'] .bp-compass button { color: var(--teal-dk); }
+  /* QA: once someone is exploring, the advice tidbits collapse for good (the "?" popover keeps the grammar) */
+  #hct-shell.hints-min .view-hint, #hct-shell.hints-min #hct-blurb { display: none; }
+  /* ── numbered story sections — the character-creation spine rides the section headers ── */
+  .bp-secn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; border: 1.5px solid color-mix(in srgb, var(--teal) 55%, transparent); color: var(--teal); font-family: var(--display); font-weight: 800; font-size: 12px; flex-shrink: 0; }
+  [data-theme='light'] .bp-secn { color: var(--teal-dk); border-color: color-mix(in srgb, var(--teal-dk) 55%, transparent); }
+  /* the guide chip: each section's station state, arrow on the first incomplete, click = focused picker */
+  .bp-guide { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--raised); color: var(--t2); font-family: var(--font); font-size: 11px; font-weight: 600; letter-spacing: 0; text-transform: none; cursor: pointer; transition: border-color .15s, background .15s; }
+  .bp-guide:hover { border-color: var(--teal); }
+  .bp-guide.todo { color: var(--t3); font-style: italic; font-weight: 500; }
+  .bp-guide.done { border-color: color-mix(in srgb, var(--teal) 40%, transparent); color: var(--t1); }
+  .bp-guide.dormant { opacity: 0.55; font-style: italic; color: var(--t3); }
+  .bp-guide.next { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 8%, var(--raised)); font-style: normal; color: var(--t1); }
+  .bp-h .bp-guide:not([hidden]) ~ .bp-h-link { margin-left: 12px; }
+  .st-arrow { font-family: var(--mono); font-size: 10px; font-weight: 700; color: #062024; background: var(--teal); border-radius: 999px; padding: 2px 9px; white-space: nowrap; animation: stPulse 2s ease-in-out infinite; }
+  @keyframes stPulse { 0%, 100% { transform: none; } 50% { transform: translateX(3px); } }
+  /* first-run spotlight: one cascade down the four numbers after the survey, then never again */
+  .bp-secn.guide-flash { animation: guideFlash 1s ease; }
+  @keyframes guideFlash { 0%, 100% { box-shadow: none; } 45% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--teal) 30%, transparent); background: color-mix(in srgb, var(--teal) 18%, transparent); } }
+  /* expertise zones: four tracks side by side inside section ③, folding to 2 then 1 */
+  .bp-zones { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: start; }
+  .bp-zone { min-width: 0; }
+  .bp-zone-h { font-family: var(--display); font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--t2); margin: 0 0 7px; }
+  @media (max-width: 1100px){ .bp-zones { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px){ .bp-zones { grid-template-columns: 1fr; } }
+  /* station picker internals */
+  #bp-station-body { max-height: 62vh; overflow-y: auto; }
+  .st-rows { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 4px; }
+  .st-row { display: flex; align-items: center; gap: 9px; padding: 7px 10px; background: var(--raised); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--t1); }
+  .st-row .st-sub { color: var(--t3); font-size: 10.5px; font-family: var(--mono); }
+  .st-add { margin-left: auto; background: rgba(232,197,71,0.14); border: 1px solid rgba(232,197,71,0.4); color: #F0CF6B; border-radius: 7px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--font); white-space: nowrap; }
+  .st-add:hover { background: rgba(232,197,71,0.24); }
+  [data-theme='light'] .st-add { color: #8A6A15; border-color: rgba(138,106,21,0.45); }
+  .st-have { margin-left: auto; }
+  .st-x { background: none; border: none; color: var(--t3); cursor: pointer; font-size: 14px; margin-left: auto; }
+  .st-x:hover { color: #ff8080; }
+  [data-theme='light'] .st-x:hover { color: #C0392B; }
   /* flow links — every surface names its next stop on the loop (sheet → matrices → sheet) */
   .bp-h-link { margin-left: auto; background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--teal); opacity: 0.75; padding: 2px 0; white-space: nowrap; }
   .bp-h-link:hover { opacity: 1; text-decoration: underline; }
@@ -595,7 +621,9 @@ permalink: /tools/healthcare-career-tree/
   .at-sub { font-size: 7.5px; font-weight: 600; fill: rgba(200,224,230,0.8); font-family: var(--font); pointer-events: none; transition: opacity .15s; }
   [data-theme='light'] .at-sub { fill: #3f5a64; }
   #hct-atlas-svg.ed-far .at-sub { opacity: 0; }
-  .atlas-node.at-off { opacity: 0; pointer-events: none; }   /* off the snapped zone — parked, not removed */
+  /* parked ALWAYS wins — .dim/.atlas-dim land on parked tiles too (equal specificity, later
+     rules won), which resurrected other zones' tiles at 28% ON TOP of a snapped zone */
+  .atlas-node.at-off { opacity: 0 !important; pointer-events: none; }
   .atlas-node.dim { opacity: 0.28; }
   .atlas-node.at-active .atlas-hex { fill-opacity: 0.55; stroke-width: 2.6; }
   /* lens dock — top-left, token surfaces so it flips themes by construction */
@@ -1075,11 +1103,12 @@ permalink: /tools/healthcare-career-tree/
   .bp-sgs-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
   @media (hover: none) { .bp-sgs-chip { min-height: 44px; } }
   /* re-entry strip in the old welcome slot (empty build + dismissed modal only) */
-  .hw-strip { max-width: 980px; margin: 18px auto 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px dashed var(--border); border-radius: 10px; }
-  .hw-strip-txt { font-size: 12.5px; color: var(--t3); }
+  .hw-strip { max-width: 980px; margin: 18px auto 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px; background: color-mix(in srgb, var(--teal) 6%, var(--surface)); border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent); border-radius: 10px; }
+  .hw-strip-txt { font-size: 12.5px; color: var(--t2); }
   .hw-strip-txt b { color: var(--t1); font-weight: 700; }
-  .hw-strip-btn { font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--t2); background: transparent; border: 1px solid var(--border); border-radius: 7px; padding: 6px 12px; cursor: pointer; transition: border-color .15s, color .15s; }
-  .hw-strip-btn:hover { border-color: var(--teal); color: var(--t1); }
+  /* the landing invitation reads SELECTED — the survey no longer pops itself */
+  .hw-strip-btn { font-family: var(--font); font-size: 12.5px; font-weight: 700; color: #062024; background: var(--teal); border: 1px solid var(--teal); border-radius: 8px; padding: 7px 16px; cursor: pointer; transition: filter .15s; }
+  .hw-strip-btn:hover { filter: brightness(1.12); }
   .hw-strip-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
   @media (hover: none) { .hw-strip-btn { min-height: 44px; } }
 
@@ -1106,7 +1135,7 @@ permalink: /tools/healthcare-career-tree/
     <!-- PRIMARY TABS: which view is on screen -->
     <div class="hct-seg hct-tabs" id="hct-tabs">
       <button data-view="path" class="on" title="Your buildable career sheet. Pin roles, degrees, and skills; saves in your browser"><i data-lucide="pin" aria-hidden="true"></i>My Path<span class="tab-badge" id="hct-mp-count">0</span></button>
-      <button data-view="career" title="153 real roles across 8 pathways. Click a hex for detail, ☆ pins it to your path">Career Matrix</button>
+      <button data-view="career" title="158 real roles across 8 pathways. Click a hex for detail, ☆ pins it to your path">Career Matrix</button>
       <button data-view="edu" id="hct-tab-edu" title="Degrees, licenses, and certs stacked by level. See what each one unlocks">Education Matrix</button>
       <button data-view="atlas" id="hct-tab-atlas" title="The skills layer. Clinical and operational expertise areas to tag onto your path">Areas of Expertise</button>
     </div>
@@ -1168,9 +1197,13 @@ permalink: /tools/healthcare-career-tree/
     <!-- CONTEXTUAL CONTROLS — My Path tab (visibility driven by #hct-tb[data-view]) -->
     <span class="tb-ctx" id="tbc-path">
       <button class="mp-fbtn" id="hct-mp-goals" title="Theorycraft: hide what you have and see just the plan" aria-pressed="false">◇ Goals only</button>
-      <button class="mp-fbtn" id="hct-mp-data" title="Back up your path to a code/file, or restore one">⤓ Save / Load</button>
-      <button class="mp-fbtn" id="hct-mp-export" title="Download your path as an image">⬇ Export JPEG</button>
-      <button class="mp-fbtn" id="hct-mp-clear">Reset build</button>
+      <span class="bp-addwrap mp-more"><button class="mp-fbtn" id="hct-mp-more" title="Save, load, export, reset" aria-haspopup="true" aria-expanded="false">⋯ More</button>
+        <div class="bp-addmenu" id="hct-mp-menu">
+          <div class="bp-addmenu-item" id="hct-mp-data" title="Back up your path to a code/file, or restore one">⤓ Save / Load</div>
+          <div class="bp-addmenu-item" id="hct-mp-export" title="Download your path as an image">⬇ Export JPEG</div>
+          <div class="bp-addmenu-item" id="hct-mp-clear">Reset build</div>
+        </div>
+      </span>
     </span>
 
     <!-- global search — persistent across tabs: roles + expertise areas, jump on pick -->
@@ -1213,8 +1246,6 @@ permalink: /tools/healthcare-career-tree/
     </div>
   </div>
   <div class="applied-strip" id="hct-applied" hidden></div>
-  <!-- the cycle rail: which beat of the loop you're on — computed from the build, never a stored step -->
-  <div id="hct-flowrail" role="navigation" aria-label="Where you are in the cycle" hidden></div>
   <div class="vh" id="hct-live" aria-live="polite" aria-atomic="true"></div>
 
   <!-- ── ONE CANVAS · three full-bleed views · ONE active at a time ── -->
@@ -1250,12 +1281,12 @@ permalink: /tools/healthcare-career-tree/
       <div id="hct-atlas-board">
         <svg id="hct-atlas-svg"></svg>
         <!-- the lens: the survey's "what pulls you," flippable right on the map. Dims what doesn't lean your way; your own tiles never dim -->
-        <div class="atlas-lens" id="hct-atlas-lens" role="group" aria-label="Lens: what pulls you">
-          <span class="atlas-lens-lbl">What pulls you</span>
-          <button type="button" data-lens="patients" aria-pressed="false">Patients</button>
-          <button type="button" data-lens="data" aria-pressed="false">Data</button>
+        <div class="atlas-lens" id="hct-atlas-lens" role="group" aria-label="Lens: where your work centers">
+          <span class="atlas-lens-lbl">Focus</span>
+          <button type="button" data-lens="patients" aria-pressed="false">Patient care</button>
+          <button type="button" data-lens="data" aria-pressed="false">Informatics</button>
           <button type="button" data-lens="ops" aria-pressed="false">Operations</button>
-          <button type="button" data-lens="hands" aria-pressed="false">Hands-on</button>
+          <button type="button" data-lens="hands" aria-pressed="false">Diagnostics</button>
         </div>
         <div id="hct-atlas-selbar" class="atlas-selbar">
           <span id="hct-atlas-selcount">0 selected</span>
@@ -1282,35 +1313,35 @@ permalink: /tools/healthcare-career-tree/
              Answers configure the map, then get thrown away; only the seeded build + the URL persist. -->
         <div class="hw-form">
           <div class="hw-q">
-            <span class="hw-q-lbl">Where are you right now?</span>
+            <span class="hw-q-lbl">Where are you today?</span>
             <div class="hw-chips" data-q="status">
-              <button class="hw-chip" type="button" data-v="working" aria-pressed="false">I work in healthcare</button>
-              <button class="hw-chip" type="button" data-v="school" aria-pressed="false">I'm in school for it</button>
-              <button class="hw-chip" type="button" data-v="looking" aria-pressed="false">Just scouting</button>
+              <button class="hw-chip" type="button" data-v="working" aria-pressed="false">Working in healthcare</button>
+              <button class="hw-chip" type="button" data-v="school" aria-pressed="false">In a program now</button>
+              <button class="hw-chip" type="button" data-v="looking" aria-pressed="false">Exploring the field</button>
             </div>
             <!-- conditional follow-ups: each status answer earns its own question -->
             <div class="hw-cond" id="hw-cond-working" hidden>
-              <span class="hw-q-lbl hw-cond-lbl">What's the job? <i>optional, but it lights your line</i></span>
-              <input id="hw-role-in" class="hw-search-in" type="text" placeholder="Search 153 real roles&hellip;" autocomplete="off" aria-label="Search roles">
+              <span class="hw-q-lbl hw-cond-lbl">Your current role <i>optional; it anchors your line</i></span>
+              <input id="hw-role-in" class="hw-search-in" type="text" placeholder="Search 158 real roles&hellip;" autocomplete="off" aria-label="Search roles">
               <div class="hw-suggest" id="hw-role-list" hidden></div>
             </div>
             <div class="hw-cond" id="hw-cond-school" hidden>
-              <span class="hw-q-lbl hw-cond-lbl">Studying toward what? <i>optional</i></span>
+              <span class="hw-q-lbl hw-cond-lbl">The credential you're pursuing <i>optional</i></span>
               <input id="hw-cred-in" class="hw-search-in" type="text" placeholder="RN, RRT, MLS, coding&hellip;" autocomplete="off" aria-label="Search credentials">
               <div class="hw-suggest" id="hw-cred-list" hidden></div>
             </div>
           </div>
           <div class="hw-q">
-            <span class="hw-q-lbl">What pulls you?</span>
+            <span class="hw-q-lbl">Where does your work center?</span>
             <div class="hw-chips" data-q="pull">
-              <button class="hw-chip" type="button" data-v="patients" aria-pressed="false">Taking care of patients</button>
-              <button class="hw-chip" type="button" data-v="data" aria-pressed="false">The data behind the care</button>
-              <button class="hw-chip" type="button" data-v="ops" aria-pressed="false">Running the operation</button>
-              <button class="hw-chip" type="button" data-v="hands" aria-pressed="false">Labs, imaging, machines</button>
+              <button class="hw-chip" type="button" data-v="patients" aria-pressed="false">Direct patient care</button>
+              <button class="hw-chip" type="button" data-v="data" aria-pressed="false">Data &amp; informatics</button>
+              <button class="hw-chip" type="button" data-v="ops" aria-pressed="false">Operations &amp; administration</button>
+              <button class="hw-chip" type="button" data-v="hands" aria-pressed="false">Diagnostics &amp; technology</button>
             </div>
           </div>
           <div class="hw-q">
-            <span class="hw-q-lbl">Education so far?</span>
+            <span class="hw-q-lbl">Highest education completed</span>
             <div class="hw-chips" data-q="edu">
               <button class="hw-chip" type="button" data-v="HS" aria-pressed="false">HS / GED</button>
               <button class="hw-chip" type="button" data-v="Cert" aria-pressed="false">Certificate</button>
@@ -1321,11 +1352,11 @@ permalink: /tools/healthcare-career-tree/
             </div>
           </div>
           <div class="hw-q">
-            <span class="hw-q-lbl">How far are you taking this?</span>
+            <span class="hw-q-lbl">Career horizon</span>
             <div class="hw-chips" data-q="reach">
-              <button class="hw-chip" type="button" data-v="next" aria-pressed="false">The next rung</button>
-              <button class="hw-chip" type="button" data-v="lead" aria-pressed="false">Leadership, eventually</button>
-              <button class="hw-chip" type="button" data-v="unsure" aria-pressed="false">No idea. Show me everything</button>
+              <button class="hw-chip" type="button" data-v="next" aria-pressed="false">The next step up</button>
+              <button class="hw-chip" type="button" data-v="lead" aria-pressed="false">Leadership track</button>
+              <button class="hw-chip" type="button" data-v="unsure" aria-pressed="false">Undecided. Show the whole map</button>
             </div>
           </div>
           <div class="hw-preview" id="hw-preview" hidden></div>
@@ -1348,8 +1379,8 @@ permalink: /tools/healthcare-career-tree/
       <!-- slim re-entry strip: sits in the old welcome slot while the build is
            empty AFTER the modal was dismissed (session-only, no cookie) -->
       <div class="hw-strip" id="hct-welcome-strip" hidden>
-        <span class="hw-strip-txt"><b>Start here.</b> Four questions set up your map.</span>
-        <button class="hw-strip-btn" id="hw-reopen" type="button">Open the questions</button>
+        <span class="hw-strip-txt"><b>New sheet.</b> Four questions set up your map, or load a saved build from ⋯ More in the toolbar.</span>
+        <button class="hw-strip-btn" id="hw-reopen" type="button">Start here →</button>
       </div>
       <!-- IDENTITY BAR -->
       <div class="bp-id">
@@ -1367,26 +1398,67 @@ permalink: /tools/healthcare-career-tree/
         </div>
       </div>
 
-      <!-- the compass: the ONE next move, read from the build (state, not tour) -->
-      <div class="bp-compass" id="bp-compass" hidden></div>
+      <!-- CHARACTER CREATION — the four stations live ON the numbered section headers
+           below: who you are + what you're becoming (①), the road (②), your
+           specialization (③), the plan (④). Each header carries a guide chip; the
+           first incomplete one gets the arrow and opens a focused picker. State, not tour. -->
+      <div id="bp-station-modal" class="bp-modal">
+        <div class="bp-modal-card">
+          <button class="bp-modal-x icon-btn" id="bp-station-x" type="button" title="Close" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button>
+          <div class="bp-modal-h" id="bp-station-h"></div>
+          <div id="bp-station-body"></div>
+        </div>
+      </div>
 
-      <!-- Career on top (full width); the rest are movable dashboard cards below -->
+      <!-- THE SHEET reads as the story, top to bottom: ① your line ② the road
+           ③ your specialization ④ the plan. Notes ride below as an appendix dash. -->
       <div class="bp-sheet">
         <div class="bp-col">
-          <div class="bp-panel bp-panel-trunk">
-            <div class="bp-h">Career Path<button class="bp-h-link" type="button" data-goview="career">Browse roles →</button></div>
-            <p class="bp-hint">Roles you've held or are climbing toward. Your trunk. Hit + and type a name to search real roles.</p>
+          <div class="bp-panel bp-panel-trunk bp-sec" data-sec="line">
+            <div class="bp-h"><span class="bp-secn">1</span>Career Path<button class="bp-guide" id="bp-guide-line" type="button" hidden></button><button class="bp-h-link" type="button" data-goview="career">Browse roles →</button></div>
+            <p class="bp-hint">Who you are and what you're becoming, on one line. Roles you've held, then the ones you're aiming at. Hit + and type a name to search real roles.</p>
             <div class="bp-grid" id="bp-grid-career"></div>
           </div>
-          <div class="bp-panel bp-panel-trunk">
-            <div class="bp-h"><i data-lucide="calendar" aria-hidden="true"></i>Education<button class="bp-h-link" type="button" data-goview="edu">Browse credentials →</button></div>
-            <p class="bp-hint">Degrees, licenses, and certs, earned or in progress. Hit + and type a name to search credentials, or * for all.</p>
+          <div class="bp-panel bp-panel-trunk bp-sec" data-sec="road">
+            <div class="bp-h"><span class="bp-secn">2</span>Education<button class="bp-guide" id="bp-guide-road" type="button" hidden></button><button class="bp-h-link" type="button" data-goview="edu">Browse credentials →</button></div>
+            <p class="bp-hint">The road between here and the goal. Degrees, licenses, and certs, earned or in progress. Hit + to search credentials, or * for all.</p>
             <div class="bp-grid" id="bp-grid-education"></div>
           </div>
           <!-- expertise starter: suggestions keyed off your current role's family — offers, never auto-adds -->
           <div class="bp-suggest-strip" id="bp-suggest" hidden></div>
+          <div class="bp-panel bp-sec" data-sec="spec">
+            <div class="bp-h"><span class="bp-secn">3</span>Areas of Expertise<button class="bp-guide" id="bp-guide-spec" type="button" hidden></button><button class="bp-h-link" type="button" data-goview="atlas">See the map →</button></div>
+            <p class="bp-hint">Your specialization: the skills, focus areas, settings, and populations you claim. Search each track, or tap a suggestion above.</p>
+            <div class="bp-zones">
+              <div class="bp-zone">
+                <div class="bp-zone-h">Skills</div>
+                <div class="bp-pick"><input id="bp-skill-search" class="bp-pick-in" placeholder="Search skills (airway, vitals, charting…)" autocomplete="off"><div class="bp-suggest" id="bp-skill-suggest"></div></div>
+                <div class="bp-spiral-wrap" id="bp-grid-skill"></div>
+              </div>
+              <div class="bp-zone">
+                <div class="bp-zone-h">Specializations</div>
+                <div class="bp-pick"><input id="bp-spec-search" class="bp-pick-in" placeholder="Search focus areas (ICU, peds, trauma…)" autocomplete="off"><div class="bp-suggest" id="bp-spec-suggest"></div></div>
+                <div class="bp-spiral-wrap" id="bp-grid-spec"></div>
+              </div>
+              <div class="bp-zone">
+                <div class="bp-zone-h">Experience</div>
+                <div class="bp-pick"><input id="bp-exp-search" class="bp-pick-in" placeholder="Search settings (ICU, ED, rural…)" autocomplete="off"><div class="bp-suggest" id="bp-exp-suggest"></div></div>
+                <div class="bp-spiral-wrap" id="bp-grid-experience"></div>
+              </div>
+              <div class="bp-zone">
+                <div class="bp-zone-h">Populations</div>
+                <div class="bp-pick"><input id="bp-pop-search" class="bp-pick-in" placeholder="Search patient types & journeys (peds, ICU patient, prenatal…)" autocomplete="off"><div class="bp-suggest" id="bp-pop-suggest"></div></div>
+                <div class="bp-spiral-wrap" id="bp-grid-population"></div>
+              </div>
+            </div>
+          </div>
+          <div class="bp-panel bp-panel-next bp-sec" data-sec="plan">
+            <div class="bp-h"><span class="bp-secn">4</span>Next Steps<button class="bp-guide" id="bp-guide-plan" type="button" hidden></button></div>
+            <p class="bp-hint">The plan, derived from the gap: what your future tiles demand, in exams and credentials. Tap a step when you land it and it moves to your Current layer.</p>
+            <div id="bp-next" class="bp-next"></div>
+          </div>
           <div class="bp-dash-bar">
-            <span class="bp-dash-lbl">Sections · drag to rearrange</span>
+            <span class="bp-dash-lbl">Your notes · drag to rearrange</span>
             <div class="bp-addwrap"><button class="bp-addbtn" id="bp-add-section">+ Add section</button><div class="bp-addmenu" id="bp-add-menu"></div></div>
           </div>
           <div class="bp-dash" id="bp-dash"></div>
@@ -1453,17 +1525,31 @@ permalink: /tools/healthcare-career-tree/
   let nodeById = new Map();        // id -> node (current class)
   let edgesAll = [];               // [ [src,tgt], ... ] current class
   // career-line focus: while a role is selected (and Free look is off), everything not on
-  // its line drops back so the connections read. The line = ancestors + descendants along
-  // leadsTo — NOT cousins (a shared parent's other children stay dim).
-  let lineageFocus = true, lineageSet = null;
+  // its line drops back so the connections read. The line = the LADDER + its DOORS:
+  // rungs expand transitively only INSIDE the selected role's discipline; a cross-discipline
+  // edge shows the tile on the far side (the door) but the walk STOPS there. The old blind
+  // closure expanded through doors too — pick an informatics role and the whole nursing
+  // ladder lit up (CNA feeds RN feeds CIA...), 8 families stayed on the board, and the
+  // snap camera framed everything. Convergent roles made "focus" mean "show it all".
+  let lineageFocus = true, lineageSet = null, lineageRungs = null, shelfSet = null;   // shelfSet = pinned roles riding the "On your path" shelf while snapped
   function lineageOf(id){
-    const down = new Set([id]), up = new Set([id]);
-    let grew = true;
-    while (grew){ grew = false; for (const [s,t] of edgesAll){ if (down.has(s) && !down.has(t)){ down.add(t); grew = true; } } }
-    grew = true;
-    while (grew){ grew = false; for (const [s,t] of edgesAll){ if (up.has(t) && !up.has(s)){ up.add(s); grew = true; } } }
-    up.forEach(x => down.add(x));
-    return down;
+    const sel = nodeById.get(id); if (!sel){ const s = new Set([id]); return { set: s, rungs: s }; }
+    const fam = sel.family;
+    const inFam = i => { const n = nodeById.get(i); return !!n && n.family === fam; };
+    const line = new Set([id]);
+    let grew = true;   // down the ladder (within the discipline only)
+    while (grew){ grew = false; for (const [s,t] of edgesAll){ if (line.has(s) && !line.has(t) && inFam(s) && inFam(t)){ line.add(t); grew = true; } } }
+    grew = true;       // up the ladder (within the discipline only)
+    while (grew){ grew = false; for (const [s,t] of edgesAll){ if (line.has(t) && !line.has(s) && inFam(s) && inFam(t)){ line.add(s); grew = true; } } }
+    const rungs = new Set(line);
+    // doors: ONE hop off any rung, either direction — shown, never expanded
+    const doors = [];
+    for (const [s,t] of edgesAll){
+      if (line.has(s) && !line.has(t)) doors.push(t);
+      if (line.has(t) && !line.has(s)) doors.push(s);
+    }
+    doors.forEach(x => line.add(x));
+    return { set: line, rungs };
   }
   let posMap = new Map();          // id -> {x,y}
   let boardRendered = false, eduRendered = false;   // lazy-render the heavy Career Matrix board + Education Matrix only when first opened
@@ -1487,7 +1573,7 @@ permalink: /tools/healthcare-career-tree/
     notes:      { title:'Notes',            kind:'text', field:'notes', ph:'Anything you want to remember…' },
     other:      { title:'Other',            kind:'text', field:'other', ph:'Anything else: awards, languages, volunteer work, links…' }
   };
-  function blankBuild(){ return { budget: 30, view: 'both', name: '', goal: '', layout: { order: ['skill','spec','experience','population','notes','sw','next','other'], hidden: ['other'], sizes: {}, titles: {} }, career: [], education: [], skill: [], spec: [], experience: [], population: [], sw: '', notes: '', other: '', tagline: '' }; }   // one view: everything layered, quick-adds land as Future goals; 'future' = the Goals-only theorycraft toggle
+  function blankBuild(){ return { budget: 30, view: 'both', name: '', goal: '', layout: { order: ['notes','sw','other'], hidden: ['other'], sizes: {}, titles: {} }, career: [], education: [], skill: [], spec: [], experience: [], population: [], sw: '', notes: '', other: '', tagline: '' }; }   // one view: everything layered, quick-adds land as Future goals; 'future' = the Goals-only theorycraft toggle. Dash order holds TEXT cards only — zones + Next are fixed story sections
   // "Other" sections are dynamic: 'other', 'other-2', 'other-3'… each a renamable text card
   function isOtherKey(k){ return k === 'other' || /^other-\d+$/.test(k); }
   function panelOf(key){ return PANELS[key] || (isOtherKey(key) ? { title:'Other', kind:'text', field:key, ph:'Anything else: awards, languages, volunteer work, links…' } : null); }
@@ -1809,7 +1895,8 @@ permalink: /tools/healthcare-career-tree/
   // ── Render ─────────────────────────────────────────────
   function render(animate){
     boardRendered = true;   // any render means the board (+ curFamilyInfo) exists now
-    lineageSet = (lineageFocus && selectedId) ? lineageOf(selectedId) : null;   // career-line focus follows the selection
+    const lin = (lineageFocus && selectedId) ? lineageOf(selectedId) : null;   // career-line focus follows the selection
+    lineageSet = lin ? lin.set : null; lineageRungs = lin ? lin.rungs : null;
     // snap-together: in focus mode only the families the line touches stay on the board, so a
     // cross-specialty link reads side-by-side instead of spanning the whole matrix. The layout
     // already compacts around missing families (the Pathways filter relies on it).
@@ -1820,15 +1907,66 @@ permalink: /tools/healthcare-career-tree/
       // question you just asked); deselect and the filter is back exactly as set
       const visIds = new Set(visNodes.map(n => n.id));
       lineageSet.forEach(i => { if (!visIds.has(i)){ const n = nodeById.get(i); if (n) visNodes.push(n); } });
-      const fams = new Set(); lineageSet.forEach(i => { const n = nodeById.get(i); if (n) fams.add(n.family); });
-      visNodes = visNodes.filter(n => fams.has(n.family));
+      // snap-together: the HOME discipline stays whole (cousins dim in place); every other
+      // lane compacts to just its door tiles — one skinny lane per connected discipline,
+      // not six full ladders of strangers dragged in for one connection each
+      const selFam = (nodeById.get(selectedId) || {}).family;
+      visNodes = visNodes.filter(n => n.family === selFam || lineageSet.has(n.id));
     }
     const visSet = new Set(visNodes.map(n=>n.id));
     posMap = layout(visSet);
+    // ON YOUR PATH shelf (snapped only): pinned roles that fell off the snapped field gather
+    // band-true in their own column past the right edge — your pins never leave the room
+    // (the AOE shelf's law, spoken in career grammar). No roads in or out; it's a shelf.
+    shelfSet = null;
+    if (lineageSet){
+      // the pinned set (not a rebuild) — it already carries FORKED concurrent roles, which
+      // a plain build.career walk missed (QA: "a few things are not pulling over")
+      const shelf = [...pinned].map(id => nodeById.get(id)).filter(n => n && !visSet.has(n.id));
+      if (shelf.length){
+        shelfSet = new Set(shelf.map(n => n.id));
+        const xs0 = [...posMap.values()].map(p => p.x);
+        const x0 = (xs0.length ? Math.max(...xs0) : 0) + PATHWAY_GAP + 90;
+        const byT = {}; shelf.forEach(n => { (byT[n.tier] = byT[n.tier]||[]).push(n); });
+        let xL = x0, xR = x0;
+        Object.entries(byT).forEach(([t, arr]) => {
+          arr.sort((a,b) => a.id < b.id ? -1 : 1);
+          const off = (+t % 2 === 0 ? -1 : 1) * (COLW/4);   // the board's honeycomb stagger — without it stacked pins touch point-to-point
+          arr.forEach((n,i) => { const px = x0 + off + i*COLW; posMap.set(n.id, { x: px, y: (+t)*ROWH }); xL = Math.min(xL, px); xR = Math.max(xR, px); });
+        });
+        shelf.forEach(n => { visNodes.push(n); visSet.add(n.id); });
+        curFamilyInfo.push({ pathway:'__mine', family:'__mine', left: xL - HEXHW - 6, right: xR + HEXHW + 6, cx: (xL + xR)/2 });
+        curLaneInfo.push({ pathway:'__mine', side:'shelf', left: xL - HEXHW - 12, right: xR + HEXHW + 12, cx: (xL + xR)/2 });
+      }
+    }
     const allEdges = edgesAll.filter(([s,t]) => visSet.has(s) && visSet.has(t));   // visSet is the one truth — filteredEdges would re-drop revealed line members
     // lines WITHIN a profession (same family/discipline container) always show; lines that go SIDEWAYS into another
-    // container only show for the selected tile's own connections.
-    const edges = allEdges.filter(e => sameContainer(e) || (selectedId && (e[0]===selectedId || e[1]===selectedId)));
+    // container only show for the selected tile's own connections. While snapped, an edge
+    // between line members lights ONLY if it touches a rung — a door↔door road (RN→BSN when
+    // both ride along as doors) would redraw the foreign ladder the snap left off (QA: "extra lines").
+    let edges = allEdges.filter(e => {
+      if (shelfSet && (shelfSet.has(e[0]) || shelfSet.has(e[1]))) return false;   // shelf tiles carry no roads
+      if (lineageSet && lineageSet.has(e[0]) && lineageSet.has(e[1]))
+        return lineageRungs.has(e[0]) || lineageRungs.has(e[1]);
+      return sameContainer(e) || (selectedId && (e[0]===selectedId || e[1]===selectedId));
+    });
+    if (lineageSet){
+      // ONE road per door — several rungs can share a door (RRT→CIA and ACCS→CIA are both
+      // real edges) but parallel lines into the same tile read as duplicates (QA). The
+      // tier-closest rung keeps the road; a road from the selected tile itself always wins.
+      const tierOf = i => (nodeById.get(i)||{}).tier || 0;
+      const best = new Map();
+      edges.forEach(e => {
+        const r0 = lineageRungs.has(e[0]), r1 = lineageRungs.has(e[1]);
+        if (r0 === r1) return;   // rung↔rung roads all stay
+        const door = r0 ? e[1] : e[0], rung = r0 ? e[0] : e[1];
+        const score = rung === selectedId ? -1000 : Math.abs(tierOf(rung) - tierOf(door))*10 - tierOf(rung);
+        const cur = best.get(door);
+        if (!cur || score < cur.score) best.set(door, { e, score });
+      });
+      const keep = new Set([...best.values()].map(v => v.e));
+      edges = edges.filter(e => (lineageRungs.has(e[0]) === lineageRungs.has(e[1])) || keep.has(e));
+    }
     const dur = animate ? 520 : 0;   // matches every camera fit (fitToBounds default) so layout + camera tween as ONE motion
 
     // level bands + numbered chips (clearly defined level markers)
@@ -1921,10 +2059,14 @@ permalink: /tools/healthcare-career-tree/
     const hdA = hdE.merge(hd);
     hdA.select('.hct-phead-txt')
       .attr('x', d=>d.cx).attr('y', headY).attr('text-anchor','middle')
-      .attr('fill', d=>(pcfg[d.pathway]||{}).color||'#ccc')
+      .attr('fill', d=>(pcfg[d.pathway]||{}).color||(d.pathway==='__mine'?'#4ECDC4':'#ccc'))
       .style('cursor','pointer').style('pointer-events','all')
       .on('click', (e,d) => { e.stopPropagation(); fitGroup(d.left, d.right, true); })
-      .text(d=>(pcfg[d.pathway]||{}).label||d.pathway);
+      .text(d=>d.pathway==='__mine' ? 'ON YOUR PATH' : ((pcfg[d.pathway]||{}).label||d.pathway))
+      .each(function(d){   // a snapped door lane is one tile wide — a long pathway title overprints its neighbors (QA); the discipline label below carries the name instead
+        this.style.display = '';
+        if (this.getComputedTextLength() > (d.right - d.left) + 30) this.style.display = 'none';
+      });
     hdA.select('.hct-phead-bar')
       .attr('x', d=>d.left+6).attr('width', d=>Math.max(24,(d.right-d.left)-12))
       .attr('y', headY+9).attr('height',4).attr('rx',2)
@@ -1938,7 +2080,11 @@ permalink: /tools/healthcare-career-tree/
       .merge(fd)
       .attr('x', d=>d.cx).attr('y', famY).attr('text-anchor','middle')
       .attr('fill', d=>(fcfg[d.family]||{}).color||'#9fb')
-      .text(d=>(fcfg[d.family]||{}).label||d.family);
+      .text(d=>d.family==='__mine' ? 'Your pins' : ((fcfg[d.family]||{}).label||d.family))
+      .each(function(d){   // same guard, looser slack — this row is the lane's last name tag
+        this.style.display = '';
+        if (this.getComputedTextLength() > (d.right - d.left) + 52) this.style.display = 'none';
+      });
 
     // region divider + CLINICAL / BUSINESS headers
     const regData = (curClass==='roles' && curRegionInfo) ? [curRegionInfo] : [];
@@ -1997,7 +2143,7 @@ permalink: /tools/healthcare-career-tree/
 
     const all = enter.merge(nodeSel);
     all.transition().duration(dur)
-      .style('opacity', d => (lineageSet && !lineageSet.has(d)) ? 0.12 : 1)   // off the selected career line = collapsed back
+      .style('opacity', d => (lineageSet && !lineageSet.has(d) && !(shelfSet && shelfSet.has(d))) ? 0.12 : 1)   // off the selected career line = collapsed back; shelf pins stay lit
       .attr('transform', d => { const p = posMap.get(d); return `translate(${p.x},${p.y})`; });
 
     paintHexBodies(all.select('.hx-body'));   // colorMode-aware: family palette, or BLS pay/growth heatmap
@@ -2092,7 +2238,10 @@ permalink: /tools/healthcare-career-tree/
     const down = s.y <= t.y;
     const sy = down ? s.y + R*0.86 : s.y - R*0.86;   // exit on source
     const ty = down ? t.y - R*0.86 : t.y + R*0.86;   // entry on target
-    const ym = (s.y + t.y) / 2;                       // mid-gap band
+    // the horizontal runs in the band gap ADJACENT to the source row — the raw midpoint
+    // put multi-row edges' horizontals dead across an intermediate ROW of tiles (QA:
+    // clean lines of promotion, like the other two boards' gutter roads)
+    const ym = down ? s.y + ROWH/2 : s.y - ROWH/2;
     if (Math.abs(sx - tx) < 1.5) return `M${sx},${sy} L${tx},${ty}`;
     const sgnY1 = ym > sy ? 1 : -1, sgnY2 = ty > ym ? 1 : -1, sgnX = tx > sx ? 1 : -1;
     return `M${sx},${sy}`+
@@ -2367,10 +2516,12 @@ permalink: /tools/healthcare-career-tree/
     // forks now live in `concurrents` (array) — migrate the legacy single `.concurrent`
     o.career.forEach(s => { if (!s) return; if (s.concurrent && !Array.isArray(s.concurrents)) s.concurrents = [s.concurrent]; delete s.concurrent; });
     const view = (o.view==='future') ? 'future' : 'both';   // 'current'-only view retired → everything shows
-    // migrate layout: keep saved order (valid keys only), append any new panels, carry hidden
-    const validKey = k => PANEL_ORDER.includes(k) || /^other-\d+$/.test(k);
+    // migrate layout: keep saved order (valid keys only), append any new panels, carry hidden.
+    // 2026-07: zones + Next Steps became fixed story sections — only text cards stay movable,
+    // so legacy zone/next keys in a saved order/hidden fall away here
+    const validKey = k => (PANELS[k] && PANELS[k].kind === 'text') || /^other-\d+$/.test(k);
     let order = Array.isArray(o.layout && o.layout.order) ? o.layout.order.filter(validKey) : [];
-    PANEL_ORDER.forEach(k => { if (!order.includes(k)) order.push(k); });
+    PANEL_ORDER.filter(k => PANELS[k].kind === 'text').forEach(k => { if (!order.includes(k)) order.push(k); });
     const hidden = Array.isArray(o.layout && o.layout.hidden) ? o.layout.hidden.filter(validKey) : [];
     const sizes = (o.layout && o.layout.sizes && typeof o.layout.sizes === 'object') ? o.layout.sizes : {};
     const titles = (o.layout && o.layout.titles && typeof o.layout.titles === 'object') ? o.layout.titles : {};
@@ -2701,7 +2852,7 @@ permalink: /tools/healthcare-career-tree/
   // Education Growth picker → real credentials from the Education Matrix pool (deduped cert/degree faces)
   let credIndex = [];
   // generic academic degrees (not tied to one job) — colored by DEGREE level in the matrix; everything else by FAMILY
-  const GENERIC_FACES = new Set(['MHA','MBA','MPH','MSN','BSN',"Master's",'Master',"Bachelor's",'Bachelor','Associate','Certificate','Doctoral','HS / GED']);
+  const GENERIC_FACES = new Set(['MHA','MBA','MPH','MSN','BSN',"Master's",'Master',"Bachelor's",'Bachelor','Associate','AS','Certificate','Doctoral','Doctorate','HS / GED']);
   // color a credential hex EXACTLY like its Education-Matrix tile: stored col (captured on add) → family color → degree color
   function credHexColor(node){
     if (node && node.col) return node.col;
@@ -2910,49 +3061,179 @@ permalink: /tools/healthcare-career-tree/
     host.querySelectorAll('.bp-next-add').forEach(el => el.onclick = () => addReqCred(el.dataset.face, el.dataset.deg, el.dataset.col, 'future'));   // plan suggestions are toward future goals
   }
 
-  // ── the cycle, read from the build: which beat you're on and the ONE next move.
-  //    State, not tour (doctrine) — derived fresh every render, never a stored step.
-  //    The rail names the loop; the compass strip names the move.
-  const FLOW_BEATS = ['Profile','Explore','Claim','Plan','Act'];
-  function flowBeat(){
-    if (totalNodes() === 0)
-      return { i:0, msg:'Nobody on the sheet yet. Four quick questions start it.', act:'Start here' };
-    const hasFuture = TRACKS.some(t => (build[t.key]||[]).some(n => !n.anchor && nodeLayer(n) === 'future'));
-    if (!hasFuture)
-      return { i:1, msg:'You\'re on the map. Where are you aiming?', act:'Browse the roles' };
-    const plan = planFromFutureTiles();
-    if (plan.school.length)
-      return { i:2, msg:'Your goal has schooling attached.', act:'See what '+plan.school[0].face+' takes', face:plan.school[0].face };
-    if (plan.midRoles.length)
-      return { i:3, msg:'There are stepping-stone roles between here and the goal.', act:'See the bridge' };
-    return { i:4, msg:'The road is on your sheet. Work it, then come back and flip a tile.', act:'Your Next Steps' };
+  // ── CHARACTER CREATION — four stations followed ON the sheet (the D&D framing):
+  //    who you are → what you're becoming → the road → your specialization. The first
+  //    incomplete station carries the arrow; every station opens a focused picker
+  //    popup. No screen-jumping. State, not tour — derived fresh every render.
+  const STATIONS = [
+    { key:'who',  n:1, kicker:'Who you are',           empty:'Name your starting point' },
+    { key:'goal', n:2, kicker:'What you\'re becoming', empty:'Pick a destination' },
+    { key:'road', n:3, kicker:'The road',              empty:'Waits on a destination' },
+    { key:'spec', n:4, kicker:'Your specialization',   empty:'Claim your expertise' }
+  ];
+  function stationState(){
+    const curRole = currentRoleNode();
+    const curEdu  = build.education.filter(e => nodeLayer(e) === 'current');
+    const goals   = build.career.filter(n => !n.anchor && nodeLayer(n) === 'future');
+    const plan    = goals.length ? planFromFutureTiles() : { school: [], midRoles: [] };
+    const futEdu  = build.education.filter(e => nodeLayer(e) === 'future');
+    const areas   = ['skill','spec','experience','population'].reduce((s,k) => s + (build[k]||[]).length, 0);
+    return {
+      who:  { done: !!(curRole || curEdu.length),
+              line: curRole ? curRole.label.replace(/\n/g,' ') + (curEdu.length ? ' · ' + curEdu[curEdu.length-1].label : '')
+                            : (curEdu.length ? curEdu[curEdu.length-1].label : '') },
+      goal: { done: goals.length > 0,
+              line: goals.length ? tileDisplayName(goals[0],'career') + (goals.length > 1 ? ' +' + (goals.length-1) : '') : '' },
+      road: { dormant: !goals.length,
+              done: goals.length > 0 && plan.school.length === 0,
+              line: !goals.length ? '' : (plan.school.length
+                    ? plan.school.length + ' credential' + (plan.school.length !== 1 ? 's' : '') + ' to pin'
+                    : (futEdu.length ? futEdu.length + ' on the road' : 'Road clear')) },
+      spec: { done: areas > 0, line: areas ? areas + ' area' + (areas !== 1 ? 's' : '') + ' claimed' : '' }
+    };
   }
-  function flowScrollNext(){
-    setView('path');
-    requestAnimationFrame(() => { const el = document.querySelector('#bp-dash [data-key="next"]'); if (el) el.scrollIntoView({ block:'center', behavior:'smooth' }); });
+  function renderSectionGuides(){
+    // the stations decorate the numbered section headers: one guide chip per section,
+    // arrow on the first incomplete, click = that station's focused picker popup
+    if (!DATA) return;
+    const st = stationState();
+    const lineDone = st.who.done && st.goal.done;
+    const g = {
+      line: lineDone ? { cls:'done', txt:'✓ ' + (st.who.line && st.goal.line ? st.who.line + ' → ' + st.goal.line : (st.goal.line || st.who.line)), open:'goal' }
+           : !st.who.done ? { cls:'todo', txt:'Name your starting point', open:'who' }
+           : { cls:'todo', txt:'Pick a destination', open:'goal' },
+      road: st.road.dormant ? { cls:'dormant', txt:'Waits on a destination', open:'road' }
+           : st.road.done ? { cls:'done', txt:'✓ ' + st.road.line, open:'road' }
+           : { cls:'todo', txt: st.road.line, open:'road' },
+      spec: st.spec.done ? { cls:'done', txt:'✓ ' + st.spec.line, open:'spec' }
+           : { cls:'todo', txt:'Claim your expertise', open:'spec' },
+      plan: null   // ④ is the output; the plan itself sits right under the header
+    };
+    let arrowed = false;
+    Object.keys(g).forEach(sec => {
+      const el = document.getElementById('bp-guide-' + sec); if (!el) return;
+      const d = g[sec];
+      if (!d){ el.hidden = true; return; }
+      const isNext = !arrowed && d.cls === 'todo';
+      if (isNext) arrowed = true;
+      el.hidden = false;
+      el.className = 'bp-guide ' + d.cls + (isNext ? ' next' : '');
+      el.innerHTML = (isNext ? '<span class="st-arrow">→ start here</span>' : '') + esc(d.txt);
+      el.onclick = (e) => { e.stopPropagation(); openStation(d.open); };
+    });
   }
-  function flowGo(b){
-    if (b.i === 0){ hwDismissed = false; setView('path'); renderMyPath(); return; }
-    if (b.i === 1){ setView('career'); return; }
-    if (b.i === 2){ if (b.face){ jumpToEduCred(b.face); } else setView('edu'); return; }
-    flowScrollNext();
+  // one modal shell, one focused picker per station
+  function stationModal(open){
+    const m = document.getElementById('bp-station-modal'); if (m) m.classList.toggle('open', !!open);
   }
-  function renderFlowRail(){
-    const b = flowBeat();
-    const rail = document.getElementById('hct-flowrail');
-    if (rail){
-      rail.hidden = false;
-      rail.innerHTML = '<span class="fr-lbl">The cycle</span>' + FLOW_BEATS.map((t,i) =>
-        (i ? '<i>·</i>' : '') + '<button type="button" data-fb="'+i+'"'
-        + ' class="'+(i < b.i ? 'done' : i === b.i ? 'on' : '')+'"'
-        + (i === b.i ? ' aria-current="step"' : '') + '>'+t+'</button>').join('');
+  function stationRoleSearch(inpId, listId, onPick){
+    const inp = document.getElementById(inpId), list = document.getElementById(listId);
+    if (!inp || !list) return;
+    inp.addEventListener('input', () => {
+      const q = (inp.value||'').trim().toLowerCase();
+      const m = !q ? [] : DATA.classes[curClass].nodes
+        .filter(n => (n.label.replace(/\n/g,' ')+' '+(n.abbr||'')+' '+n.family+' '+n.pathway).toLowerCase().includes(q)).slice(0, 8);
+      list.hidden = !m.length;
+      list.innerHTML = m.map(n => '<button type="button" class="hw-sg" data-r="'+n.id+'">'+esc(n.label.replace(/\n/g,' '))
+        + '<span class="hw-sg-meta">'+esc(n.abbr||'')+' · '+esc(n.family)+'</span></button>').join('');
+      list.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { onPick(b.dataset.r); inp.value = ''; list.hidden = true; });
+    });
+  }
+  function openStation(key){
+    const h = document.getElementById('bp-station-h'), body = document.getElementById('bp-station-body');
+    if (!h || !body || !DATA) return;
+    const d = STATIONS.find(s => s.key === key) || STATIONS[0];
+    h.textContent = d.n + ' · ' + d.kicker;
+    const rerender = () => openStation(key);   // mutations re-render the picker in place
+
+    if (key === 'who'){
+      const cur = build.career.filter(n => !n.anchor && nodeLayer(n) === 'current');
+      let hh = '<div class="bp-modal-lbl">Your current role. Search the catalog; picking one lights your line on every board.</div>'
+        + '<input id="st-role-in" class="hw-search-in" type="text" placeholder="Search 158 real roles…" autocomplete="off">'
+        + '<div class="hw-suggest" id="st-role-list" hidden></div>';
+      if (cur.length) hh += '<div class="st-rows">' + cur.map(n =>
+        '<div class="st-row">'+esc(tileDisplayName(n,'career'))+'<span class="st-sub">current</span><button type="button" class="st-x" data-rm="'+esc(n.id)+'" title="Remove">×</button></div>').join('') + '</div>';
+      hh += '<div class="bp-modal-lbl" style="margin-top:12px">Highest education completed</div><div class="hw-chips" id="st-edu-chips">'
+        + ['HS','Cert','AS','BS','MS','Doc'].map(dg => { const lbl = (DATA.meta.degrees[dg]||{}).label || dg;
+            const held = build.education.some(e => e.kind === 'real' && e.degree === dg && nodeLayer(e) === 'current');
+            return '<button type="button" class="hw-chip" data-deg="'+dg+'" aria-pressed="'+held+'">'+esc(lbl)+'</button>'; }).join('')
+        + '</div>';
+      body.innerHTML = hh;
+      stationRoleSearch('st-role-in','st-role-list', id => { pinToLayer(id, 'current'); rerender(); });
+      body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+        const k = build.career.findIndex(n => n.id === b.dataset.rm);
+        if (k >= 0){ build.career.splice(k,1); syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); } rerender(); });
+      body.querySelectorAll('[data-deg]').forEach(b => b.onclick = () => {
+        const dg = b.dataset.deg, degLbl = (DATA.meta.degrees[dg]||{}).label || dg;
+        const have = build.education.find(e => e.kind === 'real' && e.degree === dg && e.label === degLbl);
+        if (have) build.education.splice(build.education.indexOf(have), 1);
+        else build.education.push({ id:newId(), kind:'real', label:degLbl, degree:dg, sub:degLbl, years:'', layer:'current' });
+        syncPinned(); saveBuild(); renderMyPath(); rerender(); });
     }
-    const strip = document.getElementById('bp-compass');
-    if (strip){
-      strip.hidden = false;
-      strip.innerHTML = '<b>Next move</b><span>'+esc(b.msg)+'</span><button type="button" id="bp-compass-go">'+esc(b.act)+' →</button>';
-      const go = document.getElementById('bp-compass-go'); if (go) go.onclick = () => flowGo(flowBeat());
+
+    if (key === 'goal'){
+      const goals = build.career.filter(n => !n.anchor && nodeLayer(n) === 'future');
+      let hh = '<div class="bp-modal-lbl">The role you\'re aiming at. Pin more than one if you\'re weighing options.</div>'
+        + '<input id="st-goal-in" class="hw-search-in" type="text" placeholder="Search 158 real roles…" autocomplete="off">'
+        + '<div class="hw-suggest" id="st-goal-list" hidden></div>';
+      if (goals.length) hh += '<div class="st-rows">' + goals.map(n =>
+        '<div class="st-row">'+esc(tileDisplayName(n,'career'))+'<span class="st-sub">goal</span><button type="button" class="st-x" data-rm="'+esc(n.id)+'" title="Remove">×</button></div>').join('') + '</div>';
+      body.innerHTML = hh;
+      stationRoleSearch('st-goal-in','st-goal-list', id => { pinToLayer(id, 'future'); rerender(); });
+      body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+        const k = build.career.findIndex(n => n.id === b.dataset.rm);
+        if (k >= 0){ build.career.splice(k,1); syncPinned(); saveBuild(); renderMyPath(); updateBoardPins(); } rerender(); });
     }
+
+    if (key === 'road'){
+      const goals = build.career.filter(n => !n.anchor && nodeLayer(n) === 'future');
+      if (!goals.length){
+        body.innerHTML = '<div class="bp-modal-lbl">The road needs a destination first.</div>'
+          + '<button type="button" class="bp-modal-btn primary" id="st-to-goal">Pick a destination</button>';
+        const g = document.getElementById('st-to-goal'); if (g) g.onclick = () => openStation('goal');
+      } else {
+        const plan = planFromFutureTiles();
+        const futEdu = build.education.filter(e => nodeLayer(e) === 'future');
+        let hh = '<div class="bp-modal-lbl">What the gap between here and your goal demands, priced in public numbers.</div>';
+        if (plan.school.length) hh += '<div class="st-rows">' + plan.school.map(s =>
+          '<div class="st-row">'+esc(s.face)+'<span class="st-sub">'+esc((DATA.meta.degrees[s.degree]||{}).label || s.degree)+'</span>'
+          + '<button type="button" class="st-add" data-face="'+esc(s.face)+'" data-deg="'+esc(s.degree)+'" data-col="'+esc(s.col||'')+'">+ Pin to the road</button></div>').join('') + '</div>';
+        if (futEdu.length) hh += '<div class="bp-modal-lbl" style="margin-top:10px">Already on the road</div><div class="st-rows">' + futEdu.map(e =>
+          '<div class="st-row">'+esc(e.label)+'<span class="st-sub">'+esc((DATA.meta.degrees[e.degree]||{}).label || e.degree || '')+'</span><span class="st-chk" style="margin-left:auto;color:var(--teal)">✓</span></div>').join('') + '</div>';
+        if (!plan.school.length && !futEdu.length) hh += '<div class="bp-modal-lbl">Nothing missing. Your Next Steps card carries the plan.</div>';
+        body.innerHTML = hh;
+        body.querySelectorAll('.st-add').forEach(b => b.onclick = () => { addReqCred(b.dataset.face, b.dataset.deg, b.dataset.col, 'future'); rerender(); });
+      }
+    }
+
+    if (key === 'spec'){
+      const start = currentRoleNode();
+      const ids = (start && DATA.growth && DATA.growth.familySuggest && DATA.growth.familySuggest[start.family]) || [];
+      const have = new Set(); TRACKS.forEach(t => (build[t.key]||[]).forEach(n => { if (n.atlasId) have.add(n.atlasId); }));
+      const sugg = ids.map(id => growthById.get(id)).filter(n => n && !have.has(n.id)).slice(0, 8);
+      let hh = '<div class="bp-modal-lbl">The expertise around your line. Tap what you already hold; search for the rest.</div>';
+      if (sugg.length) hh += '<div class="st-rows">' + sugg.map(n => { const z = DATA.growth.zones[n.zone]||{};
+        return '<div class="st-row">'+esc(n.label)+'<span class="st-sub">'+esc(z.label || n.zone)+'</span>'
+          + '<button type="button" class="st-add" data-sg="'+esc(n.id)+'">+ I have this</button></div>'; }).join('') + '</div>';
+      hh += '<input id="st-spec-in" class="hw-search-in" type="text" placeholder="Search skills, specialties, settings, populations…" autocomplete="off" style="margin-top:8px">'
+        + '<div class="st-rows" id="st-spec-res"></div>'
+        + '<button type="button" class="hct-jump" data-goview="atlas" id="st-spec-map">Explore the whole map →</button>';
+      body.innerHTML = hh;
+      body.querySelectorAll('[data-sg]').forEach(b => b.onclick = () => { const gn = growthById.get(b.dataset.sg); if (gn) pinGrowthToLayer(gn, 'current'); rerender(); });
+      const inp = document.getElementById('st-spec-in'), res = document.getElementById('st-spec-res');
+      if (inp) inp.addEventListener('input', () => {
+        const q = (inp.value||'').trim().toLowerCase();
+        const m = !q ? [] : DATA.growth.nodes.filter(n => ((n.label||'')+' '+(n.group||'')).toLowerCase().includes(q) && !have.has(n.id)).slice(0, 6);
+        res.innerHTML = m.map(n => { const z = DATA.growth.zones[n.zone]||{};
+          return '<div class="st-row">'+esc(n.label)+'<span class="st-sub">'+esc(z.label || n.zone)+'</span>'
+            + '<button type="button" class="st-add" data-sgq="'+esc(n.id)+'">+ Have it</button>'
+            + '<button type="button" class="st-add" data-sgf="'+esc(n.id)+'" style="margin-left:6px">☆ Aiming</button></div>'; }).join('');
+        res.querySelectorAll('[data-sgq]').forEach(b => b.onclick = () => { const gn = growthById.get(b.dataset.sgq); if (gn) pinGrowthToLayer(gn, 'current'); rerender(); });
+        res.querySelectorAll('[data-sgf]').forEach(b => b.onclick = () => { const gn = growthById.get(b.dataset.sgf); if (gn) pinGrowthToLayer(gn, 'future'); rerender(); });
+      });
+      const mapBtn = document.getElementById('st-spec-map'); if (mapBtn) mapBtn.addEventListener('click', () => stationModal(false));   // deep-dive: close the popup, the delegate changes the view
+    }
+    stationModal(true);
   }
 
   // ── Export My Path as a JPEG (lazy-loads html2canvas only on first use) ──
@@ -3122,6 +3403,8 @@ permalink: /tools/healthcare-career-tree/
       [legendHex(hexA(gold,0.12), gold, true), '<b>Goal</b>. Something you want next. Gold, dashed, hollow.'],
       [legendHex(hexA(teal,0.07), hexA(teal,0.4)), '<b>Context</b>. Faint tiles are current items, shown while you view Future.'],
       [legendHex(hexA(gold,0.2), gold, false, '★', '#0d1117'), '<b>Milestones</b>. Gold markers: ★ Start of Career, ⚑ Retirement, ◆ Other.'],
+      ['grp','The sheet'],
+      ['<svg width="56" height="20"><circle cx="28" cy="10" r="8" style="fill:none;stroke:rgba(78,205,196,0.6);stroke-width:1.5"/><text x="28" y="13.5" text-anchor="middle" font-size="9" class="lg-teal" style="font-family:var(--display);font-weight:800">1</text></svg>', '<b>Numbered sections</b>. The sheet reads top to bottom: your line, the road, your expertise, the plan. The chip on each header opens a focused picker; the arrow marks the next move.'],
       ['grp','My Path · lines'],
       [legendLine('solid'), 'Your path from one role to the next.'],
       [legendLine('step'), 'A change in job type. The trunk steps up or down.'],
@@ -3137,7 +3420,7 @@ permalink: /tools/healthcare-career-tree/
       [ringHex(true), '<b>Aiming for it</b>. A dashed ring is a goal you set.'],
       ['grp','Areas of Expertise map'],
       [pipsHex, '<b>Depth</b>. Three columns across the top: Entry, Experienced, Expert.'],
-      [terrSw, '<b>Groups</b>. Related expertise stacks in rows down the left, zone by zone. Scroll down to read; click a tile and its zone snaps forward; click empty space and everything comes back.'],
+      [terrSw, '<b>Groups</b>. Related expertise stacks in rows down the left, zone by zone. Scroll down to read; click a tile and its group row snaps forward; click empty space and everything comes back.'],
       ['<svg width="56" height="20"><rect x="6" y="4" width="44" height="13" rx="7" style="fill:rgba(78,205,196,0.16);stroke:rgba(78,205,196,0.45)"/><text x="28" y="13.5" text-anchor="middle" font-size="8" letter-spacing="1" class="lg-teal" style="font-family:var(--mono);font-weight:700">LENS</text></svg>', '<b>Lens</b>. Tap what pulls you and the rest of the map steps back. Tiles on your path never dim.'],
       ['grp','The numbers'],
       [pctSw, '<b>Pass rates, fees, pay</b>. Straight from each credentialing board and the BLS, with the source linked at the bottom of every block.'],
@@ -3155,7 +3438,8 @@ permalink: /tools/healthcare-career-tree/
   function renderDash(){
     const host = document.getElementById('bp-dash'); if (!host) return;
     renderAddMenu();
-    const order = build.layout.order.filter(k => panelOf(k) && !build.layout.hidden.includes(k));
+    // the dash is the appendix now: text cards only. Zones + Next Steps are fixed story sections above.
+    const order = build.layout.order.filter(k => { const p = panelOf(k); return p && p.kind === 'text' && !build.layout.hidden.includes(k); });
     const sig = order.join(',');
     if (sig === dashSig && host.children.length) return;
     dashSig = sig;
@@ -3163,18 +3447,14 @@ permalink: /tools/healthcare-career-tree/
     order.forEach((key, i) => {
       const p = panelOf(key);
       const card = document.createElement('div');
-      card.className = 'bp-panel bp-card' + (key==='next' ? ' bp-panel-next' : '') + (p.kind==='text' ? ' bp-resize' : '');
+      card.className = 'bp-panel bp-card bp-resize';
       card.setAttribute('data-key', key);
       card.style.animationDelay = (i*0.045).toFixed(2)+'s';
-      let body = '';
-      if (p.kind === 'spiral') body = '<div class="bp-pick"><input id="'+p.search[0]+'" class="bp-pick-in" placeholder="'+esc(p.ph)+'" autocomplete="off"><div class="bp-suggest" id="'+p.search[1]+'"></div></div><div class="'+(p.chain ? 'bp-grid' : 'bp-spiral-wrap')+'" id="'+p.grid+'"></div>';   // chain panels (Education) run as a horizontal timeline like the Career Path
-      else if (p.kind === 'next') body = '<div id="bp-next" class="bp-next"></div>';
-      else if (p.kind === 'text') body = '<textarea class="bp-text" id="bp-'+p.field+'" placeholder="'+esc(p.ph)+'"></textarea>';
+      const body = '<textarea class="bp-text" id="bp-'+p.field+'" placeholder="'+esc(p.ph)+'"></textarea>';
       const titleEl = isOtherKey(key)   // the Other card's title is renamable (and persists)
         ? '<input class="bp-card-t bp-card-t-edit" value="'+esc(panelTitle(key))+'" maxlength="28" placeholder="Other" title="Rename this section">'
         : '<span class="bp-card-t">'+esc(panelTitle(key))+'</span>';
-      const mapLink = (p.kind === 'spiral' && p.picker && p.picker !== 'cred') ? '<button class="bp-h-link" type="button" data-goview="atlas">See the map →</button>' : '';
-      card.innerHTML = '<div class="bp-card-h"><span class="bp-grip" title="Drag to move">⠿</span>'+titleEl+mapLink+'<button class="bp-card-x" title="Remove section">×</button></div>'+body;
+      card.innerHTML = '<div class="bp-card-h"><span class="bp-grip" title="Drag to move">⠿</span>'+titleEl+'<button class="bp-card-x" title="Remove section">×</button></div>'+body;
       host.appendChild(card);
       const hdr = card.querySelector('.bp-card-h');
       hdr.setAttribute('draggable','true');
@@ -3189,8 +3469,7 @@ permalink: /tools/healthcare-career-tree/
         const ord = build.layout.order, from = ord.indexOf(dashDrag); if (from>=0) ord.splice(from,1);
         let to = ord.indexOf(key); if (to<0) to = ord.length; ord.splice(to,0,dashDrag); saveBuild(); renderMyPath(); });
       card.querySelector('.bp-card-x').onclick = () => { if (!build.layout.hidden.includes(key)) build.layout.hidden.push(key); saveBuild(); renderMyPath(); };
-      if (p.kind === 'spiral'){ if (p.picker==='cred') wireCredPicker(p.search[0], p.search[1]); else wireGrowthPicker(p.search[0], p.search[1], p.picker); }
-      if (p.kind === 'text'){
+      {
         const ta = card.querySelector('textarea'); ta.value = build[p.field]||''; ta.oninput = (ev)=>{ build[p.field] = ev.target.value; saveBuild(); };
         const sz = (build.layout.sizes||{})[key];                              // restore a saved card size
         if (sz && sz.w) card.style.width = sz.w + 'px';
@@ -3208,7 +3487,7 @@ permalink: /tools/healthcare-career-tree/
   }
   function renderAddMenu(){
     const menu = document.getElementById('bp-add-menu'), btn = document.getElementById('bp-add-section'); if (!menu || !btn) return;
-    const hiddenFixed = build.layout.hidden.filter(k => PANELS[k] && k !== 'other');   // 'other' is managed by the always-on "+ Other section"
+    const hiddenFixed = build.layout.hidden.filter(k => PANELS[k] && PANELS[k].kind === 'text' && k !== 'other');   // 'other' is managed by the always-on "+ Other section"; zones/next are structural, never listed
     btn.style.display = '';   // you can always add another Other section
     menu.innerHTML = hiddenFixed.map(k => '<div class="bp-addmenu-item" data-key="'+k+'">+ '+esc(panelTitle(k))+'</div>').join('')
       + '<div class="bp-addmenu-item" data-newother="1">+ Other section</div>';
@@ -3230,16 +3509,23 @@ permalink: /tools/healthcare-career-tree/
     saveBuild(); renderMyPath();
   }
 
+  let zonePickersWired = false;
   function renderMyPath(){
     enforcePanelOwner();   // a role/atlas panel can never linger on My Path — drop it if its owning view isn't this one
     const badge = document.getElementById('hct-mp-count'); if (badge) badge.textContent = totalNodes();
-    // welcome is the empty state — pin one thing and it's gone. It pops as a modal;
-    // a session dismissal swaps it for the slim re-entry strip in the same slot.
+    // QA 2026-07-12: the survey never auto-pops — it blocked returning users from
+    // Save/Load. The sheet lands flat; the LIT "Start here" strip is the invitation.
     const hwEmpty = totalNodes() === 0;
-    const hwm = document.getElementById('hct-welcome-modal'); if (hwm) hwm.classList.toggle('open', hwEmpty && !hwDismissed);
-    const hws = document.getElementById('hct-welcome-strip'); if (hws) hws.hidden = !(hwEmpty && hwDismissed);
-    if (DATA) renderFlowRail();   // the cycle rail + compass strip track every build change
+    const hwm = document.getElementById('hct-welcome-modal'); if (hwm && !hwEmpty) hwm.classList.remove('open');
+    const hws = document.getElementById('hct-welcome-strip'); if (hws) hws.hidden = !hwEmpty;
     if (!document.getElementById('bp-grid-career')) return;   // planner not in the DOM yet
+    if (DATA) renderSectionGuides();   // the header guide chips track every build change
+    if (!zonePickersWired && DATA){    // the four zone pickers live in static markup now — wire once
+      zonePickersWired = true;
+      [['bp-skill-search','bp-skill-suggest','skill'],['bp-spec-search','bp-spec-suggest','spec'],
+       ['bp-exp-search','bp-exp-suggest','experience'],['bp-pop-search','bp-pop-suggest','population']]
+        .forEach(w => wireGrowthPicker(w[0], w[1], w[2]));
+    }
     syncShift();
     renderSheetHeader();
     renderSuggest();
@@ -4025,7 +4311,7 @@ permalink: /tools/healthcare-career-tree/
   const ER = 46, EROWH = 132, ECOLW = 112, ELANE_GAP = 26, EPW_GAP = 56, EAX_W = 158;
   let edZoom = null, edUserZoomed = false, edBuilt = false;
   let edPos = new Map(), edLanes = [], edEdges = [], edMinX = 0;
-  let edSnapPw = null;   // snap-together, career-style: the selected credential's PATHWAY owns the board
+  let edSnapLane = null;   // snap-together, career-style: the selected credential's DISCIPLINE (lane) owns the board — pathway-grain was too broad (QA: "looking at Respiratory, I do not need all the therapeutics")
   let edFreeLook = false;   // career's Free look, education-side: no snap, no dim — the whole matrix stays lit
   // the Metric, education-side: discipline colors, or the exam's national first-time pass
   // rate as heat (credStats data — reality on the CREDENTIAL, never odds on a person)
@@ -4040,7 +4326,8 @@ permalink: /tools/healthcare-career-tree/
     return 'rgb(' + lo.map((v,i) => Math.round(v + (hi[i]-v)*t)).join(',') + ')';
   }
   function edSubOf(c){
-    return c.kind === 'degree' ? (c.roles.length + ' job' + (c.roles.length!==1?'s':''))
+    if (c.kind === 'spec') return wrapLabel(c.label || 'board cert', 15)[0] || '';
+    return c.kind === 'degree' ? (c.roles.length ? c.roles.length + ' job' + (c.roles.length!==1?'s':'') : 'stepping stone')
                                : (wrapLabel(c.role.label.replace(/\n/g,' '), 15)[0] || '');
   }
   function applyEduColorMode(){
@@ -4098,7 +4385,7 @@ permalink: /tools/healthcare-career-tree/
   // which lane a card lives in: certs ride their role's family; discipline degrees ride
   // FAMILY_DEG; a named cross-cutting degree goes where most of its jobs live; generic → shared
   function eduLaneOf(c){
-    if (c.kind === 'cert') return c.family || '__any';
+    if (c.kind === 'cert' || c.kind === 'spec') return c.family || '__any';
     for (const fam in FAMILY_DEG){ const lv = FAMILY_DEG[fam]; for (const k in lv){ if (lv[k][0] === c.face) return fam; } }
     if (c.roles && c.roles.length){   // even a "generic" degree lives somewhere if ~all its jobs share one family (MD/DO → physician)
       const cnt = {}; c.roles.forEach(r => cnt[r.family] = (cnt[r.family]||0)+1);
@@ -4158,6 +4445,29 @@ permalink: /tools/healthcare-career-tree/
           }
         });
       });
+      // the generic ladder tops out at a doctorate too (QA: "the Any-field lane needs the
+      // Doc-level stuff") — PhD itself rides the faculty lane (its FAMILY_DEG home), so the
+      // Any-field rung is the level's generic face, carrying the cross-field doctoral jobs
+      const docRoles = ['research-scientist','psychologist','dean'].map(id => nodes.find(n => n.id === id)).filter(Boolean);
+      if (docRoles.length) eduCards.push({ kind:'degree', face:'Doctorate', degree:'Doc', label:'Doctoral Degree (PhD / EdD / DrPH)', roles:docRoles, generic:true, lvl:5,
+        search:'doctorate doctoral degree phd edd drph dha research professor any field generic' });
+      // the generic ladder's lower rungs (QA: "Any-field needs AS and the general certs"):
+      // an unnamed associate's, and the life-support cards nearly every clinical door asks
+      // for on day one. Not tied to single jobs — they're the floor, not a destination.
+      eduCards.push({ kind:'degree', face:'AS', degree:'AS', label:"Associate's Degree", roles:[], generic:true, lvl:2,
+        search:'associate associates degree any field generic two year college' });
+      eduCards.push({ kind:'degree', face:'BLS', degree:'Cert', label:'Basic Life Support (CPR & AED)', roles:[], lvl:1,
+        search:'bls basic life support cpr aed american heart association aha first responder entry' });
+      eduCards.push({ kind:'degree', face:'ACLS', degree:'Cert', label:'Advanced Cardiovascular Life Support', roles:[], lvl:1,
+        search:'acls advanced cardiovascular cardiac life support aha code megacode' });
+      eduCards.push({ kind:'degree', face:'Lifeguard', degree:'Cert', label:'Lifeguard Certification (Red Cross)', roles:[], lvl:1,
+        search:'lifeguard red cross water safety cpr first aid summer job on ramp' });
+      // specialty certifications — post-licensure boards ride a band ABOVE the degrees
+      // (real jobs in some cases, pure certifications in others: CCRN, ACCS, CEN and kin)
+      (DATA.meta.specialtyCerts || []).forEach(sc => {
+        const search = (sc.face+' '+(sc.label||'')+' specialty board certification '+sc.family).toLowerCase();
+        eduCards.push({ kind:'spec', face:sc.face, degree:'Spec', label:sc.label, family:sc.family, prereq:sc.prereq||[], lvl:7, search });
+      });
       // lane + PATHWAY + color per card. Every tile wears its DISCIPLINE's color —
       // the level reads from the bands and the axis, not the paint (David's call).
       const famPathway = {}; famOrder.forEach(f => { const n0 = nodes.find(n => n.family === f); famPathway[f] = n0 ? n0.pathway : ''; });
@@ -4186,7 +4496,18 @@ permalink: /tools/healthcare-career-tree/
     if (byLane.has('__any')) laneKeys.push('__any');
     // the SAME pathway/family filters the career board honors (shared state, shared URL params)
     laneKeys = laneKeys.filter(k => k === '__any' || (!hiddenPathways.has(eduCards[byLane.get(k)[0]].pw) && !hiddenFamilies.has(k)));
-    if (edSnapPw) laneKeys = laneKeys.filter(k => eduCards[byLane.get(k)[0]].pw === edSnapPw);
+    if (edSnapLane){
+      laneKeys = laneKeys.filter(k => k === '__any' || k === edSnapLane);   // QA: the generic options NEVER leave the board
+      // your pinned credentials never leave either: earned/aiming cards from off-board
+      // lanes gather band-true in an "On your path" lane (the AOE shelf's law)
+      const mineIdx = [];
+      eduCards.forEach((c,i) => {
+        if (c.lane === edSnapLane || c.lane === '__any') return;
+        if (build.education.some(x => x.kind === 'real' && x.label === c.face && x.degree === c.degree)
+          || (c.kind === 'cert' && c.role && roleLayerInBuild(c.role.id))) mineIdx.push(i);   // a pinned ROLE carries its credential card over too
+      });
+      if (mineIdx.length){ byLane.set('__mine', mineIdx); laneKeys.push('__mine'); }
+    }
 
     edPos = new Map(); edLanes = [];
     let x = 0, prevPw = null;
@@ -4194,7 +4515,7 @@ permalink: /tools/healthcare-career-tree/
       const idxs = byLane.get(k);
       const byLvl = {}; idxs.forEach(i => { const t = eduCards[i].lvl; (byLvl[t] = byLvl[t]||[]).push(i); });
       const width = Math.max(...Object.values(byLvl).map(a => a.length)) * ECOLW;
-      const pw = eduCards[idxs[0]].pw;
+      const pw = k === '__mine' ? '__mine' : eduCards[idxs[0]].pw;
       if (prevPw !== null) x += (pw !== prevPw ? EPW_GAP : ELANE_GAP);
       prevPw = pw;
       const cx = x + width/2;
@@ -4202,8 +4523,8 @@ permalink: /tools/healthcare-career-tree/
         arr.forEach((i,j) => edPos.set(i, { x: cx + (j-(arr.length-1)/2)*ECOLW, y: (+t)*EROWH }));
       });
       edLanes.push({ key:k, pathway:pw, left:x, right:x+width, cx,
-        label: k === '__any' ? 'Any field' : ((fcfg[k]||{}).label || k),
-        color: k === '__any' ? '#9AB0BC' : ((fcfg[k]||{}).color || '#4ECDC4'),
+        label: k === '__mine' ? 'On your path' : k === '__any' ? 'Any field' : ((fcfg[k]||{}).label || k),
+        color: k === '__mine' ? '#4ECDC4' : k === '__any' ? '#9AB0BC' : ((fcfg[k]||{}).color || '#4ECDC4'),
         lvls: Object.keys(byLvl).map(Number).sort((a,b)=>a-b) });
       x += width;
     });
@@ -4227,9 +4548,13 @@ permalink: /tools/healthcare-career-tree/
     };
     edEdges = [];
     edLanes.forEach(L => {
+      if (L.key === '__mine') return;   // the shelf carries no roads — it's a shelf
       const perLvl = {}; byLane.get(L.key).forEach(i => { (perLvl[eduCards[i].lvl] = perLvl[eduCards[i].lvl]||[]).push(i); });
-      for (let a = 0; a < L.lvls.length-1; a++)
-        perLvl[L.lvls[a]].forEach(s => perLvl[L.lvls[a+1]].forEach(d => { if (edgeReal(s, d, L.key)) edEdges.push([s, d, L.key]); }));
+      const lvls = L.lvls.filter(t => t !== 7);   // the spec band draws NO roads — boards ride a license,
+      // they aren't the next rung of a degree ladder (QA: degree→cert lines read wrong). The
+      // "Rides on" prerequisites live in the detail panel instead.
+      for (let a = 0; a < lvls.length-1; a++)
+        perLvl[lvls[a]].forEach(s => perLvl[lvls[a+1]].forEach(d => { if (edgeReal(s, d, L.key)) edEdges.push([s, d, L.key]); }));
     });
   }
 
@@ -4268,7 +4593,7 @@ permalink: /tools/healthcare-career-tree/
     edLanes.forEach(L => {
       if (pwSeen[L.pathway]) return; pwSeen[L.pathway] = true;
       const m = edLanes.filter(v => v.pathway === L.pathway);
-      pwGroups.push({ pw:L.pathway, label:(L.pathway === '__any' ? 'Any field' : ((pws[L.pathway]||{}).label || L.pathway)).toUpperCase(),
+      pwGroups.push({ pw:L.pathway, label:(L.pathway === '__mine' ? 'On your path' : L.pathway === '__any' ? 'Any field' : ((pws[L.pathway]||{}).label || L.pathway)).toUpperCase(),
         left:Math.min(...m.map(v=>v.left)), right:Math.max(...m.map(v=>v.right)) });
     });
     const csel = gC.selectAll('rect.hct-rcontainer').data(pwGroups, d=>d.pw);
@@ -4277,19 +4602,52 @@ permalink: /tools/healthcare-career-tree/
         .attr('x',d=>d.left-36).attr('y',headY-40).attr('width',d=>d.right-d.left+72).attr('height',botY-headY+66)
       .merge(csel).transition().duration(dur)
         .attr('x',d=>d.left-36).attr('y',headY-40).attr('width',d=>d.right-d.left+72).attr('height',botY-headY+66);
+    // headers double as HIDE controls (David: "sub groups that can be hidden away") —
+    // click a pathway or discipline name and it leaves the board; the shared filter
+    // state means the applied chip + Pathways popover + Career Matrix all agree.
     const psel = gC.selectAll('text.ed-pw-lbl').data(pwGroups, d=>d.pw);
     psel.exit().remove();
-    psel.enter().append('text').attr('class','ed-pw-lbl').attr('text-anchor','middle')
+    const pen = psel.enter().append('text').attr('class','ed-pw-lbl').attr('text-anchor','middle')
         .attr('x',d=>(d.left+d.right)/2).attr('y',headY-52).text(d=>d.label)
-      .merge(psel).transition().duration(dur)
+        .style('pointer-events','auto').style('cursor','pointer');
+    pen.append('title').text('Click to hide this pathway');
+    pen.merge(psel).transition().duration(dur)
         .attr('x',d=>(d.left+d.right)/2).attr('y',headY-52).text(d=>d.label);
+    gC.selectAll('text.ed-pw-lbl').on('click', (e,d) => {
+      e.stopPropagation();
+      if (d.pw === '__any' || d.pw === '__mine') return;
+      hiddenPathways.add(d.pw); pathwayFamilies(d.pw).forEach(f => hiddenFamilies.add(f));
+      refreshPathwayControls(); applyFilterChange();
+      announce(d.label + ' hidden. The Showing chip or the Pathways filter brings it back.');
+    });
+    // discipline sub-containers — the career board's nested-box grammar: each lane gets its
+    // own family-colored box inside the pathway container (same hct-dcontainer class, so
+    // theming rides along). Box top sits just below the lane name at headY-10.
+    const dbsel = gC.selectAll('rect.hct-dcontainer').data(edLanes, d=>d.key);
+    dbsel.exit().remove();
+    dbsel.enter().append('rect').attr('class','hct-dcontainer').attr('rx',9)
+        .attr('x',d=>d.left-10).attr('y',headY-4).attr('width',d=>d.right-d.left+20).attr('height',botY-headY+16)
+        .attr('stroke',d=>d.color).attr('fill',d=>d.color)
+      .merge(dbsel).transition().duration(dur)
+        .attr('x',d=>d.left-10).attr('y',headY-4).attr('width',d=>d.right-d.left+20).attr('height',botY-headY+16)
+        .attr('stroke',d=>d.color).attr('fill',d=>d.color);
+
     // lane (discipline) names
     const lsel = gC.selectAll('text.ed-lane-lbl').data(edLanes, d=>d.key);
     lsel.exit().remove();
-    lsel.enter().append('text').attr('class','ed-lane-lbl').attr('text-anchor','middle')
+    const len2 = lsel.enter().append('text').attr('class','ed-lane-lbl').attr('text-anchor','middle')
         .attr('x',d=>d.cx).attr('y',headY-10).attr('fill',d=>d.color).text(d=>d.label)
-      .merge(lsel).transition().duration(dur)
+        .style('pointer-events','auto').style('cursor','pointer');
+    len2.append('title').text('Click to hide this discipline');
+    len2.merge(lsel).transition().duration(dur)
         .attr('x',d=>d.cx).attr('y',headY-10);
+    gC.selectAll('text.ed-lane-lbl').on('click', (e,d) => {
+      e.stopPropagation();
+      if (d.key === '__any' || d.key === '__mine') return;
+      hiddenFamilies.add(d.key);
+      refreshPathwayControls(); applyFilterChange();
+      announce(d.label + ' hidden. The Showing chip or the Pathways filter brings it back.');
+    });
 
     // ladder edges
     const esel = gE.selectAll('path.ed-edge').data(edEdges, d=>d[0]+'>'+d[1]);
@@ -4310,14 +4668,16 @@ permalink: /tools/healthcare-career-tree/
     nen.append('path').attr('class','ed-pinring').attr('d', hexPath(0,0,ER+5));
     nen.append('path').attr('class','ed-body').attr('d', hexPath(0,0,ER-2))
       .attr('fill', i => hexA(eduCards[i].color, 0.22)).attr('stroke', i => eduCards[i].color)
-      .style('stroke-dasharray', i => eduCards[i].generic ? '5 4' : null);
+      .style('stroke-dasharray', i => eduCards[i].generic ? '5 4' : (eduCards[i].kind === 'spec' ? '2 3' : null));   // fine dots = a board cert, not a degree
     nen.each(function(i){
       const c = eduCards[i], fit = eduFaceFit(c.face), g = d3.select(this);
       const baseY = -8 - (fit.lines.length-1)*fit.lh/2;
       const tx = g.append('text').attr('class','edu-hex-tx').attr('text-anchor','middle').style('font-size', fit.fs+'px');
       fit.lines.forEach((ln,j) => tx.append('tspan').attr('x',0).attr('y', (baseY + j*fit.lh + fit.fs*0.34).toFixed(1)).text(ln));
       g.append('text').attr('class','ed-sub').attr('x',0).attr('y', ER*0.5).attr('text-anchor','middle').text(edSubOf(c));
-      g.append('title').text(c.kind === 'degree' ? (c.label || c.face) : (c.face + ' · ' + c.role.label.replace(/\n/g,' ')));
+      g.append('title').text(c.kind === 'degree' ? (c.label || c.face)
+        : c.kind === 'spec' ? (c.face + ' · ' + (c.label || 'board certification'))
+        : (c.face + ' · ' + c.role.label.replace(/\n/g,' ')));   // spec cards have no .role — reading it threw and blanked every tile after the first
     });
     const nall = nen.merge(nsel);
     nall.classed('ed-off', i => !edPos.has(i));
@@ -4334,12 +4694,12 @@ permalink: /tools/healthcare-career-tree/
     aen.append('text').attr('class','ed-ax-sub').attr('x',EAX_W-14).attr('y',16).attr('text-anchor','end');
     const aall = aen.merge(asel);
     aall.transition().duration(dur).attr('transform', d=>'translate(0,'+(d*EROWH)+')');
-    aall.select('text.hct-band-txt').text(d => (DATA.meta.degrees[DEG_ORDER[d]]||{}).label || DEG_ORDER[d]);
-    aall.select('text.ed-ax-sub').text(d => (ladderByDeg[DEG_ORDER[d]]||{}).time || '');
+    aall.select('text.hct-band-txt').text(d => d === 7 ? 'Specialty certs' : ((DATA.meta.degrees[DEG_ORDER[d]]||{}).label || DEG_ORDER[d]));
+    aall.select('text.ed-ax-sub').text(d => d === 7 ? 'post-licensure boards' : ((ladderByDeg[DEG_ORDER[d]]||{}).time || ''));
 
     // camera — pan/zoom with the axis pinned to the left edge, career-style
     if (!edZoom){
-      edZoom = d3.zoom().scaleExtent([0.15, 2.2]).on('zoom', e => {
+      edZoom = d3.zoom().scaleExtent([0.15, 2.2]).clickDistance(6).on('zoom', e => {
         d3.select('#hct-edu-svg .ed-zoom').attr('transform', e.transform);
         const t = e.transform, fieldL = t.x + t.k*edMinX;
         d3.select('#hct-edu-svg .ed-axis').attr('transform',
@@ -4371,9 +4731,9 @@ permalink: /tools/healthcare-career-tree/
     document.querySelectorAll('#hct-edu-svg .ed-node').forEach(el => el.classList.remove('sel','ip','dim'));
     document.querySelectorAll('#hct-edu-svg .ed-edge').forEach(el => el.classList.remove('ed-e-hi','ed-e-lo'));
     eduDetailEmpty();
-    if (edSnapPw){ edSnapPw = null; renderEducationMatrix(true); edUserZoomed = false; edFit(true); }
+    if (edSnapLane){ edSnapLane = null; renderEducationMatrix(true); edUserZoomed = false; edFit(true); }
   }
-  function edResetSnap(){ if (edSnapPw){ edSnapPw = null; if (edBuilt) renderEducationMatrix(false); } }
+  function edResetSnap(){ if (edSnapLane){ edSnapLane = null; if (edBuilt) renderEducationMatrix(false); } }
   // default framing: height-fit, anchored left with the axis reserved (pan right for more lanes)
   function edFit(animate){
     const wrap = document.getElementById('hct-edu-layers');
@@ -4383,9 +4743,13 @@ permalink: /tools/healthcare-career-tree/
     const y0 = Math.min(...tiers)*EROWH - EROWH/2 - 84, y1 = Math.max(...tiers)*EROWH + EROWH/2 + 26;
     const maxX = Math.max(...edLanes.map(L=>L.right)) + 70;
     const kH = H/(y1-y0), kW = (W - EAX_W - 20)/(maxX - edMinX);
-    // unsnapped: height-fit, anchored left, pan for more. Snapped: frame the WHOLE pathway (career's snap fit).
-    const k = Math.max(0.15, Math.min(edSnapPw ? Math.min(kH, kW) : kH, 1.1));
-    const t = d3.zoomIdentity.translate(EAX_W + 10 - k*edMinX, (H - k*(y1-y0))/2 - k*y0).scale(k);
+    // unsnapped: height-fit, anchored left, pan for more. Snapped: frame the whole lane
+    // (career's snap fit) and CENTER it in the leftover width instead of hugging the axis.
+    const k = Math.max(0.15, Math.min(edSnapLane ? Math.min(kH, kW) : kH, 1.1));
+    const tx = edSnapLane
+      ? Math.max(EAX_W + 10 - k*edMinX, EAX_W + (W - EAX_W)/2 - k*(edMinX + maxX)/2)
+      : (EAX_W + 10 - k*edMinX);
+    const t = d3.zoomIdentity.translate(tx, (H - k*(y1-y0))/2 - k*y0).scale(k);
     const s = d3.select('#hct-edu-svg');
     (animate ? s.transition().duration(520) : s).call(edZoom.transform, t);
   }
@@ -4402,8 +4766,15 @@ permalink: /tools/healthcare-career-tree/
     document.querySelectorAll('#hct-edu-svg .ed-node').forEach(el => {
       const c = eduCards[parseInt(el.getAttribute('data-ec'),10)]; if (!c) return;
       const e = build.education.find(x => x.kind==='real' && x.label===c.face && x.degree===c.degree);
-      el.classList.toggle('ec-have', !!e && nodeLayer(e) !== 'future');
-      el.classList.toggle('ec-goal', !!e && nodeLayer(e) === 'future');
+      let have = !!e && nodeLayer(e) !== 'future', goal = !!e && nodeLayer(e) === 'future';
+      if (!e && c.kind === 'cert' && c.role){
+        // holding the JOB counts as holding its credential — a pinned CRT role rings the
+        // CRT card without a separate education entry (QA: "things don't come over")
+        const lay = roleLayerInBuild(c.role.id);
+        if (lay){ have = lay !== 'future'; goal = lay === 'future'; }
+      }
+      el.classList.toggle('ec-have', have);
+      el.classList.toggle('ec-goal', goal);
     });
   }
 
@@ -4417,7 +4788,7 @@ permalink: /tools/healthcare-career-tree/
   function eduFilter(q){
     if (!edBuilt) return;
     const toks = (q||'').trim().toLowerCase().split(/\s+/).filter(Boolean);
-    if (toks.length && edSnapPw){ edSnapPw = null; renderEducationMatrix(false); edUserZoomed = false; edFit(false); }   // search runs over the WHOLE board
+    if (toks.length && edSnapLane){ edSnapLane = null; renderEducationMatrix(false); edUserZoomed = false; edFit(false); }   // search runs over the WHOLE board
     let total = 0;
     document.querySelectorAll('#hct-edu-svg .ed-node').forEach(el => {
       const c = eduCards[parseInt(el.getAttribute('data-ec'),10)];
@@ -4435,8 +4806,11 @@ permalink: /tools/healthcare-career-tree/
   function selectEduCred(idx){
     const c = eduCards[idx]; if (!c) return;
     eduMatrixSel = idx;
-    if (!edFreeLook && c.pw !== edSnapPw){        // snap-together: this credential's pathway owns the board
-      edSnapPw = c.pw;
+    // snap-together: this credential's DISCIPLINE owns the board (its lane + the always-on
+    // Any-field lane). The Any-field lane itself never snaps (isolating the generic ladder
+    // empties the room — David's QA screenshot).
+    if (!edFreeLook && c.lane !== '__any' && c.lane !== edSnapLane){
+      edSnapLane = c.lane;
       renderEducationMatrix(true);
       edUserZoomed = false; edFit(true);
     } else {
@@ -4451,13 +4825,15 @@ permalink: /tools/healthcare-career-tree/
     const dmeta = DATA.meta.degrees[c.degree] || {}, col = c.color || dmeta.color || '#4ECDC4';
     const sch = DATA.meta.schooling || {};
     const ladder = (sch.ladder||[]).find(L => L.degree === c.degree);
-    const roles = c.kind === 'degree' ? c.roles : [c.role];
+    const roles = c.kind === 'degree' ? c.roles : (c.role ? [c.role] : []);
     const sec = (title, body) => '<div class="edu-d-sec"><div class="edu-d-sech">'+title+'</div>'+body+'</div>';
     let h = '<div class="edu-d-top" style="--lc:'+col+'">'+
-      '<div class="edu-d-badge" style="color:'+col+';border-color:'+hexA(col,0.5)+';background:'+hexA(col,0.16)+'">'+esc(c.degree)+'</div>'+
+      '<div class="edu-d-badge" style="color:'+col+';border-color:'+hexA(col,0.5)+';background:'+hexA(col,0.16)+'">'+esc(c.kind==='spec' ? 'Board cert' : c.degree)+'</div>'+
       '<div class="edu-d-ttl">'+esc(c.face)+'</div>'+
-      '<div class="edu-d-sub" style="color:'+hexA(col,0.85)+'">'+esc(c.kind==='degree' ? (c.label||dmeta.label||c.degree) : (dmeta.label||c.degree))+'</div></div>'+
+      '<div class="edu-d-sub" style="color:'+hexA(col,0.85)+'">'+esc(c.kind==='degree' ? (c.label||dmeta.label||c.degree) : c.kind==='spec' ? (c.label||'Specialty certification') : (dmeta.label||c.degree))+'</div></div>'+
       '<div class="edu-d-body">';
+    if (c.kind === 'spec' && c.prereq && c.prereq.length)
+      h += sec('Rides on', '<div class="edu-d-ex"><span>'+esc(c.prereq.join(' or '))+' first, then the practice hours the board asks for.</span></div>');
     if (ladder && ladder.time) h += sec('Typical time to reach', '<div class="edu-d-time">'+esc(ladder.time)+'</div>'+(ladder.note?'<div class="edu-d-ex" style="margin-top:6px">'+esc(ladder.note)+'</div>':''));
     const credReal = credStatsHTML(c.face);
     if (credReal) h += sec('The exam, in numbers', credReal);
@@ -4528,7 +4904,7 @@ permalink: /tools/healthcare-career-tree/
   const ACOL_GAP = 44, ALANE_GAP = 10, AZONE_GAP = 56, ALANE_PAD = 30, AT_MINX = -44, AT_MINY = -60;
   const ATIER_LBL = ['Entry', 'Experienced', 'Expert'];
   let atPos = new Map(), atLanes = [], atCols = [], atBoardW = 0, atBoardH = 0;
-  let atSnapZone = null, atFreeLook = false, atActiveId = null, atUserZoomed = false;
+  let atSnapGrp = null, atFreeLook = false, atActiveId = null, atUserZoomed = false;   // snap = the selected tile's GROUP lane (zone-grain framed all 86 skills for one click — QA)
   function layoutAtlas(){
     const g = DATA.growth;
     const byLane = new Map();   // group name → node list (group names are globally unique)
@@ -4536,7 +4912,15 @@ permalink: /tools/healthcare-career-tree/
       if (!byLane.has(n.group)) byLane.set(n.group, { zone: zk, nodes: [] });
       byLane.get(n.group).nodes.push(n); }));
     let laneKeys = [...byLane.keys()];
-    if (atSnapZone) laneKeys = laneKeys.filter(k => byLane.get(k).zone === atSnapZone);
+    if (atSnapGrp){
+      laneKeys = laneKeys.filter(k => k === atSnapGrp);
+      // your claimed tiles never leave the room (QA): have/aiming tiles from OTHER groups
+      // gather on an "On your path" shelf under the snapped group instead of parking
+      const mine = new Set();
+      ['skill','spec','experience','population'].forEach(tk => (build[tk]||[]).forEach(n => { if (n.atlasId) mine.add(n.atlasId); }));
+      const shelf = g.nodes.filter(n => mine.has(n.id) && n.group !== atSnapGrp);
+      if (shelf.length){ byLane.set('__mine', { zone:'__mine', nodes: shelf }); laneKeys.push('__mine'); }
+    }
     // tier COLUMN widths: uniform across lanes so the three columns align board-wide
     const lens = { 0:1, 1:1, 2:1 };
     laneKeys.forEach(k => {
@@ -4572,7 +4956,7 @@ permalink: /tools/healthcare-career-tree/
           atPos.set(n.id, { x: col.cx + (j-(len-1)/2)*ACOLW + brick, y: cy + (r-(rows-1)/2)*AROW_DY });
         });
       });
-      atLanes.push({ key:k, zone:L.zone, top:y, bottom:y+laneH, cy, label:k, color: zn.color || '#5AC8BE', i: atLanes.length });
+      atLanes.push({ key:k, zone:L.zone, top:y, bottom:y+laneH, cy, label: k === '__mine' ? 'On your path' : k, color: zn.color || '#5AC8BE', i: atLanes.length });
       y += laneH;
     });
     atBoardH = y;
@@ -4610,7 +4994,7 @@ permalink: /tools/healthcare-career-tree/
     const zoneGroups = [], zSeen = {};
     atLanes.forEach(L => { if (zSeen[L.zone]) return; zSeen[L.zone] = 1;
       const m = atLanes.filter(v => v.zone === L.zone);
-      zoneGroups.push({ zone:L.zone, label:((g.zones[L.zone]||{}).label || L.zone).toUpperCase(), color:(g.zones[L.zone]||{}).color || '#5AC8BE',
+      zoneGroups.push({ zone:L.zone, label:(L.zone === '__mine' ? 'On your path' : ((g.zones[L.zone]||{}).label || L.zone)).toUpperCase(), color:(g.zones[L.zone]||{}).color || '#5AC8BE',
         top:Math.min(...m.map(v=>v.top)), bottom:Math.max(...m.map(v=>v.bottom)) }); });
     const csel = gC.selectAll('rect.hct-rcontainer').data(zoneGroups, d=>d.zone);
     csel.exit().remove();
@@ -4672,7 +5056,7 @@ permalink: /tools/healthcare-career-tree/
 
     // camera — group axis pins left, tier strip pins top; plain wheel SCROLLS (Ctrl+wheel zooms)
     if (!atlasZoom){
-      atlasZoom = d3.zoom().scaleExtent([0.15, 2.4])
+      atlasZoom = d3.zoom().scaleExtent([0.15, 2.4]).clickDistance(6)   // a few px of hand-drift is still a CLICK — default 0 swallowed click-off after any micro-drag
         .filter(e => e.type === 'wheel' ? e.ctrlKey : (!e.ctrlKey && !e.button))
         .on('zoom', e => {
           gAtlasZoom.attr('transform', e.transform);
@@ -4687,9 +5071,10 @@ permalink: /tools/healthcare-career-tree/
       svgSel.call(atlasZoom).on('dblclick.zoom', null)
         .on('wheel.atscroll', (ev) => { if (ev.ctrlKey) return; ev.preventDefault();
           atUserZoomed = true;
+          svgSel.interrupt();   // the wheel owns the camera NOW — kill any in-flight fit tween, or its ticks keep dragging the view back toward the fit target
           const t = d3.zoomTransform(svgSel.node());
           svgSel.call(atlasZoom.translateBy, -(ev.deltaX||0)/t.k, -ev.deltaY/t.k); })
-        .on('mousedown.cur', () => svgSel.classed('grabbing', true))
+        .on('mousedown.cur', () => { svgSel.interrupt(); svgSel.classed('grabbing', true); })   // same law for drag-pan (tile layout tweens live on child groups and finish untouched)
         .on('mouseup.cur',   () => svgSel.classed('grabbing', false));
     }
     if (!atlasBuilt){ atlasBuilt = true; fitAtlas(); }
@@ -4709,19 +5094,19 @@ permalink: /tools/healthcare-career-tree/
     atActiveId = null;
     document.querySelectorAll('#hct-atlas-svg .atlas-node').forEach(el => el.classList.remove('at-active','dim'));
     closePanel();   // BEFORE the refit — the fit measures the panel's width and it's leaving
-    if (atSnapZone){ atSnapZone = null; renderGrowthAtlas(true); atUserZoomed = false; fitAtlas(true); }
+    if (atSnapGrp){ atSnapGrp = null; renderGrowthAtlas(true); atUserZoomed = false; fitAtlas(true); }
   }
-  function atResetSnap(){ if (atSnapZone){ atSnapZone = null; if (atlasBuilt) renderGrowthAtlas(false); } atActiveId = null; }
+  function atResetSnap(){ if (atSnapGrp){ atSnapGrp = null; if (atlasBuilt) renderGrowthAtlas(false); } atActiveId = null; }
 
   // ── the lens: the survey's "what pulls you," held as a focus state on the expertise
   //    map. A rule at GROUP altitude plus a few cross-group tiles — never per-tile
   //    authoring (the doors are a rule). Your installed tiles NEVER dim: same law as
   //    the matrix, your own pins are never filtered off your own map.
   const LENS_DEF = {
-    patients: { label:'Patients',   groups:['Clinical care','Communication','Critical care','Acute & procedural','Medical specialties','Maternal & child','Community & other','Setting','Context & acuity','Patient types','Acuity & journey','Maternal journey','Newborn journey'], ids:[] },
-    data:     { label:'Data',       groups:['Informatics','Research & Evidence'], ids:['digital'] },
-    ops:      { label:'Operations', groups:['Leadership','Communication','Community & other'], ids:['charge','magnet'] },
-    hands:    { label:'Hands-on',   groups:['Clinical care','Diagnostics','Critical care','Acute & procedural'], ids:['flight','rapid','trauma'] }
+    patients: { label:'Patient care',   groups:['Clinical care','Communication','Critical care','Acute & procedural','Medical specialties','Maternal & child','Community & other','Setting','Context & acuity','Patient types','Acuity & journey','Maternal journey','Newborn journey','Social context','Chronic disease journeys','Rehab & movement','Nutrition & dietetics'], ids:[] },
+    data:     { label:'Informatics', groups:['Informatics','Research & Evidence'], ids:['digital','payer-um','lis'] },
+    ops:      { label:'Operations',  groups:['Leadership','Communication','Community & other','Care models & systems','Regulatory & accreditation'], ids:['charge','magnet'] },
+    hands:    { label:'Diagnostics', groups:['Clinical care','Diagnostics','Critical care','Acute & procedural','Imaging & radiation','Laboratory bench','Pharmacy practice','Surgical & procedural','EMS & field','Imaging modalities','Rehab & movement'], ids:['flight','rapid','trauma'] }
   };
   let atlasLens = null;
   function lensMembers(){
@@ -4772,7 +5157,7 @@ permalink: /tools/healthcare-career-tree/
     const pw = panel ? Math.min(panel.getBoundingClientRect().width, W*0.45) : 0;
     const availW = W - pw - AAX_W - 24, bw = atBoardW - AT_MINX + 60;
     const kW = availW/bw;
-    const k = Math.max(0.15, Math.min(atSnapZone ? Math.min(kW, (H - ATOP_H - 20)/(atBoardH - AT_MINY + 40)) : kW, 1.2));
+    const k = Math.max(0.15, Math.min(atSnapGrp ? Math.min(kW, (H - ATOP_H - 20)/(atBoardH - AT_MINY + 40)) : kW, 1.2));
     const tx = AAX_W + 12 - k*AT_MINX + Math.max(0, (availW - k*bw)/2);
     const t = d3.zoomIdentity.translate(tx, ATOP_H + 10 - k*AT_MINY).scale(k);
     const s = d3.select('#hct-atlas-svg');
@@ -4843,9 +5228,9 @@ permalink: /tools/healthcare-career-tree/
 
   // detail panel for an Areas of Expertise Matrix node + add to the matching My Path track
   function openGrowthPanel(n){
-    if (curView === 'atlas' && atlasBuilt){        // board-side select: focus the tile, snap to its zone (career grammar)
+    if (curView === 'atlas' && atlasBuilt){        // board-side select: focus the tile, snap to its GROUP lane (career grammar, edu's lane grain)
       atActiveId = n.id;
-      if (!atFreeLook && n.zone !== atSnapZone){ atSnapZone = n.zone; renderGrowthAtlas(true); atUserZoomed = false;
+      if (!atFreeLook && n.group !== atSnapGrp){ atSnapGrp = n.group; renderGrowthAtlas(true); atUserZoomed = false;
         requestAnimationFrame(() => fitAtlas(true)); }   // after this call finishes opening the panel, so the fit sees its width
       atApplyFocus();
     }
@@ -5271,7 +5656,7 @@ permalink: /tools/healthcare-career-tree/
     gTopBg = gTop.append('rect').attr('class','top-frozen-bg');
     gHeaders = gTop.append('g').attr('class','headers');
 
-    zoom = d3.zoom().scaleExtent([0.07, 2.4])
+    zoom = d3.zoom().scaleExtent([0.07, 2.4]).clickDistance(6)
       // measure the BOARD live for the translate-clamp (same element fitToBounds uses) — d3's default measures the SVG,
       // which can read 0/stale right after the tab is shown and clamps the first fit off to the side
       .extent(() => { const el = document.getElementById('hct-board'); const w = el?el.clientWidth:1, h = el?el.clientHeight:1; return [[0,0],[w||1, h||1]]; })
@@ -5535,6 +5920,17 @@ permalink: /tools/healthcare-career-tree/
       resetToURL('Sheet started. ' + (hide.length ? (8 - hide.length) + ' of 8 pathways lit when you open the Career Matrix.' : 'The whole map stays lit.'));
       // 3) the next natural keystroke is your name
       setTimeout(() => { const nm = document.getElementById('bp-name'); if (nm) nm.focus(); }, 350);
+      // 4) first run only: one flash cascade down the numbered sections, top to bottom.
+      //    Shows the spine once, then never again (state, not tour — nothing blocks).
+      try{
+        if (!localStorage.getItem('hct-guided')){
+          localStorage.setItem('hct-guided','1');
+          document.querySelectorAll('.bp-sec .bp-secn').forEach((el, i) => setTimeout(() => {
+            el.classList.add('guide-flash');
+            setTimeout(() => el.classList.remove('guide-flash'), 1050);
+          }, 600 + i*700));
+        }
+      }catch(err){}
     }
     // the survey is a MODAL: dismissal is session-only (no cookie); while the build
     // stays empty a slim strip holds its place so there's always a way back in
@@ -5668,7 +6064,7 @@ permalink: /tools/healthcare-career-tree/
     document.getElementById('hct-edu-freelook').onclick = () => {
       edFreeLook = !edFreeLook;
       document.getElementById('hct-edu-freelook').setAttribute('aria-pressed', String(edFreeLook));
-      if (edFreeLook && edSnapPw){ edSnapPw = null; renderEducationMatrix(true); edUserZoomed = false; edFit(true); }
+      if (edFreeLook && edSnapLane){ edSnapLane = null; renderEducationMatrix(true); edUserZoomed = false; edFit(true); }
       if (eduMatrixSel != null) edApplySel();
       announce(edFreeLook ? 'Free look on. The whole matrix stays lit.' : 'Free look off. Selecting snaps to its pathway again.');
     };
@@ -5678,32 +6074,39 @@ permalink: /tools/healthcare-career-tree/
     document.getElementById('hct-at-freelook').onclick = () => {
       atFreeLook = !atFreeLook;
       document.getElementById('hct-at-freelook').setAttribute('aria-pressed', String(atFreeLook));
-      if (atFreeLook && atSnapZone){ atSnapZone = null; renderGrowthAtlas(true); atUserZoomed = false; fitAtlas(true); }
+      if (atFreeLook && atSnapGrp){ atSnapGrp = null; renderGrowthAtlas(true); atUserZoomed = false; fitAtlas(true); }
       if (atActiveId) atApplyFocus();
-      announce(atFreeLook ? 'Free look on. The whole map stays lit.' : 'Free look off. Selecting snaps to its zone again.');
+      announce(atFreeLook ? 'Free look on. The whole map stays lit.' : 'Free look off. Selecting snaps to its group again.');
     };
     // build-planner controls — five growth tracks
     const gBtn = document.getElementById('hct-mp-goals');
     if (gBtn) gBtn.onclick = () => { setLayerView(build.view === 'future' ? 'both' : 'future');
       announce(build.view === 'future' ? 'Goals only. Current tiles ghost back; the plan stands alone.' : 'Everything back, layered.'); };
+    // QA: the advice tidbits collapse once someone actually explores (persisted; the "?" popover carries the grammar)
+    const hintsMin = () => { const sh = document.getElementById('hct-shell'); if (sh) sh.classList.add('hints-min'); try{ localStorage.setItem('hct-hints-min','1'); }catch(e){} };
+    try{ if (localStorage.getItem('hct-hints-min')){ const sh = document.getElementById('hct-shell'); if (sh) sh.classList.add('hints-min'); } }catch(e){}
+    ['hct-svg','hct-edu-svg','hct-atlas-svg'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('pointerdown', hintsMin, { once: true }); });
     // flow links: any [data-goview] jumps to that view — the sheet → matrices → sheet loop
     document.addEventListener('click', e => {
       const g = e.target.closest('[data-goview]'); if (!g || !DATA) return;
       setView(g.dataset.goview);
     });
-    // cycle rail: any beat clicks through to its home surface (the lit beat does the live next-move)
-    document.getElementById('hct-flowrail').addEventListener('click', e => {
-      const t = e.target.closest('[data-fb]'); if (!t || !DATA) return;
-      const i = +t.dataset.fb, b = flowBeat();
-      if (i === b.i){ flowGo(b); return; }
-      if (i === 0){ setView('path'); if (totalNodes() === 0){ hwDismissed = false; renderMyPath(); } return; }
-      if (i === 1){ setView('career'); return; }
-      if (i === 2){ setView('edu'); return; }
-      flowScrollNext();
-    });
+    // station picker shell: × and backdrop close it
+    const stModal = document.getElementById('bp-station-modal');
+    document.getElementById('bp-station-x').onclick = () => stationModal(false);
+    if (stModal) stModal.addEventListener('click', e => { if (e.target === stModal) stationModal(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && stModal && stModal.classList.contains('open') && !openPop) stationModal(false); });
     document.getElementById('hct-mp-clear').onclick = (e) => { e.stopPropagation(); resetBuild(); };
     const mpExport = document.getElementById('hct-mp-export'); if (mpExport) mpExport.onclick = (e) => { e.stopPropagation(); exportMyPath(); };
     const mpData = document.getElementById('hct-mp-data'); if (mpData) mpData.onclick = (e) => { e.stopPropagation(); openDataModal(); };
+    // ⋯ More — Save/Load, Export, Reset share one overflow menu (toolbar chrome pruned 2026-07)
+    const moreBtn = document.getElementById('hct-mp-more'), moreMenu = document.getElementById('hct-mp-menu');
+    const moreClose = () => { if (moreMenu) moreMenu.classList.remove('open'); if (moreBtn) moreBtn.setAttribute('aria-expanded','false'); };
+    if (moreBtn && moreMenu){
+      moreBtn.onclick = (e) => { e.stopPropagation(); const open = !moreMenu.classList.contains('open'); moreMenu.classList.toggle('open', open); moreBtn.setAttribute('aria-expanded', String(open)); };
+      moreMenu.querySelectorAll('.bp-addmenu-item').forEach(b => b.addEventListener('click', moreClose));
+      document.addEventListener('click', e => { if (!e.target.closest('.mp-more')) moreClose(); });
+    }
     const dX = document.getElementById('bp-data-x'); if (dX) dX.onclick = closeDataModal;
     const dCopy = document.getElementById('bp-data-copy'); if (dCopy) dCopy.onclick = copyBuildCode;
     const dDl = document.getElementById('bp-data-dl'); if (dDl) dDl.onclick = downloadBuildFile;
