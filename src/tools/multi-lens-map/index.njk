@@ -630,8 +630,20 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     });
     map.on('dragstart', () => { if (sheetEl.classList.contains('open') && HUKit.phone()) sheet.setDetent('dt-peek'); });
   }
-  new MutationObserver(() => { map.setStyle(styleFor()); map.once('style.load', installLayers); })
-    .observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  // theme swap: full deterministic reload + reinstall once truly ready
+  // (same fix as the operators map — diff mode strands runtime layers)
+  let themeSwapping = false;
+  new MutationObserver(() => {
+    if (themeSwapping) return;
+    themeSwapping = true;
+    map.setStyle(styleFor(), { diff:false });
+    const reinstall = () => {
+      if (!map.isStyleLoaded()){ setTimeout(reinstall, 120); return; }
+      installLayers();
+      themeSwapping = false;
+    };
+    setTimeout(reinstall, 120);
+  }).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
 
   map.on('load', async () => {
     signal('Loading state lines…');

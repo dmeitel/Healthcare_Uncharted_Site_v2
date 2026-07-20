@@ -1451,10 +1451,25 @@ has_interactive: true
   });
 
   // theme toggle → swap basemap, re-install layers (listeners survive; wired once)
+  // theme swap: force a FULL style reload (diff mode can strand runtime layers),
+  // reinstall only once the style is truly ready (style.load can misfire across
+  // different styles), and re-theme the insets AFTER the main map settles so
+  // three GL style swaps never land in the same frames (the freeze David hit)
+  let themeSwapping = false;
   new MutationObserver(() => {
-    map.setStyle(styleFor());
-    map.once('style.load', installData);
-    INSET_MAPS.forEach(m => m.setStyle(styleFor()));
+    if (themeSwapping) return;
+    themeSwapping = true;
+    map.setStyle(styleFor(), { diff:false });
+    const reinstall = () => {
+      if (!map.isStyleLoaded()){ setTimeout(reinstall, 120); return; }
+      installData();
+      refreshSource();
+      syncBoundaryPaint();
+      updateDrawLayer();
+      themeSwapping = false;
+      map.once('idle', () => INSET_MAPS.forEach(m => m.setStyle(styleFor(), { diff:false })));
+    };
+    setTimeout(reinstall, 120);
   }).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
 
   // ── boot: basemap first, then boundaries + hospitals in parallel, signaled ──
