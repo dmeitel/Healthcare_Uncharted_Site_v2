@@ -46,6 +46,12 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 .lv-metric:hover { border-color:var(--teal); }
 .lv-metric .mq { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lv-metric .yr { margin-left:auto; flex:none; font-family:var(--mono); font-size:9.5px; color:var(--t3); }
+/* the caret says "this changes" — the pill is a selector, not a label */
+.lv-metric .car { flex:none; color:var(--t3); font-size:11px; transition:transform .15s; }
+.lv-metric[aria-expanded="true"] .car { transform:rotate(180deg); color:var(--teal); }
+.lv-metric[aria-expanded="true"] { border-color:var(--teal); }
+#lvMetricPop { min-width:300px; max-width:380px; max-height:min(480px,62vh); }
+#lvMetricPop .pop-opt .grain { font-family:var(--mono); font-size:9px; color:var(--t3); margin-left:8px; }
 .lv-chips { max-width:calc(100vw - 20px); }
 .lv-chips .hu-chip { backdrop-filter:blur(8px); box-shadow:0 3px 10px rgba(0,0,0,.3); }
 .lv-status { position:absolute; bottom:88px; left:50%; transform:translateX(-50%); z-index:20; white-space:nowrap;
@@ -58,6 +64,21 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   border:1px solid var(--border2); backdrop-filter:blur(8px); }
 .lv-cleg i { width:14px; height:8px; border-radius:2px; }
 .lv-cleg span { font-family:var(--mono); font-size:9px; color:var(--t3); margin:0 4px; }
+
+/* AK/HI insets: same corner boxes as the operations map, stacked above the
+   legend. Here each box IS the state's choropleth swatch for the live metric. */
+.lv-insets { position:absolute; left:10px; bottom:64px; z-index:20; display:flex; gap:8px; transition:opacity .2s; }
+.lv-insets.hide { opacity:0; pointer-events:none; }
+.lv-inset { position:relative; width:120px; height:92px; padding:0; border-radius:10px; overflow:hidden; cursor:pointer;
+  border:1px solid var(--border2); background:var(--surface); box-shadow:0 4px 16px rgba(0,0,0,.35); }
+.lv-inset:hover { border-color:var(--teal); }
+.lv-inset .lv-inset-map { position:absolute; inset:0; display:block; pointer-events:none; }
+.lv-inset b { position:absolute; top:5px; left:7px; z-index:2; font-family:var(--mono); font-size:9.5px; font-weight:600;
+  color:var(--t1); background:color-mix(in srgb, var(--surface) 88%, transparent); border:1px solid var(--border);
+  border-radius:6px; padding:2px 6px; }
+.lv-inset b span { color:var(--teal); }
+[data-theme="light"] .lv-inset b span { color:var(--teal-dk); }
+@media (max-width:699px){ .lv-insets { display:none; } }   /* phone portrait already frames AK+HI; GL contexts are precious there */
 .lv-shell .hu-fab { bottom:34px; }
 /* year + rankings: the thumb-zone pill row (the flagship's bottom bar, kit-sized) */
 .lv-bottombar { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); z-index:110; display:flex; gap:8px; }
@@ -100,6 +121,9 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 .lv-msec { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--t3); padding:10px 4px 4px; }
 .lv-src { font-family:var(--mono); font-size:9.5px; color:var(--t3); margin-top:12px; line-height:1.6; }
 @media (min-width:1100px){
+  /* the FAB parks LEFT of the docked panel's rail — never under a window
+     or the attribution corner (same rule as the operations map) */
+  .lv-shell .hu-fab { right:396px; }
   #lvSheet { left:auto; right:12px; bottom:12px; top:124px; width:370px;
     border:1px solid var(--border2); border-radius:14px; height:auto; max-height:none; }
   #lvSheet.dt-peek, #lvSheet.dt-half, #lvSheet.dt-full { height:auto; max-height:calc(100dvh - 200px); overflow-y:auto; }
@@ -115,9 +139,13 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     <div class="lv-srow">
       <span class="lv-ident">Pop Health <b>Multi-Lens</b></span>
       <button class="lv-scope" id="lvScope" type="button" hidden>◀ United States</button>
-      <button class="lv-metric" id="lvMetricBtn" type="button" aria-label="Choose the metric">
-        <span aria-hidden="true">📊</span><span class="mq" id="lvMetricName">Pick a metric…</span><span class="yr" id="lvMetricYear"></span>
+      <button class="lv-metric" id="lvMetricBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="lvMetricPop" aria-label="Change the metric">
+        <span aria-hidden="true">📊</span><span class="mq" id="lvMetricName">Pick a metric…</span><span class="yr" id="lvMetricYear"></span><span class="car" aria-hidden="true">▾</span>
       </button>
+    </div>
+    <div class="selector-pop" id="lvMetricPop" hidden>
+      <div class="pop-head"><span class="pop-head-title">Pick a metric</span><button class="icon-btn" data-close type="button" aria-label="Close">✕</button></div>
+      <div class="pop-body" id="lvMetricPopList" role="listbox" aria-label="Metrics"></div>
     </div>
     <div class="hu-chiprail lv-chips" id="lvLenses" role="group" aria-label="Lens"></div>
   </div>
@@ -131,6 +159,10 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     <button class="lv-rankbtn" id="lvRankBtn" type="button">Rankings</button>
   </div>
   <div class="lv-cleg" id="lvCleg" hidden aria-hidden="true"></div>
+  <div class="lv-insets" id="lvInsets">
+    <button class="lv-inset" id="lvInsetAK" type="button" aria-label="Go to Alaska"><span class="lv-inset-map" id="lvInsetAKmap"></span><b>AK <span id="lvInsetAKn"></span></b></button>
+    <button class="lv-inset" id="lvInsetHI" type="button" aria-label="Go to Hawaii"><span class="lv-inset-map" id="lvInsetHImap"></span><b>HI <span id="lvInsetHIn"></span></b></button>
+  </div>
   <button class="hu-fab" id="lvLocate" type="button" aria-label="Find my state and county" title="My location">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle></svg>
   </button>
@@ -138,6 +170,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     <button class="icon-btn hu-sheet-x lv-x" id="lvSheetX" type="button" aria-label="Close">✕</button>
     <div id="lvSheetBody" style="display:flex;flex-direction:column;min-height:0;flex:1"></div>
   </aside>
+  <div id="lvLive" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
@@ -151,6 +184,12 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   const status = $('lvStatus');
   const signal = m => { status.textContent = m; status.classList.remove('done'); };
   const signalDone = ms => setTimeout(() => status.classList.add('done'), ms || 1600);
+  // one polite live region: committed changes only, never hover (the V1 rule)
+  function announce(msg){
+    const el = $('lvLive'); if (!el) return;
+    el.textContent = '';
+    requestAnimationFrame(() => { el.textContent = msg; });
+  }
 
   const LENSES = { patient:'Patient', clinical:'Clinical', operations:'Operations', payer:'Payer', policy:'Policy', baseline:'Baseline', economics:'Economics' };
   const SCALE = ['#FF6B6B','#F2A65A','#E8C547','#7FD2C8','#4ECDC4'];   // worse → better
@@ -158,8 +197,9 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   const COUNTY_IDX = { patient:['0','1','2','3','7'], economics:['0','1'], payer:['0'] };
 
   let lens = 'patient', mIdx = 0;
-  let STATES = null, CDATA = null;
+  let STATES = null, CDATA = null, CPOP = null;
   const COUNTY_CACHE = new Map();
+  const fmtPop = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? Math.round(v / 1e3) + 'k' : String(v);
   let selState = null, selCounty = null, cmpState = null, comparePick = false;
 
   const item = () => CFG[lens].items[mIdx];
@@ -234,7 +274,14 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   $('lvSheetX').addEventListener('click', () => {
     if (mode === 'rank'){ mode = 'card'; if (selState){ selCounty ? openCountyCard() : openStateCard(); } else sheetEl.classList.remove('open'); return; }
     if (cmpState){ cmpState = null; comparePick = false; paintSel(); openStateCard(); return; }
-    if (selCounty){ selCounty = null; paintSel(); openStateCard(); return; }
+    if (selCounty){
+      // leaving a county ALWAYS refits its state — a state card over a
+      // county-deep camera reads as a mismatch (same behavior as the scope chip)
+      selCounty = null; paintSel(); openStateCard();
+      map.fitBounds(stateBounds(selState.feature), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(800) });
+      syncURL();
+      return;
+    }
     if (selState){ deselectState(); return; }
     sheetEl.classList.remove('open');
   });
@@ -253,18 +300,52 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     STATES.features.forEach(f => { const v = vYear(f.properties.abbr); if (v != null) vals.push(v); });
     if (vals.length < 5) return;
     const breaks = quantiles(vals);
+    stateBreaks = breaks;   // the AK/HI insets reuse the same scale
     const expr = ['match', ['get','abbr']];
     STATES.features.forEach(f => { const v = vYear(f.properties.abbr); expr.push(f.properties.abbr, v == null ? 'rgba(130,150,170,0.3)' : colorFor(v, breaks)); });
     expr.push('#4ECDC4');
     map.setPaintProperty('lv-state-fill','fill-color',expr);
     map.setPaintProperty('lv-state-fill','fill-opacity',0.55);
     legend();
+    syncInsetData();
+  }
+  // county labels: the empty space works for a living (David's call) — the
+  // name, plus the metric value at county grain or the population otherwise.
+  // GPU symbols, so collision quietly drops labels the screen can't fit.
+  function countyCenter(f){
+    // kit interior point: sits INSIDE the county, even the bent mountain ones
+    // (bbox centers put Sierra and Nevada CA's labels in the neighbors)
+    return f._c || (f._c = HUKit.innerPoint(f.geometry) || [0, 0]);
+  }
+  function refreshCountyLabels(){
+    const src = map.getSource('lv-county-labels'); if (!src) return;
+    const fc = selState && COUNTY_CACHE.get(selState.fips);
+    if (!fc){ src.setData({ type:'FeatureCollection', features:[] }); return; }
+    const grain = hasCounty();
+    src.setData({ type:'FeatureCollection', features: fc.features.map(f => {
+      const fips = f.properties.fips;
+      let sub = '';
+      if (grain){ const v = cVal(fips); if (v != null) sub = fmtV(v); }
+      // population fallback SAYS it is population — an unlabeled "1.2M" under
+      // a cost-of-living map reads as a cost (David's catch). "Pop." is the
+      // Census Bureau's own map-label convention, prefix style.
+      else if (CPOP && CPOP[fips] && CPOP[fips].p) sub = 'Pop. ' + fmtPop(CPOP[fips].p);
+      return { type:'Feature', geometry:{ type:'Point', coordinates: countyCenter(f) },
+        properties:{ n: f.properties.name, sub } };
+    })});
   }
   function paintCounties(){
     const src = map.getSource('lv-counties'); if (!src) return;
     const fc = selState && COUNTY_CACHE.get(selState.fips);
-    if (!fc || !hasCounty()){ src.setData({ type:'FeatureCollection', features:[] }); return; }
+    refreshCountyLabels();
+    if (!fc){ src.setData({ type:'FeatureCollection', features:[] }); return; }
     src.setData(fc);
+    if (!hasCounty()){
+      // state-only metric: boundaries and name/population labels stay for
+      // context, but no tint and no county taps (nothing to answer with)
+      map.setPaintProperty('lv-county-fill','fill-opacity',0);
+      return;
+    }
     const vals = [];
     fc.features.forEach(f => { const v = cVal(f.properties.fips); if (v != null) vals.push(v); });
     if (vals.length < 3) return;
@@ -308,27 +389,61 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     const y = DY[lens] && DY[lens][String(mIdx)];
     $('lvMetricYear').textContent = y ? String(y) : '';
   }
-  function openMetricList(){
-    const b = $('lvSheetBody');
-    selCounty = null;
-    let h = '<div class="lv-kicker">' + LENSES[lens] + ' lens</div><div class="lv-name">Pick a metric</div><div class="lv-rows">';
-    h += CFG[lens].items.map((it, i) =>
-      '<button class="pop-opt" type="button" data-mi="' + i + '" aria-selected="' + (i === mIdx) + '">' + it.name +
-      (COUNTY_IDX[lens] && COUNTY_IDX[lens].includes(String(i)) ? ' <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">· county grain</span>' : '') + '</button>').join('');
-    h += '</div>';
-    b.innerHTML = h;
-    b.querySelectorAll('[data-mi]').forEach(el => el.addEventListener('click', () => {
+  // metric picker: a real selector-pop under its pill (David's call) — the
+  // shared contract gives us the phone bottom sheet for free
+  const metricPop = $('lvMetricPop');
+  let metricOpen = false;
+  function buildMetricList(){
+    $('lvMetricPopList').innerHTML = CFG[lens].items.map((it, i) =>
+      '<button class="pop-opt" type="button" role="option" data-mi="' + i + '" aria-selected="' + (i === mIdx) + '">' + it.name +
+      (COUNTY_IDX[lens] && COUNTY_IDX[lens].includes(String(i)) ? '<span class="grain">· county grain</span>' : '') + '</button>').join('');
+    $('lvMetricPopList').querySelectorAll('[data-mi]').forEach(el => el.addEventListener('click', () => {
       mIdx = +el.dataset.mi;
-      sheetEl.classList.remove('open');
+      closeMetricPop();
       metricChanged();
     }));
-    sheetEl.classList.add('open');
-    sheet.setDetent('dt-full');
   }
-  $('lvMetricBtn').addEventListener('click', openMetricList);
+  function openMetricPop(){
+    if (metricOpen){ closeMetricPop(); return; }
+    buildMetricList();
+    const btn = $('lvMetricBtn');
+    metricPop.hidden = false; metricOpen = true;
+    btn.setAttribute('aria-expanded', 'true');
+    metricPop.style.left = btn.offsetLeft + 'px';               // desktop anchor; the phone sheet CSS overrides both
+    metricPop.style.top = (btn.offsetTop + btn.offsetHeight + 6) + 'px';
+    const f = metricPop.querySelector('[aria-selected="true"]') || metricPop.querySelector('.pop-opt');
+    if (f) f.focus();
+  }
+  function closeMetricPop(){
+    metricPop.hidden = true; metricOpen = false;
+    $('lvMetricBtn').setAttribute('aria-expanded', 'false');
+  }
+  $('lvMetricBtn').addEventListener('click', openMetricPop);
+  metricPop.querySelector('[data-close]').addEventListener('click', closeMetricPop);
+  document.addEventListener('click', e => { if (metricOpen && !e.target.closest('#lvMetricPop') && !e.target.closest('#lvMetricBtn')) closeMetricPop(); });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (metricOpen){ closeMetricPop(); return; }
+    if (sheetEl.classList.contains('open')) $('lvSheetX').click();   // Esc = the X, back-walk included
+  });
+  // arrow keys walk the metric list
+  metricPop.addEventListener('keydown', e => {
+    const opts = [...metricPop.querySelectorAll('.pop-opt')];
+    const i = opts.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown'){ e.preventDefault(); (opts[i+1] || opts[0]).focus(); }
+    else if (e.key === 'ArrowUp'){ e.preventDefault(); (opts[i-1] || opts[opts.length-1]).focus(); }
+  });
   function metricChanged(){
-    metricFace(); yearFace(); paintStates(); paintCounties();
+    metricFace(); yearFace();
+    // the new metric has no county grain: fall back to the COUNTY'S STATE
+    // instead of stranding a "no data" county card (David's call), and REFIT
+    // the state so the camera matches the story the card is now telling
+    const fellBack = selCounty && !hasCounty();
+    if (fellBack) selCounty = null;
+    paintStates(); paintCounties(); paintSel();
+    if (fellBack && selState) map.fitBounds(stateBounds(selState.feature), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(800) });
     if (selState && sheetEl.classList.contains('open')) selCounty ? openCountyCard() : openStateCard();
+    announce('Metric: ' + item().name + (fellBack ? '. No county detail for this metric, showing ' + (selState ? selState.name : 'states') + '.' : '.'));
     syncURL();
   }
 
@@ -349,6 +464,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     if (n === yearIdx) return;
     yearIdx = n;
     yearFace(); paintStates(); syncURL();
+    announce('Year ' + ALL_YEARS[yearIdx] + (isCurrentYear() ? '.' : ', estimated.'));
     if (sheetEl.classList.contains('open')){
       if (mode === 'rank') openRankings();
       else if (selState) (cmpState ? openCompareCard() : (selCounty ? openCountyCard() : openStateCard()));
@@ -360,7 +476,10 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   // ── URL state, v1-compatible: the old page's ?lens=&metric=<name-slug>&state=
   //    links keep resolving; ?year= and ?county= are new. replaceState only. ──
   const metricSlug = n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  let applyingURL = false;
+  // scope changes PUSH (back unwinds county → state → US before leaving the
+  // page — the phone back contract); lens/metric/year tweaks replace
+  let applyingURL = false, lastScope = '§init';
+  const scopeKey = () => (selState ? selState.abbr : '') + '/' + (selCounty ? selCounty.fips : '');
   function syncURL(){
     if (applyingURL) return;
     const p = new URLSearchParams();
@@ -369,9 +488,29 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     if (!isCurrentYear()) p.set('year', String(ALL_YEARS[yearIdx]));
     if (selState) p.set('state', selState.abbr);
     if (selCounty) p.set('county', selCounty.fips);
+    if (cmpState) p.set('cmp', cmpState.abbr);   // shareable comparisons
     const q = p.toString();
-    try { history.replaceState(null, '', q ? ('?' + q) : location.pathname); } catch(e){}
+    const key = scopeKey();
+    const method = (lastScope !== '§init' && key !== lastScope) ? 'pushState' : 'replaceState';
+    lastScope = key;
+    try { history[method](null, '', q ? ('?' + q) : location.pathname); } catch(e){}
   }
+  window.addEventListener('popstate', async () => {
+    // quiet reset, then rebuild the whole view from the entry's querystring
+    selState = null; selCounty = null; cmpState = null; comparePick = false; mode = 'card';
+    sheetEl.classList.remove('open');
+    paintSel(); paintCounties();
+    const p = new URLSearchParams(location.search);
+    if ([...p.keys()].length){
+      await applyURLState();
+    } else {
+      lens = 'patient'; mIdx = 0; yearIdx = ALL_YEARS.length - 1;
+      document.querySelectorAll('#lvLenses .hu-chip').forEach(c => c.classList.toggle('on', c.dataset.lens === lens));
+      metricFace(); yearFace(); paintStates();
+      map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+    }
+    lastScope = scopeKey();
+  });
   async function applyURLState(){
     const p = new URLSearchParams(location.search);
     if (![...p.keys()].length) return;
@@ -396,6 +535,14 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
           if (co && COUNTY_CACHE.has(sf.properties.fips)){
             const cf = COUNTY_CACHE.get(sf.properties.fips).features.find(x => x.properties.fips === co);
             if (cf){ selCounty = { fips:cf.properties.fips, name:cf.properties.name }; paintSel(); openCountyCard(); }
+          }
+          const cmp = p.get('cmp');
+          if (cmp && !selCounty){
+            const cf2 = STATES.features.find(x => x.properties.abbr === cmp);
+            if (cf2 && cf2.properties.abbr !== selState.abbr){
+              cmpState = { fips:cf2.properties.fips, abbr:cf2.properties.abbr, name:cf2.properties.name, feature:cf2 };
+              paintSel(); openCompareCard();
+            }
           }
         }
       }
@@ -511,7 +658,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     const act = b.querySelector('.lv-actions');
     const x = document.createElement('button');
     x.className = 'hu-chip'; x.type = 'button'; x.textContent = '✕ End compare';
-    x.addEventListener('click', () => { cmpState = null; paintSel(); openStateCard(); });
+    x.addEventListener('click', () => { cmpState = null; paintSel(); openStateCard(); syncURL(); });
     act.appendChild(x);
     sheetEl.classList.add('open');
     sheet.setDetent('dt-half');
@@ -529,11 +676,16 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     b.innerHTML = '<div class="lv-kicker">County · ' + selState.abbr + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="hu-stats"></div><div class="lv-src"></div>';
     b.querySelector('.lv-name').textContent = selCounty.name + ' County';
     b.querySelector('.lv-sub').textContent = item().name + (isCurrentYear() ? '' : ' · county grain shows the latest data year');
-    const sv = sVal(selState.abbr);
+    // year coherence: county values only exist for the real data year, so
+    // every tile SAYS which year it speaks for, and the state comparison
+    // rides the same year the rest of the map is showing
+    const dataYr = (DY[lens] && DY[lens][String(mIdx)]) || 'latest';
+    const sv = vYear(selState.abbr);
     const tiles = [];
-    tiles.push({ v: v == null ? 'no data' : fmtV(v), k:'County', cls:'' });
+    tiles.push({ v: v == null ? 'no data' : fmtV(v), k:'County · ' + dataYr, cls:'' });
     if (rank) tiles.push({ v:'#' + rank, k:'Rank of ' + vals.length + ' in ' + selState.abbr, cls: rank <= 5 ? ' hi' : '' });
-    if (sv != null) tiles.push({ v:fmtV(sv), k:selState.abbr + ' state value' });
+    if (sv != null) tiles.push({ v:fmtV(sv), k:selState.abbr + ' state · ' + yearTag() });
+    if (CPOP && CPOP[selCounty.fips] && CPOP[selCounty.fips].p) tiles.push({ v:fmtPop(CPOP[selCounty.fips].p), k:'Population' });
     b.querySelector('.hu-stats').innerHTML = tiles.map(s => '<div class="hu-stat"><div class="v' + (s.cls||'') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
     b.querySelector('.lv-src').textContent = 'County grain: CDC PLACES / BLS / Census, same joins as the production map.';
     sheetEl.classList.add('open');
@@ -544,9 +696,10 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   async function selectState(f){
     selCounty = null; cmpState = null; comparePick = false;
     selState = { fips:f.properties.fips, abbr:f.properties.abbr, name:f.properties.name, feature:f };
-    paintSel();
+    paintSel(); syncInsets();
     map.fitBounds(stateBounds(f), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(900) });
     openStateCard();
+    announce(selState.name + '.');
     if (!COUNTY_CACHE.has(selState.fips)){
       signal('Loading ' + selState.name + ' counties…');
       try {
@@ -560,7 +713,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   }
   function deselectState(){
     selState = null; selCounty = null; cmpState = null; comparePick = false;
-    paintSel(); paintCounties();
+    paintSel(); paintCounties(); syncInsets();
     sheetEl.classList.remove('open');
     map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
     syncURL();
@@ -586,6 +739,52 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     onError: () => { signal('Location unavailable. Tap your state instead'); signalDone(2600); }
   });
 
+  // ── AK/HI insets: two tiny non-interactive cameras, desktop, US zoom only.
+  // Unlike the operations map's count badges, these carry the CHOROPLETH —
+  // each box shows its state tinted on the live metric scale, value in the badge. ──
+  const INSETS = [];
+  let insetsBuilt = false;
+  let stateBreaks = null;   // written by paintStates, read by syncInsetData
+  function buildInsets(){
+    if (insetsBuilt || window.innerWidth < 700) return;
+    insetsBuilt = true;
+    [['lvInsetAKmap', [-152.5, 63.5], 1.6, 'AK'], ['lvInsetHImap', [-157.4, 20.6], 4.6, 'HI']].forEach(([el, center, zoom, abbr]) => {
+      const m = new maplibregl.Map({ container: $(el), style: styleFor(), center, zoom,
+        interactive:false, attributionControl:false });
+      INSETS.push({ m, abbr });
+      m.on('load', () => installInsetTint(m, abbr));
+      $(el).parentElement.addEventListener('click', () => {
+        const sf = STATES && STATES.features.find(f => f.properties.abbr === abbr);
+        if (sf) selectState(sf);
+      });
+    });
+  }
+  function installInsetTint(m, abbr){
+    if (!STATES || m.getSource('lv-inset-states')) return;
+    m.addSource('lv-inset-states', { type:'geojson', data:STATES });
+    m.addLayer({ id:'lv-inset-fill', type:'fill', source:'lv-inset-states',
+      filter:['==', ['get','abbr'], abbr],
+      paint:{ 'fill-color':'#4ECDC4', 'fill-opacity':0.55 }});
+    m.addLayer({ id:'lv-inset-line', type:'line', source:'lv-inset-states',
+      filter:['==', ['get','abbr'], abbr],
+      paint:{ 'line-color':'rgba(255,255,255,.35)', 'line-width':1 }});
+    syncInsetData();
+  }
+  function syncInsetData(){
+    INSETS.forEach(({ m, abbr }) => {
+      const v = vYear(abbr);
+      const el = $('lvInset' + abbr + 'n');
+      if (el) el.textContent = v == null ? '' : fmtV(v);
+      if (m.getLayer('lv-inset-fill')) m.setPaintProperty('lv-inset-fill','fill-color',
+        v == null || !stateBreaks ? 'rgba(130,150,170,0.3)' : colorFor(v, stateBreaks));
+    });
+  }
+  function syncInsets(){
+    const el = $('lvInsets'); if (!el) return;
+    el.classList.toggle('hide', map.getZoom() >= 4.6 || !!selState);
+  }
+  map.on('moveend', syncInsets);
+
   // ── layers + router ──
   function installLayers(){
     if (map.getSource('lv-states') || !STATES) return;
@@ -597,6 +796,18 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     map.addLayer({ id:'lv-state-line', type:'line', source:'lv-states', paint:{ 'line-color':'rgba(255,255,255,.35)', 'line-width':1 }});
     map.addLayer({ id:'lv-state-sel', type:'line', source:'lv-states', filter:['==', ['get','abbr'], '___'], paint:{ 'line-color':'#F6F9FC', 'line-width':2.4 }});
     map.addLayer({ id:'lv-county-sel', type:'line', source:'lv-counties', filter:['==', ['get','fips'], '___'], paint:{ 'line-color':'#F6F9FC', 'line-width':2 }});
+    // county name + value/population labels — visible once inside a state
+    const light = document.documentElement.getAttribute('data-theme') === 'light';
+    map.addSource('lv-county-labels', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+    map.addLayer({ id:'lv-county-name', type:'symbol', source:'lv-county-labels', minzoom:5.4,
+      layout:{ 'text-field':['format', ['get','n'], {}, '\n', {}, ['get','sub'], { 'font-scale':0.82 }],
+        'text-font':['Noto Sans Regular'],
+        // text grows with the zoom (David's ask): small and collision-friendly
+        // at state view, readable when one county fills the screen
+        'text-size':['interpolate', ['linear'], ['zoom'], 5.4, 10, 7, 12.5, 9, 17, 11, 22],
+        'text-max-width':8 },
+      paint:{ 'text-color': light ? '#26333B' : '#F0F6F8',
+        'text-halo-color': light ? 'rgba(255,255,255,.85)' : 'rgba(8,16,20,.72)', 'text-halo-width':1.5 }});
     wireRouter();
     paintStates(); paintCounties(); paintSel();
   }
@@ -610,6 +821,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       hits.sort((a,b) => order.indexOf(a.layer.id) - order.indexOf(b.layer.id));
       const top = hits[0];
       if (top.layer.id === 'lv-county-fill' && selState){
+        if (!hasCounty()){ if (!sheetEl.classList.contains('open')) openStateCard(); return; }   // no county grain: nothing to answer
         selCounty = { fips:top.properties.fips, name:top.properties.name };
         paintSel(); openCountyCard(); syncURL(); return;
       }
@@ -620,6 +832,8 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
         cmpState = { fips:sf.properties.fips, abbr:sf.properties.abbr, name:sf.properties.name, feature:sf };
         comparePick = false;
         paintSel(); openCompareCard();
+        announce('Comparing ' + selState.name + ' with ' + cmpState.name + '.');
+        syncURL();
         return;
       }
       selectState(sf);
@@ -641,6 +855,13 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       if (!map.isStyleLoaded()){ setTimeout(reinstall, 120); return; }
       installLayers();
       themeSwapping = false;
+      // re-theme the insets only AFTER the main map settles — three GL style
+      // swaps in the same frames is the freeze the operations map taught us
+      map.once('idle', () => INSETS.forEach(({ m, abbr }) => {
+        m.setStyle(styleFor(), { diff:false });
+        const re = () => { if (!m.isStyleLoaded()){ setTimeout(re, 120); return; } installInsetTint(m, abbr); };
+        setTimeout(re, 120);
+      }));
     };
     setTimeout(reinstall, 120);
   }).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
@@ -649,13 +870,17 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     signal('Loading state lines…');
     try { STATES = await fetch('/assets/data/geo/us-states.json?v=2').then(r => r.json()); }
     catch(e){ signal("Couldn't load the boundaries"); return; }
-    // county-grain values ride in behind (same file the production map uses)
+    // county-grain values + populations ride in behind (same files the operators map uses)
     fetch('/assets/data/countyData.json').then(r => r.json()).then(d => { CDATA = d; paintCounties(); }).catch(() => {});
+    fetch('/assets/data/us-counties.json').then(r => r.json()).then(d => { CPOP = d; refreshCountyLabels(); }).catch(() => {});
     installLayers();
     buildLenses();
     metricFace();
     yearFace();
+    buildInsets();
+    syncInsets();
     await applyURLState();   // old v1 links land exactly where they pointed
+    lastScope = scopeKey();  // the first drill after load must PUSH, not replace
     signal('✓ Six lenses, 40+ metrics · tap a state');
     signalDone(3000);
   });

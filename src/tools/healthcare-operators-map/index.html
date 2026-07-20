@@ -243,6 +243,7 @@ has_interactive: true
     <button class="icon-btn hu-sheet-x gv-x" id="gvSheetX" type="button" aria-label="Close">✕</button>
     <div id="gvSheetBody" style="display:flex;flex-direction:column;min-height:0;flex:1"></div>
   </aside>
+  <div id="gvLive" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
@@ -255,6 +256,12 @@ has_interactive: true
   const status = $('gvStatus');
   function signal(msg){ status.textContent = msg; status.classList.remove('done'); }
   function signalDone(msg, ms){ if (msg) status.textContent = msg; setTimeout(() => status.classList.add('done'), ms || 1400); }
+  // one polite live region: committed scope changes only, never hover (the V1 rule)
+  function announce(msg){
+    const el = $('gvLive'); if (!el) return;
+    el.textContent = '';
+    requestAnimationFrame(() => { el.textContent = msg; });
+  }
 
   // CMS ships names in ALL CAPS — title-case them for labels and cards
   const ACRO = new Set(['VA','LLC','USA','LDS','IHC','UNM','UPMC','UCSF','UCLA','UAB','II','III','IV']);
@@ -452,7 +459,9 @@ has_interactive: true
     const counts = layerCounts();
     return { type:'FeatureCollection', features: (STATES ? STATES.features : []).map(f => ({
       type:'Feature',
-      geometry:{ type:'Point', coordinates:[ (f.properties.bb[0] + f.properties.bb[2]) / 2, (f.properties.bb[1] + f.properties.bb[3]) / 2 ] },
+      // kit interior point, not the bbox center — Florida's box center is in
+      // the Gulf, Michigan's is in the lake; this sits on actual land
+      geometry:{ type:'Point', coordinates: f._c || (f._c = HUKit.innerPoint(f.geometry) || [ (f.properties.bb[0] + f.properties.bb[2]) / 2, (f.properties.bb[1] + f.properties.bb[3]) / 2 ]) },
       properties:{ cnt: counts[f.properties.abbr] || 0, abbr: f.properties.abbr }
     })) };
   }
@@ -613,6 +622,7 @@ has_interactive: true
     sheetEl.classList.remove('open');
     clearPin();
     mode = 'card'; backTo = null;
+    syncURL();
   }
   function clearPin(){
     selectedId = null;
@@ -700,6 +710,8 @@ has_interactive: true
     if (map.getLayer('gv-selected')) map.setFilter('gv-selected', ['==', ['get','id'], p.id]);
     sheetEl.classList.add('open');
     sheet.setDetent('dt-peek');
+    announce(p.n + '. ' + p.c + ', ' + p.s + '.');
+    syncURL();   // ?fac= rides the entry — facility views are shareable now
   }
 
   // ── state selection ──
@@ -712,6 +724,7 @@ has_interactive: true
     // maxZoom keeps DC/RI from diving to street level on selection
     map.fitBounds(stateBounds(f), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(900) });
     openStateCard();
+    announce(selState.name + '. ' + inState(selState.abbr).length + ' ' + NOUN() + '.');
     // counties load ON SELECTION (rule 7): small file, cached, signaled
     if (!COUNTY_CACHE.has(selState.fips)){
       signal('Loading ' + selState.name + ' counties…');
@@ -784,6 +797,7 @@ has_interactive: true
     refreshSource();     // pharmacy mode empties at US zoom — shards are per state
     updateCount();
     map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+    announce('Back to the United States view.');
     syncURL();
   }
 
@@ -799,6 +813,7 @@ has_interactive: true
       : null;
     if (full) map.fitBounds(bboxOf(full.geometry), { padding:FIT_PAD, maxZoom:10.5, duration:dcap(800) });
     openCountyCard();
+    announce(selCounty.name + ' County.');
     syncURL();
   }
   function openCountyCard(){
@@ -890,8 +905,12 @@ has_interactive: true
     syncURL();
   }
 
-  // ── shareable URLs: scope rides the querystring (replaceState, never pushes) ──
-  let applyingURL = false;
+  // ── shareable URLs + the phone back contract: SCOPE changes (state, county,
+  //    system) PUSH a history entry so the back button unwinds the drill;
+  //    in-view tweaks (layers, filters) replace. Back only leaves the page
+  //    from the national view — David's "double back to quit". ──
+  let applyingURL = false, lastScope = '§init';
+  const scopeKey = () => (selState ? selState.abbr : '') + '/' + (selCounty ? selCounty.fips : '') + '/' + (activeSystem || '');
   function syncURL(){
     if (applyingURL) return;
     const p = new URLSearchParams();
@@ -901,9 +920,41 @@ has_interactive: true
     if (selState) p.set('state', selState.abbr);
     if (selCounty) p.set('county', selCounty.fips);
     if (activeSystem) p.set('sys', activeSystem);
+    if (selectedId) p.set('fac', selectedId);   // shareable facility views (replace-only: pins never stack history)
     const q = p.toString();
-    try { history.replaceState(null, '', q ? ('?' + q) : location.pathname); } catch(e){}
+    const key = scopeKey();
+    const method = (lastScope !== '§init' && key !== lastScope) ? 'pushState' : 'replaceState';
+    lastScope = key;
+    try { history[method](null, '', q ? ('?' + q) : location.pathname); } catch(e){}
   }
+  window.addEventListener('popstate', async () => {
+    applyingURL = true;
+    try {
+      // quiet scope reset, then rebuild from the entry's querystring
+      activeSystem = null; selCounty = null; selState = null;
+      clearPin(); sheetEl.classList.remove('open'); mode = 'card'; backTo = null;
+      syncBoundaryPaint(); refreshSource();
+      const p = new URLSearchParams(location.search);
+      const st = p.get('state');
+      if (st && STATES){
+        const sf = STATES.features.find(f => f.properties.abbr === st);
+        if (sf){
+          await selectState(sf);
+          const co = p.get('county');
+          if (co && COUNTY_CACHE.has(sf.properties.fips)){
+            const cf = COUNTY_CACHE.get(sf.properties.fips).features.find(x => x.properties.fips === co);
+            if (cf) selectCounty(cf);
+          }
+        }
+      } else {
+        map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+        updateCount(); renderList(); syncInsets();
+      }
+      const sys = p.get('sys');
+      if (sys && LAYER_ON.has('hosp')) enterSystem(sys);
+      lastScope = scopeKey();
+    } finally { applyingURL = false; }
+  });
   async function applyURLState(){
     const p = new URLSearchParams(location.search);
     if (![...p.keys()].length) return;
@@ -1075,6 +1126,7 @@ has_interactive: true
     if (selCounty) openCountyCard();
     else if (selState && sheetEl.classList.contains('open') && mode === 'card' && !selectedId) openStateCard();
     updateScopeChip(); syncURL();
+    announce(DATASETS[ds].label + (LAYER_ON.has(ds) ? ' layer on. ' : ' layer off. ') + activeSet().length.toLocaleString('en-US') + ' facilities shown.');
   }
   function applyFilters(){
     if (!map.getSource('hosp')) return;
@@ -1134,7 +1186,21 @@ has_interactive: true
     $('gvSearchIn').value = ''; closeSheet();
   });
   $('gvSearchX').addEventListener('click', closeSearch);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('gvSearch').classList.contains('open')) closeSearch(); });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if ($('gvSearch').classList.contains('open')){ closeSearch(); return; }
+    if (sheetEl.classList.contains('open')) $('gvSheetX').click();   // Esc = the X, back-walk included
+  });
+  // arrow keys walk the search results (keyboard path to any facility)
+  $('gvSearchIn').addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown'){ e.preventDefault(); const f = $('gvSearchList').querySelector('.pop-opt'); if (f) f.focus(); }
+  });
+  $('gvSearchList').addEventListener('keydown', e => {
+    const opts = [...$('gvSearchList').querySelectorAll('.pop-opt')];
+    const i = opts.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown'){ e.preventDefault(); (opts[i+1] || opts[0]).focus(); }
+    else if (e.key === 'ArrowUp'){ e.preventDefault(); if (i <= 0) $('gvSearchIn').focus(); else opts[i-1].focus(); }
+  });
   $('gvSearchIn').addEventListener('input', buildResults);
   $('gvSearchIn').addEventListener('keydown', e => {
     if (e.key === 'Enter'){ const f = $('gvSearchList').querySelector('[data-i]'); if (f) f.click(); }
@@ -1304,7 +1370,8 @@ has_interactive: true
       // states. Dots and clusters only exist once you zoom past the country view.
       map.addSource('state-centers', { type:'geojson', data: stateCentersFC() });
       map.addLayer({ id:'gv-state-num', type:'symbol', source:'state-centers', maxzoom:4.6,
-        layout:{ 'text-field':['to-string',['get','cnt']], 'text-font':['Noto Sans Bold'], 'text-size':13, 'text-allow-overlap':false },
+        layout:{ 'text-field':['to-string',['get','cnt']], 'text-font':['Noto Sans Bold'],
+          'text-size':['interpolate', ['linear'], ['zoom'], 2.8, 11, 4.6, 15], 'text-allow-overlap':false },
         paint:{ 'text-color':'#fff', 'text-halo-color':'rgba(8,16,28,.85)', 'text-halo-width':1.8 }});
       map.addSource('hosp', { type:'geojson', data:{ type:'FeatureCollection', features: activeSet() }, cluster:true, clusterMaxZoom:10, clusterRadius:46 });
       map.addLayer({ id:'gv-clusters', type:'circle', source:'hosp', filter:['has','point_count'], minzoom:4.6,
@@ -1327,7 +1394,8 @@ has_interactive: true
       const inkMain = light ? '#26333B' : '#D9E7EC';
       const inkHalo = light ? 'rgba(255,255,255,.88)' : 'rgba(5,12,18,.88)';
       map.addLayer({ id:'gv-labels', type:'symbol', source:'hosp', filter:['!',['has','point_count']], minzoom:9.5, maxzoom:12.5,
-        layout:{ 'text-field':['get','n'], 'text-font':['Noto Sans Regular'], 'text-size':10.5,
+        layout:{ 'text-field':['get','n'], 'text-font':['Noto Sans Regular'],
+          'text-size':['interpolate', ['linear'], ['zoom'], 9.5, 10, 12.5, 13],
           'text-offset':[0,1.05], 'text-anchor':'top', 'text-max-width':9, 'text-optional':true },
         paint:{ 'text-color':inkMain, 'text-halo-color':inkHalo, 'text-halo-width':1.4 }});
       // street level: the label carries the data — stars and beds under the name
@@ -1340,7 +1408,8 @@ has_interactive: true
               ['case', ['>', ['to-number',['get','beds']], 0], ['concat', ['to-string',['get','beds']], ' beds'], '']
             ], { 'font-scale':0.85 }
           ],
-          'text-font':['Noto Sans Regular'], 'text-size':11.5,
+          'text-font':['Noto Sans Regular'],
+          'text-size':['interpolate', ['linear'], ['zoom'], 12.5, 12, 15, 16],
           'text-offset':[0,1.0], 'text-anchor':'top', 'text-max-width':9, 'text-optional':true },
         paint:{ 'text-color':inkMain, 'text-halo-color':inkHalo, 'text-halo-width':1.5 }});
     }
@@ -1493,7 +1562,8 @@ has_interactive: true
     updateCount();
     $('gvListBtn').hidden = false;
     signalDone('✓ ' + ALL.length.toLocaleString('en-US') + ' hospitals · tap a state to zoom in', 2600);
-    applyURLState();   // shared links restore scope: ?ds=&types=&state=&county=&sys=
+    await applyURLState();   // shared links restore scope: ?ds=&types=&state=&county=&sys=
+    lastScope = scopeKey();   // the first drill after load must PUSH, not replace
     applyStateTint();
     // enrichment rides in quietly behind the map; open cards fill in when it lands
     fetch('/assets/data/us-counties.json').then(r => r.json()).then(d => { CPOP = d; refreshOpenCard(); }).catch(() => {});

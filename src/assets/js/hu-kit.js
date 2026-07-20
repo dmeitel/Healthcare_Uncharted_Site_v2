@@ -152,5 +152,56 @@
     return { setState: set };
   }
 
-  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, PHONE_MQ: PHONE_MQ };
+  /* ── interior label point ─────────────────────────────────────
+     Where a region's label belongs: the area centroid of its largest
+     polygon, and when a concave shape throws the centroid outside
+     (crescent counties, bent panhandles), the midpoint of the widest
+     interior span at the centroid's latitude. Bbox centers land in
+     the ocean for Florida and outside half the mountain counties —
+     this does not.
+  */
+  function innerPoint(geom) {
+    if (!geom) return null;
+    var polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : null;
+    if (!polys) return null;
+    var best = null, bestA = -1;
+    polys.forEach(function (rings) {
+      var ring = rings && rings[0];
+      if (!ring || ring.length < 4) return;
+      var a = 0, cx = 0, cy = 0, i, j;
+      for (i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        var cr = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+        a += cr; cx += (ring[j][0] + ring[i][0]) * cr; cy += (ring[j][1] + ring[i][1]) * cr;
+      }
+      var area = Math.abs(a / 2);
+      if (area > bestA) {
+        bestA = area;
+        best = { ring: ring, c: a ? [cx / (3 * a), cy / (3 * a)] : [ring[0][0], ring[0][1]] };
+      }
+    });
+    if (!best) return null;
+    var inRing = function (pt, ring) {
+      var inside = false, i, j;
+      for (i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        if (((ring[i][1] > pt[1]) !== (ring[j][1] > pt[1])) &&
+            (pt[0] < (ring[j][0] - ring[i][0]) * (pt[1] - ring[i][1]) / (ring[j][1] - ring[i][1]) + ring[i][0])) inside = !inside;
+      }
+      return inside;
+    };
+    if (inRing(best.c, best.ring)) return best.c;
+    var y = best.c[1], ring = best.ring, xs = [], i, j;
+    for (i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      if ((ring[i][1] > y) !== (ring[j][1] > y))
+        xs.push(ring[i][0] + (y - ring[i][1]) / (ring[j][1] - ring[i][1]) * (ring[j][0] - ring[i][0]));
+    }
+    xs.sort(function (a, b) { return a - b; });
+    var bw = -1, bx = best.c[0], k;
+    for (k = 0; k + 1 < xs.length; k += 2) {
+      var w = xs[k + 1] - xs[k];
+      if (w > bw) { bw = w; bx = (xs[k] + xs[k + 1]) / 2; }
+    }
+    return [bx, y];
+  }
+
+  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, innerPoint: innerPoint, PHONE_MQ: PHONE_MQ };
 })();

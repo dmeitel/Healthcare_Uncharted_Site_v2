@@ -1,4 +1,4 @@
-# UI GRAMMAR · PHASE 1 — Career Tree Phone Discipline
+﻿# UI GRAMMAR · PHASE 1: Career Tree Phone Discipline
 ### Build notes, 2026-07-19. Reference implementation of the HU-UI-GRAMMAR budget rules.
 
 One file changed: src/tools/healthcare-career-tree/index.njk. Desktop behavior is intentionally untouched except two small upgrades noted below. Everything else is gated behind the phone breakpoint.

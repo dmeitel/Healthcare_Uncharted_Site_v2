@@ -206,11 +206,19 @@ function api(path){
 }
 function call(path, isRetry){
   var wait = Math.max(0, lastCall + 300 - Date.now());
-  return new Promise(function(r){ setTimeout(r, wait); }).then(function(){
+  // Content-Type is required: /me answers with an HTML error page without it
+  var doFetch = function(){
     lastCall = Date.now();
-    // Content-Type is required: /me answers with an HTML error page without it
     return fetch(API + path, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' } });
-  }).then(function(res){
+  };
+  return new Promise(function(r){ setTimeout(r, wait); }).then(doFetch)
+  .catch(function(err){
+    // network-level flake (privacy shields drop SOME requests, networks hiccup):
+    // one quiet retry before anyone sees a scary banner
+    if (isRetry) throw err;
+    return new Promise(function(r){ setTimeout(r, 900); }).then(doFetch);
+  })
+  .then(function(res){
     if (res.status === 429 && !isRetry) {
       return new Promise(function(r){ setTimeout(r, 1300); }).then(function(){ return call(path, true); });
     }
@@ -265,19 +273,20 @@ function buildSeries(total){
 function load(){
   var seq = ++loadSeq, r = range(), qs = '?start=' + r.start + '&end=' + r.end;
   status('Fetching from GoatCounter…');
+  // every request settles on its own: one blocked call no longer sinks the
+  // other four, and the red banner is reserved for a genuinely dead API
+  var settle = function(p){ return p.then(function(v){ return { ok: true, v: v }; }, function(e){ return { ok: false, e: e }; }); };
   Promise.all([
-    api('/stats/total' + qs),
-    api('/stats/hits' + qs + '&limit=12'),
-    api('/stats/toprefs' + qs + '&limit=12'),
-    api('/stats/locations' + qs + '&limit=8'),
-    api('/stats/browsers' + qs + '&limit=8')
+    settle(api('/stats/total' + qs)),
+    settle(api('/stats/hits' + qs + '&limit=12')),
+    settle(api('/stats/toprefs' + qs + '&limit=12')),
+    settle(api('/stats/locations' + qs + '&limit=8')),
+    settle(api('/stats/browsers' + qs + '&limit=8'))
   ]).then(function(res){
     if (seq !== loadSeq) return;
-    status('');
-    render(res[0], res[1], res[2], res[3], res[4], r);
-  }).catch(function(e){
-    if (seq !== loadSeq) return;
-    if (e.status === 401 || e.status === 403) {
+    var auth = null;
+    for (var i = 0; i < res.length; i++) if (!res[i].ok && (res[i].e.status === 401 || res[i].e.status === 403)) { auth = res[i].e; break; }
+    if (auth) {
       localStorage.removeItem(LS_TOKEN);
       if (stored && stored !== EMBEDDED_TOKEN && EMBEDDED_TOKEN) {
         stored = ''; token = EMBEDDED_TOKEN;   // pasted override went bad; fall back to the built-in
@@ -285,14 +294,31 @@ function load(){
         return;
       }
       stored = ''; token = '';
-      showGate('The token was rejected (HTTP ' + e.status + '). If the built-in one got revoked, mint a fresh Read-statistics token and paste it.');
+      showGate('The token was rejected (HTTP ' + auth.status + '). If the built-in one got revoked, mint a fresh Read-statistics token and paste it.');
       return;
     }
-    if (e.message && /failed to fetch|networkerror|load failed/i.test(e.message)) {
-      status('The browser never reached GoatCounter. That is almost always an ad blocker or privacy shield, goatcounter.com is on the common blocklists. Allow it for this page, then hit Refresh.', true);
-    } else {
-      status('Fetch failed: ' + e.message + '. GoatCounter might be down, or the network is. Try Refresh.', true);
+    var fails = res.filter(function(x){ return !x.ok; });
+    // the totals feed the chart and the tiles: without them there is nothing to
+    // draw, so total-failed or everything-failed is the real error path
+    if (!res[0].ok || fails.length === res.length) {
+      var e = res[0].ok ? fails[0].e : res[0].e;
+      if (e.message && /failed to fetch|networkerror|load failed/i.test(e.message)) {
+        status(series && series.length
+          ? 'That refresh never reached GoatCounter, probably a privacy shield eating requests. The numbers below are from the last good load. Try Refresh again.'
+          : 'The browser never reached GoatCounter, even after a retry. That is almost always an ad blocker or privacy shield, goatcounter.com is on the common blocklists. Allow it for this page, then hit Refresh.', true);
+      } else {
+        status('Fetch failed: ' + e.message + '. GoatCounter might be down, or the network is. Try Refresh.', true);
+      }
+      return;
     }
+    render(res[0].v,
+      res[1].ok ? res[1].v : { hits: [] },
+      res[2].ok ? res[2].v : { stats: [] },
+      res[3].ok ? res[3].v : { stats: [] },
+      res[4].ok ? res[4].v : { stats: [] }, r);
+    status(fails.length
+      ? fails.length + ' of 5 panels did not load this pass (a privacy shield dropped those requests). Everything shown is live. Refresh fills the gaps.'
+      : '');
   });
 }
 

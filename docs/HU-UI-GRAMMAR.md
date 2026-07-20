@@ -46,7 +46,7 @@ GPS exists nowhere in the codebase today.
 6. LIST/MAP TOGGLE as a mode switch that preserves filters, scroll, and selection. NN/g's finding: list is the better default for pure finding tasks; the map earns primacy only when spatial distribution IS the content.
 7. LOCATE ME: crosshair FAB, bottom-right, floating above the sheet's peek. Permission requested ON TAP, never on load. Manual ZIP/state fallback for denials.
 8. PANNING DECLUTTERS. Map drag means "I want to see the map": cards dismiss, sheet drops to peek, only the pill and FABs persist. "Search this area" appears when the viewport invalidates results.
-9. DRAW BOUNDARY (later, nice-to-have): explicit mode that freezes pan, freehand loop auto-closes, becomes the scope, composes with filters.
+9. DRAW BOUNDARY (BUILT, 2026-07-19): explicit mode that freezes pan, freehand loop auto-closes, becomes the scope, composes with filters. The pencil FAB on the operations map.
 10. LOADING: basemap paints first, viewport-bounded data second, list fills third. Queries fire on gesture END. Skeletons always. At low zoom, cap what renders.
 
 ### 3b · The career family grammar (roadmap.sh, O*NET, LinkedIn, FREIDA, Duolingo and kin)
@@ -117,7 +117,11 @@ Any tool whose canvas is a full geographic map builds from THIS parts list and n
 | 2 | Scope + back | ONE row: scope pill ("New Mexico") and back chip side by side. Never a stacked block. Eyebrow text is desktop-only. | `.map-hud` row pattern |
 | 3 | Filters | Type/category toggles are CHIPS in one horizontal rail. Scrolls, never wraps, never a paragraph. | `.hu-chiprail` / `.hu-chip` |
 | 4 | Legend | One row. Caption/hint text is desktop-only (`.lg-cap` convention: caption spans carry the class, phones drop them). The scale itself stays because it IS the data. | `.lg-cap` |
-| 4b | Color | Choropleth color ONLY when the user picked the metric (a labeled control plus a legend). A tint the user never chose reads as unexplained decoration — numbers carry defaults. (David's call, 2026-07-19.) | — |
+| 4b | Color | Choropleth color ONLY when the user picked the metric (a labeled control plus a legend). A tint the user never chose reads as unexplained decoration; numbers carry defaults. (David's call, 2026-07-19.) | (rule) |
+| 11 | Markers | Facilities wear SHAPES, not just colors: a cross is a hospital, a drop is dialysis, a pill is a pharmacy. Canvas-drawn sprites, type-colored, dark rim. | `installIcons` pattern |
+| 12 | Labels | Region labels sit INSIDE their region (`HUKit.innerPoint`, never bbox centers), scale with zoom, and any number a user could misread names itself (units, "Pop.", year tags, "est."). | `HUKit.innerPoint` |
+| 13 | Insets | Alaska + Hawaii ride corner mini-map insets at the national view (desktop; phones frame both in portrait). Click flies there. | inset pattern |
+| 14 | Back | The browser back button unwinds the drill (county to state to nation) before it leaves the page: scope changes push history, tweaks replace. | scopeKey pattern |
 | 5 | Detail | Pin/region tap opens a CARD on the detent sheet (peek → half → full), never a navigation. Selection marked on the map and card together; dismissing one clears both. | `HUKit.sheet`, `.shell-sheet` |
 | 6 | Locate | Crosshair FAB, bottom-right, above attribution. Permission on tap. Thematic maps target "your county/state," POI maps fly to you. | `.hu-fab`, `HUKit.locate` |
 | 7 | Toolbar | Dataset/metric selectors dock BOTTOM on phone (thumb zone), popovers open as sheets above them. | `.selector` + sheet contract |
