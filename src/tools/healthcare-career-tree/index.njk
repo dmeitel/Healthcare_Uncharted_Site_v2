@@ -207,6 +207,9 @@ permalink: /tools/healthcare-career-tree/
     display: flex; flex-direction: column; overflow: hidden;
   }
   #hct-panel.open { opacity: 1; visibility: visible; transform: none; transition: opacity .2s ease, transform .2s ease; }
+  /* detent grabber: phone-only chrome (shown in the ≤699px block) */
+  .hct-p-grab { display: none; border: none; background: none; padding: 10px 0 6px; cursor: grab; flex-shrink: 0; touch-action: none; }
+  .hct-p-grab span { display: block; width: 44px; height: 4px; border-radius: 2px; background: var(--border2, rgba(255,255,255,0.25)); margin: 0 auto; }
   /* On My Path the content is centered (.bp-col, ~1240px) — nest the panel's LEFT edge against the column's right
      border (sit in the margin beside it), clamped so it never runs past the screen on narrower windows. */
   #hct-canvas-wrap[data-view="path"] #hct-panel { left: min(calc(50% + 620px), calc(100% - 340px)); right: auto; }
@@ -638,7 +641,7 @@ permalink: /tools/healthcare-career-tree/
   [data-theme='light'] .atlas-lens button.on { background: var(--teal); color: #062024; }
   /* multi-select owns the bottom edge — the HUD steps aside so the selbar never covers it */
   #hct-atlas-selbar.on ~ .atlas-hud { opacity: 0; transition: opacity .15s; }
-  @media (max-width: 640px) { .atlas-selbar { bottom: 60px; } }   /* clear of the bottom edge on phones */
+  /* (phone selbar lift lives in the unified ≤699px block at the end) */
   /* Education Matrix cards speak the same on-path ring language */
   .lg-ring { stroke: #F6F9FC; }
   [data-theme='light'] .lg-ring { stroke: #2E4450; }
@@ -963,8 +966,11 @@ permalink: /tools/healthcare-career-tree/
   .hct-clegend .cl-ends span:nth-child(2) { opacity: .7; }
   #hct-tip .tip-val { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-top: 3px; }
 
-  /* ── Phone layout (≤ 600px) ─────────────────────────────────── */
-  @media (max-width: 600px) {
+  /* ── Phone layout (≤ 699px — the selector-pop sheet break; ONE phone breakpoint) ──
+     HU-UI-GRAMMAR budget: canvas + nav + toolbar + AT MOST ONE transient surface.
+     Guides pre-collapse, inline board searches fold into the global search, the AOE
+     lens becomes an in-flow rail, HUDs yield, and the detail panel rides detents. */
+  @media (max-width: 699px) {
     #hct-tb { padding: 6px 10px; gap: 7px; }
     .hct-tabs { width: 100%; }
     .hct-tabs button { padding: 10px 8px; }
@@ -974,16 +980,54 @@ permalink: /tools/healthcare-career-tree/
     .edu-search-wrap { margin-left: 0; width: 100%; flex-wrap: wrap; }
     .edu-search { width: 100%; box-sizing: border-box; }
 
-    /* detail panel docks to the BOTTOM as a sheet instead of covering the board from the right edge */
+    /* guides never spend phone pixels — the hints-min state from the very start */
+    .view-hint, .hct-blurb-hint, .hct-blurb { display: none; }
+    /* motion budget: the view cross-fade ducks under the 250ms ceiling too */
+    .hct-view.active { animation-duration: .22s; }
+    /* toolbar collapses to essentials: pinch replaces the − / + pairs, Fit stays */
+    #hct-zoomout, #hct-zoomin, #hct-edu-tzout, #hct-edu-tzin, #hct-at-tzout, #hct-at-tzin { display: none; }
+    /* ONE search placement: the global search in the toolbar; the inline board inputs retire */
+    .edu-search-wrap .hct-search-box, #hct-edu-searchnote,
+    .atlas-tools .hct-search-box, #hct-atlas-searchnote { display: none; }
+
+    /* AOE: the lens dock stops floating over the canvas — it becomes an in-flow rail on top */
+    #hct-atlas-board { display: flex; flex-direction: column; }
+    #hct-atlas-svg { flex: 1; height: auto; min-height: 0; }
+    .atlas-lens { position: static; order: -1; max-width: none; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+      border: none; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; padding: 7px 10px; }
+    .atlas-lens::-webkit-scrollbar { display: none; }
+    .atlas-lens button { flex-shrink: 0; min-height: 40px; padding: 5px 12px; }
+    /* HUD: one row, horizontally scrollable, and it steps aside while the hand owns the
+       canvas or the detail sheet is up (rule 2: canvas gestures declutter) */
+    .atlas-hud { bottom: 10px; flex-wrap: nowrap; max-width: calc(100% - 16px); overflow-x: auto; scrollbar-width: none; transition: opacity .15s; }
+    .atlas-hud::-webkit-scrollbar { display: none; }
+    #hct-canvas-wrap.sheet-open .atlas-hud,
+    #hct-atlas-board.gesturing .atlas-hud { opacity: 0; pointer-events: none; }
+    .atlas-selbar { bottom: 60px; }   /* multi-select bar clear of the bottom edge */
+
+    /* Education Matrix: the aside stops competing with the board — hidden until a
+       credential is selected, then it reads as a bottom block under the board */
+    .edu-hud { flex-direction: column; }
+    .edu-detail { width: auto; max-height: 44vh; }
+    .edu-detail:has(.edu-detail-empty) { display: none; }
+
+    /* detail panel docks to the BOTTOM as a sheet with three detents (peek/half/full).
+       Grabber + X, nonmodal at peek and half — the board above stays live. */
     #hct-panel,
     #hct-canvas-wrap[data-view="path"] #hct-panel {
       width: 100%; max-width: 100%; left: 0; right: 0; top: auto; bottom: 0;
-      height: auto; max-height: 66vh;
+      height: auto; max-height: 52vh; max-height: 52dvh;
       border-left: none; border-top: 2px solid var(--border);
       box-shadow: 0 -10px 30px rgba(0,0,0,.55);
       transform: translateY(16px);
+      transition: opacity .2s ease, transform .2s ease, max-height .2s ease, height .2s ease, visibility 0s linear .2s;
     }
-    #hct-panel.open { transform: none; }
+    #hct-panel.open { transform: none; transition: opacity .2s ease, transform .2s ease, max-height .2s ease, height .2s ease; }
+    #hct-panel.dt-peek { max-height: 120px; }
+    #hct-panel.dt-peek .hct-p-body { overflow: hidden; }
+    #hct-panel.dt-full { height: 92vh; height: 92dvh; max-height: 92vh; max-height: 92dvh; }
+    #hct-panel.dragging { transition: none; }
+    .hct-p-grab { display: block; }
     .hct-p-close, .bp-modal-x { font-size: 26px; padding: 4px 6px; top: 8px; right: 10px; }
 
     /* My Path: single column, full-width cards */
@@ -1120,7 +1164,7 @@ permalink: /tools/healthcare-career-tree/
   .hct-p-close.icon-btn, .bp-modal-x.icon-btn { border: 1px solid var(--border); background: transparent; color: var(--t2); font-size: 0; }
   .hct-p-close.icon-btn:hover, .bp-modal-x.icon-btn:hover { border-color: rgba(78,205,196,0.5); color: var(--t1); }
 
-  @media (max-width: 600px) {
+  @media (max-width: 699px) {
     .hct-search-box { flex: 1 1 auto; }
     .hct-p-close.icon-btn, .bp-modal-x.icon-btn { width: 34px; height: 34px; padding: 0; }
   }
@@ -1241,7 +1285,7 @@ permalink: /tools/healthcare-career-tree/
     </div>
     <div class="selector-pop" id="hct-pop-search" hidden>
       <div class="pop-head"><span class="pop-head-title"><i data-lucide="search" aria-hidden="true"></i>Search</span><button class="icon-btn" data-close type="button" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>
-      <div class="hct-gs-box"><span class="hct-search-box"><i data-lucide="search" class="hct-search-ico" aria-hidden="true"></i><input class="edu-search" id="hct-global-search" type="text" placeholder="Role, family, or expertise…" autocomplete="off" aria-label="Search roles and expertise"></span></div>
+      <div class="hct-gs-box"><span class="hct-search-box"><i data-lucide="search" class="hct-search-ico" aria-hidden="true"></i><input class="edu-search" id="hct-global-search" type="text" placeholder="Role, expertise, or credential…" autocomplete="off" aria-label="Search roles, expertise, and credentials"></span></div>
       <div class="pop-body" id="hct-pop-search-list" role="listbox" aria-label="Search results"></div>
     </div>
   </div>
@@ -1491,6 +1535,8 @@ permalink: /tools/healthcare-career-tree/
 
     <!-- Detail panel overlay (fades in, docked right) -->
     <aside id="hct-panel">
+      <!-- phone detent grabber (hidden on desktop): tap = half⇄full, drag = peek/half/full, drag past the bottom = dismiss -->
+      <button class="hu-sheet-grab hct-p-grab" id="hct-p-grab" type="button" aria-label="Resize the detail sheet. Drag down past the bottom to close"><span></span></button>
       <div class="hct-p-head">
         <button class="hct-p-close icon-btn" id="hct-p-close" type="button" aria-label="Close detail panel"><i data-lucide="x" aria-hidden="true"></i></button>
         <span class="hct-p-badge" id="hct-p-badge"><span class="hct-p-dot"></span><span class="lbl"></span></span>
@@ -1508,11 +1554,18 @@ permalink: /tools/healthcare-career-tree/
 {% include "components/tool-attribution.njk" %}
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="/assets/js/hu-kit.js"></script>
 <script>
 (function(){
   'use strict';
 
   // ── State ──────────────────────────────────────────────
+  // phone break matches the selector-pop sheet contract in hu-global.css (699px)
+  const PHONE_MQ = window.matchMedia('(max-width: 699px)');
+  const REDUCED_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const isPhone = () => PHONE_MQ.matches;
+  // motion budget (HU-UI-GRAMMAR rule 5): every tween caps at 250ms on phones, 0 under reduced-motion
+  const dcap = ms => REDUCED_MQ.matches ? 0 : (PHONE_MQ.matches ? Math.min(ms, 250) : ms);
   let DATA = null, BLS = null, CREDS = null;   // CREDS = credential reality (pass rate / length / fee), optional enrichment
   let curClass = 'roles';
   let curView = 'career';   // 'career' | 'edu' | 'path' — the active main-panel view
@@ -1967,7 +2020,7 @@ permalink: /tools/healthcare-career-tree/
       const keep = new Set([...best.values()].map(v => v.e));
       edges = edges.filter(e => (lineageRungs.has(e[0]) === lineageRungs.has(e[1])) || keep.has(e));
     }
-    const dur = animate ? 520 : 0;   // matches every camera fit (fitToBounds default) so layout + camera tween as ONE motion
+    const dur = animate ? dcap(520) : 0;   // matches every camera fit (fitToBounds default) so layout + camera tween as ONE motion
 
     // level bands + numbered chips (clearly defined level markers)
     const meta = DATA.meta;
@@ -2439,7 +2492,7 @@ permalink: /tools/healthcare-career-tree/
     }
 
     document.getElementById('hct-p-body').innerHTML = h;
-    const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = curView;   // belongs to whatever view opened it (docks right on My Path, right edge on the Career Matrix)
+    const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = curView; panelOpened();   // belongs to whatever view opened it (docks right on My Path, right edge on the Career Matrix)
 
     document.querySelectorAll('#hct-p-body [data-pin-layer]').forEach(b => { b.onclick = () => pinToLayer(id, b.dataset.pinLayer); });
     document.querySelectorAll('#hct-p-body [data-edu-layer]').forEach(b => {
@@ -2480,9 +2533,25 @@ permalink: /tools/healthcare-career-tree/
     const target = (sx > rightEdge) ? rightEdge : leftEdge;   // tuck just inside the edge it was hidden past
     const nt = d3.zoomIdentity.translate(target - t.k * pos.x, t.y).scale(t.k);
     userZoomed = true;                                     // intentional reveal; lock the camera so nothing snaps it back
-    svg.transition().duration(280).call(zoom.transform, nt).on('end', syncLOD);
+    svg.transition().duration(dcap(280)).call(zoom.transform, nt).on('end', syncLOD);
   }
-  function closePanel(){ const p = document.getElementById('hct-panel'); p.classList.remove('open'); p.dataset.owner = ''; }
+  function closePanel(){ const p = document.getElementById('hct-panel'); p.classList.remove('open','dt-peek','dt-full'); p.classList.add('dt-half'); p.dataset.owner = '';
+    const cw = document.getElementById('hct-canvas-wrap'); if (cw) cw.classList.remove('sheet-open'); }
+  // every panel open routes through here: phone budget (ONE transient — the detail sheet
+  // displaces any selector sheet), default detent, and the sheet-open flag HUDs yield to
+  function panelOpened(){
+    if (isPhone()) closePop(false);
+    const p = document.getElementById('hct-panel');
+    if (!p.classList.contains('dt-peek') && !p.classList.contains('dt-full')) p.classList.add('dt-half');
+    const cw = document.getElementById('hct-canvas-wrap'); if (cw) cw.classList.add('sheet-open');
+  }
+  // the X path in one place so swipe-down-to-dismiss behaves exactly like the X
+  function dismissPanel(){
+    const wasSnapped = !!lineageSet;
+    selectedId = null; eduSelId = null; closePanel();
+    render(wasSnapped && curView === 'career'); renderMyPath();
+    if (wasSnapped && curView === 'career') fitDefaultGroup(true);
+  }
   // close any open detail whose owning view isn't the one we're showing (self-heals a panel that lingered across a tab switch)
   function enforcePanelOwner(){ const p = document.getElementById('hct-panel'); if (p.classList.contains('open') && p.dataset.owner && p.dataset.owner !== curView) closePanel(); }
   // Home the shared detail panel INSIDE the active view's section — exactly like the Education panel lives inside its view.
@@ -4256,7 +4325,7 @@ permalink: /tools/healthcare-career-tree/
     }
     const k = 1.0, tx = AXIS_RESERVE + (availW - AXIS_RESERVE)/2 - k*p.x, ty = wrap.height/2 - k*p.y;
     userZoomed = true;
-    svg.transition().duration(520).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k)).on('end', syncLOD);
+    svg.transition().duration(dcap(520)).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k)).on('end', syncLOD);
   }
   function selectCareer(id){
     const n = nodeById.get(id); if (!n) return;
@@ -4569,7 +4638,7 @@ permalink: /tools/healthcare-career-tree/
       svg.on('click', (e) => { if (e.defaultPrevented) return; if (!e.target.closest('g.ed-node')) edClearSel(); });   // empty space releases the snap
     }
     const gC = gZ.select('g.ed-cont'), gB = gZ.select('g.ed-bands'), gE = gZ.select('g.ed-eds'), gN = gZ.select('g.ed-nds'), gAx = svg.select('g.ed-axis');
-    const dur = animate ? 520 : 0;
+    const dur = animate ? dcap(520) : 0;
     const minX = edMinX, maxX = edLanes.length ? Math.max(...edLanes.map(L=>L.right)) + 70 : 70;
     const tiers = [...new Set(edLanes.reduce((a,L)=>a.concat(L.lvls), []))].sort((a,b)=>a-b);
     const headY = (tiers[0]||0)*EROWH - EROWH/2 - 16;
@@ -4751,14 +4820,14 @@ permalink: /tools/healthcare-career-tree/
       : (EAX_W + 10 - k*edMinX);
     const t = d3.zoomIdentity.translate(tx, (H - k*(y1-y0))/2 - k*y0).scale(k);
     const s = d3.select('#hct-edu-svg');
-    (animate ? s.transition().duration(520) : s).call(edZoom.transform, t);
+    (animate ? s.transition().duration(dcap(520)) : s).call(edZoom.transform, t);
   }
   function edFocusCard(i){
     const p = edPos.get(i); if (!p || !edZoom) return;
     const wrap = document.getElementById('hct-edu-layers'); if (!wrap) return;
     const W = wrap.clientWidth, H = wrap.clientHeight, k = 0.9;
     const t = d3.zoomIdentity.translate(EAX_W + (W-EAX_W)/2 - k*p.x, H/2 - k*p.y).scale(k);
-    d3.select('#hct-edu-svg').transition().duration(520).call(edZoom.transform, t);
+    d3.select('#hct-edu-svg').transition().duration(dcap(520)).call(edZoom.transform, t);
   }
   // on-your-path rings for the Education Matrix hexes — the same solid/dashed language every map speaks
   function updateEduPins(){
@@ -4975,7 +5044,7 @@ permalink: /tools/healthcare-career-tree/
     }
     const gC = gAtlasZoom.select('g.at-cont'), gB = gAtlasZoom.select('g.at-bands'), gN = gAtlasZoom.select('g.at-nds');
     const gAx = svgSel.select('g.at-axis'), gTx = svgSel.select('g.at-topax');
-    const dur = animate ? 520 : 0;
+    const dur = animate ? dcap(520) : 0;
     const botY = atBoardH + 16;
 
     // tier COLUMNS — vertical zebra + separators (the career band classes, so theming rides along)
@@ -5067,7 +5136,11 @@ permalink: /tools/healthcare-career-tree/
             'translate(' + t.x + ',' + Math.max(t.k*ATOP_H, t.y + t.k*AT_MINY) + ') scale(' + t.k + ')');   // strip content lives at y∈[-ATOP_H,0], so its BOTTOM rides this y — pinning keeps it fully on-screen
           d3.select('#hct-atlas-svg').classed('ed-far', t.k < 0.5);   // LOD: sub-lines out when zoomed far
           if (e.sourceEvent) atUserZoomed = true;
-        });
+        })
+        // canvas gestures declutter (HU-UI-GRAMMAR rule 2): while the hand owns the
+        // camera, the floating HUD steps aside — user gestures only, not camera fits
+        .on('start.chrome', e => { if (e.sourceEvent){ const b = document.getElementById('hct-atlas-board'); if (b) b.classList.add('gesturing'); } })
+        .on('end.chrome', () => { const b = document.getElementById('hct-atlas-board'); if (b) b.classList.remove('gesturing'); });
       svgSel.call(atlasZoom).on('dblclick.zoom', null)
         .on('wheel.atscroll', (ev) => { if (ev.ctrlKey) return; ev.preventDefault();
           atUserZoomed = true;
@@ -5161,9 +5234,9 @@ permalink: /tools/healthcare-career-tree/
     const tx = AAX_W + 12 - k*AT_MINX + Math.max(0, (availW - k*bw)/2);
     const t = d3.zoomIdentity.translate(tx, ATOP_H + 10 - k*AT_MINY).scale(k);
     const s = d3.select('#hct-atlas-svg');
-    (animate ? s.transition().duration(520) : s).call(atlasZoom.transform, t);
+    (animate ? s.transition().duration(dcap(520)) : s).call(atlasZoom.transform, t);
   }
-  function atlasZoomBy(f){ const s = d3.select('#hct-atlas-svg'); if (atlasZoom && s.node()) s.transition().duration(180).call(atlasZoom.scaleBy, f); }
+  function atlasZoomBy(f){ const s = d3.select('#hct-atlas-svg'); if (atlasZoom && s.node()) s.transition().duration(dcap(180)).call(atlasZoom.scaleBy, f); }
 
   // forgiving search over the Areas of Expertise hexes: matches the label, abbr, group, zone, summary, and "where you'll
   // find it" (so "vent"→Ventilator/Pulmonology, "icu"→all the ICUs, "epic"→Epic build). Matches glow; the rest fade.
@@ -5261,7 +5334,7 @@ permalink: /tools/healthcare-career-tree/
        + '<button class="hct-pin-btn'+(gLayer==='future'?' pinned':'')+'" data-gp-layer="future">'+(gLayer==='future'?'★':'☆')+' I\'m aiming for it</button>'
        + '</div>';
     document.getElementById('hct-p-body').innerHTML = h;
-    const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = 'atlas';
+    const panel = document.getElementById('hct-panel'); dockPanel(); panel.classList.add('open'); panel.dataset.owner = 'atlas'; panelOpened();
     document.querySelectorAll('#hct-p-body [data-gp-layer]').forEach(b => { b.onclick = () => pinGrowthToLayer(n, b.dataset.gpLayer); });
     panel.querySelectorAll('.hct-chip[data-grow]').forEach(ch => ch.onclick = () => { const gn = growthById.get(ch.getAttribute('data-grow')); if (gn) openGrowthPanel(gn); });
   }
@@ -5362,7 +5435,7 @@ permalink: /tools/healthcare-career-tree/
     // top-align the board content so it sits right under My Path (only center if it overflows)
     const ty = (k*h < wrap.height) ? (14 - k*y0) : (wrap.height/2 - k*(y0+y1)/2);
     const t = d3.zoomIdentity.translate(tx, ty).scale(k);
-    if (animate) svg.transition().duration(dur||520).call(zoom.transform, t).on('end', syncLOD);
+    if (animate) svg.transition().duration(dcap(dur||520)).call(zoom.transform, t).on('end', syncLOD);
     else { svg.call(zoom.transform, t); syncLOD(); }
   }
   function fit(animate, dur){
@@ -5431,6 +5504,7 @@ permalink: /tools/healthcare-career-tree/
   function openPopover(btn, pop, build){
     if (openPop && openPop.pop === pop){ closePop(true); return; }
     closePop(false);
+    if (isPhone()) closePanel();   // phone budget: ONE transient surface — a selector sheet displaces the detail sheet
     build();
     pop.hidden = false; btn.setAttribute('aria-expanded','true');
     pop.style.left = btn.offsetLeft + 'px'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 6) + 'px'; // desktop anchor; the phone sheet CSS overrides both
@@ -5745,11 +5819,25 @@ permalink: /tools/healthcare-career-tree/
     const gsInput = document.getElementById('hct-global-search'), gsList = document.getElementById('hct-pop-search-list');
     function buildGsList(){
       const q = (gsInput.value || '').trim().toLowerCase();
-      if (!q){ gsList.innerHTML = '<div class="gs-none">Type to search ' + DATA.classes[curClass].nodes.length + ' roles and the expertise pool.</div>'; return; }
+      if (!q){ gsList.innerHTML = '<div class="gs-none">Type to search ' + DATA.classes[curClass].nodes.length + ' roles, the expertise pool, and the credential stack.</div>'; return; }
       const roles = DATA.classes[curClass].nodes
         .filter(n => (n.label.replace(/\n/g,' ') + ' ' + (n.abbr||'') + ' ' + n.family + ' ' + n.pathway).toLowerCase().includes(q)).slice(0, 12);   // \n → space: "nurse anesthetist" must match the two-line label
       const grow = ((DATA.growth && DATA.growth.nodes) || [])
         .filter(n => ((n.label||'') + ' ' + (n.group||'') + ' ' + (n.zone||'')).toLowerCase().includes(q)).slice(0, 8);
+      // credentials: the Education Matrix corpus once it has rendered, the creds file's faces before
+      // that (jumpToEduCred lazy-builds the matrix on pick either way). ONE search covers all three
+      // boards — the phone hides the inline board inputs and leans entirely on this list.
+      const seenFace = new Set();
+      let creds = [];
+      if (eduCards.length){
+        eduCards.forEach(c => { if (!c || !c.face || seenFace.has(c.face)) return;
+          if ((c.face + ' ' + (c.label||'')).toLowerCase().includes(q)){ seenFace.add(c.face); creds.push({ face:c.face, meta:c.label || 'credential' }); } });
+      } else if (CREDS && CREDS.faceMap){
+        Object.keys(CREDS.faceMap).forEach(f => { if (seenFace.has(f)) return;
+          const cd = (CREDS.credentials||{})[CREDS.faceMap[f]] || {};
+          if ((f + ' ' + (cd.exam||'')).toLowerCase().includes(q)){ seenFace.add(f); creds.push({ face:f, meta:cd.exam || 'credential' }); } });
+      }
+      creds = creds.slice(0, 8);
       let h = '';
       if (roles.length){
         h += '<div class="pop-sec">Roles</div>' + roles.map(n =>
@@ -5758,6 +5846,10 @@ permalink: /tools/healthcare-career-tree/
       if (grow.length){
         h += '<div class="pop-sec">Areas of Expertise</div>' + grow.map(n =>
           `<button class="pop-opt" role="option" data-gs-kind="growth" data-gs-id="${n.id}">${(n.label||'').replace(/\n/g,' ')}<span class="gs-meta">${n.group || n.zone}</span></button>`).join('');
+      }
+      if (creds.length){
+        h += '<div class="pop-sec">Credentials</div>' + creds.map(c =>
+          `<button class="pop-opt" role="option" data-gs-kind="cred" data-gs-id="${c.face}">${c.face}<span class="gs-meta">${c.meta}</span></button>`).join('');
       }
       gsList.innerHTML = h || '<div class="gs-none">No matches. Try a shorter word, or a family like "nursing" or "informatics".</div>';
     }
@@ -5778,6 +5870,8 @@ permalink: /tools/healthcare-career-tree/
       if (t.dataset.gsKind === 'role'){
         if (curView !== 'career' && curView !== 'edu') setView('career');   // selectCareer handles the edu → career jump itself
         selectCareer(id);
+      } else if (t.dataset.gsKind === 'cred'){
+        jumpToEduCred(id);   // sets the edu view itself and lands with the credential selected
       } else {
         const n = (DATA.growth && DATA.growth.nodes || []).find(x => x.id === id); if (!n) return;
         if (curView !== 'atlas') setView('atlas');
@@ -6015,15 +6109,20 @@ permalink: /tools/healthcare-career-tree/
       [...new Set(cls.nodes.map(n=>n.family))].forEach(f => hiddenFamilies.add(f));
       refreshPathwayControls(); applyFilterChange(); announce('All pathways hidden');
     };
-    document.getElementById('hct-zoomin').onclick  = () => { userZoomed = true; svg.transition().duration(180).call(zoom.scaleBy, 1.4); };
-    document.getElementById('hct-zoomout').onclick = () => { userZoomed = true; svg.transition().duration(180).call(zoom.scaleBy, 1/1.4); };
+    document.getElementById('hct-zoomin').onclick  = () => { userZoomed = true; svg.transition().duration(dcap(180)).call(zoom.scaleBy, 1.4); };
+    document.getElementById('hct-zoomout').onclick = () => { userZoomed = true; svg.transition().duration(dcap(180)).call(zoom.scaleBy, 1/1.4); };
     document.getElementById('hct-freelook').onclick = () => {
       lineageFocus = !lineageFocus;
       document.getElementById('hct-freelook').setAttribute('aria-pressed', String(!lineageFocus));   // pressed = free look ON = focus OFF
       render(false);
       announce(lineageFocus ? 'Career-line focus on' : 'Free look: whole board stays lit');
     };
-    document.getElementById('hct-p-close').onclick = () => { const wasSnapped = !!lineageSet; selectedId=null; eduSelId=null; closePanel(); render(wasSnapped && curView==='career'); renderMyPath(); if (wasSnapped && curView==='career') fitDefaultGroup(true); };   // animated expand, in step with the camera
+    document.getElementById('hct-p-close').onclick = dismissPanel;   // animated expand, in step with the camera
+
+    // ── phone detent sheet: the ONE shared implementation (HUKit.sheet, item 12).
+    // Same class grammar this panel already speaks (dt-peek/half/full), same
+    // dismiss path as the X, plus the kit's rAF-batched drag and flick detents.
+    if (window.HUKit) HUKit.sheet(document.getElementById('hct-panel'), { onDismiss: dismissPanel });
     document.querySelectorAll('#hct-tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));   // setView resets any open detail on a view change
     // click ANYWHERE off the open panel → dismiss it. Global (not scoped to one view) so a click in any empty area works.
     // The Career Matrix board has its own background-click handler; here we cover My Path + Areas of Expertise.
@@ -6058,8 +6157,8 @@ permalink: /tools/healthcare-career-tree/
       const eb = document.getElementById('hct-edu-layers');
       if (eb) new ResizeObserver(() => { if (edBuilt && !edUserZoomed) edFit(false); }).observe(eb);
     }
-    document.getElementById('hct-edu-tzin').onclick  = () => { edUserZoomed = true; if (edZoom) d3.select('#hct-edu-svg').transition().duration(180).call(edZoom.scaleBy, 1.4); };
-    document.getElementById('hct-edu-tzout').onclick = () => { edUserZoomed = true; if (edZoom) d3.select('#hct-edu-svg').transition().duration(180).call(edZoom.scaleBy, 1/1.4); };
+    document.getElementById('hct-edu-tzin').onclick  = () => { edUserZoomed = true; if (edZoom) d3.select('#hct-edu-svg').transition().duration(dcap(180)).call(edZoom.scaleBy, 1.4); };
+    document.getElementById('hct-edu-tzout').onclick = () => { edUserZoomed = true; if (edZoom) d3.select('#hct-edu-svg').transition().duration(dcap(180)).call(edZoom.scaleBy, 1/1.4); };
     document.getElementById('hct-edu-tfit').onclick  = () => { edUserZoomed = false; edFit(true); };
     document.getElementById('hct-edu-freelook').onclick = () => {
       edFreeLook = !edFreeLook;

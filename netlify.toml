@@ -12,15 +12,22 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    # geolocation=(self): the geo tools' locate-me FAB (kit HUKit.locate) asks
+    # permission ON TAP only; blanket () would silently kill it in production.
+    Permissions-Policy = "geolocation=(self), microphone=(), camera=()"
     # Force HTTPS for a year, including subdomains. Netlify serves HTTPS already;
     # this tells browsers to never even try plain HTTP. Add `; preload` later if
     # you want to submit to the browser preload lists (that commitment is hard to undo).
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     # CSP — ENFORCED (flipped from report-only 2026-07-09 after auditing every
     # external reference in the built site). Sources match what actually loads:
-    #   jsdelivr   -> D3 + topojson tags AND runtime fetch of us-atlas TopoJSON
-    #                 (multi-lens + operators maps; hence jsdelivr in connect-src)
+    #   jsdelivr   -> D3 + topojson + MapLibre GL JS tags, the maplibre-gl.css
+    #                 stylesheet (hence jsdelivr in style-src), AND runtime fetch
+    #                 of us-atlas TopoJSON (hence jsdelivr in connect-src)
+    #   openfreemap-> the geo tools' vector basemap: style JSON, tiles, glyphs,
+    #                 sprites — all fetched, so connect-src (added 2026-07-19)
+    #   worker-src -> MapLibre spins its workers from blob: URLs; without this
+    #                 directive workers fall back to script-src and the map dies
     #   unpkg      -> Lucide icons        cdnjs -> sql.js + its wasm fetch
     #   fonts.*    -> Google Fonts        'unsafe-inline' -> inline tool/game scripts
     #   goatcounter-> beacon (connect) + pixel fallback (img); gc.zgo.at script
@@ -28,10 +35,11 @@
     Content-Security-Policy = """\
 default-src 'self'; \
 script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://gc.zgo.at; \
-style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; \
 font-src 'self' https://fonts.gstatic.com; \
 img-src 'self' data: blob: https://*.goatcounter.com; \
-connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://*.goatcounter.com; \
+worker-src 'self' blob:; \
+connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://*.goatcounter.com https://tiles.openfreemap.org; \
 frame-src 'self' https://maps.google.com https://www.google.com; \
 object-src 'none'; \
 base-uri 'self'; \
@@ -44,6 +52,18 @@ form-action 'self'\
 [[redirects]]
   from = "/tools/American-4Ps-Map/*"
   to = "/tools/multi-lens-map/:splat"
+  status = 301
+
+# The v2 map pilots were promoted to production 2026-07-19; the secret-menu
+# pilot URLs forward to where the tools now live.
+[[redirects]]
+  from = "/secret-menu/geo-v2/*"
+  to = "/tools/healthcare-operators-map/"
+  status = 301
+
+[[redirects]]
+  from = "/secret-menu/lens-v2/*"
+  to = "/tools/multi-lens-map/"
   status = 301
 
 # ── Caching ────────────────────────────────────────────────────────────────

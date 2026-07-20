@@ -1,0 +1,656 @@
+﻿---
+layout: base.njk
+navPage: tools
+no_footer: true
+section: tool
+status: published
+order: 1
+title: U.S. Pop Health Multi-Lens Map
+description: "Explore U.S. state healthcare through six lenses: Patient, Clinical, Operations, Payer, Policy, and Economics. Compare all 50 states on 40+ metrics, drill to real county boundaries, walk the years, and let the map find your county."
+tags: [interactive, maps, policy, data-viz]
+has_interactive: true
+---
+<!-- ════════════════════════════════════════════════════════════════
+     U.S. POP HEALTH MULTI-LENS MAP — v2, on the HU full-map standard
+     (docs/HU-UI-GRAMMAR.md §5b). Promoted from the lens-v2 pilot
+     2026-07-19; the D3 v1 lives in archive/multi-lens-map-2026-07-19-d3-v1.html.
+     Identity preserved: metricsConfig + stateData + dataYears inlined at
+     build (same machinery, same numbers), TREND_CONFIG year model ported
+     verbatim (history is estimated, labeled est.). The new canvas buys
+     real county boundaries, basemap context, GPS find-my-county, and the
+     kit sheet. Old ?lens/?metric/?state links still resolve.
+════════════════════════════════════════════════════════════════ -->
+<script>
+window.LENS_CONFIG = {{ metricsConfig | dump | safe }};
+window.STATE_DATA = {{ stateData | dump | safe }};
+window.DATA_YEARS = {{ dataYears | dump | safe }};
+</script>
+{% raw %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<style>
+.lv-shell { position:relative; height:calc(100dvh - 64px); overflow:hidden; }
+#lvMap { position:absolute; inset:0; }
+.lv-top { position:absolute; top:10px; left:10px; right:10px; z-index:20; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+.lv-top > * { pointer-events:auto; }
+.lv-srow { display:flex; gap:8px; align-items:center; }
+.lv-ident { flex:none; display:flex; align-items:center; height:38px; padding:0 13px; border-radius:10px;
+  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
+  font-family:var(--display); font-size:12.5px; font-weight:700; color:var(--t2); backdrop-filter:blur(8px); white-space:nowrap; }
+.lv-ident b { color:var(--teal); margin-left:4px; }
+[data-theme="light"] .lv-ident b { color:var(--teal-dk); }
+@media (max-width:699px){ .lv-ident { display:none; } }
+.lv-metric { flex:1; max-width:460px; display:flex; align-items:center; gap:9px; height:38px; padding:0 14px; border-radius:999px;
+  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
+  color:var(--t1); font-family:var(--font); font-size:12.5px; font-weight:600; cursor:pointer; backdrop-filter:blur(8px);
+  box-shadow:0 4px 16px rgba(0,0,0,.35); text-align:left; overflow:hidden; }
+.lv-metric:hover { border-color:var(--teal); }
+.lv-metric .mq { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lv-metric .yr { margin-left:auto; flex:none; font-family:var(--mono); font-size:9.5px; color:var(--t3); }
+.lv-chips { max-width:calc(100vw - 20px); }
+.lv-chips .hu-chip { backdrop-filter:blur(8px); box-shadow:0 3px 10px rgba(0,0,0,.3); }
+.lv-status { position:absolute; bottom:88px; left:50%; transform:translateX(-50%); z-index:20; white-space:nowrap;
+  font-family:var(--mono); font-size:10.5px; color:var(--t2); padding:6px 12px; border-radius:999px;
+  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
+  backdrop-filter:blur(8px); transition:opacity .3s; }
+.lv-status.done { opacity:0; pointer-events:none; }
+.lv-cleg { position:absolute; bottom:34px; left:10px; z-index:20; display:flex; align-items:center; gap:3px;
+  padding:5px 9px; border-radius:999px; background:color-mix(in srgb, var(--surface) 94%, transparent);
+  border:1px solid var(--border2); backdrop-filter:blur(8px); }
+.lv-cleg i { width:14px; height:8px; border-radius:2px; }
+.lv-cleg span { font-family:var(--mono); font-size:9px; color:var(--t3); margin:0 4px; }
+.lv-shell .hu-fab { bottom:34px; }
+/* year + rankings: the thumb-zone pill row (the flagship's bottom bar, kit-sized) */
+.lv-bottombar { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); z-index:110; display:flex; gap:8px; }
+.lv-yearpill { display:flex; align-items:center; height:42px; padding:0 6px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--border2); box-shadow:0 6px 20px rgba(0,0,0,.45); }
+.lv-yearpill button { width:34px; height:34px; border:none; background:none; color:var(--t2); font-size:17px; cursor:pointer; border-radius:50%; }
+.lv-yearpill button:hover { color:var(--teal); background:var(--raised); }
+.lv-yearpill button:disabled { opacity:.3; cursor:default; }
+.lv-yearpill span { font-family:var(--mono); font-size:11.5px; font-weight:600; color:var(--t1); min-width:74px; text-align:center; }
+.lv-yearpill span i { font-style:normal; color:var(--amber); }
+[data-theme="light"] .lv-yearpill span i { color:var(--amber-dk); }
+.lv-yearpill.no-trend { opacity:.5; }
+.lv-rankbtn { height:42px; padding:0 18px; border-radius:999px; cursor:pointer;
+  background:var(--surface); border:1px solid var(--border2); color:var(--t1);
+  font-family:var(--font); font-size:12.5px; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.45); }
+.lv-rankbtn:hover { border-color:var(--teal); }
+.lv-trend { margin-top:12px; }
+.lv-spark { width:100%; max-width:260px; height:54px; display:block; }
+.lv-trend-lbl { font-family:var(--mono); font-size:9px; color:var(--t3); margin-top:4px; line-height:1.5; }
+.lv-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+.lv-rank-row b { font-family:var(--mono); font-size:10px; color:var(--t3); margin-right:8px; }
+@media (max-width:1099px){
+  .lv-shell:has(#lvSheet.open) .hu-fab { bottom:150px; }
+  .lv-shell:has(#lvSheet.open) .lv-bottombar { bottom:150px; }
+}
+.lv-scope { flex:none; height:38px; padding:0 13px; border-radius:999px; cursor:pointer;
+  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--teal);
+  color:var(--t1); font-family:var(--font); font-size:12px; font-weight:700; backdrop-filter:blur(8px);
+  white-space:nowrap; max-width:40vw; overflow:hidden; text-overflow:ellipsis; box-shadow:0 4px 16px rgba(0,0,0,.35); }
+[data-theme="light"] .lv-scope { border-color:var(--teal-dk); }
+#lvSheet { padding:0 16px calc(14px + env(safe-area-inset-bottom)); z-index:300; }
+#lvSheet:not(.open) { transform:translateY(105%); }
+.lv-x { position:absolute; top:10px; right:10px; z-index:2; }
+.lv-kicker { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal); }
+[data-theme="light"] .lv-kicker { color:var(--teal-dk); }
+.lv-name { font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); line-height:1.15; padding-right:34px; }
+.lv-sub { font-family:var(--mono); font-size:10.5px; color:var(--t3); margin:3px 0 12px; }
+.lv-rows { overflow-y:auto; min-height:0; flex:1; }
+.lv-rows .pop-opt { width:100%; }
+.lv-msec { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--t3); padding:10px 4px 4px; }
+.lv-src { font-family:var(--mono); font-size:9.5px; color:var(--t3); margin-top:12px; line-height:1.6; }
+@media (min-width:1100px){
+  #lvSheet { left:auto; right:12px; bottom:12px; top:124px; width:370px;
+    border:1px solid var(--border2); border-radius:14px; height:auto; max-height:none; }
+  #lvSheet.dt-peek, #lvSheet.dt-half, #lvSheet.dt-full { height:auto; max-height:calc(100dvh - 200px); overflow-y:auto; }
+  #lvSheet:not(.open) { transform:translateX(115%); }
+  #lvSheet .hu-sheet-grab { display:none; }
+  #lvSheet { padding-top:12px; }
+}
+</style>
+
+<div class="lv-shell">
+  <div id="lvMap" role="application" aria-label="U.S. health metric choropleth. Tap a state, then a county."></div>
+  <div class="lv-top">
+    <div class="lv-srow">
+      <span class="lv-ident">Pop Health <b>Multi-Lens</b></span>
+      <button class="lv-scope" id="lvScope" type="button" hidden>◀ United States</button>
+      <button class="lv-metric" id="lvMetricBtn" type="button" aria-label="Choose the metric">
+        <span aria-hidden="true">📊</span><span class="mq" id="lvMetricName">Pick a metric…</span><span class="yr" id="lvMetricYear"></span>
+      </button>
+    </div>
+    <div class="hu-chiprail lv-chips" id="lvLenses" role="group" aria-label="Lens"></div>
+  </div>
+  <div class="lv-status" id="lvStatus">Painting the basemap…</div>
+  <div class="lv-bottombar">
+    <div class="lv-yearpill" id="lvYearPill">
+      <button id="lvYearPrev" type="button" aria-label="Earlier year">‹</button>
+      <span id="lvYearLbl">2024</span>
+      <button id="lvYearNext" type="button" aria-label="Later year">›</button>
+    </div>
+    <button class="lv-rankbtn" id="lvRankBtn" type="button">Rankings</button>
+  </div>
+  <div class="lv-cleg" id="lvCleg" hidden aria-hidden="true"></div>
+  <button class="hu-fab" id="lvLocate" type="button" aria-label="Find my state and county" title="My location">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle></svg>
+  </button>
+  <aside class="shell-sheet" id="lvSheet" aria-label="Detail">
+    <button class="icon-btn hu-sheet-x lv-x" id="lvSheetX" type="button" aria-label="Close">✕</button>
+    <div id="lvSheetBody" style="display:flex;flex-direction:column;min-height:0;flex:1"></div>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="/assets/js/hu-kit.js"></script>
+<script>
+(function(){
+  'use strict';
+  const dcap = HUKit.dcap;
+  const $ = id => document.getElementById(id);
+  const CFG = window.LENS_CONFIG, SD = window.STATE_DATA, DY = window.DATA_YEARS;
+  const status = $('lvStatus');
+  const signal = m => { status.textContent = m; status.classList.remove('done'); };
+  const signalDone = ms => setTimeout(() => status.classList.add('done'), ms || 1600);
+
+  const LENSES = { patient:'Patient', clinical:'Clinical', operations:'Operations', payer:'Payer', policy:'Policy', baseline:'Baseline', economics:'Economics' };
+  const SCALE = ['#FF6B6B','#F2A65A','#E8C547','#7FD2C8','#4ECDC4'];   // worse → better
+  // county-grain availability mirrors countyData.json (lens → metric indexes)
+  const COUNTY_IDX = { patient:['0','1','2','3','7'], economics:['0','1'], payer:['0'] };
+
+  let lens = 'patient', mIdx = 0;
+  let STATES = null, CDATA = null;
+  const COUNTY_CACHE = new Map();
+  let selState = null, selCounty = null, cmpState = null, comparePick = false;
+
+  const item = () => CFG[lens].items[mIdx];
+  const sVal = abbr => { const l = SD[lens]; const m = l && l[String(mIdx)]; const v = m ? m[abbr] : null; return v == null ? null : +v; };
+
+  // ── the year machinery, ported VERBATIM from the production Multi-Lens:
+  //    history is ESTIMATED by per-metric drift rates from the one real data
+  //    year (COVID dip modeled for life expectancy) and labeled "est." ──
+  const ALL_YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
+  let yearIdx = ALL_YEARS.length - 1;
+  const TREND_CONFIG = {
+    patient: { 0:{type:'pct',rate:-0.008}, 1:{type:'pct',rate:0.003}, 2:{type:'pct',rate:-0.006}, 3:{type:'pct',rate:0.010}, 4:{type:'abs',rate:0.20}, 5:{type:'abs',rate:-1.5}, 6:{type:'lifeExp'}, 7:{type:'pct',rate:0.003} },
+    clinical: { 0:{type:'abs',rate:0.5}, 1:{type:'abs',rate:1.5}, 2:{type:'abs',rate:2.5}, 4:{type:'abs',rate:0.15}, 5:{type:'pct',rate:0.08}, 6:{type:'abs',rate:0.15}, 7:{type:'abs',rate:12}, 8:{type:'abs',rate:0.8} },
+    operations: { 0:{type:'abs',rate:-0.03}, 1:{type:'abs',rate:-2.0}, 3:{type:'pct',rate:0.005}, 4:{type:'abs',rate:1.0}, 5:{type:'abs',rate:0.02}, 6:{type:'abs',rate:-0.08} },
+    payer: { 0:{type:'pct',rate:-0.04}, 1:{type:'pct',rate:0.015}, 2:{type:'pct',rate:0.012}, 3:{type:'pct',rate:0.08}, 4:{type:'pct',rate:-0.005}, 5:{type:'pct',rate:0.040} },
+    economics: { 0:{type:'abs',rate:2.5}, 1:{type:'abs',rate:-0.08}, 2:{type:'abs',rate:0.4}, 3:{type:'abs',rate:-0.15}, 4:{type:'abs',rate:1.2} },
+    baseline: { 0:{type:'abs',rate:2.5}, 1:{type:'abs',rate:-0.08}, 2:{type:'abs',rate:0.4}, 3:{type:'abs',rate:-0.15}, 4:{type:'abs',rate:1.2}, 5:{type:'abs',rate:0.12}, 6:{type:'abs',rate:-0.10}, 7:{type:'abs',rate:0.15}, 8:{type:'abs',rate:0.05}, 9:{type:'abs',rate:-0.25}, 10:{type:'abs',rate:0.10}, 11:{type:'abs',rate:0.10}, 12:{type:'abs',rate:0.15} }
+  };
+  function trendPoints(abbr){
+    const real = sVal(abbr);
+    const dataYear = DY[lens] && DY[lens][String(mIdx)];
+    if (real == null || !dataYear) return null;
+    const cfg = TREND_CONFIG[lens] && TREND_CONFIG[lens][String(mIdx)];
+    if (!cfg) return null;
+    return ALL_YEARS.map(y => {
+      const dy = y - dataYear;
+      let v;
+      if (cfg.type === 'lifeExp'){ v = real + dy * 0.20 - (y === 2020 ? 1.2 : y === 2021 ? 2.4 : 0); }
+      else if (cfg.type === 'pct'){ v = real * Math.pow(1 + cfg.rate, dy); }
+      else { v = real + cfg.rate * dy; }
+      return { year: y, value: Math.max(0, Math.round(v * 10) / 10), real: y === dataYear };
+    });
+  }
+  const hasTrend = () => !!(TREND_CONFIG[lens] && TREND_CONFIG[lens][String(mIdx)]);
+  const isCurrentYear = () => yearIdx === ALL_YEARS.length - 1;
+  function vYear(abbr){
+    if (isCurrentYear()) return sVal(abbr);
+    const pts = trendPoints(abbr);
+    if (!pts) return sVal(abbr);
+    const pt = pts.find(p => p.year === ALL_YEARS[yearIdx]);
+    return pt ? pt.value : sVal(abbr);
+  }
+  const cVal = fips => { const l = CDATA && CDATA[lens]; const m = l && l[String(mIdx)]; const v = m ? m[fips] : null; return v == null ? null : +v; };
+  const hasCounty = () => !!(COUNTY_IDX[lens] && COUNTY_IDX[lens].includes(String(mIdx)));
+  const fmtV = v => { const u = item().unit || ''; return u === '$' ? '$' + v.toLocaleString('en-US') : u === '$k' ? '$' + v + 'k' : v.toLocaleString('en-US') + (u === '%' ? '%' : u ? ' ' + u : ''); };
+
+  const styleFor = () => document.documentElement.getAttribute('data-theme') === 'light'
+    ? 'https://tiles.openfreemap.org/styles/positron'
+    : 'https://tiles.openfreemap.org/styles/fiord';
+  const map = new maplibregl.Map({ container:'lvMap', style:styleFor(),
+    center:[-96.5,39.3], zoom:3.6, minZoom:2.8, maxZoom:12, renderWorldCopies:false,
+    attributionControl:false });
+  map.addControl(new maplibregl.AttributionControl({ compact:true }), 'bottom-left');
+  map.touchZoomRotate.disableRotation(); map.dragRotate.disable();
+
+  function pip(pt, geom){
+    const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+    const x = pt[0], y = pt[1]; let inside = false;
+    for (const rings of polys) for (const ring of rings)
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++){
+        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+      }
+    return inside;
+  }
+  const stateBounds = f => [[f.properties.bb[0], f.properties.bb[1]], [f.properties.bb[2], f.properties.bb[3]]];
+  const FIT_PAD = { top:130, bottom:150, left:28, right:28 };
+
+  // ── sheet ──
+  const sheetEl = $('lvSheet');
+  const sheet = HUKit.sheet(sheetEl, { startDetent:'dt-half', onDismiss: () => sheetEl.classList.remove('open') });
+  $('lvSheetX').addEventListener('click', () => {
+    if (mode === 'rank'){ mode = 'card'; if (selState){ selCounty ? openCountyCard() : openStateCard(); } else sheetEl.classList.remove('open'); return; }
+    if (cmpState){ cmpState = null; comparePick = false; paintSel(); openStateCard(); return; }
+    if (selCounty){ selCounty = null; paintSel(); openStateCard(); return; }
+    if (selState){ deselectState(); return; }
+    sheetEl.classList.remove('open');
+  });
+
+  // ── quantile machinery (shared by both grains) ──
+  function quantiles(vals){
+    const v = vals.slice().sort((a,b) => a - b);
+    const q = p => v[Math.min(v.length - 1, Math.floor(p * v.length))];
+    return [q(0.2), q(0.4), q(0.6), q(0.8)];
+  }
+  const colorFor = (v, breaks) => { let i = 0; while (i < 4 && v >= breaks[i]) i++; return item().dir === -1 ? SCALE[4 - i] : SCALE[i]; };
+
+  function paintStates(){
+    if (!map.getLayer('lv-state-fill') || !STATES) return;
+    const vals = [];
+    STATES.features.forEach(f => { const v = vYear(f.properties.abbr); if (v != null) vals.push(v); });
+    if (vals.length < 5) return;
+    const breaks = quantiles(vals);
+    const expr = ['match', ['get','abbr']];
+    STATES.features.forEach(f => { const v = vYear(f.properties.abbr); expr.push(f.properties.abbr, v == null ? 'rgba(130,150,170,0.3)' : colorFor(v, breaks)); });
+    expr.push('#4ECDC4');
+    map.setPaintProperty('lv-state-fill','fill-color',expr);
+    map.setPaintProperty('lv-state-fill','fill-opacity',0.55);
+    legend();
+  }
+  function paintCounties(){
+    const src = map.getSource('lv-counties'); if (!src) return;
+    const fc = selState && COUNTY_CACHE.get(selState.fips);
+    if (!fc || !hasCounty()){ src.setData({ type:'FeatureCollection', features:[] }); return; }
+    src.setData(fc);
+    const vals = [];
+    fc.features.forEach(f => { const v = cVal(f.properties.fips); if (v != null) vals.push(v); });
+    if (vals.length < 3) return;
+    const breaks = quantiles(vals);
+    const expr = ['match', ['get','fips']];
+    fc.features.forEach(f => { const v = cVal(f.properties.fips); expr.push(f.properties.fips, v == null ? 'rgba(130,150,170,0.35)' : colorFor(v, breaks)); });
+    expr.push('#4ECDC4');
+    map.setPaintProperty('lv-county-fill','fill-color',expr);
+    map.setPaintProperty('lv-county-fill','fill-opacity',0.6);
+  }
+  function legend(){
+    const leg = $('lvCleg'); if (!leg) return;
+    leg.innerHTML = '<span></span>' + SCALE.map(c => '<i style="background:' + c + '"></i>').join('') + '<span>worse → better</span>';
+    leg.firstChild.textContent = item().name.length > 26 ? item().name.slice(0, 24) + '…' : item().name;
+    leg.hidden = false;
+  }
+  function paintSel(){
+    if (map.getLayer('lv-state-sel')) map.setFilter('lv-state-sel',
+      ['in', ['get','abbr'], ['literal', [selState ? selState.abbr : '___', cmpState ? cmpState.abbr : '___']]]);
+    if (map.getLayer('lv-county-sel')) map.setFilter('lv-county-sel', ['==', ['get','fips'], selCounty ? selCounty.fips : '___']);
+    const sc = $('lvScope');
+    if (!selState){ sc.hidden = true; return; }
+    sc.hidden = false;
+    sc.textContent = selCounty ? '◀ ' + selState.name : '◀ United States';
+  }
+
+  // ── lens + metric chrome ──
+  function buildLenses(){
+    const host = $('lvLenses');
+    host.innerHTML = Object.entries(LENSES).map(([k,l]) =>
+      '<button class="hu-chip' + (k === lens ? ' on' : '') + '" type="button" data-lens="' + k + '">' + l + '</button>').join('');
+    host.addEventListener('click', e => {
+      const b = e.target.closest('[data-lens]'); if (!b) return;
+      lens = b.dataset.lens; mIdx = 0;
+      host.querySelectorAll('.hu-chip').forEach(c => c.classList.toggle('on', c.dataset.lens === lens));
+      metricChanged();
+    });
+  }
+  function metricFace(){
+    $('lvMetricName').textContent = item().name;
+    const y = DY[lens] && DY[lens][String(mIdx)];
+    $('lvMetricYear').textContent = y ? String(y) : '';
+  }
+  function openMetricList(){
+    const b = $('lvSheetBody');
+    selCounty = null;
+    let h = '<div class="lv-kicker">' + LENSES[lens] + ' lens</div><div class="lv-name">Pick a metric</div><div class="lv-rows">';
+    h += CFG[lens].items.map((it, i) =>
+      '<button class="pop-opt" type="button" data-mi="' + i + '" aria-selected="' + (i === mIdx) + '">' + it.name +
+      (COUNTY_IDX[lens] && COUNTY_IDX[lens].includes(String(i)) ? ' <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">· county grain</span>' : '') + '</button>').join('');
+    h += '</div>';
+    b.innerHTML = h;
+    b.querySelectorAll('[data-mi]').forEach(el => el.addEventListener('click', () => {
+      mIdx = +el.dataset.mi;
+      sheetEl.classList.remove('open');
+      metricChanged();
+    }));
+    sheetEl.classList.add('open');
+    sheet.setDetent('dt-full');
+  }
+  $('lvMetricBtn').addEventListener('click', openMetricList);
+  function metricChanged(){
+    metricFace(); yearFace(); paintStates(); paintCounties();
+    if (selState && sheetEl.classList.contains('open')) selCounty ? openCountyCard() : openStateCard();
+    syncURL();
+  }
+
+  // ── year control: ‹ 2021 est. › — history is modeled, the pill says so ──
+  function yearFace(){
+    const pill = $('lvYearPill'), lbl = $('lvYearLbl');
+    if (!pill || !lbl) return;
+    const trend = hasTrend();
+    pill.classList.toggle('no-trend', !trend);
+    if (!trend && !isCurrentYear()) yearIdx = ALL_YEARS.length - 1;
+    lbl.innerHTML = ALL_YEARS[yearIdx] + (isCurrentYear() ? '' : ' <i>est.</i>');
+    $('lvYearPrev').disabled = !trend || yearIdx === 0;
+    $('lvYearNext').disabled = !trend || isCurrentYear();
+  }
+  function stepYear(d){
+    if (!hasTrend()) return;
+    const n = Math.max(0, Math.min(ALL_YEARS.length - 1, yearIdx + d));
+    if (n === yearIdx) return;
+    yearIdx = n;
+    yearFace(); paintStates(); syncURL();
+    if (sheetEl.classList.contains('open')){
+      if (mode === 'rank') openRankings();
+      else if (selState) (cmpState ? openCompareCard() : (selCounty ? openCountyCard() : openStateCard()));
+    }
+  }
+  $('lvYearPrev').addEventListener('click', () => stepYear(-1));
+  $('lvYearNext').addEventListener('click', () => stepYear(1));
+
+  // ── URL state, v1-compatible: the old page's ?lens=&metric=<name-slug>&state=
+  //    links keep resolving; ?year= and ?county= are new. replaceState only. ──
+  const metricSlug = n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  let applyingURL = false;
+  function syncURL(){
+    if (applyingURL) return;
+    const p = new URLSearchParams();
+    if (lens !== 'patient') p.set('lens', lens);
+    if (mIdx !== 0) p.set('metric', metricSlug(item().name));
+    if (!isCurrentYear()) p.set('year', String(ALL_YEARS[yearIdx]));
+    if (selState) p.set('state', selState.abbr);
+    if (selCounty) p.set('county', selCounty.fips);
+    const q = p.toString();
+    try { history.replaceState(null, '', q ? ('?' + q) : location.pathname); } catch(e){}
+  }
+  async function applyURLState(){
+    const p = new URLSearchParams(location.search);
+    if (![...p.keys()].length) return;
+    applyingURL = true;
+    try {
+      const L = p.get('lens');
+      if (L && LENSES[L]){ lens = L; mIdx = 0; }
+      const mk = p.get('metric');
+      if (mk){ const idx = CFG[lens].items.findIndex(it => metricSlug(it.name) === mk); if (idx >= 0) mIdx = idx; }
+      document.querySelectorAll('#lvLenses .hu-chip').forEach(c => c.classList.toggle('on', c.dataset.lens === lens));
+      metricFace(); yearFace();
+      const y = parseInt(p.get('year'), 10);
+      const yi = ALL_YEARS.indexOf(y);
+      if (yi >= 0 && hasTrend()) yearIdx = yi;
+      yearFace(); paintStates();
+      const st = p.get('state');
+      if (st){
+        const sf = STATES.features.find(f => f.properties.abbr === st);
+        if (sf){
+          await selectState(sf);
+          const co = p.get('county');
+          if (co && COUNTY_CACHE.has(sf.properties.fips)){
+            const cf = COUNTY_CACHE.get(sf.properties.fips).features.find(x => x.properties.fips === co);
+            if (cf){ selCounty = { fips:cf.properties.fips, name:cf.properties.name }; paintSel(); openCountyCard(); }
+          }
+        }
+      }
+    } finally { applyingURL = false; }
+  }
+
+  // ── rankings: every state at the current metric + year, best first ──
+  let mode = 'card';
+  function openRankings(){
+    mode = 'rank';
+    const rows = STATES.features
+      .map(f => ({ abbr:f.properties.abbr, name:f.properties.name, v:vYear(f.properties.abbr) }))
+      .filter(r => r.v != null)
+      .sort((a,b) => item().dir === -1 ? a.v - b.v : b.v - a.v);
+    const b = $('lvSheetBody');
+    b.innerHTML = '<div class="lv-kicker">Rankings · ' + yearTag() + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-rows"></div>';
+    b.querySelector('.lv-name').textContent = item().name;
+    b.querySelector('.lv-sub').textContent = 'Best first · tap a state to open it';
+    const host = b.querySelector('.lv-rows');
+    host.innerHTML = rows.map((r,i) =>
+      '<button class="pop-opt lv-rank-row" type="button" data-ab="' + r.abbr + '" aria-selected="' + (selState && selState.abbr === r.abbr) + '"><b>#' + (i+1) + '</b><span class="rn"></span><span class="gv-sr-meta" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--t3)">' + fmtV(r.v) + '</span></button>').join('');
+    host.querySelectorAll('.lv-rank-row').forEach((el,i) => {
+      el.querySelector('.rn').textContent = rows[i].name;
+      el.addEventListener('click', () => {
+        mode = 'card';
+        const sf = STATES.features.find(x => x.properties.abbr === el.dataset.ab);
+        if (sf) selectState(sf);
+      });
+    });
+    sheetEl.classList.add('open');
+    sheet.setDetent('dt-full');
+  }
+  $('lvRankBtn').addEventListener('click', () => {
+    if (mode === 'rank' && sheetEl.classList.contains('open')){
+      mode = 'card';
+      if (selState){ selCounty ? openCountyCard() : openStateCard(); } else sheetEl.classList.remove('open');
+    } else openRankings();
+  });
+
+  // ── cards (values + rank, straight from the flagship's numbers) ──
+  function natStats(){
+    const vals = [];
+    STATES.features.forEach(f => { const v = vYear(f.properties.abbr); if (v != null) vals.push(v); });
+    return vals;
+  }
+  const yearTag = () => ALL_YEARS[yearIdx] + (isCurrentYear() ? '' : ' est.');
+  // tiny trend sparkline: seven points, the real data year marked solid
+  function sparkSVG(pts){
+    if (!pts || pts.length < 2) return '';
+    const W = 250, H = 54, P = 8;
+    const vs = pts.map(p => p.value);
+    const mn = Math.min(...vs), mx = Math.max(...vs), span = (mx - mn) || 1;
+    const x = i => P + i * (W - 2*P) / (pts.length - 1);
+    const y = v => H - P - (v - mn) * (H - 2*P) / span;
+    const line = pts.map((p,i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.value).toFixed(1)).join(' ');
+    const yi = yearIdx;
+    return '<svg class="lv-spark" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">' +
+      '<path d="' + line + '" fill="none" stroke="#4ECDC4" stroke-width="2" opacity=".85"/>' +
+      pts.map((p,i) =>
+        '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="' + (i === yi ? 4 : p.real ? 3 : 1.6) + '" ' +
+        'fill="' + (i === yi ? '#E8A838' : p.real ? '#4ECDC4' : 'rgba(160,190,200,.55)') + '"/>').join('') +
+      '</svg>';
+  }
+  function openStateCard(){
+    if (!selState) return;
+    mode = 'card';
+    if (cmpState){ openCompareCard(); return; }
+    const v = vYear(selState.abbr);
+    const vals = natStats();
+    const sorted = vals.slice().sort((a,b) => item().dir === -1 ? a - b : b - a);   // rank 1 = best
+    const rank = v == null ? null : sorted.indexOf(v) + 1;
+    const avg = vals.length ? vals.reduce((a,x) => a + x, 0) / vals.length : null;
+    const b = $('lvSheetBody');
+    b.innerHTML = '<div class="lv-kicker">State · ' + LENSES[lens] + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="hu-stats"></div><div class="lv-trend"></div><div class="lv-actions"></div><div class="lv-src"></div>';
+    b.querySelector('.lv-name').textContent = selState.name;
+    b.querySelector('.lv-sub').textContent = item().name + ' · ' + yearTag() + (hasCounty() ? ' · tap a county' : '');
+    const tiles = [];
+    if (v != null) tiles.push({ v:fmtV(v), k:'Value · ' + yearTag(), cls:'' });
+    if (rank) tiles.push({ v:'#' + rank, k:'Rank of ' + vals.length, cls: rank <= 10 ? ' hi' : rank > vals.length - 10 ? ' lo' : '' });
+    if (avg != null && v != null) tiles.push({ v:(v >= avg ? '+' : '') + fmtV(Math.round((v - avg) * 10) / 10).replace('%','') + (item().unit === '%' ? 'pp' : ''), k:'vs national avg' });
+    b.querySelector('.hu-stats').innerHTML = tiles.map(s => '<div class="hu-stat"><div class="v' + s.cls + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
+    if (hasTrend()){
+      const tr = b.querySelector('.lv-trend');
+      tr.innerHTML = sparkSVG(trendPoints(selState.abbr)) + '<div class="lv-trend-lbl">2018–2024 · solid dot = real data year, rest estimated from trend rates</div>';
+    }
+    const act = b.querySelector('.lv-actions');
+    const cbtn = document.createElement('button');
+    cbtn.className = 'hu-chip'; cbtn.type = 'button';
+    cbtn.textContent = comparePick ? 'Now tap the state to compare with…' : '⇄ Compare with another state';
+    cbtn.addEventListener('click', () => { comparePick = !comparePick; openStateCard(); });
+    act.appendChild(cbtn);
+    b.querySelector('.lv-src').textContent = 'Source: ' + (item().source || '') + (DY[lens] && DY[lens][String(mIdx)] ? ' · ' + DY[lens][String(mIdx)] + ' data' : '');
+    sheetEl.classList.add('open');
+    sheet.setDetent('dt-peek');
+  }
+  function openCompareCard(){
+    if (!selState || !cmpState) return;
+    mode = 'card';
+    const va = vYear(selState.abbr), vb = vYear(cmpState.abbr);
+    const b = $('lvSheetBody');
+    b.innerHTML = '<div class="lv-kicker">Compare · ' + item().name + ' · ' + yearTag() + '</div><div class="lv-name"></div><div class="hu-stats"></div><div class="lv-actions"></div>';
+    b.querySelector('.lv-name').textContent = selState.name + ' vs ' + cmpState.name;
+    const tiles = [
+      { v: va == null ? '—' : fmtV(va), k: selState.abbr },
+      { v: vb == null ? '—' : fmtV(vb), k: cmpState.abbr }
+    ];
+    if (va != null && vb != null){
+      const d = Math.round((va - vb) * 10) / 10;
+      const better = item().dir === -1 ? (va < vb ? selState.abbr : cmpState.abbr) : (va > vb ? selState.abbr : cmpState.abbr);
+      tiles.push({ v:(d >= 0 ? '+' : '') + fmtV(d).replace('%','') + (item().unit === '%' ? 'pp' : ''), k:'Δ · ' + better + ' better', cls:' hi' });
+    }
+    b.querySelector('.hu-stats').innerHTML = tiles.map(s => '<div class="hu-stat"><div class="v' + (s.cls||'') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
+    const act = b.querySelector('.lv-actions');
+    const x = document.createElement('button');
+    x.className = 'hu-chip'; x.type = 'button'; x.textContent = '✕ End compare';
+    x.addEventListener('click', () => { cmpState = null; paintSel(); openStateCard(); });
+    act.appendChild(x);
+    sheetEl.classList.add('open');
+    sheet.setDetent('dt-half');
+  }
+  function openCountyCard(){
+    if (!selCounty || !selState) return;
+    mode = 'card';
+    const v = cVal(selCounty.fips);
+    const fc = COUNTY_CACHE.get(selState.fips);
+    const vals = [];
+    if (fc) fc.features.forEach(f => { const x = cVal(f.properties.fips); if (x != null) vals.push(x); });
+    const sorted = vals.slice().sort((a,b) => item().dir === -1 ? a - b : b - a);
+    const rank = v == null ? null : sorted.indexOf(v) + 1;
+    const b = $('lvSheetBody');
+    b.innerHTML = '<div class="lv-kicker">County · ' + selState.abbr + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="hu-stats"></div><div class="lv-src"></div>';
+    b.querySelector('.lv-name').textContent = selCounty.name + ' County';
+    b.querySelector('.lv-sub').textContent = item().name + (isCurrentYear() ? '' : ' · county grain shows the latest data year');
+    const sv = sVal(selState.abbr);
+    const tiles = [];
+    tiles.push({ v: v == null ? 'no data' : fmtV(v), k:'County', cls:'' });
+    if (rank) tiles.push({ v:'#' + rank, k:'Rank of ' + vals.length + ' in ' + selState.abbr, cls: rank <= 5 ? ' hi' : '' });
+    if (sv != null) tiles.push({ v:fmtV(sv), k:selState.abbr + ' state value' });
+    b.querySelector('.hu-stats').innerHTML = tiles.map(s => '<div class="hu-stat"><div class="v' + (s.cls||'') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
+    b.querySelector('.lv-src').textContent = 'County grain: CDC PLACES / BLS / Census, same joins as the production map.';
+    sheetEl.classList.add('open');
+    sheet.setDetent('dt-half');
+  }
+
+  // ── selection ──
+  async function selectState(f){
+    selCounty = null; cmpState = null; comparePick = false;
+    selState = { fips:f.properties.fips, abbr:f.properties.abbr, name:f.properties.name, feature:f };
+    paintSel();
+    map.fitBounds(stateBounds(f), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(900) });
+    openStateCard();
+    if (!COUNTY_CACHE.has(selState.fips)){
+      signal('Loading ' + selState.name + ' counties…');
+      try {
+        const fc = await fetch('/assets/data/geo/counties/' + selState.fips + '.json').then(r => r.json());
+        COUNTY_CACHE.set(selState.fips, fc);
+      } catch(e){}
+      signalDone(400);
+    }
+    paintCounties();
+    syncURL();
+  }
+  function deselectState(){
+    selState = null; selCounty = null; cmpState = null; comparePick = false;
+    paintSel(); paintCounties();
+    sheetEl.classList.remove('open');
+    map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+    syncURL();
+  }
+  $('lvScope').addEventListener('click', () => {
+    if (selCounty){ selCounty = null; paintSel(); openStateCard(); map.fitBounds(stateBounds(selState.feature), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(800) }); return; }
+    if (selState) deselectState();
+  });
+
+  // ── locate (kit: permission on tap; resolves to state + county) ──
+  HUKit.locate($('lvLocate'), {
+    onFix: async fix => {
+      const pt = [fix.lon, fix.lat];
+      const st = STATES && STATES.features.find(f => pip(pt, f.geometry));
+      if (!st){ signal('Your location is outside the mapped states'); signalDone(2600); return; }
+      await selectState(st);
+      const fc = COUNTY_CACHE.get(st.properties.fips);
+      if (fc && hasCounty()){
+        const cf = fc.features.find(f => pip(pt, f.geometry));
+        if (cf){ selCounty = { fips:cf.properties.fips, name:cf.properties.name }; paintSel(); openCountyCard(); }
+      }
+    },
+    onError: () => { signal('Location unavailable. Tap your state instead'); signalDone(2600); }
+  });
+
+  // ── layers + router ──
+  function installLayers(){
+    if (map.getSource('lv-states') || !STATES) return;
+    map.addSource('lv-states', { type:'geojson', data:STATES });
+    map.addSource('lv-counties', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+    map.addLayer({ id:'lv-state-fill', type:'fill', source:'lv-states', paint:{ 'fill-color':'#4ECDC4', 'fill-opacity':0.08 }});
+    map.addLayer({ id:'lv-county-fill', type:'fill', source:'lv-counties', paint:{ 'fill-color':'#4ECDC4', 'fill-opacity':0 }});
+    map.addLayer({ id:'lv-county-line', type:'line', source:'lv-counties', paint:{ 'line-color':'rgba(255,255,255,.22)', 'line-width':0.7 }});
+    map.addLayer({ id:'lv-state-line', type:'line', source:'lv-states', paint:{ 'line-color':'rgba(255,255,255,.35)', 'line-width':1 }});
+    map.addLayer({ id:'lv-state-sel', type:'line', source:'lv-states', filter:['==', ['get','abbr'], '___'], paint:{ 'line-color':'#F6F9FC', 'line-width':2.4 }});
+    map.addLayer({ id:'lv-county-sel', type:'line', source:'lv-counties', filter:['==', ['get','fips'], '___'], paint:{ 'line-color':'#F6F9FC', 'line-width':2 }});
+    wireRouter();
+    paintStates(); paintCounties(); paintSel();
+  }
+  let wired = false;
+  function wireRouter(){
+    if (wired) return; wired = true;
+    map.on('click', e => {
+      const order = ['lv-county-fill','lv-state-fill'].filter(l => map.getLayer(l));
+      const hits = map.queryRenderedFeatures(e.point, { layers:order });
+      if (!hits.length) return;
+      hits.sort((a,b) => order.indexOf(a.layer.id) - order.indexOf(b.layer.id));
+      const top = hits[0];
+      if (top.layer.id === 'lv-county-fill' && selState){
+        selCounty = { fips:top.properties.fips, name:top.properties.name };
+        paintSel(); openCountyCard(); syncURL(); return;
+      }
+      const sf = STATES.features.find(x => x.properties.abbr === top.properties.abbr || x.properties.fips === top.properties.fips);
+      if (!sf) return;
+      // compare mode: the NEXT state tap becomes the partner, not a new selection
+      if (comparePick && selState && sf.properties.abbr !== selState.abbr){
+        cmpState = { fips:sf.properties.fips, abbr:sf.properties.abbr, name:sf.properties.name, feature:sf };
+        comparePick = false;
+        paintSel(); openCompareCard();
+        return;
+      }
+      selectState(sf);
+    });
+    ['lv-county-fill','lv-state-fill'].forEach(l => {
+      map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; });
+    });
+    map.on('dragstart', () => { if (sheetEl.classList.contains('open') && HUKit.phone()) sheet.setDetent('dt-peek'); });
+  }
+  new MutationObserver(() => { map.setStyle(styleFor()); map.once('style.load', installLayers); })
+    .observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+
+  map.on('load', async () => {
+    signal('Loading state lines…');
+    try { STATES = await fetch('/assets/data/geo/us-states.json?v=2').then(r => r.json()); }
+    catch(e){ signal("Couldn't load the boundaries"); return; }
+    // county-grain values ride in behind (same file the production map uses)
+    fetch('/assets/data/countyData.json').then(r => r.json()).then(d => { CDATA = d; paintCounties(); }).catch(() => {});
+    installLayers();
+    buildLenses();
+    metricFace();
+    yearFace();
+    await applyURLState();   // old v1 links land exactly where they pointed
+    signal('✓ Six lenses, 40+ metrics · tap a state');
+    signalDone(3000);
+  });
+  map.on('error', ev => { if (!map.loaded()) signal('Basemap failed to load. Check the connection'); if (ev && ev.error) console.warn('maplibre', ev.error); });
+})();
+</script>
+{% endraw %}
+{% set ta_fixed = true %}
+{% set ta_source = 'CDC PLACES, KFF, BLS, Census, CMS and peers per metric (tap a metric for its source) · trend years estimated from drift rates, marked est.' %}
+{% include "components/tool-attribution.njk" %}

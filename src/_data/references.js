@@ -66,7 +66,7 @@ function canonicalKey(url) {
 const USE = {
   siteWide:  { label: 'Site-wide', site: true },
   home:      { label: 'Home', href: '/' },
-  mlm:       { label: 'Multi-Lens Map', href: '/tools/multi-lens-map/' },
+  mlm:       { label: 'Pop Health Multi-Lens Map', href: '/tools/multi-lens-map/' },
   fourPs:    { label: '4Ps Framework', href: '/learn/4ps-framework/' },
   oxygen:    { label: 'Oxygen Payment Cuts', href: '/learn/oxygen-payment-cuts/' },
   arma:      { label: 'ArMA 2026 Talk', href: '/learn/talks/arma-2026/' },

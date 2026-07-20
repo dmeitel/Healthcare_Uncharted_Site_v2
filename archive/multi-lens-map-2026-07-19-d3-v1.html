@@ -5,8 +5,8 @@ no_footer: true
 section: tool
 status: published
 order: 1
-title: U.S. Healthcare Multi-Lens Map
-description: Explore U.S. state healthcare through six lenses — Patient, Clinical, Operations, Payer, Policy, and Economics. Compare all 50 states on 40+ metrics.
+title: U.S. Pop Health Multi-Lens Map
+description: "Explore U.S. state healthcare through six lenses: Patient, Clinical, Operations, Payer, Policy, and Economics. Compare all 50 states on 40+ metrics."
 tags: [interactive, maps, policy, data-viz]
 has_interactive: true
 ---
@@ -1552,13 +1552,18 @@ body[data-colorblind="true"] {
   background: rgba(240,250,255,0.92); border-color: rgba(78,205,196,0.35);
   color: rgba(5,120,110,0.85);
 }
+/* ── find-my-location (HU-UI-GRAMMAR Phase 4, kit FAB + boundary PIP) ── */
+.map-stage .hu-fab { bottom: 14px; right: 12px; }
+.me-dot { fill: #4ECDC4; stroke: #fff; stroke-width: 1.6; pointer-events: none; }
+.me-dot-ring { fill: none; stroke: rgba(78,205,196,0.5); stroke-width: 2; pointer-events: none; }
+.county.my-county { stroke: #E8A838 !important; stroke-width: 2.2 !important; }
 </style>
 <div class="app hu-shell">
 
   <div class="lens-strip tool-bar">
     <div class="lens-strip-identity">
       <span class="tool-bar-kicker">Tool</span>
-      <span class="tool-bar-title">Multi-Lens <span>Map</span></span>
+      <span class="tool-bar-title">Pop Health <span>Multi-Lens</span></span>
     </div>
     <div class="lens-strip-inner">
       <span class="ls-group-label">4Ps</span>
@@ -1666,6 +1671,9 @@ body[data-colorblind="true"] {
       <div class="county-tip" id="countyTip" hidden></div>
       <div class="map-stage">
         <button class="pz-reset-btn" id="mapPzReset" aria-label="Reset zoom">&#8635; Reset view</button>
+        <button class="hu-fab" id="mapLocate" type="button" aria-label="Find my state and county on the map" title="Find my location">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle></svg>
+        </button>
         <div class="pz-hint" id="mapPzHint">Pinch to zoom &middot; drag to pan</div>
         <svg id="mapSvg" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet" aria-label="Interactive map of U.S. states colored by the selected metric"></svg>
         <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -1897,7 +1905,7 @@ body[data-colorblind="true"] {
     <div class="tutorial-head">
       <div class="tutorial-head-text">
         <div class="tutorial-title">How to use this map</div>
-        <div class="tutorial-sub">U.S. Healthcare Multi-Lens Map · Interactive guide</div>
+        <div class="tutorial-sub">U.S. Pop Health Multi-Lens Map · Interactive guide</div>
       </div>
       <button class="tutorial-close" id="tutorialClose">✕ Close</button>
     </div>
@@ -2032,6 +2040,7 @@ body[data-colorblind="true"] {
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script src="/assets/js/hu-kit.js"></script>
 <script>
 // ===== TOUCH DETECTION =====
 // Uses the CSS hover media query — more reliable than touch event sniffing.
@@ -2042,7 +2051,7 @@ const isTouch = () => window.matchMedia('(hover: none)').matches;
 // ===== NARROW-VIEWPORT POLICY (not geometry) =====
 // Map geometry never re-measures (fixed viewBox); only presentation policy keys
 // off the viewport, through matchMedia instead of ad-hoc innerWidth reads.
-const MQ_PHONE = matchMedia('(max-width: 680px)');     // overlay placement + auto-open data sheet
+const MQ_PHONE = matchMedia('(max-width: 699px)');     // overlay placement + auto-open data sheet — SAME line as the CSS phone block and the site sheet contract (was 680, which left a 19px band where CSS said phone but JS said desktop)
 const MQ_TOUCHPAN = matchMedia('(max-width: 960px)');  // pinch/pan gesture layer
 
 // ===== FIPS → STATE ABBR =====
@@ -2885,7 +2894,7 @@ function drawCountyChoropleth(path) {
     .data(countyFeatures)
     .join('path')
     .attr('d', path)
-    .attr('class', d => { const q = displayCountyQuintile(String(d.id).padStart(5, '0')); return 'county ' + (q === null ? 'no-data' : 'has-val-' + q); })
+    .attr('class', d => { const id = String(d.id).padStart(5, '0'); const q = displayCountyQuintile(id); return 'county ' + (q === null ? 'no-data' : 'has-val-' + q) + (id === _myCountyFips ? ' my-county' : ''); })
     .on('mousemove', function(event, d) { if (isTouch()) return; showCountyTip(String(d.id).padStart(5, '0'), (d.properties && d.properties.name) || 'County', event.clientX, event.clientY); })
     .on('mouseleave', hideCountyTip);
   // state borders on top for orientation
@@ -4211,6 +4220,9 @@ const Q_COLORS    = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)'
 function showStateFloatCard(abbr, clientX, clientY, forceAnimate = true) {
   const card = document.getElementById('stateFloatCard');
   if (!card) return;
+  // phone budget (HU-UI-GRAMMAR rule 1): a state tap auto-opens the data sheet,
+  // which carries this same headline — one surface, not a card AND a sheet
+  if (MQ_PHONE.matches) { card.style.display = 'none'; return; }
   const metric = METRICS[activeLens].items[activeMetricIdx];
   const val    = getValForYear(activeLens, activeMetricIdx, abbr, selectedYearIdx);
   const q      = displayQuintile(abbr);
@@ -4429,4 +4441,61 @@ function attachPinchZoom() {
 if (MQ_TOUCHPAN.matches) attachPinchZoom();
 else MQ_TOUCHPAN.addEventListener('change', e => { if (e.matches) attachPinchZoom(); });
 
+// ── FIND MY LOCATION (HU-UI-GRAMMAR Phase 4) ─────────────────────────
+// Kit FAB: permission ON TAP only. A fix resolves to YOUR state (and, in
+// county grain, YOUR county) via point-in-polygon against the same lon/lat
+// boundary files the geo-v2 stack serves — then the tool's own selection
+// machinery takes over. The dot projects through geoAlbersUsa, whose default
+// calibration IS this 975x610 canvas. Nothing leaves the browser.
+let _geoStates = null, _myXY = null, _myCountyFips = null;
+function _pipGeo(pt, geom) {
+  const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+  const x = pt[0], y = pt[1];
+  let inside = false;
+  for (const rings of polys) for (const ring of rings)
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+  return inside;
+}
+function _paintMe() {
+  if (!_myXY || !svg) return;
+  svg.selectAll('.me-dot,.me-dot-ring').remove();
+  svg.append('circle').attr('class', 'me-dot-ring').attr('cx', _myXY[0]).attr('cy', _myXY[1]).attr('r', 9);
+  svg.append('circle').attr('class', 'me-dot').attr('cx', _myXY[0]).attr('cy', _myXY[1]).attr('r', 4.5);
+}
+// every redraw wipes the svg — re-land the dot after each one (same wrapper
+// pattern this file already uses for selectState)
+const _origDrawMapForMe = drawMap;
+drawMap = function () { _origDrawMapForMe.apply(this, arguments); _paintMe(); };
+
+if (window.HUKit && document.getElementById('mapLocate')) {
+  HUKit.locate(document.getElementById('mapLocate'), {
+    onFix: async fix => {
+      const pt = [fix.lon, fix.lat];
+      _myXY = d3.geoAlbersUsa()(pt) || null;
+      let st = null;
+      try {
+        if (!_geoStates) _geoStates = await fetch('/assets/data/geo/us-states.json').then(r => r.json());
+        st = _geoStates.features.find(f => _pipGeo(pt, f.geometry)) || null;
+      } catch (e) {}
+      if (!st) { announce('Your location is outside the mapped states.'); drawMap(); return; }
+      _myCountyFips = null;
+      let county = null;
+      if (mapGrain === 'county') {
+        try {
+          const fc = await fetch('/assets/data/geo/counties/' + st.properties.fips + '.json').then(r => r.json());
+          county = fc.features.find(f => _pipGeo(pt, f.geometry)) || null;
+          if (county) _myCountyFips = county.properties.fips;
+        } catch (e) {}
+      }
+      selectState(st.properties.abbr);   // existing machinery: panel, phone sheet, URL
+      announce(county
+        ? 'You are in ' + county.properties.name + ' County, ' + st.properties.name
+        : 'You are in ' + st.properties.name);
+    },
+    onError: () => announce('Location unavailable. Tap your state instead.')
+  });
+}
 </script>

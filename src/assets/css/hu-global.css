@@ -841,6 +841,69 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
   .shell-dock--sheet.open { transform:translateY(0); }
 }
 
+/* ================================================================
+   HU KIT v1 — shared interactive chrome (HU-UI-GRAMMAR Phase 2)
+   ONE detent sheet, ONE chip rail, ONE locate FAB, ONE stat tile.
+   JS controller: /assets/js/hu-kit.js (HUKit.sheet / HUKit.locate /
+   HUKit.dcap). Detent class grammar matches the career tree's Phase 1
+   sheet: dt-peek / dt-half / dt-full / .dragging.
+================================================================ */
+
+/* Detents on the shared sheets. Peek shows the header line, half is the
+   working default, full nearly owns the screen. Declared after the base
+   .shell-sheet / .shell-dock--sheet rules so the added transition props win. */
+.shell-sheet, .shell-dock--sheet { display:flex; flex-direction:column; }
+.shell-sheet.dt-peek, .shell-dock--sheet.dt-peek { max-height:120px; overflow:hidden; }
+.shell-sheet.dt-half, .shell-dock--sheet.dt-half { max-height:52vh; max-height:52dvh; }
+.shell-sheet.dt-full, .shell-dock--sheet.dt-full { height:92vh; height:92dvh; max-height:92vh; max-height:92dvh; }
+.shell-sheet.dragging, .shell-dock--sheet.dragging { transition:none !important; }
+.shell-sheet { transition:transform .28s cubic-bezier(.2,.8,.2,1), max-height .2s ease, height .2s ease; }
+@media (max-width:699px) {
+  .shell-dock--sheet { transition:transform .28s cubic-bezier(.2,.8,.2,1), max-height .2s ease, height .2s ease; }
+}
+/* a real grabber (injected by HUKit.sheet) replaces the static ::before line */
+.shell-sheet.has-grab::before, .shell-dock--sheet.has-grab::before { display:none; }
+.hu-sheet-grab { display:block; width:100%; border:none; background:none; padding:10px 0 6px; cursor:grab; touch-action:none; flex:none; }
+.hu-sheet-grab span { display:block; width:44px; height:4px; border-radius:2px; background:var(--border2); margin:0 auto; }
+.hu-sheet-x { position:absolute; top:10px; right:10px; z-index:2; }
+
+/* Chip rail — one horizontal, non-wrapping filter row. Chips apply state,
+   they never navigate. Rail scrolls; chips keep the 44px floor on touch. */
+.hu-chiprail { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:2px; }
+.hu-chiprail::-webkit-scrollbar { display:none; }
+.hu-chip { flex:none; display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px; cursor:pointer;
+  background:var(--raised); border:1px solid var(--border); color:var(--t2);
+  font-family:var(--font); font-size:12px; font-weight:600; white-space:nowrap; transition:color .15s, border-color .15s, background .15s; }
+.hu-chip:hover { color:var(--t1); border-color:var(--teal); }
+.hu-chip.on { background:color-mix(in srgb, var(--teal) 16%, transparent); border-color:var(--teal); color:var(--t1); }
+[data-theme="light"] .hu-chip.on { border-color:var(--teal-dk); }
+.hu-chip:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+@media (hover:none) { .hu-chip { min-height:44px; } }
+
+/* Locate FAB — crosshair button floating bottom-right of a map canvas.
+   Permission is requested ON TAP only (HUKit.locate); state rides classes. */
+.hu-fab { position:absolute; right:14px; bottom:18px; z-index:110; width:48px; height:48px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  background:var(--surface); border:1px solid var(--border2); color:var(--t1); box-shadow:0 4px 16px rgba(0,0,0,.4); }
+.hu-fab:hover { border-color:var(--teal); color:var(--teal); }
+.hu-fab:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+.hu-fab.is-locating { animation:hu-fab-pulse 1s ease-in-out infinite; }
+.hu-fab.is-on { color:var(--teal); border-color:var(--teal); }
+.hu-fab.is-denied { opacity:.45; }
+@keyframes hu-fab-pulse { 50% { box-shadow:0 0 0 8px color-mix(in srgb, var(--teal) 22%, transparent); } }
+@media (prefers-reduced-motion:reduce) { .hu-fab.is-locating { animation:none; } }
+
+/* Stat tiles — the glanceable number pattern (one value, one label).
+   Grid wraps itself; give it 2-4 tiles, not a table. */
+.hu-stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; }
+.hu-stat { background:var(--raised); border:1px solid var(--border); border-radius:10px; padding:11px 13px; }
+.hu-stat .v { font-family:var(--display); font-size:20px; font-weight:800; color:var(--t1); line-height:1.1; }
+.hu-stat .v.hi { color:var(--teal); }
+.hu-stat .v.lo { color:var(--amber); }
+[data-theme="light"] .hu-stat .v.hi { color:var(--teal-dk); }
+[data-theme="light"] .hu-stat .v.lo { color:var(--amber-dk); }
+.hu-stat .k { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--t3); margin-top:4px; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width:6px; }
 ::-webkit-scrollbar-track { background:var(--dark); }
