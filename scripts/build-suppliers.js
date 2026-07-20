@@ -23,7 +23,24 @@
 const fs = require('fs');
 const path = require('path');
 
-const URL = 'https://data.cms.gov/provider-data/sites/default/files/resources/3b76abb9b6f610373563b5ef08bb0d81_1780186547/Medical-Equipment-Suppliers.csv';
+// The CSV lives behind a rotating content hash, so the pinned URL 404s whenever CMS
+// republishes. Resolve the CURRENT distribution URL from the dataset metastore first;
+// the pinned copy is only the offline fallback. Dataset id: ct36-nrcq.
+const META_URL = 'https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/ct36-nrcq';
+const FALLBACK_URL = 'https://data.cms.gov/provider-data/sites/default/files/resources/3b76abb9b6f610373563b5ef08bb0d81_1780186547/Medical-Equipment-Suppliers.csv';
+async function resolveCsvUrl() {
+  try {
+    const res = await fetch(META_URL);
+    if (!res.ok) throw new Error('metastore ' + res.status);
+    const meta = await res.json();
+    const dist = (meta.distribution || []).find((d) => /\.csv($|\?)/i.test(d.downloadURL || ''));
+    if (dist && dist.downloadURL) { console.log('  resolved current CSV via metastore'); return dist.downloadURL; }
+    throw new Error('no csv distribution in metastore response');
+  } catch (e) {
+    console.warn('  metastore resolve failed (' + e.message + ') — falling back to pinned URL');
+    return FALLBACK_URL;
+  }
+}
 const ROOT = path.join(__dirname, '..');
 const P = (...p) => path.join(ROOT, ...p);
 const read = (rel) => JSON.parse(fs.readFileSync(P(rel), 'utf8'));
@@ -71,7 +88,7 @@ async function getCSV() {
   const cache = P('scripts/.cache/dme-suppliers.csv');
   if (fs.existsSync(cache)) { console.log('  using cached CSV'); return fs.readFileSync(cache, 'utf8'); }
   console.log('  fetching CSV (~29 MB)...');
-  const res = await fetch(URL);
+  const res = await fetch(await resolveCsvUrl());
   if (!res.ok) throw new Error('fetch failed: ' + res.status);
   const text = await res.text();
   fs.mkdirSync(P('scripts/.cache'), { recursive: true });

@@ -17,11 +17,16 @@
  */
 const { makeNode, edge, uid } = require('../entity');
 
+// This is a TEXT parse of a live page — brittle by nature, so it FAILS LOUDLY.
+// If a reformat of atlas/index.njk moves an anchor, the build stops here with a
+// named error instead of quietly shipping a graph with zero concept nodes.
+const FAIL = (msg) => { throw new Error('[atlas-concepts] ' + msg + ' — the adapter text-parses src/atlas/index.njk; if the atlas was reformatted, update the anchors in scripts/lib/adapters/atlas-concepts.js'); };
+
 function parseZoneDefs(src) {
   const start = src.indexOf('const ZONE_DEFS');
-  if (start < 0) return [];
+  if (start < 0) FAIL('anchor "const ZONE_DEFS" not found');
   const end = src.indexOf('\n];', start);     // first line-initial ]; closes the array
-  if (end < 0) return [];
+  if (end < 0) FAIL('closing "];" for ZONE_DEFS not found');
   const snippet = src.slice(start, end + 3);
   return new Function(snippet + '\nreturn ZONE_DEFS;')();
 }
@@ -29,11 +34,16 @@ function parseZoneDefs(src) {
 // Same trick for a named expansion config object (const NAME = { ... };).
 function parseExpand(src, name) {
   const start = src.indexOf('const ' + name + ' ');
-  if (start < 0) return null;
+  if (start < 0) FAIL('anchor "const ' + name + '" not found');
   const end = src.indexOf('\n};', start);     // first line-initial }; closes the object
-  if (end < 0) return null;
+  if (end < 0) FAIL('closing "};" for ' + name + ' not found');
   return new Function(src.slice(start, end + 3) + '\nreturn ' + name + ';')();
 }
+
+// Sanity floors from the known-good atlas (2026-07-20: 7 zones, 101 concept cells).
+// Shrinking below these is either a deliberate atlas restructure (update the floors)
+// or a broken parse (the thing this guard exists to catch).
+const MIN_ZONES = 5, MIN_CONCEPTS = 60;
 
 module.exports = {
   name: 'atlas-concepts',
@@ -143,6 +153,10 @@ module.exports = {
       }
     }
 
-    return [...byUid.values()];
+    const out = [...byUid.values()];
+    const zoneCount = out.filter((n) => n.facets && n.facets.kind === 'zone').length;
+    if (zoneCount < MIN_ZONES) FAIL('only ' + zoneCount + ' zones parsed (floor ' + MIN_ZONES + ')');
+    if (out.length - zoneCount < MIN_CONCEPTS) FAIL('only ' + (out.length - zoneCount) + ' concept nodes parsed (floor ' + MIN_CONCEPTS + ')');
+    return out;
   },
 };

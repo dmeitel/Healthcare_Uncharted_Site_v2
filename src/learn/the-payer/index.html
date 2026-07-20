@@ -1,0 +1,386 @@
+---
+layout: base.njk
+section: learn
+title: "The Payer: Claims, Codes, and Prior Auth"
+description: "An insurer never sees your patient. It sees an 837 file full of codes. How claims adjudication, coding systems, and prior authorization actually work, and what the denial-versus-overturn numbers say about the whole machine."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial palette + DM Serif Display: the Payer chapter of the player series. The parallel system that pays for the visible one."
+---
+{% block extraHead %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+{% endblock %}
+
+<style>
+  /* ── Editorial palette layered on HU tokens (same idiom as Articles 03/07/09/10) ── */
+  .py4{
+    --jp-bg:        var(--dark);
+    --jp-surface:   var(--surface);
+    --jp-raised:    var(--raised);
+    --jp-line:      var(--border);
+    --jp-line-2:    var(--border2);
+    --jp-ink-1:     var(--t1);
+    --jp-ink-2:     var(--t2);
+    --jp-ink-3:     var(--t3);
+    --jp-ink-4:     var(--t4);
+    --jp-accent:    var(--amber);
+    --jp-teal:      var(--teal);
+    --jp-blue:      #6aadff;
+    --jp-red:       #ff7b76;
+    --jp-serif:     'DM Serif Display', Georgia, serif;
+    --jp-sans:      var(--font);
+    --jp-mono:      var(--mono);
+  }
+  [data-theme="light"] .py4{
+    --jp-accent: var(--amber-dk);
+    --jp-teal:   var(--teal-dk);
+    --jp-blue:   var(--blue);
+    --jp-red:    #C0392B;
+  }
+
+  .py4{ background:var(--jp-bg); color:var(--jp-ink-2); font-family:var(--jp-sans); line-height:1.65; }
+  .py4 *,.py4 *::before,.py4 *::after{ box-sizing:border-box; }
+
+  .p4-hero{ position:relative; overflow:hidden; border-bottom:1px solid var(--jp-line);
+            background: linear-gradient(135deg, var(--jp-bg) 0%, var(--jp-surface) 55%, var(--jp-bg) 100%); }
+  .p4-hero::before{ content:""; position:absolute; top:-160px; right:-120px; width:520px; height:520px;
+                    background:radial-gradient(circle, rgba(232,168,56,.13) 0%, transparent 65%); pointer-events:none; }
+  .p4-hero::after{ content:""; position:absolute; bottom:-220px; left:-160px; width:560px; height:560px;
+                   background:radial-gradient(circle, rgba(78,205,196,.09) 0%, transparent 65%); pointer-events:none; }
+  .p4-hero-inner{ max-width:1100px; margin:0 auto; padding:80px 36px 64px; position:relative; z-index:1;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:780px){ .p4-hero-inner{ grid-template-columns:1fr; gap:32px; padding:56px 24px 44px; } }
+
+  .jp-eyebrow{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--jp-accent); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .jp-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--jp-accent);
+                    box-shadow:0 0 14px var(--jp-accent); flex-shrink:0; }
+  .jp-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--jp-ink-4); }
+
+  .jp-h1{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(44px, 7vw, 86px);
+          line-height:1.02; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 22px; }
+  .jp-h1 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-hero-sub{ font-size:19px; line-height:1.55; color:var(--jp-ink-2); max-width:640px; margin:0 0 32px; }
+  .jp-hero-sub strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-thesis{ background: linear-gradient(135deg, rgba(232,168,56,.09), rgba(78,205,196,.04));
+              border:1px solid rgba(232,168,56,.24); border-left:4px solid var(--jp-accent);
+              border-radius:6px; padding:18px 22px; max-width:680px; }
+  .jp-thesis-label{ color:var(--jp-accent); font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .jp-thesis-text{ font-size:15px; line-height:1.6; color:var(--jp-ink-2); display:inline; }
+  .jp-thesis-text strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-byline{ margin-top:24px; font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3);
+              letter-spacing:.06em; display:flex; gap:14px; flex-wrap:wrap; }
+  .jp-byline span strong{ color:var(--jp-ink-2); font-weight:500; }
+
+  /* hero viz: the translation pipeline */
+  .p4-hero-viz{ width:300px; max-width:100%; }
+  @media (max-width:780px){ .p4-hero-viz{ width:100%; max-width:340px; } }
+  .p4v{ width:100%; height:auto; display:block; overflow:visible; }
+  .p4v-node{ fill:var(--jp-surface); stroke:var(--jp-teal); stroke-width:1.5; }
+  .p4v-node.amber{ stroke:var(--jp-accent); }
+  .p4v-lab{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; fill:var(--jp-ink-2); }
+  .p4v-cap{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; fill:var(--jp-ink-3); }
+  .p4v-arr{ fill:var(--jp-ink-3); }
+  .p4v-line{ stroke:var(--jp-line-2); stroke-width:1.5; }
+
+  .jp-body{ max-width:880px; margin:0 auto; padding:64px 36px 96px; }
+  @media (max-width:780px){ .jp-body{ padding:48px 24px 72px; } }
+  .jp-section + .jp-section{ margin-top:60px; }
+
+  .jp-kicker{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+              color:var(--jp-accent); margin-bottom:14px; display:flex; align-items:center; gap:9px; }
+  .jp-kicker::before{ content:""; width:22px; height:1px; background:var(--jp-accent); }
+
+  .jp-h2{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(28px, 4vw, 42px);
+          line-height:1.15; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 18px; }
+  .jp-h2 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-p{ font-size:17px; line-height:1.78; color:var(--jp-ink-2); margin:0 0 18px; }
+  .jp-p strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-p em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  .jp-p a{ color:var(--jp-teal); text-decoration:none; border-bottom:1px dotted var(--jp-teal); }
+  .jp-p a:hover{ border-bottom-style:solid; }
+
+  .jp-pull{ font-family:var(--jp-serif); font-size:25px; line-height:1.4; color:var(--jp-ink-1);
+            margin:30px 0; padding:8px 0 8px 28px; border-left:3px solid var(--jp-accent); font-style:italic; }
+
+  .p4-tldr{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:36px 0 0; }
+  @media (max-width:680px){ .p4-tldr{ grid-template-columns:1fr; } }
+  .p4-tldr-card{ background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:18px 20px; }
+  .p4-tldr-tag{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+                font-weight:600; margin-bottom:8px; }
+  .p4-tldr-tag.pipe{ color:var(--jp-teal); }
+  .p4-tldr-tag.lens{ color:var(--jp-accent); }
+  .p4-tldr-tag.gap{ color:var(--jp-red); }
+  .p4-tldr-card p{ font-size:13.5px; line-height:1.6; color:var(--jp-ink-2); margin:0; }
+  .p4-tldr-card p strong{ color:var(--jp-ink-1); }
+
+  .p4-verdict{ display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:22px 0 0;
+               background:var(--jp-raised); border:1px solid var(--jp-line); border-radius:8px; padding:14px 18px; }
+  .p4-verdict b{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+                 color:var(--jp-accent); font-weight:600; flex-shrink:0; }
+  .p4-verdict span{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); }
+  .p4-verdict span strong{ color:var(--jp-ink-1); }
+
+  .p4-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0; }
+  @media (max-width:680px){ .p4-stats{ grid-template-columns:1fr; } }
+  .p4-stat{ border:1px solid var(--jp-line); border-radius:10px; padding:16px 18px; background:var(--jp-surface); }
+  .p4-stat .n{ font-family:var(--jp-serif); font-size:38px; line-height:1; color:var(--jp-ink-1); margin-bottom:6px; }
+  .p4-stat .n em{ font-style:italic; color:var(--jp-accent); }
+  .p4-stat .l{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+               color:var(--jp-ink-3); line-height:1.5; }
+
+  /* code-system ledger */
+  .p4-ledger{ margin:28px 0; border:1px solid var(--jp-line); border-radius:10px; overflow:hidden; }
+  .p4-lg-row{ display:grid; grid-template-columns:150px 1fr; }
+  .p4-lg-row + .p4-lg-row{ border-top:1px solid var(--jp-line); }
+  .p4-lg-row > div{ padding:13px 18px; font-size:14px; line-height:1.55; color:var(--jp-ink-2); }
+  .p4-lg-row > div:first-child{ border-right:1px solid var(--jp-line); font-family:var(--jp-mono); font-size:12px;
+                                color:var(--jp-accent); font-weight:600; letter-spacing:.04em; }
+  .p4-lg-row > div strong{ color:var(--jp-ink-1); font-weight:600; }
+  @media (max-width:640px){
+    .p4-lg-row{ grid-template-columns:1fr; }
+    .p4-lg-row > div:first-child{ border-right:0; border-bottom:1px dashed var(--jp-line); padding-bottom:8px; }
+  }
+
+  .p4-go{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:28px 0 0; }
+  @media (max-width:680px){ .p4-go{ grid-template-columns:1fr; } }
+  .p4-go a{ display:block; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px;
+            padding:16px 18px; text-decoration:none; transition:border-color .15s, transform .15s; }
+  .p4-go a:hover{ border-color:var(--jp-accent); transform:translateY(-2px); }
+  .p4-go .t{ font-size:14px; font-weight:600; color:var(--jp-ink-1); margin-bottom:4px; }
+  .p4-go .d{ font-size:12.5px; line-height:1.55; color:var(--jp-ink-3); }
+  .p4-go .k{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--jp-accent); margin-bottom:6px; }
+
+  .jp-source{ font-size:13px; line-height:1.7; color:var(--jp-ink-3); margin-bottom:10px; padding-left:18px; position:relative; }
+  .jp-source::before{ content:"·"; position:absolute; left:4px; color:var(--jp-accent); }
+  .jp-source a{ color:var(--jp-teal); text-decoration:none; }
+  .jp-source a:hover{ text-decoration:underline; }
+  .jp-source em{ font-style:normal; color:var(--jp-ink-2); }
+</style>
+
+<div class="py4">
+
+  <!-- ── HERO ── -->
+  <header class="p4-hero">
+    <div class="p4-hero-inner">
+      <div>
+        <div class="jp-eyebrow">
+          <span class="dot"></span>
+          <span>Article 04</span>
+          <span class="sep"></span>
+          <span>The payer</span>
+        </div>
+
+        <h1 class="jp-h1">The payer reads a different <em>chart</em>.</h1>
+
+        <p class="jp-hero-sub">You see a patient. The insurer sees an 837 file: every encounter translated into codes, run through adjudication rules, and answered with a payment, a denial, or a request for more paperwork. <strong>That translation layer is a parallel healthcare system</strong>, and it decides what the visible one gets paid for.</p>
+
+        <div class="jp-thesis">
+          <span class="jp-thesis-label">Principle</span>
+          <span class="jp-thesis-text">In the payer's world, care only exists once it is coded, and <strong>every code is a negotiation.</strong> Learn to read the pipeline and the denial statistics stop looking like verdicts. They start looking like what they are: a process, with a documented overturn rate.</span>
+        </div>
+
+        <div class="jp-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~12 min read</span>
+          <span>KFF · CMS · AMA · HHS OIG</span>
+        </div>
+
+        <div class="card-fps" style="margin-top:18px;margin-bottom:0">
+          <a class="fp fp-payer" href="/atlas/#payer/commercial">Commercial Insurance</a>
+          <a class="fp fp-payer" href="/atlas/#payer/medicare">Medicare</a>
+          <a class="fp fp-techeco" href="/atlas/#techeco/rcm-vendors">Revenue Cycle Vendors</a>
+        </div>
+      </div>
+
+      <div class="p4-hero-viz" aria-hidden="true">
+        <svg class="p4v" viewBox="0 0 300 260">
+          <text class="p4v-cap" x="150" y="16" text-anchor="middle">the translation</text>
+          <rect class="p4v-node" x="80" y="34" width="140" height="30" rx="7"/>
+          <text class="p4v-lab" x="150" y="53" text-anchor="middle">the visit</text>
+          <line class="p4v-line" x1="150" y1="64" x2="150" y2="88"/>
+          <path class="p4v-arr" d="M145 86 l5 9 5 -9 z"/>
+          <rect class="p4v-node amber" x="80" y="98" width="140" height="30" rx="7"/>
+          <text class="p4v-lab" x="150" y="117" text-anchor="middle">837 · the codes</text>
+          <line class="p4v-line" x1="150" y1="128" x2="150" y2="152"/>
+          <path class="p4v-arr" d="M145 150 l5 9 5 -9 z"/>
+          <rect class="p4v-node amber" x="80" y="162" width="140" height="30" rx="7"/>
+          <text class="p4v-lab" x="150" y="181" text-anchor="middle">adjudication</text>
+          <line class="p4v-line" x1="150" y1="192" x2="150" y2="216"/>
+          <path class="p4v-arr" d="M145 214 l5 9 5 -9 z"/>
+          <rect class="p4v-node" x="80" y="226" width="140" height="30" rx="7"/>
+          <text class="p4v-lab" x="150" y="245" text-anchor="middle">835 · pay or deny</text>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="jp-body">
+
+    <!-- ── TLDR ── -->
+    <section class="jp-section">
+      <div class="p4-tldr">
+        <div class="p4-tldr-card">
+          <div class="p4-tldr-tag pipe">The pipeline</div>
+          <p><strong>HIPAA mandates the rails.</strong> X12 claims in, remittances out. In 2024, HealthCare.gov insurers denied 19% of in-network claims. Fewer than 1% were ever appealed.</p>
+        </div>
+        <div class="p4-tldr-card">
+          <div class="p4-tldr-tag lens">The lens</div>
+          <p><strong>~74,000 diagnosis codes, 11,000 CPT codes, 767 DRGs.</strong> The payer's entire view of medicine is these code sets, plus math on top. Coding intensity alone is worth $40 billion a year in Medicare Advantage.</p>
+        </div>
+        <div class="p4-tldr-card">
+          <div class="p4-tldr-tag gap">The gap</div>
+          <p><strong>When people DO appeal, they win.</strong> 80.7% of appealed Medicare Advantage denials were overturned in 2024, above 80% every year since 2019. The OIG found 13% of denials met coverage rules all along.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── THE PIPELINE ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The pipeline</div>
+      <h2 class="jp-h2">The parallel <em>system</em></h2>
+
+      <p class="jp-p">Every claim in the country rides the same rails. HIPAA's administrative simplification rules mandate the X12 transaction formats: the 837 carries the claim, the 835 carries the payment and the explanation, the 270 and 271 handle eligibility. This standardization is one of the quiet wins of American health policy. CAQH's industry index credits automation of these transactions with $258 billion in avoided spending, with about $21 billion a year still on the table for the workflows that haven't finished converting.</p>
+
+      <p class="jp-p">Then the claim hits adjudication, and the win rate changes hands. In 2024, insurers on HealthCare.gov denied 19% of in-network claims, roughly 85 million of 451 million. Denial rates by insurer ranged from 3% to 36%, same law, same marketplace. And here is the number that should reframe every conversation about denials: the stated reason was "medical necessity" only 5% of the time. The biggest reported buckets were "other" at 36% and administrative at 25%. Most denials are not a clinical judgment. They are the pipeline rejecting paperwork.</p>
+
+      <div class="p4-stats">
+        <div class="p4-stat"><div class="n">19<em>%</em></div><div class="l">In-network marketplace claims denied, 2024</div></div>
+        <div class="p4-stat"><div class="n">&lt;1<em>%</em></div><div class="l">Of denied claims ever appealed by consumers</div></div>
+        <div class="p4-stat"><div class="n">5<em>%</em></div><div class="l">Of denials citing medical necessity as the reason</div></div>
+      </div>
+
+      <p class="jp-p">Consumers appealed 262,982 of those 85 million denials. That is under one percent. The system's asymmetry lives in that number: one side runs the process at industrial scale, the other side mostly never engages with it. Keep that asymmetry in mind. It comes back with teeth in the prior auth section.</p>
+    </section>
+
+    <!-- ── THE CODES ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The lens</div>
+      <h2 class="jp-h2">The codes ARE the <em>chart</em></h2>
+
+      <p class="jp-p">The payer never meets the patient. Its entire epistemology is a stack of code sets, each owned by someone, each updated on its own calendar, each carrying money.</p>
+
+      <div class="p4-ledger">
+        <div class="p4-lg-row"><div>ICD-10-CM</div><div><strong>The diagnosis.</strong> Roughly 74,000 codes maintained by CDC/NCHS, updated every October. This is what was WRONG with the patient, as far as the payer knows.</div></div>
+        <div class="p4-lg-row"><div>CPT</div><div><strong>The work.</strong> More than 11,000 codes describing what was done, owned and licensed by the AMA. The 2026 set added 288 new ones, heavy on emerging tech.</div></div>
+        <div class="p4-lg-row"><div>HCPCS II</div><div><strong>The stuff.</strong> CMS-maintained codes for equipment, drugs, ambulances, everything that isn't professional work.</div></div>
+        <div class="p4-lg-row"><div>MS-DRG</div><div><strong>The hospital stay, flattened.</strong> Medicare pays inpatient care as one predetermined rate per discharge, assigned to one of 767 diagnosis-related groups. The whole admission becomes a single number.</div></div>
+        <div class="p4-lg-row"><div>RVU</div><div><strong>The physician's worth, in units.</strong> Work, practice expense, and malpractice values times a conversion factor: $32.35 in 2025, splitting to $33.40 or $33.57 in 2026 depending on payment-model participation. Yes, the entire physician fee schedule hangs off one multiplier.</div></div>
+        <div class="p4-lg-row"><div>HCC</div><div><strong>The risk score.</strong> In Medicare Advantage, submitted diagnoses feed a risk model that scales the plan's monthly payment. Which means in MA, a diagnosis code is not a clinical fact. It is revenue.</div></div>
+      </div>
+
+      <p class="jp-p">How much is coding worth? MedPAC estimates Medicare pays MA plans about 20% more than traditional Medicare for comparable beneficiaries, $84 billion in 2025 alone, and attributes $40 billion of it to coding intensity: the same patients, documented harder. When a code set carries that kind of money, the documentation stops being a record of care and becomes an instrument of payment. Both sides know it. Only one side staffs it accordingly.</p>
+
+      <div class="jp-pull">In this system, documentation is not paperwork about the care. Documentation IS the care, as far as anyone paying can see.</div>
+    </section>
+
+    <!-- ── PRIOR AUTH ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The gate</div>
+      <h2 class="jp-h2">Prior authorization, <em>measured</em></h2>
+
+      <p class="jp-p">Prior authorization is where the parallel system reaches forward in time: approval BEFORE care instead of payment after it. The AMA's 2025 physician survey puts the operational load in plain numbers. Practices complete 40 prior auths per physician per week and spend 13 hours a week doing it. Forty percent of physicians employ staff whose entire job is prior auth.</p>
+
+      <p class="jp-p">The clinical numbers are worse than the operational ones. 95% of physicians report PA delays access to necessary care. 26% report a prior auth led to a SERIOUS adverse event for a patient in their care, and within that group, 8% report a disability, birth defect, or death. 79% report patients abandoning treatment at least sometimes because of the process. And 88% report the thing the actuaries should care about: prior auth often drives overall utilization UP, through failed step therapy, extra visits, and the ER trips that happen while an approval is pending.</p>
+
+      <div class="p4-stats">
+        <div class="p4-stat"><div class="n">52.8<em>M</em></div><div class="l">Medicare Advantage PA determinations, 2024</div></div>
+        <div class="p4-stat"><div class="n">80.7<em>%</em></div><div class="l">Of appealed MA denials overturned</div></div>
+        <div class="p4-stat"><div class="n">13<em>%</em></div><div class="l">Of denied PA requests met Medicare coverage rules, per OIG</div></div>
+      </div>
+
+      <p class="jp-p">Now the shape of the machine, from KFF's Medicare Advantage data. 52.8 million PA determinations in 2024, about 1.7 per enrollee. Traditional Medicare, covering a comparable population, ran about 625,000 reviews, two per HUNDRED beneficiaries. Of the MA denials, 11.5% were appealed. Of those appeals, 80.7% were overturned, and the overturn rate has topped 80% every single year since 2019. The HHS Inspector General, auditing the largest MA insurers, found 13% of denied PA requests met Medicare coverage rules at the moment of denial.</p>
+
+      <p class="jp-p">Put those numbers in one sentence: a denial that is appealed usually dies, and most denials are never appealed. Whatever that process is optimized for, it is not accuracy.</p>
+
+      <div class="p4-verdict"><b>Lesson</b><span>The gap between the denial rate and the overturn rate is the entire argument. <strong>Appeal. The published numbers say the first answer is frequently not the real answer.</strong></span></div>
+    </section>
+
+    <!-- ── THE REFEREE ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The referee's math</div>
+      <h2 class="jp-h2">Floors, rebates, and <em>concentration</em></h2>
+
+      <p class="jp-p">The main federal control on insurer economics is the medical loss ratio: at least 80 cents of every premium dollar (85 in large group, and 85 for Medicare Advantage and Medicaid managed care) must go to claims and quality improvement, or the difference comes back as rebates. Real money moves: $1.6 billion rebated in 2025, $14.4 billion cumulative since 2012. Notice what an MLR floor does NOT constrain: the absolute size of the pie. Fifteen percent of a bigger number is a bigger number.</p>
+
+      <p class="jp-p">And the pie is consolidating. The AMA's market study finds 97% of metropolitan commercial insurance markets highly concentrated. In 47% of them, a single insurer holds at least half the market. Nationally, UnitedHealth holds 16% of commercial enrollment, with Elevance and CVS/Aetna at 12% each. Medicare Advantage now covers 55% of eligible beneficiaries, and UnitedHealth plus Humana hold 46% of it. One layer down, the FTC reports the three largest pharmacy benefit managers, each owned by a company that also owns a top insurer, processed nearly 80% of America's 6.6 billion prescriptions.</p>
+
+      <p class="jp-p">This is the context for every negotiation story you have ever heard from a practice manager. The pipeline is standardized, the codes are public, and the counterparty across the table keeps getting bigger. If you want to see what happens when this much of the money layer runs through one company, <a href="/learn/change-healthcare-stress-test/">February 2024 already ran the experiment</a>.</p>
+    </section>
+
+    <!-- ── WHAT'S CHANGING ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The counted era</div>
+      <h2 class="jp-h2">The pipeline gets a <em>clock</em></h2>
+
+      <p class="jp-p">Two forces are currently rewiring this system, one regulatory and one reputational. The regulatory one is CMS's Interoperability and Prior Authorization rule: starting in 2026, affected payers owe PA decisions within 72 hours for urgent requests and 7 days for standard ones, must give specific denial reasons, and must publish their PA metrics. By 2027 the whole exchange moves to FHIR APIs, prior auth included. CMS prices the efficiency gain around $15 billion over ten years.</p>
+
+      <p class="jp-p">The reputational one arrived in June 2025, when insurers covering 257 million Americans signed a voluntary pledge to shrink PA volume, honor existing authorizations across plan switches, answer most electronic requests in real time by 2027, and put medical professionals on every clinical denial. Worth watching. Worth skepticism too: in the AMA's survey, exactly 33% of physicians believe the pledge will make a meaningful difference. The profession has seen voluntary before.</p>
+
+      <div class="p4-verdict"><b>Lesson</b><span>Deadlines, published metrics, and machine-readable denials mean the pipeline is about to become MEASURABLE from the outside. <strong>Measured systems behave differently. That is rather the point.</strong></span></div>
+    </section>
+
+    <!-- ── DO THIS ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Do this</div>
+      <h2 class="jp-h2">Working a system that <em>counts</em></h2>
+
+      <p class="jp-p">If you practice: appeal, and build the habit into the workflow rather than the exception. The overturn statistics are not an anecdote, they are six consecutive years of federal data. If you run a practice: know your own denial distribution the way the payer knows it, because "other" and "administrative" are fixable categories, and the cost of NOT working a denial is documented too. If you're the informaticist: the 2026-2027 FHIR deadlines mean the PA machinery is about to live in your integration backlog. Get ahead of it.</p>
+
+      <p class="jp-p">And whichever seat you sit in, remember what the payer can and cannot see. It cannot see the patient. It can only see what the documentation became after translation. That is not a reason to game the codes. It is a reason to make the codes tell the truth at full resolution, because in this system, an undocumented severity is clinically real and financially fictional at the same time.</p>
+
+      <div class="p4-go">
+        <a href="/learn/ehr-architecture/">
+          <div class="k">Article 03 · The Provider</div>
+          <div class="t">EHR Architecture and Clinical Workflow</div>
+          <div class="d">The system that produces the documentation this article's system consumes.</div>
+        </a>
+        <a href="/learn/change-healthcare-stress-test/">
+          <div class="k">Article 09 · Stress test</div>
+          <div class="t">The Change Healthcare Cyberattack</div>
+          <div class="d">What happened when the claims pipeline's single biggest node went dark for a month.</div>
+        </a>
+        <a href="/tools/multi-lens-map/?lens=payer">
+          <div class="k">Tool · Deep link</div>
+          <div class="t">The Payer lens, mapped</div>
+          <div class="d">Uninsured rates, Medicaid, Medicare, marketplace enrollment: the payer landscape state by state.</div>
+        </a>
+        <a href="/tools/healthcare-vendor-directory/?sector=rcm">
+          <div class="k">Vendor Directory · Preset</div>
+          <div class="t">The revenue cycle layer</div>
+          <div class="d">The companies that live inside this article: clearinghouses, coders, denial-management vendors.</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── SOURCES ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Sources</div>
+      <h2 class="jp-h2">The receipts</h2>
+      <p class="jp-p">Every claim above traces to one of these. Full citations, with everything else this site cites, live in the <a href="/learn/sources/">Reference Appendix</a>.</p>
+      <div class="jp-source"><em>KFF (2026)</em> · <a href="https://www.kff.org/patient-consumer-protections/claims-denials-and-appeals-in-aca-marketplace-plans-in-2024/" target="_blank" rel="noopener">Claims denials and appeals in ACA marketplace plans, 2024</a> · 19% in-network denial rate, under 1% appealed, reason distribution.</div>
+      <div class="jp-source"><em>KFF (2026)</em> · <a href="https://www.kff.org/medicare/nearly-50-million-prior-authorization-requests-were-sent-to-medicare-advantage-insurers-in-2023/" target="_blank" rel="noopener">Medicare Advantage prior authorization data</a> · 52.8M determinations, 80.7% of appeals overturned.</div>
+      <div class="jp-source"><em>HHS OIG (2022)</em> · <a href="https://oig.hhs.gov/oei/reports/OEI-09-18-00260.asp" target="_blank" rel="noopener">MA denials audit, OEI-09-18-00260</a> · 13% of PA denials met coverage rules.</div>
+      <div class="jp-source"><em>AMA (2026)</em> · <a href="https://www.ama-assn.org/system/files/prior-authorization-survey.pdf" target="_blank" rel="noopener">2025 prior authorization physician survey</a> · 40 PAs/week, 13 hrs/week, 26% serious adverse events, 33% believe the pledge.</div>
+      <div class="jp-source"><em>CMS (2024)</em> · <a href="https://www.federalregister.gov/documents/2024/02/08/2024-00895/medicare-and-medicaid-programs-patient-protection-and-affordable-care-act-advancing-interoperability" target="_blank" rel="noopener">Interoperability and Prior Authorization final rule (CMS-0057-F)</a> · and the <a href="https://www.cms.gov/newsroom/fact-sheets/cms-interoperability-prior-authorization-final-rule-cms-0057-f" target="_blank" rel="noopener">fact sheet</a> · 72-hour/7-day windows, FHIR APIs, ~$15B estimate.</div>
+      <div class="jp-source"><em>AHIP (2025)</em> · <a href="https://www.ahip.org/news/press-releases/health-plans-take-action-to-simplify-prior-authorization" target="_blank" rel="noopener">The voluntary PA pledge</a> · 257M covered lives, six commitments.</div>
+      <div class="jp-source"><em>eCFR</em> · <a href="https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-162" target="_blank" rel="noopener">45 CFR Part 162, HIPAA transaction standards</a> · the X12 mandate.</div>
+      <div class="jp-source"><em>CAQH (2026)</em> · <a href="https://www.dataspring.com/blog/2025-caqh-index-shows-u.s.-healthcare-avoided-258-billion-and-accelerated-automation-interoperability-and-ai-adoption" target="_blank" rel="noopener">2025 CAQH Index</a> · $258B avoided, $21B remaining opportunity.</div>
+      <div class="jp-source"><em>MedPAC (2025)</em> · <a href="https://www.medpac.gov/wp-content/uploads/2025/03/Mar25_Ch11_MedPAC_Report_To_Congress_SEC.pdf" target="_blank" rel="noopener">March 2025 report, MA chapter</a> · $84B above-FFS payments; $40B coding intensity. Hospital payment mechanics: <a href="https://www.medpac.gov/wp-content/uploads/2024/10/MedPAC_Payment_Basics_24_hospital_FINAL_SEC.pdf" target="_blank" rel="noopener">Payment Basics</a> · 767 MS-DRGs.</div>
+      <div class="jp-source"><em>CMS (2025)</em> · <a href="https://www.cms.gov/newsroom/fact-sheets/calendar-year-cy-2026-medicare-physician-fee-schedule-final-rule-cms-1832-f" target="_blank" rel="noopener">CY2026 Physician Fee Schedule final rule</a> · conversion factors.</div>
+      <div class="jp-source"><em>AMA</em> · <a href="https://www.ama-assn.org/practice-management/cpt/cpt-overview-and-code-approval" target="_blank" rel="noopener">CPT overview</a> · code-set ownership; <a href="https://www.ama-assn.org/press-center/ama-press-releases/ama-releases-cpt-2026-code-set" target="_blank" rel="noopener">CPT 2026 release</a>.</div>
+      <div class="jp-source"><em>KFF (2026)</em> · <a href="https://www.kff.org/private-insurance/medical-loss-ratio-rebates/" target="_blank" rel="noopener">MLR rebates</a> · $1.6B in 2025, $14.4B cumulative; <a href="https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-B/part-158" target="_blank" rel="noopener">45 CFR Part 158</a> · the 80/85 floors.</div>
+      <div class="jp-source"><em>AMA (2025)</em> · <a href="https://www.ama-assn.org/press-center/ama-press-releases/ama-report-health-insurance-giants-tighten-grip-us-markets" target="_blank" rel="noopener">Competition in health insurance, 2025 edition</a> · 97% of markets highly concentrated, national shares.</div>
+      <div class="jp-source"><em>KFF (2026)</em> · <a href="https://www.kff.org/medicare/medicare-advantage-in-2026-enrollment-update-and-key-trends/" target="_blank" rel="noopener">Medicare Advantage in 2026</a> · 55% penetration, plan shares.</div>
+      <div class="jp-source"><em>FTC (2024)</em> · <a href="https://www.ftc.gov/news-events/news/press-releases/2024/07/ftc-releases-interim-staff-report-prescription-drug-middlemen" target="_blank" rel="noopener">PBM interim staff report</a> · big three at ~80% of prescriptions, vertical integration.</div>
+      <div class="jp-source"><em>KFF (2025)</em> · <a href="https://www.kff.org/medicare/how-medicare-pays-medicare-advantage-plans-issues-and-policy-options/" target="_blank" rel="noopener">How Medicare pays MA plans</a> · HCC risk adjustment mechanics.</div>
+    </section>
+
+  </div>
+</div>

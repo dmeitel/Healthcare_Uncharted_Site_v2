@@ -1,0 +1,416 @@
+---
+layout: base.njk
+section: learn
+title: "Leading the AI Transition: Run It Like a Formulary"
+description: "71% of hospitals run predictive AI. Fewer than half bias-checked it on their own patients. The governance system that closes that gap already exists down the hall in pharmacy. Leadership is the missing pillar, with the receipts."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial palette + DM Serif Display: the leadership anchor. Governance as a clinical system, not a committee."
+---
+{% block extraHead %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+{% endblock %}
+
+<style>
+  /* ── Editorial palette layered on HU tokens (same idiom as Article 07 / Method 01) ── */
+  .ld10{
+    --jp-bg:        var(--dark);
+    --jp-surface:   var(--surface);
+    --jp-raised:    var(--raised);
+    --jp-line:      var(--border);
+    --jp-line-2:    var(--border2);
+    --jp-ink-1:     var(--t1);
+    --jp-ink-2:     var(--t2);
+    --jp-ink-3:     var(--t3);
+    --jp-ink-4:     var(--t4);
+    --jp-accent:    var(--teal);
+    --jp-accent-d:  var(--teal-dk);
+    --jp-blue:      #6aadff;
+    --jp-gold:      #F0CF6B;
+    --jp-amber:     var(--amber);
+    --jp-red:       var(--red);
+    --jp-serif:     'DM Serif Display', Georgia, serif;
+    --jp-sans:      var(--font);
+    --jp-mono:      var(--mono);
+  }
+  [data-theme="light"] .ld10{
+    --jp-accent: var(--teal-dk);
+    --jp-blue:   var(--blue);
+    --jp-gold:   #8A6A15;
+  }
+
+  .ld10{ background:var(--jp-bg); color:var(--jp-ink-2); font-family:var(--jp-sans); line-height:1.65; }
+  .ld10 *,.ld10 *::before,.ld10 *::after{ box-sizing:border-box; }
+
+  /* ── HERO ── */
+  .l10-hero{ position:relative; overflow:hidden; border-bottom:1px solid var(--jp-line);
+            background: linear-gradient(135deg, var(--jp-bg) 0%, var(--jp-surface) 55%, var(--jp-bg) 100%); }
+  .l10-hero::before{ content:""; position:absolute; top:-160px; right:-120px; width:520px; height:520px;
+                    background:radial-gradient(circle, rgba(232,197,71,.12) 0%, transparent 65%); pointer-events:none; }
+  .l10-hero::after{ content:""; position:absolute; bottom:-220px; left:-160px; width:560px; height:560px;
+                   background:radial-gradient(circle, rgba(78,205,196,.10) 0%, transparent 65%); pointer-events:none; }
+  .l10-hero-inner{ max-width:1100px; margin:0 auto; padding:80px 36px 64px; position:relative; z-index:1;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:780px){ .l10-hero-inner{ grid-template-columns:1fr; gap:32px; padding:56px 24px 44px; } }
+
+  .jp-eyebrow{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--jp-gold); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .jp-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--jp-gold);
+                    box-shadow:0 0 14px var(--jp-gold); flex-shrink:0; }
+  .jp-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--jp-ink-4); }
+
+  .jp-h1{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(44px, 7vw, 86px);
+          line-height:1.02; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 22px; }
+  .jp-h1 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-hero-sub{ font-size:19px; line-height:1.55; color:var(--jp-ink-2); max-width:640px; margin:0 0 32px; }
+  .jp-hero-sub strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-thesis{ background: linear-gradient(135deg, rgba(232,197,71,.08), rgba(78,205,196,.05));
+              border:1px solid rgba(232,197,71,.24); border-left:4px solid var(--jp-gold);
+              border-radius:6px; padding:18px 22px; max-width:680px; }
+  .jp-thesis-label{ color:var(--jp-gold); font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .jp-thesis-text{ font-size:15px; line-height:1.6; color:var(--jp-ink-2); display:inline; }
+  .jp-thesis-text strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-byline{ margin-top:24px; font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3);
+              letter-spacing:.06em; display:flex; gap:14px; flex-wrap:wrap; }
+  .jp-byline span strong{ color:var(--jp-ink-2); font-weight:500; }
+
+  /* hero viz: the lifecycle loop a formulary already runs */
+  .l10-hero-viz{ width:300px; max-width:100%; }
+  @media (max-width:780px){ .l10-hero-viz{ width:100%; max-width:340px; } }
+  .l10v{ width:100%; height:auto; display:block; overflow:visible; }
+  .l10v-ring{ fill:none; stroke:var(--jp-line-2); stroke-width:1.5; stroke-dasharray:5 6; }
+  .l10v-node{ fill:var(--jp-surface); stroke:var(--jp-accent); stroke-width:1.6; }
+  .l10v-node.gold{ stroke:var(--jp-gold); }
+  .l10v-lab{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; fill:var(--jp-ink-2); }
+  .l10v-cap{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; fill:var(--jp-ink-3); }
+  .l10v-arr{ fill:var(--jp-ink-3); }
+
+  /* ── BODY ── */
+  .jp-body{ max-width:880px; margin:0 auto; padding:64px 36px 96px; }
+  @media (max-width:780px){ .jp-body{ padding:48px 24px 72px; } }
+  .jp-section + .jp-section{ margin-top:60px; }
+
+  .jp-kicker{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+              color:var(--jp-accent); margin-bottom:14px; display:flex; align-items:center; gap:9px; }
+  .jp-kicker::before{ content:""; width:22px; height:1px; background:var(--jp-accent); }
+
+  .jp-h2{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(28px, 4vw, 42px);
+          line-height:1.15; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 18px; }
+  .jp-h2 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-p{ font-size:17px; line-height:1.78; color:var(--jp-ink-2); margin:0 0 18px; }
+  .jp-p strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-p em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  .jp-p a{ color:var(--jp-accent); text-decoration:none; border-bottom:1px dotted var(--jp-accent); }
+  .jp-p a:hover{ border-bottom-style:solid; }
+
+  .jp-pull{ font-family:var(--jp-serif); font-size:25px; line-height:1.4; color:var(--jp-ink-1);
+            margin:30px 0; padding:8px 0 8px 28px; border-left:3px solid var(--jp-gold); font-style:italic; }
+
+  /* ── TLDR cards ── */
+  .l10-tldr{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:36px 0 0; }
+  @media (max-width:680px){ .l10-tldr{ grid-template-columns:1fr; } }
+  .l10-tldr-card{ background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:18px 20px; }
+  .l10-tldr-tag{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+                font-weight:600; margin-bottom:8px; }
+  .l10-tldr-tag.gap{ color:var(--jp-red); }
+  .l10-tldr-tag.frame{ color:var(--jp-accent); }
+  .l10-tldr-tag.capital{ color:var(--jp-gold); }
+  [data-theme="light"] .l10-tldr-tag.gap{ color:var(--red); }
+  .l10-tldr-card p{ font-size:13.5px; line-height:1.6; color:var(--jp-ink-2); margin:0; }
+  .l10-tldr-card p strong{ color:var(--jp-ink-1); }
+
+  /* ── verdict strip ── */
+  .l10-verdict{ display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:22px 0 0;
+               background:var(--jp-raised); border:1px solid var(--jp-line); border-radius:8px; padding:14px 18px; }
+  .l10-verdict b{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+                 color:var(--jp-accent); font-weight:600; flex-shrink:0; }
+  .l10-verdict span{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); }
+  .l10-verdict span strong{ color:var(--jp-ink-1); }
+
+  /* ── big stat row ── */
+  .l10-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0; }
+  @media (max-width:680px){ .l10-stats{ grid-template-columns:1fr; } }
+  .l10-stat{ border:1px solid var(--jp-line); border-radius:10px; padding:16px 18px; background:var(--jp-surface); }
+  .l10-stat .n{ font-family:var(--jp-serif); font-size:38px; line-height:1; color:var(--jp-ink-1); margin-bottom:6px; }
+  .l10-stat .n em{ font-style:italic; color:var(--jp-accent); }
+  .l10-stat .l{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+               color:var(--jp-ink-3); line-height:1.5; }
+
+  /* ── the formulary mapping table ── */
+  .l10-map{ margin:28px 0; border:1px solid var(--jp-line); border-radius:10px; overflow:hidden; }
+  .l10-map-row{ display:grid; grid-template-columns:1fr 1fr; }
+  .l10-map-row + .l10-map-row{ border-top:1px solid var(--jp-line); }
+  .l10-map-row.head{ background:var(--jp-raised); }
+  .l10-map-row.head > div{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+                           color:var(--jp-ink-3); font-weight:600; }
+  .l10-map-row > div{ padding:13px 18px; font-size:14px; line-height:1.55; color:var(--jp-ink-2); }
+  .l10-map-row > div:first-child{ border-right:1px solid var(--jp-line); }
+  .l10-map-row > div strong{ color:var(--jp-ink-1); font-weight:600; }
+  .l10-map-row > div em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  @media (max-width:640px){
+    .l10-map-row{ grid-template-columns:1fr; }
+    .l10-map-row > div:first-child{ border-right:0; border-bottom:1px dashed var(--jp-line); }
+    .l10-map-row.head > div:first-child{ border-bottom:0; }
+  }
+
+  /* ── rulebook timeline ── */
+  .l10-tl{ margin:26px 0; padding-left:2px; }
+  .l10-tl-row{ display:flex; gap:16px; padding:10px 0; border-bottom:1px dashed var(--jp-line); align-items:baseline; }
+  .l10-tl-row:last-child{ border-bottom:0; }
+  .l10-tl-date{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.08em; color:var(--jp-gold);
+                flex:0 0 92px; font-weight:600; }
+  .l10-tl-tx{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); }
+  .l10-tl-tx strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  /* ── go-deeper cards ── */
+  .l10-go{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:28px 0 0; }
+  @media (max-width:680px){ .l10-go{ grid-template-columns:1fr; } }
+  .l10-go a{ display:block; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px;
+            padding:16px 18px; text-decoration:none; transition:border-color .15s, transform .15s; }
+  .l10-go a:hover{ border-color:var(--jp-accent); transform:translateY(-2px); }
+  .l10-go .t{ font-size:14px; font-weight:600; color:var(--jp-ink-1); margin-bottom:4px; }
+  .l10-go .d{ font-size:12.5px; line-height:1.55; color:var(--jp-ink-3); }
+  .l10-go .k{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--jp-accent); margin-bottom:6px; }
+
+  /* ── sources ── */
+  .jp-source{ font-size:13px; line-height:1.7; color:var(--jp-ink-3); margin-bottom:10px; padding-left:18px; position:relative; }
+  .jp-source::before{ content:"·"; position:absolute; left:4px; color:var(--jp-accent); }
+  .jp-source a{ color:var(--jp-accent); text-decoration:none; }
+  .jp-source a:hover{ text-decoration:underline; }
+  .jp-source em{ font-style:normal; color:var(--jp-ink-2); }
+</style>
+
+<div class="ld10">
+
+  <!-- ── HERO ── -->
+  <header class="l10-hero">
+    <div class="l10-hero-inner">
+      <div>
+        <div class="jp-eyebrow">
+          <span class="dot"></span>
+          <span>Article 10</span>
+          <span class="sep"></span>
+          <span>Leadership</span>
+        </div>
+
+        <h1 class="jp-h1">Run it like a <em>formulary</em>.</h1>
+
+        <p class="jp-hero-sub">Seventy-one percent of U.S. hospitals now run predictive AI inside the EHR. The year before, fewer than half had checked their models for bias on their own patients. That gap has a name, and the name is not "innovation." It is <strong>governance</strong>, and it belongs to leadership, not to an IT ticket queue.</p>
+
+        <div class="jp-thesis">
+          <span class="jp-thesis-label">Principle</span>
+          <span class="jp-thesis-text">Every clinical AI should get what every drug already gets: <strong>a named owner, an evidence review before it touches a patient, monitoring while it runs, and a scheduled way off the shelf.</strong> Your hospital has operated that system for fifty years. It's called the formulary.</span>
+        </div>
+
+        <div class="jp-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~11 min read</span>
+          <span>ASTP · AMA · Joint Commission · RAND</span>
+        </div>
+
+        <div class="card-fps" style="margin-top:18px;margin-bottom:0">
+          <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
+          <a class="fp fp-techeco" href="/atlas/#techeco/ai-vendors">AI Vendor Landscape</a>
+          <a class="fp fp-policy" href="/atlas/#policy/accreditation">Accreditation Bodies</a>
+        </div>
+      </div>
+
+      <div class="l10-hero-viz" aria-hidden="true">
+        <svg class="l10v" viewBox="0 0 300 260">
+          <text class="l10v-cap" x="150" y="16" text-anchor="middle">the loop</text>
+          <circle class="l10v-ring" cx="150" cy="140" r="88"/>
+          <rect class="l10v-node" x="112" y="34" width="76" height="26" rx="6"/>
+          <text class="l10v-lab" x="150" y="51" text-anchor="middle">intake</text>
+          <rect class="l10v-node" x="216" y="126" width="76" height="26" rx="6"/>
+          <text class="l10v-lab" x="254" y="143" text-anchor="middle">evidence</text>
+          <rect class="l10v-node" x="112" y="218" width="76" height="26" rx="6"/>
+          <text class="l10v-lab" x="150" y="235" text-anchor="middle">monitor</text>
+          <rect class="l10v-node gold" x="8" y="126" width="76" height="26" rx="6"/>
+          <text class="l10v-lab" x="46" y="143" text-anchor="middle">retire</text>
+          <path class="l10v-arr" d="M226 92 l10 4 -8 7 z"/>
+          <path class="l10v-arr" d="M226 190 l8 7 -10 4 z"/>
+          <path class="l10v-arr" d="M66 197 l10 -4 -2 11 z"/>
+          <path class="l10v-arr" d="M74 84 l2 11 -10 -4 z"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="jp-body">
+
+    <!-- ── TLDR ── -->
+    <section class="jp-section">
+      <div class="l10-tldr">
+        <div class="l10-tldr-card">
+          <div class="l10-tldr-tag gap">The gap</div>
+          <p><strong>Adoption outran accountability.</strong> 71% of hospitals run predictive AI. In the 2023 data, 44% had evaluated for bias locally, and 79% took the model straight from their EHR vendor.</p>
+        </div>
+        <div class="l10-tldr-card">
+          <div class="l10-tldr-tag frame">The frame</div>
+          <p><strong>You already govern dangerous, useful things.</strong> Drugs get intake, evidence review, monitoring, and deprescribing. Models are begging for the same four steps.</p>
+        </div>
+        <div class="l10-tldr-card">
+          <div class="l10-tldr-tag capital">The capital</div>
+          <p><strong>Trust is the budget.</strong> 85% of physicians want a real say in AI adoption. 27% have received no AI training from anyone. Every silent rollout spends trust you never banked.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── THE GAP ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The gap</div>
+      <h2 class="jp-h2">The pillar nobody <em>staffed</em></h2>
+
+      <p class="jp-p">Start with the federal count, because it is bigger than most boards think. By 2024, 71% of U.S. hospitals were using predictive AI integrated with their EHR, up from 66% the year before. This is not a pilot-program story anymore. It is infrastructure.</p>
+
+      <p class="jp-p">Now the part that should bother you. In the 2023 hospital data, only 61% of adopters had evaluated their models for accuracy on their OWN patients, and only 44% had evaluated for bias. Meanwhile 79% of hospitals took their models from their EHR developer, the same distribution channel that shipped a sepsis model which <a href="/learn/ai-in-healthcare/">missed two thirds of the sepsis</a> until one health system finally validated it locally. The hospitals most likely to check their models were the ones that built their own. The ones least equipped to check were the ones taking whatever came in the update.</p>
+
+      <div class="l10-stats">
+        <div class="l10-stat"><div class="n">71<em>%</em></div><div class="l">Hospitals running predictive AI in the EHR, 2024</div></div>
+        <div class="l10-stat"><div class="n">44<em>%</em></div><div class="l">Had evaluated for bias on local data, 2023</div></div>
+        <div class="l10-stat"><div class="n">79<em>%</em></div><div class="l">Took models straight from their EHR vendor, 2023</div></div>
+      </div>
+
+      <p class="jp-p">The 2024 numbers improved: 82% of adopters now evaluate accuracy somewhere, 66% have a committee. Fine. But field research from Duke-Margolis found some "AI governance committees" are one to three people reviewing developer-reported performance and a privacy checklist. A committee that only reads the vendor's own numbers is a book club.</p>
+
+      <div class="jp-pull">A committee that only reads the vendor's own numbers is a book club.</div>
+    </section>
+
+    <!-- ── THE FRAME ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The frame</div>
+      <h2 class="jp-h2">You already run this <em>play</em></h2>
+
+      <p class="jp-p">Here's the thing about clinical AI governance: leaders keep treating it like a new discipline that needs inventing. It isn't. Hospitals already operate a mature governance system for a class of interventions that are powerful, useful, dangerous, and aggressively marketed. That system is the pharmacy and therapeutics committee, and every clinician in your building already trusts it.</p>
+
+      <p class="jp-p">Nobody stocks a drug because the rep gave a good demo. The drug gets an intake request. The evidence gets reviewed by people who can read it. It goes on the formulary with defined indications, gets monitored in use, and gets REMOVED when something better or a safety signal shows up. Map that onto models and you have the whole job.</p>
+
+      <div class="l10-map">
+        <div class="l10-map-row head"><div>The formulary does this</div><div>Model governance needs this</div></div>
+        <div class="l10-map-row"><div><strong>Intake.</strong> A requested drug enters a formal review, or it doesn't get stocked.</div><div><strong>Registration.</strong> Every model in the building is on a list, with an owner. Including the ones already running that nobody remembers turning on.</div></div>
+        <div class="l10-map-row"><div><strong>Evidence review.</strong> Published trials, on your patient population, read critically.</div><div><strong>Local validation.</strong> External evidence plus a silent run on YOUR patients before a single alert fires. <em>The sepsis lesson, institutionalized.</em></div></div>
+        <div class="l10-map-row"><div><strong>Monitoring.</strong> Adverse drug event reporting, utilization review.</div><div><strong>Drift watch.</strong> Performance tracked in production, with a defined threshold that triggers review. Models decay. Patient populations move.</div></div>
+        <div class="l10-map-row"><div><strong>Deprescribing.</strong> Drugs come OFF the formulary.</div><div><strong>Retirement.</strong> Every model carries a scheduled review date and a defined path off the shelf. If it can't be turned off, it was never governed.</div></div>
+      </div>
+
+      <p class="jp-p">This is not a thought experiment. Duke Health published exactly this lifecycle as its ABCDS oversight framework: registration, evaluation, deployment, active monitoring, for every algorithm that touches care. The framework paper is in JAMIA, the process is public, and it reads like a P&amp;T charter because that is what it is.</p>
+
+      <div class="l10-verdict"><b>Lesson</b><span>The governance system your clinicians trust most already exists down the hall. <strong>Don't invent a new bureaucracy. Extend the one that works.</strong></span></div>
+    </section>
+
+    <!-- ── THE CAPITAL ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The capital</div>
+      <h2 class="jp-h2">Trust is the <em>budget</em></h2>
+
+      <p class="jp-p">The workforce is not resisting this technology. Physician AI use went from 38% in 2023 to 66% in 2024 to 72% in early 2026, one of the fastest adoption curves clinical software has ever produced. Excitement now edges out concern, 37% to 23%, with 40% sitting exactly in the middle. The middle is where rollouts are won and lost.</p>
+
+      <p class="jp-p">Look at what the same survey says clinicians want from LEADERSHIP. 85% of physicians want to be consulted on AI adoption decisions or hold responsibility for them. 92% want more training. 27% have received no AI training from any source at all. And when asked what would most increase trust, the top answer wasn't a better model. It was a clear liability framework: tell me who owns the miss.</p>
+
+      <p class="jp-p">If that sounds familiar, it should. The Surgeon General's burnout advisory said the quiet part in 2022: burnout is a workplace phenomenon that calls for systems-level, organizational solutions, not another resilience webinar. The National Academy of Medicine's AI Code of Conduct makes workforce well-being and engaging the people affected two of its six core commitments. The pattern across all of it: the workforce is a stakeholder in the deployment, not a training line-item after the contract is signed.</p>
+
+      <p class="jp-p">One honest caveat. Nursing, the largest clinical workforce in the country, has NO rigorous national AI-sentiment survey yet. The best available numbers come from a staffing vendor's survey, which found that one in five nurses says AI tools "just appear" on the unit with no plan from leadership. Treat the number as directional. Treat the phenomenon as real, because you have probably watched it happen. And remember the workforce you are deploying onto: NCSBN counts 138,000 nurses gone since 2022 and roughly 40% of the remainder intending to leave by 2029.</p>
+
+      <div class="jp-pull">Every tool that "just appears" on a unit spends trust you never budgeted.</div>
+    </section>
+
+    <!-- ── THE RULEBOOK ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The rulebook</div>
+      <h2 class="jp-h2">Accreditation is coming, <em>on schedule</em></h2>
+
+      <p class="jp-p">If the formulary argument doesn't move you, the compliance calendar will. The external rulebook for health AI governance assembled itself in about eighteen months, and it is aimed at ORGANIZATIONS, not algorithms.</p>
+
+      <div class="l10-tl">
+        <div class="l10-tl-row"><div class="l10-tl-date">Jan 2025</div><div class="l10-tl-tx"><strong>HTI-1 goes live.</strong> Certified EHRs must expose 31 "source attributes" for every predictive model they ship: training data, validation, performance, fairness process, maintenance schedule. The vendor-evaluation checklist is now a regulatory requirement sitting inside your EHR.</div></div>
+        <div class="l10-tl-row"><div class="l10-tl-date">May 2025</div><div class="l10-tl-tx"><strong>NAM publishes its AI Code of Conduct.</strong> Six commitments, ten principles. Workforce well-being and engaging impacted people are commitments, not appendices.</div></div>
+        <div class="l10-tl-row"><div class="l10-tl-date">Sep 2025</div><div class="l10-tl-tx"><strong>Joint Commission and CHAI publish responsible-use guidance.</strong> Seven elements, including governance structures, quality monitoring, and a mechanism to keep the GOVERNING BODY briefed on AI uses and adverse events. Your board is now in the loop by design.</div></div>
+        <div class="l10-tl-row"><div class="l10-tl-date">May 2026</div><div class="l10-tl-tx"><strong>CHAI ships eight governance playbooks</strong>, built with 150+ health systems: policy, org structures, lifecycle management, risk assessment, third-party management, training.</div></div>
+        <div class="l10-tl-row"><div class="l10-tl-date">Jun 2026</div><div class="l10-tl-tx"><strong>Joint Commission opens the first AI certification.</strong> Voluntary today. You have watched this movie. Voluntary is how every accreditation standard starts.</div></div>
+      </div>
+
+      <p class="jp-p">Context for scale: the FDA's device list now carries roughly 1,500 AI-enabled devices, three quarters of them in imaging. And the ecosystem is still finding its feet. CHAI's original "assurance labs" concept quietly pivoted into certifying commercial assurance vendors, and the trade press wrote the retrospective. The rulebook is assembling, not settled. Which is exactly why you should not outsource your judgment to it.</p>
+
+      <div class="l10-verdict"><b>Lesson</b><span>Get ahead of the standard while it is still voluntary. <strong>The systems that governed early will certify by mail. The ones that didn't will certify by consultant.</strong></span></div>
+    </section>
+
+    <!-- ── THE FAILURE MODE ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The failure mode</div>
+      <h2 class="jp-h2">Why these projects actually <em>die</em></h2>
+
+      <p class="jp-p">RAND interviewed 65 experienced data scientists and engineers about why AI projects fail, and by some estimates cited in that report, more than 80% of them do. The most common root cause was not the model, the data, or the vendor. It was leadership misunderstanding what problem needed solving. Read that as a job description. The technical failure modes have technical owners. The number one failure mode is YOURS.</p>
+
+      <p class="jp-p">Healthcare has known this longer than the AI industry has existed. Sittig and Singh's sociotechnical model lists eight dimensions of health IT, and exactly one of them is hardware and software. The rest are people, workflow, culture, policy, and measurement. When Children's Hospital of Pittsburgh rushed a CPOE rollout in 2005, mortality among transferred patients more than doubled, and the postmortem was about workflow, not code. When the VA's new EHR silently routed thousands of orders into an "unknown queue" nobody could see, the Inspector General tied it to 149 patient harm events. The technology worked as built. The rollout failed as led.</p>
+
+      <p class="jp-p">Is there a randomized trial proving that involving clinicians in governance prevents these failures? No, and be suspicious of anyone who claims one. What exists is convergence: the implementation literature keeps finding clinician engagement at the center of success, the workforce is explicitly asking for a seat, and every framework from NAM to the Joint Commission now requires one. When the evidence, the demand, and the standard all point the same direction, waiting for the RCT is a stall tactic.</p>
+    </section>
+
+    <!-- ── DO THIS ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Do this</div>
+      <h2 class="jp-h2">The moves, in <em>order</em></h2>
+
+      <p class="jp-p">Start with the list. Can you produce, today, an inventory of every algorithm influencing care in your building, each with a named owner? Most systems cannot. That inventory is move one, and it costs a spreadsheet. Registration before regulation.</p>
+
+      <p class="jp-p">Then extend the formulary: route every new model, including the "free" ones bundled in the next EHR update, through intake, evidence review with a silent local run, production monitoring, and a scheduled review date. Ask your EHR vendor for the 31 HTI-1 source attributes; since January 2025 they are required to show you. Put a clinician who still works the floor on the committee and pay for their time, because 85% of your medical staff is asking. Budget the training line, because 92% want it and 27% have gotten nothing. And brief the board on AI the way you brief them on quality, because as of this year the Joint Commission expects exactly that.</p>
+
+      <p class="jp-p">None of this requires a chief AI officer or a moonshot budget. It requires deciding that models are clinical interventions and governing them like you already govern the last class of intervention that was this powerful. The vendors will keep moving faster than you. That was always true of the drug reps too. The formulary never needed to outrun them. It needed to make them walk through the front door.</p>
+
+      <div class="l10-go">
+        <a href="/learn/ai-in-healthcare/">
+          <div class="k">Article 07 · Evidence</div>
+          <div class="t">AI in Healthcare: What Works, What Doesn't, and Why</div>
+          <div class="d">The evaluation frame this article governs with: four questions that sort every pitch, case studies with receipts.</div>
+        </a>
+        <a href="/learn/talks/arma-2026/">
+          <div class="k">Talk · CME</div>
+          <div class="t">AI in Healthcare: Value vs. Hype</div>
+          <div class="d">The live version, with slides and the take-home evaluation card.</div>
+        </a>
+        <a href="/tools/healthcare-career-tree/?role=cmio">
+          <div class="k">Career Tree · Deep link</div>
+          <div class="t">The informatics leadership ladder</div>
+          <div class="d">Who actually staffs this work: the roads into CMIO, informatics, and clinical technology leadership.</div>
+        </a>
+        <a href="/tools/healthcare-vendor-directory/?sector=cautionary">
+          <div class="k">Vendor Directory · Preset</div>
+          <div class="t">Proceed with caution</div>
+          <div class="d">The cautionary-tales sector. Governance exists because this list exists.</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── SOURCES ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Sources</div>
+      <h2 class="jp-h2">The receipts</h2>
+      <p class="jp-p">Every claim above traces to one of these. Full citations, with everything else this site cites, live in the <a href="/learn/sources/">Reference Appendix</a>.</p>
+      <div class="jp-source"><em>ASTP/ONC Data Brief 80 (2025)</em> · <a href="https://www.healthit.gov/data/data-briefs/hospital-trends-use-evaluation-and-governance-predictive-ai-2023-2024/" target="_blank" rel="noopener">Hospital use, evaluation, and governance of predictive AI, 2023-2024</a> · 71% adoption, 82%/74% evaluation rates, 66% with committees.</div>
+      <div class="jp-source"><em>Nong et al., Health Affairs (2025)</em> · <a href="https://pubmed.ncbi.nlm.nih.gov/39761454/" target="_blank" rel="noopener">Predictive model use and governance in U.S. hospitals, 2023</a> · 61% local accuracy evaluation, 44% bias, 79% EHR-developer models.</div>
+      <div class="jp-source"><em>AMA (2026)</em> · <a href="https://www.ama-assn.org/system/files/physician-ai-sentiment-report.pdf" target="_blank" rel="noopener">Physician sentiment on augmented intelligence</a> · 72% use, 85% want a role in adoption, 92% want training, 27% received none.</div>
+      <div class="jp-source"><em>AMA (2025)</em> · <a href="https://www.ama-assn.org/practice-management/digital-health/2-3-physicians-are-using-health-ai-78-2023" target="_blank" rel="noopener">2 in 3 physicians using health AI, up 78% from 2023</a>.</div>
+      <div class="jp-source"><em>Joint Commission &amp; CHAI (2025)</em> · <a href="https://www.jointcommission.org/en-us/knowledge-library/news/2025-09-jc-and-chai-release-initial-guidance-to-support-responsible-ai-adoption" target="_blank" rel="noopener">Guidance on the Responsible Use of AI in Healthcare</a> and the <a href="https://www.jointcommission.org/en-us/certification/responsible-use-of-ai-in-healthcare" target="_blank" rel="noopener">RUAIH certification (2026)</a>.</div>
+      <div class="jp-source"><em>CHAI (2026)</em> · <a href="https://www.chai.org/news/coalition-for-health-ai-chai-releases-comprehensive-governance-playbooks-to" target="_blank" rel="noopener">Eight AI governance playbooks</a>.</div>
+      <div class="jp-source"><em>National Academy of Medicine (2025)</em> · <a href="https://nam.edu/our-work/programs/leadership-consortium/health-care-artificial-intelligence-code-of-conduct/" target="_blank" rel="noopener">An AI Code of Conduct for Health and Medicine</a>.</div>
+      <div class="jp-source"><em>ONC/ASTP</em> · <a href="https://www.federalregister.gov/documents/2024/01/09/2023-28857/health-data-technology-and-interoperability-certification-program-updates-algorithm-transparency-and" target="_blank" rel="noopener">HTI-1 final rule</a> and the <a href="https://www.healthit.gov/sites/default/files/page/2023-12/HTI-1_DSI_fact%20sheet_508.pdf" target="_blank" rel="noopener">DSI transparency fact sheet</a> · the 31 source attributes.</div>
+      <div class="jp-source"><em>Bedoya et al., JAMIA (2022)</em> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9382367/" target="_blank" rel="noopener">Duke's ABCDS oversight framework</a>.</div>
+      <div class="jp-source"><em>Duke-Margolis (2024)</em> · <a href="https://healthpolicy.duke.edu/sites/default/files/2024-10/AI%20Governance%20in%20Health%20Systems.pdf" target="_blank" rel="noopener">AI governance in health systems</a> · committee composition field research.</div>
+      <div class="jp-source"><em>RAND (2024)</em> · <a href="https://www.rand.org/pubs/research_reports/RRA2680-1.html" target="_blank" rel="noopener">The root causes of failure for AI projects</a> · leadership misalignment tops the list; the 80% figure is an estimate RAND cites, not measures.</div>
+      <div class="jp-source"><em>Sittig &amp; Singh, Qual Saf Health Care (2010)</em> · <a href="https://pubmed.ncbi.nlm.nih.gov/20959322/" target="_blank" rel="noopener">The eight-dimension sociotechnical model</a>.</div>
+      <div class="jp-source"><em>Han et al., Pediatrics (2005)</em> · <a href="https://pubmed.ncbi.nlm.nih.gov/16322178/" target="_blank" rel="noopener">Mortality after rapid CPOE implementation</a> · 2.80% to 6.57% in transferred patients.</div>
+      <div class="jp-source"><em>VA Office of Inspector General (2022)</em> · <a href="https://www.vaoig.gov/reports/national-healthcare-review/new-electronic-health-records-unknown-queue-caused-multiple" target="_blank" rel="noopener">The unknown queue</a> · 149 patient harm events.</div>
+      <div class="jp-source"><em>U.S. Surgeon General (2022)</em> · <a href="https://www.ncbi.nlm.nih.gov/books/NBK595228/" target="_blank" rel="noopener">Addressing health worker burnout</a>.</div>
+      <div class="jp-source"><em>NCSBN (2025)</em> · <a href="https://www.ncsbn.org/news/ncsbn-launches-2024-nursing-workforce-survey" target="_blank" rel="noopener">2024 National Nursing Workforce Survey</a> · 138,000 nurses gone since 2022.</div>
+      <div class="jp-source"><em>FDA</em> · <a href="https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-enabled-medical-devices" target="_blank" rel="noopener">AI-enabled medical device list</a>.</div>
+      <div class="jp-source"><em>Healthcare IT News (2026)</em> · <a href="https://www.healthcareitnews.com/news/nurses-are-fearing-ai-less-and-using-it-more" target="_blank" rel="noopener">Nurses fearing AI less, using it more</a> · staffing-vendor survey, cited with that caveat.</div>
+    </section>
+
+  </div>
+</div>

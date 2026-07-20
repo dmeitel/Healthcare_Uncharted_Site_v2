@@ -94,3 +94,60 @@ module.exports = [
   // Health Tech
   { from: 'concept:telehealth-plat', rel: 'measured-by', to: 'metric:clinical:5' }, // telehealth adoption
 ];
+
+// ── positional-index guard ────────────────────────────────────────────────────
+// Metric uids are positional (metric:<lens>:<index>), so reordering metricsConfig
+// would silently repoint every edge above. This map pins what each referenced
+// index MUST be named; build-entities verifies it against the live config and
+// fails the build on any mismatch. When you reorder or rename metrics, update
+// both the links above and this map — that forced touch is the whole point.
+const METRIC_EXPECT = {
+  'metric:clinical:0': /primary care physicians/i,
+  'metric:clinical:1': /specialists per/i,
+  'metric:clinical:2': /nurse practitioners/i,
+  'metric:clinical:3': /shortage areas/i,
+  'metric:clinical:4': /population in hpsas/i,
+  'metric:clinical:5': /telehealth adoption/i,
+  'metric:clinical:7': /registered nurses/i,
+  'metric:clinical:8': /respiratory therapists/i,
+  'metric:operations:0': /beds per/i,
+  'metric:operations:1': /hospital count/i,
+  'metric:operations:2': /critical access/i,
+  'metric:operations:4': /ed wait/i,
+  'metric:payer:0': /uninsured/i,
+  'metric:payer:1': /medicaid enrollment/i,
+  'metric:payer:2': /medicare enrollment/i,
+  'metric:payer:3': /marketplace enrollment/i,
+  'metric:payer:4': /employer/i,
+  'metric:policy:0': /medicaid expansion/i,
+  'metric:policy:1': /certificate of need/i,
+  'metric:policy:2': /np scope/i,
+  'metric:policy:4': /telehealth parity/i,
+  'metric:policy:5': /rural health/i,
+  'metric:patient:0': /fair or poor health/i,
+  'metric:patient:1': /diabetes/i,
+  'metric:patient:2': /coronary/i,
+  'metric:patient:3': /obesity/i,
+  'metric:patient:6': /life expectancy/i,
+  'metric:patient:7': /routine checkup/i,
+  'metric:baseline:0': /household income/i,
+  'metric:baseline:2': /housing cost/i,
+  'metric:baseline:3': /food insecurity/i,
+};
+
+// Throws when any referenced metric index no longer means what the link meant.
+module.exports.verifyMetricTargets = function verifyMetricTargets(metricsConfig) {
+  const bad = [];
+  for (const cl of module.exports) {
+    for (const end of [cl.from, cl.to]) {
+      if (!/^metric:/.test(end)) continue;
+      const expect = METRIC_EXPECT[end];
+      if (!expect) { bad.push(end + ' has no METRIC_EXPECT entry (add one)'); continue; }
+      const [, lens, idx] = end.split(':');
+      const item = ((metricsConfig[lens] || {}).items || [])[Number(idx)];
+      if (!item) bad.push(end + ' does not exist in metricsConfig');
+      else if (!expect.test(item.name)) bad.push(end + ' is now "' + item.name + '" (expected ' + expect + ')');
+    }
+  }
+  if (bad.length) throw new Error('[cross-links] positional metric references drifted:\n  ' + [...new Set(bad)].join('\n  '));
+};

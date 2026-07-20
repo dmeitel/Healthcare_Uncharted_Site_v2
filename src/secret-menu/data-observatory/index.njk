@@ -115,10 +115,43 @@ eleventyExcludeFromCollections: true
 .obs-legend .sep { width: 1px; height: 14px; background: var(--border); }
 #obsTotals { font-family: var(--mono); font-size: 10px; color: var(--t3); font-variant-numeric: tabular-nums; }
 
+/* face-up operational stats — a HUD band under the instrument header.
+   Lives on theme surfaces, so real tokens apply (not the dmap literals). */
+.obs-stats {
+  display: flex; gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.obs-stat {
+  flex: 1 1 0; min-width: 118px; padding: 10px 16px 9px;
+  border-right: 1px solid var(--border);
+}
+.obs-stat:last-child { border-right: 0; }
+.obs-stat .v {
+  font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--t1);
+  line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.obs-stat .v em { font-style: normal; color: var(--teal); }
+[data-theme="light"] .obs-stat .v em { color: var(--teal-dk); }
+.obs-stat .k {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--t3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* plain-terms block — leads the side panel, reads like a sentence, not a spec */
+.obs-plain {
+  font-size: 13px; line-height: 1.65; color: var(--t1);
+  background: rgba(78,205,196,.06); border: 1px solid rgba(78,205,196,.18);
+  border-left: 3px solid var(--teal); border-radius: 6px;
+  padding: 10px 12px; margin-bottom: 14px;
+}
+[data-theme="light"] .obs-plain { border-left-color: var(--teal-dk); }
+.obs-kind-plain { font-size: 11px; line-height: 1.55; color: var(--t3); font-style: italic; margin: -8px 0 14px; }
+
 /* phone: the DAG can't reflow — fixed-width svg inside a scroll strip */
 @media (max-width: 699px) {
   .obs-shell .shell-canvas { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   #obsSvg { min-width: 1080px; }
+  .obs-stat { min-width: 104px; padding: 8px 12px 7px; }
 }
 </style>
 
@@ -130,6 +163,9 @@ eleventyExcludeFromCollections: true
     <span class="tool-bar-spacer"></span>
     <a class="toggle-chip" href="/secret-menu/">&larr; Secret Menu</a>
   </header>
+
+  <!-- face-up operational readout: filled by statsHUD() once the map loads -->
+  <div class="obs-stats" id="obsStats" aria-label="Data architecture totals"></div>
 
   <div class="shell-main">
     <div class="shell-canvas">
@@ -143,7 +179,7 @@ eleventyExcludeFromCollections: true
         <div class="obs-hint" id="obsHint">
           <span class="glyph">&#9678;</span>
           Hover a node to light up its full chain, upstream and down.<br><br>
-          Click to pin it here: size on disk, refresh mode, provenance, and everything it feeds.
+          Click to pin it here: what it is in plain terms, how the site uses it, its size and share of the total, and everything it feeds.
         </div>
         <div id="obsDetail" hidden></div>
       </div>
@@ -177,6 +213,27 @@ var KIND = {
   tool:         { color: '#2f9c6a', label: 'Tools',      col: 4 }
 };
 var COLS = ['Sources', 'Pipeline', 'Datasets', 'Build-time', 'Tools'];
+
+/* plain-language framing per column, shown under the badge in the side panel */
+var KIND_PLAIN = {
+  source:       'A source: somewhere outside this site that data comes FROM.',
+  script:       'A pipeline script: a program in the repo that fetches, cleans, or assembles data.',
+  dataset:      'A dataset: a file that ships with the site and gets loaded by pages in your browser.',
+  intermediate: 'A build-time file: used while the site is being assembled, never sent to browsers.',
+  tool:         'A tool: a page on the site that consumes the data upstream of it.'
+};
+/* refresh + provenance, translated */
+var REFRESH_PLAIN = {
+  'hand-maintained': 'edited by hand when the data changes',
+  'fetch-on-build':  're-downloaded from the source when rebuilt',
+  'auto-pull':       'refreshed by a pull script on demand',
+  'derived':         'rebuilt automatically from other files on this map'
+};
+var PROV_PLAIN = {
+  official:  'from official government or industry data',
+  editorial: 'written and maintained by hand for this site',
+  derived:   'computed from other datasets here'
+};
 var NODE_W = 172, NODE_GAP = 2, FIXED_H = 26, MIN_H = 22, MAX_H = 64;
 var MARGIN = { top: 46, right: 24, bottom: 24, left: 24 };
 
@@ -224,6 +281,7 @@ function init(data) {
   render();
   legend();
   totals(data);
+  statsHUD();
 }
 
 /* ── layout: fixed columns, packed vertically, sorted by bytes desc ── */
@@ -411,16 +469,45 @@ function select(id) {
   });
 }
 
+/* days-ago phrasing for the Updated row */
+function agoText(iso) {
+  var days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 45) return days + ' days ago';
+  if (days < 400) return Math.round(days / 30) + ' months ago';
+  return Math.round(days / 365) + ' years ago';
+}
+
 function dockHTML(n) {
   var k = KIND[n.kind];
   var h = '<h2>' + esc(n.label) + '</h2>';
   h += '<div class="obs-kind-badge"><i style="background:' + k.color + '"></i>' + esc(k.label) + ' &middot; ' + esc(n.kind) + '</div>';
+  h += '<div class="obs-kind-plain">' + esc(KIND_PLAIN[n.kind] || '') + '</div>';
+
+  /* simple terms first: what this is and how it works within the site */
+  if (n.plain) h += '<div class="obs-plain">' + esc(n.plain) + '</div>';
+
+  /* operational rows: size in context, not just size */
+  var kin = nodes.filter(function (x) { return x.kind === n.kind && x.bytes != null; })
+                 .sort(function (a, b) { return (b.bytes || 0) - (a.bytes || 0); });
+  var pool = d3.sum(kin, function (x) { return x.bytes || 0; });
+
   h += '<dl class="obs-meta">';
   if (n.path) h += '<dt>Path</dt><dd>' + esc(n.path) + '</dd>';
-  if (n.bytes != null) h += '<dt>Size</dt><dd>' + fmtBytes(n.bytes) + '</dd>';
-  if (n.mtime) h += '<dt>Updated</dt><dd>' + esc(n.mtime.slice(0, 10)) + '</dd>';
-  if (n.refresh) h += '<dt>Refresh</dt><dd>' + esc(n.refresh) + '</dd>';
-  if (n.provenance) h += '<dt>Provenance</dt><dd>' + esc(n.provenance) + '</dd>';
+  if (n.bytes != null) {
+    h += '<dt>Size</dt><dd>' + fmtBytes(n.bytes) + '</dd>';
+    if (pool && kin.length > 1) {
+      var rank = kin.indexOf(n) + 1;
+      var pct = (n.bytes / pool) * 100;
+      h += '<dt>Share</dt><dd>' + (pct >= 1 ? pct.toFixed(0) : pct.toFixed(1)) + '% of ' + esc(k.label.toLowerCase()) + ' weight</dd>';
+      h += '<dt>Rank</dt><dd>#' + rank + ' of ' + kin.length + ' by size</dd>';
+    }
+  }
+  if (n.mtime) h += '<dt>Updated</dt><dd>' + esc(n.mtime.slice(0, 10)) + ' &middot; ' + agoText(n.mtime) + '</dd>';
+  if (n.refresh) h += '<dt>Refresh</dt><dd>' + esc(REFRESH_PLAIN[n.refresh] || n.refresh) + '</dd>';
+  if (n.provenance) h += '<dt>Origin</dt><dd>' + esc(PROV_PLAIN[n.provenance] || n.provenance) + '</dd>';
+  h += '<dt>Connections</dt><dd>fed by ' + inAdj[n.id].length + ' &middot; feeds ' + outAdj[n.id].length + '</dd>';
   if (n.note) h += '<dt>Note</dt><dd>' + esc(n.note) + '</dd>';
   h += '</dl>';
   if (n.detail) h += '<p class="obs-detail">' + esc(n.detail) + '</p>';
@@ -495,6 +582,30 @@ function totals(data) {
   document.getElementById('obsTotals').textContent =
     ds.length + ' datasets · ' + fmtBytes(deployed) + ' deployed · '
     + fmtBytes(buildOnly) + ' build-only · mapped ' + (data._meta.generated || '').slice(0, 10);
+}
+
+/* ── face-up operational readout (the HUD band under the header) ── */
+function statsHUD() {
+  var ds = nodes.filter(function (n) { return n.kind === 'dataset'; });
+  var ints = nodes.filter(function (n) { return n.kind === 'intermediate'; });
+  var deployed = d3.sum(ds, function (n) { return n.bytes || 0; });
+  var buildOnly = d3.sum(ints, function (n) { return n.bytes || 0; });
+  var sized = nodes.filter(function (n) { return n.bytes != null; });
+  var big = sized.slice().sort(function (a, b) { return b.bytes - a.bytes; })[0];
+  var fresh = nodes.filter(function (n) { return n.mtime; })
+                   .sort(function (a, b) { return new Date(b.mtime) - new Date(a.mtime); })[0];
+  var tile = function (v, k, title) {
+    return '<div class="obs-stat"' + (title ? ' title="' + esc(title) + '"' : '') + '>'
+      + '<div class="v">' + v + '</div><div class="k">' + esc(k) + '</div></div>';
+  };
+  var h = '';
+  h += tile(fmtBytes(deployed), 'deployed data', 'Total weight of every dataset a browser can fetch');
+  h += tile(fmtBytes(buildOnly), 'build-only weight', 'Files used to assemble the site, never shipped');
+  h += tile(ds.length + ' <em>/</em> ' + ints.length, 'datasets / build files');
+  h += tile(String(edges.length), 'connections mapped');
+  if (big) h += tile(fmtBytes(big.bytes), 'largest: ' + big.label, big.label + ' is the single heaviest file on the map');
+  if (fresh) h += tile(esc(agoText(fresh.mtime)), 'freshest: ' + fresh.label, fresh.label + ' last changed ' + fresh.mtime.slice(0, 10));
+  document.getElementById('obsStats').innerHTML = h;
 }
 
 })();

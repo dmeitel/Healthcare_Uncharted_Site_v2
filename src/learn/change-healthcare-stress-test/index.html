@@ -1,0 +1,367 @@
+---
+layout: base.njk
+section: learn
+title: "The Change Healthcare Cyberattack: A System Stress Test"
+description: "One compromised login, no MFA, nine days of quiet access, and a third of the country's patient records. What the February 2024 attack proved about healthcare's structural dependencies, from the Congressional record and UHG's own filings."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial palette + DM Serif Display: the system-dependency chapter of the player series, told as the stress test it was."
+---
+{% block extraHead %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+{% endblock %}
+
+<style>
+  /* ── Editorial palette layered on HU tokens (same idiom as Articles 07/10) ── */
+  .cs9{
+    --jp-bg:        var(--dark);
+    --jp-surface:   var(--surface);
+    --jp-raised:    var(--raised);
+    --jp-line:      var(--border);
+    --jp-line-2:    var(--border2);
+    --jp-ink-1:     var(--t1);
+    --jp-ink-2:     var(--t2);
+    --jp-ink-3:     var(--t3);
+    --jp-ink-4:     var(--t4);
+    --jp-accent:    var(--teal);
+    --jp-blue:      #6aadff;
+    --jp-amber:     var(--amber);
+    --jp-red:       #ff7b76;
+    --jp-serif:     'DM Serif Display', Georgia, serif;
+    --jp-sans:      var(--font);
+    --jp-mono:      var(--mono);
+  }
+  [data-theme="light"] .cs9{
+    --jp-accent: var(--teal-dk);
+    --jp-blue:   var(--blue);
+    --jp-red:    #C0392B;
+  }
+
+  .cs9{ background:var(--jp-bg); color:var(--jp-ink-2); font-family:var(--jp-sans); line-height:1.65; }
+  .cs9 *,.cs9 *::before,.cs9 *::after{ box-sizing:border-box; }
+
+  .c9-hero{ position:relative; overflow:hidden; border-bottom:1px solid var(--jp-line);
+            background: linear-gradient(135deg, var(--jp-bg) 0%, var(--jp-surface) 55%, var(--jp-bg) 100%); }
+  .c9-hero::before{ content:""; position:absolute; top:-160px; right:-120px; width:520px; height:520px;
+                    background:radial-gradient(circle, rgba(223,87,82,.12) 0%, transparent 65%); pointer-events:none; }
+  .c9-hero::after{ content:""; position:absolute; bottom:-220px; left:-160px; width:560px; height:560px;
+                   background:radial-gradient(circle, rgba(78,205,196,.10) 0%, transparent 65%); pointer-events:none; }
+  .c9-hero-inner{ max-width:1100px; margin:0 auto; padding:80px 36px 64px; position:relative; z-index:1;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:780px){ .c9-hero-inner{ grid-template-columns:1fr; gap:32px; padding:56px 24px 44px; } }
+
+  .jp-eyebrow{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--jp-red); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .jp-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--jp-red);
+                    box-shadow:0 0 14px var(--jp-red); flex-shrink:0; }
+  .jp-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--jp-ink-4); }
+
+  .jp-h1{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(44px, 7vw, 86px);
+          line-height:1.02; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 22px; }
+  .jp-h1 em{ font-style:italic; color:var(--jp-red); font-weight:400; }
+
+  .jp-hero-sub{ font-size:19px; line-height:1.55; color:var(--jp-ink-2); max-width:640px; margin:0 0 32px; }
+  .jp-hero-sub strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-thesis{ background: linear-gradient(135deg, rgba(223,87,82,.08), rgba(78,205,196,.04));
+              border:1px solid rgba(223,87,82,.24); border-left:4px solid var(--jp-red);
+              border-radius:6px; padding:18px 22px; max-width:680px; }
+  .jp-thesis-label{ color:var(--jp-red); font-family:var(--jp-mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .jp-thesis-text{ font-size:15px; line-height:1.6; color:var(--jp-ink-2); display:inline; }
+  .jp-thesis-text strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .jp-byline{ margin-top:24px; font-family:var(--jp-mono); font-size:11px; color:var(--jp-ink-3);
+              letter-spacing:.06em; display:flex; gap:14px; flex-wrap:wrap; }
+  .jp-byline span strong{ color:var(--jp-ink-2); font-weight:500; }
+
+  /* hero viz: everything through one node */
+  .c9-hero-viz{ width:300px; max-width:100%; }
+  @media (max-width:780px){ .c9-hero-viz{ width:100%; max-width:340px; } }
+  .c9v{ width:100%; height:auto; display:block; overflow:visible; }
+  .c9v-hub{ fill:var(--jp-surface); stroke:var(--jp-red); stroke-width:2; }
+  .c9v-spoke{ stroke:var(--jp-line-2); stroke-width:1.5; }
+  .c9v-node{ fill:var(--jp-surface); stroke:var(--jp-accent); stroke-width:1.4; }
+  .c9v-lab{ font-family:var(--jp-mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; fill:var(--jp-ink-2); }
+  .c9v-cap{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; fill:var(--jp-ink-3); }
+  .c9v-x{ stroke:var(--jp-red); stroke-width:2.5; stroke-linecap:round; }
+
+  .jp-body{ max-width:880px; margin:0 auto; padding:64px 36px 96px; }
+  @media (max-width:780px){ .jp-body{ padding:48px 24px 72px; } }
+  .jp-section + .jp-section{ margin-top:60px; }
+
+  .jp-kicker{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+              color:var(--jp-accent); margin-bottom:14px; display:flex; align-items:center; gap:9px; }
+  .jp-kicker::before{ content:""; width:22px; height:1px; background:var(--jp-accent); }
+
+  .jp-h2{ font-family:var(--jp-serif); font-weight:400; font-size:clamp(28px, 4vw, 42px);
+          line-height:1.15; letter-spacing:-.01em; color:var(--jp-ink-1); margin:0 0 18px; }
+  .jp-h2 em{ font-style:italic; color:var(--jp-accent); font-weight:400; }
+
+  .jp-p{ font-size:17px; line-height:1.78; color:var(--jp-ink-2); margin:0 0 18px; }
+  .jp-p strong{ color:var(--jp-ink-1); font-weight:600; }
+  .jp-p em{ color:var(--jp-accent); font-style:normal; font-weight:500; }
+  .jp-p a{ color:var(--jp-accent); text-decoration:none; border-bottom:1px dotted var(--jp-accent); }
+  .jp-p a:hover{ border-bottom-style:solid; }
+
+  .jp-pull{ font-family:var(--jp-serif); font-size:25px; line-height:1.4; color:var(--jp-ink-1);
+            margin:30px 0; padding:8px 0 8px 28px; border-left:3px solid var(--jp-red); font-style:italic; }
+
+  .c9-tldr{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:36px 0 0; }
+  @media (max-width:680px){ .c9-tldr{ grid-template-columns:1fr; } }
+  .c9-tldr-card{ background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px; padding:18px 20px; }
+  .c9-tldr-tag{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+                font-weight:600; margin-bottom:8px; }
+  .c9-tldr-tag.breach{ color:var(--jp-red); }
+  .c9-tldr-tag.dep{ color:var(--jp-amber); }
+  .c9-tldr-tag.lesson{ color:var(--jp-accent); }
+  [data-theme="light"] .c9-tldr-tag.dep{ color:var(--amber-dk); }
+  .c9-tldr-card p{ font-size:13.5px; line-height:1.6; color:var(--jp-ink-2); margin:0; }
+  .c9-tldr-card p strong{ color:var(--jp-ink-1); }
+
+  .c9-verdict{ display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:22px 0 0;
+               background:var(--jp-raised); border:1px solid var(--jp-line); border-radius:8px; padding:14px 18px; }
+  .c9-verdict b{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+                 color:var(--jp-accent); font-weight:600; flex-shrink:0; }
+  .c9-verdict span{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); }
+  .c9-verdict span strong{ color:var(--jp-ink-1); }
+
+  .c9-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0; }
+  @media (max-width:680px){ .c9-stats{ grid-template-columns:1fr; } }
+  .c9-stat{ border:1px solid var(--jp-line); border-radius:10px; padding:16px 18px; background:var(--jp-surface); }
+  .c9-stat .n{ font-family:var(--jp-serif); font-size:38px; line-height:1; color:var(--jp-ink-1); margin-bottom:6px; }
+  .c9-stat .n em{ font-style:italic; color:var(--jp-red); }
+  .c9-stat .l{ font-family:var(--jp-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+               color:var(--jp-ink-3); line-height:1.5; }
+
+  .c9-tl{ margin:26px 0; }
+  .c9-tl-row{ display:flex; gap:16px; padding:10px 0; border-bottom:1px dashed var(--jp-line); align-items:baseline; }
+  .c9-tl-row:last-child{ border-bottom:0; }
+  .c9-tl-date{ font-family:var(--jp-mono); font-size:11px; letter-spacing:.08em; color:var(--jp-red);
+                flex:0 0 92px; font-weight:600; }
+  .c9-tl-tx{ font-size:14px; line-height:1.6; color:var(--jp-ink-2); }
+  .c9-tl-tx strong{ color:var(--jp-ink-1); font-weight:600; }
+
+  .c9-go{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:28px 0 0; }
+  @media (max-width:680px){ .c9-go{ grid-template-columns:1fr; } }
+  .c9-go a{ display:block; background:var(--jp-surface); border:1px solid var(--jp-line); border-radius:10px;
+            padding:16px 18px; text-decoration:none; transition:border-color .15s, transform .15s; }
+  .c9-go a:hover{ border-color:var(--jp-accent); transform:translateY(-2px); }
+  .c9-go .t{ font-size:14px; font-weight:600; color:var(--jp-ink-1); margin-bottom:4px; }
+  .c9-go .d{ font-size:12.5px; line-height:1.55; color:var(--jp-ink-3); }
+  .c9-go .k{ font-family:var(--jp-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--jp-accent); margin-bottom:6px; }
+
+  .jp-source{ font-size:13px; line-height:1.7; color:var(--jp-ink-3); margin-bottom:10px; padding-left:18px; position:relative; }
+  .jp-source::before{ content:"·"; position:absolute; left:4px; color:var(--jp-accent); }
+  .jp-source a{ color:var(--jp-accent); text-decoration:none; }
+  .jp-source a:hover{ text-decoration:underline; }
+  .jp-source em{ font-style:normal; color:var(--jp-ink-2); }
+</style>
+
+<div class="cs9">
+
+  <!-- ── HERO ── -->
+  <header class="c9-hero">
+    <div class="c9-hero-inner">
+      <div>
+        <div class="jp-eyebrow">
+          <span class="dot"></span>
+          <span>Article 09</span>
+          <span class="sep"></span>
+          <span>System stress test</span>
+        </div>
+
+        <h1 class="jp-h1">The stress test nobody <em>ordered</em>.</h1>
+
+        <p class="jp-hero-sub">On February 12, 2024, someone logged into a Change Healthcare remote-access portal with stolen credentials. The portal <strong>did not have multi-factor authentication</strong>. Nine days later they encrypted the company from the inside, and American healthcare found out exactly how much of itself ran through one vendor. All of this is on the Congressional record.</p>
+
+        <div class="jp-thesis">
+          <span class="jp-thesis-label">Principle</span>
+          <span class="jp-thesis-text">Every system gets stress-tested eventually. The only choice is whether you run the test <strong>or your single point of failure runs it for you.</strong> Healthcare got the second kind, and the results are worth reading like the lab report they are.</span>
+        </div>
+
+        <div class="jp-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~11 min read</span>
+          <span>SEC · Senate Finance · HHS OCR · Treasury OFR</span>
+        </div>
+
+        <div class="card-fps" style="margin-top:18px;margin-bottom:0">
+          <a class="fp fp-techeco" href="/atlas/#techeco/cyber">Cybersecurity</a>
+          <a class="fp fp-techeco" href="/atlas/#techeco/rcm-vendors">Revenue Cycle Vendors</a>
+          <a class="fp fp-payer" href="/atlas/#payer/commercial">Commercial Insurance</a>
+        </div>
+      </div>
+
+      <div class="c9-hero-viz" aria-hidden="true">
+        <svg class="c9v" viewBox="0 0 300 260">
+          <text class="c9v-cap" x="150" y="16" text-anchor="middle">one company</text>
+          <line class="c9v-spoke" x1="150" y1="140" x2="54" y2="60"/>
+          <line class="c9v-spoke" x1="150" y1="140" x2="246" y2="60"/>
+          <line class="c9v-spoke" x1="150" y1="140" x2="40" y2="200"/>
+          <line class="c9v-spoke" x1="150" y1="140" x2="260" y2="200"/>
+          <circle class="c9v-hub" cx="150" cy="140" r="34"/>
+          <line class="c9v-x" x1="138" y1="128" x2="162" y2="152"/>
+          <line class="c9v-x" x1="162" y1="128" x2="138" y2="152"/>
+          <rect class="c9v-node" x="16" y="42" width="82" height="24" rx="6"/>
+          <text class="c9v-lab" x="57" y="58" text-anchor="middle">pharmacy</text>
+          <rect class="c9v-node" x="204" y="42" width="82" height="24" rx="6"/>
+          <text class="c9v-lab" x="245" y="58" text-anchor="middle">claims</text>
+          <rect class="c9v-node" x="4" y="188" width="82" height="24" rx="6"/>
+          <text class="c9v-lab" x="45" y="204" text-anchor="middle">payments</text>
+          <rect class="c9v-node" x="216" y="188" width="82" height="24" rx="6"/>
+          <text class="c9v-lab" x="257" y="204" text-anchor="middle">eligibility</text>
+          <text class="c9v-cap" x="150" y="248" text-anchor="middle">1 in 3 patient records</text>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="jp-body">
+
+    <!-- ── TLDR ── -->
+    <section class="jp-section">
+      <div class="c9-tldr">
+        <div class="c9-tldr-card">
+          <div class="c9-tldr-tag breach">The breach</div>
+          <p><strong>192.7 million people.</strong> The largest healthcare data breach in American history started with one set of compromised credentials on a portal without MFA, and ended with a $22 million ransom paid in Bitcoin.</p>
+        </div>
+        <div class="c9-tldr-card">
+          <div class="c9-tldr-tag dep">The dependency</div>
+          <p><strong>15 billion transactions a year. One in three patient records. $2 trillion in claims.</strong> Treasury's own analysts called it what it was: a single point of failure with exclusivity clauses.</p>
+        </div>
+        <div class="c9-tldr-card">
+          <div class="c9-tldr-tag lesson">The lesson</div>
+          <p><strong>Resilience is a structure problem.</strong> The rule that would mandate the missing MFA was proposed in January 2025. It still isn't final. Map your own dependencies; nobody upstream is doing it for you.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── THE TIMELINE ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Nine days in February</div>
+      <h2 class="jp-h2">One login, no second <em>factor</em></h2>
+
+      <p class="jp-p">The mechanics are almost insultingly simple. This was not a zero-day, not nation-state tradecraft, not some exotic supply-chain implant. UnitedHealth Group's CEO told the Senate Finance Committee exactly what happened: criminals used compromised credentials to log into a Citrix remote-access portal, and the portal did not have multi-factor authentication. The control that your bank requires for a $50 transfer was not protecting the front door of the company that moves a third of America's patient records.</p>
+
+      <div class="c9-tl">
+        <div class="c9-tl-row"><div class="c9-tl-date">Feb 12</div><div class="c9-tl-tx"><strong>Entry.</strong> Stolen credentials open the Citrix portal. No MFA challenge. The intruders move laterally and start exfiltrating data.</div></div>
+        <div class="c9-tl-row"><div class="c9-tl-date">Feb 21</div><div class="c9-tl-tx"><strong>Detonation.</strong> ALPHV/BlackCat ransomware encrypts Change Healthcare's systems. UHG isolates the environment and files its 8-K the next day. Pharmacies nationwide lose electronic prescribing and claims routing.</div></div>
+        <div class="c9-tl-row"><div class="c9-tl-date">Feb 27</div><div class="c9-tl-tx"><strong>Context arrives.</strong> The FBI/CISA/HHS advisory notes that since December, healthcare has been ALPHV's most-victimized sector, after the group's administrator urged affiliates to target hospitals.</div></div>
+        <div class="c9-tl-row"><div class="c9-tl-date">March</div><div class="c9-tl-tx"><strong>The ransom.</strong> UHG pays $22 million in Bitcoin. Witty, under oath: "the decision to pay a ransom was mine." Pharmacy services return by March 7, payments March 15, claims testing March 18.</div></div>
+        <div class="c9-tl-row"><div class="c9-tl-date">After</div><div class="c9-tl-tx"><strong>The count climbs.</strong> The breach notification starts at a placeholder 500 people in July 2024. Then 100 million in October. Then 190 million in January 2025. The current official figure: <strong>192.7 million individuals.</strong></div></div>
+      </div>
+
+      <div class="c9-stats">
+        <div class="c9-stat"><div class="n">9</div><div class="l">Days inside before the ransomware fired</div></div>
+        <div class="c9-stat"><div class="n">$22<em>M</em></div><div class="l">Ransom paid in Bitcoin, confirmed to Congress</div></div>
+        <div class="c9-stat"><div class="n">192.7<em>M</em></div><div class="l">People whose data was taken, per HHS OCR</div></div>
+      </div>
+    </section>
+
+    <!-- ── THE DEPENDENCY ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The dependency</div>
+      <h2 class="jp-h2">How much fits through <em>one</em> company</h2>
+
+      <p class="jp-p">Most clinicians had never heard of Change Healthcare on February 20. Here is what the people who measure these things knew. Fifteen billion healthcare transactions a year. One in every three American patient records. Roughly 40% of all medical claims, by the House committee's count. Treasury's Office of Financial Research put the dollar figure at $2 trillion in annual claims, about 44% of the money that would move through the U.S. medical system that year.</p>
+
+      <p class="jp-p">The concentration was not an accident, and it was not a secret. The Department of Justice sued to block UnitedHealth's $13 billion acquisition of Change in 2022, calling the company "a critical data highway through which about half of all Americans' health insurance claims pass each year." A federal court sided with UnitedHealth. The deal closed in October 2022. Sixteen months later the highway closed too, and the market-definition argument the government lost in court got settled empirically, on every practice's cash-flow statement, in about a week.</p>
+
+      <p class="jp-p">Treasury's postmortem found the structural rot under the concentration: Change held exclusivity clauses with more than a third of its clients, and some payers had NO backup payment system at all. Not a degraded one. None.</p>
+
+      <div class="jp-pull">The market-definition argument the government lost in court got settled empirically, on every practice's cash-flow statement, in about a week.</div>
+    </section>
+
+    <!-- ── THE IMPACT ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The two weeks the money stopped</div>
+      <h2 class="jp-h2">Payroll from <em>personal savings</em></h2>
+
+      <p class="jp-p">The AHA surveyed roughly a thousand hospitals three weeks in: 94% reported financial impact, over 80% had cash flow disrupted, and of those, nearly 60% were losing a million dollars or more in revenue PER DAY. Almost three quarters reported effects on direct patient care. For the hospitals, it was a crisis with a treasury department attached.</p>
+
+      <p class="jp-p">For small practices it was closer to a bank run. In the AMA's survey of mostly sub-ten-physician practices: 80% lost revenue to unpaid claims, 55% of owners dipped into PERSONAL funds to cover practice expenses, 31% could not make payroll, 44% could not buy supplies. Sit with the 55% for a second. Physicians paying their staff out of family savings because a vendor three layers removed from their exam rooms skipped a login control.</p>
+
+      <p class="jp-p">The scale of the emergency financing tells you the rest. UnitedHealth ultimately advanced $9.03 billion in loans to providers during 2024, per its own audited cash-flow statement, less than half repaid by year-end. CMS stood up an advance-payment program that moved another $2.55 billion to hospitals and $717 million to Part B suppliers. One clearinghouse went down and the response required more emergency liquidity than most natural disasters.</p>
+
+      <div class="c9-stats">
+        <div class="c9-stat"><div class="n">94<em>%</em></div><div class="l">Hospitals reporting financial impact, AHA survey</div></div>
+        <div class="c9-stat"><div class="n">55<em>%</em></div><div class="l">Practice owners covering expenses from personal funds</div></div>
+        <div class="c9-stat"><div class="n">$9<em>B</em></div><div class="l">UHG emergency loans to providers in 2024</div></div>
+      </div>
+
+      <p class="jp-p">And the final bill, from UnitedHealth's own earnings tables: $3.09 billion in full-year cyberattack costs, $2.2 billion of it direct response and the rest business disruption. For sector context, IBM's annual study put the AVERAGE healthcare breach at $9.77 million that year, the costliest of any industry for the fourteenth year running. This one cost three hundred times the average, before you count anything that happened outside UnitedHealth's walls.</p>
+    </section>
+
+    <!-- ── WHAT IT PROVED ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">The lab report</div>
+      <h2 class="jp-h2">What the test <em>proved</em></h2>
+
+      <p class="jp-p">Read it as the stress test it was, and the findings write themselves. Finding one: the failure mode was boring. Credential hygiene and MFA, the same two controls on every security checklist since the 2010s. Finding two: the blast radius was structural, not technical. The damage scaled with market concentration, exclusivity clauses, and absent backups, none of which any hospital's IT department could see or fix. Finding three: the system had no circuit breakers. The money simply stopped until one company's engineers rebuilt, and the federal response was cash, not architecture.</p>
+
+      <p class="jp-p">So what did the system DO about it? The scoreboard, two and a half years on. HHS published voluntary cybersecurity performance goals in January 2024. The Wyden-Warner bill that would have made standards mandatory, with real audits and money for safety-net hospitals, died with the 118th Congress without a vote. And the one regulatory vehicle with teeth, OCR's proposed overhaul of the HIPAA Security Rule, which would mandate MFA, encryption, and asset inventories and cites the Change breach throughout its preamble, was published in January 2025, closed comments in March 2025, and as of this writing is still not final.</p>
+
+      <p class="jp-p">The control whose absence cost $3 billion, 192.7 million records, and a month of national cash flow is, today, still legally optional.</p>
+
+      <div class="c9-verdict"><b>Lesson</b><span>Nobody upstream is running your dependency analysis. <strong>The stress test found the structure brittle, and the structure has mostly not changed.</strong> UnitedHealth's revenue the year after the attack: $400 billion.</span></div>
+    </section>
+
+    <!-- ── DO THIS ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Do this</div>
+      <h2 class="jp-h2">Your own <em>dependency map</em></h2>
+
+      <p class="jp-p">If you lead anything that bills, ask three questions this quarter. Which clearinghouse and which intermediaries does our revenue actually flow through, and what percentage rides each one? What is the backup route, and has anyone ever exercised it, not diagrammed it, EXERCISED it? And how many days of operating cash survive a full stop in claims payments? The practices that answered those questions before February 2024 had a bad month. The ones that couldn't had an existential one.</p>
+
+      <p class="jp-p">Then put the MFA question in writing to every vendor holding your data or your money. Not "do you have a security program." Specifically: is multi-factor authentication enforced on every remote access path, no exceptions, and will you attest to that annually? It is a one-sentence email. The entire event you just read about happens if one company answers it honestly.</p>
+
+      <div class="c9-go">
+        <a href="/learn/ehr-architecture/">
+          <div class="k">Article 03 · The Provider</div>
+          <div class="t">EHR Architecture and Clinical Workflow</div>
+          <div class="d">The data layer the claims ride on top of, and why the workflows follow the filing system.</div>
+        </a>
+        <a href="/tools/healthcare-operators-map/">
+          <div class="k">Tool · Live map</div>
+          <div class="t">U.S. Hospital Operations Map</div>
+          <div class="d">The physical infrastructure that kept running while the money layer froze: every hospital, pharmacy, and supplier on one map.</div>
+        </a>
+        <a href="/tools/healthcare-vendor-directory/?sector=cyber">
+          <div class="k">Vendor Directory · Preset</div>
+          <div class="t">The security stack</div>
+          <div class="d">Who sells healthcare its defenses. The sector that grew fastest after February 2024.</div>
+        </a>
+        <a href="/tools/healthcare-vendor-directory/?sector=rcm">
+          <div class="k">Vendor Directory · Preset</div>
+          <div class="t">The revenue cycle layer</div>
+          <div class="d">Clearinghouses and RCM vendors: the middle of the money map, including the one this article is about.</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── SOURCES ── -->
+    <section class="jp-section">
+      <div class="jp-kicker">Sources</div>
+      <h2 class="jp-h2">The receipts</h2>
+      <p class="jp-p">Every claim above traces to the Congressional record, federal filings, or the government's own analysts. Full citations live in the <a href="/learn/sources/">Reference Appendix</a>.</p>
+      <div class="jp-source"><em>Witty, A., written testimony, Senate Finance Committee (May 1, 2024)</em> · <a href="https://www.finance.senate.gov/imo/media/doc/0501_witty_testimony.pdf" target="_blank" rel="noopener">The Feb 12 entry, the missing MFA, the ransom decision, the advances</a>.</div>
+      <div class="jp-source"><em>Senate hearing record, Congress.gov (2024)</em> · <a href="https://www.congress.gov/118/chrg/CHRG-118shrg63595/CHRG-118shrg63595.pdf" target="_blank" rel="noopener">"UHG paid the demanded $22 million ransom in Bitcoin"</a>.</div>
+      <div class="jp-source"><em>UnitedHealth Group, SEC Form 8-K (Feb 22, 2024)</em> · <a href="https://www.sec.gov/Archives/edgar/data/731766/000073176624000045/unh-20240221.htm" target="_blank" rel="noopener">Initial disclosure</a> · and <a href="https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm" target="_blank" rel="noopener">Q4/FY2024 results</a> · $3.09B total attack costs, $9.03B provider loans, $400.3B revenue.</div>
+      <div class="jp-source"><em>HHS Office for Civil Rights</em> · <a href="https://www.hhs.gov/hipaa/for-professionals/special-topics/change-healthcare-cybersecurity-incident-frequently-asked-questions/index.html" target="_blank" rel="noopener">Change Healthcare incident FAQ</a> · the breach-count milestones: 100M, 190M, 192.7M.</div>
+      <div class="jp-source"><em>U.S. Treasury, Office of Financial Research (2024)</em> · <a href="https://www.financialresearch.gov/briefs/files/OFRBrief-24-05-change-healthcare-cyberattack.pdf" target="_blank" rel="noopener">OFR Brief 24-05</a> · $2T in claims, 44% of system funds, exclusivity clauses, payers with no backup.</div>
+      <div class="jp-source"><em>FBI / CISA / HHS (2023, updated Feb 2024)</em> · <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-353a" target="_blank" rel="noopener">Advisory AA23-353A on ALPHV/BlackCat</a>.</div>
+      <div class="jp-source"><em>AHA (2024, 2025)</em> · <a href="https://www.aha.org/news/news/2024-03-15-aha-survey-change-healthcare-cyberattack-having-significant-disruptions-patient-care-hospitals-finances" target="_blank" rel="noopener">Hospital impact survey</a> · and the <a href="https://www.aha.org/system/files/media/file/2025/02/Change-Healthcare-Cyberattack-Underscores-Urgent-Need-to-Strengthen-Cyber-Preparedness.pdf" target="_blank" rel="noopener">2025 preparedness report</a> · 15B transactions, 1 in 3 records.</div>
+      <div class="jp-source"><em>AMA (2024)</em> · <a href="https://www.ama-assn.org/system/files/change-healthcare-survey-results.pdf" target="_blank" rel="noopener">Practice impact survey</a> · 55% personal funds, 31% missed payroll.</div>
+      <div class="jp-source"><em>CMS (2024)</em> · <a href="https://www.cms.gov/newsroom/press-releases/cms-statement-continued-action-respond-cyberattack-change-healthcare" target="_blank" rel="noopener">Flexibilities statement</a> · and <a href="https://www.cms.gov/newsroom/press-releases/cms-preparing-close-program-addressed-medicare-funding-issues-resulting-change-healthcare-cyber" target="_blank" rel="noopener">CHOPD totals</a> · $2.55B + $717M advanced.</div>
+      <div class="jp-source"><em>DOJ (2022)</em> · <a href="https://www.justice.gov/archives/opa/pr/justice-department-sues-block-unitedhealth-group-s-acquisition-change-healthcare" target="_blank" rel="noopener">Suit to block the acquisition</a> · "a critical data highway."</div>
+      <div class="jp-source"><em>House Energy &amp; Commerce (2024)</em> · <a href="https://energycommerce.house.gov/posts/what-we-learned-change-healthcare-cyber-attack" target="_blank" rel="noopener">What we learned</a> · ~40% of claims, the MFA admission.</div>
+      <div class="jp-source"><em>Congress.gov</em> · <a href="https://www.congress.gov/bill/118th-congress/senate-bill/5218" target="_blank" rel="noopener">S.5218, Health Infrastructure Security and Accountability Act</a> · introduced Sept 2024, died in committee.</div>
+      <div class="jp-source"><em>Federal Register (2025)</em> · <a href="https://www.federalregister.gov/documents/2025/01/06/2024-30983/hipaa-security-rule-to-strengthen-the-cybersecurity-of-electronic-protected-health-information" target="_blank" rel="noopener">Proposed HIPAA Security Rule overhaul</a> · mandatory MFA; not final as of this writing.</div>
+      <div class="jp-source"><em>IBM (2024)</em> · <a href="https://newsroom.ibm.com/2024-07-30-ibm-report-escalating-data-breach-disruption-pushes-costs-to-new-highs" target="_blank" rel="noopener">Cost of a Data Breach 2024</a> · healthcare average $9.77M, costliest sector 14 years running.</div>
+      <div class="jp-source"><em>Wyden, R., chairman's statement (May 1, 2024)</em> · <a href="https://www.finance.senate.gov/imo/media/doc/0501_wyden_statement.pdf" target="_blank" rel="noopener">"Too big to fail" framing, concentration figures</a>.</div>
+    </section>
+
+  </div>
+</div>

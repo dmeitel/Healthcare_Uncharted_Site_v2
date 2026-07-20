@@ -55,6 +55,8 @@ if (m.merged) console.log('  merged ' + m.merged + ' duplicate backbone refs');
 // Apply curated cross-layer edges (the editorial connective tissue). Skip any
 // whose endpoints don't exist so a typo surfaces instead of dangling.
 const crossLinks = require('./lib/cross-links');
+// positional metric:lens:index refs must still mean what the link meant — fail loudly on reorder
+crossLinks.verifyMetricTargets(read('src/_data/metricsConfig.json'));
 const xlByUid = new Map(all.map((n) => [n.uid, n]));
 let xlApplied = 0; const xlSkipped = [];
 for (const cl of crossLinks) {
