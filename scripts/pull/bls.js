@@ -160,7 +160,8 @@ const fmtDelta = (d) => (d > 0 ? '+' : '') + d.toFixed(1);
   countyData.meta = countyData.meta || {};
   countyData.meta[LENS] = countyData.meta[LENS] || {};
   countyData.meta[LENS][INDEX] = { name: item.name || 'Unemployment rate', unit: item.unit || '%', dir: item.dir == null ? -1 : item.dir, year };
-  fs.writeFileSync(P('src/assets/data/countyData.json'), JSON.stringify(countyData, null, 2) + '\n');
+  // minified: runtime-fetched by both maps, rides the deploy
+  fs.writeFileSync(P('src/assets/data/countyData.json'), JSON.stringify(countyData) + '\n');
 
   // ── apply: state rollup into both mirrored lenses ──
   for (const m of MIRROR) stateData[m.lens][m.index] = stateValues;

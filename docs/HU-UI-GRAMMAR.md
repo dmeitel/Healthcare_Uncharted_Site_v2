@@ -180,3 +180,21 @@ Verified July 2026, every piece keyless, accountless, static-host friendly:
 3. Draw-boundary search: worth it for the operators map, or skip?
 4. Does the vertical My Path stepper become the phone LANDING view of the career tree, or stay one tab among four?
 5. Naming: "surface classes" language OK, or rename to match how you think about zones?
+
+---
+
+## 9 · THE CHROME GRAMMAR (adopted 2026-07-23, variant A of docs/HU-CHROME-MOCKUPS-2026-07-23.html)
+
+Map tools ran out of room the old way: filters on a top rail, controls in corners, details in a panel, and every new dataset adding another chip. The fix is a fixed chrome budget. Three surfaces, never more.
+
+**ONE BAR.** A single top row that never wraps. It holds identity, the scope breadcrumb, the tool's PRIMARY selector (metric pill / search pill), and READOUT pills. A readout pill states its value ("Layers · Hospitals +1", "Patient · Smoking · 9/15"), and tapping it opens the drawer's Display tab. Below 850px the readout pills fold into one ⚙ Display pill.
+
+**ONE DRAWER.** The docked panel (desktop) / detent sheet (phone) with two tabs:
+- **Details** — what you tapped. Cards, rankings, lists. Unchanged behavior.
+- **Display** — how the map reads. EVERY filter and view control lives here: layer toggles, type filters (with one-tap "only"), county shading, map-label switches, scale explanation.
+
+**ONE CLUSTER.** The bottom-right FAB stack (locate, draw). Nothing else floats.
+
+**THE RULE THAT MAKES IT SCALE:** new capability adds a SECTION to the Display tab, never a new surface on the canvas. If a control can become a map label instead of chrome, it becomes a map label (state values, county values, cluster counts). The bar's budget is spent; it stays spent.
+
+Lenses on the multi-lens map are not chrome anymore: they are the section headers of the metric picker, which searches across all of them. The picker is the catalog; the pill is the readout.

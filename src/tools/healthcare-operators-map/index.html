@@ -55,37 +55,69 @@ og_image: /brand/og-operators-map.jpg
 .gv-pill .clr { margin-left:auto; flex:none; color:var(--t3); font-size:15px; padding:4px; display:none; }
 .gv-pill.has-q .clr { display:block; }
 .gv-pill .clr:hover { color:var(--t1); }
-.gv-chips { max-width:calc(100vw - 20px); }
-.gv-chips .hu-chip { backdrop-filter:blur(8px); box-shadow:0 3px 10px rgba(0,0,0,.3); }
-.gv-chips .hu-chip i { width:9px; height:9px; border-radius:50%; flex:none; }
-.gv-chips .hu-chip .cnt { font-family:var(--mono); font-size:9.5px; font-weight:600; color:var(--t3); white-space:pre; }
-.gv-chips .hu-chip.on .cnt { color:var(--teal); }
-[data-theme="light"] .gv-chips .hu-chip.on .cnt { color:var(--teal-dk); }
-/* dataset chips lead the rail; type chips are hospital-vocabulary and leave in pharmacy mode */
-.gv-chips .ds-chip { font-weight:800; }
-.gv-chips .ds-chip[data-ds="pharm"] { margin-right:12px; }
-.gv-chips.no-types .tchip { display:none; }
-/* phone, zoomed in: the rail collapses to ONE pill so the canvas owns the screen */
-.gv-chips-pill { display:none; align-self:flex-start; border-color:var(--teal); backdrop-filter:blur(8px); box-shadow:0 3px 10px rgba(0,0,0,.3); }
-[data-theme="light"] .gv-chips-pill { border-color:var(--teal-dk); }
-@media (max-width:699px){
-  .gv-chips.rail-hide { display:none; }
-  .gv-chips-pill.show { display:inline-flex; }
+/* ── the chrome grammar: ONE bar, ONE drawer, ONE cluster ──
+   The chip rail is gone. Filters live in the drawer's Display tab; the bar
+   carries READOUT pills that say their state (Zillow move, variant A). */
+.gv-rpill { flex:none; display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 13px; border-radius:999px;
+  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
+  color:var(--t3); font-family:var(--font); font-size:12px; font-weight:600; cursor:pointer; backdrop-filter:blur(8px);
+  box-shadow:0 4px 16px rgba(0,0,0,.35); white-space:nowrap; }
+.gv-rpill b { color:var(--t1); font-weight:700; }
+.gv-rpill .car { color:var(--t3); font-size:10px; }
+.gv-rpill:hover { border-color:var(--teal); }
+/* view pills park RIGHT, stacked over the drawer they open (nav left, view right) */
+#gvLayersPill { margin-left:auto; }
+.gv-dispill { margin-left:auto; }
+.gv-dispill { display:none; }
+@media (max-width:849px){
+  .gv-rpill { display:none; }
+  .gv-rpill.gv-dispill { display:inline-flex; }   /* narrow: the two readouts fold into one ⚙ Display pill */
 }
+/* drawer tabs: Details (what you tapped) | Display (how the map reads) */
+.gv-tabs { display:flex; gap:4px; background:var(--raised); border-radius:9px; padding:3px; margin:4px 0 10px; flex:none; }
+.gv-tabs button { flex:1; border:1px solid transparent; background:none; border-radius:7px; padding:6px 0;
+  font-family:var(--font); font-size:11.5px; font-weight:700; color:var(--t3); cursor:pointer; }
+.gv-tabs button.on { background:var(--surface); border-color:var(--border2); color:var(--t1); }
+#gvDisplayBody { overflow-y:auto; min-height:0; flex:1; }
+.gv-dsec { border-bottom:1px dotted var(--border); padding:12px 0; }
+.gv-dsec:last-child { border-bottom:none; }
+/* section headers you can actually read — display face leads, mono meta rides right */
+.gv-dsec h5 { display:flex; align-items:baseline; gap:8px; margin:0 0 8px;
+  font-family:var(--display); font-size:13.5px; font-weight:800; color:var(--t1); }
+.gv-dsec h5 .sub { margin-left:auto; font-family:var(--mono); font-size:10.5px; font-weight:400;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--t2); }
+/* readable sub text drawer-wide (David's call): brighter tier + a size up */
+#gvSheet .hu-stat .k { font-size:10px; color:var(--t2); }
+.gv-drow { display:flex; gap:6px; flex-wrap:wrap; }
+.gv-drow .hu-chip i { width:9px; height:9px; border-radius:50%; flex:none; }
+.gv-drow .hu-chip .cnt { font-family:var(--mono); font-size:9.5px; font-weight:600; color:var(--t3); white-space:pre; }
+.gv-drow .hu-chip.on .cnt { color:var(--teal); }
+[data-theme="light"] .gv-drow .hu-chip.on .cnt { color:var(--teal-dk); }
+.gv-only { font-family:var(--mono); font-size:8.5px; color:var(--t3); margin-left:4px; }
+.gv-only:hover { color:var(--teal); }
+.gv-tgl { display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:12.5px; color:var(--t2); }
+.gv-sw { width:34px; height:19px; border-radius:999px; background:var(--raised2); border:1px solid var(--border2); position:relative; cursor:pointer; flex:none; }
+.gv-sw::after { content:''; position:absolute; left:2px; top:2px; width:13px; height:13px; border-radius:50%; background:var(--t3); transition:left .15s; }
+.gv-sw.on { background:color-mix(in srgb, var(--teal) 30%, var(--raised2)); border-color:var(--teal); }
+.gv-sw.on::after { left:17px; background:var(--teal); }
 /* desktop has the room: the sheet docks RIGHT as the Inspector panel
    (grammar: docked panel on desktop, detent sheet on phone) */
 @media (min-width:1100px){
   /* the FAB column parks LEFT of the docked panel's rail so no window ever
-     covers it (David's call) — attribution keeps the corner to itself */
-  .gv-shell .hu-fab { right:396px; }
-  #gvSheet { left:auto; right:12px; bottom:12px; top:124px; width:370px;
+     covers it (David's call) — attribution keeps the corner to itself.
+     Both track the RESIZABLE drawer width (monitor yes, phone no). */
+  .gv-shell .hu-fab { right:calc(var(--drawer-w, 370px) + 26px); }
+  #gvSheet { left:auto; right:12px; bottom:12px; top:124px; width:var(--drawer-w, 370px);
     border:1px solid var(--border2); border-radius:14px;
     height:auto; max-height:none; }
   #gvSheet.dt-peek, #gvSheet.dt-half, #gvSheet.dt-full { height:auto; max-height:calc(100dvh - 200px); overflow-y:auto; }
   #gvSheet:not(.open) { transform:translateX(115%); }
   #gvSheet .hu-sheet-grab { display:none; }
   #gvSheet { padding-top:12px; }
+  #gvSheet .gv-resize { display:block; position:absolute; left:-4px; top:0; bottom:0; width:9px; cursor:ew-resize; z-index:5; }
+  #gvSheet .gv-resize:hover { background:linear-gradient(90deg, transparent, rgba(78,205,196,.3), transparent); }
 }
+.gv-resize { display:none; }   /* phone/tablet: the sheet owns its width */
 /* desktop hover card (fine pointers only) */
 .gv-tip { position:absolute; z-index:40; pointer-events:none; display:none; max-width:250px;
   background:var(--surface); border:1px solid var(--border2); border-radius:9px; padding:8px 11px;
@@ -143,7 +175,6 @@ og_image: /brand/og-operators-map.jpg
 .gv-cleg i { width:14px; height:8px; border-radius:2px; }
 .gv-cleg .cl-name { font-family:var(--mono); font-size:9.5px; color:var(--t2); margin-right:5px; }
 .gv-cleg .cl-dir { font-family:var(--mono); font-size:9px; color:var(--t3); margin-left:5px; }
-.gv-mchips { margin-top:8px; }
 .gv-listbtn b { font-family:var(--mono); font-weight:600; font-size:11px; color:var(--teal); }
 [data-theme="light"] .gv-listbtn b { color:var(--teal-dk); }
 .gv-shell .hu-fab { bottom:34px; }
@@ -164,7 +195,7 @@ og_image: /brand/og-operators-map.jpg
 .gv-card-kicker { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal); }
 [data-theme="light"] .gv-card-kicker { color:var(--teal-dk); }
 .gv-card-name { font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); line-height:1.15; padding-right:34px; }
-.gv-card-sub { font-family:var(--mono); font-size:10.5px; color:var(--t3); margin:3px 0 12px; }
+.gv-card-sub { font-family:var(--mono); font-size:11.5px; color:var(--t2); margin:3px 0 12px; }
 .gv-card-sys { font-size:12px; color:var(--t2); margin-top:12px; }
 .gv-card-sys b { color:var(--teal); }
 [data-theme="light"] .gv-card-sys b { color:var(--teal-dk); }
@@ -189,13 +220,17 @@ og_image: /brand/og-operators-map.jpg
 .gv-row .rs .st { color:var(--amber); }
 [data-theme="light"] .gv-row .rs .st { color:var(--amber-dk); }
 .gv-more { font-family:var(--mono); font-size:10px; color:var(--t3); text-align:center; padding:12px 0 4px; }
-.gv-hint { font-family:var(--mono); font-size:10px; color:var(--t3); margin-top:12px; }
+.gv-hint { font-family:var(--mono); font-size:11px; color:var(--t2); margin-top:12px; }
 /* fact rows under the stat tiles: label left, value right, two columns */
 .gv-facts { display:grid; grid-template-columns:1fr 1fr; gap:5px 18px; margin-top:12px; }
 @media (max-width:480px){ .gv-facts { grid-template-columns:1fr; } }
 .gv-facts > div { display:flex; justify-content:space-between; align-items:baseline; gap:10px; border-bottom:1px dotted var(--border); padding-bottom:4px; }
-.gv-facts span { font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--t3); }
+.gv-facts span { font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--t2); }
 .gv-facts b { font-family:var(--mono); font-size:11.5px; color:var(--t1); white-space:nowrap; }
+/* MapLibre's attribution chip ships light-only from the CDN css — theme it */
+[data-theme="dark"] .maplibregl-ctrl-attrib { background:color-mix(in srgb, var(--surface) 88%, transparent) !important; }
+[data-theme="dark"] .maplibregl-ctrl-attrib, [data-theme="dark"] .maplibregl-ctrl-attrib a { color:var(--t2) !important; }
+[data-theme="dark"] .maplibregl-ctrl-attrib-button { filter:invert(1); }
 </style>
 
 <div class="gv-shell">
@@ -209,9 +244,10 @@ og_image: /brand/og-operators-map.jpg
         <span aria-hidden="true">⌕</span><span class="q" id="gvPillQ">Search 5,366 hospitals…</span>
         <span class="clr" id="gvPillClr" role="button" aria-label="Clear search" title="Clear">✕</span>
       </button>
+      <button class="gv-rpill" id="gvLayersPill" type="button" aria-label="Layer filters">Layers</button>
+      <button class="gv-rpill" id="gvTypesPill" type="button" aria-label="Hospital type filters">Types</button>
+      <button class="gv-rpill gv-dispill" id="gvDisplayPill" type="button" aria-label="Display settings">⚙ <b>Display</b></button>
     </div>
-    <div class="hu-chiprail gv-chips" id="gvChips" role="group" aria-label="Filter by hospital type"></div>
-    <button class="hu-chip gv-chips-pill" id="gvChipsPill" type="button" aria-label="Show type filters">Filters</button>
   </div>
 
   <div class="gv-search" id="gvSearch">
@@ -242,7 +278,12 @@ og_image: /brand/og-operators-map.jpg
 
   <aside class="shell-sheet" id="gvSheet" aria-label="Detail">
     <button class="icon-btn hu-sheet-x gv-x" id="gvSheetX" type="button" aria-label="Close">✕</button>
+    <div class="gv-tabs" id="gvTabs" role="tablist">
+      <button type="button" data-tab="details" class="on" role="tab" aria-selected="true">Details</button>
+      <button type="button" data-tab="display" role="tab" aria-selected="false">Display</button>
+    </div>
     <div id="gvSheetBody" style="display:flex;flex-direction:column;min-height:0;flex:1"></div>
+    <div id="gvDisplayBody" hidden></div>
   </aside>
   <div id="gvLive" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
 </div>
@@ -531,6 +572,8 @@ og_image: /brand/og-operators-map.jpg
     uninsured: { label:'Uninsured',        get:f => cdVal('payer','0',f),     dir:-1 },
     diabetes:  { label:'Diabetes',         get:f => cdVal('patient','1',f),   dir:-1 },
     health:    { label:'Fair/poor health', get:f => cdVal('patient','0',f),   dir:-1 },
+    smoking:   { label:'Smoking',          get:f => cdVal('patient','8',f),   dir:-1 },
+    copd:      { label:'COPD',             get:f => cdVal('patient','9',f),   dir:-1 },
     income:    { label:'Median income',    get:f => cdVal('economics','0',f), dir:1 }
   };
   const CSCALE = ['#FF6B6B','#F2A65A','#E8C547','#7FD2C8','#4ECDC4'];   // worse → better
@@ -610,6 +653,7 @@ og_image: /brand/og-operators-map.jpg
     return false;
   }
   $('gvSheetX').addEventListener('click', () => {
+    if (tab === 'display'){ if (!restoreScopeCard()) closeSheet(); return; }                  // display X → back to the scope's card, or away
     if (mode === 'list'){ if (!restoreScopeCard()) closeSheet(); return; }                     // list X → back to the county/state/system card
     if (backTo === 'list'){ openList(); return; }
     if (backTo === 'system' && activeSystem){ openSystemCard(); return; }
@@ -632,6 +676,7 @@ og_image: /brand/og-operators-map.jpg
 
   // ── shared card scaffold ──
   function cardScaffold(kicker, name, sub){
+    showTab('details');   // any card render lands the drawer on Details
     let h = '<div class="gv-card-kicker"></div><div class="gv-card-name"></div><div class="gv-card-sub"></div><div class="hu-stats"></div><div class="gv-extra"></div>';
     $('gvSheetBody').innerHTML = h;
     const b = $('gvSheetBody');
@@ -768,21 +813,14 @@ og_image: /brand/og-operators-map.jpg
       facts.push([DATASETS[k].label, hs.filter(f => layerOf(f.properties.t) === k).length.toLocaleString('en-US')]);
     });
     factsBlock(ex, facts.filter(Boolean));
-    // shade-counties control lives IN the card — no extra floating chrome
+    // shade-counties moved to the drawer's Display tab (one filter home);
+    // the card keeps a one-tap pointer so the feature stays discoverable
     if (CDATA){
-      ex.insertAdjacentHTML('beforeend', '<div class="gv-list-h" style="margin-top:14px">Shade counties by</div>');
-      const mrow = document.createElement('div');
-      mrow.className = 'hu-chiprail gv-mchips';
-      mrow.innerHTML = '<button class="hu-chip' + (!countyMetric ? ' on' : '') + '" type="button" data-m="">Plain</button>' +
-        Object.entries(CMETRICS).map(([k,m]) =>
-          '<button class="hu-chip' + (countyMetric === k ? ' on' : '') + '" type="button" data-m="' + k + '">' + m.label + '</button>').join('');
-      mrow.addEventListener('click', e => {
-        const c = e.target.closest('[data-m]'); if (!c) return;
-        countyMetric = c.dataset.m || null;
-        applyCountyTint();
-        mrow.querySelectorAll('.hu-chip').forEach(x => x.classList.toggle('on', (x.dataset.m || null) === countyMetric));
-      });
-      ex.appendChild(mrow);
+      const hint = document.createElement('button');
+      hint.className = 'gv-tolist'; hint.type = 'button';
+      hint.textContent = countyMetric ? '◩ Shading: ' + CMETRICS[countyMetric].label + ' — change…' : '◩ Shade counties by a metric…';
+      hint.addEventListener('click', openDisplayTab);
+      ex.appendChild(hint);
     }
     hospRows(ex, hs.slice().sort((a,b2) => (+b2.properties.beds||0) - (+a.properties.beds||0)), 3, 'state');
     sheetEl.classList.add('open');
@@ -976,10 +1014,7 @@ og_image: /brand/og-operators-map.jpg
       const ty = p.get('types');
       if (ty){
         const ks = ty.split(',').filter(k => TYPES[k]);
-        if (ks.length){ activeTypes = new Set(ks); dropFilterCache();
-          document.querySelectorAll('#gvChips .tchip').forEach(c =>
-            c.classList.toggle('on', c.dataset.t === '__all' ? false : activeTypes.has(c.dataset.t)));
-          refreshSource(); }
+        if (ks.length){ activeTypes = new Set(ks); dropFilterCache(); buildDisplayPanel(); pillFaces(); refreshSource(); }
       }
       const lay = p.get('layers') || (p.get('ds') && DATASETS[p.get('ds')] ? p.get('ds') : null);
       if (lay){
@@ -1041,6 +1076,7 @@ og_image: /brand/og-operators-map.jpg
   function openList(){
     mode = 'list'; backTo = null;
     clearPin();
+    showTab('details');   // the list is a Details view of the current scope
     renderList();
     sheetEl.classList.add('open');
     sheet.setDetent('dt-half');
@@ -1079,32 +1115,127 @@ og_image: /brand/og-operators-map.jpg
   });
 
   // ── chips ──
-  function buildChips(){
-    const host = $('gvChips');
-    host.innerHTML =
+  function buildDisplayPanel(){
+    // the drawer's Display tab: every filter, one home (chrome grammar A).
+    // Rebuilt on every open/change — ~25 small nodes, cheap and always true.
+    const host = $('gvDisplayBody');
+    const p = labelPrefs();
+    let h = '<div class="gv-dsec"><h5>Layers</h5><div class="gv-drow">' +
       Object.entries(DATASETS).map(([k,d]) =>
         '<button class="hu-chip ds-chip' + (LAYER_ON.has(k) ? ' on' : '') + '" type="button" data-ds="' + k + '" aria-pressed="' + LAYER_ON.has(k) + '">' +
-        (LAYER_COLORS[k] ? '<i style="background:' + LAYER_COLORS[k] + '"></i>' : '') + d.label + '<b class="cnt"></b></button>').join('') +
-      '<button class="hu-chip tchip on" type="button" data-t="__all">All types</button>' +
-      Object.entries(TYPES).map(([k,v]) =>
-        '<button class="hu-chip tchip" type="button" data-t="' + k + '"><i style="background:' + v.color + '"></i>' + v.label + '<b class="cnt"></b></button>').join('');
-    host.addEventListener('click', e => {
-      const ds = e.target.closest('[data-ds]');
-      if (ds){ toggleLayer(ds.dataset.ds); return; }
-      const b = e.target.closest('[data-t]'); if (!b) return;
-      const t = b.dataset.t;
+        (LAYER_COLORS[k] ? '<i style="background:' + LAYER_COLORS[k] + '"></i>' : '') + d.label + '<b class="cnt"></b></button>').join('') + '</div></div>';
+    if (LAYER_ON.has('hosp')){
+      h += '<div class="gv-dsec"><h5>Hospital types <span class="sub">only = solo</span></h5><div class="gv-drow">' +
+        '<button class="hu-chip tchip' + (!activeTypes ? ' on' : '') + '" type="button" data-t="__all">All types</button>' +
+        Object.entries(TYPES).map(([k,v]) =>
+          '<button class="hu-chip tchip' + (activeTypes && activeTypes.has(k) ? ' on' : '') + '" type="button" data-t="' + k + '"><i style="background:' + v.color + '"></i>' + v.label + '<b class="cnt"></b><span class="gv-only" data-only="' + k + '">only</span></button>').join('') + '</div></div>';
+    }
+    if (CDATA){
+      h += '<div class="gv-dsec"><h5>Shade counties by <span class="sub">county tint</span></h5><div class="gv-drow">' +
+        '<button class="hu-chip' + (!countyMetric ? ' on' : '') + '" type="button" data-m="">Plain</button>' +
+        Object.entries(CMETRICS).map(([k,m]) =>
+          '<button class="hu-chip' + (countyMetric === k ? ' on' : '') + '" type="button" data-m="' + k + '">' + m.label + '</button>').join('') + '</div></div>';
+    }
+    h += '<div class="gv-dsec"><h5>Map labels <span class="sub">basemap text</span></h5>' +
+      '<div class="gv-tgl">State names <span class="gv-sw' + (p.state ? ' on' : '') + '" id="gvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
+      '<div class="gv-tgl">City names <span class="gv-sw' + (p.city ? ' on' : '') + '" id="gvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>';
+    host.innerHTML = h;
+    updateCount();   // fill the live per-chip tallies
+  }
+  // one delegated listener survives every rebuild
+  $('gvDisplayBody').addEventListener('click', e => {
+    const only = e.target.closest('[data-only]');
+    if (only){
+      activeTypes = new Set([only.dataset.only]);   // "only" = solo in one tap
+      dropFilterCache(); buildDisplayPanel(); pillFaces(); applyFilters(); return;
+    }
+    const ds = e.target.closest('[data-ds]');
+    if (ds){ toggleLayer(ds.dataset.ds); return; }
+    const tb = e.target.closest('[data-t]');
+    if (tb){
+      const t = tb.dataset.t;
       if (t === '__all') activeTypes = null;
       else {
         activeTypes = activeTypes || new Set();
         activeTypes.has(t) ? activeTypes.delete(t) : activeTypes.add(t);
         if (!activeTypes.size || activeTypes.size === Object.keys(TYPES).length) activeTypes = null;
       }
-      dropFilterCache();
-      host.querySelectorAll('.tchip').forEach(c =>
-        c.classList.toggle('on', c.dataset.t === '__all' ? !activeTypes : !!(activeTypes && activeTypes.has(c.dataset.t))));
-      applyFilters();
-    });
+      dropFilterCache(); buildDisplayPanel(); pillFaces(); applyFilters(); return;
+    }
+    const mc = e.target.closest('[data-m]');
+    if (mc){ countyMetric = mc.dataset.m || null; applyCountyTint(); buildDisplayPanel(); return; }
+    if (e.target.id === 'gvLabState'){ toggleLabelPref('state'); return; }
+    if (e.target.id === 'gvLabCity'){ toggleLabelPref('city'); return; }
+  });
+  // the bar's readout pills: they SAY the filter state, and open its home
+  function pillFaces(){
+    const lp = $('gvLayersPill'), tp = $('gvTypesPill');
+    if (!lp || !tp) return;
+    const labs = [...LAYER_ON].map(k => DATASETS[k].label);
+    lp.innerHTML = 'Layers · <b>' + labs[0] + (labs.length > 1 ? ' +' + (labs.length - 1) : '') + '</b> <span class="car">▾</span>';
+    const showTypes = LAYER_ON.has('hosp');
+    tp.hidden = !showTypes;
+    if (showTypes){
+      const t = activeTypes ? [...activeTypes].map(k => TYPES[k] ? TYPES[k].label : k) : null;
+      tp.innerHTML = 'Types · <b>' + (t ? (t[0] + (t.length > 1 ? ' +' + (t.length - 1) : '')) : 'All') + '</b> <span class="car">▾</span>';
+    }
   }
+  // ── drawer tabs: Details | Display ──
+  let tab = 'details';
+  function showTab(t){
+    tab = t;
+    if (t === 'display') buildDisplayPanel();   // the tab itself is an entry point
+    // the details body carries an inline display:flex, which BEATS the hidden
+    // attribute — drive display directly or the switch is a no-op
+    const det = $('gvSheetBody'), dis = $('gvDisplayBody');
+    det.hidden = t !== 'details'; det.style.display = t === 'details' ? 'flex' : 'none';
+    dis.hidden = t !== 'display'; dis.style.display = t === 'display' ? 'block' : 'none';
+    document.querySelectorAll('#gvTabs button').forEach(b => {
+      b.classList.toggle('on', b.dataset.tab === t);
+      b.setAttribute('aria-selected', String(b.dataset.tab === t));
+    });
+    if (t === 'details' && !det.innerHTML.trim())
+      det.innerHTML = '<div class="gv-hint">Tap a state, county, or facility for its profile.</div>';
+  }
+  $('gvTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
+  function openDisplayTab(){
+    showTab('display');   // builds the panel on entry
+    sheetEl.classList.add('open');
+    sheet.setDetent('dt-half');
+  }
+
+  // ── drawer resize: drag the LEFT edge on a monitor; phones keep the sheet.
+  //    Width is shared with the multi-lens map (one preference). ──
+  (function(){
+    const KEY = 'hu-drawer-w';
+    const shell = document.querySelector('.gv-shell');
+    const saved = parseInt(localStorage.getItem(KEY), 10);
+    if (saved >= 300 && saved <= 640) shell.style.setProperty('--drawer-w', saved + 'px');
+    const grip = document.createElement('div');
+    grip.className = 'gv-resize';
+    grip.setAttribute('aria-hidden', 'true');
+    sheetEl.appendChild(grip);
+    let sx = 0, sw = 0, lastW = 0, on = false;
+    grip.addEventListener('pointerdown', e => {
+      if (window.innerWidth < 1100) return;
+      on = true; sx = e.clientX; sw = sheetEl.getBoundingClientRect().width;
+      grip.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    grip.addEventListener('pointermove', e => {
+      if (!on) return;
+      lastW = Math.max(300, Math.min(640, Math.round(sw + (sx - e.clientX))));
+      shell.style.setProperty('--drawer-w', lastW + 'px');
+    });
+    grip.addEventListener('pointerup', () => {
+      if (!on) return;
+      on = false;
+      if (lastW) try { localStorage.setItem(KEY, String(lastW)); } catch(e){}
+    });
+  })();
+  $('gvLayersPill').addEventListener('click', openDisplayTab);
+  $('gvTypesPill').addEventListener('click', openDisplayTab);
+  $('gvDisplayPill').addEventListener('click', openDisplayTab);
   async function toggleLayer(ds){
     if (LAYER_ON.has(ds)){
       if (LAYER_ON.size === 1) return;   // never an empty map
@@ -1117,13 +1248,11 @@ og_image: /brand/og-operators-map.jpg
         else { signal(DATASETS[ds].label + ' load per state. Tap a state'); signalDone(null, 3200); }
       } else if (DATASETS[ds].file) await loadWhole(ds);
     }
-    const host = $('gvChips');
-    host.classList.toggle('no-types', !LAYER_ON.has('hosp'));
-    host.querySelectorAll('.ds-chip').forEach(c => c.classList.toggle('on', LAYER_ON.has(c.dataset.ds)));
+    buildDisplayPanel(); pillFaces();
     if (!$('gvPill').classList.contains('has-q'))
       pillQ.textContent = 'Search ' + activeSet().length.toLocaleString('en-US') + ' ' + NOUN() + '…';
     applyStateTint();
-    refreshSource(); updateStateNums(); updateCount(); renderList(); railAutoCollapse();
+    refreshSource(); updateStateNums(); updateCount(); renderList();
     if (selCounty) openCountyCard();
     else if (selState && sheetEl.classList.contains('open') && mode === 'card' && !selectedId) openStateCard();
     updateScopeChip(); syncURL();
@@ -1133,7 +1262,7 @@ og_image: /brand/og-operators-map.jpg
     if (!map.getSource('hosp')) return;
     refreshSource();
     if (selectedId && !activeSet().some(f => f.properties.id === selectedId)) closeSheet();
-    updateCount(); renderList(); railAutoCollapse();
+    updateCount(); renderList();
     // an open state/county card recomputes under the new filters
     if (mode === 'card' && sheetEl.classList.contains('open')){
       if (selCounty) openCountyCard();
@@ -1152,29 +1281,15 @@ og_image: /brand/og-operators-map.jpg
       if (k) perLayer[k] = (perLayer[k] || 0) + 1;
       if (TYPES[f.properties.t]) perType[f.properties.t] = (perType[f.properties.t] || 0) + 1;
     });
-    document.querySelectorAll('#gvChips .ds-chip .cnt').forEach(el => {
+    document.querySelectorAll('#gvDisplayBody .ds-chip .cnt').forEach(el => {
       const k = el.parentElement.dataset.ds;
       el.textContent = (LAYER_ON.has(k) && perLayer[k]) ? ' ' + perLayer[k].toLocaleString('en-US') : '';
     });
-    document.querySelectorAll('#gvChips .tchip .cnt').forEach(el => {
+    document.querySelectorAll('#gvDisplayBody .tchip .cnt').forEach(el => {
       const k = el.parentElement.dataset.t;
       el.textContent = (k !== '__all' && perType[k]) ? ' ' + perType[k].toLocaleString('en-US') : '';
     });
   }
-
-  // phone + zoomed in: the chip rail folds into one pill (David's call — the
-  // buttons pop out of the way once you're working the canvas)
-  let railPinned = false;
-  function railAutoCollapse(){
-    const rail = $('gvChips'), pill = $('gvChipsPill');
-    if (!rail || !pill) return;
-    const deep = HUKit.phone() && map.getZoom() >= 7.5;
-    if (!deep){ rail.classList.remove('rail-hide'); pill.classList.remove('show'); railPinned = false; return; }
-    pill.classList.add('show');
-    if (railPinned){ rail.classList.remove('rail-hide'); pill.textContent = '✕ Hide filters'; }
-    else { rail.classList.add('rail-hide'); pill.textContent = 'Filters' + (activeTypes ? ' · ' + activeTypes.size : ''); }
-  }
-  $('gvChipsPill').addEventListener('click', () => { railPinned = !railPinned; railAutoCollapse(); });
 
   // ── search ──
   const pillQ = $('gvPillQ');
@@ -1192,6 +1307,36 @@ og_image: /brand/og-operators-map.jpg
     if ($('gvSearch').classList.contains('open')){ closeSearch(); return; }
     if (sheetEl.classList.contains('open')) $('gvSheetX').click();   // Esc = the X, back-walk included
   });
+
+  // ── map-label toggles: basemap state/city names on or off, persisted and
+  //    SHARED with the multi-lens map (same localStorage pref) ──
+  const LABEL_PREFS_KEY = 'hu-map-labels';
+  const labelPrefs = () => { try { return Object.assign({ state:true, city:true }, JSON.parse(localStorage.getItem(LABEL_PREFS_KEY) || '{}')); } catch(e){ return { state:true, city:true }; } };
+  // our own gv-* layers are DATA (counts, facility names), never toggled here
+  const labelGroup = id => /^gv-/.test(id) || /country|continent/.test(id) ? null
+    : /state|region/.test(id) ? 'state'
+    : /place|city|town|village|suburb/.test(id) ? 'city' : null;
+  function applyLabelPrefs(){
+    const p = labelPrefs();
+    map.getStyle().layers.forEach(l => {
+      if (l.type !== 'symbol') return;
+      const g = labelGroup(l.id);
+      if (!g) return;
+      try { map.setLayoutProperty(l.id, 'visibility', p[g] ? 'visible' : 'none'); } catch(e){}
+    });
+  }
+  function toggleLabelPref(k){
+    const p = labelPrefs(); p[k] = !p[k];
+    try { localStorage.setItem(LABEL_PREFS_KEY, JSON.stringify(p)); } catch(e){}
+    // the switches live in the Display tab — repaint them in place
+    [['gvLabState','state'],['gvLabCity','city']].forEach(([id, key]) => {
+      const el = $(id); if (!el) return;
+      el.classList.toggle('on', p[key]);
+      el.setAttribute('aria-checked', String(p[key]));
+    });
+    applyLabelPrefs();
+    announce((k === 'state' ? 'State names ' : 'City names ') + (p[k] ? 'on.' : 'off.'));
+  }
   // arrow keys walk the search results (keyboard path to any facility)
   $('gvSearchIn').addEventListener('keydown', e => {
     if (e.key === 'ArrowDown'){ e.preventDefault(); const f = $('gvSearchList').querySelector('.pop-opt'); if (f) f.focus(); }
@@ -1341,30 +1486,50 @@ og_image: /brand/og-operators-map.jpg
   // ── layers (re-installed after any theme/style switch) ──
   function installData(){
     if (map.getSource('hosp')) return;
+    // one ink decision for every runtime layer: white text/lines vanish on the
+    // light positron basemap, dark ink vanishes on fiord — computed here, used
+    // below, recomputed on every theme swap (installData re-runs after setStyle)
+    const light = document.documentElement.getAttribute('data-theme') === 'light';
+    const inkMain = light ? '#26333B' : '#D9E7EC';
+    const inkHalo = light ? 'rgba(255,255,255,.88)' : 'rgba(5,12,18,.88)';
+    // boundary fills + tints ride UNDER the basemap's label layers so city
+    // names keep full ink over the county choropleth (David's catch); the
+    // facility dots, clusters, and our own labels stay on top as content
+    const beforeId = (map.getStyle().layers.find(l => l.type === 'symbol') || {}).id;
+    // place labels: defined but SECONDARY — muted ink + halo, so city names
+    // read over the tint without competing with counts and facility labels
+    map.getStyle().layers.forEach(l => {
+      if (l.type !== 'symbol' || !/place|city|town|village|suburb|state/.test(l.id)) return;
+      try {
+        map.setPaintProperty(l.id, 'text-color', light ? '#5A6B76' : '#9FB1BA');
+        map.setPaintProperty(l.id, 'text-halo-color', light ? 'rgba(255,255,255,.9)' : 'rgba(8,16,20,.85)');
+        map.setPaintProperty(l.id, 'text-halo-width', 1.3);
+      } catch(e){}
+    });
     // boundaries under everything: state fill is the US-zoom tap target,
     // county fill is the state-zoom tap target
     if (STATES){
       map.addSource('states', { type:'geojson', data:STATES });
       map.addLayer({ id:'gv-state-fill', type:'fill', source:'states',
-        paint:{ 'fill-color':'#4ECDC4', 'fill-opacity':0.03 }});
+        paint:{ 'fill-color':'#4ECDC4', 'fill-opacity':0.03 }}, beforeId);
       map.addLayer({ id:'gv-state-line', type:'line', source:'states',
-        paint:{ 'line-color':'rgba(78,205,196,.35)', 'line-width':0.8 }});
+        paint:{ 'line-color':'rgba(78,205,196,.35)', 'line-width':0.8 }}, beforeId);
       map.addLayer({ id:'gv-state-sel', type:'line', source:'states',
         filter:['==', ['get','fips'], selState ? selState.fips : '___none'],
-        paint:{ 'line-color':'#4ECDC4', 'line-width':2.2 }});
+        paint:{ 'line-color':'#4ECDC4', 'line-width':2.2 }}, beforeId);
     }
     map.addSource('counties', { type:'geojson',
       data: (selState && COUNTY_CACHE.get(selState.fips)) || { type:'FeatureCollection', features:[] } });
     map.addLayer({ id:'gv-county-fill', type:'fill', source:'counties',
-      paint:{ 'fill-color':'#4ECDC4', 'fill-opacity':0.04 }});
+      paint:{ 'fill-color':'#4ECDC4', 'fill-opacity':0.04 }}, beforeId);
     map.addLayer({ id:'gv-county-line', type:'line', source:'counties',
-      paint:{ 'line-color':'rgba(255,255,255,.16)', 'line-width':0.6 }});
+      paint:{ 'line-color': light ? 'rgba(27,42,52,.22)' : 'rgba(255,255,255,.16)', 'line-width':0.6 }}, beforeId);
     map.addLayer({ id:'gv-county-self', type:'fill', source:'counties',
       filter:['==', ['get','fips'], selCounty ? selCounty.fips : '___none'],
-      paint:{ 'fill-color':'rgba(232,168,56,.13)' }});
+      paint:{ 'fill-color':'rgba(232,168,56,.13)' }}, beforeId);
     map.addLayer({ id:'gv-county-sel', type:'line', source:'counties',
       filter:['==', ['get','fips'], selCounty ? selCounty.fips : '___none'],
-      paint:{ 'line-color':'#E8A838', 'line-width':1.8 }});
+      paint:{ 'line-color':'#E8A838', 'line-width':1.8 }}, beforeId);
 
     if (ALL.length){
       // the Geo-1 national read: count per state, dead center, over the shaded
@@ -1373,15 +1538,18 @@ og_image: /brand/og-operators-map.jpg
       map.addLayer({ id:'gv-state-num', type:'symbol', source:'state-centers', maxzoom:4.6,
         layout:{ 'text-field':['to-string',['get','cnt']], 'text-font':['Noto Sans Bold'],
           'text-size':['interpolate', ['linear'], ['zoom'], 2.8, 11, 4.6, 15], 'text-allow-overlap':false },
-        paint:{ 'text-color':'#fff', 'text-halo-color':'rgba(8,16,28,.85)', 'text-halo-width':1.8 }});
+        paint:{ 'text-color': light ? '#26333B' : '#fff',
+          'text-halo-color': light ? 'rgba(255,255,255,.9)' : 'rgba(8,16,28,.85)', 'text-halo-width':1.8 }});
       map.addSource('hosp', { type:'geojson', data:{ type:'FeatureCollection', features: activeSet() }, cluster:true, clusterMaxZoom:10, clusterRadius:46 });
       map.addLayer({ id:'gv-clusters', type:'circle', source:'hosp', filter:['has','point_count'], minzoom:4.6,
         paint:{ 'circle-color':['step',['get','point_count'],'#1B5FA8',25,'#2E86AB',100,'#4ECDC4'],
           'circle-radius':['step',['get','point_count'],14,25,19,100,26],
-          'circle-opacity':0.85,'circle-stroke-width':2,'circle-stroke-color':'rgba(255,255,255,.7)' }});
+          'circle-opacity':0.85,'circle-stroke-width':2,
+          'circle-stroke-color': light ? 'rgba(13,17,23,.35)' : 'rgba(255,255,255,.7)' }});
       map.addLayer({ id:'gv-cluster-count', type:'symbol', source:'hosp', filter:['has','point_count'], minzoom:4.6,
         layout:{ 'text-field':['get','point_count_abbreviated'], 'text-font':['Noto Sans Bold'], 'text-size':12 },
-        paint:{ 'text-color':'#fff' }});
+        // the halo does the work: white-on-teal was ~2:1 on the big clusters
+        paint:{ 'text-color':'#fff', 'text-halo-color':'rgba(8,16,28,.8)', 'text-halo-width':1.4 }});
       map.addLayer({ id:'gv-selected', type:'circle', source:'hosp', minzoom:4.6,
         filter:['==',['get','id'], selectedId || '___none'],
         paint:{ 'circle-radius':13,'circle-color':'rgba(232,168,56,.35)','circle-stroke-width':2.5,'circle-stroke-color':'#E8A838' }});
@@ -1391,9 +1559,6 @@ og_image: /brand/og-operators-map.jpg
         layout:{ 'icon-image':iconExpr, 'icon-allow-overlap':true, 'icon-ignore-placement':true,
           'icon-size':['interpolate',['linear'],['zoom'],4.6,0.5,8,0.65,11,0.85,14,1.05] }});
       // dots at distance, NAMES up close, DATA PILLS at street level (grammar #5)
-      const light = document.documentElement.getAttribute('data-theme') === 'light';
-      const inkMain = light ? '#26333B' : '#D9E7EC';
-      const inkHalo = light ? 'rgba(255,255,255,.88)' : 'rgba(5,12,18,.88)';
       map.addLayer({ id:'gv-labels', type:'symbol', source:'hosp', filter:['!',['has','point_count']], minzoom:9.5, maxzoom:12.5,
         layout:{ 'text-field':['get','n'], 'text-font':['Noto Sans Regular'],
           'text-size':['interpolate', ['linear'], ['zoom'], 9.5, 10, 12.5, 13],
@@ -1423,6 +1588,7 @@ og_image: /brand/og-operators-map.jpg
     wireRouter();
     applyCountyTint();   // theme switches re-add layers — restore any active tint
     applyStateTint();
+    applyLabelPrefs();   // saved label toggles survive boot AND theme swaps
   }
 
   // ── ONE click router owns priority: pin > cluster > county > state ──
@@ -1517,7 +1683,7 @@ og_image: /brand/og-operators-map.jpg
   let mvT = 0;
   map.on('moveend', () => {
     clearTimeout(mvT);
-    mvT = setTimeout(() => { if (ALL.length){ updateCount(); renderList(); railAutoCollapse(); syncInsets(); } }, 120);
+    mvT = setTimeout(() => { if (ALL.length){ updateCount(); renderList(); syncInsets(); } }, 120);
   });
 
   // theme toggle → swap basemap, re-install layers (listeners survive; wired once)
@@ -1555,10 +1721,10 @@ og_image: /brand/og-operators-map.jpg
       dropFilterCache();   // the memo may have cached the pre-data empty list
     } catch(e){ signal("Couldn't load the map data"); return; }
     installData();
-    buildChips();
+    buildDisplayPanel();
+    pillFaces();
     buildInsets();
     syncInsets();
-    railAutoCollapse();
     pillQ.textContent = 'Search ' + ALL.length.toLocaleString('en-US') + ' hospitals…';
     updateCount();
     $('gvListBtn').hidden = false;

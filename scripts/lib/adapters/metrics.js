@@ -12,11 +12,16 @@
  * shared state, even though neither dataset mentions the other.
  */
 const { makeNode, edge, uid } = require('../entity');
+const { validateMetricIds } = require('../metric-id');
+
+// the map resolves ?metric= by name slug, not by index (multi-lens metricSlug)
+const slugOf = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 module.exports = {
   name: 'metrics',
   run(read) {
     const cfg = read('src/_data/metricsConfig.json');
+    validateMetricIds(cfg);   // every item has a unique lens-prefixed id, or the build stops
     const data = read('src/_data/stateData.json');
     const out = [];
     for (const lens of Object.keys(cfg)) {
@@ -34,6 +39,7 @@ module.exports = {
           label: m.name,
           facets: {
             layer: 'metrics',
+            metricId: m.id || null,
             lens,
             unit: m.unit || null,
             dir: m.dir == null ? null : m.dir,   // 1 higher=better, -1 lower=better, 0 neutral
@@ -46,7 +52,7 @@ module.exports = {
           searchParts: [m.name, m.sub, m.defn, lens, m.source, m.unit],
           rels,
           source: { dataset: 'stateData.json+metricsConfig.json', lens, index: i },
-          href: '/tools/multi-lens-map/?lens=' + encodeURIComponent(lens) + '&metric=' + i,
+          href: '/tools/multi-lens-map/?lens=' + encodeURIComponent(lens) + '&metric=' + slugOf(m.name),
         }));
       });
     }

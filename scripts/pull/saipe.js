@@ -112,7 +112,8 @@ const fmtDelta = (d) => (d > 0 ? '+' : '') + d;
   countyData.meta = countyData.meta || {};
   countyData.meta[LENS] = countyData.meta[LENS] || {};
   countyData.meta[LENS][INDEX] = { name: item.name || 'Median household income', unit: item.unit || '$k', dir: item.dir == null ? 1 : item.dir, year };
-  fs.writeFileSync(P('src/assets/data/countyData.json'), JSON.stringify(countyData, null, 2) + '\n');
+  // minified: runtime-fetched by both maps, rides the deploy
+  fs.writeFileSync(P('src/assets/data/countyData.json'), JSON.stringify(countyData) + '\n');
 
   for (const m of MIRROR) stateData[m.lens][m.index] = stateValues;
   fs.writeFileSync(P('src/_data/stateData.json'), JSON.stringify(stateData, null, 2) + '\n');

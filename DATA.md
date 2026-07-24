@@ -39,7 +39,7 @@ reference (small, committed)        fact (large)                derived (generat
 | **County** | `countyFips` | 5-digit string (`01001`) | `registries/counties.json` | Carries `name`, `stateFips`, `stateAbbr`. |
 | **Facility** | `ccn` | CMS cert number (`010001`) | `us-hospitals.json` (`id`) | Gold-standard hospital key. |
 | **Health system** | `systemId` | kebab slug (`hca-healthcare`) | `registries/systems.json` | Slug of the system name; registry adds metadata. |
-| **Metric** | `metricId` | `lens/slug` (planned) | `metricsConfig.json` | TODAY metrics are array indices — see "Known debt". |
+| **Metric** | `metricId` | `lens/slug` (`patient/diabetes`) | `metricsConfig.json` (`items[].id`) | Live since 2026-07. Writers resolve id → index via `scripts/lib/metric-id.js`; data files still KEY on index — see "Known debt". |
 | **Domain** | `domain` id | kebab (`provider-ops`) | `registries/taxonomy.json` | One classification for everything. |
 | **Content node** | `nodeId` | kebab (`prior-auth`) | atlas graph | `{parent}-{child}` for hierarchy. |
 | **Time** | `year` | 4-digit int (`2024`) | per-dataset | First-class facet; enables time series. |
@@ -153,8 +153,12 @@ genuine typos in the CMS source and are logged on every run.
 
 ## Known debt (tracked, not done in this pass)
 
-- **Metric identity is array index**, not a stable `metricId`. Reordering
-  `metricsConfig` items silently breaks `stateData`. Migrate to `lens/slug` ids.
+- **Metric identity: ids are live, data-file keys are not.** Every `metricsConfig`
+  item now carries a stable `id` (`lens/slug`); pull scripts resolve id → index at
+  boot (`scripts/lib/metric-id.js`), and `build:entities` fails on missing or
+  duplicate ids. Still index-keyed: `stateData`/`countyData`/`dataYears` storage
+  keys, `cross-links.js` `METRIC_EXPECT`, and the multi-lens map internals — so
+  APPEND-only remains the rule until those re-key by id.
 - **map_node / map_connections are defined but unwired** — and superseded. The
   linking rule became "content deep-links to existing tiles, never its own node",
   and `atlasLinks` (in `_data/rounds.js`) is the wired mechanism as of 2026-07-09:

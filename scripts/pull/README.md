@@ -24,16 +24,26 @@ states changed, a fresh release landed and it's time to `--write`.
 
 | Fetcher | Source | Dataset | Grain | Refresh cadence | Feeds |
 |---|---|---|---|---|---|
-| `places.js` | CDC PLACES | County 2025 release `swc5-untb` (BRFSS) | county → state rollup | annual (~summer), ~2yr lag | patient lens (5 metrics) |
+| `places.js` | CDC PLACES | County 2025 release `swc5-untb` (BRFSS) | county → state rollup | annual (~summer), ~2yr lag | patient lens (10 metrics: health status + smoking, COPD, asthma, BP, depression) |
 | `bls.js` | BLS LAUS | bulk `la.data.64.County` | county → state rollup | annual averages (~spring) + monthly | economics + baseline unemployment |
+| `acs.js` | Census ACS 5-year | API `acs/acs5` + `acs5/subject` | county + official state rows | annual (~December) | median age (patient), household size + age mix (baseline) |
+| `chr.js` | County Health Rankings | analytic CSV (`analytic_data<yr>[_v2].csv`) | county + official state rows | annual (~spring) | outcomes: premature death + low birthweight (patient) |
+
+Fetchers address metrics by **stable id** (`lens/slug` in `metricsConfig.json`),
+resolved to array position at boot via `scripts/lib/metric-id.js`. Never hardcode
+an index in a fetcher again.
 
 ## Access gotchas (learned the hard way)
 
 - **BLS** flat files (`laucnty<yy>.txt`) now 404. The bulk server works but **requires a
   descriptive User-Agent with a contact email** or it 403s. No API key. The county
   file is ~336MB; cached under `scripts/.cache/` (gitignored), `--refresh` re-pulls.
-- **Census API** now **requires a key** (302 → missing_key). Not used yet; SAHIE/ACS
-  fetchers will need a static-CSV path or a key.
+- **Census API** now **requires a key** (302 → missing_key). `acs.js` uses it: sign up
+  free at https://api.census.gov/data/key_signup.html, then `set CENSUS_API_KEY` or
+  drop the key into `scripts/.cache/census-key.txt` (gitignored). SAIPE/SAHIE dodge
+  this by riding static files.
+- **KY & PA** also gate NEW PLACES measures: with no prior state value to carry
+  forward, they stay null and the map honestly shows no-data for those two states.
 - **CDC PLACES** dropped its State file; we pull County and population-weight to states.
 - **KY & PA** bar county-level release of PLACES chronic-disease measures — carried
   forward + flagged, not treated as missing.

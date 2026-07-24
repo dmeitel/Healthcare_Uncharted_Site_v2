@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HU Map Chrome — 3 Variants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=DM+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dark:#0a0f1a; --surface:#0f1825; --raised:#162030; --raised2:#1c2a40;
+  --blue:#1B5FA8; --teal:#4ECDC4; --teal-dk:#1B9A90; --amber:#E8A838; --red:#DF5752; --green:#2D9B6F; --purple:#7C6FCD;
+  --t1:#FFFFFF; --t2:#b8cfe8; --t3:#5A7898; --border:#1a2d48; --border2:#24405e;
+  --font:'DM Sans',system-ui,sans-serif; --display:'Outfit',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--dark);color:var(--t2);font-family:var(--font);padding:40px 24px 80px;max-width:1280px;margin:0 auto}
+h1{font-family:var(--display);font-size:30px;font-weight:800;color:var(--t1)}
+.sub{font-family:var(--mono);font-size:12px;color:var(--t3);margin:6px 0 40px}
+h2{font-family:var(--display);font-size:21px;font-weight:800;color:var(--t1);margin:56px 0 4px}
+h2 .tag{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--teal);margin-left:10px;letter-spacing:.08em}
+.blurb{font-size:14px;line-height:1.6;color:var(--t2);max-width:760px;margin:8px 0 18px}
+.frames{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:8px;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── frames ── */
+.desk{width:820px;max-width:100%;aspect-ratio:16/9.4;border-radius:14px;border:1px solid var(--border2);position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55);flex:none}
+.phone{width:252px;aspect-ratio:9/18.6;border-radius:26px;border:2px solid var(--border2);position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55);flex:none}
+
+/* ── fake canvas: choropleth-ish blobs + facility dots ── */
+.canvas{position:absolute;inset:0;background:
+  radial-gradient(46% 42% at 18% 34%, rgba(78,205,196,.34) 0 62%, transparent 63%),
+  radial-gradient(38% 40% at 46% 26%, rgba(232,168,56,.30) 0 60%, transparent 61%),
+  radial-gradient(42% 44% at 74% 40%, rgba(223,87,82,.28) 0 61%, transparent 62%),
+  radial-gradient(40% 36% at 36% 68%, rgba(27,95,168,.36) 0 60%, transparent 61%),
+  radial-gradient(36% 34% at 68% 74%, rgba(78,205,196,.24) 0 58%, transparent 59%),
+  linear-gradient(160deg,#101b2c 0%,#0c1422 100%)}
+.mlbl{position:absolute;font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:#9FB1BA;text-shadow:0 1px 3px rgba(8,16,20,.9)}
+.mval{position:absolute;font-family:var(--font);font-weight:700;font-size:11px;color:#F0F6F8;text-shadow:0 0 3px rgba(8,16,20,.95),0 0 6px rgba(8,16,20,.8)}
+.dot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--teal);border:1.5px solid rgba(8,16,20,.6)}
+.dot.b{background:var(--blue);width:16px;height:16px;font-family:var(--mono);font-size:7px;color:#fff;display:flex;align-items:center;justify-content:center;border:none}
+
+/* ── shared chrome bits ── */
+.pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:rgba(15,24,37,.94);border:1px solid var(--border2);font-size:9.5px;font-weight:600;color:var(--t1);white-space:nowrap}
+.pill .mut{color:var(--t3);font-family:var(--mono);font-size:8px}
+.pill .car{color:var(--t3);font-size:8px}
+.pill.hot{border-color:var(--teal)}
+.pill.ghost{color:var(--t3);font-weight:400}
+.ident{font-family:var(--display);font-weight:700;font-size:9.5px;color:var(--t2)}
+.ident b{color:var(--teal)}
+.bar{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:7px;align-items:center;z-index:5}
+.chipx{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;background:var(--raised);border:1px solid var(--border);font-size:8.5px;font-weight:600;color:var(--t2)}
+.chipx.on{background:rgba(78,205,196,.16);border-color:var(--teal);color:var(--t1)}
+.chipx i{width:7px;height:7px;border-radius:50%}
+.fabcol{position:absolute;right:10px;bottom:12px;display:flex;flex-direction:column;gap:7px;z-index:5}
+.fab{width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--t1);font-size:11px}
+.fab.cluster{border-radius:10px}
+.legend{position:absolute;left:10px;bottom:12px;display:flex;align-items:center;gap:3px;height:20px;padding:0 8px;border-radius:999px;background:rgba(15,24,37,.94);border:1px solid var(--border2);font-family:var(--mono);font-size:7px;color:var(--t2);z-index:5}
+.legend i{width:9px;height:5px;border-radius:1px}
+.listpill{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:5}
+
+/* ── drawer (variant A) ── */
+.drawer{position:absolute;top:46px;right:10px;bottom:12px;width:232px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;z-index:6;padding:10px;display:flex;flex-direction:column;gap:9px}
+.tabs{display:flex;background:var(--raised);border-radius:8px;padding:3px;gap:3px}
+.tabs span{flex:1;text-align:center;font-size:9px;font-weight:700;padding:5px 0;border-radius:6px;color:var(--t3)}
+.tabs span.on{background:var(--surface);color:var(--t1);border:1px solid var(--border2)}
+.dsec{border-bottom:1px dotted var(--border);padding-bottom:8px}
+.dsec h5{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.dsec .row{display:flex;gap:5px;flex-wrap:wrap}
+.tgl{display:flex;justify-content:space-between;align-items:center;font-size:9px;color:var(--t2);padding:3px 0}
+.sw{width:22px;height:12px;border-radius:999px;background:var(--teal);position:relative}
+.sw::after{content:'';position:absolute;right:1.5px;top:1.5px;width:9px;height:9px;border-radius:50%;background:#0a0f1a}
+.sw.off{background:var(--raised2)}
+.sw.off::after{right:auto;left:1.5px;background:var(--t3)}
+
+/* ── left rail (variant B) ── */
+.rail{position:absolute;top:0;left:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border2);z-index:6;padding:12px 10px;display:flex;flex-direction:column;gap:10px}
+.rail .search{height:26px;border-radius:8px;background:var(--raised);border:1px solid var(--border);display:flex;align-items:center;padding:0 9px;font-size:9px;color:var(--t3)}
+.railcard{background:var(--raised);border:1px solid var(--border);border-radius:9px;padding:9px;margin-top:auto}
+.railcard .k{font-family:var(--mono);font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.railcard .n{font-family:var(--display);font-size:12px;font-weight:800;color:var(--t1);margin:3px 0 5px}
+.stat3{display:flex;gap:5px}
+.stat3 div{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px}
+.stat3 b{display:block;font-family:var(--display);font-size:11px;color:var(--t1)}
+.stat3 span{font-family:var(--mono);font-size:6px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+
+/* ── floating card (variant C) ── */
+.fcard{position:absolute;left:10px;bottom:40px;width:200px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px;z-index:6;box-shadow:0 12px 34px rgba(0,0,0,.5)}
+
+/* ── phone chrome ── */
+.pbar{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:5px;align-items:center;z-index:5}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--border2);border-radius:16px 16px 0 0;z-index:6;padding:6px 10px 10px}
+.grab{width:34px;height:3px;border-radius:2px;background:var(--border2);margin:2px auto 8px}
+.yearpill{position:absolute;left:50%;transform:translateX(-50%);z-index:5;display:inline-flex;align-items:center;gap:8px;height:26px;padding:0 10px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-family:var(--mono);font-size:9px;color:var(--t1)}
+.yearpill span{color:var(--t3)}
+
+/* ── verdict blocks ── */
+.pros{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pros span{font-family:var(--mono);font-size:9.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--border2)}
+.pros .p{color:var(--teal);border-color:rgba(78,205,196,.4)}
+.pros .c{color:var(--amber);border-color:rgba(232,168,56,.4)}
+table{border-collapse:collapse;margin-top:18px;font-size:12.5px}
+th,td{border:1px solid var(--border2);padding:8px 14px;text-align:left}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+td b{color:var(--t1)}
+.rec{background:var(--surface);border:1px solid var(--teal);border-radius:14px;padding:20px 24px;margin-top:48px;max-width:820px}
+.rec h3{font-family:var(--display);font-size:17px;color:var(--t1);margin-bottom:8px}
+.rec p{font-size:13.5px;line-height:1.65}
+.rec .mono{font-family:var(--mono);font-size:11px;color:var(--t3);margin-top:12px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<h1>Map chrome, three ways</h1>
+<div class="sub">HU tokens, real proportions · desktop frame = Operators map · phone frame = Multi-Lens · 2026-07-23</div>
+
+<!-- ═══════════════ VARIANT A ═══════════════ -->
+<h2>A · Command Bar + Tabbed Drawer<span class="tag">THE ZILLOW MOVE</span></h2>
+<p class="blurb">One bar, pills that read out their own state, and every other control folds into the panel you already have, behind a second tab. The 16-chip rail becomes two pills. Chrome budget is fixed forever: new data grows the drawer, never the canvas.</p>
+<div class="frames">
+  <div>
+    <div class="desk">
+      <div class="canvas">
+        <span class="mlbl" style="left:20%;top:44%">SALT LAKE CITY</span>
+        <span class="mval" style="left:17%;top:30%">128</span>
+        <span class="mval" style="left:44%;top:38%">86</span>
+        <span class="mval" style="left:60%;top:55%">204</span>
+        <span class="dot" style="left:24%;top:52%"></span><span class="dot" style="left:30%;top:40%"></span>
+        <span class="dot b" style="left:40%;top:60%">23</span><span class="dot" style="left:52%;top:30%"></span>
+      </div>
+      <div class="bar">
+        <span class="pill"><span class="ident">Hospital <b>Operations</b></span></span>
+        <span class="pill hot">◀ Utah</span>
+        <span class="pill ghost" style="flex:1;max-width:200px">⌕ Search 5,366 hospitals…</span>
+        <span class="pill">Layers · <b>Hospitals +1</b> <span class="car">▾</span></span>
+        <span class="pill">Types · <b>Acute</b> <span class="car">▾</span></span>
+      </div>
+      <div class="drawer">
+        <div class="tabs"><span>Details</span><span class="on">Display</span></div>
+        <div class="dsec"><h5>Layers</h5><div class="row">
+          <span class="chipx on"><i style="background:#4ECDC4"></i>Hospitals</span>
+          <span class="chipx on"><i style="background:#B07BD6"></i>Dialysis</span>
+          <span class="chipx"><i style="background:#A3E635"></i>Pharmacies</span>
+          <span class="chipx"><i style="background:#35C7E8"></i>Surgery</span>
+        </div></div>
+        <div class="dsec"><h5>Hospital types</h5><div class="row">
+          <span class="chipx on">Acute <span style="color:var(--t3)">only</span></span>
+          <span class="chipx">Critical access</span>
+          <span class="chipx">Psychiatric</span>
+        </div></div>
+        <div class="dsec"><h5>Shade counties by</h5><div class="row">
+          <span class="chipx on">Smoking</span><span class="chipx">COPD</span><span class="chipx">Uninsured</span>
+        </div></div>
+        <div class="dsec" style="border:none"><h5>Map labels</h5>
+          <div class="tgl">State names <span class="sw"></span></div>
+          <div class="tgl">City names <span class="sw off"></span></div>
+        </div>
+      </div>
+      <div class="fabcol"><span class="fab">◎</span><span class="fab">▦</span><span class="fab">✎</span></div>
+      <div class="legend"><i style="background:#FF6B6B"></i><i style="background:#F2A65A"></i><i style="background:#E8C547"></i><i style="background:#7FD2C8"></i><i style="background:#4ECDC4"></i>&nbsp;worse → better</div>
+      <span class="pill listpill">List · 412 in view</span>
+    </div>
+    <div class="cap">Desktop · drawer on Display tab · bar never wraps to two rows</div>
+  </div>
+  <div>
+    <div class="phone">
+      <div class="canvas">
+        <span class="mval" style="left:22%;top:26%">7.3%</span>
+        <span class="mval" style="left:55%;top:36%">9.3%</span>
+        <span class="mval" style="left:38%;top:52%">7.6%</span>
+      </div>
+      <div class="pbar">
+        <span class="pill hot" style="height:24px">◀ US</span>
+        <span class="pill" style="flex:1;height:24px">Patient · <b>Smoking</b> <span class="mut">9/15</span> <span class="car">▾</span></span>
+      </div>
+      <span class="yearpill" style="bottom:132px">‹ <span></span>2023<span></span> ›</span>
+      <div class="sheet" style="height:118px">
+        <div class="grab"></div>
+        <div class="tabs"><span class="on">Details</span><span>Display</span></div>
+        <div style="font-family:var(--display);font-weight:800;font-size:12px;color:var(--t1);margin-top:8px">Utah</div>
+        <div style="font-family:var(--mono);font-size:7.5px;color:var(--t3)">Adult smoking rate · 2023 · tap a county</div>
+      </div>
+    </div>
+    <div class="cap">Phone · sheet grows a Display tab · no chip rail at all</div>
+  </div>
+</div>
+<div class="pros">
+  <span class="p">+ smallest change from today</span><span class="p">+ scales: drawer sections are free</span>
+  <span class="p">+ one filter home on every device</span><span class="c">− drawer covers map while open (already true)</span>
+</div>
+
+<!-- ═══════════════ VARIANT B ═══════════════ -->
+<h2>B · Left Rail Workstation<span class="tag">THE DRONE-OPS MOVE</span></h2>
+<p class="blurb">Everything lives in a persistent left rail: search, filters, and the selection card, always visible, never overlapping the canvas. The map keeps only the corner cluster and legend. This is the "tool for an analyst" posture. Phone collapses to Variant A's sheet, so the mobile build is identical.</p>
+<div class="frames">
+  <div>
+    <div class="desk">
+      <div class="canvas" style="left:240px">
+        <span class="mval" style="left:30%;top:34%">128</span>
+        <span class="mval" style="left:58%;top:52%">204</span>
+        <span class="dot" style="left:34%;top:56%"></span><span class="dot b" style="left:50%;top:38%">23</span>
+      </div>
+      <div class="rail">
+        <span class="ident" style="font-size:11px">Hospital <b>Operations</b></span>
+        <div class="search">⌕ Search 5,366 hospitals…</div>
+        <div class="dsec"><h5>Layers</h5><div class="row">
+          <span class="chipx on"><i style="background:#4ECDC4"></i>Hospitals</span>
+          <span class="chipx on"><i style="background:#B07BD6"></i>Dialysis</span>
+          <span class="chipx"><i style="background:#A3E635"></i>Pharmacies</span>
+        </div></div>
+        <div class="dsec"><h5>Hospital types</h5><div class="row">
+          <span class="chipx on">Acute</span><span class="chipx">CAH</span><span class="chipx">Psych</span><span class="chipx">VA</span>
+        </div></div>
+        <div class="dsec"><h5>Shade counties by</h5><div class="row">
+          <span class="chipx on">Smoking</span><span class="chipx">Income</span>
+        </div></div>
+        <div class="railcard">
+          <div class="k">STATE · 128 FACILITIES</div>
+          <div class="n">Utah</div>
+          <div class="stat3">
+            <div><b>128</b><span>Total</span></div>
+            <div><b>4.1</b><span>Per 100k</span></div>
+            <div><b>13</b><span>CAH</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="bar" style="left:252px"><span class="pill hot">◀ Utah</span></div>
+      <div class="fabcol"><span class="fab">◎</span><span class="fab">▦</span><span class="fab">✎</span></div>
+      <div class="legend" style="left:252px"><i style="background:#FF6B6B"></i><i style="background:#F2A65A"></i><i style="background:#E8C547"></i><i style="background:#7FD2C8"></i><i style="background:#4ECDC4"></i>&nbsp;worse → better</div>
+    </div>
+    <div class="cap">Desktop · rail owns filters AND the selection card · canvas never covered</div>
+  </div>
+  <div>
+    <div class="phone">
+      <div class="canvas">
+        <span class="mval" style="left:24%;top:30%">7.3%</span>
+        <span class="mval" style="left:52%;top:46%">9.3%</span>
+      </div>
+      <div class="pbar">
+        <span class="pill hot" style="height:24px">◀ US</span>
+        <span class="pill" style="flex:1;height:24px">Patient · <b>Smoking</b> <span class="car">▾</span></span>
+      </div>
+      <div class="sheet" style="height:96px">
+        <div class="grab"></div>
+        <div class="tabs"><span class="on">Details</span><span>Display</span></div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:8px">Same sheet as Variant A — phone is identical</div>
+      </div>
+    </div>
+    <div class="cap">Phone · identical to A (rail has no phone form)</div>
+  </div>
+</div>
+<div class="pros">
+  <span class="p">+ nothing ever covers the map</span><span class="p">+ most room for filter growth</span>
+  <span class="c">− biggest rebuild of the three</span><span class="c">− map loses ~240px on laptops</span><span class="c">− diverges desktop vs phone grammar</span>
+</div>
+
+<!-- ═══════════════ VARIANT C ═══════════════ -->
+<h2>C · Canvas Minimal<span class="tag">THE AIRBNB MOVE</span></h2>
+<p class="blurb">Chrome nearly disappears: scope pill, one Display pill, corner cluster. The map's own labels do the talking, and selections open a floating card, not a docked panel. Every control lives behind the single Display pill, which opens a full overlay.</p>
+<div class="frames">
+  <div>
+    <div class="desk">
+      <div class="canvas">
+        <span class="mval" style="left:16%;top:28%">6.7%</span>
+        <span class="mval" style="left:30%;top:42%">7.3%</span>
+        <span class="mval" style="left:47%;top:32%">7.6%</span>
+        <span class="mval" style="left:62%;top:48%">9.4%</span>
+        <span class="mval" style="left:76%;top:34%">8.3%</span>
+        <span class="mlbl" style="left:40%;top:57%">DENVER</span>
+      </div>
+      <div class="bar" style="justify-content:space-between">
+        <span style="display:flex;gap:7px">
+          <span class="pill"><span class="ident">Pop Health <b>Multi-Lens</b></span></span>
+          <span class="pill hot">◀ United States</span>
+        </span>
+        <span class="pill">⚙ Display · <b>Patient · Smoking · 2023</b></span>
+      </div>
+      <div class="fcard">
+        <div class="k" style="font-family:var(--mono);font-size:7px;letter-spacing:.12em;color:var(--teal);text-transform:uppercase">STATE · PATIENT LENS</div>
+        <div style="font-family:var(--display);font-size:13px;font-weight:800;color:var(--t1);margin:3px 0 6px">Colorado</div>
+        <div class="stat3">
+          <div><b>10.2%</b><span>Value</span></div>
+          <div><b>#11</b><span>Rank</span></div>
+          <div><b>−1.1pp</b><span>vs nat</span></div>
+        </div>
+      </div>
+      <div class="fabcol"><span class="fab">◎</span><span class="fab">▦</span></div>
+      <div class="legend" style="left:auto;right:52px"><i style="background:#FF6B6B"></i><i style="background:#F2A65A"></i><i style="background:#E8C547"></i><i style="background:#7FD2C8"></i><i style="background:#4ECDC4"></i>&nbsp;worse → better</div>
+    </div>
+    <div class="cap">Desktop · floating card, one Display pill, everything else is map</div>
+  </div>
+  <div>
+    <div class="phone">
+      <div class="canvas">
+        <span class="mval" style="left:22%;top:28%">7.3%</span>
+        <span class="mval" style="left:50%;top:44%">9.3%</span>
+      </div>
+      <div class="pbar" style="justify-content:space-between">
+        <span class="pill hot" style="height:24px">◀ US</span>
+        <span class="pill" style="height:24px">⚙ <b>Smoking · 2023</b></span>
+      </div>
+      <div class="fcard" style="left:8px;right:8px;bottom:10px;width:auto">
+        <div style="font-family:var(--display);font-size:12px;font-weight:800;color:var(--t1)">Utah · 7.3%</div>
+        <div style="font-family:var(--mono);font-size:7.5px;color:var(--t3);margin-top:2px">#2 of 49 · Adult smoking rate</div>
+      </div>
+    </div>
+    <div class="cap">Phone · card floats, Display pill opens a full-screen panel</div>
+  </div>
+</div>
+<div class="pros">
+  <span class="p">+ most map, least chrome — beautiful</span><span class="p">+ strongest on phone</span>
+  <span class="c">− every filter is two taps deep</span><span class="c">− floating card can't hold rankings/compare/sparkline depth</span><span class="c">− hides the multi-lens identity (lenses invisible until opened)</span>
+</div>
+
+<!-- ═══════════════ COMPARISON ═══════════════ -->
+<h2>Side by side</h2>
+<table>
+  <tr><th></th><th>A · Bar + Drawer</th><th>B · Left Rail</th><th>C · Minimal</th></tr>
+  <tr><td>Chrome rows on canvas</td><td><b>1</b></td><td><b>0</b> (rail) + 1 chip</td><td><b>1</b></td></tr>
+  <tr><td>New dataset costs</td><td><b>a drawer section</b></td><td>a rail section</td><td>depth in the overlay</td></tr>
+  <tr><td>Filter discoverability</td><td><b>high</b> (readout pills)</td><td><b>highest</b> (always visible)</td><td>low (behind ⚙)</td></tr>
+  <tr><td>Phone story</td><td><b>same grammar as desktop</b></td><td>borrows A's</td><td>strongest visually</td></tr>
+  <tr><td>Build cost from today</td><td><b>small</b> — reuses panel/sheet/chips</td><td>large — new layout system</td><td>medium — new card system</td></tr>
+  <tr><td>Deep analysis (rankings, compare)</td><td><b>keeps it</b></td><td>keeps it</td><td>loses room for it</td></tr>
+</table>
+
+<div class="rec">
+  <h3>The call</h3>
+  <p><b>Build A.</b> Steal B's always-grouped sections for the drawer's Display tab, and steal C's discipline as the target state: if a control can become a map label instead of chrome, it becomes a map label. A is also the only one that keeps one grammar across desktop and phone, which is what made the maps feel right once navigation was fixed.</p>
+  <div class="mono">
+    TRIAL PLAN · operators map first (rail dies, two readout pills + Display tab) →
+    port to multi-lens (lens rail folds into the metric popover as sections) →
+    corner cluster unified on both → write the rule into HU-UI-GRAMMAR.md →
+    run it a few days → ONE commit when it feels right.
+  </div>
+</div>
+
+</body>
+</html>
