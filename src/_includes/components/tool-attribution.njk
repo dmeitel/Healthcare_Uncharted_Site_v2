@@ -4,8 +4,11 @@
      {% set ta_source = 'CMS Provider Data · 2024' %}  — optional source line
      {% set ta_source_href = '/learn/healthcare-data-sources/' %} — optional link target
      {% include "components/tool-attribution.njk" %}
-#}
+   Phone (≤699px): the FIXED variant collapses to an ⓘ chip — the full card
+   was burying the thumb-zone controls (year pill, FABs, legend) on the maps.
+   Tap ⓘ to read, tap ✕ to put it away. Inline (non-fixed) usage is untouched. #}
 <div class="tool-attribution{% if ta_fixed %} tool-attribution--fixed{% endif %}">
+  {% if ta_fixed %}<button class="ta-toggle" type="button" aria-expanded="false" aria-label="Data sources and disclaimer">ⓘ</button>{% endif %}
   <span class="ta-brand">Healthcare <span>Uncharted</span></span>
   <span class="ta-sep">&middot;</span>
   <span>Educational use, not clinical advice</span>
@@ -14,3 +17,18 @@
   {% if ta_source_href %}<a href="{{ ta_source_href }}">{{ ta_source }}</a>{% else %}<span>{{ ta_source }}</span>{% endif %}
   {% endif %}
 </div>
+{% if ta_fixed %}
+<script>
+(function(){
+  document.querySelectorAll('.tool-attribution--fixed .ta-toggle:not([data-wired])').forEach(function(b){
+    b.setAttribute('data-wired', '1');
+    b.addEventListener('click', function(){
+      var box = b.closest('.tool-attribution');
+      var open = box.classList.toggle('ta-open');
+      b.setAttribute('aria-expanded', open ? 'true' : 'false');
+      b.textContent = open ? '✕' : 'ⓘ';
+    });
+  });
+})();
+</script>
+{% endif %}

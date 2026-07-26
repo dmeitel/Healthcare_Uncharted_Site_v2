@@ -29,6 +29,8 @@ const NODES = [
   // ── SOURCES (external) ──────────────────────────────────────────
   { id: 'src-cms-care-compare', kind: 'source', label: 'CMS Care Compare', provenance: 'official',
     detail: 'Hospital General Information download. One leg of the us-hospitals merge.' },
+  { id: 'src-cms-pos', kind: 'source', label: 'CMS Provider of Services', provenance: 'official',
+    detail: 'Quarterly POS file (Hospital & Non-Hospital Facilities, iQIES) via the data.cms.gov API. Service flags, teaching, capacity, and network counts behind hospital-enrich.json.' },
   { id: 'src-cms-asc', kind: 'source', label: 'CMS ASC Dataset', provenance: 'official',
     detail: 'Ambulatory surgical center listing behind us-ascs.json.' },
   { id: 'src-cms-dialysis', kind: 'source', label: 'CMS Dialysis Dataset', provenance: 'official',
@@ -79,12 +81,18 @@ const NODES = [
     detail: 'Rollups: facilities by state / county / system, national summary, suppliers by state. Build-only outputs.' },
   { id: 'js-build-entities', kind: 'script', label: 'build-entities.js', stat: 'scripts/build-entities.js',
     detail: '10-adapter unified graph. Reads every major dataset, validates links (incl. the cross-links metric-name guard), writes the search graph.' },
+  { id: 'js-build-hospital-enrichment', kind: 'script', label: 'build-hospital-enrichment.js', stat: 'scripts/build-hospital-enrichment.js',
+    detail: 'Pulls the POS hospital file from the data.cms.gov API (paged, cached to .cache), joins by CCN, packs 31 service flags into a bitmask, and adds same-ZIP outpatient neighbor counts from the shipped layers. Re-run quarterly.' },
 
   // ── DATASETS (deployed, src/assets/data/) ───────────────────────
   { id: 'ds-us-hospitals', kind: 'dataset', label: 'us-hospitals.json', stat: 'src/assets/data/us-hospitals.json',
     refresh: 'hand-maintained', provenance: 'official',
     detail: '5,366 hospitals. CMS Care Compare merged with the AHRQ system crosswalk and HIFLD/CovidCareMap beds.',
     consumers: ['Operators Map (eager)', 'facility.js (build)'] },
+  { id: 'ds-hospital-enrich', kind: 'dataset', label: 'hospital-enrich.json', stat: 'src/assets/data/hospital-enrich.json',
+    refresh: 'auto-pull', provenance: 'official',
+    detail: '5,355 hospitals enriched from the POS file: services bitmask, teaching, capacity, staffing, off-site footprint, county FIPS, same-ZIP neighbors.',
+    consumers: ['Operators Map (lazy, on idle)'] },
   { id: 'ds-us-ascs', kind: 'dataset', label: 'us-ascs.json', stat: 'src/assets/data/us-ascs.json',
     refresh: 'hand-maintained', provenance: 'official',
     detail: '5,611 ambulatory surgical centers.', consumers: ['Operators Map (lazy)'] },
@@ -233,6 +241,15 @@ const EDGES = [
   { from: 'src-hand-curated', to: 'int-data-years' },
   { from: 'src-hand-curated', to: 'int-registries' },
 
+  // hospital enrichment: POS in, boot set + shipped layers as the join frame
+  { from: 'src-cms-pos', to: 'js-build-hospital-enrichment' },
+  { from: 'ds-us-hospitals', to: 'js-build-hospital-enrichment' },
+  { from: 'ds-us-ascs', to: 'js-build-hospital-enrichment' },
+  { from: 'ds-us-dialysis', to: 'js-build-hospital-enrichment' },
+  { from: 'ds-suppliers-pharmacy', to: 'js-build-hospital-enrichment' },
+  { from: 'js-build-hospital-enrichment', to: 'ds-hospital-enrich' },
+  { from: 'ds-hospital-enrich', to: 'tool-operators-map', mode: 'lazy' },
+
   // scripts → what they write
   { from: 'js-pull-places', to: 'ds-county-data' },
   { from: 'js-pull-bls', to: 'ds-county-data' },
@@ -312,6 +329,7 @@ const EDGES = [
 const PLAIN = {
   // sources
   'src-cms-care-compare': 'The federal government\'s public list of every Medicare-certified hospital. We download it, clean it, and merge it into our one hospital file.',
+  'src-cms-pos':          'CMS\'s quarterly census of every certified facility: what services each hospital offers, its teaching status, operating rooms, and staffing as reported. The raw material behind the hospital profile cards.',
   'src-cms-asc':          'CMS\'s public list of Medicare-certified outpatient surgery centers. The raw material behind us-ascs.json.',
   'src-cms-dialysis':     'CMS\'s public list of dialysis clinics, including which chain runs each one. Becomes us-dialysis.json.',
   'src-cms-dmepos':       'CMS\'s directory of medical equipment suppliers, pharmacies, and optical shops. A build script downloads the current copy and splits it into four map layers.',
@@ -338,9 +356,11 @@ const PLAIN = {
   'js-build-geo':      'Downloads county map shapes and population, and writes the geographic base files the maps draw.',
   'js-build-data':     'The adder-upper: facilities per state, per county, per system. Its outputs feed page templates while the site builds.',
   'js-build-entities': 'The big joiner. Reads every major dataset, links hospitals to states to metrics to careers into one graph, and writes the Atlas search file. Refuses to build if any link dangles.',
+  'js-build-hospital-enrichment': 'Asks CMS what every hospital actually offers (NICU, cath lab, respiratory care, and 28 more), who teaches residents, and what shares its ZIP code, then packs it into one small file the map loads quietly.',
 
   // datasets (deployed)
   'ds-us-hospitals':      'Every U.S. hospital in one file: name, location, type, beds, star rating, owning system. The Hospital Operations Map loads it the moment the page opens.',
+  'ds-hospital-enrich':   'The deep profile behind every hospital pin: 31 kinds of care it does or does not offer, teaching status, operating rooms, nurses and respiratory therapists on staff, and what else operates in its ZIP. Loads quietly after the map is up.',
   'ds-us-ascs':           'Outpatient surgery centers. Sits on the shelf until you toggle that layer on the map.',
   'ds-us-dialysis':       'Dialysis clinics with their chains. Loads on the map when toggled.',
   'ds-suppliers-pharmacy':'Every Medicare-enrolled pharmacy, 40,000+ points. The heaviest file on the site, which is exactly why it only loads when you ask for it, one state at a time.',

@@ -41,15 +41,36 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 [data-theme="light"] .lv-ident b { color:var(--teal-dk); }
 @media (max-width:699px){ .lv-ident { display:none; } }
 .lv-metric { flex:1; max-width:460px; display:flex; align-items:center; gap:9px; height:38px; padding:0 14px; border-radius:999px;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
+  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--teal);
   color:var(--t1); font-family:var(--font); font-size:12.5px; font-weight:600; cursor:pointer; backdrop-filter:blur(8px);
   box-shadow:0 4px 16px rgba(0,0,0,.35); text-align:left; overflow:hidden; }
-.lv-metric:hover { border-color:var(--teal); }
+/* teal border = tappable, same control language as the scope chip. The pill
+   is the tool's PRIMARY selector; it must not dress like the inert ident pill */
+[data-theme="light"] .lv-metric { border-color:var(--teal-dk); }
+.lv-metric:hover { border-color:var(--teal); box-shadow:0 4px 16px rgba(0,0,0,.35), 0 0 0 3px color-mix(in srgb, var(--teal) 18%, transparent); }
+.lv-metric:active { transform:scale(.985); }
 .lv-metric .mq { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lv-metric .yr { margin-left:auto; flex:none; font-family:var(--mono); font-size:9.5px; color:var(--t3); }
 /* the caret says "this opens the drawer" — the pill is the READOUT, the
-   drawer's Display tab is the editor (nav lives left, view lives right) */
-.lv-metric .car { flex:none; color:var(--t3); font-size:11px; }
+   drawer's Display tab is the editor (nav lives left, view lives right).
+   It sits in a teal well now so it reads as the pill's handle, not decor */
+.lv-metric .car { flex:none; width:22px; height:22px; margin-right:-4px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:9px;
+  background:color-mix(in srgb, var(--teal) 20%, transparent); color:var(--teal); }
+[data-theme="light"] .lv-metric .car { color:var(--teal-dk); background:color-mix(in srgb, var(--teal) 26%, transparent); }
+/* one-time coach: teaches "the pill opens the catalog," then leaves forever
+   (budget rule: guidance leaves after use). ?coach in the URL re-arms it. */
+.lv-coach { align-self:flex-end; position:relative; margin:-1px 48px 0 0;
+  border:1px solid var(--teal); background:var(--surface); color:var(--t1);
+  font-family:var(--font); font-size:12px; font-weight:600; padding:8px 12px;
+  border-radius:10px; box-shadow:0 8px 26px rgba(0,0,0,.45); cursor:pointer; }
+.lv-coach::before { content:''; position:absolute; top:-5px; right:26px; width:8px; height:8px;
+  background:var(--surface); border-left:1px solid var(--teal); border-top:1px solid var(--teal); transform:rotate(45deg); }
+[data-theme="light"] .lv-coach, [data-theme="light"] .lv-coach::before { border-color:var(--teal-dk); }
+.lv-coach.gone { opacity:0; transition:opacity .3s; pointer-events:none; }
+@keyframes lv-coach-pulse { 50% { box-shadow:0 0 0 7px color-mix(in srgb, var(--teal) 26%, transparent); } }
+.lv-metric.coaching .car { animation:lv-coach-pulse 1.7s ease-in-out 3; }
+@media (prefers-reduced-motion:reduce){ .lv-metric.coaching .car { animation:none; } }
 /* the view group parks RIGHT, stacked over the drawer it opens */
 .lv-viewgrp { margin-left:auto; display:flex; gap:8px; align-items:center; flex:1; max-width:560px; justify-content:flex-end; }
 /* ‹ › steppers flank the pill: shuffle one metric per tap, no drawer round-trip */
@@ -66,15 +87,22 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 #lvMetricList { max-height:44vh; overflow-y:auto; }
 #lvMetricList .pop-opt { width:100%; display:flex; align-items:center; gap:8px; text-align:left; }
 #lvMetricList .pop-opt .mn { flex:1; min-width:0; }
-/* the ◯ on every row: tap to layer that metric as the circle overlay */
-#lvMetricList .ovbtn { flex:none; font-size:11px; color:var(--t3); padding:2px 6px; border-radius:6px; }
-#lvMetricList .ovbtn:hover { color:var(--blue-hi); background:var(--raised); }
-#lvMetricList .ovbtn.on { color:var(--blue-hi); }
-/* the ☆: pin this metric's value to every state/county card (cap 4) */
-#lvMetricList .pinbtn { flex:none; font-size:11px; color:var(--t3); padding:2px 4px; border-radius:6px; }
-#lvMetricList .pinbtn:hover { color:var(--amber); background:var(--raised); }
-#lvMetricList .pinbtn.on { color:var(--amber); }
-[data-theme="light"] #lvMetricList .pinbtn.on, [data-theme="light"] #lvMetricList .pinbtn:hover { color:var(--amber-dk); }
+/* ◯ Size / ☆ Pin: LABELED chips now, not lone glyphs (David 2026-07-26 —
+   "something people can understand"). Same words the This-view block and
+   the cards already use, so the vocabulary teaches itself. Bordered =
+   button, blue = overlay-on, amber = pinned. */
+#lvMetricList .ovbtn, #lvMetricList .pinbtn { flex:none; display:inline-flex; align-items:center;
+  font-family:var(--mono); font-size:10.5px; white-space:nowrap; color:var(--t2);
+  padding:5px 10px; border-radius:999px; border:1px solid var(--border2); background:var(--raised); }
+#lvMetricList .ovbtn:hover { color:var(--blue-hi); border-color:var(--blue-hi); }
+#lvMetricList .ovbtn.on { color:var(--blue-hi); border-color:var(--blue-hi); background:color-mix(in srgb, var(--blue-hi) 12%, transparent); }
+#lvMetricList .pinbtn:hover { color:var(--amber); border-color:var(--amber); }
+#lvMetricList .pinbtn.on { color:var(--amber); border-color:var(--amber); background:color-mix(in srgb, var(--amber) 12%, transparent); }
+/* coarse pointers: the pair keeps the touch floor, labels and all */
+@media (hover:none){
+  #lvMetricList .ovbtn, #lvMetricList .pinbtn { min-height:40px; padding:0 12px; font-size:11px; }
+}
+[data-theme="light"] #lvMetricList .pinbtn.on, [data-theme="light"] #lvMetricList .pinbtn:hover { color:var(--amber-dk); border-color:var(--amber-dk); }
 #lvMetricList .pop-opt .grain { font-family:var(--mono); font-size:10px; color:var(--t2); margin-left:8px; }
 #lvMetricList .pop-opt .lns { font-family:var(--mono); font-size:10px; color:var(--teal); margin-left:8px; }
 [data-theme="light"] #lvMetricList .pop-opt .lns { color:var(--teal-dk); }
@@ -135,9 +163,11 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 .lv-inset b span { color:var(--teal); }
 [data-theme="light"] .lv-inset b span { color:var(--teal-dk); }
 @media (max-width:699px){ .lv-insets { display:none; } }   /* phone portrait already frames AK+HI; GL contexts are precious there */
-.lv-shell .hu-fab { bottom:34px; }
-/* year + rankings: the thumb-zone pill row (the flagship's bottom bar, kit-sized) */
+/* year + rankings + locate: ONE thumb-zone cluster, bottom center (David's
+   call 2026-07-26 — the GPS button lives with its siblings, not in a corner).
+   The FAB drops its corner-float positioning and rides the row in-flow. */
 .lv-bottombar { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); z-index:110; display:flex; gap:8px; }
+.lv-bottombar .hu-fab { position:static; width:42px; height:42px; flex:none; box-shadow:0 6px 20px rgba(0,0,0,.45); }
 .lv-yearpill { display:flex; align-items:center; height:42px; padding:0 6px; border-radius:999px;
   background:var(--surface); border:1px solid var(--border2); box-shadow:0 6px 20px rgba(0,0,0,.45); }
 .lv-yearpill button { width:34px; height:34px; border:none; background:none; color:var(--t2); font-size:17px; cursor:pointer; border-radius:50%; }
@@ -157,8 +187,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 .lv-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
 .lv-rank-row b { font-family:var(--mono); font-size:10px; color:var(--t3); margin-right:8px; }
 @media (max-width:1099px){
-  .lv-shell:has(#lvSheet.open) .hu-fab { bottom:150px; }
-  .lv-shell:has(#lvSheet.open) .lv-bottombar { bottom:150px; }
+  .lv-shell:has(#lvSheet.open) .lv-bottombar { bottom:150px; }   /* the FAB rides the bar now */
 }
 .lv-scope { flex:none; height:38px; padding:0 13px; border-radius:999px; cursor:pointer;
   background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--teal);
@@ -170,7 +199,14 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 .lv-x { position:absolute; top:10px; right:10px; z-index:2; }
 .lv-kicker { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal); }
 [data-theme="light"] .lv-kicker { color:var(--teal-dk); }
-.lv-name { font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); line-height:1.15; padding-right:34px; }
+.lv-name { display:flex; align-items:baseline; gap:10px; font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); line-height:1.15; padding-right:34px; }
+/* the peek payoff: value rides the name row, rank leads the sub — but only
+   where the sheet PARKS at peek (<1100). The desktop dock shows the full
+   ptable already; a duplicate header stat would just be noise there. */
+.lv-name .pv { display:none; margin-left:auto; flex:none; font-size:15px; color:var(--teal); }
+[data-theme="light"] .lv-name .pv { color:var(--teal-dk); }
+@media (max-width:1099px){ .lv-name .pv { display:inline; } }
+@media (min-width:1100px){ .lv-sub .pr { display:none; } }
 /* readable sub text (David's call): brighter tier + a size up, drawer-wide */
 .lv-sub { font-family:var(--mono); font-size:11.5px; color:var(--t2); margin:3px 0 12px; }
 #lvSheet .hu-stat .k { font-size:10px; color:var(--t2); }
@@ -196,13 +232,15 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 .lv-msec { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--t3); padding:10px 4px 4px; }
 .lv-src { font-family:var(--mono); font-size:11px; color:var(--t2); margin-top:12px; line-height:1.6; }
 @media (min-width:1100px){
-  /* the FAB parks LEFT of the docked panel's rail — never under a window
-     or the attribution corner (same rule as the operations map). Both track
-     the RESIZABLE drawer width (monitor yes, phone no — David's call). */
-  .lv-shell .hu-fab { right:calc(var(--drawer-w, 370px) + 26px); }
+  /* the drawer tracks the RESIZABLE width (monitor yes, phone no — David's
+     call). The locate FAB left this corner for the bottom-center cluster. */
   #lvSheet { left:auto; right:12px; bottom:12px; top:124px; width:var(--drawer-w, 370px);
     border:1px solid var(--border2); border-radius:14px; height:auto; max-height:none; }
   #lvSheet.dt-peek, #lvSheet.dt-half, #lvSheet.dt-full { height:auto; max-height:calc(100dvh - 200px); overflow-y:auto; }
+  /* Display = the workbench: a pin adds a "This view" row, and height:auto
+     would grow the whole drawer under the cursor mid-multi-select. While
+     the Display tab is up the drawer just holds its full working height. */
+  #lvSheet.tab-display.dt-peek, #lvSheet.tab-display.dt-half, #lvSheet.tab-display.dt-full { height:calc(100dvh - 200px); }
   #lvSheet:not(.open) { transform:translateX(115%); }
   #lvSheet .hu-sheet-grab { display:none; }
   #lvSheet { padding-top:12px; }
@@ -210,6 +248,22 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   #lvSheet .lv-resize:hover { background:linear-gradient(90deg, transparent, rgba(78,205,196,.3), transparent); }
 }
 .lv-resize { display:none; }   /* phone/tablet: the sheet owns its width */
+/* ── PHONE (≤699): stacked chrome + 44px thumb targets (QA 2026-07-25) ──
+   One row could not hold scope + ‹ pill › on a 400px screen — the pill ran
+   off the edge. Scope takes row one, the metric group takes row two, and
+   every control in reach of a thumb clears the 44px floor. The FAB rises
+   over the collapsed ⓘ attribution chip parked in the corner below it. */
+@media (max-width:699px){
+  .lv-srow { flex-wrap:wrap; }
+  .lv-viewgrp { flex-basis:100%; max-width:none; min-width:0; }
+  .lv-scope { height:44px; font-size:13px; max-width:70vw; }
+  .lv-metric { height:44px; font-size:13px; min-width:0; }
+  .lv-mstep { width:44px; height:44px; }
+  .lv-yearpill { height:46px; }
+  .lv-yearpill button { width:42px; height:42px; }
+  .lv-rankbtn { height:46px; }
+  .lv-bottombar .hu-fab { width:46px; height:46px; }
+}
 </style>
 
 <div class="lv-shell">
@@ -220,7 +274,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       <button class="lv-scope" id="lvScope" type="button" hidden>◀ United States</button>
       <div class="lv-viewgrp">
         <button class="lv-mstep" id="lvMetricPrev" type="button" aria-label="Previous metric">‹</button>
-        <button class="lv-metric" id="lvMetricBtn" type="button" aria-label="Change the metric — opens Display">
+        <button class="lv-metric" id="lvMetricBtn" type="button" aria-label="Change the metric. Opens the metric catalog">
           <span aria-hidden="true">📊</span><span class="mq" id="lvMetricName">Pick a metric…</span><span class="yr" id="lvMetricYear"></span><span class="car" aria-hidden="true">▾</span>
         </button>
         <button class="lv-mstep" id="lvMetricNext" type="button" aria-label="Next metric">›</button>
@@ -235,15 +289,15 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       <button id="lvYearNext" type="button" aria-label="Later year">›</button>
     </div>
     <button class="lv-rankbtn" id="lvRankBtn" type="button">Rankings</button>
+    <button class="hu-fab" id="lvLocate" type="button" aria-label="Find my state and county" title="My location">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle></svg>
+    </button>
   </div>
   <div class="lv-cleg" id="lvCleg" hidden aria-hidden="true"></div>
   <div class="lv-insets" id="lvInsets">
     <button class="lv-inset" id="lvInsetAK" type="button" aria-label="Go to Alaska"><span class="lv-inset-map" id="lvInsetAKmap"></span><b>AK <span id="lvInsetAKn"></span></b></button>
     <button class="lv-inset" id="lvInsetHI" type="button" aria-label="Go to Hawaii"><span class="lv-inset-map" id="lvInsetHImap"></span><b>HI <span id="lvInsetHIn"></span></b></button>
   </div>
-  <button class="hu-fab" id="lvLocate" type="button" aria-label="Find my state and county" title="My location">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle></svg>
-  </button>
   <aside class="shell-sheet" id="lvSheet" aria-label="Detail">
     <button class="icon-btn hu-sheet-x lv-x" id="lvSheetX" type="button" aria-label="Close">✕</button>
     <div class="lv-tabs" id="lvTabs" role="tablist">
@@ -281,7 +335,11 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   // light up with no code change here
   const COUNTY_IDX = { patient:['0','1','2','3','4','7','8','9','10','11','12','13','14'], economics:['0','1'], payer:['0'], baseline:['5','6','13'] };
 
-  let lens = 'patient', mIdx = 0;
+  // Landing metric = LIFE EXPECTANCY (patient/6, David's call 2026-07-26): the
+  // one number in the whole config a stranger reads without a glossary. It has
+  // no county grain (5 and 6 are the only patient metrics without it) — first
+  // impression beats drill depth on the landing view.
+  let lens = 'patient', mIdx = 6;
   let STATES = null, CDATA = null, CPOP = null;
   const COUNTY_CACHE = new Map();
   const fmtPop = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? Math.round(v / 1e3) + 'k' : String(v);
@@ -379,11 +437,43 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     return inside;
   }
   const stateBounds = f => [[f.properties.bb[0], f.properties.bb[1]], [f.properties.bb[2], f.properties.bb[3]]];
-  const FIT_PAD = { top:130, bottom:150, left:28, right:28 };
+  // Two pad regimes on phone: card open = the peek sheet (120) + raised bar
+  // (150-192) own the south edge, so the fit clears them; sheet dismissed =
+  // the state expands to own the screen. Desktop keeps the QA'd numbers.
+  const fitPad = () => HUKit.phone()
+    ? { top:118, bottom:212, left:14, right:14 }
+    : { top:130, bottom:150, left:28, right:28 };
+  const fitPadFree = () => ({ top:118, bottom:96, left:14, right:14 });
 
   // ── sheet ──
   const sheetEl = $('lvSheet');
-  const sheet = HUKit.sheet(sheetEl, { startDetent:'dt-half', onDismiss: () => sheetEl.classList.remove('open') });
+  // the camera follows the sheet DOWN, never up: drag to peek and the fitted
+  // scope re-frames above the smaller card; drag the sheet away and the scope
+  // expands. The moment the user pans or pinches, the camera is THEIRS —
+  // detent changes stop refitting until the next scope fit takes it back.
+  let lastDet = null, userCam = false, lastCam = null;
+  const sheet = HUKit.sheet(sheetEl, { startDetent:'dt-half',
+    onDismiss: () => { sheetEl.classList.remove('open'); refitFree(); },
+    onDetent: d => {
+      if (d === lastDet) return;
+      lastDet = d;
+      if (d === 'dt-peek' && HUKit.phone() && lastCam && !userCam && mode === 'card' && !cmpState) refitScope();
+    }
+  });
+  // programmatic detent moves pre-assign lastDet so onDetent stays quiet;
+  // only the user's own grabber drags reach the refit path
+  const setDetQuiet = d => { lastDet = d; sheet.setDetent(d); };
+  const curDetent = () => sheetEl.classList.contains('dt-full') ? 'dt-full' : sheetEl.classList.contains('dt-half') ? 'dt-half' : 'dt-peek';
+  // card re-renders (year step, metric change) KEEP the detent the user chose;
+  // fresh opens use the card's default
+  const cardDetent = def => sheetEl.classList.contains('open') ? curDetent() : def;
+  // explicit reveals (Display, rankings, compare) claim at least half, but
+  // never yank a full-height sheet down
+  const revealDetent = () => sheetEl.classList.contains('open') && sheetEl.classList.contains('dt-full') ? 'dt-full' : 'dt-half';
+  function fitScope(b, z, dur){ lastCam = { b, z }; userCam = false; map.fitBounds(b, { padding:fitPad(), maxZoom:z, duration:dcap(dur) }); }
+  function refitScope(){ if (lastCam) map.fitBounds(lastCam.b, { padding:fitPad(), maxZoom:lastCam.z, duration:dcap(600) }); }
+  function refitFree(){ if (HUKit.phone() && lastCam && !userCam) map.fitBounds(lastCam.b, { padding:fitPadFree(), maxZoom:lastCam.z, duration:dcap(600) }); }
+  map.on('movestart', e => { if (e && e.originalEvent) userCam = true; });
   $('lvSheetX').addEventListener('click', () => {
     if (tab === 'display'){
       // display X → back to whatever details context exists, or away
@@ -396,7 +486,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       // leaving a county ALWAYS refits its state — a state card over a
       // county-deep camera reads as a mismatch (same behavior as the scope chip)
       selCounty = null; paintSel(); openStateCard();
-      map.fitBounds(stateBounds(selState.feature), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(800) });
+      fitScope(stateBounds(selState.feature), 8.5, 800);
       syncURL();
       return;
     }
@@ -444,7 +534,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       if (v == null) return null;
       const pt = f._sc || (f._sc = HUKit.innerPoint(f.geometry) || null);
       if (!pt) return null;
-      const props = { v: fmtV(v) };
+      const props = { v: fmtV(v), name: f.properties.name.toUpperCase() };
       if (ovBreaks){ const ov = ovSVal(f.properties.abbr); if (ov != null) props.ovb = bucketOf(ov, ovBreaks); }
       return { type:'Feature', geometry:{ type:'Point', coordinates: pt }, properties: props };
     }).filter(Boolean) });
@@ -536,6 +626,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   }
   // ‹ › shuffle: one metric per tap, wraps at the ends of the lens
   function stepMetric(d){
+    coachDone();   // they've found the metric machinery — the coach's job is over
     const n = CFG[lens].items.length;
     mIdx = (mIdx + d + n) % n;
     metricChanged();
@@ -550,8 +641,8 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     return '<button class="pop-opt" type="button" role="option" data-lens="' + l + '" data-mi="' + i + '" aria-selected="' + (l === lens && i === mIdx) + '"><span class="mn">' + it.name +
       (foreign ? '<span class="lns">' + LENSES[l] + '</span>' : '') +
       (COUNTY_IDX[l] && COUNTY_IDX[l].includes(String(i)) ? '<span class="grain">· county grain</span>' : '') + '</span>' +
-      '<span class="ovbtn' + (isOv ? ' on' : '') + '" data-ovpick="1" title="' + (isOv ? 'Remove circle overlay' : 'Layer as circle overlay') + '">' + (isOv ? '⬤' : '◯') + '</span>' +
-      '<span class="pinbtn' + (pin ? ' on' : '') + '" data-pinpick="1" title="' + (pin ? 'Unpin from cards' : 'Pin to cards') + '">' + (pin ? '★' : '☆') + '</span></button>';
+      '<span class="ovbtn' + (isOv ? ' on' : '') + '" data-ovpick="1" title="' + (isOv ? 'Remove circle overlay' : 'Layer as sized circles over the colors') + '">' + (isOv ? '⬤ Size' : '◯ Size') + '</span>' +
+      '<span class="pinbtn' + (pin ? ' on' : '') + '" data-pinpick="1" title="' + (pin ? 'Unpin from cards' : 'Pin to every state and county card') + '">' + (pin ? '★ Pin' : '☆ Pin') + '</span></button>';
   }
   function buildMetricList(q){
     const list = $('lvMetricList'); if (!list) return;
@@ -603,14 +694,29 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     syncURL();
     announce(msg);
   }
-  // repaint the Display panel in place, search query intact
+  // repaint the Display panel in place, search query intact. The catalog must
+  // NOT move under a working finger (David 2026-07-26, multi-pin runs): both
+  // scrollboxes restore, and any growth of the sections ABOVE the catalog
+  // ("This view" gains a ★ CARD row per pin) is absorbed into the outer
+  // scroll so the row you just tapped stays exactly where it was.
   function repaintPanel(){
     const find = $('lvMetricFind');
     if (!find) return;
     const q = find.value;
+    const body = $('lvDisplayBody');
+    const listBefore = $('lvMetricList');
+    const bodyScroll = body ? body.scrollTop : 0;
+    const listScroll = listBefore ? listBefore.scrollTop : 0;
+    const anchorBefore = listBefore ? listBefore.offsetTop : null;
     buildDisplayPanel();
     const nf = $('lvMetricFind');
     if (nf && q){ nf.value = q; buildMetricList(q); }
+    const listAfter = $('lvMetricList');
+    if (listAfter){
+      listAfter.scrollTop = listScroll;
+      const delta = anchorBefore == null ? 0 : listAfter.offsetTop - anchorBefore;
+      if (body) body.scrollTop = bodyScroll + delta;
+    } else if (body) body.scrollTop = bodyScroll;
   }
   // re-render the open card UNDER the Display tab so its tiles stay honest
   // (desktop only — on phone the card re-renders when Details is next opened)
@@ -668,7 +774,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     const fellBack = selCounty && !hasCounty();
     if (fellBack) selCounty = null;
     paintStates(); paintCounties(); paintSel();
-    if (fellBack && selState) map.fitBounds(stateBounds(selState.feature), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(800) });
+    if (fellBack && selState) fitScope(stateBounds(selState.feature), 8.5, 800);
     if (selState && sheetEl.classList.contains('open')) selCounty ? openCountyCard() : openStateCard();
     announce('Metric: ' + item().name + (fellBack ? '. No county detail for this metric, showing ' + (selState ? selState.name : 'states') + '.' : '.'));
     syncURL();
@@ -712,7 +818,9 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     if (applyingURL) return;
     const p = new URLSearchParams();
     if (lens !== 'patient') p.set('lens', lens);
-    if (mIdx !== 0) p.set('metric', metricSlug(item().name));
+    // elide only the BOOT default (patient/6) — every other pick, including
+    // old default patient/0, writes itself so shared links stay honest
+    if (lens !== 'patient' || mIdx !== 6) p.set('metric', metricSlug(item().name));
     if (ovItem()) p.set('ov', ovLens + ':' + metricSlug(ovItem().name));   // shareable two-metric views
     if (PINS.length) p.set('pins', PINS.map(pn => pn.l + ':' + metricSlug(CFG[pn.l].items[pn.i].name)).join(','));
     if (!isCurrentYear()) p.set('year', String(YRS()[yearIdx]));
@@ -820,7 +928,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       });
     });
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-full');
+    setDetQuiet('dt-full');
   }
   $('lvRankBtn').addEventListener('click', () => {
     if (mode === 'rank' && sheetEl.classList.contains('open')){
@@ -922,7 +1030,20 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     const b = $('lvSheetBody');
     b.innerHTML = '<div class="lv-kicker">State · ' + LENSES[lens] + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-ptable"></div><div class="lv-more"></div><div class="lv-trend"></div><div class="lv-actions"></div><div class="lv-src"></div>';
     b.querySelector('.lv-name').textContent = selState.name;
+    // phone: the peek sheet must carry the answer — value rides the name row,
+    // rank leads the sub, so a parked card still tells the story
+    if (v != null){
+      const pv = document.createElement('span');
+      pv.className = 'pv'; pv.textContent = fmtV(v);
+      b.querySelector('.lv-name').appendChild(pv);
+    }
     b.querySelector('.lv-sub').textContent = item().name + ' · ' + yearTag() + (hasCounty() ? ' · tap a county' : '');
+    if (rank){
+      const pr = document.createElement('span');
+      pr.className = 'pr'; pr.textContent = '#' + rank + ' of ' + vals.length + ' · ';
+      const sub = b.querySelector('.lv-sub');
+      sub.insertBefore(pr, sub.firstChild);
+    }
     // primary table: STATE vs NATION × value / rank / population
     popOf();
     const cell = (html, cls) => '<div class="' + (cls || '') + '">' + html + '</div>';
@@ -950,9 +1071,26 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     cbtn.textContent = comparePick ? 'Now tap the state to compare with…' : '⇄ Compare with another state';
     cbtn.addEventListener('click', () => { comparePick = !comparePick; openStateCard(); });
     act.appendChild(cbtn);
+    act.appendChild(linkChip());
     b.querySelector('.lv-src').textContent = 'Source: ' + (item().source || '') + (DY[lens] && DY[lens][String(mIdx)] ? ' · ' + DY[lens][String(mIdx)] + ' data' : '');
+    const det = cardDetent('dt-peek');
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-peek');
+    setDetQuiet(det);
+  }
+  // every view is already in the URL (syncURL) — this just hands it over
+  function linkChip(){
+    const b = document.createElement('button');
+    b.className = 'hu-chip'; b.type = 'button'; b.textContent = '🔗 Copy link to this view';
+    b.addEventListener('click', () => {
+      const done = ok => {
+        b.textContent = ok ? '✓ Link copied' : 'Copy blocked. The address bar has it';
+        announce(ok ? 'Link copied to the clipboard.' : 'Copy was blocked. The address bar holds the same link.');
+        setTimeout(() => { b.textContent = '🔗 Copy link to this view'; }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(() => done(true), () => done(false));
+      else done(false);
+    });
+    return b;
   }
   function openCompareCard(){
     if (!selState || !cmpState) return;
@@ -977,8 +1115,10 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     x.className = 'hu-chip'; x.type = 'button'; x.textContent = '✕ End compare';
     x.addEventListener('click', () => { cmpState = null; paintSel(); openStateCard(); syncURL(); });
     act.appendChild(x);
+    act.appendChild(linkChip());
+    const det = revealDetent();
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-half');
+    setDetQuiet(det);
   }
   function openCountyCard(){
     if (!selCounty || !selState) return;
@@ -991,9 +1131,20 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     const sorted = vals.slice().sort((a,b) => item().dir === -1 ? a - b : b - a);
     const rank = v == null ? null : sorted.indexOf(v) + 1;
     const b = $('lvSheetBody');
-    b.innerHTML = '<div class="lv-kicker">County · ' + selState.abbr + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-ptable"></div><div class="lv-more"></div><div class="lv-src"></div>';
+    b.innerHTML = '<div class="lv-kicker">County · ' + selState.abbr + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-ptable"></div><div class="lv-more"></div><div class="lv-actions"></div><div class="lv-src"></div>';
     b.querySelector('.lv-name').textContent = selCounty.name + ' County';
+    if (v != null){
+      const pv = document.createElement('span');
+      pv.className = 'pv'; pv.textContent = fmtV(v);
+      b.querySelector('.lv-name').appendChild(pv);
+    }
     b.querySelector('.lv-sub').textContent = item().name + (isCurrentYear() ? '' : ' · county grain shows the latest data year');
+    if (rank){
+      const pr = document.createElement('span');
+      pr.className = 'pr'; pr.textContent = '#' + rank + ' of ' + vals.length + ' in ' + selState.abbr + ' · ';
+      const sub = b.querySelector('.lv-sub');
+      sub.insertBefore(pr, sub.firstChild);
+    }
     // primary table (David's spec): COUNTY vs STATE × value / rank / population —
     // the county ranks within its state, the state ranks within the nation
     const dataYr = (DY[lens] && DY[lens][String(mIdx)]) || 'latest';
@@ -1035,9 +1186,11 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       else if (svv != null) sec.push({ v: fmtVFor(it, +svv), k:'★ ' + it.name + ' · ' + selState.abbr });
     });
     moreBlock(b.querySelector('.lv-more'), sec);
+    b.querySelector('.lv-actions').appendChild(linkChip());
     b.querySelector('.lv-src').textContent = 'County grain: CDC PLACES / BLS / Census, same joins as the production map.';
+    const det = cardDetent('dt-half');
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-half');
+    setDetQuiet(det);
   }
 
   // ── selection ──
@@ -1045,7 +1198,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     selCounty = null; cmpState = null; comparePick = false;
     selState = { fips:f.properties.fips, abbr:f.properties.abbr, name:f.properties.name, feature:f };
     paintSel(); syncInsets();
-    map.fitBounds(stateBounds(f), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(900) });
+    fitScope(stateBounds(f), 8.5, 900);
     openStateCard();
     announce(selState.name + '.');
     if (!COUNTY_CACHE.has(selState.fips)){
@@ -1061,13 +1214,14 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   }
   function deselectState(){
     selState = null; selCounty = null; cmpState = null; comparePick = false;
+    lastCam = null;   // home view: detent changes have no scope to refit
     paintSel(); paintCounties(); syncInsets();
     sheetEl.classList.remove('open');
     map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
     syncURL();
   }
   $('lvScope').addEventListener('click', () => {
-    if (selCounty){ selCounty = null; paintSel(); openStateCard(); map.fitBounds(stateBounds(selState.feature), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(800) }); return; }
+    if (selCounty){ selCounty = null; paintSel(); openStateCard(); fitScope(stateBounds(selState.feature), 8.5, 800); return; }
     if (selState) deselectState();
   });
 
@@ -1102,6 +1256,10 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       const g = labelGroup(l.id);
       if (!g) return;
       try { map.setLayoutProperty(l.id, 'visibility', p[g] ? 'visible' : 'none'); } catch(e){}
+      // our lv-state-val carries NAME + value through the country band — the
+      // basemap's admin-1 names hold back until the county grain takes over,
+      // so the two layers never double-label or collision-drop each other
+      if (g === 'state') try { map.setLayerZoomRange(l.id, Math.max(5.4, l.minzoom || 0), l.maxzoom === undefined ? 24 : l.maxzoom); } catch(e){}
     });
   }
   function toggleLabelPref(k){
@@ -1122,6 +1280,9 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   function showTab(t){
     const was = tab;
     tab = t;
+    // Display = the workbench: the desktop drawer holds full height while
+    // it's up (see the ≥1100 tab-display rule) so pinning never resizes it
+    sheetEl.classList.toggle('tab-display', t === 'display');
     if (t === 'display') buildDisplayPanel();   // the tab itself is an entry point
     // the details body carries an inline display:flex, which BEATS the hidden
     // attribute — drive display directly or the switch is a no-op
@@ -1158,12 +1319,13 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     const p = labelPrefs();
     $('lvDisplayBody').innerHTML =
       '<div class="lv-dsec"><h5>This view</h5><div class="lv-view" id="lvViewBlock">' + viewBlockHTML() + '</div></div>' +
-      '<div class="lv-dsec"><h5>Metric <span class="sub" id="lvMetricSecH">' + LENSES[lens] + ' · ' + (mIdx + 1) + '/' + CFG[lens].items.length + '</span></h5>' +
+      '<div class="lv-dsec"><h5>Metric catalog <span class="sub" id="lvMetricSecH">' + LENSES[lens] + ' · ' + (mIdx + 1) + '/' + CFG[lens].items.length + '</span></h5>' +
+      '<div class="lv-src" style="margin:0 0 8px">Every lens, every metric lives here. Tap one and the map repaints.</div>' +
       '<div class="lv-find"><input id="lvMetricFind" type="text" placeholder="Search all lenses…" autocomplete="off" aria-label="Search metrics across every lens"></div>' +
       '<div id="lvMetricList" role="listbox" aria-label="Metrics"></div></div>' +
       '<div class="lv-dsec"><h5>Overlay <span class="sub">sized circles</span></h5>' + (ovItem()
         ? '<div class="lv-tgl"><span>⬤ ' + ovItem().name + '</span><button class="hu-chip" id="lvOvClear" type="button">✕ Clear</button></div>'
-        : '<div class="lv-src" style="margin-top:0">Tap the ◯ on any metric above to layer it as SIZED CIRCLES over the colors — e.g. heart disease as color, nurses per 100k as size.</div>') +
+        : '<div class="lv-src" style="margin-top:0">Tap ◯ Size on any metric above to layer it as SIZED CIRCLES over the colors. Heart disease as color, nurses per 100k as size.</div>') +
       '</div>' +
       '<div class="lv-dsec"><h5>Pinned to cards <span class="sub">' + PINS.length + '/4</span></h5>' + (PINS.length
         ? '<div class="lv-drow">' + PINS.map((pn, k) =>
@@ -1208,9 +1370,42 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   });
   $('lvTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
   function openDisplayTab(){
+    coachDone();   // the catalog opened — the coach's one lesson is learned
     showTab('display');   // builds the panel on entry
+    const det = revealDetent();
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-half');
+    setDetQuiet(det);
+  }
+
+  // ── one-time coach: the pill IS the door to the catalog. It teaches that
+  //    once, then leaves forever (budget rule: guidance leaves after use).
+  //    Auto-fade does NOT count as learned — only an interaction does, so a
+  //    user who missed it gets one more chance next visit. ?coach re-arms. ──
+  const COACH_KEY = 'hu-lens-pill-coach';
+  if (new URLSearchParams(location.search).has('coach')){ try { localStorage.removeItem(COACH_KEY); } catch(e){} }
+  let coachEl = null;
+  function coachHide(){
+    if (!coachEl) return;
+    const el = coachEl; coachEl = null;
+    el.classList.add('gone');
+    $('lvMetricBtn').classList.remove('coaching');
+    setTimeout(() => el.remove(), 350);
+  }
+  function coachDone(){
+    try { if (!localStorage.getItem(COACH_KEY)) localStorage.setItem(COACH_KEY, '1'); } catch(e){}
+    coachHide();
+  }
+  function maybeCoach(){
+    let seen = null; try { seen = localStorage.getItem(COACH_KEY); } catch(e){}
+    if (seen) return;
+    coachEl = document.createElement('button');
+    coachEl.type = 'button';
+    coachEl.className = 'lv-coach';
+    coachEl.textContent = 'Tap to change what the map shows';
+    coachEl.addEventListener('click', () => openDisplayTab());   // the bubble is a shortcut, not a chore
+    document.querySelector('.lv-top').appendChild(coachEl);
+    $('lvMetricBtn').classList.add('coaching');
+    setTimeout(coachHide, 14000);
   }
 
   // ── drawer resize: drag the LEFT edge on a monitor; phones keep the sheet.
@@ -1352,9 +1547,17 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
         'circle-stroke-color': light ? 'rgba(13,17,23,.65)' : 'rgba(255,255,255,.85)', 'circle-stroke-width':1.4,
         'circle-radius':['interpolate',['linear'],['zoom'], 2.8, ['*',['+',['get','ovb'],1], 2.4], 4.6, ['*',['+',['get','ovb'],1], 3.4]] }});
     map.addLayer({ id:'lv-state-val', type:'symbol', source:'lv-state-labels', maxzoom:5.4,
-      layout:{ 'text-field':['get','v'], 'text-font':['Noto Sans Bold'],
+      // ONE symbol carries NAME + value. The old split (basemap says MONTANA,
+      // we hang the number under it) had two layers fighting in the collision
+      // engine — our number won placement and KILLED the basemap's name for
+      // whole states (David's 07-26 screenshot: values everywhere, names gone)
+      layout:{ 'text-field':['format',
+          ['get','name'], { 'font-scale':0.72 },
+          '\n', {},
+          ['get','v'], {}],
+        'text-font':['Noto Sans Bold'],
         'text-size':['interpolate', ['linear'], ['zoom'], 2.8, 10.5, 4.6, 14],
-        'text-offset':[0, 0.9], 'text-anchor':'top', 'text-allow-overlap':false },
+        'text-allow-overlap':false },
       paint:{ 'text-color': light ? '#26333B' : '#F0F6F8',
         'text-halo-color': light ? 'rgba(255,255,255,.92)' : 'rgba(8,16,20,.85)', 'text-halo-width':1.8 }});
     wireRouter();
@@ -1392,7 +1595,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; });
     });
-    map.on('dragstart', () => { if (sheetEl.classList.contains('open') && HUKit.phone()) sheet.setDetent('dt-peek'); });
+    map.on('dragstart', () => { if (sheetEl.classList.contains('open') && HUKit.phone()) setDetQuiet('dt-peek'); });
   }
   // theme swap: full deterministic reload + reinstall once truly ready
   // (same fix as the operators map — diff mode strands runtime layers)
@@ -1437,6 +1640,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     lastScope = scopeKey();  // the first drill after load must PUSH, not replace
     signal('✓ Six lenses + baseline, 50+ metrics · tap a state');
     signalDone(3000);
+    maybeCoach();   // first-ever visit: one bubble, one lesson, then gone
   });
   map.on('error', ev => { if (!map.loaded()) signal('Basemap failed to load. Check the connection'); if (ev && ev.error) console.warn('maplibre', ev.error); });
 })();

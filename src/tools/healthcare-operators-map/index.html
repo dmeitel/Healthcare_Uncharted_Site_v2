@@ -103,10 +103,8 @@ og_image: /brand/og-operators-map.jpg
 /* desktop has the room: the sheet docks RIGHT as the Inspector panel
    (grammar: docked panel on desktop, detent sheet on phone) */
 @media (min-width:1100px){
-  /* the FAB column parks LEFT of the docked panel's rail so no window ever
-     covers it (David's call) — attribution keeps the corner to itself.
-     Both track the RESIZABLE drawer width (monitor yes, phone no). */
-  .gv-shell .hu-fab { right:calc(var(--drawer-w, 370px) + 26px); }
+  /* the drawer tracks the RESIZABLE width (monitor yes, phone no — David's
+     call). The FABs left this corner for the bottom-center cluster. */
   #gvSheet { left:auto; right:12px; bottom:12px; top:124px; width:var(--drawer-w, 370px);
     border:1px solid var(--border2); border-radius:14px;
     height:auto; max-height:none; }
@@ -147,9 +145,13 @@ og_image: /brand/og-operators-map.jpg
   backdrop-filter:blur(8px); transition:opacity .3s; }
 .gv-status.done { opacity:0; pointer-events:none; }
 
-/* ── list/map toggle pill, thumb zone bottom-center ── */
-.gv-listbtn { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); z-index:110;
-  display:flex; align-items:center; gap:7px; height:42px; padding:0 18px; border-radius:999px; cursor:pointer;
+/* ── thumb-zone cluster, bottom center: List pill + draw + locate (David's
+   call 2026-07-26, same move as the multi-lens map — the FABs left their
+   corner and ride the row in-flow) ── */
+.gv-bottombar { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); z-index:110;
+  display:flex; gap:8px; align-items:center; }
+.gv-bottombar .hu-fab { position:static; width:42px; height:42px; flex:none; box-shadow:0 6px 20px rgba(0,0,0,.45); }
+.gv-listbtn { display:flex; align-items:center; gap:7px; height:42px; padding:0 18px; border-radius:999px; cursor:pointer;
   background:var(--surface); border:1px solid var(--border2); color:var(--t1);
   font-family:var(--font); font-size:12.5px; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.45); }
 .gv-listbtn:hover { border-color:var(--teal); }
@@ -177,24 +179,37 @@ og_image: /brand/og-operators-map.jpg
 .gv-cleg .cl-dir { font-family:var(--mono); font-size:9px; color:var(--t3); margin-left:5px; }
 .gv-listbtn b { font-family:var(--mono); font-weight:600; font-size:11px; color:var(--teal); }
 [data-theme="light"] .gv-listbtn b { color:var(--teal-dk); }
-.gv-shell .hu-fab { bottom:34px; }
-.gv-shell .gv-drawfab { bottom:92px; }
-/* under 1100px the sheet rises from the bottom — the FABs and the list toggle
-   climb above its peek so they never drown under an open sheet */
+@media (max-width:699px){
+  .gv-bottombar .hu-fab { width:46px; height:46px; }
+  .gv-listbtn { height:46px; }
+}
+/* under 1100px the sheet rises from the bottom — the whole cluster climbs
+   above its peek so it never drowns under an open sheet */
 @media (max-width:1099px){
-  .gv-shell:has(#gvSheet.open) .hu-fab { bottom:150px; }
-  .gv-shell:has(#gvSheet.open) .gv-drawfab { bottom:208px; }
-  .gv-shell:has(#gvSheet.open) .gv-listbtn { bottom:150px; }
+  .gv-shell:has(#gvSheet.open) .gv-bottombar { bottom:150px; }
 }
 .gv-shell .gv-drawfab.is-on { color:var(--amber); border-color:var(--amber); }
 [data-theme="light"] .gv-shell .gv-drawfab.is-on { color:var(--amber-dk); border-color:var(--amber-dk); }
+/* POS enrichment on pin cards: services as quiet mono chips + a source note */
+.gv-svcs { margin-top:12px; }
+.gv-svcs-h { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--t3); margin-bottom:6px; }
+.gv-svcs-row { display:flex; flex-wrap:wrap; gap:5px; }
+.gv-svcs-row i { font-style:normal; font-family:var(--mono); font-size:10px; color:var(--t2);
+  border:1px solid var(--border); border-radius:999px; padding:3px 8px; white-space:nowrap; }
+.gv-cardsrc { font-family:var(--mono); font-size:10px; color:var(--t3); margin-top:12px; line-height:1.5; }
 
 /* ── the sheet: pin card / county card / state card / list ── */
 #gvSheet { padding:0 16px calc(14px + env(safe-area-inset-bottom)); }
 #gvSheet:not(.open) { transform:translateY(105%); }
 .gv-card-kicker { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal); }
 [data-theme="light"] .gv-card-kicker { color:var(--teal-dk); }
-.gv-card-name { font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); line-height:1.15; padding-right:34px; }
+.gv-card-name { display:flex; align-items:baseline; gap:10px; font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); line-height:1.15; padding-right:34px; }
+/* the peek payoff: the scope count rides the name row where the sheet PARKS
+   at peek (<1100). The desktop dock shows the stat tiles already. */
+.gv-card-name .pv { display:none; margin-left:auto; flex:none; font-size:15px; color:var(--teal); }
+[data-theme="light"] .gv-card-name .pv { color:var(--teal-dk); }
+@media (max-width:1099px){ .gv-card-name .pv { display:inline; } }
+.gv-copylink { margin-top:12px; align-self:flex-start; }
 .gv-card-sub { font-family:var(--mono); font-size:11.5px; color:var(--t2); margin:3px 0 12px; }
 .gv-card-sys { font-size:12px; color:var(--t2); margin-top:12px; }
 .gv-card-sys b { color:var(--teal); }
@@ -224,9 +239,20 @@ og_image: /brand/og-operators-map.jpg
 /* fact rows under the stat tiles: label left, value right, two columns */
 .gv-facts { display:grid; grid-template-columns:1fr 1fr; gap:5px 18px; margin-top:12px; }
 @media (max-width:480px){ .gv-facts { grid-template-columns:1fr; } }
-.gv-facts > div { display:flex; justify-content:space-between; align-items:baseline; gap:10px; border-bottom:1px dotted var(--border); padding-bottom:4px; }
-.gv-facts span { font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--t2); }
-.gv-facts b { font-family:var(--mono); font-size:11.5px; color:var(--t1); white-space:nowrap; }
+.gv-facts > div { display:flex; justify-content:space-between; align-items:baseline; gap:10px; border-bottom:1px dotted var(--border); padding-bottom:4px; min-width:0; }
+/* long facts (names, service lists) take the FULL row — a nowrap value in a
+   half-width cell silently shoved its neighbors off the drawer edge
+   (David's 07-26 screenshot: Setting/cath/rehab/RT looked empty) */
+.gv-facts > div.w { grid-column:1 / -1; }
+.gv-facts span { font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--t2); min-width:0; }
+/* break-word, NOT anywhere — anywhere shattered "29" into 2/9 and "Yes" into
+   a vertical Y-e-s the moment the drawer got narrow (David's resize test) */
+.gv-facts b { font-family:var(--mono); font-size:11.5px; color:var(--t1); text-align:right; overflow-wrap:break-word; min-width:0; }
+/* the drawer RESIZES on desktop, so the fact grid answers the DRAWER's width,
+   not the viewport's: below 480px of sheet, half-cells starve the values —
+   collapse to one readable column */
+#gvSheet { container-type:inline-size; }
+@container (max-width:480px){ .gv-facts { grid-template-columns:1fr; } }
 /* MapLibre's attribution chip ships light-only from the CDN css — theme it */
 [data-theme="dark"] .maplibregl-ctrl-attrib { background:color-mix(in srgb, var(--surface) 88%, transparent) !important; }
 [data-theme="dark"] .maplibregl-ctrl-attrib, [data-theme="dark"] .maplibregl-ctrl-attrib a { color:var(--t2) !important; }
@@ -265,16 +291,17 @@ og_image: /brand/og-operators-map.jpg
   </div>
   <div class="gv-tip" id="gvTip" aria-hidden="true"><div class="tn"></div><div class="ts"></div></div>
   <div class="gv-cleg" id="gvCleg" hidden aria-hidden="true"></div>
-  <button class="gv-listbtn" id="gvListBtn" type="button" hidden>List <b id="gvCount">·</b></button>
-
-  <button class="hu-fab gv-drawfab" id="gvDraw" type="button" aria-label="Draw an area to search" title="Draw an area to search">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
-  </button>
-  <button class="hu-fab" id="gvLocate" type="button" aria-label="Show my location on the map" title="My location">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle>
-    </svg>
-  </button>
+  <div class="gv-bottombar">
+    <button class="gv-listbtn" id="gvListBtn" type="button" hidden>List <b id="gvCount">·</b></button>
+    <button class="hu-fab gv-drawfab" id="gvDraw" type="button" aria-label="Draw an area to search" title="Draw an area to search">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+    </button>
+    <button class="hu-fab" id="gvLocate" type="button" aria-label="Show my location on the map" title="My location">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle>
+      </svg>
+    </button>
+  </div>
 
   <aside class="shell-sheet" id="gvSheet" aria-label="Detail">
     <button class="icon-btn hu-sheet-x gv-x" id="gvSheetX" type="button" aria-label="Close">✕</button>
@@ -504,7 +531,7 @@ og_image: /brand/og-operators-map.jpg
       // kit interior point, not the bbox center — Florida's box center is in
       // the Gulf, Michigan's is in the lake; this sits on actual land
       geometry:{ type:'Point', coordinates: f._c || (f._c = HUKit.innerPoint(f.geometry) || [ (f.properties.bb[0] + f.properties.bb[2]) / 2, (f.properties.bb[1] + f.properties.bb[3]) / 2 ]) },
-      properties:{ cnt: counts[f.properties.abbr] || 0, abbr: f.properties.abbr }
+      properties:{ cnt: counts[f.properties.abbr] || 0, abbr: f.properties.abbr, name: f.properties.name.toUpperCase() }
     })) };
   }
   function updateStateNums(){
@@ -519,6 +546,7 @@ og_image: /brand/og-operators-map.jpg
   // ── enrichment (loads quietly after the map; cards fill in when it lands) ──
   // us-counties.json: {fips:{p:population}} · countyData.json: lens→idx→fips→value
   let CPOP = null, CDATA = null, lastFix = null;
+  let ENRICH = null;   // per-CCN POS enrichment (services/teaching/capacity), lazy-loaded on idle
   const statePopCache = new Map();
   function statePop(fips){
     if (!CPOP) return null;
@@ -542,6 +570,7 @@ og_image: /brand/og-operators-map.jpg
     const el = document.createElement('div'); el.className = 'gv-facts';
     kept.forEach(r => {
       const d = document.createElement('div');
+      if (r[2]) d.className = 'w';   // long-value rows span the full width
       const s = document.createElement('span'); s.textContent = r[0];
       const b = document.createElement('b'); b.textContent = r[1];
       d.appendChild(s); d.appendChild(b); el.appendChild(d);
@@ -635,7 +664,13 @@ og_image: /brand/og-operators-map.jpg
     if (w < -179.9) w = -179.9;   // Aleutians run past the antimeridian — unclamped, fits center on open ocean
     return [[w,s],[e,n]];
   }
-  const FIT_PAD = { top:130, bottom:150, left:28, right:28 };
+  // Two pad regimes on phone: card open = the peek sheet + raised list pill
+  // own the south edge, so fits clear them; sheet dismissed = the scope
+  // expands to own the screen. Desktop keeps the QA'd numbers.
+  const fitPad = () => HUKit.phone()
+    ? { top:130, bottom:212, left:20, right:20 }
+    : { top:130, bottom:150, left:28, right:28 };
+  const fitPadFree = () => ({ top:130, bottom:96, left:20, right:20 });
   // states ship a precomputed camera-safe bb; geometry walk is the fallback
   const stateBounds = f => f.properties.bb
     ? [[f.properties.bb[0], f.properties.bb[1]], [f.properties.bb[2], f.properties.bb[3]]]
@@ -644,7 +679,34 @@ og_image: /brand/og-operators-map.jpg
 
   // ── sheet ──
   const sheetEl = $('gvSheet');
-  const sheet = HUKit.sheet(sheetEl, { startDetent:'dt-peek', onDismiss: closeSheet });
+  // the camera follows the sheet DOWN, never up: drag to peek and the fitted
+  // scope re-frames above the smaller card; drag the sheet away and the scope
+  // expands. The moment the user pans or pinches (or locates), the camera is
+  // THEIRS — detent changes stop refitting until the next scope fit.
+  // (lastCam, not lastFit — lastFix is the locate fix, keep them apart)
+  let lastDet = null, userCam = false, lastCam = null;
+  const sheet = HUKit.sheet(sheetEl, { startDetent:'dt-peek',
+    onDismiss: () => { closeSheet(); refitFree(); },
+    onDetent: d => {
+      if (d === lastDet) return;
+      lastDet = d;
+      if (d === 'dt-peek' && HUKit.phone() && lastCam && !userCam && mode === 'card' && !selectedId) refitScope();
+    }
+  });
+  // programmatic detent moves pre-assign lastDet so onDetent stays quiet;
+  // only the user's own grabber drags reach the refit path
+  const setDetQuiet = d => { lastDet = d; sheet.setDetent(d); };
+  const curDetent = () => sheetEl.classList.contains('dt-full') ? 'dt-full' : sheetEl.classList.contains('dt-half') ? 'dt-half' : 'dt-peek';
+  // card re-renders (layer toggles, data landing) KEEP the detent the user
+  // chose; fresh opens use the card's default
+  const cardDetent = def => sheetEl.classList.contains('open') ? curDetent() : def;
+  // explicit reveals (list, Display, system) claim at least half, but never
+  // yank a full-height sheet down
+  const revealDetent = () => sheetEl.classList.contains('open') && sheetEl.classList.contains('dt-full') ? 'dt-full' : 'dt-half';
+  function fitScope(b, z, dur){ lastCam = { b, z }; userCam = false; map.fitBounds(b, { padding:fitPad(), maxZoom:z, duration:dcap(dur) }); }
+  function refitScope(){ if (lastCam) map.fitBounds(lastCam.b, { padding:fitPad(), maxZoom:lastCam.z, duration:dcap(600) }); }
+  function refitFree(){ if (HUKit.phone() && lastCam && !userCam) map.fitBounds(lastCam.b, { padding:fitPadFree(), maxZoom:lastCam.z, duration:dcap(600) }); }
+  map.on('movestart', e => { if (e && e.originalEvent) userCam = true; });
   // the list is a VIEW of the current scope — closing it returns to the scope's card
   function restoreScopeCard(){
     if (selCounty){ openCountyCard(); return true; }
@@ -685,6 +747,21 @@ og_image: /brand/og-operators-map.jpg
     b.querySelector('.gv-card-sub').textContent = sub;
     return b;
   }
+  // every view is already in the URL (syncURL) — this just hands it over
+  function linkChip(){
+    const b = document.createElement('button');
+    b.className = 'hu-chip gv-copylink'; b.type = 'button'; b.textContent = '🔗 Copy link to this view';
+    b.addEventListener('click', () => {
+      const done = ok => {
+        b.textContent = ok ? '✓ Link copied' : 'Copy blocked. The address bar has it';
+        announce(ok ? 'Link copied to the clipboard.' : 'Copy was blocked. The address bar holds the same link.');
+        setTimeout(() => { b.textContent = '🔗 Copy link to this view'; }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(() => done(true), () => done(false));
+      else done(false);
+    });
+    return b;
+  }
   function statTiles(el, stats){
     el.querySelector('.hu-stats').innerHTML = stats.map(s =>
       '<div class="hu-stat"><div class="v' + (s.cls||'') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
@@ -710,6 +787,94 @@ og_image: /brand/og-operators-map.jpg
     });
   }
 
+  // ── pin-card enrichment: the POS story + client-computed standing ──
+  const svcChips = e => {
+    if (!e || !e.sv || !ENRICH) return [];
+    const ord = ENRICH._meta.svcOrder, lab = ENRICH._meta.svcLabels;
+    return ord.filter((k, i) => e.sv & (1 << i)).map(k => lab[k] || k);
+  };
+  function hav(a, b){
+    const R = 3958.8, dLa = (b[1] - a[1]) * Math.PI / 180, dLo = (b[0] - a[0]) * Math.PI / 180;
+    const s = Math.sin(dLa / 2) ** 2 + Math.cos(a[1] * Math.PI / 180) * Math.cos(b[1] * Math.PI / 180) * Math.sin(dLo / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+  function pinEnrichBlocks(ex, p, feat){
+    const e = ENRICH && ENRICH.byId ? ENRICH.byId[p.id] : null;
+    const rows = [];   // row = [label, value, wide] — wide rows span the grid
+    // county context: name ships on every record; numbers join by the POS fips
+    if (p.co){
+      const pop = e && e.f && CPOP && CPOP[e.f] ? CPOP[e.f].p : null;
+      rows.push(['County', tcase(p.co) + (pop ? ' · ' + fmtPop(pop) + ' people' : ''), 1]);
+      if (e && e.f && CDATA){
+        const inc = cdVal('economics', '0', e.f), un = cdVal('payer', '0', e.f);
+        if (inc != null) rows.push(['County median income', '$' + inc + 'k']);
+        if (un != null) rows.push(['County uninsured', un + '%']);
+      }
+    }
+    // in-state standing by beds, within the facility's own layer
+    if (+p.beds){
+      const peers = ALL.filter(f => f.properties.s === p.s && layerOf(f.properties.t) === layerOf(p.t) && +f.properties.beds > 0);
+      if (peers.length > 1){
+        const rank = peers.filter(f => +f.properties.beds > +p.beds).length + 1;
+        rows.push(['Size in ' + p.s, '#' + rank + ' of ' + peers.length + ' by beds']);
+      }
+    }
+    if (e){
+      rows.push(['Setting', e.ur ? 'Rural' : 'Urban']);
+      if (e.ms) rows.push(['Teaching', ['', 'Major', 'Limited', 'Graduate'][e.ms] + ' med-school affiliation' + (e.res ? ' · ' + e.res + ' residents' : ''), 1]);
+      else if (e.res) rows.push(['Residents', String(e.res)]);
+      if (e.or) rows.push(['Operating rooms', String(e.or)]);
+      if (e.cathrm) rows.push(['Cath lab rooms', String(e.cathrm)]);
+      if (e.psyb) rows.push(['Psych unit beds', String(e.psyb)]);
+      if (e.rehb) rows.push(['Rehab unit beds', String(e.rehb)]);
+      // RN/RT staffing counts stay in the FILE but off the CARD: the POS
+      // staffing block is self-reported and provably stale for ~7% of
+      // hospitals (McKay-Dee says 58 RNs for 321 beds; Rush says 24 RTs
+      // for 715 beds) with no per-record freshness signal. HCRIS cost
+      // reports are the audited staffing source — that's a future pull.
+    }
+    // nearest peer in the same layer (ZIP-centroid grain, honest at miles scale)
+    if (feat){
+      let bn = null, bd = Infinity;
+      ALL.forEach(f => {
+        if (f.properties.id === p.id || layerOf(f.properties.t) !== layerOf(p.t)) return;
+        const d = hav(feat.geometry.coordinates, f.geometry.coordinates);
+        if (d < bd){ bd = d; bn = f; }
+      });
+      if (bn && bd < 500) rows.push(['Nearest peer', bn.properties.n + ' · ' + bd.toFixed(1) + ' mi', 1]);
+    }
+    if (e){
+      if (e.off) rows.push(['Off-site locations', e.off + ((e.offed || e.offuc)
+        ? ' (' + [e.offed ? e.offed + ' ED' : '', e.offuc ? e.offuc + ' urgent care' : ''].filter(Boolean).join(', ') + ')' : ''), 1]);
+      if (e.aff){
+        const A = { asc: 'surgery centers', esrd: 'dialysis', hha: 'home health', snf: 'SNFs', fqhc: 'FQHCs', rhc: 'rural clinics', hospc: 'hospice' };
+        rows.push(['Affiliated network', Object.entries(e.aff).map(([k, v]) => v + ' ' + (A[k] || k)).join(' · '), 1]);
+      }
+      if (e.near) rows.push(['Same ZIP', [
+        e.near.asc ? e.near.asc + ' surgery' : '',
+        e.near.dial ? e.near.dial + ' dialysis' : '',
+        e.near.ph ? e.near.ph + ' pharmacy' : ''
+      ].filter(Boolean).join(' · '), 1]);
+    }
+    if (rows.length) factsBlock(ex, rows);
+    const svcs = svcChips(e);
+    if (svcs.length){
+      const w = document.createElement('div');
+      w.className = 'gv-svcs';
+      const h = document.createElement('div'); h.className = 'gv-svcs-h';
+      h.textContent = 'Services · ' + svcs.length;
+      const row = document.createElement('div'); row.className = 'gv-svcs-row';
+      svcs.forEach(s => { const i = document.createElement('i'); i.textContent = s; row.appendChild(i); });
+      w.appendChild(h); w.appendChild(row);
+      ex.appendChild(w);
+    }
+    if (e){
+      const src = document.createElement('div');
+      src.className = 'gv-cardsrc';
+      src.textContent = 'Profile: CMS Provider of Services, Apr 2026 release · services and capacity as reported to CMS';
+      ex.appendChild(src);
+    }
+  }
   // ── pin card ──
   function openPinCard(p, from){
     mode = 'card'; backTo = from || null;
@@ -731,12 +896,15 @@ og_image: /brand/og-operators-map.jpg
       TYPES[p.t] ? ['Emergency services', +p.e ? 'Yes' : 'No'] : null,
       ['CMS ID', p.id]
     ].filter(Boolean));
+    pinEnrichBlocks(ex, p, feat);
     if (p.sys){
       const sysEl = document.createElement('div');
       sysEl.className = 'gv-card-sys';
       sysEl.innerHTML = 'System: <button class="gv-syslink" type="button"><b></b></button>';
       sysEl.querySelector('b').textContent = p.sys;
       sysEl.querySelector('.gv-syslink').addEventListener('click', () => enterSystem(p.sys));
+      const sysN = ALL.filter(f => f.properties.sys === p.sys).length;
+      if (sysN > 1) sysEl.appendChild(document.createTextNode(' · ' + sysN + ' facilities'));
       ex.appendChild(sysEl);
     }
     if (feat){
@@ -746,6 +914,7 @@ og_image: /brand/og-operators-map.jpg
       gm.textContent = 'View on Google Maps ↗';
       ex.appendChild(gm);
     }
+    ex.appendChild(linkChip());   // ?fac= rides the URL — facility views share clean
     if (backTo){
       const back = document.createElement('button');
       back.className = 'gv-tolist'; back.type = 'button';
@@ -755,7 +924,7 @@ og_image: /brand/og-operators-map.jpg
     }
     if (map.getLayer('gv-selected')) map.setFilter('gv-selected', ['==', ['get','id'], p.id]);
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-peek');
+    setDetQuiet('dt-peek');   // pin cards ALWAYS land at peek — the map is the payoff
     announce(p.n + '. ' + p.c + ', ' + p.s + '.');
     syncURL();   // ?fac= rides the entry — facility views are shareable now
   }
@@ -768,7 +937,7 @@ og_image: /brand/og-operators-map.jpg
     selState = { fips:f.properties.fips, abbr:f.properties.abbr, name:f.properties.name, feature:f };
     syncBoundaryPaint();
     // maxZoom keeps DC/RI from diving to street level on selection
-    map.fitBounds(stateBounds(f), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(900) });
+    fitScope(stateBounds(f), 8.5, 900);
     openStateCard();
     announce(selState.name + '. ' + inState(selState.abbr).length + ' ' + NOUN() + '.');
     // counties load ON SELECTION (rule 7): small file, cached, signaled
@@ -796,6 +965,10 @@ og_image: /brand/og-operators-map.jpg
     const beds = hs.reduce((a,f) => a + (+f.properties.beds || 0), 0);
     const pop = statePop(selState.fips);
     const b = cardScaffold('State', selState.name, hs.length + ' ' + NOUN() + (activeTypes && LAYER_ON.has('hosp') ? ' (filtered)' : '') + ' · tap a county for its profile');
+    // phone: the peek sheet must carry the answer — the count rides the name row
+    const pv = document.createElement('span');
+    pv.className = 'pv'; pv.textContent = hs.length.toLocaleString('en-US');
+    b.querySelector('.gv-card-name').appendChild(pv);
     const stats = [{ v:hs.length.toLocaleString('en-US'), k: LAYER_ON.size === 1 ? DATASETS[[...LAYER_ON][0]].label : 'Facilities' }];
     if (beds > 0){
       stats.push({ v:beds.toLocaleString('en-US'), k:'Beds' });
@@ -823,8 +996,10 @@ og_image: /brand/og-operators-map.jpg
       ex.appendChild(hint);
     }
     hospRows(ex, hs.slice().sort((a,b2) => (+b2.properties.beds||0) - (+a.properties.beds||0)), 3, 'state');
+    ex.appendChild(linkChip());
+    const det = cardDetent('dt-peek');
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-peek');
+    setDetQuiet(det);
   }
   function deselectState(){
     selState = null;
@@ -835,6 +1010,7 @@ og_image: /brand/og-operators-map.jpg
     applyCountyTint();   // back to plain (the chosen metric survives for the next state)
     refreshSource();     // pharmacy mode empties at US zoom — shards are per state
     updateCount();
+    lastCam = null;   // home view: detent changes have no scope to refit
     map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
     announce('Back to the United States view.');
     syncURL();
@@ -850,7 +1026,7 @@ og_image: /brand/og-operators-map.jpg
     const full = COUNTY_CACHE.has(selState.fips)
       ? COUNTY_CACHE.get(selState.fips).features.find(x => x.properties.fips === selCounty.fips)
       : null;
-    if (full) map.fitBounds(bboxOf(full.geometry), { padding:FIT_PAD, maxZoom:10.5, duration:dcap(800) });
+    if (full) fitScope(bboxOf(full.geometry), 10.5, 800);
     openCountyCard();
     announce(selCounty.name + ' County.');
     syncURL();
@@ -895,8 +1071,10 @@ og_image: /brand/og-operators-map.jpg
     factsBlock(ex, cfacts);
     if (hs.length) hospRows(ex, hs.slice().sort((a,b2) => (+b2.properties.beds||0) - (+a.properties.beds||0)), 3, 'county');
     else ex.insertAdjacentHTML('beforeend', '<div class="gv-hint">No ' + (activeTypes && LAYER_ON.has('hosp') ? 'matching ' : '') + NOUN() + ' inside this county line.</div>');
+    ex.appendChild(linkChip());
+    const det = cardDetent('dt-half');
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-half');
+    setDetQuiet(det);
   }
   function clearCounty(){
     selCounty = null;
@@ -913,7 +1091,7 @@ og_image: /brand/og-operators-map.jpg
       let w = 180, s = 90, e = -180, n = -90;
       pts.forEach(f => { const [lo, la] = f.geometry.coordinates; if (lo < w) w = lo; if (lo > e) e = lo; if (la < s) s = la; if (la > n) n = la; });
       if (w < -179.9) w = -179.9;
-      map.fitBounds([[w, s], [e, n]], { padding:FIT_PAD, maxZoom:9, duration:dcap(900) });
+      fitScope([[w, s], [e, n]], 9, 900);
     }
     openSystemCard();
     updateScopeChip();
@@ -931,15 +1109,17 @@ og_image: /brand/og-operators-map.jpg
     const st = avgStar(hs); if (st) stats.push({ v:st + '★', k:'Avg CMS', cls:' hi' });
     statTiles(b, stats);
     hospRows(b.querySelector('.gv-extra'), hs.slice().sort((a,b2) => (+b2.properties.beds||0) - (+a.properties.beds||0)), 5, 'system');
+    b.querySelector('.gv-extra').appendChild(linkChip());
+    const det = revealDetent();
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-half');
+    setDetQuiet(det);
   }
   function exitSystem(){
     activeSystem = null;
     refreshSource(); updateCount(); renderList();
     closeSheet();
     if (selState){ openStateCard(); fitState(); }
-    else map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+    else { lastCam = null; map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) }); }
     updateScopeChip();
     syncURL();
   }
@@ -986,6 +1166,7 @@ og_image: /brand/og-operators-map.jpg
           }
         }
       } else {
+        lastCam = null;
         map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
         updateCount(); renderList(); syncInsets();
       }
@@ -1055,7 +1236,7 @@ og_image: /brand/og-operators-map.jpg
   // ── scope-back chip: one level per tap — county → state → United States ──
   function fitState(){
     if (!selState) return;
-    map.fitBounds(stateBounds(selState.feature), { padding:FIT_PAD, maxZoom:8.5, duration:dcap(900) });
+    fitScope(stateBounds(selState.feature), 8.5, 900);
   }
   function updateScopeChip(){
     const sc = $('gvScope'); if (!sc) return;
@@ -1078,8 +1259,9 @@ og_image: /brand/og-operators-map.jpg
     clearPin();
     showTab('details');   // the list is a Details view of the current scope
     renderList();
+    const det = revealDetent();
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-half');
+    setDetQuiet(det);
   }
   function renderList(){
     if (mode !== 'list' || !sheetEl.classList.contains('open')) return;
@@ -1200,8 +1382,9 @@ og_image: /brand/og-operators-map.jpg
   $('gvTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
   function openDisplayTab(){
     showTab('display');   // builds the panel on entry
+    const det = revealDetent();
     sheetEl.classList.add('open');
-    sheet.setDetent('dt-half');
+    setDetQuiet(det);
   }
 
   // ── drawer resize: drag the LEFT edge on a monitor; phones keep the sheet.
@@ -1323,6 +1506,10 @@ og_image: /brand/og-operators-map.jpg
       const g = labelGroup(l.id);
       if (!g) return;
       try { map.setLayoutProperty(l.id, 'visibility', p[g] ? 'visible' : 'none'); } catch(e){}
+      // gv-state-num carries NAME + count through the country band — the
+      // basemap's admin-1 names hold back until clusters take over at 4.6,
+      // so the two layers never double-label or collision-drop each other
+      if (g === 'state') try { map.setLayerZoomRange(l.id, Math.max(4.6, l.minzoom || 0), l.maxzoom === undefined ? 24 : l.maxzoom); } catch(e){}
     });
   }
   function toggleLabelPref(k){
@@ -1392,6 +1579,7 @@ og_image: /brand/og-operators-map.jpg
       }
       meMarker.setLngLat([fix.lon, fix.lat]).addTo(map);
       lastFix = [fix.lon, fix.lat];   // lists sort nearest-first and cards carry mileage from here on
+      userCam = true;   // the camera is at YOUR location now — no refit steals it
       map.flyTo({ center:[fix.lon, fix.lat], zoom:9, duration:dcap(900) });
       renderList();
     },
@@ -1536,7 +1724,14 @@ og_image: /brand/og-operators-map.jpg
       // states. Dots and clusters only exist once you zoom past the country view.
       map.addSource('state-centers', { type:'geojson', data: stateCentersFC() });
       map.addLayer({ id:'gv-state-num', type:'symbol', source:'state-centers', maxzoom:4.6,
-        layout:{ 'text-field':['to-string',['get','cnt']], 'text-font':['Noto Sans Bold'],
+        // ONE symbol carries NAME + count — split layers (basemap name, our
+        // number) fought in the collision engine and the number won, dropping
+        // names for whole states (same fix as the multi-lens map, 07-26)
+        layout:{ 'text-field':['format',
+            ['get','name'], { 'font-scale':0.72 },
+            '\n', {},
+            ['to-string',['get','cnt']], {}],
+          'text-font':['Noto Sans Bold'],
           'text-size':['interpolate', ['linear'], ['zoom'], 2.8, 11, 4.6, 15], 'text-allow-overlap':false },
         paint:{ 'text-color': light ? '#26333B' : '#fff',
           'text-halo-color': light ? 'rgba(255,255,255,.9)' : 'rgba(8,16,28,.85)', 'text-halo-width':1.8 }});
@@ -1679,7 +1874,7 @@ og_image: /brand/og-operators-map.jpg
 
   // gestures: pan drops the card to peek; viewport work is debounced so a
   // pan-pan-pan sequence runs the scans once, not per settle
-  map.on('dragstart', () => { if (HUKit.phone() && sheetEl.classList.contains('open') && mode === 'card') sheet.setDetent('dt-peek'); });
+  map.on('dragstart', () => { if (HUKit.phone() && sheetEl.classList.contains('open') && mode === 'card') setDetQuiet('dt-peek'); });
   let mvT = 0;
   map.on('moveend', () => {
     clearTimeout(mvT);
@@ -1735,6 +1930,15 @@ og_image: /brand/og-operators-map.jpg
     // enrichment rides in quietly behind the map; open cards fill in when it lands
     fetch('/assets/data/us-counties.json').then(r => r.json()).then(d => { CPOP = d; refreshOpenCard(); }).catch(() => {});
     fetch('/assets/data/countyData.json').then(r => r.json()).then(d => { CDATA = d; refreshOpenCard(); }).catch(() => {});
+    // POS enrichment rides in AFTER the map settles (538KB, never boot-blocking);
+    // an open pin card fills in the moment it lands
+    setTimeout(() => fetch('/assets/data/hospital-enrich.json').then(r => r.json()).then(d => {
+      ENRICH = d;
+      if (mode === 'card' && selectedId){
+        const f = ALL.find(x => x.properties.id === selectedId);
+        if (f) openPinCard(f.properties, backTo);
+      }
+    }).catch(() => {}), 2500);
   });
   map.on('error', ev => {
     if (!map.loaded()){ signal('Basemap failed to load. Check the connection'); }
