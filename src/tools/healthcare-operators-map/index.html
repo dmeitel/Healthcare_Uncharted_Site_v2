@@ -316,7 +316,7 @@ og_image: /brand/og-operators-map.jpg
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script src="/assets/js/hu-kit.js"></script>
+<script src="/assets/js/hu-kit.js?v=20260729"></script>
 <script>
 (function(){
   'use strict';
@@ -547,6 +547,8 @@ og_image: /brand/og-operators-map.jpg
   // us-counties.json: {fips:{p:population}} · countyData.json: lens→idx→fips→value
   let CPOP = null, CDATA = null, lastFix = null;
   let ENRICH = null;   // per-CCN POS enrichment (services/teaching/capacity), lazy-loaded on idle
+  // (the Utah price-pilot UI was removed 2026-07-29: project parked, the
+  //  finder lives in the secret menu; pipeline + data files remain for later)
   const statePopCache = new Map();
   function statePop(fips){
     if (!CPOP) return null;
@@ -731,6 +733,15 @@ og_image: /brand/og-operators-map.jpg
     mode = 'card'; backTo = null;
     syncURL();
   }
+  // phone hardware back = the X button, one step at a time, for the views
+  // that replaceState keeps OUT of history (pin cards, list, Display).
+  // Plain scope cards fall through to the real state/county/
+  // system entries. The popstate handler below early-returns on consumed().
+  const backGd = HUKit.backGuard ? HUKit.backGuard({
+    watch: sheetEl,
+    active: () => sheetEl.classList.contains('open') && (tab === 'display' || mode === 'list' || !!selectedId),
+    step: () => $('gvSheetX').click()
+  }) : null;
   function clearPin(){
     selectedId = null;
     if (map.getLayer('gv-selected')) map.setFilter('gv-selected', ['==', ['get','id'], '___none']);
@@ -991,7 +1002,7 @@ og_image: /brand/og-operators-map.jpg
     if (CDATA){
       const hint = document.createElement('button');
       hint.className = 'gv-tolist'; hint.type = 'button';
-      hint.textContent = countyMetric ? '◩ Shading: ' + CMETRICS[countyMetric].label + ' — change…' : '◩ Shade counties by a metric…';
+      hint.textContent = countyMetric ? '◩ Shading: ' + CMETRICS[countyMetric].label + ' · change…' : '◩ Shade counties by a metric…';
       hint.addEventListener('click', openDisplayTab);
       ex.appendChild(hint);
     }
@@ -1147,6 +1158,7 @@ og_image: /brand/og-operators-map.jpg
     try { history[method](null, '', q ? ('?' + q) : location.pathname); } catch(e){}
   }
   window.addEventListener('popstate', async () => {
+    if (backGd && backGd.consumed()) return;   // the back guard handled this pop
     applyingURL = true;
     try {
       // quiet scope reset, then rebuild from the entry's querystring

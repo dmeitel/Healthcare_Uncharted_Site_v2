@@ -13,6 +13,9 @@
                            that speaks dt-peek / dt-half / dt-full)
    HUKit.locate(btn,opts)-> locate-me FAB wiring. Permission is asked
                            ON TAP, never on load. County-grain accuracy.
+   HUKit.backGuard(opts) -> phone hardware-back interceptor: transient
+                           drawer views consume back one X-step at a
+                           time; scope entries stay history-native.
 ================================================================ */
 (function () {
   'use strict';
@@ -152,6 +155,58 @@
     return { setState: set };
   }
 
+  /* ── Hardware back guard ──────────────────────────────────────
+     Phone nav rule: THE BACK BUTTON SPEAKS THE X BUTTON'S LANGUAGE.
+     Transient drawer views (pin cards, lists, compare, Display) are
+     replaceState-only by design, so a bare back press used to pop the
+     whole scope and throw the user out of the tool. While the watched
+     sheet is open on a phone, ONE sentinel entry sits on the stack:
+       back + transient up  -> step() unwinds one X-walk step, re-arm
+       back + plain scope   -> the press passes through to the real
+                               state/county entry below (history.back)
+       sheet closed by UI   -> the sentinel is eaten silently
+     CONTRACT: call this factory BEFORE the tool registers its own
+     popstate handler, and that handler's first line must be
+       if (guard.consumed()) return;
+     or the guard pop would trigger a full scope rebuild.
+     opts: watch  = the sheet element ('open' class drives arm/disarm)
+           active() -> true when a transient (non-scope) view is up
+           step()   -> unwind exactly one step (usually: click the X)
+  */
+  function backGuard(opts) {
+    var armed = false, eating = false, consumedFlag = false;
+    function arm() {
+      if (!phone() || armed || eating) return;
+      try { history.pushState({ huBack: 1 }, '', location.href); armed = true; } catch (e) {}
+    }
+    function disarmEat() {
+      if (!armed || eating) return;
+      eating = true;
+      history.back();
+    }
+    window.addEventListener('popstate', function () {
+      if (eating) { eating = false; armed = false; consumedFlag = true; return; }
+      if (!armed) { consumedFlag = false; return; }
+      armed = false; consumedFlag = true;
+      if (phone() && opts.active()) {
+        opts.step();
+        setTimeout(function () { if (opts.watch.classList.contains('open')) arm(); }, 0);
+      } else {
+        history.back();   // sentinel was stale for this view: pass the press along
+      }
+    });
+    var MO = window.MutationObserver;
+    if (opts.watch && MO) {
+      var was = opts.watch.classList.contains('open');
+      new MO(function () {
+        var is = opts.watch.classList.contains('open');
+        if (is !== was) { was = is; if (is) arm(); else disarmEat(); }
+      }).observe(opts.watch, { attributes: true, attributeFilter: ['class'] });
+      if (was) arm();
+    }
+    return { consumed: function () { return consumedFlag; }, arm: arm };
+  }
+
   /* ── interior label point ─────────────────────────────────────
      Where a region's label belongs: the area centroid of its largest
      polygon, and when a concave shape throws the centroid outside
@@ -203,5 +258,5 @@
     return [bx, y];
   }
 
-  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, innerPoint: innerPoint, PHONE_MQ: PHONE_MQ };
+  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, PHONE_MQ: PHONE_MQ };
 })();

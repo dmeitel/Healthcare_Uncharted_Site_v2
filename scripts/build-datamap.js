@@ -31,6 +31,8 @@ const NODES = [
     detail: 'Hospital General Information download. One leg of the us-hospitals merge.' },
   { id: 'src-cms-pos', kind: 'source', label: 'CMS Provider of Services', provenance: 'official',
     detail: 'Quarterly POS file (Hospital & Non-Hospital Facilities, iQIES) via the data.cms.gov API. Service flags, teaching, capacity, and network counts behind hospital-enrich.json.' },
+  { id: 'src-hpt-mrf', kind: 'source', label: 'Hospital price files (45 CFR 180.50)', provenance: 'official',
+    detail: 'Each hospital\'s CMS-required price transparency machine-readable file, self-hosted and discovered via cms-hpt.txt at the hospital\'s domain root. Utah pilot pulls 37 files across 7 systems.' },
   { id: 'src-cms-asc', kind: 'source', label: 'CMS ASC Dataset', provenance: 'official',
     detail: 'Ambulatory surgical center listing behind us-ascs.json.' },
   { id: 'src-cms-dialysis', kind: 'source', label: 'CMS Dialysis Dataset', provenance: 'official',
@@ -83,6 +85,8 @@ const NODES = [
     detail: '10-adapter unified graph. Reads every major dataset, validates links (incl. the cross-links metric-name guard), writes the search graph.' },
   { id: 'js-build-hospital-enrichment', kind: 'script', label: 'build-hospital-enrichment.js', stat: 'scripts/build-hospital-enrichment.js',
     detail: 'Pulls the POS hospital file from the data.cms.gov API (paged, cached to .cache), joins by CCN, packs 31 service flags into a bitmask, and adds same-ZIP outpatient neighbor counts from the shipped layers. Re-run quarterly.' },
+  { id: 'js-build-hospital-prices', kind: 'script', label: 'build-hospital-prices.js', stat: 'scripts/build-hospital-prices.js',
+    detail: 'Reads each Utah system\'s cms-hpt.txt, downloads the machine-readable price files (CSV v3.0 wide + JSON v2.2, cached to .cache/mrf), and keeps a 14-service basket: gross, cash, payer min/max per hospital. Placeholder 999999999 values dropped; medians across chargemaster lines. Re-run quarterly.' },
 
   // ── DATASETS (deployed, src/assets/data/) ───────────────────────
   { id: 'ds-us-hospitals', kind: 'dataset', label: 'us-hospitals.json', stat: 'src/assets/data/us-hospitals.json',
@@ -93,6 +97,14 @@ const NODES = [
     refresh: 'auto-pull', provenance: 'official',
     detail: '5,355 hospitals enriched from the POS file: services bitmask, teaching, capacity, staffing, off-site footprint, county FIPS, same-ZIP neighbors.',
     consumers: ['Operators Map (lazy, on idle)'] },
+  { id: 'ds-hospital-prices', kind: 'dataset', label: 'hospital-prices.json', stat: 'src/assets/data/hospital-prices.json',
+    refresh: 'auto-pull', provenance: 'official',
+    detail: 'Utah pilot: 43 hospitals x 14 recognizable services from hospital-posted transparency files. Gross, cash, payer min/max per service, with the posting date carried per hospital. No consumer while the price project is parked; the map card block will read it when the pilot resumes.',
+    consumers: ['none (parked with the price project)'] },
+  { id: 'ds-hospital-cdm-ut', kind: 'dataset', label: 'hospital-cdm-ut.json', stat: 'src/assets/data/hospital-cdm-ut.json',
+    refresh: 'auto-pull', provenance: 'official',
+    detail: 'The full Utah chargemaster extract: 8,500+ CPT/HCPCS/DRG codes x 43 hospitals, median gross + cash per code with the most-posted description. Same pull as hospital-prices.json.',
+    consumers: ['Utah Price Finder (on page load)'] },
   { id: 'ds-us-ascs', kind: 'dataset', label: 'us-ascs.json', stat: 'src/assets/data/us-ascs.json',
     refresh: 'hand-maintained', provenance: 'official',
     detail: '5,611 ambulatory surgical centers.', consumers: ['Operators Map (lazy)'] },
@@ -201,6 +213,8 @@ const NODES = [
     detail: 'The hex atlas. Search rides the unified graph, lazy-fetched on first use.' },
   { id: 'tool-atlas-craft', kind: 'tool', label: 'Atlas Craft', path: '/atlas/craft/',
     detail: 'Relationship-explorer canvas. The entity graph is injected into the template at build.' },
+  { id: 'tool-price-finder', kind: 'tool', label: 'Utah Price Finder', path: '/secret-menu/hospital-price-finder/',
+    detail: 'Search any billable code across Utah hospitals; compares cash and list from the full CDM extract. Parked in the secret menu, isolated from the operators map, until the price project resumes.' },
   { id: 'tool-hospital-map', kind: 'tool', label: 'Hospital Map', path: '/tools/hospital-map/',
     detail: 'Camera-zoom map. No external data files.' },
   { id: 'tool-sql-mystery', kind: 'tool', label: 'Clinical SQL Mystery', path: '/tools/clinical-sql-mystery/',
@@ -249,6 +263,13 @@ const EDGES = [
   { from: 'ds-suppliers-pharmacy', to: 'js-build-hospital-enrichment' },
   { from: 'js-build-hospital-enrichment', to: 'ds-hospital-enrich' },
   { from: 'ds-hospital-enrich', to: 'tool-operators-map', mode: 'lazy' },
+
+  // hospital prices (Utah pilot): self-hosted MRFs in, the boot set as join frame
+  { from: 'src-hpt-mrf', to: 'js-build-hospital-prices' },
+  { from: 'ds-us-hospitals', to: 'js-build-hospital-prices' },
+  { from: 'js-build-hospital-prices', to: 'ds-hospital-prices' },
+  { from: 'js-build-hospital-prices', to: 'ds-hospital-cdm-ut' },
+  { from: 'ds-hospital-cdm-ut', to: 'tool-price-finder', mode: 'lazy' },
 
   // scripts → what they write
   { from: 'js-pull-places', to: 'ds-county-data' },
@@ -330,6 +351,7 @@ const PLAIN = {
   // sources
   'src-cms-care-compare': 'The federal government\'s public list of every Medicare-certified hospital. We download it, clean it, and merge it into our one hospital file.',
   'src-cms-pos':          'CMS\'s quarterly census of every certified facility: what services each hospital offers, its teaching status, operating rooms, and staffing as reported. The raw material behind the hospital profile cards.',
+  'src-hpt-mrf':          'Since 2021, federal law makes every hospital publish its full price list online. Nobody collects them centrally, so we go hospital by hospital: each domain has a required pointer file that says where the prices live.',
   'src-cms-asc':          'CMS\'s public list of Medicare-certified outpatient surgery centers. The raw material behind us-ascs.json.',
   'src-cms-dialysis':     'CMS\'s public list of dialysis clinics, including which chain runs each one. Becomes us-dialysis.json.',
   'src-cms-dmepos':       'CMS\'s directory of medical equipment suppliers, pharmacies, and optical shops. A build script downloads the current copy and splits it into four map layers.',
@@ -357,10 +379,13 @@ const PLAIN = {
   'js-build-data':     'The adder-upper: facilities per state, per county, per system. Its outputs feed page templates while the site builds.',
   'js-build-entities': 'The big joiner. Reads every major dataset, links hospitals to states to metrics to careers into one graph, and writes the Atlas search file. Refuses to build if any link dangles.',
   'js-build-hospital-enrichment': 'Asks CMS what every hospital actually offers (NICU, cath lab, respiratory care, and 28 more), who teaches residents, and what shares its ZIP code, then packs it into one small file the map loads quietly.',
+  'js-build-hospital-prices': 'Downloads gigabytes of hospital price files and keeps 13KB: what 14 common services cost, cash and list price, at every Utah hospital that posts them. The junk values hospitals use as placeholders get thrown out on the way through.',
 
   // datasets (deployed)
   'ds-us-hospitals':      'Every U.S. hospital in one file: name, location, type, beds, star rating, owning system. The Hospital Operations Map loads it the moment the page opens.',
   'ds-hospital-enrich':   'The deep profile behind every hospital pin: 31 kinds of care it does or does not offer, teaching status, operating rooms, nurses and respiratory therapists on staff, and what else operates in its ZIP. Loads quietly after the map is up.',
+  'ds-hospital-prices':   'What an MRI, an ER visit, or a delivery actually costs in cash at 43 Utah hospitals, straight from each hospital\'s own posted price file. Sitting on the shelf while the price project is parked.',
+  'ds-hospital-cdm-ut':   'The whole Utah chargemaster, distilled: 8,500+ billable codes across 43 hospitals, each with the cash price and the list price. The Price Finder searches this.',
   'ds-us-ascs':           'Outpatient surgery centers. Sits on the shelf until you toggle that layer on the map.',
   'ds-us-dialysis':       'Dialysis clinics with their chains. Loads on the map when toggled.',
   'ds-suppliers-pharmacy':'Every Medicare-enrolled pharmacy, 40,000+ points. The heaviest file on the site, which is exactly why it only loads when you ask for it, one state at a time.',
@@ -398,6 +423,7 @@ const PLAIN = {
   'tool-vendor-directory': 'The vendor browser: one data file, loaded on open.',
   'tool-atlas':            'The concept atlas. Browsing costs nothing; search taps the big graph, fetched lazily on first use.',
   'tool-atlas-craft':      'The relationship-explorer canvas. Its entire dataset was baked into the page at build time.',
+  'tool-price-finder':     'Type a service or billing code, see what every reporting Utah hospital charges for it, cheapest first. Each row jumps to that hospital on the operations map.',
   'tool-hospital-map':     'The older camera-zoom hospital map. Self-contained.',
   'tool-sql-mystery':      'The SQL teaching game. All data is synthetic, on purpose. Nothing fetched.',
   'tool-iceberg-map':      'The hand-drawn concept map. No data files at all.',

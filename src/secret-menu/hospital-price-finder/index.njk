@@ -1,0 +1,238 @@
+---
+layout: base.njk
+title: Utah Hospital Price Finder
+description: "Search any billable service or code and see what every reporting Utah hospital charges for it, cash price and list price, straight from each hospital's own federally required price file."
+noindex: true
+no_footer: true
+eleventyExcludeFromCollections: true
+has_interactive: true
+---
+{% raw %}
+<!-- ════════════════════════════════════════════════════════════════
+     UTAH HOSPITAL PRICE FINDER — round 21 (2026-07-27), PARKED in the
+     secret menu 2026-07-29 by David's call: concept proven, work on
+     hold, deliberately ISOLATED (no links to or from the operators
+     map) until the price project resumes way down the line.
+     Data: /assets/data/hospital-cdm-ut.json, built by
+     scripts/build-hospital-prices.js (full chargemaster extract,
+     43 Utah hospitals x 8,535 codes).
+==================================================================== -->
+<style>
+.pf-wrap { max-width:1060px; margin:0 auto; padding:28px 18px 60px; }
+.pf-kicker { font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); }
+[data-theme="light"] .pf-kicker { color:var(--teal-dk); }
+.pf-wrap h1 { font-family:var(--display); font-size:clamp(26px,4.5vw,38px); font-weight:800; color:var(--t1); margin:6px 0 10px; line-height:1.1; }
+.pf-lede { font-size:15px; color:var(--t2); max-width:66ch; line-height:1.55; margin:0 0 18px; }
+.pf-stats { display:flex; flex-wrap:wrap; gap:18px; font-family:var(--mono); font-size:11px; color:var(--t3); margin-bottom:22px; }
+.pf-stats b { color:var(--teal); font-weight:600; }
+[data-theme="light"] .pf-stats b { color:var(--teal-dk); }
+.pf-search { position:relative; }
+.pf-search input { width:100%; padding:14px 16px; font-family:var(--font); font-size:16px; color:var(--t1);
+  background:var(--raised); border:1px solid var(--border); border-radius:12px; }
+.pf-search input:focus { outline:none; border-color:var(--teal); }
+.pf-chips { display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 6px; }
+.pf-chips button { font-family:var(--mono); font-size:11px; color:var(--t2); background:var(--raised);
+  border:1px solid var(--border); border-radius:999px; padding:7px 12px; cursor:pointer; }
+.pf-chips button:hover { border-color:var(--teal); color:var(--t1); }
+.pf-hint { font-family:var(--mono); font-size:10.5px; color:var(--t3); margin-top:10px; }
+.pf-results { margin-top:14px; border:1px solid var(--border); border-radius:12px; overflow:hidden; display:none; }
+.pf-results.on { display:block; }
+.pf-hit { display:flex; align-items:baseline; gap:12px; width:100%; text-align:left; padding:10px 14px; cursor:pointer;
+  background:none; border:none; border-bottom:1px solid var(--border); }
+.pf-hit:last-child { border-bottom:none; }
+.pf-hit:hover { background:color-mix(in srgb, var(--teal) 7%, transparent); }
+.pf-hit .cd { font-family:var(--mono); font-size:12px; color:var(--teal); flex:none; min-width:74px; }
+[data-theme="light"] .pf-hit .cd { color:var(--teal-dk); }
+.pf-hit .ds { font-size:13px; color:var(--t1); min-width:0; }
+.pf-hit .nn { margin-left:auto; flex:none; font-family:var(--mono); font-size:10px; color:var(--t3); }
+.pf-sel { margin-top:26px; display:none; }
+.pf-sel.on { display:block; }
+.pf-sel-code { font-family:var(--mono); font-size:11px; color:var(--teal); }
+[data-theme="light"] .pf-sel-code { color:var(--teal-dk); }
+.pf-sel h2 { font-family:var(--display); font-size:22px; font-weight:800; color:var(--t1); margin:2px 0 4px; line-height:1.2; }
+.pf-sel-sum { font-family:var(--mono); font-size:11.5px; color:var(--t2); margin-bottom:6px; }
+.pf-unit { font-family:var(--mono); font-size:10.5px; color:var(--amber); margin:4px 0 8px; }
+[data-theme="light"] .pf-unit { color:var(--amber-dk); }
+.pf-table { width:100%; border-collapse:collapse; margin-top:10px; }
+.pf-table th { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--t3);
+  text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); }
+.pf-table th.r, .pf-table td.r { text-align:right; }
+.pf-table td { padding:9px 10px; border-bottom:1px solid var(--border); font-size:13px; color:var(--t1); }
+.pf-table td.city { color:var(--t3); font-family:var(--mono); font-size:11px; white-space:nowrap; }
+.pf-table td.cash { font-family:var(--mono); font-weight:600; color:var(--teal); white-space:nowrap; }
+[data-theme="light"] .pf-table td.cash { color:var(--teal-dk); }
+.pf-table td.list { font-family:var(--mono); font-size:11.5px; color:var(--t3); white-space:nowrap; }
+.pf-table tr.lo td.cash::after { content:" · lowest"; font-size:9px; color:var(--t3); font-weight:400; }
+.pf-note { font-family:var(--mono); font-size:10px; color:var(--t3); line-height:1.6; margin-top:16px; max-width:80ch; }
+.pf-links { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.pf-links a, .pf-links button { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px; cursor:pointer;
+  background:var(--raised); border:1px solid var(--border); color:var(--t2); font-family:var(--font); font-size:12px; font-weight:600; text-decoration:none; }
+.pf-links a:hover, .pf-links button:hover { color:var(--t1); border-color:var(--teal); }
+.pf-load { font-family:var(--mono); font-size:11px; color:var(--t3); padding:22px 0; }
+@media (max-width:640px){
+  .pf-table th:nth-child(2), .pf-table td:nth-child(2) { display:none; }   /* city folds into the phone's tight table */
+  .pf-wrap { padding:20px 14px 48px; }
+}
+</style>
+
+<div class="pf-wrap">
+  <div class="pf-kicker">Utah pilot · hospital-posted prices</div>
+  <h1>Utah Hospital Price Finder</h1>
+  <p class="pf-lede">Every hospital in the country has to publish its full price list. Almost nobody reads them. We pulled the files for Utah's hospitals so you can search any service, drug, or billing code and see what each hospital says it charges, the self-pay cash price and the pre-discount list price, side by side.</p>
+  <div class="pf-stats" id="pfStats"><span class="pf-load">Loading the price data…</span></div>
+  <div class="pf-search">
+    <input id="pfQ" type="search" autocomplete="off" spellcheck="false"
+      placeholder="Search a service or code… try MRI, colonoscopy, or 99284" aria-label="Search services and billing codes">
+  </div>
+  <div class="pf-chips" id="pfChips" hidden></div>
+  <div class="pf-hint" id="pfHint" hidden>Codes are CPT/HCPCS as posted by the hospitals; MS-DRG for inpatient stays. Tap a result to compare hospitals.</div>
+  <div class="pf-results" id="pfResults" role="listbox" aria-label="Matching services"></div>
+
+  <div class="pf-sel" id="pfSel">
+    <div class="pf-sel-code" id="pfSelCode"></div>
+    <h2 id="pfSelName"></h2>
+    <div class="pf-sel-sum" id="pfSelSum"></div>
+    <div class="pf-unit" id="pfUnit" hidden>Unit-level charge: this is billed per unit or per time increment, so the total depends on quantity.</div>
+    <table class="pf-table" aria-label="Hospital price comparison">
+      <thead><tr><th>Hospital</th><th>City</th><th class="r">Cash price</th><th class="r">List price</th></tr></thead>
+      <tbody id="pfRows"></tbody>
+    </table>
+    <div class="pf-links">
+      <button type="button" id="pfCopy">🔗 Copy link to this comparison</button>
+    </div>
+  </div>
+
+  <p class="pf-note" id="pfNote">
+    Prices come from each hospital's own machine-readable standard-charges file, the disclosure federal law
+    (45 CFR 180.50) has required since 2021, located through the cms-hpt.txt pointer each hospital domain must serve.
+    Cash = the hospital's posted discounted self-pay price. List = the gross chargemaster amount, which almost nobody
+    actually pays. Where a hospital posts several chargemaster lines for one code we show the median and note the
+    count. Placeholder junk values are dropped. These are estimates for orientation, not quotes: confirm with the
+    hospital, and expect your insurance's negotiated rate to differ from both numbers. Some hospitals' files are
+    fresher than others: the oldest in this set was posted mid-2024, the newest spring 2026.
+  </p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  let D = null;          // the CDM dataset
+  let IDX = [];          // [{k, d, n}] search index, most-posted first
+  let curCode = null;
+  const fmt$ = v => '$' + Math.round(v).toLocaleString('en-US');
+  const dispCode = k => k[0] === 'D' ? 'MS-DRG ' + k.slice(1) : k;
+  const tcase = s => String(s || '').toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+
+  // the map's curated basket, as quick-start chips (same codes, same words)
+  const CHIPS = [
+    ['99284','ER visit, level 4'], ['70551','MRI brain'], ['74177','CT abdomen + pelvis'],
+    ['71046','Chest X-ray'], ['77067','Mammogram'], ['45378','Colonoscopy'],
+    ['85025','Blood count (CBC)'], ['80053','Metabolic panel'], ['D470','Hip or knee replacement'], ['D807','Vaginal delivery']
+  ];
+
+  fetch('/assets/data/hospital-cdm-ut.json').then(r => r.json()).then(d => {
+    D = d;
+    IDX = Object.keys(d.codes).map(k => ({ k, d: d.descs[k] || '', n: Object.keys(d.codes[k]).length }))
+      .sort((a, b) => b.n - a.n);
+    $('pfStats').innerHTML = '<span><b>' + d._meta.hospitals + '</b> Utah hospitals</span>' +
+      '<span><b>' + Object.keys(d.codes).length.toLocaleString('en-US') + '</b> billable services</span>' +
+      '<span>built <b>' + d._meta.built + '</b></span>';
+    const chips = $('pfChips');
+    CHIPS.filter(c => d.codes[c[0]]).forEach(c => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = c[1];
+      b.addEventListener('click', () => selectCode(c[0]));
+      chips.appendChild(b);
+    });
+    chips.hidden = false; $('pfHint').hidden = false;
+    const p = new URLSearchParams(location.search);
+    const c0 = p.get('code');
+    if (c0 && d.codes[c0.toUpperCase()]) selectCode(c0.toUpperCase());
+    else if (p.get('q')){ $('pfQ').value = p.get('q'); search(p.get('q')); }
+  }).catch(() => { $('pfStats').innerHTML = '<span class="pf-load">The price data did not load. Refresh to retry.</span>'; });
+
+  function search(q){
+    const box = $('pfResults');
+    const toks = String(q || '').trim().toUpperCase().split(/\s+/).filter(Boolean);
+    if (!toks.length || !D){ box.classList.remove('on'); box.innerHTML = ''; return; }
+    const hits = [];
+    for (const e of IDX){
+      const DU = e.d.toUpperCase();
+      if (toks.every(t => e.k.startsWith(t) || ('MS-DRG ' + e.k.slice(1)).startsWith(t) || DU.includes(t))){
+        hits.push(e);
+        if (hits.length >= 40) break;
+      }
+    }
+    box.innerHTML = '';
+    if (!hits.length){
+      const d0 = document.createElement('div'); d0.className = 'pf-load'; d0.style.padding = '14px';
+      d0.textContent = 'No posted service matches that. Try a broader word or a 5-digit CPT code.';
+      box.appendChild(d0);
+    }
+    hits.forEach(e => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pf-hit'; b.setAttribute('role','option');
+      const cd = document.createElement('span'); cd.className = 'cd'; cd.textContent = dispCode(e.k);
+      const ds = document.createElement('span'); ds.className = 'ds'; ds.textContent = e.d || '(no description posted)';
+      const nn = document.createElement('span'); nn.className = 'nn'; nn.textContent = e.n + (e.n === 1 ? ' hospital' : ' hospitals');
+      b.appendChild(cd); b.appendChild(ds); b.appendChild(nn);
+      b.addEventListener('click', () => selectCode(e.k));
+      box.appendChild(b);
+    });
+    box.classList.add('on');
+  }
+  let deb = null;
+  $('pfQ').addEventListener('input', e => { clearTimeout(deb); deb = setTimeout(() => search(e.target.value), 120); });
+  $('pfQ').addEventListener('keydown', e => {
+    if (e.key === 'Enter'){ const first = $('pfResults').querySelector('.pf-hit'); if (first) first.click(); }
+  });
+
+  function selectCode(k){
+    if (!D || !D.codes[k]) return;
+    curCode = k;
+    const rows = Object.entries(D.codes[k]).map(([ccn, a]) => ({
+      ccn, h: D.hosp[ccn], g: a[0], c: a[1], pts: a[2], lead: a[1] != null ? a[1] : a[0]
+    })).filter(r => r.h && r.lead != null).sort((a, b) => a.lead - b.lead);
+    $('pfSelCode').textContent = dispCode(k);
+    $('pfSelName').textContent = D.descs[k] || 'Posted service';
+    const cashes = rows.map(r => r.c).filter(v => v != null);
+    const med = cashes.length ? cashes.slice().sort((a,b) => a - b)[Math.floor(cashes.length / 2)] : null;
+    $('pfSelSum').textContent = rows.length + (rows.length === 1 ? ' hospital posts' : ' hospitals post') + ' this' +
+      (med != null ? ' · median cash ' + fmt$(med) : '') +
+      (rows.length > 1 && rows[0].lead && rows[rows.length-1].lead ? ' · spread ' + (rows[rows.length-1].lead / rows[0].lead).toFixed(1) + 'x' : '');
+    $('pfUnit').hidden = !/PER MIN|EACH ADDL|EA ADDL|PER HOUR|ADDL HR|PER UNIT|PER DAY|DAILY|PER DOSE|PER MG|PER GM/i.test(D.descs[k] || '');
+    const tb = $('pfRows'); tb.innerHTML = '';
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      if (i === 0 && rows.length > 1 && r.c != null) tr.className = 'lo';
+      const tdH = document.createElement('td');
+      tdH.textContent = tcase(r.h.n);
+      const tdC = document.createElement('td'); tdC.className = 'city'; tdC.textContent = tcase(r.h.c);
+      const tdCash = document.createElement('td'); tdCash.className = 'r cash';
+      tdCash.textContent = r.c != null ? fmt$(r.c) : '·';
+      const tdList = document.createElement('td'); tdList.className = 'r list';
+      tdList.textContent = r.g != null ? fmt$(r.g) + (r.pts > 1 ? ' (' + r.pts + ')' : '') : '·';
+      tr.appendChild(tdH); tr.appendChild(tdC); tr.appendChild(tdCash); tr.appendChild(tdList);
+      tb.appendChild(tr);
+    });
+    $('pfSel').classList.add('on');
+    $('pfResults').classList.remove('on');
+    $('pfQ').value = dispCode(k) + ' · ' + (D.descs[k] || '');
+    try { history.replaceState(null, '', '?code=' + encodeURIComponent(k)); } catch(e){}
+    $('pfSel').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+  // retyping leaves the comparison up until a new pick lands
+  $('pfQ').addEventListener('focus', e => e.target.select());
+
+  $('pfCopy').addEventListener('click', () => {
+    const b = $('pfCopy');
+    const done = ok => { b.textContent = ok ? '✓ Link copied' : 'Copy blocked. The address bar has it';
+      setTimeout(() => { b.textContent = '🔗 Copy link to this comparison'; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(() => done(true), () => done(false));
+    else done(false);
+  });
+})();
+</script>
+{% endraw %}
+{% set ta_fixed = true %}
+{% set ta_source = "Hospital-posted price transparency machine-readable files (45 CFR 180.50), pulled per hospital via cms-hpt.txt discovery · Utah pilot" %}
+{% include "components/tool-attribution.njk" %}

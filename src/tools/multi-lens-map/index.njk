@@ -311,7 +311,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script src="/assets/js/hu-kit.js"></script>
+<script src="/assets/js/hu-kit.js?v=20260729"></script>
 <script>
 (function(){
   'use strict';
@@ -493,6 +493,15 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     if (selState){ deselectState(); return; }
     sheetEl.classList.remove('open');
   });
+  // phone hardware back = the X button, one step at a time, for the views
+  // that replaceState keeps OUT of history (Display, rankings, compare).
+  // State/county cards fall through to their real history entries.
+  // The popstate handler early-returns on consumed().
+  const backGd = HUKit.backGuard ? HUKit.backGuard({
+    watch: sheetEl,
+    active: () => sheetEl.classList.contains('open') && (tab === 'display' || mode === 'rank' || !!cmpState || comparePick),
+    step: () => $('lvSheetX').click()
+  }) : null;
 
   // ── quantile machinery (shared by both grains) ──
   function quantiles(vals){
@@ -834,6 +843,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     try { history[method](null, '', q ? ('?' + q) : location.pathname); } catch(e){}
   }
   window.addEventListener('popstate', async () => {
+    if (backGd && backGd.consumed()) return;   // the back guard handled this pop
     // quiet reset, then rebuild the whole view from the entry's querystring
     selState = null; selCounty = null; cmpState = null; comparePick = false; mode = 'card';
     sheetEl.classList.remove('open');
