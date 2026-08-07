@@ -1,0 +1,1273 @@
+---
+layout: base.njk
+navPage: tools
+no_footer: true
+section: tool
+status: published
+featured: true
+date: 2026-07-30
+order: 8
+title: Assignment Compass
+description: "Compare take-home pay and real monthly costs between two locations: actual state tax bracket math, GSA per diem rates for the assignment county, and the blind spots cost-of-living sites miss. Built for nurses, RTs, and allied health comparing offers and travel contracts."
+tags: [interactive, cost-of-living, taxes, travel, careers]
+has_interactive: true
+---
+<!-- ════════════════════════════════════════════════════════════════
+     ASSIGNMENT COMPASS · Phase 1 + critique round (2026-07-30)
+     Two locations in, one honest answer out: projected monthly costs,
+     real state tax bracket math (2025 tables), GSA per diem for the
+     assignment county, a breakeven number, and an offer-vs-offer mode
+     with a negotiation card to carry into the recruiter call.
+     Engine: /assets/js/assignment-compass-engine.js (pure functions,
+     Node-testable). Data: /assets/data/assignment-compass.json +
+     /assets/data/derived/compass-counties.json (from the canonical
+     county registry). Per diem rides /.netlify/functions/perdiem
+     (CSP pins connect-src to self; the GSA key stays server-side)
+     and falls back to the standard CONUS rate when offline.
+════════════════════════════════════════════════════════════════ -->
+
+<style>
+/* Scoped: .ac-* only. Regions come from the shell; content styling is ours. */
+.ac-shell .shell-dock--left { display:flex; flex-direction:column; }
+
+/* ── form dock ── */
+.ac-form-inner { padding:14px 16px 28px; display:flex; flex-direction:column; gap:18px; }
+.ac-sec { display:flex; flex-direction:column; gap:8px; }
+.ac-sec-label { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); display:flex; align-items:center; gap:6px; }
+/* icons are wayfinding, not signal: faded ink keeps teal for data (One Signal Rule) */
+.ac-sec-label svg { width:11px; height:11px; stroke-width:1.75; color:var(--t3); }
+.ac-field { display:flex; flex-direction:column; gap:4px; }
+.ac-field label { font-size:11.5px; color:var(--t2); }
+.ac-loc-tag { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; vertical-align:1px; }
+.ac-loc-tag.cur { background:var(--blue-hi); }
+.ac-loc-tag.asg { background:var(--teal); }
+.ac-input, .ac-select {
+  width:100%; padding:9px 11px; border-radius:8px;
+  border:1px solid var(--border); background:var(--raised); color:var(--t1);
+  font-family:var(--font); font-size:13px; min-height:38px;
+}
+.ac-input:focus-visible, .ac-select:focus-visible { outline:2px solid var(--teal); outline-offset:1px; }
+.ac-input[inputmode] { font-family:var(--mono); font-size:13px; }
+.ac-row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ac-chiprow { display:flex; gap:6px; flex-wrap:wrap; }
+.ac-cost-grid { display:flex; flex-direction:column; gap:7px; }
+.ac-cost-row { display:grid; grid-template-columns:1fr 104px; align-items:center; gap:8px; }
+.ac-cost-row label { font-size:12px; color:var(--t2); line-height:1.3; }
+.ac-cost-row .ac-input { padding:7px 9px; min-height:36px; text-align:right; }
+.ac-hint { font-size:10.5px; color:var(--t3); line-height:1.5; }
+
+/* ── results canvas: a scrolling column, not a locked map ── */
+.ac-results { overflow-y:auto; background:var(--dark); }
+.ac-results-inner { max-width:860px; margin:0 auto; padding:18px clamp(14px,3vw,28px) 60px; display:flex; flex-direction:column; gap:16px; }
+.ac-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
+.ac-card-head { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.ac-card-head svg { width:13px; height:13px; stroke-width:1.75; color:var(--t3); }
+.ac-badge { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:999px; border:1px solid var(--border2); color:var(--t3); margin-left:auto; white-space:nowrap; }
+.ac-badge.warn { border-color:color-mix(in srgb, var(--amber) 55%, transparent); color:var(--amber); }
+[data-theme="light"] .ac-badge.warn { color:var(--amber-dk); border-color:var(--amber-dk); }
+
+/* stat tiles ride the kit pattern (20px per the kit spec) with location coloring */
+.ac-shell .hu-stat .v { font-size:20px; }
+.ac-shell .hu-stat .v.cur { color:var(--blue-hi); }
+.ac-shell .hu-stat .v.asg { color:var(--teal); }
+[data-theme="light"] .ac-shell .hu-stat .v.asg { color:var(--teal-dk); }
+.ac-shell .hu-stat .v.good { color:var(--green); }
+.ac-shell .hu-stat .v.bad { color:var(--red); }
+
+/* ledger */
+.ac-ledger-wrap { overflow-x:auto; }
+.ac-ledger { width:100%; border-collapse:collapse; font-size:12.5px; min-width:430px; }
+.ac-ledger th { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--t3); text-align:right; padding:6px 10px; border-bottom:1px solid var(--border2); white-space:nowrap; }
+.ac-ledger th:first-child { text-align:left; }
+.ac-ledger th.cur { color:var(--blue-hi); }
+.ac-ledger th.asg { color:var(--teal); }
+[data-theme="light"] .ac-ledger th.asg { color:var(--teal-dk); }
+.ac-ledger td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--t2); text-align:right; font-family:var(--mono); font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.ac-ledger td:first-child, .ac-ledger th[scope="row"] { text-align:left; font-family:var(--font); color:var(--t1); font-size:12.5px; font-weight:400; }
+.ac-ledger th[scope="row"] { padding:7px 10px; border-bottom:1px solid var(--border); white-space:nowrap; letter-spacing:0; text-transform:none; }
+.ac-ledger tr.ac-sum td { border-top:2px solid var(--border2); font-weight:600; color:var(--t1); }
+.ac-ledger .d-good { color:var(--green); }
+.ac-ledger .d-bad { color:var(--red); }
+.ac-ledger .d-flat { color:var(--t3); }
+
+/* delta bars */
+.ac-bars { width:100%; height:auto; display:block; }
+.ac-bars text { font-family:var(--mono); font-size:11px; }
+.ac-bars .lbl { font-family:var(--font); font-size:12px; }
+
+/* per diem */
+.ac-pd-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:10px; }
+.ac-pd-note { font-size:12px; color:var(--t2); line-height:1.6; }
+.ac-pd-sub { font-size:10.5px; color:var(--t3); margin-top:8px; line-height:1.5; }
+
+/* license logistics */
+.ac-lic-path { font-size:13.5px; color:var(--t1); line-height:1.65; }
+.ac-lic-detail { font-size:12px; color:var(--t2); margin-top:8px; line-height:1.6; }
+.ac-lic-status { font-size:11.5px; color:var(--t3); margin-top:10px; line-height:1.55; border-left:2px solid var(--border2); padding-left:10px; }
+.ac-lic-status a, .ac-spot a { color:var(--teal); }
+[data-theme="light"] .ac-lic-status a, [data-theme="light"] .ac-spot a { color:var(--teal-dk); }
+
+/* blind spots: margin notes, not panels (The Margin Note Rule) */
+.ac-spots { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px 18px; }
+.ac-spot { border-left:3px solid var(--amber); padding:6px 0 6px 14px; }
+[data-theme="light"] .ac-spot { border-left-color:var(--amber-dk); }
+.ac-spot.tax { border-left-color:var(--red); }
+.ac-spot h3 { font-family:var(--font); font-size:12.5px; font-weight:700; color:var(--t1); margin-bottom:4px; }
+.ac-spot p { font-size:11.5px; color:var(--t2); line-height:1.55; }
+
+/* breakeven */
+.ac-be { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.ac-be .num { font-family:var(--display); font-size:30px; font-weight:800; color:var(--t1); }
+.ac-be .per { font-family:var(--mono); font-size:12px; color:var(--t3); }
+.ac-be-sub { font-size:12.5px; color:var(--t2); line-height:1.6; margin-top:8px; }
+
+/* assumptions */
+.ac-assume summary { cursor:pointer; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); list-style:none; display:flex; align-items:center; gap:8px; }
+.ac-assume summary::-webkit-details-marker { display:none; }
+.ac-assume summary::after { content:"+"; font-family:var(--mono); color:var(--teal); margin-left:auto; }
+.ac-assume[open] summary::after { content:"\2212"; }
+.ac-assume-grid { margin-top:12px; display:flex; flex-direction:column; gap:6px; }
+.ac-assume-row { display:grid; grid-template-columns:1fr 90px 70px; gap:8px; align-items:center; font-size:12px; color:var(--t2); }
+.ac-assume-row .def { font-family:var(--mono); font-size:11px; color:var(--t3); text-align:right; }
+.ac-assume-row .ac-input { padding:5px 8px; min-height:32px; text-align:right; }
+.ac-assume-foot { margin-top:10px; display:flex; align-items:center; gap:10px; }
+.ac-reset { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--t2); font-family:var(--font); font-size:12px; cursor:pointer; }
+.ac-reset:hover { border-color:rgba(78,205,196,.5); color:var(--t1); }
+.ac-reset:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+
+/* methodology sheet */
+.ac-method { max-width:720px; margin:0 auto; }
+.ac-method h2 { font-family:var(--display); font-size:17px; color:var(--t1); margin:14px 0 6px; }
+.ac-method p, .ac-method li { font-size:13px; color:var(--t2); line-height:1.65; }
+.ac-method ul { padding-left:18px; margin:6px 0; }
+.ac-method a { color:var(--teal); }
+[data-theme="light"] .ac-method a { color:var(--teal-dk); }
+
+/* foot */
+.ac-foot-note { font-size:11px; color:var(--t3); }
+.ac-foot-year { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--t3); margin-left:auto; white-space:nowrap; }
+
+/* the negotiation card: the ending the reader carries into the call */
+.ac-nego { border-color:var(--border2); }
+.ac-nego-verdict { font-size:14px; color:var(--t1); line-height:1.6; }
+.ac-nego-verdict b { font-family:var(--mono); font-weight:600; color:var(--teal); white-space:nowrap; }
+[data-theme="light"] .ac-nego-verdict b { color:var(--teal-dk); }
+.ac-nego-lines { margin:10px 0 0; display:flex; flex-direction:column; gap:6px; }
+.ac-nego-line { font-size:12.5px; color:var(--t2); line-height:1.55; padding-left:12px; border-left:2px solid var(--border2); }
+.ac-nego-line b { font-family:var(--mono); font-weight:600; color:var(--t1); }
+.ac-nego-actions { display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
+.ac-dl { font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); background:transparent;
+  border:1px solid var(--border2); border-radius:999px; padding:9px 16px; cursor:pointer; transition:all .15s; }
+.ac-dl:hover { border-color:var(--teal); color:var(--t1); }
+[data-theme="light"] .ac-dl { color:var(--teal-dk); }
+.ac-share-canvas { display:none; }
+
+/* one-shot restore after a reset: ink and weight, no wash (Ink State Rule) */
+.ac-undo { display:none; align-items:center; gap:6px; padding:7px 13px; border-radius:999px; cursor:pointer;
+  background:transparent; border:1px solid var(--amber); color:var(--amber);
+  font-family:var(--font); font-size:12px; font-weight:600; white-space:nowrap; }
+.ac-undo.show { display:inline-flex; }
+[data-theme="light"] .ac-undo { border-color:var(--amber-dk); color:var(--amber-dk); }
+
+/* phone sticky answer strip: the bottom line follows the thumb.
+   The [hidden] rule must outrank the phone display:flex or an empty
+   blurred strip ghosts in at boot. */
+.ac-sticky { display:none; }
+.ac-sticky[hidden] { display:none !important; }
+
+/* touch floor rides POINTER TYPE too, so wide tablets get real targets */
+@media (hover:none) {
+  .ac-input, .ac-select { min-height:44px; }
+  .ac-cost-row .ac-input, .ac-assume-row .ac-input { min-height:44px; }
+  .ac-dl, .ac-undo, .ac-reset { min-height:44px; }
+  .ac-assume summary { min-height:44px; align-items:center; }
+}
+
+/* a11y */
+.vh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* phone: the results are a document, not a viewport-locked canvas.
+   Touch floor: these selectors must OUTGUN the desktop compact rules
+   (.ac-cost-row .ac-input is (0,2,0)), so they carry the same weight. */
+@media (max-width:699px) {
+  .ac-shell .shell-canvas.ac-results { height:auto; overflow:visible; }
+  .ac-shell .shell-main { display:flex; flex-direction:column; }
+  .ac-cost-row { grid-template-columns:1fr 120px; }
+  .ac-input, .ac-select { min-height:44px; }
+  .ac-cost-row .ac-input, .ac-assume-row .ac-input { min-height:44px; padding-top:9px; padding-bottom:9px; }
+  .ac-reset, .ac-dl, .ac-undo { min-height:44px; }
+  .ac-assume summary { min-height:44px; align-items:center; }
+  /* the bars card duplicates the ledger at unreadable scale on phones */
+  .ac-bars-card { display:none; }
+  /* scroll hint: the preset rail fades at its clipped edge */
+  .shell-deck .hu-chiprail { -webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image:linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+  /* sticky bottom line: two positions + the delta, tap returns to results */
+  .ac-sticky { position:fixed; left:0; right:0; bottom:0; z-index:120; display:flex; align-items:center; justify-content:center; gap:14px;
+    min-height:48px; padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+    background:color-mix(in srgb, var(--dark) 96%, transparent); backdrop-filter:blur(12px);
+    border:none; border-top:1px solid var(--border); width:100%; cursor:pointer;
+    font-family:var(--mono); font-size:12px; color:var(--t2); }
+  .ac-sticky .cur { color:var(--blue-hi); font-weight:600; }
+  .ac-sticky .asg { color:var(--teal); font-weight:600; }
+  [data-theme="light"] .ac-sticky .asg { color:var(--teal-dk); }
+  .ac-sticky .d-good { color:var(--green); font-weight:600; }
+  .ac-sticky .d-bad { color:var(--red); font-weight:600; }
+  .ac-shell .shell-foot { padding-bottom:64px; }
+}
+</style>
+
+<div class="hu-shell ac-shell">
+
+  <div class="tool-bar">
+    <span class="tool-bar-kicker">Tool</span>
+    <h1 class="tool-bar-title">Assignment <span>Compass</span></h1>
+    <span class="tool-bar-crumb">COST &middot; TAX &middot; PER DIEM</span>
+    <div class="tool-bar-spacer"></div>
+    <div class="tool-bar-actions">
+      <button class="ac-undo" id="acUndoBtn" type="button">↩ Undo reset</button>
+      <button class="icon-btn" id="acMethodBtn" aria-label="Methodology and sources" aria-haspopup="dialog" aria-expanded="false"><i data-lucide="book-open"></i></button>
+      <button class="icon-btn" id="acResetBtn" aria-label="Reset to the example scenario"><i data-lucide="rotate-ccw"></i></button>
+    </div>
+  </div>
+
+  <div class="shell-deck">
+    <div class="shell-deck-row">
+      <span class="shell-deck-label"><i data-lucide="pin"></i>&nbsp;Presets</span>
+      <div class="hu-chiprail" role="group" aria-label="Example scenarios">
+        <button class="hu-chip" data-preset="0" aria-pressed="false">Travel RT: SLC &rarr; Sacramento</button>
+        <button class="hu-chip" data-preset="1" aria-pressed="false">ICU RN: Provo &rarr; Phoenix</button>
+        <button class="hu-chip" data-preset="2" aria-pressed="false">Rad Tech: Boise &rarr; Seattle</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="shell-main">
+
+    <aside class="shell-dock shell-dock--left ac-form" aria-label="Scenario inputs">
+      <div class="ac-form-inner">
+
+        <div class="ac-sec">
+          <h2 class="ac-sec-label"><i data-lucide="map-pin"></i>Locations</h2>
+          <div class="ac-field">
+            <label for="acCurState"><span class="ac-loc-tag cur"></span>Where you are now</label>
+            <select class="ac-select" id="acCurState"></select>
+          </div>
+          <div class="ac-field">
+            <label for="acCurCounty">County <span style="color:var(--t3)">(optional)</span></label>
+            <select class="ac-select" id="acCurCounty" aria-label="Current location county (optional)" disabled><option value="">Statewide</option></select>
+          </div>
+          <div class="ac-field">
+            <label for="acAsgState"><span class="ac-loc-tag asg"></span>The assignment</label>
+            <select class="ac-select" id="acAsgState"></select>
+          </div>
+          <div class="ac-field">
+            <label for="acAsgCounty">County <span style="color:var(--t3)">(optional)</span></label>
+            <select class="ac-select" id="acAsgCounty" aria-label="Assignment county (optional)" disabled><option value="">Statewide</option></select>
+          </div>
+          <p class="ac-hint">Pick counties and housing switches from state indexes to real county rents (Zillow + Census). County also drives the per diem lookup. Other categories stay state-level; edit them in Assumptions if you know your cities.</p>
+          <div class="ac-field">
+            <label for="acProf">Profession <span style="color:var(--t3)">(for license logistics)</span></label>
+            <select class="ac-select" id="acProf">
+              <option value="">Skip this</option>
+              <option value="rn">Nurse (RN / LPN)</option>
+              <option value="rt">Respiratory Therapist</option>
+              <option value="pt">Physical Therapist</option>
+              <option value="md">Physician (MD / DO)</option>
+              <option value="psy">Psychologist</option>
+              <option value="other">Imaging / other allied</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ac-sec">
+          <h2 class="ac-sec-label"><i data-lucide="banknote"></i>Pay</h2>
+          <div class="ac-chiprow" role="group" aria-label="Pay entry mode">
+            <button class="toggle-chip" id="acModeAnnual" aria-pressed="true">Annual</button>
+            <button class="toggle-chip" id="acModeHourly" aria-pressed="false">Hourly</button>
+          </div>
+          <div class="ac-field" id="acAnnualField">
+            <label for="acGross">Gross annual pay ($)</label>
+            <input class="ac-input" id="acGross" inputmode="numeric" value="85000" aria-describedby="acPayHint">
+          </div>
+          <div class="ac-row2" id="acHourlyFields" hidden>
+            <div class="ac-field">
+              <label for="acHourly">Rate ($/hr)</label>
+              <input class="ac-input" id="acHourly" inputmode="decimal" value="42">
+            </div>
+            <div class="ac-field">
+              <label for="acHours">Hours/week</label>
+              <input class="ac-input" id="acHours" inputmode="numeric" value="36">
+            </div>
+          </div>
+          <p class="ac-hint" id="acPayHint">Taxable wages only. Travel stipends are usually paid untaxed and sit outside this math; the per diem card below is where they live.</p>
+          <div class="ac-chiprow" role="group" aria-label="Assignment pay">
+            <button class="toggle-chip" id="acPaySame" aria-pressed="true">Same pay both sides</button>
+            <button class="toggle-chip" id="acPayOffer" aria-pressed="false">The offer pays differently</button>
+          </div>
+          <div class="ac-field" id="acOfferAnnualField" hidden>
+            <label for="acGross2"><span class="ac-loc-tag asg"></span>Offer gross annual ($)</label>
+            <input class="ac-input" id="acGross2" inputmode="numeric" value="">
+          </div>
+          <div class="ac-row2" id="acOfferHourlyFields" hidden>
+            <div class="ac-field">
+              <label for="acHourly2"><span class="ac-loc-tag asg"></span>Offer rate ($/hr)</label>
+              <input class="ac-input" id="acHourly2" inputmode="decimal" value="">
+            </div>
+            <div class="ac-field">
+              <label for="acHours2">Offer hours/week</label>
+              <input class="ac-input" id="acHours2" inputmode="numeric" value="36">
+            </div>
+          </div>
+          <div class="ac-chiprow" role="group" aria-label="Filing status">
+            <button class="toggle-chip" id="acFilS" aria-pressed="true">Single</button>
+            <button class="toggle-chip" id="acFilM" aria-pressed="false">Married joint</button>
+          </div>
+        </div>
+
+        <div class="ac-sec">
+          <h2 class="ac-sec-label"><i data-lucide="receipt"></i>Monthly costs today</h2>
+          <div class="ac-cost-grid">
+            <div class="ac-cost-row"><label for="acHousing">Housing</label><input class="ac-input" id="acHousing" inputmode="numeric" value="1500"></div>
+            <div class="ac-cost-row"><label for="acUtil">Utilities (electric + gas)</label><input class="ac-input" id="acUtil" inputmode="numeric" value="160"></div>
+            <div class="ac-cost-row"><label for="acTrans">Transportation + fuel</label><input class="ac-input" id="acTrans" inputmode="numeric" value="320"></div>
+            <div class="ac-cost-row"><label for="acGroc">Groceries</label><input class="ac-input" id="acGroc" inputmode="numeric" value="480"></div>
+            <div class="ac-cost-row"><label for="acIns">Insurance (home/renters + auto)</label><input class="ac-input" id="acIns" inputmode="numeric" value="210"></div>
+            <div class="ac-cost-row"><label for="acHealth">Healthcare premiums + OOP</label><input class="ac-input" id="acHealth" inputmode="numeric" value="280"></div>
+            <div class="ac-cost-row"><label for="acOther">Everything else</label><input class="ac-input" id="acOther" inputmode="numeric" value="550"></div>
+          </div>
+          <div class="ac-chiprow" role="group" aria-label="Which location these costs reflect">
+            <button class="toggle-chip" id="acRefCur" aria-pressed="true">These are my current costs</button>
+            <button class="toggle-chip" id="acRefAsg" aria-pressed="false">These are assignment costs</button>
+          </div>
+          <p class="ac-hint">Whichever side you enter anchors the math; the other side scales by the cost ratios below.</p>
+        </div>
+
+      </div>
+    </aside>
+
+    <section class="shell-canvas ac-results" aria-label="Results">
+      <div class="ac-results-inner">
+
+        <div class="ac-card hu-ticks">
+          <h2 class="ac-card-head"><i data-lucide="scale"></i>Bottom line<span class="ac-badge" id="acScopeBadge">State-level estimate</span></h2>
+          <div class="hu-stats" id="acTiles"></div>
+          <p class="ac-hint" style="margin-top:10px" id="acTileNote"></p>
+        </div>
+
+        <div class="ac-card hu-ticks">
+          <h2 class="ac-card-head"><i data-lucide="target"></i>Breakeven</h2>
+          <div class="ac-be"><span class="num" id="acBeNum">...</span><span class="per" id="acBePer"></span></div>
+          <p class="ac-be-sub" id="acBeSub"></p>
+        </div>
+
+        <div class="ac-card">
+          <h2 class="ac-card-head"><i data-lucide="table"></i>Monthly ledger</h2>
+          <div class="ac-ledger-wrap">
+            <table class="ac-ledger" id="acLedger"></table>
+          </div>
+        </div>
+
+        <div class="ac-card ac-bars-card">
+          <h2 class="ac-card-head"><i data-lucide="bar-chart-2"></i>Where the money moves</h2>
+          <svg class="ac-bars" id="acBars" role="img" aria-label="Per-category monthly cost difference between locations; the ledger table above carries the same numbers"></svg>
+          <p class="ac-hint">Bars to the right cost more at the assignment. The ledger above has the exact figures.</p>
+        </div>
+
+        <div class="ac-card">
+          <h2 class="ac-card-head"><i data-lucide="bed-double"></i>GSA per diem, assignment county<span class="ac-badge" id="acPdBadge" hidden></span></h2>
+          <div class="ac-pd-grid hu-stats" id="acPdTiles"></div>
+          <p class="ac-pd-note">Agencies build travel stipends against these federal caps. If a recruiter's housing stipend is far under the lodging line for the county, that is your negotiation room.</p>
+          <div class="ac-cost-row" style="margin-top:10px; max-width:340px">
+            <label for="acStipend">Stipend offered ($/week, optional)</label>
+            <input class="ac-input" id="acStipend" inputmode="numeric" value="" aria-describedby="acPdSub">
+          </div>
+          <p class="ac-pd-sub" id="acPdSub"></p>
+        </div>
+
+        <div class="ac-card" id="acLicCard" hidden>
+          <h2 class="ac-card-head"><i data-lucide="badge-check"></i>License logistics<span class="ac-badge" id="acLicBadge"></span></h2>
+          <div id="acLicBody"></div>
+          <p class="ac-hint" style="margin-top:10px">Fees and timelines are planning numbers, not quotes. Verify with the state board before you sign anything.</p>
+        </div>
+
+        <div class="ac-card" id="acProfileCard" hidden>
+          <h2 class="ac-card-head"><i data-lucide="layout-grid"></i>Assignment county profile<span class="ac-badge" id="acProfileBadge"></span></h2>
+          <div class="hu-stats" id="acProfileTiles"></div>
+          <p class="ac-hint" style="margin-top:10px" id="acProfileNote"></p>
+        </div>
+
+        <div class="ac-card" id="acSpotsCard">
+          <h2 class="ac-card-head"><i data-lucide="eye-off"></i>Blind spots</h2>
+          <div class="ac-spots" id="acSpots"></div>
+        </div>
+
+        <div class="ac-card">
+          <details class="ac-assume" id="acAssume">
+            <summary><i data-lucide="settings-2" style="width:13px;height:13px"></i>Assumptions (editable)</summary>
+            <p class="ac-hint" style="margin-top:8px">Each category scales by assignment &divide; current, from the state cost-of-living index (MERIC). If you know the real ratio for your two cities, type it. 1.00 means no change.</p>
+            <div class="ac-assume-grid" id="acAssumeGrid"></div>
+            <div class="ac-assume-foot">
+              <button class="ac-reset" id="acAssumeReset" type="button"><i data-lucide="rotate-ccw" style="width:13px;height:13px"></i>Reset ratios</button>
+              <span class="ac-hint" id="acAssumeState"></span>
+            </div>
+          </details>
+        </div>
+
+        <div class="ac-card ac-nego hu-ticks">
+          <h2 class="ac-card-head"><i data-lucide="phone-outgoing"></i>Take this into the call<span class="ac-badge" id="acNegoBadge" hidden>Offer entered</span></h2>
+          <p class="ac-nego-verdict" id="acNegoVerdict"></p>
+          <div class="ac-nego-lines" id="acNegoLines"></div>
+          <div class="ac-nego-actions">
+            <button class="ac-dl" id="acAskBtn" type="button">Copy the ask</button>
+            <button class="ac-dl" id="acCardBtn" type="button">Download the card</button>
+            <span class="ac-hint">The ask as a sentence for the call, or a 1080&times;1080 JPEG with sources on it. The page address holds this whole scenario.</span>
+          </div>
+          <canvas class="ac-share-canvas" id="acShareCanvas" width="1080" height="1080" aria-hidden="true"></canvas>
+        </div>
+
+      </div>
+    </section>
+
+    <button class="ac-sticky" id="acSticky" type="button" aria-label="Jump to the results" hidden></button>
+
+  </div>
+
+  <div class="shell-foot">
+    <span class="ac-foot-note">Every number here is an estimate. Not tax, legal, or financial advice.</span>
+    {% set ta_source = 'MERIC COL Q1 2026 · GSA per diem · 2025 state tax tables' %}
+    {% include "components/tool-attribution.njk" %}
+    <span class="ac-foot-year" id="acFootYear"></span>
+  </div>
+
+  <div class="shell-sheet" id="acMethodSheet" role="dialog" aria-modal="false" aria-label="Methodology and sources">
+    <button class="icon-btn hu-sheet-x" id="acMethodClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <div class="ac-method">
+      <h2>How this works</h2>
+      <p>You enter what you actually pay each month. The tool scales each category by the ratio between the two states' cost indexes, computes state income tax from the real 2025 bracket tables (plus mandatory payroll deductions like CA SDI and WA Cares), subtracts federal tax and FICA on each side, and compares what is left over each month. By default the same gross rides both columns; enter the offer's own pay and each column uses its own gross with its own tax math. The breakeven number inverts the comparison: the gross pay the assignment location needs before you are trading down.</p>
+      <h2>Sources</h2>
+      <ul>
+        <li>Housing, county grain: <a href="https://www.zillow.com/research/data/" target="_blank" rel="noopener">Zillow ZORI</a> market rents where covered, <a href="https://www.census.gov/programs-surveys/acs.html" target="_blank" rel="noopener">Census ACS 5-year</a> median rents everywhere else. County profile stats (income, home value, commute, property tax) are ACS + ZHVI.</li>
+        <li>All other cost ratios: <a href="https://meric.mo.gov/data/cost-living-data-series" target="_blank" rel="noopener">MERIC Cost of Living Index</a>, state grain. Insurance has no MERIC category; it scales by the miscellaneous index as a stand-in.</li>
+        <li>State tax: 2025 bracket tables from state revenue departments and the Tax Foundation. Payroll programs (SDI, PFML, TDI) included where they take real money. Sales tax figures: Tax Foundation combined state and average local.</li>
+        <li>Insurance risk flags: <a href="https://hazards.fema.gov/nri/" target="_blank" rel="noopener">FEMA National Risk Index</a>, counties rated Very High or Relatively High for wildfire, flood, quake, hurricane, tornado, or hail.</li>
+        <li>Per diem: <a href="https://www.gsa.gov/travel/plan-book/per-diem-rates" target="_blank" rel="noopener">GSA per diem rates</a>, live by county for the current federal fiscal year.</li>
+        <li>License logistics: compact membership verified against the compact commissions (<a href="https://www.nursecompact.com/" target="_blank" rel="noopener">NLC</a>, <a href="https://ptcompact.org/" target="_blank" rel="noopener">PT Compact</a>, <a href="https://www.imlcc.com/" target="_blank" rel="noopener">IMLC</a>, <a href="https://psypact.gov/" target="_blank" rel="noopener">PSYPACT</a>, <a href="https://respiratorycarecompact.org/" target="_blank" rel="noopener">RCIC</a>). RCIC status is maintained by hand here; the author chairs the USRC Legislative Affairs Committee and has a professional stake in keeping it current. Fees and timelines are planning approximations.</li>
+      </ul>
+      <h2>What it does not do</h2>
+      <ul>
+        <li>Local income taxes (Maryland counties, Ohio cities, PA municipalities, NYC, Indiana counties) are FLAGGED, not computed. Where they apply they are material.</li>
+        <li>Stipend taxability, tax-home rules, and multistate filing are real topics this tool does not touch. Talk to a tax professional who knows travel contracts.</li>
+        <li>Hourly pay annualizes at 52 weeks times weekly hours on both sides. A 13-week contract is not a year; the comparison holds because both columns share the convention, but the annual figures are conventions, not predictions.</li>
+        <li>County rents fix the worst of the state-average blur, but only for housing. Groceries, transportation, and the rest are still state ratios, and a county is still not a zip code. The Assumptions panel exists so you can correct for what you know.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="vh" aria-live="polite" id="acLive"></div>
+</div>
+
+<script src="/assets/js/hu-kit.js?v=20260729"></script>
+<script src="/assets/js/assignment-compass-engine.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* State names from the canonical geo registry (territories excluded) */
+var STATES = {
+{%- for abbr, st in registries.geo.states -%}
+{%- if st.fips <= "56" %}"{{ abbr }}":"{{ st.name }}",{% endif -%}
+{%- endfor -%}
+};
+
+var E = window.CompassEngine;
+var $ = function (id) { return document.getElementById(id); };
+
+var DATA = null, COUNTIES = null, CDATA = null, cdataLoading = false;
+var LDATA = null, ldataLoading = false;
+var overrides = {};
+var lastPd = null;          // last per diem render, feeds the negotiation card
+var lastCalc = null;        // last computed positions, same reason
+var dirty = false;          // any hand edit clears the EXAMPLE marker
+var activePreset = null;    // which preset chip is lit, null once edited
+var prevScenario = null;    // querystring snapshot for the one-shot reset undo
+var CATS = [
+  ['housing', 'Housing'],
+  ['utilities', 'Utilities'],
+  ['transportation', 'Transportation + fuel'],
+  ['groceries', 'Groceries'],
+  ['insurance', 'Insurance'],
+  ['healthcare', 'Healthcare'],
+  ['other', 'Everything else']
+];
+
+/* county fields are FIPS (the join key everywhere on this site) */
+var PRESETS = [
+  { cs: 'UT', cc: '49035', as: 'CA', ac: '06067', mode: 'h', hourly: 42, hours: 36, fil: 's', pf: 'rt',
+    costs: { housing: 1500, utilities: 160, transportation: 320, groceries: 480, insurance: 210, healthcare: 280, other: 550 } },
+  { cs: 'UT', cc: '49049', as: 'AZ', ac: '04013', mode: 'a', gross: 82000, fil: 'm', pf: 'rn',
+    costs: { housing: 1450, utilities: 140, transportation: 300, groceries: 520, insurance: 190, healthcare: 320, other: 500 } },
+  { cs: 'ID', cc: '16001', as: 'WA', ac: '53033', mode: 'a', gross: 74000, fil: 's', pf: 'other',
+    costs: { housing: 1400, utilities: 130, transportation: 280, groceries: 450, insurance: 180, healthcare: 260, other: 480 } }
+];
+
+/* FEMA NRI flag codes -> blind-spot card copy */
+var RISK_CARDS = {
+  WF: ['Wildfire zone', 'FEMA rates this county high for wildfire risk. Carriers know it too: expect surcharges, non-renewals, or state FAIR-plan pricing. Quote a real address before committing to housing.'],
+  FL: ['Flood exposure', 'High riverine flood risk per FEMA. Standard renters and homeowners policies do NOT cover flood; a separate NFIP or private policy is its own bill. Check the flood zone of any address you consider.'],
+  CF: ['Coastal flood exposure', 'High coastal flood risk per FEMA. Separate flood coverage, wind deductibles, and evacuation-zone logistics all live here. Price them before you sign.'],
+  EQ: ['Earthquake country', 'High earthquake risk per FEMA. Quake damage is excluded from standard policies; separate coverage runs real money and deductibles are steep percentages.'],
+  HU: ['Hurricane exposure', 'High hurricane risk per FEMA. Wind deductibles are percentage-based, and coastal carriers churn. Get a binding quote, not a ballpark.'],
+  TO: ['Tornado alley', 'High tornado risk per FEMA. Premiums price it in; so should your budget. Renters insurance here is not the formality it is elsewhere.'],
+  HA: ['Hail belt', 'High hail risk per FEMA. Auto comprehensive and roof coverage both feel it, and hail claims are why premiums in this county run above what housing prices suggest.']
+};
+
+/* ── helpers ── */
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtSign(n) { if (Math.abs(n) < 0.5) return '$0'; return (n > 0 ? '+' : '−') + fmt(Math.abs(n)); }
+function debounce(fn, ms) { var t; return function () { clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+/* ── read the form ── */
+function readInputs() {
+  var mode = $('acModeHourly').getAttribute('aria-pressed') === 'true' ? 'h' : 'a';
+  var gross = mode === 'h'
+    ? E.hourlyToAnnual(num('acHourly'), num('acHours'))
+    : num('acGross');
+  /* offer-vs-offer: the assignment column can carry its own gross */
+  var offerMode = $('acPayOffer').getAttribute('aria-pressed') === 'true';
+  var gross2 = null;
+  if (offerMode) {
+    gross2 = mode === 'h'
+      ? E.hourlyToAnnual(num('acHourly2'), num('acHours2'))
+      : num('acGross2');
+    if (!(gross2 > 0)) gross2 = null;   // empty offer field = same pay until typed
+  }
+  return {
+    cs: $('acCurState').value, cc: $('acCurCounty').value,
+    as: $('acAsgState').value, ac: $('acAsgCounty').value,
+    prof: $('acProf').value,
+    mode: mode, gross: gross, gross2: gross2, offerMode: offerMode,
+    stip: num('acStipend'),
+    fil: $('acFilM').getAttribute('aria-pressed') === 'true' ? 'm' : 's',
+    ref: $('acRefAsg').getAttribute('aria-pressed') === 'true' ? 'assign' : 'current',
+    costs: {
+      housing: num('acHousing'), utilities: num('acUtil'), transportation: num('acTrans'),
+      groceries: num('acGroc'), insurance: num('acIns'), healthcare: num('acHealth'), other: num('acOther')
+    }
+  };
+}
+/* money fields accept money: "85,000" and "$1,500" parse as typed, not as $85 */
+function num(id) { return Math.max(0, parseFloat(String($(id).value).replace(/[^0-9.\-]/g, '')) || 0); }
+
+/* money fields also TEACH money: figures group with commas on blur and at
+   boot, so the field shows the format num() already forgives */
+var MONEY_IDS = ['acGross', 'acGross2', 'acStipend', 'acHousing', 'acUtil', 'acTrans', 'acGroc', 'acIns', 'acHealth', 'acOther'];
+function fmtField(id) {
+  var el = $(id);
+  if (!el || !String(el.value).trim()) return;
+  var n = parseFloat(String(el.value).replace(/[^0-9.\-]/g, ''));
+  if (!isFinite(n)) return;
+  el.value = n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+function fmtAllMoney() { MONEY_IDS.forEach(fmtField); }
+
+/* ── county data: fetched once, lazily, the first time a county matters ── */
+function needCdata(s) { return !!(s.cc || s.ac); }
+var cdataFailed = false;
+function loadCdata() {
+  if (CDATA || cdataLoading) return;
+  cdataLoading = true;
+  fetch('/assets/data/assignment-compass-counties.json')
+    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function (j) { CDATA = j; compute(); })
+    .catch(function () { cdataLoading = false; cdataFailed = true; compute(); });
+}
+function loadLdata() {
+  if (LDATA || ldataLoading) return;
+  ldataLoading = true;
+  fetch('/assets/data/derived/licensure.json')
+    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function (j) { LDATA = j; compute(); })
+    .catch(function () { ldataLoading = false; });
+}
+
+/* ── render ── */
+function compute() {
+  if (!DATA) return;
+  var s = readInputs();
+  if (needCdata(s) && !CDATA) loadCdata();
+  var geo = { counties: CDATA, curFips: s.cc, asgFips: s.ac };
+  var proj = E.projectCosts(DATA, s.costs, s.ref, s.cs, s.as, overrides, geo);
+  var asgGross = s.gross2 != null ? s.gross2 : s.gross;
+  var cur = E.monthlyPosition(DATA, s.cs, s.gross, s.fil, proj.current.total);
+  var asg = E.monthlyPosition(DATA, s.as, asgGross, s.fil, proj.assign.total);
+  var delta = asg.position - cur.position;
+  var be = E.breakeven(DATA, s.as, s.fil, cur.position, proj.assign.total);
+
+  renderTiles(s, cur, asg, delta);
+  renderBreakeven(s, cur, proj, be);
+  renderLedger(s, cur, asg, proj);
+  renderBars(s, cur, asg, proj);
+  renderLicense(s);
+  renderProfile(s);
+  renderSpots(s);
+  renderAssumptions(s, proj);
+  renderNego(s, cur, asg, delta, be);
+  renderSticky(s, cur, asg, delta);
+  $('acScopeBadge').textContent = (needCdata(s) && !CDATA)
+    ? (cdataFailed ? 'County data unavailable · state grain shown' : 'Loading county data…')
+    : (proj.housingMeta
+      ? 'Housing: ' + proj.housingMeta.source + ' · rest: state index'
+      : 'State-level estimate');
+  $('acFootYear').textContent = 'Tax year ' + DATA._meta.taxYear + ' · COL ' + (DATA._meta.colSource.match(/Q\d \d{4}/) || [''])[0];
+  if (s.gross > 0) {
+    announce(s.gross2 != null
+      ? 'With each offer at its own pay, the assignment leaves ' + fmt(asg.position) + ' a month vs ' + fmt(cur.position) + ' now.'
+      : 'At the same gross pay, the assignment leaves ' + fmt(asg.position) + ' a month vs ' + fmt(cur.position) + ' now.');
+  }
+  syncUrl(s);
+  schedulePerDiem(s);
+}
+
+/* the phone sticky strip mirrors the bottom line wherever the thumb is */
+function renderSticky(s, cur, asg, delta) {
+  var el = $('acSticky');
+  if (s.gross <= 0) { el.hidden = true; return; }
+  el.hidden = false;
+  var cls = delta > 5 ? 'd-good' : delta < -5 ? 'd-bad' : '';
+  el.innerHTML = '<span class="cur">' + s.cs + ' ' + fmt(cur.position) + '</span>' +
+    '<span class="asg">' + s.as + ' ' + fmt(asg.position) + '</span>' +
+    '<span class="' + cls + '">' + fmtSign(delta) + '/mo</span>';
+}
+
+function renderTiles(s, cur, asg, delta) {
+  if (s.gross <= 0) {
+    $('acTiles').innerHTML = '';
+    $('acTileNote').textContent = 'Enter pay above and the comparison computes from there.';
+    return;
+  }
+  var cls = delta > 5 ? 'good' : delta < -5 ? 'bad' : '';
+  var twoPay = s.gross2 != null;
+  $('acTiles').innerHTML =
+    tile(fmt(cur.position), STATES[s.cs] + ' / mo left over' + (twoPay ? ' at ' + fmt(s.gross) : ''), 'cur') +
+    tile(fmt(asg.position), STATES[s.as] + ' / mo left over' + (twoPay ? ' at ' + fmt(s.gross2) : ''), 'asg') +
+    tile(fmtSign(delta), twoPay ? 'monthly delta, each at its own pay' : 'monthly delta at same pay', cls);
+  var note = 'Left over = net pay after federal, FICA, state tax, and mandatory payroll, minus modeled monthly costs. ' +
+    (twoPay ? 'Each column uses its own gross with its own tax math.' : 'Same gross pay applied to both columns.');
+  if (s.cs === s.as) note += ' You are comparing ' + STATES[s.cs] + ' to itself: cost ratios are flat by definition, so any delta comes from pay alone.';
+  if (!dirty && activePreset != null) note = 'EXAMPLE SCENARIO shown. Edit anything and it becomes yours. ' + note;
+  $('acTileNote').textContent = note;
+}
+function tile(v, k, cls) {
+  return '<div class="hu-stat"><div class="v ' + (cls || '') + '">' + v + '</div><div class="k">' + k + '</div></div>';
+}
+
+function renderBreakeven(s, cur, proj, be) {
+  if (be == null || s.gross <= 0) { $('acBeNum').textContent = '...'; $('acBePer').textContent = ''; $('acBeSub').textContent = s.gross <= 0 ? 'Waiting on pay.' : ''; return; }
+  var hrs = (s.gross2 != null ? num('acHours2') : num('acHours')) || 36;
+  $('acBeNum').textContent = fmt(be);
+  $('acBePer').textContent = '≈ ' + fmt(be / (hrs * 52)) + '/hr at ' + hrs + ' hrs';
+  var sub = 'The assignment in ' + STATES[s.as] + ' needs to gross at least this much before it matches what ' +
+    fmt(s.gross) + ' leaves you in ' + STATES[s.cs] + '. Below that number you are paying to work there.';
+  if (s.gross2 != null) {
+    var gap = s.gross2 - be;
+    sub += gap >= 0
+      ? ' The offer grosses ' + fmt(s.gross2) + ': it clears the bar by ' + fmt(gap) + ' a year.'
+      : ' The offer grosses ' + fmt(s.gross2) + ': it falls ' + fmt(-gap) + ' a year short of breaking even.';
+  }
+  $('acBeSub').textContent = sub;
+}
+
+function renderLedger(s, cur, asg, proj) {
+  var csAb = s.cs, asAb = s.as;
+  var rows = '<tr><th scope="col">Category</th><th scope="col" class="cur">' + csAb + '</th><th scope="col" class="asg">' + asAb + '</th><th scope="col">&Delta;/mo</th></tr>';
+  CATS.forEach(function (c) {
+    rows += row(c[1], proj.current[c[0]], proj.assign[c[0]]);
+  });
+  rows += row('State income tax', cur.pay.state / 12, asg.pay.state / 12);
+  rows += row('Mandatory payroll', cur.pay.payroll / 12, asg.pay.payroll / 12);
+  rows += row('Federal + FICA', (cur.pay.federal + cur.pay.fica) / 12, (asg.pay.federal + asg.pay.fica) / 12);
+  var curTot = proj.current.total + (cur.pay.state + cur.pay.payroll + cur.pay.federal + cur.pay.fica) / 12;
+  var asgTot = proj.assign.total + (asg.pay.state + asg.pay.payroll + asg.pay.federal + asg.pay.fica) / 12;
+  rows += '<tr class="ac-sum">' + cells('All costs + tax / mo', curTot, asgTot) + '</tr>';
+  rows += '<tr class="ac-sum">' + cells('Left over / mo', cur.position, asg.position, true) + '</tr>';
+  $('acLedger').innerHTML = rows;
+}
+function row(label, a, b) { return '<tr>' + cells(label, a, b) + '</tr>'; }
+function cells(label, a, b, invert) {
+  var d = b - a;
+  var good = invert ? d > 0.5 : d < -0.5;
+  var bad = invert ? d < -0.5 : d > 0.5;
+  var cls = good ? 'd-good' : bad ? 'd-bad' : 'd-flat';
+  return '<th scope="row">' + label + '</th><td>' + fmt(a) + '</td><td>' + fmt(b) + '</td><td class="' + cls + '">' + fmtSign(d) + '</td>';
+}
+
+function renderBars(s, cur, asg, proj) {
+  /* three fixed columns, like the ledger: labels left, plot center, values in
+     a right-hand mono rail. Values NEVER ride the bar tip, so a long bar can
+     never collide with its own label (the Housing/$329 overlap bug). */
+  var items = CATS.map(function (c) { return { label: c[1], d: proj.assign[c[0]] - proj.current[c[0]] }; });
+  items.push({ label: 'State tax + payroll', d: (asg.pay.state + asg.pay.payroll - cur.pay.state - cur.pay.payroll) / 12 });
+  var max = Math.max(50, Math.max.apply(null, items.map(function (i) { return Math.abs(i.d); })));
+  var W = 640, LBL = 158, VAL = 72;
+  var plotL = LBL + 10, plotR = W - VAL - 10;
+  var mid = (plotL + plotR) / 2, span = (plotR - plotL) / 2;
+  var rowH = 30, H = items.length * rowH + 14;
+  var sv = '<line x1="' + mid + '" y1="4" x2="' + mid + '" y2="' + (H - 4) + '" stroke="var(--border2)" stroke-width="1"/>';
+  items.forEach(function (it, i) {
+    var y = i * rowH + 10;
+    var w = Math.min(Math.abs(it.d) / max * span, span);
+    var x = it.d >= 0 ? mid : mid - w;
+    var flat = Math.abs(it.d) < 0.5;
+    var color = flat ? 'var(--t4)' : it.d > 0 ? 'var(--red)' : 'var(--green)';
+    sv += '<text class="lbl" x="' + (LBL - 2) + '" y="' + (y + 12) + '" text-anchor="end" fill="var(--t2)">' + it.label + '</text>';
+    if (!flat) sv += '<rect x="' + x + '" y="' + y + '" width="' + Math.max(w, 2) + '" height="16" rx="3" fill="' + color + '" opacity="0.85"/>';
+    sv += '<text x="' + (W - 4) + '" y="' + (y + 12) + '" text-anchor="end" fill="' + (flat ? 'var(--t4)' : color) + '">' + fmtSign(it.d) + '</text>';
+  });
+  var el = $('acBars');
+  el.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  el.innerHTML = sv;
+}
+
+/* license logistics: what the move means for the license itself */
+function renderLicense(s) {
+  var card = $('acLicCard');
+  if (!s.prof || s.cs === s.as) { card.hidden = true; return; }
+  if (!LDATA) { loadLdata(); card.hidden = true; return; }
+  var p = LDATA.professions[s.prof];
+  if (!p) { card.hidden = true; return; }
+  card.hidden = false;
+  $('acLicBadge').textContent = p.label;
+
+  var to = s.as, from = s.cs, c = p.compact;
+  function endorse() {
+    var ex = p.states[to] || {};
+    /* 'an Iowa license' but 'a Utah license': U-states sound like consonants */
+    var art = /^[AEIO]/.test(STATES[to]) ? 'An ' : 'A ';
+    return art + STATES[to] + ' license by endorsement runs ' + (ex.fee || p.endorse.feeTypical) +
+      ' and typically ' + (ex.weeks || p.endorse.weeksTypical) + ' weeks.' + (ex.note ? ' ' + ex.note : '');
+  }
+  var html = '';
+  if (!c) {
+    html = '<p class="ac-lic-path">No compact covers this field. ' + endorse() + '</p>';
+    if (p.note) html += '<p class="ac-lic-detail">' + p.note + '</p>';
+  } else {
+    var inTo = c.members.indexOf(to) >= 0, inFrom = c.members.indexOf(from) >= 0;
+    if (!c.operational) {
+      html = '<p class="ac-lic-path">No compact path yet. ' + endorse() + '</p>';
+      var extra = '';
+      if (inTo && inFrom) extra = ' Both ' + STATES[from] + ' and ' + STATES[to] + ' have enacted; when it goes live, this exact move gets radically easier.';
+      else if (inTo || inFrom) extra = ' ' + STATES[inTo ? to : from] + ' has already enacted it.';
+      html += '<p class="ac-lic-status">' + (c.statusLine || '') + extra +
+        ' <a href="' + c.url + '" target="_blank" rel="noopener">Track the ' + c.code + '</a>.</p>';
+    } else if (inTo && inFrom) {
+      var detail = '';
+      if (c.code === 'NLC') detail = 'If ' + STATES[from] + ' is your PRIMARY STATE OF RESIDENCE, your multistate license already authorizes practice in ' + STATES[to] + '. No new license, no fee, no wait. If your tax home sits outside the compact, you need a single-state license instead: ' + endorse();
+      else if (c.code === 'PTC') detail = 'Buy a ' + STATES[to] + ' compact privilege on your home-state license at ptcompact.org. Days, not weeks, and cheaper than a full endorsement.';
+      else if (c.code === 'IMLC') detail = 'Use the IMLC letter of qualification: a full ' + STATES[to] + ' license, typically 30 to 60 days, about $700 in compact fees plus ' + STATES[to] + ' fees. Faster than traditional endorsement, not cheaper.';
+      else if (c.code === 'PSYPACT') detail = 'PSYPACT covers telepsychology into ' + STATES[to] + ' and up to 30 days per year in person. A permanent in-person role still needs the state license: ' + endorse();
+      else detail = endorse();
+      html = '<p class="ac-lic-path">Compact move: ' + c.how + '.</p><p class="ac-lic-detail">' + detail + '</p>';
+      if (c.notes && c.notes[to]) html += '<p class="ac-lic-status">' + c.notes[to] + '.</p>';
+    } else if (inTo && !inFrom) {
+      html = '<p class="ac-lic-path">' + STATES[to] + ' is in the ' + c.code + ', but ' + STATES[from] + ' is not, so the compact cannot carry you in. ' + endorse() + '</p>';
+      if (c.pending && c.pending[from]) html += '<p class="ac-lic-status">' + STATES[from] + ': ' + c.pending[from] + '. That may change this math soon.</p>';
+    } else {
+      var pend = c.pending && c.pending[to];
+      html = '<p class="ac-lic-path">' + (pend
+        ? STATES[to] + ' has moved on the ' + c.code + ' (' + pend + ') but you cannot use it yet. ' + endorse()
+        : STATES[to] + ' is not in the ' + c.code + '. ' + endorse()) + '</p>';
+    }
+  }
+  $('acLicBody').innerHTML = html;
+}
+
+/* county profile: the assignment county in five numbers */
+function renderProfile(s) {
+  var card = $('acProfileCard');
+  var c = CDATA && s.ac && CDATA.counties[s.ac];
+  if (!c) { card.hidden = true; return; }
+  card.hidden = false;
+  var name = countyName(s.as, s.ac);
+  $('acProfileBadge').textContent = name + ' · ' + CDATA._meta.acsVintage;
+  var tiles = '';
+  var rent = c.z || c.r;
+  if (rent) tiles += tile(fmt(rent), (c.z ? 'market rent (Zillow ' + (CDATA._meta.zoriMonth || '').slice(0, 7) + ')' : 'median gross rent (ACS)'), 'asg');
+  var home = c.h || c.v;
+  if (home) tiles += tile(fmt(home), c.h ? 'home value (ZHVI)' : 'median home value (ACS)', '');
+  if (c.i) tiles += tile(fmt(c.i), 'median household income', '');
+  if (c.c) tiles += tile(c.c + ' min', 'mean commute', '');
+  if (c.t && home) tiles += tile((c.t / home * 100).toFixed(2) + '%', 'property tax, effective (' + fmt(c.t) + '/yr)', '');
+  $('acProfileTiles').innerHTML = tiles;
+  var st = CDATA.states[s.as];
+  var bits = [];
+  if (c.p) bits.push('Population ' + Math.round(c.p / 1000).toLocaleString() + 'K.');
+  if (st && st.s != null) bits.push('Sales tax in ' + STATES[s.as] + ' runs about ' + st.s + '% combined state and local.');
+  if (CDATA.national && rent) bits.push('National median rent for scale: ' + fmt(CDATA.national.r) + '.');
+  $('acProfileNote').textContent = bits.join(' ');
+}
+
+function renderSpots(s) {
+  var st = DATA.states[s.as];
+  var cards = '';
+  if (s.cs !== s.as) {
+    cards += spot('Tax home and stipends',
+      'Cross-state contracts raise two questions this tool does not compute. One: tax-free stipends require keeping a real tax home, meaning duplicated living costs at both ends; without that, stipends are just taxable wages. Two: both states may want a return. Credits usually prevent true double taxation, but not always. Educate first, sign second. <a href="https://www.irs.gov/publications/p463" target="_blank" rel="noopener">IRS Publication 463</a> is the primary source.', 'tax');
+  }
+  if (st.local) cards += spot('Local income tax', st.local, 'tax');
+  if (st.noTax) cards += spot('No state income tax. Read the fine print.', st.noTax, '');
+  /* county FEMA flags first when we have them: they are the sharpest signal */
+  var c = CDATA && s.ac && CDATA.counties[s.ac];
+  if (c && c.k) c.k.forEach(function (code) {
+    var rc = RISK_CARDS[code];
+    if (rc) cards += spot(rc[0] + ': ' + countyName(s.as, s.ac) + ' County', rc[1], '');
+  });
+  (st.spots || []).forEach(function (sp) { cards += spot(sp.t, sp.b, ''); });
+  var curLocal = DATA.states[s.cs].local;
+  if (curLocal && s.cs !== s.as) cards += spot('Leaving behind: local tax in ' + STATES[s.cs], curLocal, 'tax');
+  if (!cards) cards = spot('Nothing flagged', 'No structural cost traps on file for ' + STATES[s.as] + '. The usual advice stands: quote insurance at a real address before signing.', '');
+  $('acSpots').innerHTML = cards;
+}
+function spot(t, b, cls) {
+  return '<div class="ac-spot ' + cls + '"><h3>' + t + '</h3><p>' + b + '</p></div>';
+}
+
+function renderAssumptions(s, proj) {
+  var grid = $('acAssumeGrid');
+  if (!grid.dataset.built) {
+    var html = '<div class="ac-assume-row" style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)"><span>Category</span><span style="text-align:right">Index default</span><span style="text-align:right">Ratio</span></div>';
+    CATS.forEach(function (c) {
+      html += '<div class="ac-assume-row"><label for="acR_' + c[0] + '">' + c[1] + '</label>' +
+        '<span class="def" id="acD_' + c[0] + '"></span>' +
+        '<input class="ac-input" id="acR_' + c[0] + '" inputmode="decimal" step="0.01" aria-label="' + c[1] + ' cost ratio"></div>';
+    });
+    grid.innerHTML = html;
+    grid.dataset.built = '1';
+    CATS.forEach(function (c) {
+      $('acR_' + c[0]).addEventListener('change', function () {
+        var v = parseFloat(this.value);
+        if (isFinite(v) && v > 0) overrides[c[0]] = v; else delete overrides[c[0]];
+        compute();
+      });
+    });
+    $('acAssumeReset').addEventListener('click', function () { overrides = {}; compute(); });
+  }
+  /* defaults = what the engine would use with no hand-set ratios (county-aware) */
+  var defs = E.projectCosts(DATA, {}, 'current', s.cs, s.as, {}, { counties: CDATA, curFips: s.cc, asgFips: s.ac }).ratio;
+  CATS.forEach(function (c) {
+    $('acD_' + c[0]).textContent = defs[c[0]].toFixed(2);
+    var inp = $('acR_' + c[0]);
+    if (document.activeElement !== inp) inp.value = proj.ratio[c[0]].toFixed(2);
+  });
+  $('acAssumeState').textContent = Object.keys(overrides).length
+    ? Object.keys(overrides).length + ' ratio(s) hand-set'
+    : (proj.housingMeta ? 'Housing from ' + proj.housingMeta.source + '; rest from the MERIC state index' : 'Using MERIC state index ratios');
+}
+
+/* ── the negotiation card: the verdict as an action, and the JPEG that
+      carries it into the recruiter chat (the Rounds share-card idiom) ── */
+function renderNego(s, cur, asg, delta, be) {
+  lastCalc = { s: s, cur: cur, asg: asg, delta: delta, be: be };
+  var v = $('acNegoVerdict');
+  $('acNegoBadge').hidden = s.gross2 == null;
+  if (s.gross <= 0 || be == null) { v.textContent = 'Enter pay above and this card writes your ask.'; $('acNegoLines').innerHTML = ''; return; }
+  var hrs = (s.gross2 != null ? num('acHours2') : num('acHours')) || 36;
+  if (s.gross2 != null) {
+    var gap = s.gross2 - be;
+    v.innerHTML = gap >= 0
+      ? 'This offer clears your breakeven by <b>' + fmt(gap) + '/yr</b>. The move nets ' + (delta >= 0 ? '<b>+' : '<b>−') + fmt(Math.abs(delta)) + '/mo</b> after taxes and costs.'
+      : 'Ask for at least <b>' + fmt(be) + '</b> gross (≈ <b>' + fmt(be / (hrs * 52)) + '/hr</b> at ' + hrs + ' hrs). This offer is <b>' + fmt(-gap) + '/yr</b> short of breaking even.';
+  } else {
+    v.innerHTML = 'Any offer in ' + STATES[s.as] + ' needs to gross at least <b>' + fmt(be) + '</b> (≈ <b>' + fmt(be / (hrs * 52)) + '/hr</b> at ' + hrs + ' hrs) before it beats staying put.';
+  }
+  renderNegoLines();
+}
+/* the pd-dependent lines rebuild whenever per diem lands */
+function renderNegoLines() {
+  if (!lastCalc) return;
+  var s = lastCalc.s, lines = '';
+  if (lastPd) {
+    var capMo = lastPd.lodging * 30.4;
+    lines += '<div class="ac-nego-line">County lodging cap: <b>' + fmt(lastPd.lodging) + '/night</b> (' + fmt(capMo) + '/mo). ' +
+      (s.stip > 0
+        ? 'The offered stipend builds to <b>' + fmt(s.stip * 52 / 12) + '/mo</b>: ' + (capMo - s.stip * 52 / 12 > 1 ? '<b>' + fmt(capMo - s.stip * 52 / 12) + '/mo</b> of room under the cap.' : 'the lodging line is fully used.')
+        : 'A housing stipend far under that line is your opening.') +
+      (lastPd.offline ? ' (Offline standard rate: the real county cap may be higher.)' : '') + '</div>';
+  }
+  if (s.cs !== s.as) lines += '<div class="ac-nego-line">Before signing: tax home rules decide whether stipends stay tax-free. <b>IRS Pub 463</b> is the primary source.</div>';
+  $('acNegoLines').innerHTML = lines;
+}
+/* 1080 square, dark, sourced: the number Dana texts herself before the call */
+function drawShareCard() {
+  var c = $('acShareCanvas'), x = c.getContext('2d');
+  if (!lastCalc || lastCalc.s.gross <= 0) return false;
+  var s = lastCalc.s, cur = lastCalc.cur, asg = lastCalc.asg, delta = lastCalc.delta, be = lastCalc.be;
+  x.fillStyle = '#0a0f1a'; x.fillRect(0, 0, 1080, 1080);
+  x.fillStyle = '#4ECDC4'; x.fillRect(0, 0, 1080, 6);
+  x.fillStyle = '#5A7898'; x.font = '600 26px "IBM Plex Mono", monospace';
+  x.fillText('HEALTHCARE UNCHARTED · ASSIGNMENT COMPASS', 64, 96);
+  if (!dirty && activePreset != null) {
+    /* preset numbers never leave the building unlabeled (sourced or absent) */
+    x.fillStyle = '#E8A838'; x.font = '700 28px "IBM Plex Mono", monospace';
+    x.textAlign = 'right'; x.fillText('EXAMPLE SCENARIO', 1016, 148); x.textAlign = 'left';
+  }
+  x.fillStyle = '#FFFFFF'; x.font = '800 64px Outfit, sans-serif';
+  x.fillText(STATES[s.cs] + '  vs  ' + STATES[s.as], 64, 190);
+  x.fillStyle = '#b8cfe8'; x.font = '300 30px "DM Sans", sans-serif';
+  x.fillText(s.gross2 != null ? 'Each offer at its own pay, after taxes and real monthly costs' : 'Same gross pay, after taxes and real monthly costs', 64, 244);
+  function block(y, label, val, color) {
+    x.fillStyle = '#5A7898'; x.font = '600 24px "IBM Plex Mono", monospace';
+    x.fillText(label.toUpperCase(), 64, y);
+    x.fillStyle = color; x.font = '800 88px Outfit, sans-serif';
+    x.fillText(val, 64, y + 96);
+  }
+  block(340, STATES[s.cs] + ' leaves / mo' + (s.gross2 != null ? ' at ' + fmt(s.gross) : ''), fmt(cur.position), '#2478d4');
+  block(520, STATES[s.as] + ' leaves / mo' + (s.gross2 != null ? ' at ' + fmt(s.gross2) : ''), fmt(asg.position), '#4ECDC4');
+  block(700, 'monthly delta', fmtSign(delta), Math.abs(delta) < 5 ? '#5A7898' : delta > 0 ? '#2D9B6F' : '#DF5752');
+  if (be != null) {
+    x.strokeStyle = '#24405e'; x.beginPath(); x.moveTo(64, 852); x.lineTo(1016, 852); x.stroke();
+    x.fillStyle = '#FFFFFF'; x.font = '600 34px "DM Sans", sans-serif';
+    var hrs = (s.gross2 != null ? num('acHours2') : num('acHours')) || 36;
+    x.fillText('Breakeven: ' + fmt(be) + ' gross  ·  ≈ ' + fmt(be / (hrs * 52)) + '/hr at ' + hrs + ' hrs', 64, 912);
+  }
+  x.fillStyle = '#5A7898'; x.font = '400 22px "IBM Plex Mono", monospace';
+  x.fillText('2025 state tax tables · MERIC COL · GSA per diem · estimates, not advice', 64, 990);
+  x.fillText('healthcareuncharted.com/tools/assignment-compass/', 64, 1026);
+  return true;
+}
+
+/* ── GSA per diem ── */
+var pdTimer = null;
+function schedulePerDiem(s) {
+  clearTimeout(pdTimer);
+  pdTimer = setTimeout(function () { perDiem(s); }, 250);
+}
+function perDiem(s) {
+  var now = new Date();
+  var fy = now.getMonth() >= 9 ? now.getFullYear() + 1 : now.getFullYear();
+  var key = 'ac-pd:' + s.as + ':' + fy;
+  var cached = null;
+  try { cached = JSON.parse(sessionStorage.getItem(key)); } catch (e) {}
+  if (cached) return renderPerDiem(s, cached, now);
+  /* pending state: the card says it is checking, not silently stale */
+  var b = $('acPdBadge');
+  b.textContent = 'Checking county rate…'; b.classList.remove('warn'); b.hidden = false;
+  fetch('/.netlify/functions/perdiem?state=' + s.as + '&year=' + fy)
+    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function (j) {
+      if (!j || !j.areas) throw 0;
+      try { sessionStorage.setItem(key, JSON.stringify(j)); } catch (e) {}
+      renderPerDiem(s, j, now);
+    })
+    .catch(function () { renderPerDiem(s, null, now); });
+}
+function renderPerDiem(s, pd, now) {
+  var std = DATA._meta.conusStandard;
+  var badge = $('acPdBadge'), sub = $('acPdSub');
+  var lodging = std.lodging, mie = std.mie, label = 'Standard CONUS rate';
+  var seasonal = '';
+  var acName = s.ac ? countyName(s.as, s.ac) : '';
+  if (pd && pd.areas) {
+    var match = null;
+    if (acName) {
+      var want = acName.toLowerCase().replace(/[^a-z]/g, '');
+      match = pd.areas.find(function (a) {
+        return (a.county || '').toLowerCase().replace(/[^a-z]/g, '').indexOf(want) !== -1 && !a.standard;
+      });
+    }
+    if (match) {
+      var m = now.getMonth();
+      lodging = match.lodging[m]; mie = match.mie;
+      label = (match.city ? match.city + ', ' : '') + match.county + ' County';
+      var lo = Math.min.apply(null, match.lodging), hi = Math.max.apply(null, match.lodging);
+      if (hi > lo) seasonal = 'Seasonal: lodging runs ' + fmt(lo) + ' to ' + fmt(hi) + ' through the year. Shown: this month.';
+      badge.hidden = true;
+    } else {
+      var stdArea = pd.areas.find(function (a) { return a.standard; });
+      if (stdArea) { lodging = stdArea.lodging[now.getMonth()]; mie = stdArea.mie; }
+      label = acName ? acName + ' County: standard rate applies' : 'Standard rate (pick a county to check for a higher one)';
+      badge.textContent = 'Standard CONUS'; badge.classList.remove('warn'); badge.hidden = false;
+    }
+  } else {
+    badge.textContent = 'Offline: standard rate'; badge.classList.add('warn'); badge.hidden = false;
+  }
+  lastPd = { lodging: lodging, mie: mie, label: label, offline: !pd };
+  $('acPdTiles').innerHTML =
+    tile(fmt(lodging), 'lodging / night cap', 'asg') +
+    tile(fmt(mie), 'meals + incidentals / day', 'asg') +
+    tile(fmt(lodging * 30.4 + mie * 30.4), 'per diem / mo (lodging + M&IE, 30.4 days)', '');
+  var txt = label + ' · FY' + (pd ? pd.year : std.fy) + (seasonal ? ' · ' + seasonal : '');
+  if (!pd) txt += ' · High-cost counties run above the standard rate: treat this as a floor, not the cap.';
+  var stip = num('acStipend');
+  if (stip > 0) {
+    var stipMo = stip * 52 / 12, capMo = lodging * 30.4;
+    var room = capMo - stipMo;
+    txt += room > 1
+      ? ' · The offered stipend builds to ' + fmt(stipMo) + '/mo against a ' + fmt(capMo) + '/mo lodging cap: ' + fmt(room) + '/mo of negotiation room on lodging alone.'
+      : ' · The offered stipend builds to ' + fmt(stipMo) + '/mo, at or above the ' + fmt(capMo) + '/mo lodging cap. The lodging line is fully used; any ask moves to M&IE or rate.';
+  }
+  sub.textContent = txt;
+  renderNegoLines();
+}
+
+/* ── announce (committed changes only, debounced) ── */
+var lastMsg = '';
+var announce = debounce2(function (msg) {
+  if (msg !== lastMsg) { $('acLive').textContent = msg; lastMsg = msg; }
+}, 800);
+function debounce2(fn, ms) {
+  var t; return function (a) { clearTimeout(t); t = setTimeout(function () { fn(a); }, ms); };
+}
+
+/* ── URL state: short keys, defaults omitted, replace on tweak ── */
+function syncUrl(s) {
+  var p = new URLSearchParams();
+  p.set('cs', s.cs); p.set('as', s.as);
+  if (s.cc) p.set('cc', s.cc);
+  if (s.ac) p.set('ac', s.ac);
+  if (s.mode === 'h') { p.set('hr', num('acHourly')); p.set('hw', num('acHours')); }
+  else p.set('g', s.gross);
+  if (s.offerMode) {
+    if (s.mode === 'h') { p.set('hr2', num('acHourly2')); p.set('hw2', num('acHours2')); }
+    else if (num('acGross2') > 0) p.set('g2', num('acGross2'));
+  }
+  if (s.stip > 0) p.set('sp', s.stip);
+  if (s.prof) p.set('pf', s.prof);
+  if (s.fil === 'm') p.set('fs', 'm');
+  if (s.ref === 'assign') p.set('ref', 'a');
+  CATS.forEach(function (c) { p.set(c[0].slice(0, 2), s.costs[c[0]]); });
+  history.replaceState(null, '', location.pathname + '?' + p.toString());
+}
+function restoreUrl() {
+  var p = new URLSearchParams(location.search);
+  if (!p.get('cs') || !STATES[p.get('cs')] || !STATES[p.get('as')]) return false;
+  setSelect('acCurState', p.get('cs'));
+  setSelect('acAsgState', p.get('as'));
+  fillCounties('acCurCounty', p.get('cs'), p.get('cc') || '');
+  fillCounties('acAsgCounty', p.get('as'), p.get('ac') || '');
+  if (p.get('hr')) {
+    setMode('h'); $('acHourly').value = p.get('hr'); $('acHours').value = p.get('hw') || 36;
+  } else if (p.get('g')) { setMode('a'); $('acGross').value = p.get('g'); }
+  if (p.get('g2') || p.get('hr2')) {
+    setOfferMode(true);
+    if (p.get('hr2')) { $('acHourly2').value = p.get('hr2'); $('acHours2').value = p.get('hw2') || 36; }
+    if (p.get('g2')) $('acGross2').value = p.get('g2');
+  } else setOfferMode(false);
+  if (p.get('sp')) $('acStipend').value = p.get('sp');
+  $('acProf').value = p.get('pf') || '';
+  setPressed('acFilS', p.get('fs') !== 'm'); setPressed('acFilM', p.get('fs') === 'm');
+  setPressed('acRefCur', p.get('ref') !== 'a'); setPressed('acRefAsg', p.get('ref') === 'a');
+  var map = { housing: 'acHousing', utilities: 'acUtil', transportation: 'acTrans', groceries: 'acGroc', insurance: 'acIns', healthcare: 'acHealth', other: 'acOther' };
+  CATS.forEach(function (c) { var v = p.get(c[0].slice(0, 2)); if (v != null) $(map[c[0]]).value = v; });
+  return true;
+}
+
+/* ── presets ── */
+function applyPreset(i) {
+  var pr = PRESETS[i];
+  overrides = {};
+  activePreset = i; dirty = false;
+  setOfferMode(false); $('acGross2').value = ''; $('acHourly2').value = ''; $('acStipend').value = '';
+  setSelect('acCurState', pr.cs); setSelect('acAsgState', pr.as);
+  fillCounties('acCurCounty', pr.cs, pr.cc); fillCounties('acAsgCounty', pr.as, pr.ac);
+  $('acProf').value = pr.pf || '';
+  setMode(pr.mode);
+  if (pr.mode === 'h') { $('acHourly').value = pr.hourly; $('acHours').value = pr.hours; }
+  else $('acGross').value = pr.gross;
+  setPressed('acFilS', pr.fil === 's'); setPressed('acFilM', pr.fil === 'm');
+  setPressed('acRefCur', true); setPressed('acRefAsg', false);
+  var map = { housing: 'acHousing', utilities: 'acUtil', transportation: 'acTrans', groceries: 'acGroc', insurance: 'acIns', healthcare: 'acHealth', other: 'acOther' };
+  Object.keys(pr.costs).forEach(function (k) { $(map[k]).value = pr.costs[k]; });
+  document.querySelectorAll('[data-preset]').forEach(function (b, j) {
+    b.setAttribute('aria-pressed', String(j === i));
+    b.classList.toggle('on', j === i);
+  });
+  fmtAllMoney();
+  compute();
+}
+
+/* ── small UI wiring ── */
+function setPressed(id, on) { $(id).setAttribute('aria-pressed', String(!!on)); }
+function setMode(m) {
+  setPressed('acModeAnnual', m === 'a'); setPressed('acModeHourly', m === 'h');
+  $('acAnnualField').hidden = m === 'h';
+  $('acHourlyFields').hidden = m !== 'h';
+  syncOfferFields();
+}
+function setOfferMode(on) {
+  setPressed('acPaySame', !on); setPressed('acPayOffer', on);
+  syncOfferFields();
+}
+/* the offer fields follow BOTH toggles: offer on/off and annual/hourly */
+function syncOfferFields() {
+  var on = $('acPayOffer').getAttribute('aria-pressed') === 'true';
+  var hourly = $('acModeHourly').getAttribute('aria-pressed') === 'true';
+  $('acOfferAnnualField').hidden = !on || hourly;
+  $('acOfferHourlyFields').hidden = !on || !hourly;
+}
+function setSelect(id, val) { $(id).value = val; }
+/* COUNTIES[abbr] rows are [fips, name]; option value is the FIPS join key */
+function fillCounties(id, stateAbbr, selected) {
+  var sel = $(id);
+  var list = (COUNTIES && COUNTIES[stateAbbr]) || [];
+  sel.innerHTML = '<option value="">Statewide</option>' + list.map(function (row) {
+    return '<option value="' + row[0] + '">' + row[1] + '</option>';
+  }).join('');
+  sel.disabled = !list.length;
+  if (selected) sel.value = selected;
+}
+function countyName(stateAbbr, fips) {
+  var list = (COUNTIES && COUNTIES[stateAbbr]) || [];
+  for (var i = 0; i < list.length; i++) if (list[i][0] === fips) return list[i][1];
+  return '';
+}
+
+function buildStateSelects() {
+  var entries = Object.keys(STATES).map(function (ab) { return [ab, STATES[ab]]; })
+    .sort(function (a, b) { return a[1].localeCompare(b[1]); });
+  ['acCurState', 'acAsgState'].forEach(function (id) {
+    $(id).innerHTML = entries.map(function (e) { return '<option value="' + e[0] + '">' + e[1] + '</option>'; }).join('');
+  });
+}
+
+function wire() {
+  var markDirty = function () {
+    dirty = true; activePreset = null; hideUndo();
+    /* the lit preset chip must stop lying the moment the scenario is yours */
+    document.querySelectorAll('[data-preset]').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); b.classList.remove('on'); });
+  };
+  ['acGross', 'acHourly', 'acHours', 'acGross2', 'acHourly2', 'acHours2', 'acStipend',
+   'acHousing', 'acUtil', 'acTrans', 'acGroc', 'acIns', 'acHealth', 'acOther'].forEach(function (id) {
+    $(id).addEventListener('input', debounce(compute, 250));
+    $(id).addEventListener('input', markDirty);
+  });
+  MONEY_IDS.forEach(function (id) {
+    $(id).addEventListener('blur', function () { fmtField(id); });
+  });
+  $('acCurState').addEventListener('change', function () { markDirty(); fillCounties('acCurCounty', this.value, ''); compute(); });
+  $('acAsgState').addEventListener('change', function () { markDirty(); fillCounties('acAsgCounty', this.value, ''); compute(); });
+  ['acCurCounty', 'acAsgCounty', 'acProf'].forEach(function (id) {
+    $(id).addEventListener('change', function () { markDirty(); compute(); });
+  });
+  $('acModeAnnual').addEventListener('click', function () { setMode('a'); compute(); });
+  $('acModeHourly').addEventListener('click', function () { setMode('h'); compute(); });
+  $('acPaySame').addEventListener('click', function () { markDirty(); setOfferMode(false); compute(); });
+  $('acPayOffer').addEventListener('click', function () { markDirty(); setOfferMode(true); compute(); });
+  [['acFilS', 'acFilM'], ['acFilM', 'acFilS'], ['acRefCur', 'acRefAsg'], ['acRefAsg', 'acRefCur']].forEach(function (pair) {
+    $(pair[0]).addEventListener('click', function () { markDirty(); setPressed(pair[0], true); setPressed(pair[1], false); compute(); });
+  });
+  document.querySelectorAll('[data-preset]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      /* presets get the same one-shot undo as reset: a curiosity tap must
+         never cost a hand-built scenario */
+      if (dirty && location.search.length > 1) {
+        prevScenario = location.search;
+        $('acUndoBtn').classList.add('show');
+        clearTimeout(undoTimer);
+        undoTimer = setTimeout(hideUndo, 60000);
+      }
+      applyPreset(Number(b.dataset.preset));
+    });
+  });
+
+  /* reset is recoverable: one tap out, one tap back (the amber undo chip) */
+  var undoTimer = null;
+  function hideUndo() { $('acUndoBtn').classList.remove('show'); clearTimeout(undoTimer); }
+  $('acResetBtn').addEventListener('click', function () {
+    prevScenario = location.search;
+    overrides = {}; applyPreset(0);
+    if (prevScenario && prevScenario.length > 1) {
+      $('acUndoBtn').classList.add('show');
+      clearTimeout(undoTimer);
+      undoTimer = setTimeout(hideUndo, 60000);
+      $('acLive').textContent = 'Reset to the example. Undo is in the toolbar for the next minute.';
+    }
+  });
+  $('acUndoBtn').addEventListener('click', function () {
+    if (!prevScenario) return;
+    history.replaceState(null, '', location.pathname + prevScenario);
+    hideUndo();
+    if (restoreUrl()) { dirty = true; activePreset = null; fmtAllMoney(); compute(); }
+  });
+
+  /* the phone sticky strip returns the thumb to the answer */
+  $('acSticky').addEventListener('click', function () {
+    document.querySelector('.ac-results-inner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  /* the ask, as the sentence Dana actually says on the phone */
+  $('acAskBtn').addEventListener('click', function () {
+    if (!lastCalc || lastCalc.be == null || lastCalc.s.gross <= 0) return;
+    var sc = lastCalc.s, hrs = (sc.gross2 != null ? num('acHours2') : num('acHours')) || 36;
+    var txt = 'I need at least ' + fmt(lastCalc.be) + ' gross (about ' + fmt(lastCalc.be / (hrs * 52)) + '/hr at ' + hrs +
+      ' hrs) for the ' + STATES[sc.as] + ' assignment to beat staying in ' + STATES[sc.cs] + '.';
+    var btn = $('acAskBtn');
+    var done = function (okd) {
+      btn.textContent = okd ? '✓ Copied' : 'Copy blocked';
+      setTimeout(function () { btn.textContent = 'Copy the ask'; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); });
+    else done(false);
+  });
+
+  /* share card download */
+  $('acCardBtn').addEventListener('click', function () {
+    if (!drawShareCard()) return;
+    $('acShareCanvas').toBlob(function (blob) {
+      if (!blob) return;
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'hu-assignment-compass.jpg';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    }, 'image/jpeg', 0.92);
+  });
+
+  /* methodology sheet: kit detents, real focus order, hardware back = close.
+     Closed = inert so its links never ghost into the tab order. */
+  var sheetEl = $('acMethodSheet'), mBtn = $('acMethodBtn');
+  var kitSheet = window.HUKit && HUKit.sheet ? HUKit.sheet(sheetEl, {
+    startDetent: 'dt-full',
+    onDismiss: function () { closeSheet(); }
+  }) : null;
+  function openSheet() {
+    sheetEl.inert = false; sheetEl.removeAttribute('aria-hidden');
+    if (kitSheet) kitSheet.open('dt-full'); else sheetEl.classList.add('open');
+    mBtn.setAttribute('aria-expanded', 'true');
+    $('acMethodClose').focus();
+  }
+  function closeSheet() {
+    sheetEl.classList.remove('open');
+    sheetEl.inert = true; sheetEl.setAttribute('aria-hidden', 'true');
+    mBtn.setAttribute('aria-expanded', 'false');
+    mBtn.focus();
+  }
+  sheetEl.inert = true; sheetEl.setAttribute('aria-hidden', 'true');
+  mBtn.addEventListener('click', function () {
+    sheetEl.classList.contains('open') ? closeSheet() : openSheet();
+  });
+  $('acMethodClose').addEventListener('click', closeSheet);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sheetEl.classList.contains('open')) closeSheet(); });
+  if (window.HUKit && HUKit.backGuard) HUKit.backGuard({
+    watch: sheetEl,
+    active: function () { return sheetEl.classList.contains('open'); },
+    step: closeSheet
+  });
+}
+
+/* ── boot: engine data is required, county list is nice-to-have ── */
+Promise.all([
+  fetch('/assets/data/assignment-compass.json').then(function (r) { return r.json(); }),
+  fetch('/assets/data/derived/compass-counties.json').then(function (r) { return r.json(); }).catch(function () { return null; })
+]).then(function (res) {
+  DATA = res[0]; COUNTIES = res[1];
+  buildStateSelects();
+  wire();
+  if (!restoreUrl()) applyPreset(0); else { fmtAllMoney(); compute(); }
+}).catch(function () {
+  $('acTiles').innerHTML = '';
+  $('acTileNote').textContent = 'Could not load the tax and cost data. Check your connection and refresh.';
+  $('acLive').textContent = 'Could not load the tax and cost data. Check your connection and refresh.';
+});
+
+})();
+</script>

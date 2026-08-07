@@ -116,6 +116,25 @@ module.exports = [
   },
 
   {
+    id:          'assignment-compass',
+    status:      'live',
+    featured:    true,
+    title:       'Assignment Compass',
+    desc:        'Compare two locations before you take the job. Real state tax bracket math for all 50 states, projected monthly costs by category, GSA per diem for the assignment county, and the blind spots cost-of-living sites miss. Built for clinicians weighing offers and travel contracts.',
+    url:         '/tools/assignment-compass/',
+    type:        'interactive',
+    badge:       'Interactive',
+    badgeClass:  'badge-interactive',
+    bandClass:   'tc-band-blue',
+    mark:        'AC',
+    markClass:   'mark-blue',
+    tags:        ['Cost of Living', 'State Tax', 'Travel Contracts'],
+    motif:       'compass-rose',
+    ps:          ['p2a', 'p2b'],
+    labNode:     'assignment-compass'
+  },
+
+  {
     id:          'healthcare-career-tree',
     status:      'live',
     featured:    true,

@@ -51,7 +51,7 @@ eleventyExcludeFromCollections: true
   letter-spacing: .16em; text-transform: uppercase;
 }
 
-/* tooltip — floats over the canvas; dark literals to match the pinned surface */
+/* tooltip · floats over the canvas; dark literals to match the pinned surface */
 #obsTip {
   position: absolute; z-index: 60; pointer-events: none; display: none;
   max-width: 260px; padding: 9px 11px; border-radius: 8px;
@@ -62,7 +62,7 @@ eleventyExcludeFromCollections: true
 #obsTip .tt-name { color: var(--dmap-t1); font-weight: 600; font-size: 12px; margin-bottom: 3px; }
 #obsTip .tt-kind { text-transform: uppercase; letter-spacing: .1em; font-size: 9px; }
 
-/* right dock — lives on theme surfaces, so real tokens apply here */
+/* right dock · lives on theme surfaces, so real tokens apply here */
 .obs-dock { padding: 16px; font-size: 12px; color: var(--t2); }
 .obs-dock h2 {
   font-family: var(--display); font-size: 15px; font-weight: 700;
@@ -98,7 +98,7 @@ eleventyExcludeFromCollections: true
 .obs-hint { padding: 28px 8px; text-align: center; color: var(--t3); font-size: 12px; line-height: 1.7; }
 .obs-hint .glyph { font-size: 22px; display: block; margin-bottom: 10px; opacity: .6; }
 
-/* foot legend — static label + icon beside the JS-rendered swatches
+/* foot legend · static label + icon beside the JS-rendered swatches
    (the icon lives OUTSIDE #obsLegend, which legend() rebuilds via innerHTML) */
 .obs-leg-label {
   display: inline-flex; align-items: center; gap: 5px; margin-right: 2px;
@@ -115,17 +115,17 @@ eleventyExcludeFromCollections: true
 .obs-legend .sep { width: 1px; height: 14px; background: var(--border); }
 #obsTotals { font-family: var(--mono); font-size: 10px; color: var(--t3); font-variant-numeric: tabular-nums; }
 
-/* face-up operational stats — a HUD band under the instrument header.
+/* face-up operational stats · a HUD band under the instrument header.
    Lives on theme surfaces, so real tokens apply (not the dmap literals). */
 .obs-stats {
-  display: flex; gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  display: flex; gap: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  padding: 8px 16px 10px;
   border-bottom: 1px solid var(--border); background: var(--surface);
 }
 .obs-stat {
-  flex: 1 1 0; min-width: 118px; padding: 10px 16px 9px;
-  border-right: 1px solid var(--border);
+  flex: 1 1 0; min-width: 118px;
+  border-top: 2px solid var(--border2); padding: 8px 2px 0;
 }
-.obs-stat:last-child { border-right: 0; }
 .obs-stat .v {
   font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--t1);
   line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap;
@@ -133,25 +133,25 @@ eleventyExcludeFromCollections: true
 .obs-stat .v em { font-style: normal; color: var(--teal); }
 [data-theme="light"] .obs-stat .v em { color: var(--teal-dk); }
 .obs-stat .k {
-  font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--t3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--t2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* plain-terms block — leads the side panel, reads like a sentence, not a spec */
+/* plain-terms block · leads the side panel, reads like a sentence, not a spec */
 .obs-plain {
   font-size: 13px; line-height: 1.65; color: var(--t1);
-  background: rgba(78,205,196,.06); border: 1px solid rgba(78,205,196,.18);
-  border-left: 3px solid var(--teal); border-radius: 6px;
-  padding: 10px 12px; margin-bottom: 14px;
+  background: none; border: none;
+  border-left: 3px solid var(--teal); border-radius: 0;
+  padding: 6px 0 6px 14px; margin-bottom: 14px;
 }
 [data-theme="light"] .obs-plain { border-left-color: var(--teal-dk); }
 .obs-kind-plain { font-size: 11px; line-height: 1.55; color: var(--t3); font-style: italic; margin: -8px 0 14px; }
 
-/* phone: the DAG can't reflow — fixed-width svg inside a scroll strip */
+/* phone: the DAG can't reflow: fixed-width svg inside a scroll strip */
 @media (max-width: 699px) {
   .obs-shell .shell-canvas { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   #obsSvg { min-width: 1080px; }
-  .obs-stat { min-width: 104px; padding: 8px 12px 7px; }
+  .obs-stat { min-width: 104px; }
 }
 </style>
 
@@ -165,7 +165,7 @@ eleventyExcludeFromCollections: true
   </header>
 
   <!-- face-up operational readout: filled by statsHUD() once the map loads -->
-  <div class="obs-stats" id="obsStats" aria-label="Data architecture totals"></div>
+  <div class="obs-stats hu-ticks" id="obsStats" aria-label="Data architecture totals"></div>
 
   <div class="shell-main">
     <div class="shell-canvas">
@@ -174,7 +174,7 @@ eleventyExcludeFromCollections: true
         <div id="obsTip"></div>
       </div>
     </div>
-    <aside class="shell-dock shell-dock--right">
+    <aside class="shell-dock shell-dock--right hu-ticks">
       <div class="obs-dock" id="obsDock">
         <div class="obs-hint" id="obsHint">
           <span class="glyph">&#9678;</span>
@@ -248,7 +248,7 @@ var nodes = [], edges = [], byId = {}, outAdj = {}, inAdj = {};
 var pinned = null;
 
 function fmtBytes(b) {
-  if (b == null) return '—';
+  if (b == null) return '–';
   if (b < 1024) return b + ' B';
   if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
   return (b / 1048576).toFixed(1) + ' MB';
