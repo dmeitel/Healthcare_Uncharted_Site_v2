@@ -112,7 +112,7 @@ Mono-uppercase-tracked text (`var(--mono)` + uppercase + letter-spacing) is rese
 
 ## Accessibility — required on every tool
 
-The Operators Map (`src/tools/healthcare-operators-map/index.html`) is the reference implementation. Copy its patterns; don't reinvent them.
+The Operators Map (`src/tools/operators-map/index.html`) is the reference implementation. Copy its patterns; don't reinvent them.
 
 - **One live region.** A single visually-hidden `aria-live="polite"` div (use the `.vh` utility) with an `announce(msg)` helper. Announce COMMITTED state changes only: selection, zoom target, resource/filter switch, load result. Never hover, never mousemove, never per-keystroke.
 - **The status banner is a `role="status"`.** And guard the assignment: only rewrite its text when it actually changes, or every render re-fires an announcement.

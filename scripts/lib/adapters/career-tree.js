@@ -40,7 +40,7 @@ function roleNodes(raw) {
     searchParts: [n.label, n.abbr, n.domain, n.family, n.pathway, n.summary, metaValues(n)],
     rels: (n.leadsTo || []).map((t) => edge('leads-to', uid('role', t))),
     source: { dataset: 'career-tree.json', class: 'roles', sourceId: n.id },
-    href: '/tools/healthcare-career-tree/?class=roles&node=' + encodeURIComponent(n.id),
+    href: '/tools/career-tree/?class=roles&node=' + encodeURIComponent(n.id),
   }));
 }
 
@@ -64,7 +64,7 @@ function patientNodes(raw) {
     searchParts: [n.label, n.abbr, n.family, n.summary, metaValues(n)],
     rels: (n.leadsTo || []).map((t) => edge('leads-to', uid('patient', t))),
     source: { dataset: 'career-tree.json', class: 'patients', sourceId: n.id },
-    href: '/tools/healthcare-career-tree/?class=patients&node=' + encodeURIComponent(n.id),
+    href: '/tools/career-tree/?class=patients&node=' + encodeURIComponent(n.id),
   }));
 }
 
@@ -86,7 +86,7 @@ function expertiseNodes(raw) {
       searchParts: [n.label, n.abbr, n.group, z.label, n.summary, n.seen],
       rels: (n.pairs || []).map((p) => edge('pairs-with', uid('expertise', p))),
       source: { dataset: 'career-tree.json', class: 'growth', sourceId: n.id },
-      href: '/tools/healthcare-career-tree/?tab=atlas&expertise=' + encodeURIComponent(n.id),
+      href: '/tools/career-tree/?tab=atlas&expertise=' + encodeURIComponent(n.id),
     });
   });
 }

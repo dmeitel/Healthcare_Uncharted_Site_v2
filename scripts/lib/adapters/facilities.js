@@ -52,7 +52,7 @@ module.exports = {
         searchParts: [h.n, h.c, h.co, h.s, h.t, h.od, h.sys, h.trauma],
         rels,
         source: { dataset: 'us-hospitals.json', sourceId: h.id },
-        href: '/tools/healthcare-operators-map/?facility=' + encodeURIComponent(h.id),
+        href: '/tools/operators-map/?facility=' + encodeURIComponent(h.id),
       });
     });
   },

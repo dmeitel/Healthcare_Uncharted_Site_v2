@@ -3,7 +3,9 @@ module.exports = [
   // ── LIVE TOOLS ──────────────────────────────────────────────────────────────
 
   {
-    id:          'american-4ps-map',
+    id:          'multi-lens-map',
+    cluster:     'maps-systems',
+    keys:        ['population health', 'state data', 'county data', 'life expectancy', 'uninsured', 'medicaid', 'public health map'],
     status:      'live',
     featured:    true,
     title:       'U.S. Pop Health Multi-Lens Map',
@@ -22,12 +24,14 @@ module.exports = [
   },
 
   {
-    id:          'healthcare-iceberg-map',
+    id:          'iceberg-map',
+    cluster:     'maps-systems',
+    keys:        ['big picture', 'system layers', 'how healthcare works', 'payers', 'policy'],
     status:      'live',
     featured:    true,
     title:       'The Healthcare Iceberg Map',
     desc:        'An interactive map of the full U.S. healthcare system. All 8 layers visible at once, from patient experience to the policy and financial forces underneath.',
-    url:         '/tools/healthcare-iceberg-map/',
+    url:         '/tools/iceberg-map/',
     type:        'interactive',
     badge:       'Interactive',
     badgeClass:  'badge-interactive',
@@ -42,11 +46,13 @@ module.exports = [
 
   {
     id:          'vendor-directory',
+    cluster:     'maps-systems',
+    keys:        ['vendors', 'companies', 'ehr market', 'epic', 'cerner', 'oracle health', 'ai companies', 'market share'],
     status:      'live',
     featured:    true,
     title:       'Healthcare Vendor Directory',
     desc:        'A searchable, filterable directory of major healthcare technology vendors. What sector they operate in, which layers of the system they touch, and whether their technology is proven, emerging, or cautionary.',
-    url:         '/tools/healthcare-vendor-directory/',
+    url:         '/tools/vendor-directory/',
     type:        'reference',
     badge:       'Reference',
     badgeClass:  'badge-reference',
@@ -61,6 +67,8 @@ module.exports = [
 
   {
     id:          'hospital-map',
+    cluster:     'maps-systems',
+    keys:        ['hospital departments', 'units', 'floors', 'who works where', 'icu', 'emergency department'],
     status:      'live',
     featured:    true,
     title:       'Hospital Blueprint',
@@ -80,11 +88,13 @@ module.exports = [
 
   {
     id:          'sql-mystery',
+    cluster:     'learn-play',
+    keys:        ['sql', 'database', 'queries', 'data model', 'practice', 'game', 'ehr tables'],
     status:      'live',
     featured:    true,
     title:       'Clinical SQL Mystery',
     desc:        'Learn the Patient → Encounter → Clinical Event data model by solving a real clinical mystery using SQL queries against an Epic-style database. Four cases, escalating difficulty. No experience needed.',
-    url:         '/tools/clinical-sql-mystery/',
+    url:         '/tools/sql-mystery/',
     type:        'lab',
     badge:       'Game',
     badgeClass:  'badge-lab',
@@ -97,12 +107,14 @@ module.exports = [
   },
 
   {
-    id:          'healthcare-operators-map',
+    id:          'operators-map',
+    cluster:     'maps-systems',
+    keys:        ['hospitals near me', 'facilities', 'dialysis', 'pharmacies', 'surgery centers', 'cms data', 'health systems'],
     status:      'live',
     featured:    true,
     title:       'U.S. Hospital Operations Map',
     desc:        'A live national map of U.S. healthcare infrastructure from CMS data. Stack hospitals, dialysis, surgery centers, pharmacies, and equipment suppliers as layers; drill from states to counties to a single facility; draw your own search area; let the map find your county.',
-    url:         '/tools/healthcare-operators-map/',
+    url:         '/tools/operators-map/',
     type:        'interactive',
     badge:       'Interactive',
     badgeClass:  'badge-interactive',
@@ -117,6 +129,8 @@ module.exports = [
 
   {
     id:          'assignment-compass',
+    cluster:     'careers-pay',
+    keys:        ['travel pay', 'stipend', 'taxes', 'cost of living', 'contract', 'relocation', 'per diem', 'take home pay', 'salary comparison', 'license', 'travel roles'],
     status:      'live',
     featured:    true,
     title:       'Assignment Compass',
@@ -135,12 +149,14 @@ module.exports = [
   },
 
   {
-    id:          'healthcare-career-tree',
+    id:          'career-tree',
+    cluster:     'careers-pay',
+    keys:        ['careers', 'credentials', 'certifications', 'become a nurse', 'respiratory therapist', 'pay ladder', 'travel roles', 'education paths'],
     status:      'live',
     featured:    true,
     title:       'Healthcare Career Tree',
     desc:        'A branching map of healthcare careers. Start with the roles that need no license, follow the credentials down through specialty, leadership, and technology, and pin your own path. A second track maps the patient journey from healthy to critical.',
-    url:         '/tools/healthcare-career-tree/',
+    url:         '/tools/career-tree/',
     type:        'interactive',
     badge:       'Interactive',
     badgeClass:  'badge-interactive',

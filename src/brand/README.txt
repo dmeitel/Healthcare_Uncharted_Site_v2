@@ -22,6 +22,11 @@ MARK
 FAVICONS / APP ICONS
   favicon.svg, favicon.ico, favicon-16/32/48.png
   apple-touch-icon.png (180), icon-192.png, icon-512.png
+  ALL of the above are GENERATED. Do not hand-edit them.
+  Sources are favicon.svg (light) and hu-mark-dark.svg (dark).
+  Regenerate:  node scripts/build-favicons.js
+  Then bump the v= stamp on the icon links in src/_includes/base.njk,
+  or browsers will keep serving the old icon from cache.
 SOCIAL
   og-image.png (1200x630)        link previews / OpenGraph
   social-square.png (1200x1200)  profiles / Instagram

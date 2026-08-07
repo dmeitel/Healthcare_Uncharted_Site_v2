@@ -4,752 +4,342 @@ title: Home — Map the System. Understand the Why.
 description: A living resource for clinical informatics, healthcare data architecture, and the real story behind the systems that run modern medicine.
 navPage: home
 ---
-{% from "components/section.njk" import sectionHeader %}
-{% from "components/card.njk" import card %}
+<!-- ════════════════════════════════════════════════════════════════
+     HOME V3 · FIELD OFFICE (locked spec: docs/HU-V3-HOME-BUILD-SPEC-2026-08-06.md)
+     One door, one box, one catalog, one mission. The hero rests on
+     clean ground with the brand rose; the hex world draws on tap
+     (The Earned Scenery Rule). Catalog tabs and search ride tools.js;
+     the dated list rides featuredPages. Nothing here is hand-listed.
+════════════════════════════════════════════════════════════════ -->
 
 <style>
-/* ================================================================
-   INDEX PAGE · PAGE-SPECIFIC STYLES
-================================================================ */
+/* ── HERO · clean ground, rose crown, floating search ── */
+.hv-hero { position:relative; border-bottom:1px solid var(--border); overflow:hidden; }
+#hu-network-bg { position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0; }
+.hv-hero-content { position:relative; z-index:1; text-align:center; padding:180px clamp(20px,5vw,72px) 44px; max-width:860px; margin:0 auto; }
+/* the rose is canvas-drawn at top-center; this transparent button is its hit area.
+   Tap: draw the map / reroll routes. The 8-tap ride is inside the canvas code. */
+#hu-compass-btn { position:absolute; top:92px; left:50%; width:150px; height:150px; transform:translate(-50%,-50%);
+  padding:0; border:0; background:transparent; border-radius:50%; cursor:pointer; z-index:2; -webkit-tap-highlight-color:transparent; }
+#hu-compass-btn:active { transform:translate(-50%,-50%) scale(0.97); }
+#hu-compass-btn:focus-visible { outline:2px solid var(--teal); outline-offset:6px; }
+#hu-secret-tile { position:absolute; transform:translate(-50%,-50%); display:none; z-index:3; border-radius:50%; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+#hu-secret-tile.revealed { display:block; animation:hu-sm-pulse 1.8s ease-in-out infinite; }
+#hu-secret-tile:hover, #hu-secret-tile:focus-visible { animation:none; box-shadow:0 0 26px 8px rgba(21,128,61,1); outline:none; }
+@keyframes hu-sm-pulse { 0%,100% { box-shadow:0 0 10px 2px rgba(21,128,61,0.55); } 50% { box-shadow:0 0 22px 6px rgba(21,128,61,0.9); } }
+@media (prefers-reduced-motion:reduce) { #hu-secret-tile.revealed { animation:none; box-shadow:0 0 18px 5px rgba(21,128,61,0.8); } }
 
-/* HERO V3 · FULL-WIDTH NETWORK BACKGROUND */
-.hero-v3 {
-  position: relative;
-  min-height: 88vh;
-  overflow: hidden;
-  border-bottom: 3px solid var(--border);
-}
-#hu-network-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  z-index: 0;
-}
-/* Readability scrim: a solid dark base under the hero text that fades up into
-   the network, so the headline reads cleanly over the busy honeycomb. Sits
-   above the canvas (z0) but below the content (z1) and the compass/SM tile. */
-.hero-v3::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(to top,
-    rgba(0, 17, 23, 0.97) 0%,
-    rgba(0, 17, 23, 0.90) 24%,
-    rgba(0, 17, 23, 0.50) 40%,
-    rgba(0, 17, 23, 0.00) 52%);
-}
-[data-theme="light"] .hero-v3::after {
-  background: linear-gradient(to top,
-    rgba(238, 242, 247, 0.98) 0%,
-    rgba(238, 242, 247, 0.92) 24%,
-    rgba(238, 242, 247, 0.55) 40%,
-    rgba(238, 242, 247, 0.00) 52%);
-}
-/* Transparent hit area centered over the canvas compass rose. Clicking it
-   re-rolls the routes. Sits above .hero-v3-content (z-index 1) so the centre
-   stays clickable; content's interactive bits live at the edges/bottom. */
-#hu-compass-btn {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 190px;
-  height: 190px;
-  transform: translate(-50%, -50%);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 2;
-  -webkit-tap-highlight-color: transparent;
-}
-#hu-compass-btn:active {
-  transform: translate(-50%, -50%) scale(0.97);
-}
-#hu-compass-btn:focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 6px;
-}
-/* Hidden until the 8-click easter egg fires; then a pulsing green halo over
-   the canvas-drawn "SM" tile, linking to the Secret Menu. */
-#hu-secret-tile {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: none;
-  z-index: 3;
-  border-radius: 50%;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-#hu-secret-tile.revealed {
-  display: block;
-  animation: hu-sm-pulse 1.8s ease-in-out infinite;
-}
-#hu-secret-tile:hover,
-#hu-secret-tile:focus-visible {
-  animation: none;
-  box-shadow: 0 0 26px 8px rgba(21, 128, 61, 1);
-  outline: none;
-}
-@keyframes hu-sm-pulse {
-  0%, 100% { box-shadow: 0 0 10px 2px rgba(21, 128, 61, 0.55); }
-  50%      { box-shadow: 0 0 22px 6px rgba(21, 128, 61, 0.9); }
-}
-@media (prefers-reduced-motion: reduce) {
-  #hu-secret-tile.revealed { animation: none; box-shadow: 0 0 18px 5px rgba(21, 128, 61, 0.8); }
-}
-.hero-v3-content {
-  position: relative;
-  z-index: 1;
-  padding: clamp(48px, 8vh, 96px) clamp(24px, 5vw, 72px) clamp(40px, 6vh, 72px);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 32px;
-  min-height: 88vh;
-  flex-wrap: wrap;
-}
-.hero-v3-text {
-  max-width: 620px;
-  flex: 1 1 520px;
-}
+.hv-hero h1 { font-family:var(--display); font-size:clamp(34px,5vw,54px); font-weight:800; line-height:1.05; letter-spacing:-.03em; color:var(--t1); }
+.hv-hero h1 strong { color:var(--teal); font-weight:800; }
+[data-theme="light"] .hv-hero h1 strong { color:var(--teal-dk); }
+.hv-sub { font-size:16px; line-height:1.7; color:var(--t2); max-width:52ch; margin:12px auto 0; }
 
-.hero-v3 h1 {
-  font-family: var(--display);
-  font-size: clamp(40px, 6vw, 68px);
-  font-weight: 800;
-  line-height: 1.0;
-  letter-spacing: -0.04em;
-  color: var(--t1);
-  margin-bottom: 22px;
-}
-.hero-v3 h1 strong {
-  color: var(--teal);
-  display: block;
-  font-weight: 800;
-}
-.hero-v3-desc {
-  font-size: 16px;
-  line-height: 1.7;
-  color: var(--t2);
-  font-weight: 400;
-  max-width: 480px;
-  margin-bottom: 32px;
-}
-.hero-v3-btns {
-  display: flex;
-  gap: 0;
-}
-.hero-v3-btns .btn-primary {
-  border-radius: 0;
-  padding: 12px 24px;
-}
-.hero-v3-ghost {
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 12px 24px;
-  background: none;
-  color: var(--t2);
-  border: 2px solid var(--border);
-  border-left: none;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  transition: color 0.15s, border-color 0.15s;
-}
-.hero-v3-ghost:hover {
-  color: var(--t1);
-  border-color: var(--border2);
-}
-.hero-v3-status {
-  min-width: 220px;
-  border: 2px solid var(--border);
-  padding: 18px 20px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: color-mix(in srgb, var(--dark) 70%, transparent);
-  flex-shrink: 0;
-}
-.hero-v3-status-label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--t3);
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.hero-v3-status-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 10px;
-}
-.hero-v3-status-row:last-child {
-  margin-bottom: 0;
-}
-.hero-v3-status-num {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.03em;
-  color: var(--teal);
-  font-variant-numeric: tabular-nums;
-}
-.hero-v3-status-text {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--t3);
-}
-.hero-v3-status-updated {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--t3);
-}
-.hero-v3-status-updated b { color: var(--t2); font-weight: 600; }
-@media (max-width: 860px) {
-  .hero-v3-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .hero-v3-status {
-    width: 100%;
-    max-width: 320px;
-  }
-}
+/* search box + hub cards are global hub components now; home adds placement */
+.hv-search { margin:24px auto 0; }
+.hv-chips { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+.hv-chip { font-family:var(--font); font-size:12.5px; font-weight:600; color:var(--t2); background:var(--raised);
+  border:1px solid var(--border); border-radius:999px; padding:8px 15px; text-decoration:none; transition:color .15s, border-color .15s; }
+.hv-chip:hover { color:var(--t1); border-color:var(--teal); }
 
-/* FEATURED CAROUSEL */
-.featured-section { background:var(--dark); }
-.carousel-wrap { position:relative; overflow:hidden; max-width:100%; }
-.carousel { display:flex; gap:16px; overflow-x:auto; scroll-behavior:smooth; padding:0 clamp(20px,5vw,80px); margin:0 calc(-1 * clamp(20px,5vw,80px)); }
-.carousel::-webkit-scrollbar { height:4px; }
-.carousel::-webkit-scrollbar-track { background:var(--border); }
-.carousel::-webkit-scrollbar-thumb { background:var(--teal); border-radius:2px; }
-.featured-card { flex:0 0 calc(100% - 40px); max-width:900px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:32px; overflow:hidden; text-decoration:none; display:flex; flex-direction:column; gap:16px; transition:all .2s; }
-.featured-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 12px 40px rgba(0,0,0,.4); }
-.fc-meta { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.fc-badge { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:4px 12px; border-radius:20px; font-family:var(--mono); background:rgba(78,205,196,.12); color:var(--teal); }
-.fc-date { font-family:var(--mono); font-size:10px; color:var(--t3); }
-.fc-title { font-family:var(--display); font-size:clamp(18px,2.2vw,28px); font-weight:700; color:var(--t1); line-height:1.1; letter-spacing:-.02em; }
-.fc-desc { font-size:15px; color:var(--t2); line-height:1.7; }
-.fc-tags { display:flex; gap:6px; flex-wrap:wrap; }
-.fc-tag { font-size:10px; padding:3px 10px; background:var(--raised); color:var(--t3); border:1px solid var(--border); border-radius:8px; }
-.fc-arrow { color:var(--t3); font-size:16px; font-weight:600; transition:all .15s; margin-left:auto; flex-shrink:0; }
-.featured-card:hover .fc-arrow { color:var(--teal); transform:translateX(4px); }
+/* ── CATALOG · T2 tabs fed from tools.js clusters ── */
+.hv-cat { max-width:1100px; margin:0 auto; padding:36px clamp(20px,5vw,80px) 8px; }
+.hv-tabs { display:flex; align-items:center; border-bottom:1px solid var(--border); }
+.hv-tab { font-family:var(--font); font-size:14px; font-weight:600; color:var(--t3); background:none; border:none;
+  padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+.hv-tab[aria-selected="true"] { color:var(--teal); border-bottom-color:var(--teal); font-weight:700; }
+[data-theme="light"] .hv-tab[aria-selected="true"] { color:var(--teal-dk); border-bottom-color:var(--teal-dk); }
+.hv-tab:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; }
+.hv-alltools { margin-left:auto; font-size:13px; color:var(--teal); text-decoration:none; white-space:nowrap; }
+.hv-alltools:hover { color:var(--t1); }
+[data-theme="light"] .hv-alltools { color:var(--teal-dk); }
+.hv-pane { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; padding:18px 0 6px; }
+.hv-pane[hidden] { display:none; }
+/* .hc-card / .hc-thumb / .hc-title family: global hub components (hu-global.css) */
 
-/* CAROUSEL NAV V2 */
-.carousel-section-head { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
-.carousel-nav { display:flex; align-items:center; gap:10px; flex-shrink:0; padding-bottom:4px; }
-.carousel-arrow { width:36px; height:36px; border-radius:8px; background:var(--raised); border:1px solid var(--border); color:var(--t2); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; }
-.carousel-arrow:hover { background:var(--raised2); color:var(--t1); border-color:var(--border2); }
-.carousel-dots { display:flex; gap:6px; align-items:center; }
-.carousel-dot { width:6px; height:6px; border-radius:50%; background:var(--border2); cursor:pointer; transition:all .2s; border:none; padding:0; }
-.carousel-dot.active { background:var(--teal); width:18px; border-radius:3px; }
+/* ── NEW ON THE SITE · dated rows + the live pulse ── */
+.hv-latest { max-width:1100px; margin:0 auto; padding:26px clamp(20px,5vw,80px) 8px; }
+.hv-latest-head { display:flex; align-items:baseline; gap:14px; border-bottom:1px solid var(--border); padding-bottom:7px; }
+.hv-shelf { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); }
+.hv-shelf i { font-style:normal; color:var(--border2); }
+.hv-pulse { margin-left:auto; display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:10px; color:var(--t3); }
+.hv-pulse b { color:var(--teal); font-weight:700; font-size:12px; font-variant-numeric:tabular-nums; }
+[data-theme="light"] .hv-pulse b { color:var(--teal-dk); }
+.hv-row { display:flex; align-items:baseline; gap:12px; padding:10px 2px; border-bottom:1px solid var(--border); text-decoration:none; }
+.hv-row:hover .hv-row-t { color:var(--teal); }
+[data-theme="light"] .hv-row:hover .hv-row-t { color:var(--teal-dk); }
+.hv-row .d { font-family:var(--mono); font-size:10px; color:var(--t3); flex:none; min-width:58px; }
+.hv-row-t { color:var(--t1); font-weight:600; font-size:14px; transition:color .15s; }
+.hv-row .sub { color:var(--t2); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hv-row .ty { margin-left:auto; flex:none; font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); }
+[data-theme="light"] .hv-row .ty { color:var(--teal-dk); }
 
+/* ── THREE WAYS IN · the role doors, one compact row ── */
+.hv-doors { max-width:1100px; margin:0 auto; padding:26px clamp(20px,5vw,80px) 8px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.hv-door { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; text-decoration:none; transition:border-color .15s; }
+.hv-door:hover { border-color:var(--teal); }
+.hv-door .dl { font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
+.hv-door .dt { font-family:var(--display); font-size:15px; font-weight:700; color:var(--t1); margin-top:3px; }
+.hv-door .da { font-size:12px; color:var(--teal); margin-top:5px; }
+[data-theme="light"] .hv-door .da { color:var(--teal-dk); }
 
+/* ── THE MISSION · M2, the one place the author appears ── */
+.hv-mission { max-width:1100px; margin:0 auto; padding:30px clamp(20px,5vw,80px) 56px; }
+.hv-mission-in { border:1px solid var(--border2); border-radius:12px; padding:26px clamp(18px,3vw,34px); background:var(--surface); }
+.hv-mk { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); }
+[data-theme="light"] .hv-mk { color:var(--teal-dk); }
+.hv-mission h2 { font-family:var(--display); font-size:clamp(20px,2.6vw,26px); font-weight:800; color:var(--t1); margin-top:8px; letter-spacing:-.02em; }
+.hv-mission p { font-size:14.5px; color:var(--t2); line-height:1.75; margin-top:10px; max-width:72ch; }
+.hv-mission-foot { display:flex; gap:18px; flex-wrap:wrap; align-items:baseline; margin-top:14px; font-size:13px; }
+.hv-mission-foot a { color:var(--teal); text-decoration:none; }
+.hv-mission-foot a:hover { color:var(--t1); }
+[data-theme="light"] .hv-mission-foot a { color:var(--teal-dk); }
+.hv-cred { font-family:var(--mono); font-size:11px; color:var(--t3); }
 
-/* START HERE */
-.start-here { background:var(--surface); }
-.start-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.start-card { background:var(--raised); border:1px solid var(--border); border-radius:var(--radius); padding:26px 24px; display:flex; flex-direction:column; gap:12px; position:relative; overflow:hidden; transition:all .2s; }
-.start-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
-.start-card.s1::after { background:var(--teal); }
-.start-card.s2::after { background:var(--blue-hi); }
-.start-card.s3::after { background:var(--amber); }
-.start-card:hover { border-color:var(--border2); transform:translateY(-3px); box-shadow:var(--shadow); }
-.start-num { font-family:var(--display); font-size:42px; font-weight:800; line-height:1; opacity:.12; position:absolute; top:16px; right:20px; }
-.start-card.s1 .start-num { color:var(--teal); }
-.start-card.s2 .start-num { color:var(--blue-hi); }
-.start-card.s3 .start-num { color:var(--amber); }
-.start-path-label { font-family:var(--mono); font-size:10px; color:var(--t3); letter-spacing:.1em; text-transform:uppercase; }
-.start-title { font-family:var(--display); font-size:19px; font-weight:700; color:var(--t1); }
-.start-desc { font-size:13px; color:var(--t2); line-height:1.65; flex:1; }
-.start-cta { font-size:12px; color:var(--teal); font-weight:600; display:flex; align-items:center; gap:6px; margin-top:4px; text-decoration:none; }
-.start-cta-arrow { display:inline-block; transition:transform .15s; }
-.start-card:hover .start-cta-arrow { transform:translateX(5px); }
-
-/* TOOLS */
-.tools-section { background:var(--dark); }
-.lab-notice { border-left:3px solid var(--amber); padding:6px 0 6px 14px; display:flex; align-items:center; gap:16px; margin-bottom:24px; }
-.ln-marker { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; color:var(--amber); flex-shrink:0; }
-.ln-text { font-size:13px; color:var(--t2); }
-.ln-text strong { color:var(--amber); }
-.ln-link { font-size:12px; color:var(--amber); font-weight:600; flex-shrink:0; padding:5px 14px; border:1px solid rgba(232,168,56,.3); border-radius:8px; transition:all .15s; margin-left:auto; text-decoration:none; }
-.ln-link:hover { background:rgba(232,168,56,.12); color:var(--amber); }
-.row-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--space-7); }
-.view-all { font-size:13px; color:var(--teal); font-weight:500; white-space:nowrap; text-decoration:none; }
-.view-all:hover { color:var(--t1); }
-
-/* STATS */
-.stats-bar { background:var(--dark); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:32px clamp(20px,5vw,80px); }
-.stats-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-.stat-card { border-top:2px solid var(--border2); padding:8px 2px 0; text-align:center; }
-.stat-num { font-family:var(--display); font-size:38px; font-weight:800; color:var(--teal); line-height:1; font-variant-numeric:tabular-nums; }
-.stat-label { font-size:12px; color:var(--t2); margin-top:7px; line-height:1.45; }
-.stat-source { margin-top:6px; }
-.stat-source a { color:var(--t3); font-size:10px; font-family:var(--mono); text-decoration:none; border-bottom:1px dotted var(--t4); transition:color .15s; }
-.stat-source a:hover { color:var(--teal); }
-.citations-bar { background:var(--surface); border-top:1px solid var(--border); padding:16px clamp(20px,5vw,80px); }
-.citations-inner { max-width:1100px; margin:0 auto; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
-.citations-label { font-size:9px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--t3); flex-shrink:0; }
-.citations-list { display:flex; flex-wrap:wrap; gap:4px 18px; list-style:none; }
-.citations-list li { font-size:10px; font-family:var(--mono); }
-.citations-list a { color:var(--t3); text-decoration:none; border-bottom:1px dotted var(--t4); transition:color .15s; }
-.citations-list a:hover { color:var(--teal); }
-
-/* ABOUT */
-.about-section { background:var(--surface); border-top:1px solid var(--border); }
-.about-grid { display:grid; grid-template-columns:auto 1fr; gap:48px; align-items:center; }
-.about-identity { display:flex; flex-direction:column; align-items:center; gap:10px; }
-.about-avatar-img-wrap { width:90px; height:90px; border-radius:50%; overflow:hidden; border:2px solid rgba(78,205,196,.3); }
-.about-avatar-img { width:100%; height:100%; object-fit:cover; object-position:top center; }
-.about-name { font-family:var(--display); font-size:16px; font-weight:700; color:var(--t1); text-align:center; }
-.about-creds { font-family:var(--mono); font-size:11px; color:var(--teal); text-align:center; line-height:1.6; }
-.about-text { font-size:16px; color:var(--t2); line-height:1.8; max-width:680px; }
-.about-text p { margin-bottom:14px; }
-.about-text p:last-child { margin-bottom:0; }
-.about-text strong { color:var(--t1); font-weight:500; }
-.about-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
-.about-tag { font-size:11px; padding:4px 12px; border-radius:8px; background:var(--surface); color:var(--t2); border:1px solid var(--border2); }
-.ac-guest { border-left:3px solid var(--green) !important; }
-.tag-guest { background:rgba(45,155,111,.12); color:#4ecb8d; border:1px solid rgba(45,155,111,.28); font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:10px; font-family:var(--mono); }
-
-/* RESPONSIVE */
-@media (max-width:900px) {
-  .start-grid   { grid-template-columns:1fr; }
-  .about-grid   { grid-template-columns:1fr; }
-  .about-identity { flex-direction:row; align-items:center; justify-content:flex-start; }
-  .stats-inner  { grid-template-columns:repeat(2,1fr); }
-  .row-header   { flex-direction:column; align-items:flex-start; gap:10px; }
-}
-@media (max-width:640px) {
-  .stats-inner  { grid-template-columns:1fr 1fr; }
-}
-/* phone pass (699 = the kit-wide line): the hero stops reserving 88vh of
-   mostly blank space, the joined button pair wraps instead of overflowing,
-   and the amber lab notice learns to wrap its three pieces */
+/* ── PHONE (699 = the kit line): pinned-high search, scrolling chip rail ── */
 @media (max-width:699px) {
-  .hero-v3-content { min-height:auto; padding-top:clamp(44px,7vh,64px); }
-  .hero-v3 h1 { font-size:clamp(34px,10.5vw,44px); }
-  .hero-v3-btns { flex-wrap:wrap; gap:10px; }
-  .hero-v3-btns .btn-primary { border-radius:8px; }
-  .hero-v3-ghost { border-left:2px solid var(--border); border-radius:8px; }
-  .hero-v3-status { width:100%; max-width:none; }
-  .featured-card { padding:22px 18px; }
-  .lab-notice { flex-wrap:wrap; }
-  .ln-link { margin-left:0; }
+  .hv-hero-content { padding:150px 20px 34px; }
+  #hu-compass-btn { top:78px; width:120px; height:120px; }
+  .hv-hero h1 { font-size:clamp(30px,9vw,38px); }
+  .hv-search { min-height:48px; }
+  .hv-chips { flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; scrollbar-width:none; padding-bottom:4px; }
+  .hv-chips::-webkit-scrollbar { display:none; }
+  .hv-chip { flex:none; min-height:44px; display:inline-flex; align-items:center; }
+  .hv-tab { padding:12px 12px; min-height:44px; }
+  .hv-doors { grid-template-columns:1fr; }
+  .hv-door { min-height:44px; }
+  .hv-row .sub { display:none; }
+  .hv-pulse { display:none; }
 }
-/* touch: carousel controls reach the 44px floor; dots get a real hitbox */
 @media (hover:none) {
-  .carousel-arrow { width:44px; height:44px; }
-  .carousel-dot { width:10px; height:10px; position:relative; }
-  .carousel-dot::after { content:''; position:absolute; inset:-9px; }
-  .carousel-dot.active { width:22px; }
+  .hv-search { min-height:48px; }
+  .hv-chip, .hv-tab { min-height:44px; }
 }
-
-/* ── Light mode: teal/light-green text drops to the darker accent tokens ── */
-[data-theme="light"] .hero-v3 h1 strong { color:var(--teal-dk); }
-[data-theme="light"] .hero-v3-status-num { color:var(--teal-dk); }
-[data-theme="light"] .fc-badge { color:var(--teal-dk); }
-[data-theme="light"] .featured-card:hover .fc-arrow { color:var(--teal-dk); }
-[data-theme="light"] .start-cta { color:var(--teal-dk); }
-[data-theme="light"] .view-all { color:var(--teal-dk); }
-[data-theme="light"] .stat-num { color:var(--teal-dk); }
-[data-theme="light"] .stat-source a:hover { color:var(--teal-dk); }
-[data-theme="light"] .citations-list a:hover { color:var(--teal-dk); }
-[data-theme="light"] .about-creds { color:var(--teal-dk); }
-[data-theme="light"] .tag-guest { color:var(--green); }
-[data-theme="light"] .creds-more { color:var(--teal-dk) !important; }
-[data-theme="light"] .ln-marker { color:var(--amber-dk); }
-[data-theme="light"] .ln-text strong { color:var(--amber-dk); }
-[data-theme="light"] .ln-link { color:var(--amber-dk); }
-[data-theme="light"] .ln-link:hover { color:var(--amber-dk); }
 </style>
 
-<!-- HERO V3 -->
-<div class="hero-v3">
-  <canvas id="hu-network-bg"></canvas>
-  <button id="hu-compass-btn" type="button" aria-label="Redraw the map with new routes" title="Click for new routes"></button>
+<!-- HERO -->
+<div class="hv-hero">
+  <canvas id="hu-network-bg" aria-hidden="true"></canvas>
+  <button id="hu-compass-btn" type="button" aria-label="Draw the map: new routes each press" title="Draw the map"></button>
   <a id="hu-secret-tile" href="/secret-menu/" aria-label="Secret Menu" title="Secret Menu"></a>
-  <div class="hero-v3-content">
-    <div class="hero-v3-text">
-      <div class="eyebrow" style="margin-bottom:22px">
-        <div class="eyebrow-line"></div>
-        <span>Mapping the system behind modern healthcare.</span>
-      </div>
-      <h1>Healthcare Doesn't<br><strong>Come With a Map.</strong></h1>
-      <p class="hero-v3-desc">So we drew one. Every clinical, operational, financial, and technical connection, in one system map. Built for people who need to see past their own slice.</p>
-      <div class="hero-v3-btns">
-        <a class="btn-primary" href="/atlas/">Explore the Atlas</a><a class="hero-v3-ghost" href="/learn/">Explore Articles</a>
-      </div>
-    </div>
-    <div class="hero-v3-status hu-ticks">
-      <div class="hero-v3-status-label">// Site Status</div>
-      <div class="hero-v3-status-row">
-        <span class="hero-v3-status-text">Interactive Tools</span>
-        <span class="hero-v3-status-num">{{ (collections.toolPages | length) + (collections.labPages | length) }}</span>
-      </div>
-      <div class="hero-v3-status-row">
-        <span class="hero-v3-status-text">Learning Modules</span>
-        <span class="hero-v3-status-num">{{ collections.learnModules | length }}</span>
-      </div>
-      <div class="hero-v3-status-row">
-        <span class="hero-v3-status-text">Conference Talks</span>
-        <span class="hero-v3-status-num">{{ collections.talkPages | length }}</span>
-      </div>
-      <div class="hero-v3-status-updated"><span>Last updated</span><b>{{ build.date | dateFilter }}</b></div>
+  <div class="hv-hero-content">
+    <h1>Map the system. <strong>Understand the why.</strong></h1>
+    <p class="hv-sub">Interactive tools and honest writing on the machinery behind American healthcare.</p>
+    <button class="hv-search" type="button" data-hu-search aria-label="Search the site">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
+      <b>Try: travel pay in Sacramento &middot; FHIR &middot; hospital prices</b>
+      <span class="k">/</span>
+    </button>
+    <div class="hv-chips">
+      <a class="hv-chip" href="#hv-cat" data-tab-jump="careers-pay">Careers &amp; Pay</a>
+      <a class="hv-chip" href="#hv-cat" data-tab-jump="maps-systems">Maps &amp; Systems</a>
+      <a class="hv-chip" href="#hv-cat" data-tab-jump="learn-play">Learn &amp; Play</a>
     </div>
   </div>
 </div>
 
-<!-- FEATURED CAROUSEL -->
-<section class="featured-section">
-  <div style="max-width:1100px;margin:0 auto;padding:56px clamp(20px,5vw,80px) 40px">
-    <div class="carousel-section-head">
-      <div>
-        <div class="eyebrow"><div class="eyebrow-line"></div><span>Featured</span></div>
-        <h2 class="section-h-v2">Recent Additions</h2>
-        <div class="section-accent-v2"></div>
-        <p class="section-intro" style="margin-bottom:0">The latest talks, articles, and tools added to the site.</p>
-      </div>
-      <div class="carousel-nav">
-        <button class="carousel-arrow" id="carPrev">&#8592;</button>
-        <div class="carousel-dots" id="carDots"></div>
-        <button class="carousel-arrow" id="carNext">&#8594;</button>
-      </div>
-    </div>
-    <div class="carousel-wrap">
-      <div class="carousel">
-        {% set featuredList = collections.featuredPages or [] %}
-        {% for item in featuredList %}
-          <a class="featured-card" href="{{ item.url }}">
-            <div class="fc-meta">
-              {% if item.data.cme_credit %}<span class="fc-badge">CME Credit</span>{% else %}<span class="fc-badge">Featured</span>{% endif %}
-              <span class="fc-date">{{ item.data.date | dateFilter }}</span>
-            </div>
-            <div class="fc-title">{{ item.data.title }}</div>
-            <div class="fc-desc">{{ item.data.description }}</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
-              <div class="fc-tags">
-                {% for tag in item.data.tags | slice(0, 3) %}
-                  <span class="fc-tag">{{ tag }}</span>
-                {% endfor %}
-              </div>
-              <span class="fc-arrow">→</span>
-            </div>
-          </a>
-        {% endfor %}
-      </div>
-    </div>
+<!-- CATALOG -->
+<section class="hv-cat" id="hv-cat" aria-label="The tool catalog">
+  <div class="hv-tabs" role="tablist" aria-label="Tool clusters">
+    <button class="hv-tab" role="tab" id="tab-careers-pay" aria-controls="pane-careers-pay" aria-selected="true">Careers &amp; Pay</button>
+    <button class="hv-tab" role="tab" id="tab-maps-systems" aria-controls="pane-maps-systems" aria-selected="false">Maps &amp; Systems</button>
+    <button class="hv-tab" role="tab" id="tab-learn-play" aria-controls="pane-learn-play" aria-selected="false">Learn &amp; Play</button>
+    <a class="hv-alltools" href="/tools/">All tools &rarr;</a>
+  </div>
+
+  <div class="hv-pane" id="pane-careers-pay" role="tabpanel" aria-labelledby="tab-careers-pay">
+    {%- for tool in tools %}{% if tool.status == 'live' and tool.cluster == 'careers-pay' %}
+    <a class="hc-card" href="{{ tool.url }}">
+      <div class="hc-thumb" aria-hidden="true" style="background-image:url('/assets/images/tool-thumbs/{{ tool.id }}.png')"></div>
+      <div class="hc-title">{{ tool.title }}</div>
+      <div class="hc-desc">{{ tool.desc | truncate(140) }}</div>
+      <div class="hc-meta">{{ tool.tags | join(' · ') }}</div>
+    </a>
+    {% endif %}{%- endfor %}
+  </div>
+
+  <div class="hv-pane" id="pane-maps-systems" role="tabpanel" aria-labelledby="tab-maps-systems" hidden>
+    {%- for tool in tools %}{% if tool.status == 'live' and tool.cluster == 'maps-systems' %}
+    <a class="hc-card" href="{{ tool.url }}">
+      <div class="hc-thumb" aria-hidden="true" style="background-image:url('/assets/images/tool-thumbs/{{ tool.id }}.png')"></div>
+      <div class="hc-title">{{ tool.title }}</div>
+      <div class="hc-desc">{{ tool.desc | truncate(140) }}</div>
+      <div class="hc-meta">{{ tool.tags | join(' · ') }}</div>
+    </a>
+    {% endif %}{%- endfor %}
+    <a class="hc-card" href="/atlas/">
+      <div class="hc-thumb" aria-hidden="true" style="background-image:url('/assets/images/tool-thumbs/atlas.png')"></div>
+      <div class="hc-title">Healthcare Atlas</div>
+      <div class="hc-desc">The hex territory map this whole site is built on. Zones, nodes, routes, and every connection between them.</div>
+      <div class="hc-meta">Territory &middot; System Map &middot; Interactive</div>
+    </a>
+  </div>
+
+  <div class="hv-pane" id="pane-learn-play" role="tabpanel" aria-labelledby="tab-learn-play" hidden>
+    {%- for tool in tools %}{% if tool.status == 'live' and tool.cluster == 'learn-play' %}
+    <a class="hc-card" href="{{ tool.url }}">
+      <div class="hc-thumb" aria-hidden="true" style="background-image:url('/assets/images/tool-thumbs/{{ tool.id }}.png')"></div>
+      <div class="hc-title">{{ tool.title }}</div>
+      <div class="hc-desc">{{ tool.desc | truncate(140) }}</div>
+      <div class="hc-meta">{{ tool.tags | join(' · ') }}</div>
+    </a>
+    {% endif %}{%- endfor %}
+    <a class="hc-card" href="/learn/">
+      <div class="hc-thumb" aria-hidden="true" style="background-image:url('/assets/images/tool-thumbs/learn-library.png')"></div>
+      <div class="hc-title">The Learn Library</div>
+      <div class="hc-desc">All {{ collections.learnModules | length }} learning modules: the 4Ps, EHR architecture, the payer machine, FHIR, and the rest of the territory.</div>
+      <div class="hc-meta">{{ collections.learnModules | length }} Modules &middot; Deep Dives</div>
+    </a>
   </div>
 </section>
 
-<!-- START HERE -->
-<section class="section start-here" id="start-here">
-  <div class="section-inner">
-    {{ sectionHeader("New Here?", "Three ways into the system", "Whether you work at the bedside, in analytics, or in a boardroom, this is your layer of the map.") }}
-    <div class="start-grid">
-      <div class="start-card s1">
-        <div class="start-num">01</div>
-        <div class="start-path-label">Path 01 &middot; For Clinicians</div>
-        <div class="start-title">I Work in Healthcare</div>
-        <div class="start-desc">You work the bedside or the clinic, and the AI pitches have already reached your unit. You want a straight read on what these tools actually deliver, what they miss, and who still owns the risk when one is wrong.</div>
-        <a class="start-cta" href="/learn/ai-in-healthcare/">Start with the AI reality check <span class="start-cta-arrow">&rarr;</span></a>
-      </div>
-      <div class="start-card s2">
-        <div class="start-num">02</div>
-        <div class="start-path-label">Path 02 &middot; For Analysts &amp; Informaticists</div>
-        <div class="start-title">I Work with Healthcare Data</div>
-        <div class="start-desc">You write SQL, pull reports, or work with healthcare datasets and need the clinical context behind the tables: what an encounter is, how patient identity works, and why reporting lags exist.</div>
-        <a class="start-cta" href="/tools/#sql-mystery">Try the SQL Mystery Game <span class="start-cta-arrow">&rarr;</span></a>
-      </div>
-      <div class="start-card s3">
-        <div class="start-num">03</div>
-        <div class="start-path-label">Path 03 &middot; For Leaders &amp; Strategists</div>
-        <div class="start-title">I Make Technology Decisions</div>
-        <div class="start-desc">You are evaluating AI platforms, interoperability initiatives, or EHR implementations and need an honest picture of what the data shows and where the real gaps are.</div>
-        <a class="start-cta" href="/learn/leading-the-ai-transition/">Start with the leadership playbook <span class="start-cta-arrow">&rarr;</span></a>
-      </div>
+<!-- NEW ON THE SITE -->
+<section class="hv-latest" aria-label="New on the site">
+  <div class="hv-latest-head">
+    <span class="hv-shelf"><i>&#9472; </i>New on the site</span>
+    <div class="hv-pulse">
+      <span><b>{{ (collections.toolPages | length) + (collections.labPages | length) }}</b> tools</span>
+      <span><b>{{ collections.learnModules | length }}</b> modules</span>
+      <span><b>{{ collections.talkPages | length }}</b> talks</span>
+      <span>updated <b style="font-size:10px">{{ build.date | dateFilter }}</b></span>
+    </div>
+  </div>
+  {%- for item in collections.featuredPages %}{% if loop.index <= 3 %}
+  <a class="hv-row" href="{{ item.url }}">
+    <span class="d">{{ item.data.date | dateFilter }}</span>
+    <span class="hv-row-t">{{ item.data.title }}</span>
+    <span class="sub">{{ item.data.description | truncate(70) }}</span>
+    <span class="ty">{% if item.data.section == 'tool' %}Tool{% elif item.data.section == 'rounds' %}Rounds{% elif item.data.section == 'talk' %}Talk{% else %}Module{% endif %}</span>
+  </a>
+  {% endif %}{%- endfor %}
+</section>
+
+<!-- THREE WAYS IN -->
+<section class="hv-doors" aria-label="Three ways in">
+  <a class="hv-door" href="/learn/ai-in-healthcare/">
+    <div class="dl">Path 01 &middot; Clinician</div>
+    <div class="dt">I work in healthcare</div>
+    <div class="da">Start with the AI reality check &rarr;</div>
+  </a>
+  <a class="hv-door" href="/tools/sql-mystery/">
+    <div class="dl">Path 02 &middot; Analyst</div>
+    <div class="dt">I work with the data</div>
+    <div class="da">Try the SQL Mystery &rarr;</div>
+  </a>
+  <a class="hv-door" href="/learn/leading-the-ai-transition/">
+    <div class="dl">Path 03 &middot; Leader</div>
+    <div class="dt">I make the calls</div>
+    <div class="da">Start with the leadership playbook &rarr;</div>
+  </a>
+</section>
+
+<!-- THE MISSION -->
+<section class="hv-mission" aria-label="The mission">
+  <div class="hv-mission-in hu-ticks">
+    <div class="hv-mk">The mission</div>
+    <h2>Map the connections, not just the components.</h2>
+    <p>Healthcare technology is full of territory nobody maps in plain language. Clinicians use systems nobody explains. Analysts query data nobody translates. Leaders buy platforms nobody has honestly assessed. Healthcare Uncharted exists to close that gap, for every role in the system, not just the technical ones. Built from real clinical and informatics experience.</p>
+    <div class="hv-mission-foot">
+      <a href="/about/">The whole story &rarr;</a>
+      <span class="hv-cred">Built by David Eitel &middot; RRT, MHA, MSRT, RRT-ACCS &middot; Senior Clinical Informatics Analyst</span>
     </div>
   </div>
 </section>
-
-<!-- TOOLS V2 -->
-<section class="section tools-section" id="tools">
-  <div class="section-inner">
-    <div class="row-header">
-      <div>
-        <div class="eyebrow"><div class="eyebrow-line"></div><span>Interactive Tools</span></div>
-        <h2 class="section-h-v2">Interactive system views</h2>
-        <div class="section-accent-v2"></div>
-        <p class="section-intro" style="margin-bottom:0">Not slides. Not PDFs. Each tool maps a different layer of the system, built to make the abstract visible.</p>
-      </div>
-      <a class="view-all" href="/tools/">View all tools →</a>
-    </div>
-    <div class="lab-notice">
-      <span class="ln-marker">MAP</span>
-      <div class="ln-text"><strong>Map section active.</strong> Experimental layers and works in progress live there. Some are still being built.</div>
-      <a class="ln-link" href="/atlas/">Visit the Atlas →</a>
-    </div>
-    <div class="card-grid">
-      {% for tool in collections.toolPages %}
-        {% if loop.index <= 3 %}
-        {{ card("interactive", tool.data.title, tool.data.description, tool.url, tool.data.tags) }}
-        {% endif %}
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-
-<!-- ROUNDS -->
-{% if rounds.entries and rounds.entries | selectattr("status", "equalto", "published") | list | length %}
-<section class="section" id="rounds">
-  <div class="section-inner">
-    <div class="row-header">
-      <div>
-        <div class="eyebrow" style="margin-bottom:var(--space-3)"><div class="eyebrow-line" style="background:#7B92AB"></div><span>Current Events &amp; Takes</span></div>
-        <h2 class="section-h-v2">Rounds</h2>
-        <div class="section-accent-v2" style="background:#7B92AB"></div>
-        <p class="section-intro" style="margin-bottom:0">News, commentary, and guest perspectives on what&rsquo;s happening now &mdash; policy shifts, industry moves, and the clinical implications nobody explains clearly.</p>
-      </div>
-      <a class="view-all" href="/rounds/">All rounds &rarr;</a>
-    </div>
-
-    <div class="card-grid">
-      {% set roundsPublished = rounds.entries | selectattr("status", "equalto", "published") | list %}
-      {% for entry in roundsPublished %}
-        {% if loop.index <= 3 %}
-        {{ card("rounds", entry.title, entry.summary, "/rounds/" + entry.slug + "/", entry.tags, entry.posted, entry.readMinutes) }}
-        {% endif %}
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat-card">
-      <div class="stat-num">1987</div>
-      <div class="stat-label">Year HL7 was founded &mdash; the standard that made EHR interoperability possible</div>
-      <div class="stat-source"><a href="https://www.hl7.org/about/index.cfm" target="_blank" rel="noopener">HL7 International &middot; About HL7</a></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">$25.9B</div>
-      <div class="stat-label">HITECH Act EHR incentive payments that drove nationwide adoption from 2009 forward</div>
-      <div class="stat-source"><a href="https://www.hhs.gov/hipaa/for-professionals/special-topics/hitech-act-enforcement-interim-final-rule/index.html" target="_blank" rel="noopener">HHS.gov &middot; HITECH Act</a></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">~36%</div>
-      <div class="stat-label">U.S. hospital market share held by the largest single EHR vendor by bed count</div>
-      <div class="stat-source"><a href="https://klasresearch.com" target="_blank" rel="noopener">KLAS Research &middot; 2024 EHR Rankings</a></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">157</div>
-      <div class="stat-label">Defined FHIR R4 resource types &mdash; the open standard for healthcare data exchange</div>
-      <div class="stat-source"><a href="https://hl7.org/fhir/R4/resourcelist.html" target="_blank" rel="noopener">HL7 FHIR R4 &middot; Resource List</a></div>
-    </div>
-  </div>
-</div>
-
-<!-- Citations bar -->
-<div class="citations-bar">
-  <div class="citations-inner">
-    <span class="citations-label">Page Sources</span>
-    <ul class="citations-list">
-      <li><a href="https://www.hl7.org/about/index.cfm" target="_blank" rel="noopener">HL7 International &mdash; About HL7</a></li>
-      <li><a href="https://hl7.org/fhir/R4/resourcelist.html" target="_blank" rel="noopener">HL7 FHIR R4 Resource List</a></li>
-      <li><a href="https://www.hhs.gov/hipaa/for-professionals/special-topics/hitech-act-enforcement-interim-final-rule/index.html" target="_blank" rel="noopener">HHS &mdash; HITECH Act Rule</a></li>
-      <li><a href="https://www.healthit.gov/topic/federal-hit-strategic-plan" target="_blank" rel="noopener">ONC &mdash; Federal HIT Strategic Plan</a></li>
-      <li><a href="https://klasresearch.com" target="_blank" rel="noopener">KLAS Research &mdash; EHR Market Data</a></li>
-      <li><a href="https://fhir.epic.com/" target="_blank" rel="noopener">Epic &mdash; Public FHIR API Docs</a></li>
-      <li><a href="https://fhir.cerner.com/" target="_blank" rel="noopener">Oracle Health (Cerner) &mdash; Public FHIR Docs</a></li>
-    </ul>
-  </div>
-</div>
-
-<!-- ABOUT -->
-<section class="section about-section" id="about">
-  <div class="section-inner">
-    <div class="about-grid">
-      <div class="about-identity">
-        <div class="about-avatar-img-wrap">
-          <img src="/assets/images/David_Picture.jpg" alt="David Eitel" class="about-avatar-img" width="341" height="512" loading="lazy" decoding="async">
-        </div>
-        <div>
-          <div class="about-name">David Eitel</div>
-          <div class="about-creds">RRT &middot; MHA<br>MSRT &middot; RRT-ACCS</div>
-        </div>
-      </div>
-      <div>
-        <div class="eyebrow" style="margin-bottom:var(--space-4)"><div class="eyebrow-line"></div><span>About Healthcare Uncharted</span></div>
-        <div class="about-text">
-          <p>Healthcare technology is full of territory that nobody maps in plain language. Clinicians use enterprise EHRs every day without understanding why the data is structured the way it is. Analysts write reports without knowing the clinical meaning behind the tables. Leaders make AI investments without knowing what actually works versus what is still emerging.</p>
-          <p><strong>Healthcare Uncharted exists to close that gap.</strong> This is a living system map built from real clinical and informatics experience &mdash; interactive tools, deep-dive articles, terminology guides, and honest assessments of where healthcare technology actually stands.</p>
-          <p>Built by a Respiratory Therapist turned healthcare informaticist. The goal is simple: <strong>map the connections, not just the components</strong> &mdash; for every role in the system, not just the technical ones.</p>
-        </div>
-        <div class="about-tags">
-          <span class="about-tag">Respiratory Therapy</span>
-          <span class="about-tag">Health Administration</span>
-          <span class="about-tag">Clinical Informatics</span>
-          <span class="about-tag">EHR Architecture</span>
-          <span class="about-tag">Health Data Standards</span>
-          <span class="about-tag">AI in Healthcare</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- CREDENTIALS STRIP -->
-<div style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-  <div style="max-width:1100px;margin:0 auto;padding:18px clamp(20px,5vw,80px);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--t2)">
-    <div><strong style="color:var(--t1)">David Eitel</strong> · RRT, MHA, MSRT, RRT-ACCS · Senior Clinical Informatics Analyst at Intermountain Health</div>
-    <a href="/about/" class="creds-more" style="color:var(--teal);text-decoration:none;white-space:nowrap">Learn more →</a>
-  </div>
-</div>
 
 <script>
-// ── SEARCH ──────────────────────────────────────────────
-const SEARCH_DATA = [
-  { label:'Healthcare Iceberg Map', sub:'Interactive 8-layer map of the U.S. healthcare system', type:'tool', url:'/tools/healthcare-iceberg-map/' },
-  { label:'Clinical SQL Mystery Game', sub:'Learn EHR data models by solving a clinical mystery', type:'tool', url:'/tools/clinical-sql-mystery/' },  { label:'Healthcare Vendor Directory', sub:'Searchable directory of healthcare technology vendors', type:'tool', url:'/tools/healthcare-vendor-directory/' },  { label:'Patient — The 4Ps Framework', sub:'Encounters, events, and data from the patient view', type:'learn', url:'/learn/4ps-framework/' },
-  { label:'Provider — EHR Workflows', sub:'Clinical data, orders, and documentation structure', type:'learn', url:'/learn/4ps-framework/' },
-  { label:'Payer — Claims and Billing', sub:'How insurers adjudicate and what gets denied', type:'learn', url:'/learn/4ps-framework/' },
-  { label:'Policy Makers — CMS, ONC, HHS', sub:'The regulations and incentives that shape the system', type:'learn', url:'/learn/4ps-framework/' },
-  { label:'FHIR R4 Resource Types', sub:'HL7 FHIR R4 — 157 defined resource types', type:'reference', url:'https://hl7.org/fhir/R4/resourcelist.html' },
-  { label:'Epic Public FHIR Documentation', sub:'fhir.epic.com — open API and resource docs', type:'reference', url:'https://fhir.epic.com/' },
-  { label:'Oracle Health FHIR Documentation', sub:'fhir.cerner.com — open API and resource docs', type:'reference', url:'https://fhir.cerner.com/' },
-  { label:'Healthcare Atlas', sub:'Hex territory map of the U.S. healthcare system', type:'tool', url:'/atlas/' },
-  { label:'Pop Health Multi-Lens Map', sub:'State-level healthcare data across six lenses', type:'tool', url:'/tools/multi-lens-map/' },
-  { label:'Assignment Compass', sub:'Compare pay and real monthly costs between two locations', type:'tool', url:'/tools/assignment-compass/' },
-  { label:'U.S. Hospital Operations Map', sub:'Live national map of CMS healthcare infrastructure', type:'tool', url:'/tools/healthcare-operators-map/' },
-  { label:'Healthcare Career Tree', sub:'Branching map of healthcare careers and credentials', type:'tool', url:'/tools/healthcare-career-tree/' },
-  { label:'Hospital Blueprint', sub:'Interactive cross-section of a modern hospital', type:'tool', url:'/tools/hospital-map/' },
-];
-
-// ── CAROUSEL NAV ────────────────────────────────────────
+// ── CATALOG TABS ─────────────────────────────────────────
 (function () {
-  const carousel = document.querySelector('.carousel');
-  const prevBtn  = document.getElementById('carPrev');
-  const nextBtn  = document.getElementById('carNext');
-  const dotsWrap = document.getElementById('carDots');
-  if (!carousel || !dotsWrap) return;
-
-  const cards = Array.from(carousel.querySelectorAll('.featured-card'));
-  let current = 0;
-
-  cards.forEach((_, i) => {
-    const dot = document.createElement('button');
-    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-    dot.addEventListener('click', () => goTo(i));
-    dotsWrap.appendChild(dot);
-  });
-
-  function goTo(n) {
-    current = Math.max(0, Math.min(n, cards.length - 1));
-    cards[current].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    dotsWrap.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.hv-tab'));
+  function show(tab) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      var pane = document.getElementById(t.getAttribute('aria-controls'));
+      if (pane) pane.hidden = !on;
+    });
   }
-
-  if (prevBtn) prevBtn.addEventListener('click', () => goTo(current - 1));
-  if (nextBtn) nextBtn.addEventListener('click', () => goTo(current + 1));
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { show(t); });
+    t.addEventListener('keydown', function (ev) {
+      if (ev.key === 'ArrowRight') { show(tabs[(i + 1) % tabs.length]); tabs[(i + 1) % tabs.length].focus(); }
+      if (ev.key === 'ArrowLeft') { show(tabs[(i - 1 + tabs.length) % tabs.length]); tabs[(i - 1 + tabs.length) % tabs.length].focus(); }
+    });
+  });
+  // hero cluster chips jump to the catalog with the right tab lit
+  document.querySelectorAll('[data-tab-jump]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var tab = document.getElementById('tab-' + chip.getAttribute('data-tab-jump'));
+      if (tab) show(tab);
+    });
+  });
+  // measurement: tool entries from the home catalog
+  document.querySelectorAll('.hc-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      if (window.goatcounter && window.goatcounter.count) {
+        window.goatcounter.count({ path: 'home/tool', title: card.getAttribute('href'), event: true });
+      }
+    });
+  });
 })();
 
-// ── HEX GRID BACKDROP ────────────────────────────────────
-// A faint honeycomb behind the hero, the grid the Atlas is built from.
-// A compass rose sits at the centre, like the Atlas hub. Each page load draws
-// several routes that walk the hex borders between random hexes, plus a field
-// of lit nodes. Roughly 1 in 10 loads is a constellation: routes burst out of
-// the compass. Static after that: redraws only on resize and theme change.
+// ── HEX WORLD · drawn on tap (The Earned Scenery Rule) ───
+// The brand rose renders alone at rest, top-center. The first press of the
+// rose draws the hex panel and walking routes into the hero zone; every
+// further press rerolls them. The 8-tap Secret Menu ride is unchanged.
 (function () {
   const cv = document.getElementById('hu-network-bg');
   if (!cv) return;
   const ctx = cv.getContext('2d');
   let W = 0, H = 0;
+  let revealed = false;
 
   const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
+  const ROSE_CY = 92;          // rose anchor: top-center, matches #hu-compass-btn
+  const ROSE_S  = 22;          // compass scale (hex-frame radius = 2.7 * this)
 
-  // Route endpoints in fractional coords. Rolled on page load and again each
-  // time the compass is clicked, so fresh routes draw on demand. One crosses
-  // left-to-right, one top-to-bottom.
   function rollRoutes() {
     const r = [
-      // left-to-right
       { a: [0.05 + Math.random() * 0.22, 0.12 + Math.random() * 0.48],
         b: [0.66 + Math.random() * 0.28, 0.12 + Math.random() * 0.48] },
-      // top-to-bottom
       { a: [0.12 + Math.random() * 0.74, 0.05 + Math.random() * 0.16],
         b: [0.12 + Math.random() * 0.74, 0.74 + Math.random() * 0.20] }
     ];
-    // a diagonal now and then, for a touch more web without the clutter
     if (Math.random() < 0.4) {
       r.push({ a: [0.05 + Math.random() * 0.24, 0.58 + Math.random() * 0.30],
                b: [0.70 + Math.random() * 0.24, 0.08 + Math.random() * 0.30] });
     }
     return r;
   }
-
-  // Rare "constellation": routes burst out of the compass to points all around
-  // the board. Rolled on ~1 in 10 page loads (and compass clicks) as a treat.
   function rollSpecialRoutes() {
     const out = [];
-    const n = 6 + Math.floor(Math.random() * 3);            // 6 to 8 spokes
+    const n = 6 + Math.floor(Math.random() * 3);
     for (let i = 0; i < n; i++) {
       const ang = (i / n) * Math.PI * 2 + Math.random() * 0.35;
       const rad = 0.40 + Math.random() * 0.12;
       const bx = Math.max(0.04, Math.min(0.96, 0.5 + Math.cos(ang) * rad * 0.92));
       const by = Math.max(0.05, Math.min(0.93, 0.5 + Math.sin(ang) * rad));
-      out.push({ a: [0.5, 0.5], b: [bx, by] });
+      out.push({ a: [0.5, ROSE_CY / Math.max(H, 1)], b: [bx, by] });
     }
     return out;
   }
-
-  // Scattered lit hexes: accent nodes in random Atlas zone colors, rolled
-  // fresh each page load. They sit clear of the central compass.
   const ATLAS_COLORS = ['#FF6B6B','#6aabff','#4ECDC4','#5DBF87','#0EA5E9','#8B5CF6','#E8A838'];
   const hexToRgb = h =>
     [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)].join(',');
   function rollLitHexes(count) {
-    const n = (count != null) ? count : (7 + Math.floor(Math.random() * 4));  // 7 to 10
+    const n = (count != null) ? count : (7 + Math.floor(Math.random() * 4));
     const out = [];
     let guard = 0;
     while (out.length < n && guard++ < 300) {
       const fx = 0.04 + Math.random() * 0.92;
       const fy = 0.05 + Math.random() * 0.90;
-      if (Math.abs(fx - 0.5) < 0.11 && Math.abs(fy - 0.5) < 0.26) continue;   // clear the compass
+      if (Math.abs(fx - 0.5) < 0.14 && fy < 0.40) continue;    // clear the rose crown
       out.push({ a: [fx, fy], rgb: hexToRgb(ATLAS_COLORS[(Math.random() * ATLAS_COLORS.length) | 0]) });
     }
     return out;
   }
-
-  // Roll the whole backdrop. ~1 in 10 is a special constellation: a burst of
-  // routes out of the compass plus a denser field of lit nodes.
   function rollAll() {
     if (Math.random() < 0.1) {
       routes = rollSpecialRoutes();
-      litHexes = rollLitHexes(12 + Math.floor(Math.random() * 4));            // 12 to 15
+      litHexes = rollLitHexes(12 + Math.floor(Math.random() * 4));
     } else {
       routes = rollRoutes();
       litHexes = rollLitHexes();
@@ -758,24 +348,19 @@ const SEARCH_DATA = [
   let routes, litHexes;
   rollAll();
 
-  // Easter egg: a tile that glows dark green, reads "SM", and links to the
-  // (otherwise unlisted) Secret Menu. Teaser at clicks 8-9 (gone by 10), then
-  // a recurring cycle from 28 — visible 2 clicks, hidden 8 (28, 38, 48, ...).
-  // Re-rolls to a fresh tile each time it returns.
-  let secretTile = null;     // { fx, fy } once unlocked, else null
+  // Secret tile: same cadence as ever (teaser at presses 8-9, cycle from 28).
+  // New home: it lands in the side margins, clear of the centered content column.
+  let secretTile = null;
   let compassClicks = 0;
-
-  // A tile in the upper band of the board, clear of the bottom hero content
-  // and of the central compass.
   function rollSecretTile() {
     let guard = 0;
     while (guard++ < 200) {
-      const fx = 0.10 + Math.random() * 0.80;
-      const fy = 0.12 + Math.random() * 0.22;          // upper band: stays visible above the text
-      if (Math.abs(fx - 0.5) < 0.12 && fy > 0.30) continue;   // belt-and-suspenders compass clearance
+      const side = Math.random() < 0.5;
+      const fx = side ? 0.06 + Math.random() * 0.18 : 0.76 + Math.random() * 0.18;
+      const fy = 0.25 + Math.random() * 0.55;
       return { fx, fy };
     }
-    return { fx: 0.82, fy: 0.18 };
+    return { fx: 0.84, fy: 0.30 };
   }
 
   function hex(cx, cy, s) {
@@ -787,20 +372,15 @@ const SEARCH_DATA = [
     }
     ctx.closePath();
   }
-
-  // Nearest hex centre to a pixel point, in the pointy-top offset grid.
   function snap(x, y, colW, rowH) {
     const row = Math.round(y / rowH);
     const offset = (row % 2) ? colW / 2 : 0;
     const col = Math.round((x - offset) / colW);
     return [col * colW + offset, row * rowH];
   }
-
-  // Vertex graph of the visible honeycomb: every hex corner is a node, every
-  // hex edge a link. Routes walk this graph, so they follow tile borders.
   function buildGrid(s, colW, rowH) {
-    const verts = new Map();          // key -> {x, y}
-    const adj   = new Map();          // key -> Set(neighbour keys)
+    const verts = new Map();
+    const adj   = new Map();
     const key = (x, y) => Math.round(x) + ',' + Math.round(y);
     const addVert = (x, y) => {
       const k = key(x, y);
@@ -824,8 +404,6 @@ const SEARCH_DATA = [
     }
     return { verts, adj, key };
   }
-
-  // Corner of the hex at centre c that sits closest to the point `toward`.
   function nearestCorner(c, toward, s, grid) {
     let best = null, bestD = Infinity;
     for (let i = 0; i < 6; i++) {
@@ -838,8 +416,6 @@ const SEARCH_DATA = [
     }
     return best;
   }
-
-  // A* across the vertex graph: the shortest border-following path of edges.
   function astar(grid, startK, goalK) {
     if (!startK || !goalK) return null;
     if (startK === goalK) return [startK];
@@ -873,20 +449,15 @@ const SEARCH_DATA = [
     }
     return null;
   }
-
-  // One route across the board, walking hex borders from origin hex to target
-  // hex, with glowing origin and destination hexes. Endpoints snap to the grid.
   function drawRoute(route, grid, teal, s, colW, rowH) {
     const ca = snap(route.a[0] * W, route.a[1] * H, colW, rowH);
     const cb = snap(route.b[0] * W, route.b[1] * H, colW, rowH);
     const path = astar(grid, nearestCorner(ca, cb, s, grid), nearestCorner(cb, ca, s, grid));
-
     ctx.save();
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.shadowColor = `rgba(${teal},0.3)`;
     ctx.shadowBlur = 5;
-
     if (path && path.length > 1) {
       ctx.strokeStyle = `rgba(${teal},0.32)`;
       ctx.lineWidth = 1.4;
@@ -897,7 +468,6 @@ const SEARCH_DATA = [
       });
       ctx.stroke();
     }
-
     [ca, cb].forEach(c => {
       hex(c[0], c[1], s - 1);
       ctx.fillStyle = `rgba(${teal},0.12)`;
@@ -908,8 +478,6 @@ const SEARCH_DATA = [
     });
     ctx.restore();
   }
-
-  // One scattered lit hex: an accent node drawn in an Atlas zone color.
   function drawLitHex(lit, s, colW, rowH) {
     const c = snap(lit.a[0] * W, lit.a[1] * H, colW, rowH);
     const rgb = lit.rgb;
@@ -925,9 +493,6 @@ const SEARCH_DATA = [
     ctx.stroke();
     ctx.restore();
   }
-
-  // The secret tile: a dark-green glowing hex marked "SM". Drawn on the canvas,
-  // with a transparent <a> overlay positioned on top to make it a real link.
   function drawSecretTile(t, s, colW, rowH) {
     const c = snap(t.fx * W, t.fy * H, colW, rowH);
     ctx.save();
@@ -935,7 +500,7 @@ const SEARCH_DATA = [
     ctx.shadowColor = 'rgba(21,128,61,0.95)';
     ctx.shadowBlur = 20;
     hex(c[0], c[1], s - 1);
-    ctx.fillStyle = 'rgba(16,94,45,0.92)';        // dark green
+    ctx.fillStyle = 'rgba(16,94,45,0.92)';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(52,199,89,0.95)';
@@ -949,8 +514,6 @@ const SEARCH_DATA = [
     ctx.restore();
     placeSecretLink(c[0], c[1], s);
   }
-
-  // Sync the clickable overlay to the tile's current pixel position.
   function placeSecretLink(cx, cy, s) {
     const link = document.getElementById('hu-secret-tile');
     if (!link) return;
@@ -962,48 +525,34 @@ const SEARCH_DATA = [
     link.classList.add('revealed');
   }
 
-  // Brand compass rose, drawn straight into the canvas to match the design in
-  // /brand/hu-atlas-core-node.svg: a blue hex frame, a teal ring with ticks, a
-  // four-point blue/teal star, N/E/S/W labels and the HU monogram at the centre.
-  // Sits in a clean hex clearing so the honeycomb and routes don't show through.
-  // Geometry is scaled from the SVG, whose hex has a 182-unit vertex radius.
-
-  // HU monogram paths lifted verbatim from the brand SVG's monogram group
-  // (origin 318.75,203.72 relative to the 340,218 centre; drawn at scale 0.34).
+  // Brand compass rose, unchanged geometry from the shipped design
+  // (/brand/hu-atlas-core-node.svg): blue hex frame, teal ring and ticks,
+  // four-point star, N/E/S/W, HU monogram.
   const MONO_H1 = new Path2D('M0,4 Q0,0 4,0 L15,0 Q19,0 19,4 L19,23 Q19,27 15.7,29.26 L3.3,37.74 Q0,40 0,36 Z');
   const MONO_H2 = new Path2D('M0,50 Q0,46 3.38,43.86 L15.62,36.14 Q19,34 23,34 L46,34 Q50,34 50,38 L50,49 Q50,53 46,53 L23,53 Q19,53 19,57 L19,80 Q19,84 15,84 L4,84 Q0,84 0,80 Z');
   const MONO_U  = new Path2D('M57,1.5 Q57,-2.5 61,-2.5 L72,-2.5 Q76,-2.5 76,1.5 L76,52.5 Q76,67.5 91,67.5 Q106,67.5 106,52.5 L106,1.5 Q106,-2.5 110,-2.5 L121,-2.5 Q125,-2.5 125,1.5 L125,52.5 Q125,86.5 91,86.5 Q57,86.5 57,52.5 Z');
 
   function drawCompass(cx, cy, dark, bg, s) {
-    const R = 2.7 * s;            // hex-frame vertex radius
-    const k = R / 182;            // scale from the SVG's 182-unit hex
+    const R = 2.7 * s;
+    const k = R / 182;
     const circleR = 115 * k;
-
-    // Theme-aware brand palette (brighter on dark, deeper on light).
     const BLUE    = dark ? '#3585cc' : '#1B5FA8';
     const BLUE_LT = dark ? '#5aa6e6' : '#3585cc';
     const TEAL    = dark ? '#4ecdc4' : '#2FA79E';
     const TEAL_LT = dark ? '#7ff0e6' : '#4ecdc4';
     const TEAL_DK = dark ? '#3fa9a2' : '#1f7d76';
-
     ctx.save();
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-
-    // Clean hex clearing behind the compass.
     hex(cx, cy, R);
     ctx.fillStyle = bg;
     ctx.fill();
-
-    // Blue hex frame.
     hex(cx, cy, R);
     ctx.lineWidth = 2;
     ctx.strokeStyle = BLUE;
     ctx.globalAlpha = 0.85;
     ctx.stroke();
     ctx.globalAlpha = 1;
-
-    // Teal ring.
     ctx.beginPath();
     ctx.arc(cx, cy, circleR, 0, Math.PI * 2);
     ctx.lineWidth = 1.5;
@@ -1011,8 +560,6 @@ const SEARCH_DATA = [
     ctx.globalAlpha = 0.9;
     ctx.stroke();
     ctx.globalAlpha = 1;
-
-    // 36 ticks around the ring; longer + brighter at the cardinals.
     for (let i = 0; i < 36; i++) {
       const ang = (-90 + i * 10) * Math.PI / 180;
       const c = Math.cos(ang), sn = Math.sin(ang);
@@ -1027,17 +574,14 @@ const SEARCH_DATA = [
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
-
-    // Four-point star: N/S teal darts, E/W blue darts, each split into a light
-    // and a dark half for the folded-facet look. Light half is always +perp.
     const darts = [
-      { ax: 0,  ay: -1, lt: TEAL_LT, dk: TEAL_DK },   // N
-      { ax: 1,  ay: 0,  lt: BLUE_LT, dk: BLUE    },   // E
-      { ax: 0,  ay: 1,  lt: TEAL_LT, dk: TEAL_DK },   // S
-      { ax: -1, ay: 0,  lt: BLUE_LT, dk: BLUE    }    // W
+      { ax: 0,  ay: -1, lt: TEAL_LT, dk: TEAL_DK },
+      { ax: 1,  ay: 0,  lt: BLUE_LT, dk: BLUE    },
+      { ax: 0,  ay: 1,  lt: TEAL_LT, dk: TEAL_DK },
+      { ax: -1, ay: 0,  lt: BLUE_LT, dk: BLUE    }
     ];
     darts.forEach(d => {
-      const ax = d.ax, ay = d.ay, px = -ay, py = ax;   // perp
+      const ax = d.ax, ay = d.ay, px = -ay, py = ax;
       const P = (dist, off) => [cx + ax * dist * k + px * off * k,
                                 cy + ay * dist * k + py * off * k];
       const base = P(15, 0), tip = P(100, 0);
@@ -1052,12 +596,10 @@ const SEARCH_DATA = [
         ctx.fillStyle = col;
         ctx.fill();
       };
-      quad(10, 15, d.lt);      // light half (+perp)
-      quad(-10, -15, d.dk);    // dark half (-perp)
+      quad(10, 15, d.lt);
+      quad(-10, -15, d.dk);
     });
-
-    // N/E/S/W labels just outside the ring.
-    const fs = Math.max(12, Math.round(21 * k));
+    const fs = Math.max(11, Math.round(21 * k));
     ctx.font = `700 ${fs}px Outfit, "Poppins", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1067,18 +609,15 @@ const SEARCH_DATA = [
       ctx.fillStyle = col;
       ctx.fillText(t, cx + ax * lr, cy + ay * lr);
     });
-
-    // Centre: soft blue glow, dark hex, blue outline, HU monogram.
     ctx.beginPath();
     ctx.arc(cx, cy, 27 * k, 0, Math.PI * 2);
     ctx.fillStyle = BLUE;
     ctx.globalAlpha = 0.18;
     ctx.fill();
     ctx.globalAlpha = 1;
-
     const chR = 32 * k;
     hex(cx, cy, chR);
-    ctx.fillStyle = dark ? '#0d1117' : '#ffffff';   // pure white centre in light mode, not a dark/grey blob
+    ctx.fillStyle = dark ? '#0d1117' : '#ffffff';
     ctx.fill();
     hex(cx, cy, chR);
     ctx.lineWidth = 2;
@@ -1086,9 +625,6 @@ const SEARCH_DATA = [
     ctx.globalAlpha = 0.9;
     ctx.stroke();
     ctx.globalAlpha = 1;
-
-    // HU monogram from the brand paths (same geometry as the Atlas hub),
-    // not typed letters: the H is the angled brand mark, not a font glyph.
     ctx.save();
     ctx.translate(cx - 21.25 * k, cy - 14.28 * k);
     ctx.scale(0.34 * k, 0.34 * k);
@@ -1098,48 +634,38 @@ const SEARCH_DATA = [
     ctx.fillStyle = TEAL;
     ctx.fill(MONO_U);
     ctx.restore();
-
     ctx.restore();
   }
 
   function draw() {
     const dark = isDark();
-    const bg   = dark ? '#001117' : '#EEF2F7';
+    const pageBg = dark ? '#0a0f1a' : '#EEF2F7';
     const teal = dark ? '78,205,196' : '15,118,110';
     const s = 34, colW = Math.sqrt(3) * s, rowH = 1.5 * s;
-
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
     ctx.lineWidth = 1;
 
-    // Tessellated hex outlines, fading from the top down toward the headline.
-    for (let row = 0; row * rowH <= H + s; row++) {
-      const cy = row * rowH;
-      const offset = (row % 2) ? colW / 2 : 0;
-      const f = Math.max(0, 1 - cy / H);
-      ctx.strokeStyle = `rgba(${teal},${(0.028 + 0.09 * f * f).toFixed(3)})`;
-      for (let cx = -colW; cx <= W + colW; cx += colW) {
-        hex(cx + offset, cy, s - 1);
-        ctx.stroke();
+    // The map is EARNED: the honeycomb, routes, lit hexes, and the secret
+    // tile draw only after the first press of the rose.
+    if (revealed) {
+      for (let row = 0; row * rowH <= H + s; row++) {
+        const cy = row * rowH;
+        const offset = (row % 2) ? colW / 2 : 0;
+        const f = Math.max(0, 1 - cy / H);
+        ctx.strokeStyle = `rgba(${teal},${(0.028 + 0.09 * f * f).toFixed(3)})`;
+        for (let cx = -colW; cx <= W + colW; cx += colW) {
+          hex(cx + offset, cy, s - 1);
+          ctx.stroke();
+        }
       }
+      const grid = buildGrid(s, colW, rowH);
+      routes.forEach(r => drawRoute(r, grid, teal, s, colW, rowH));
+      litHexes.forEach(l => drawLitHex(l, s, colW, rowH));
+      if (secretTile) drawSecretTile(secretTile, s, colW, rowH);
     }
 
-    // Routes across the board, walking hex borders like Atlas routes.
-    const grid = buildGrid(s, colW, rowH);
-    routes.forEach(r => drawRoute(r, grid, teal, s, colW, rowH));
-
-    // Scattered lit hexes in random Atlas zone colors.
-    litHexes.forEach(l => drawLitHex(l, s, colW, rowH));
-
-    // The secret tile, once unlocked. Drawn before the compass so the centre
-    // stays clean, though the tile is placed well clear of it anyway.
-    if (secretTile) drawSecretTile(secretTile, s, colW, rowH);
-
-    // The compass occupies a single grid cell. Snap it (and its click target) to
-    // the nearest cell centre so it tessellates with the honeycomb, then ring that
-    // cell with a moat, exactly like the Atlas hub.
-    drawCompass(W / 2, H / 2, dark, bg, s);
+    // The rose crowns the door at rest and after the reveal alike.
+    drawCompass(W / 2, ROSE_CY, dark, pageBg, ROSE_S);
   }
 
   function resize() {
@@ -1149,28 +675,22 @@ const SEARCH_DATA = [
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw();
   }
-
   window.addEventListener('resize', resize);
   resize();
 
   const themeBtn = document.getElementById('themeToggle');
   if (themeBtn) themeBtn.addEventListener('click', () => setTimeout(draw, 0));
 
-  // Compass is a button: re-roll the routes and lit hexes, then redraw — same
-  // as a page refresh, but without the reload.
   const compassBtn = document.getElementById('hu-compass-btn');
   if (compassBtn) compassBtn.addEventListener('click', () => {
-    rollAll();
+    if (!revealed) { revealed = true; } else { rollAll(); }
     compassClicks++;
-
-    // First teaser window at clicks 8-9 (gone by 10). Then a recurring cycle
-    // starting at 28: visible for 2 clicks, hidden for 8 (28-29, 38-39, ...).
     const FIRST_SHOW_AT = 8, CYCLE_START = 28, SHOW_LEN = 2, CYCLE_LEN = 10;
     const inFirst = compassClicks >= FIRST_SHOW_AT && compassClicks < FIRST_SHOW_AT + SHOW_LEN;
     const inCycle = compassClicks >= CYCLE_START && ((compassClicks - CYCLE_START) % CYCLE_LEN) < SHOW_LEN;
     const shouldShow = inFirst || inCycle;
     if (shouldShow && !secretTile) {
-      secretTile = rollSecretTile();                 // fresh spot each time it returns
+      secretTile = rollSecretTile();
     } else if (!shouldShow && secretTile) {
       secretTile = null;
       const link = document.getElementById('hu-secret-tile');
@@ -1179,21 +699,4 @@ const SEARCH_DATA = [
     draw();
   });
 })();
-
-// ── SCROLL REVEAL ────────────────────────────────────────
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.style.opacity = '1';
-      e.target.style.transform = 'translateY(0)';
-    }
-  });
-}, { threshold: 0.07 });
-
-document.querySelectorAll('.tool-card, .start-card, .fourp-card').forEach((el, i) => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(20px)';
-  el.style.transition = `opacity .45s ${i * 0.06}s ease, transform .45s ${i * 0.06}s ease`;
-  observer.observe(el);
-});
 </script>

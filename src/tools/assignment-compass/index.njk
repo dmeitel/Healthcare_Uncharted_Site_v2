@@ -499,6 +499,7 @@ var CATS = [
   ['healthcare', 'Healthcare'],
   ['other', 'Everything else']
 ];
+var COST_IDS = { housing: 'acHousing', utilities: 'acUtil', transportation: 'acTrans', groceries: 'acGroc', insurance: 'acIns', healthcare: 'acHealth', other: 'acOther' };
 
 /* county fields are FIPS (the join key everywhere on this site) */
 var PRESETS = [
@@ -1024,17 +1025,22 @@ function syncUrl(s) {
   p.set('cs', s.cs); p.set('as', s.as);
   if (s.cc) p.set('cc', s.cc);
   if (s.ac) p.set('ac', s.ac);
-  if (s.mode === 'h') { p.set('hr', num('acHourly')); p.set('hw', num('acHours')); }
+  if (s.mode === 'h') { p.set('hr', num('acHourly')); if (num('acHours') !== 36) p.set('hw', num('acHours')); }
   else p.set('g', s.gross);
   if (s.offerMode) {
-    if (s.mode === 'h') { p.set('hr2', num('acHourly2')); p.set('hw2', num('acHours2')); }
+    if (s.mode === 'h') { p.set('hr2', num('acHourly2')); if (num('acHours2') !== 36) p.set('hw2', num('acHours2')); }
     else if (num('acGross2') > 0) p.set('g2', num('acGross2'));
   }
   if (s.stip > 0) p.set('sp', s.stip);
   if (s.prof) p.set('pf', s.prof);
   if (s.fil === 'm') p.set('fs', 'm');
   if (s.ref === 'assign') p.set('ref', 'a');
-  CATS.forEach(function (c) { p.set(c[0].slice(0, 2), s.costs[c[0]]); });
+  /* cost rows ride the URL only when they differ from the page defaults;
+     restoreUrl already leaves absent ones on their markup values */
+  CATS.forEach(function (c) {
+    var v = s.costs[c[0]];
+    if (v !== (Number($(COST_IDS[c[0]]).defaultValue) || 0)) p.set(c[0].slice(0, 2), v);
+  });
   history.replaceState(null, '', location.pathname + '?' + p.toString());
 }
 function restoreUrl() {
@@ -1056,7 +1062,7 @@ function restoreUrl() {
   $('acProf').value = p.get('pf') || '';
   setPressed('acFilS', p.get('fs') !== 'm'); setPressed('acFilM', p.get('fs') === 'm');
   setPressed('acRefCur', p.get('ref') !== 'a'); setPressed('acRefAsg', p.get('ref') === 'a');
-  var map = { housing: 'acHousing', utilities: 'acUtil', transportation: 'acTrans', groceries: 'acGroc', insurance: 'acIns', healthcare: 'acHealth', other: 'acOther' };
+  var map = COST_IDS;
   CATS.forEach(function (c) { var v = p.get(c[0].slice(0, 2)); if (v != null) $(map[c[0]]).value = v; });
   return true;
 }
@@ -1075,7 +1081,7 @@ function applyPreset(i) {
   else $('acGross').value = pr.gross;
   setPressed('acFilS', pr.fil === 's'); setPressed('acFilM', pr.fil === 'm');
   setPressed('acRefCur', true); setPressed('acRefAsg', false);
-  var map = { housing: 'acHousing', utilities: 'acUtil', transportation: 'acTrans', groceries: 'acGroc', insurance: 'acIns', healthcare: 'acHealth', other: 'acOther' };
+  var map = COST_IDS;
   Object.keys(pr.costs).forEach(function (k) { $(map[k]).value = pr.costs[k]; });
   document.querySelectorAll('[data-preset]').forEach(function (b, j) {
     b.setAttribute('aria-pressed', String(j === i));

@@ -17,7 +17,7 @@
  *     search: 'registered nurse rn ...', // precomputed, lowercased
  *     rels:   [ { rel:'leads-to', to:'role:bsn' } ],
  *     source: { dataset:'career-tree.json', sourceId:'rn' },
- *     href:   '/tools/healthcare-career-tree/?node=rn'
+ *     href:   '/tools/career-tree/?node=rn'
  *   }
  *
  * Two decisions are baked in here because they are the only parts that hurt to

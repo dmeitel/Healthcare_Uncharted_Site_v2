@@ -39,7 +39,7 @@ module.exports = {
         searchParts: [v.name, v.owner, sectorLabel, v.sector, v.desc, ...(v.ps || [])],
         rels: [edge('in-zone', uid('concept', 'zone', 'techeco'))],
         source: { dataset: 'vendors.json', sourceId: sid },
-        href: '/tools/healthcare-vendor-directory/?v=' + encodeURIComponent(sid),
+        href: '/tools/vendor-directory/?v=' + encodeURIComponent(sid),
       });
     });
   },

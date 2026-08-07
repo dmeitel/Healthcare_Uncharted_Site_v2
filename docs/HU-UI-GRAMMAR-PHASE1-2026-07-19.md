@@ -1,7 +1,7 @@
 ﻿# UI GRAMMAR · PHASE 1: Career Tree Phone Discipline
 ### Build notes, 2026-07-19. Reference implementation of the HU-UI-GRAMMAR budget rules.
 
-One file changed: src/tools/healthcare-career-tree/index.njk. Desktop behavior is intentionally untouched except two small upgrades noted below. Everything else is gated behind the phone breakpoint.
+One file changed: src/tools/career-tree/index.njk. Desktop behavior is intentionally untouched except two small upgrades noted below. Everything else is gated behind the phone breakpoint.
 
 ONE breakpoint now: 699px, the same line where the site-wide selector-pop becomes a bottom sheet (hu-global.css). The old 600px and 640px phone blocks folded into it.
 
@@ -72,4 +72,4 @@ AFTER: one title row (title + Select), lens as part of the board frame, ONE floa
 - Logic repro on the built source: credentials search section renders from eduCards, deduplicates repeated faces, falls back to the creds file before the edu board has rendered, no-match and empty-query paths correct. 5/5.
 - Not verifiable headless: grabber drag feel, gesture fade timing, detent snap points. That is the phone test above.
 
-Rollback: this is one file. `git checkout -- src/tools/healthcare-career-tree/index.njk` before committing, or revert the commit after.
+Rollback: this is one file. `git checkout -- src/tools/career-tree/index.njk` before committing, or revert the commit after.

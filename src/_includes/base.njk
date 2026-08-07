@@ -22,14 +22,17 @@
   <meta name="theme-color" id="metaThemeColor" content="#0a0f1a">
   <link rel="manifest" href="/site.webmanifest">
 
-  <!-- Favicon / app icons (brand kit) — scheme-aware: light art on light tabs, dark art on dark tabs -->
-  <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="/brand/favicon-32.png" sizes="32x32" type="image/png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="/brand/favicon-16.png" sizes="16x16" type="image/png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="/brand/favicon-32-dark.png" sizes="32x32" type="image/png" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="/brand/favicon-16-dark.png" sizes="16x16" type="image/png" media="(prefers-color-scheme: dark)">
-  <link rel="shortcut icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <!-- Favicon / app icons (brand kit). Scheme-aware: light art on light tabs,
+       dark art on dark tabs. Browsers cache favicons far harder than they cache
+       pages, so the v= stamp is the ONLY reliable way to push a new icon out.
+       Bump it whenever scripts/build-favicons.js regenerates the family. -->
+  <link rel="icon" href="/brand/favicon.svg?v=20260807" type="image/svg+xml" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="/brand/favicon-32.png?v=20260807" sizes="32x32" type="image/png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="/brand/favicon-16.png?v=20260807" sizes="16x16" type="image/png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="/brand/favicon-32-dark.png?v=20260807" sizes="32x32" type="image/png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/brand/favicon-16-dark.png?v=20260807" sizes="16x16" type="image/png" media="(prefers-color-scheme: dark)">
+  <link rel="shortcut icon" href="/favicon.ico?v=20260807">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png?v=20260807">
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Healthcare Uncharted">
@@ -53,7 +56,7 @@
   <!-- versioned: /assets/css/* ships with stale-while-revalidate, so returning
        visitors get a CACHED copy after a deploy unless the URL changes. Bump
        the v= stamp whenever hu-global.css changes. -->
-  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260806">
+  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260807">
   <link rel="stylesheet" href="/brand/web/brand.css">
 
   <!-- Structured data: brand + author identity -->
@@ -138,6 +141,7 @@
     <a class="nav-pill" href="/atlas/">Atlas &rarr;</a>
     <button class="nav-theme-btn" id="themeToggle" aria-label="Toggle light / dark mode" title="Toggle light / dark mode">☀</button>
   </div>
+  <button class="nav-theme-btn nav-search-btn" data-hu-search aria-label="Search the site" title="Search &middot; press /"><i data-lucide="search"></i></button>
   <button class="nav-ham" id="navHam" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">&#9776;</button>
 </nav>
 
@@ -169,11 +173,11 @@
         <div class="footer-col-title">Tools</div>
         <div class="footer-nav-list">
           <a class="footer-nav-link" href="/atlas/">Healthcare Atlas</a>
-          <a class="footer-nav-link" href="/tools/healthcare-iceberg-map/">Iceberg Map</a>
+          <a class="footer-nav-link" href="/tools/iceberg-map/">Iceberg Map</a>
           <a class="footer-nav-link" href="/tools/multi-lens-map/">Pop Health Multi-Lens Map</a>
-          <a class="footer-nav-link" href="/tools/healthcare-vendor-directory/">Vendor Directory</a>
+          <a class="footer-nav-link" href="/tools/vendor-directory/">Vendor Directory</a>
           <a class="footer-nav-link" href="/tools/assignment-compass/">Assignment Compass</a>
-          <a class="footer-nav-link" href="/tools/clinical-sql-mystery/">Clinical SQL Mystery</a>
+          <a class="footer-nav-link" href="/tools/sql-mystery/">Clinical SQL Mystery</a>
         </div>
       </div>
     </div>
@@ -208,18 +212,34 @@
   </div>
 </footer>{% endif %}
 
+{% if navPage == 'home' or navPage == 'tools' or navPage == 'learn' %}
+<!-- Phone bottom bar (V3 phase 3): the hub pages carry it; the lit slot
+     follows navPage. Search rides the center; More opens the nav menu. -->
+<nav class="hu-bbar" id="huBottomBar" aria-label="Quick navigation">
+  <a class="bb-item {% if navPage == 'home' %}on{% endif %}" href="/" {% if navPage == 'home' %}aria-current="page"{% endif %}><i data-lucide="house"></i><span>Home</span></a>
+  <a class="bb-item {% if navPage == 'tools' %}on{% endif %}" href="/tools/" {% if navPage == 'tools' %}aria-current="page"{% endif %}><i data-lucide="wrench"></i><span>Tools</span></a>
+  <button class="bb-search" type="button" data-hu-search aria-label="Search the site"><i data-lucide="search"></i><span>Search</span></button>
+  <a class="bb-item {% if navPage == 'learn' %}on{% endif %}" href="/learn/" {% if navPage == 'learn' %}aria-current="page"{% endif %}><i data-lucide="book-open"></i><span>Learn</span></a>
+  <button class="bb-item" type="button" id="bbMore" aria-label="More menu" aria-expanded="false" aria-controls="navLinks"><i data-lucide="menu"></i><span>More</span></button>
+</nav>
+{% endif %}
+
 <script>
 const ham = document.getElementById('navHam');
 const navLinks = document.getElementById('navLinks');
-if (ham) {
-  ham.addEventListener('click', () => {
-    navLinks.classList.toggle('open');
-    const open = navLinks.classList.contains('open');
+function setMenu(open) {
+  navLinks.classList.toggle('open', open);
+  if (ham) {
     ham.innerHTML = open ? '&#10005;' : '&#9776;';
     ham.setAttribute('aria-expanded', String(open));
     ham.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
-  });
+  }
+  const more = document.getElementById('bbMore');
+  if (more) more.setAttribute('aria-expanded', String(open));
 }
+if (ham) ham.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
+const bbMore = document.getElementById('bbMore');
+if (bbMore) bbMore.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
 </script>
 
 <script>
@@ -240,6 +260,7 @@ themeToggle.addEventListener('click', () => {
 
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
+<script src="/assets/js/hu-search.js?v=20260806" defer></script>
 
 {% if site.goatcounter %}
 <script data-goatcounter="https://{{ site.goatcounter }}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>

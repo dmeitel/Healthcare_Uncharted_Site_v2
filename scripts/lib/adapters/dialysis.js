@@ -31,7 +31,7 @@ module.exports = {
       searchParts: [r.n, r.c, r.s, r.chain, 'dialysis'],
       rels: r.s ? [edge('in-state', uid('place', 'state', r.s))] : [],
       source: { dataset: 'us-dialysis.json', sourceId: r.id },
-      href: '/tools/healthcare-operators-map/?facility=' + encodeURIComponent(r.id),
+      href: '/tools/operators-map/?facility=' + encodeURIComponent(r.id),
     }));
   },
 };

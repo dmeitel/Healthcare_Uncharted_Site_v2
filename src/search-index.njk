@@ -1,0 +1,23 @@
+---
+permalink: /assets/data/search-index.json
+eleventyExcludeFromCollections: true
+---
+[
+{%- for t in tools %}{%- if t.status == 'live' %}
+  { "label": {{ t.title | dump | safe }}, "sub": {{ t.desc | truncate(90) | dump | safe }}, "type": "tool", "url": {{ t.url | dump | safe }}, "cluster": {{ (t.cluster or '') | dump | safe }}, "keys": {{ (t.keys or []) | dump | safe }} },
+{%- endif %}{%- endfor %}
+{%- for item in collections.learnModules %}
+  { "label": {{ item.data.title | replace("—", "·") | dump | safe }}, "sub": {{ (item.data.description or '') | truncate(90) | replace("—", "·") | dump | safe }}, "type": "learn", "url": {{ item.url | dump | safe }}, "cluster": "learn-play", "date": {{ item.date.toISOString() | dump | safe }} },
+{%- endfor %}
+{%- for item in collections.talkPages %}
+  { "label": {{ item.data.title | replace("—", "·") | dump | safe }}, "sub": {{ (item.data.description or '') | truncate(90) | replace("—", "·") | dump | safe }}, "type": "talk", "url": {{ item.url | dump | safe }}, "date": {{ item.date.toISOString() | dump | safe }} },
+{%- endfor %}
+{%- for entry in rounds.entries %}{%- if entry.status == 'published' %}
+  { "label": {{ entry.title | dump | safe }}, "sub": {{ (entry.summary or '') | truncate(90) | dump | safe }}, "type": "rounds", "url": {{ ("/rounds/" + entry.slug + "/") | dump | safe }}, "date": {{ (entry.posted or '') | dump | safe }} },
+{%- endif %}{%- endfor %}
+  { "label": "Healthcare Atlas", "sub": "The hex territory map of the U.S. healthcare system", "type": "tool", "url": "/atlas/", "cluster": "maps-systems", "keys": ["map", "territory", "system map", "explore"] },
+  { "label": "Rounds", "sub": "News, commentary, and guest takes on what is happening now", "type": "rounds", "url": "/rounds/", "keys": ["news", "blog", "commentary"] },
+  { "label": "Learn", "sub": "All the learning modules, from the 4Ps to FHIR", "type": "learn", "url": "/learn/", "cluster": "learn-play", "keys": ["articles", "modules", "guides"] },
+  { "label": "Tools", "sub": "Every interactive tool on one page", "type": "tool", "url": "/tools/", "keys": ["interactive", "all tools"] },
+  { "label": "About Healthcare Uncharted", "sub": "Who builds this and why", "type": "learn", "url": "/about/", "keys": ["david eitel", "mission", "contact", "author"] }
+]

@@ -20,7 +20,7 @@ function stateNodes(geo) {
     facets: { layer: 'geography', kind: 'state', fips: s.fips, abbr: s.abbr },
     searchParts: [s.name, s.abbr],
     source: { dataset: 'registries/geo.json', sourceId: s.abbr },
-    href: '/tools/healthcare-operators-map/?state=' + encodeURIComponent(s.abbr),
+    href: '/tools/operators-map/?state=' + encodeURIComponent(s.abbr),
   }));
 }
 
@@ -33,7 +33,7 @@ function countyNodes(counties) {
     searchParts: [c.name, c.stateAbbr, 'county'],
     rels: c.stateAbbr ? [edge('in-state', uid('place', 'state', c.stateAbbr))] : [],
     source: { dataset: 'registries/counties.json', sourceId: fips },
-    href: '/tools/healthcare-operators-map/?county=' + encodeURIComponent(fips),
+    href: '/tools/operators-map/?county=' + encodeURIComponent(fips),
   }));
 }
 
@@ -45,7 +45,7 @@ function systemNodes(systems) {
     facets: { layer: 'facilities', kind: 'system', facilityCount: s.facilityCount || null, stateCount: s.stateCount || null },
     searchParts: [s.name],
     source: { dataset: 'registries/systems.json', sourceId: s.systemId },
-    href: '/tools/healthcare-operators-map/?system=' + encodeURIComponent(s.systemId),
+    href: '/tools/operators-map/?system=' + encodeURIComponent(s.systemId),
   }));
 }
 

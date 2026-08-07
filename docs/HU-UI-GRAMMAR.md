@@ -131,7 +131,7 @@ Any tool whose canvas is a full geographic map builds from THIS parts list and n
 
 The test: screenshot the tool at 390px in its busiest state. Count what floats over the canvas. If it is more than the scope row, one chip rail or legend row, and one card, it fails the standard.
 
-The reference implementations (post-swap, 2026-07-19): /tools/healthcare-operators-map/ for the full POI stack, /tools/multi-lens-map/ for the thematic stack; /secret-menu/design/ shows every part with its class names. The D3 v1s live in archive/.
+The reference implementations (post-swap, 2026-07-19): /tools/operators-map/ for the full POI stack, /tools/multi-lens-map/ for the thematic stack; /secret-menu/design/ shows every part with its class names. The D3 v1s live in archive/.
 
 ---
 

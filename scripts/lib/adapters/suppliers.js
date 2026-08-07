@@ -29,7 +29,7 @@ module.exports = {
       searchParts: ['suppliers dmepos all total'],
       rels: Object.entries(agg.byState).map(([st, s]) => edge('describes', uid('place', 'state', st), { value: s.total })),
       source: { dataset: 'suppliers-by-state.json', kind: 'total' },
-      href: '/tools/healthcare-operators-map/',
+      href: '/tools/operators-map/',
     }));
 
     const kinds = new Set();
@@ -50,7 +50,7 @@ module.exports = {
         searchParts: [label, 'supplier dmepos density', k.replace(/-/g, ' ')],
         rels,
         source: { dataset: 'suppliers-by-state.json', kind: k },
-        href: '/tools/healthcare-operators-map/?layer=' + encodeURIComponent(k),
+        href: '/tools/operators-map/?layer=' + encodeURIComponent(k),
       }));
     }
     return out;

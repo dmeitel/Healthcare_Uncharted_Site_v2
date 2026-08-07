@@ -17,7 +17,7 @@ colors:
   chart-shelf: "#1c2a40"
   paper-white: "#FFFFFF"
   fog-blue: "#b8cfe8"
-  faded-ink: "#5A7898"
+  faded-ink: "#7E9CBF"
   depth-mark: "#2a4060"
   sounding-line: "#1a2d48"
   sounding-line-bold: "#24405e"
@@ -205,7 +205,7 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 - **Chart Shelf** (#1c2a40): the highest resting step (`--raised2`).
 - **Paper White** (#FFFFFF): headlines and primary text (`--t1`). Light: #001117.
 - **Fog Blue** (#b8cfe8): body prose and secondary text (`--t2`). Light: #2D3748.
-- **Faded Ink** (#5A7898): captions, meta, labels (`--t3`). Light: #4A5568.
+- **Faded Ink** (#7E9CBF): captions, meta, labels (`--t3`). Light: #4A5568. Lifted from #5A7898 on 2026-08-07: the old step sat at 3.2 to 4.2 contrast on the dark surfaces and failed small text everywhere. The old value survives only as a GRAPHIC fill (chart bars, gridlines) where 3:1 is the bar.
 - **Depth Mark** (#2a4060): the faintest text step and dotted underlines (`--t4`).
 - **Sounding Line** (#1a2d48) and **Sounding Line Bold** (#24405e): the one-pixel borders that draw every container (`--border`, `--border2`).
 - **Ink on Signal** (#062024): the only text color allowed on a solid Signal Teal fill; it is deep water read as ink (The Ink State Rule).
@@ -272,6 +272,10 @@ Depth is drawn, not cast. The four-step tonal ladder (Deep Water to Chart Surfac
 **The Border-First Rule.** If a container needs definition at rest, it gets a Sounding Line border and a tonal step, never a shadow. A shadow at rest must be justified by floating above a live canvas.
 
 **The Survey Tick Rule.** Outer surfaces (content cards, pin cards, drawer panels, report containers) may carry two hairline corner ticks: 10px arms, 1px, Sounding Line Bold, top-left and bottom-right, inset about 5px. Ticks are drawn in border gray, NEVER in an accent hue, and never on nested elements; the frame is marked the way a chart plate is, quietly and at the edge.
+
+**The Hub Lift Rule (V3 hub surfaces, locked 2026-08-06).** The hub pages (home, tools, learn indexes) are PRODUCT surfaces, not documents: their catalog cards and the search box carry RESTING elevation as an interaction affordance. Vocabulary: search box `0 12px 32px rgba(0,0,0,.55)`, catalog cards `0 10px 28px rgba(0,0,0,.45)` on the Raised-Chart-plus (#131f30 family) step. This is a scoped exception to the Border-First Rule, which continues to govern reading and editorial surfaces unchanged. Source: the V3 Field Office comp (docs/HU-V3-HOME-BUILD-SPEC-2026-08-06.md).
+
+**The Earned Scenery Rule (V3, 2026-08-06).** The home hero's canvas world (hex panel + routes) draws only when the reader taps the compass rose; at rest the ground is clean. The Earned Color Rule applied to scenery: atmosphere is a reward, not a preload. The 8-tap secret and route rerolls ride the same tap path; reduced motion reveals without animation.
 
 ## Shapes
 

@@ -25,7 +25,7 @@ module.exports = {
       searchParts: [r.n, r.c, r.s, 'ambulatory surgery center asc'],
       rels: r.s ? [edge('in-state', uid('place', 'state', r.s))] : [],
       source: { dataset: 'us-ascs.json', sourceId: r.id },
-      href: '/tools/healthcare-operators-map/?facility=' + encodeURIComponent(r.id),
+      href: '/tools/operators-map/?facility=' + encodeURIComponent(r.id),
     }));
   },
 };
