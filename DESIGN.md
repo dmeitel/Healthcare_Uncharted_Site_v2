@@ -33,6 +33,14 @@ colors:
   lens-techeco: "#38b6f0"
   lens-techeco-base: "#0EA5E9"
   lens-medsci: "#FF6B6B"
+  filter-leaders: "#F0CF6B"
+  filter-leaders-tint-base: "#E8C547"
+  filter-leaders-deep: "#8A6A15"
+  filter-patient-text: "#aac8ff"
+  reef-red-text: "#ff9090"
+  beacon-pulse: "#15803d"
+  raised-chart-plus: "#131f30"
+  chart-thumb: "#12233a"
   chart-blue-mid: "#2D4A8A"
   deep-step-teal: "#0F7A72"
   deep-step-teal-chip: "#0D7268"
@@ -67,7 +75,7 @@ typography:
     lineHeight: 1.7
   label:
     fontFamily: "IBM Plex Mono, Courier New, monospace"
-    fontSize: "10px"
+    fontSize: "11px"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "0.14em"
@@ -99,7 +107,12 @@ typography:
     display-28: "28px"
     display-30: "30px"
     display-32: "32px"
+    display-34: "34px"
     display-36: "36px"
+    display-44: "44px"
+    display-46: "46px"
+    display-54: "54px"
+    display-56: "56px"
 rounded:
   hairline: "2px"
   bar: "3px"
@@ -215,6 +228,9 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 - **Lens-pill brights**: policy #b59ff5, tech/economy #38b6f0, medical science #FF6B6B alongside the named accents. Their tint BASES (the rgba anchors behind the 12 to 16% fills) are #8B5CF6 (policy) and #0EA5E9 (tech/economy).
 - **Deep steps for light surfaces** (The Deep-Step Rule's per-lens dark values): teal #0F7A72 (#0D7268 on tinted chips), provider #1d5fae, policy #6A45D8, public health #23794e, tech #0e6f96, med-sci #C22F2F.
 - **Guest green** #4ecb8d: the Secret Menu's section identity, deep step #2D9B6F.
+- **Learn filter accents** (documented 2026-08-09): the leaders filter gold #F0CF6B (tint base #E8C547, deep step #8A6A15 on light) and the patient text step #aac8ff ride alongside the type badges; patient active fills use type-learn #6aabff, policy tints ride the lens-policy base. Interop tags run reef-red tints with the #ff9090 text step on dark.
+- **The Secret Beacon** rgba(21,128,61,x) (#15803d family): the home secret tile's pulse, the ONE sanctioned glow on the site, earned by the 8-tap secret. A scoped exception to The Ink State Rule, locked with the V3 comp.
+- **Hub card steps**: Raised-Chart-plus #131f30 (hub catalog card ground) and #12233a (tool-thumb resting water).
 - **Chart Blue Mid** #2D4A8A: the button hover midpoint token (`--brand-blue-mid`).
 
 ### Named Rules
@@ -235,19 +251,21 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 **Character:** Confident geometry over warm prose over instrument labels. Outfit at weight 800 with tight tracking gives headlines the stamped-title feel of an atlas cover; DM Sans at light weights keeps long reading calm; Plex Mono captions everything that is data, small, uppercase, letterspaced like coordinates.
 
 ### Hierarchy
-- **Display** (800, clamp(40px, 6vw, 64px), line-height 1.0, tracking -0.03em): page heroes only. One per page. Page H1s and section titles stay mixed-case; tracked caps never climb to page scale.
+- **Display** (800, fluid per surface, line-height 1.0 to 1.1, tracking -0.03em to -0.025em): page heroes only. One per page. The working hero clamps, documented 2026-08-09: home clamp(34px,5vw,54px), tools and secret menu clamp(30px,4.5vw,44px), learn clamp(28px,4vw,46px), rounds posts clamp(36px,5vw,56px). The 64px ceiling (clamp(40px,6vw,64px)) is reserved for cover-scale moments. Page H1s and section titles stay mixed-case; tracked caps never climb to page scale.
 - **Headline** (800, clamp(24px, 3vw, 38px), tracking -0.02em): section titles.
 - **Title** (800, 20px, line-height 1.15): card titles. Drawer-card and pin-card NAMES inside tools run the cartographic variant: 14px, uppercase, tracking 0.09em.
 - **Body** (400, 13 to 16px, line-height 1.65 to 1.75): prose. The 300 weight is retired on dark; thin-on-dark reads generated. Max measure ~65ch (620 to 680px containers).
-- **Label** (500 to 700, 9 to 11px, uppercase, tracking 0.08 to 0.16em, always Plex Mono): eyebrows, source lines, stat captions, meta, table headers.
-- **Working sizes inside tools** legitimately run 8.5 to 12.5px (fact rows, chip text, drawer meta); these in-between steps are incumbent vocabulary, not drift.
+- **Label** (500 to 700, 11px, uppercase, tracking 0.08 to 0.16em, always Plex Mono): eyebrows, source lines, stat captions, meta, table headers.
+- **Working sizes inside tool canvases** still run 8.5 to 12.5px (fact rows, chip text, drawer meta). The sub-11px steps are LEGACY, kept only until the tool-canvas migration to the floor; site chrome, hubs, and editorial surfaces already obey it.
 
 ### Named Rules
 **The Data Speaks Mono Rule.** If a string is a value, a unit, a source, a date, or a coordinate, it is set in IBM Plex Mono. If it is a sentence, it is DM Sans. No exceptions; this is how readers learn what is checkable.
 
 **The CAPS Rule.** Emphasis is CAPS or a heavier weight, never italics and never bold-inside-prose. UI strings follow the same voice kernel as editorial: no em dashes, middots (·) join fragments.
 
-**The Caption Rule.** Fact-row labels and data captions are mono captions: 9.5px, uppercase, tracked 0.12em or wider, FOG BLUE (`--t2`). Faded Ink captions failed David's QA on open dark ground once the tile boxes dissolved (2026-08-06); Faded Ink is reserved for source lines, meta, and section labels that should recede. Names at drawer-card scale go tracked caps (14px / 0.09em); page H1s and editorial card titles stay mixed-case Outfit 800. Values keep `font-variant-numeric: tabular-nums` wherever figures align vertically.
+**The Legibility Floor Rule (adopted 2026-08-09).** Functional text, anything a reader must read to use the page (labels, tags, kickers, meta, source lines, nav items), never sets below 11px. Tracked-caps mono labels are NOT exempt; a third of the audience is on phones, and decorative smallness was the old habit. The cap-85 through label-105 scale steps survive only inside tool canvases until their migration pass.
+
+**The Caption Rule.** Fact-row labels and data captions are mono captions: 11px, uppercase, tracked 0.12em or wider, FOG BLUE (`--t2`). Faded Ink captions failed David's QA on open dark ground once the tile boxes dissolved (2026-08-06); Faded Ink is reserved for source lines, meta, and section labels that should recede. Names at drawer-card scale go tracked caps (14px / 0.09em); page H1s and editorial card titles stay mixed-case Outfit 800. Values keep `font-variant-numeric: tabular-nums` wherever figures align vertically.
 
 ## Layout
 
@@ -266,6 +284,7 @@ Depth is drawn, not cast. The four-step tonal ladder (Deep Water to Chart Surfac
 - **Card lift** (`0 12px 40px rgba(0,0,0,.45)`): appears only with the hover translateY(-4px).
 - **FAB rest** (`0 4px 16px rgba(0,0,0,.4)`): the one resting shadow, earned by floating over a map canvas.
 - **Sheet** (`0 -12px 40px rgba(0,0,0,.45)`): upward, under bottom sheets.
+- **Light-theme steps** (documented 2026-08-09): on light ground the black alphas read as smudges, so lifted surfaces run ink-blue shadows instead: hub cards `0 10px 28px rgba(13,32,54,.14)`, the search box `0 12px 32px rgba(13,32,54,.18)`, the card-lift hover `0 12px 40px rgba(13,32,54,.18)`.
 - **RETIRED (Quiet Precision, 2026-08-06):** the CTA glow and the signal glow. Zero-offset halos and colored hover glows are out of the vocabulary everywhere; hover states brighten and lift, they do not radiate.
 
 ### Named Rules
@@ -314,7 +333,7 @@ Tactile and confident: controls respond to touch like they enjoy it, one state a
 - **Phone:** 44px hamburger, full-width 48px menu rows, Atlas pill and theme toggle as sized rows
 
 ### Stat Tiles (signature)
-- **The Ruled Figure Rule.** One value, one label: Outfit 800 at 20px over a 9.5px uppercase mono caption in Fog Blue, standing on a 2px Sounding Line Bold TOP RULE with no fill and no border box. The figure owns the ground it sits on, the way a table in print does. `.hi` values go Signal Teal, `.lo` go Beacon Amber; values set tabular-nums. Grids of two to four, never tables.
+- **The Ruled Figure Rule.** One value, one label: Outfit 800 at 20px over an 11px uppercase mono caption in Fog Blue, standing on a 2px Sounding Line Bold TOP RULE with no fill and no border box. The figure owns the ground it sits on, the way a table in print does. `.hi` values go Signal Teal, `.lo` go Beacon Amber; values set tabular-nums. Grids of two to four, never tables.
 
 ### Callouts (signature)
 - **The Margin Note Rule.** Warnings and asides are margin notes, not panels: a 3px accent left rule (Beacon Amber for cautions, per-lens hues where earned) against open ground, 14px of lead-in padding, no background tint, no border box, no radius. The editor writes in the margin; the page does not build a little room for the remark.

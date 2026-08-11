@@ -11,7 +11,8 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const W = 1280, H = 440;                       // 2x of the 640x220 card slot
 const BG = '#0e1a2e', LINE = '#24405e', TEAL = '#4ECDC4', BLUE = '#2478d4',
-      AMBER = '#E8A838', GREEN = '#5DBF87', INK = '#b8cfe8';
+      AMBER = '#E8A838', GREEN = '#5DBF87', INK = '#b8cfe8',
+      GGREEN = '#4ecb8d', GDEEP = '#2D9B6F';   // secret-menu guest identity
 const frame = (inner) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
   `<rect width="${W}" height="${H}" fill="${BG}"/>${inner}</svg>`;
@@ -122,7 +123,57 @@ const THUMBS = {
   'learn-library': frame(
     `${[0, 1, 2, 3].map(i =>
       `<rect x="${360 + i * 14}" y="${90 + i * 58}" width="${560 - i * 28}" height="44" rx="8" fill="${i === 0 ? TEAL : '#132238'}" opacity="${i === 0 ? 0.5 : 1}" stroke="${i === 0 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
-     <line x1="420" y1="368" x2="860" y2="368" stroke="${AMBER}" stroke-width="4" opacity=".7"/>`)
+     <line x1="420" y1="368" x2="860" y2="368" stroke="${AMBER}" stroke-width="4" opacity=".7"/>`),
+
+  // ── SECRET MENU (sm-*) · guest-green identity, same overwrite contract ──
+  // the roguelite: hospital wings stacked, one lit, the quarter goal meter below
+  'sm-uncharted-general': frame(
+    `${[0, 1, 2].map(i =>
+      `<rect x="${400 + i * 30}" y="${70 + i * 90}" width="${480 - i * 60}" height="70" rx="8" fill="${i === 1 ? GGREEN : '#132238'}" opacity="${i === 1 ? 0.45 : 1}" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
+     <rect x="618" y="30" width="44" height="40" fill="none" stroke="${GGREEN}" stroke-width="3"/>
+     <line x1="640" y1="30" x2="640" y2="10" stroke="${GGREEN}" stroke-width="3"/>
+     <rect x="360" y="380" width="560" height="14" rx="7" fill="none" stroke="${LINE}" stroke-width="3"/>
+     <rect x="360" y="380" width="380" height="14" rx="7" fill="${GGREEN}" opacity=".6"/>
+     <line x1="800" y1="368" x2="800" y2="406" stroke="${AMBER}" stroke-width="4"/>`),
+  // the camp: horizon, hills, pines, one tent
+  'sm-camp-nauvoo': frame(
+    `<line x1="60" y1="330" x2="1220" y2="330" stroke="${LINE}" stroke-width="3"/>
+     <path d="M180 330 L400 160 L620 330 Z" fill="none" stroke="${GDEEP}" stroke-width="3" opacity=".8"/>
+     <path d="M480 330 L760 110 L1040 330 Z" fill="none" stroke="${GDEEP}" stroke-width="3" opacity=".55"/>
+     ${[300, 950, 1080].map(x =>
+       `<path d="M${x} 330 L${x + 26} 268 L${x + 52} 330 Z" fill="${GGREEN}" opacity=".5"/><line x1="${x + 26}" y1="330" x2="${x + 26}" y2="344" stroke="${GDEEP}" stroke-width="4"/>`).join('')}
+     <path d="M560 330 L640 230 L720 330 Z" fill="${GGREEN}" opacity=".75"/>
+     <path d="M622 330 L640 290 L658 330 Z" fill="${BG}"/>
+     <circle cx="1120" cy="90" r="34" fill="none" stroke="${INK}" stroke-width="3" opacity=".5"/>`),
+  // the observatory: source nodes flowing to tools, one chain lit
+  'sm-data-observatory': frame(
+    `${[90, 200, 310].map((y, i) =>
+      `<circle cx="220" cy="${y + 40}" r="22" fill="none" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
+     ${[140, 260].map((y, i) =>
+      `<rect x="580" y="${y}" width="120" height="56" rx="8" fill="${i === 0 ? GGREEN : 'none'}" opacity="${i === 0 ? 0.4 : 1}" stroke="${i === 0 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
+     ${[100, 210, 320].map((y, i) =>
+      `<circle cx="1040" cy="${y + 30}" r="26" fill="none" stroke="${i === 0 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
+     <path d="M242 240 C400 240 430 168 580 168" fill="none" stroke="${GGREEN}" stroke-width="3"/>
+     <path d="M700 168 C880 168 880 130 1014 130" fill="none" stroke="${GGREEN}" stroke-width="3"/>
+     <path d="M242 130 C400 130 430 288 580 288" fill="none" stroke="${LINE}" stroke-width="3"/>
+     <path d="M700 288 C880 288 880 350 1014 350" fill="none" stroke="${LINE}" stroke-width="3"/>
+     <path d="M242 350 C420 350 460 288 580 288" fill="none" stroke="${LINE}" stroke-width="3"/>`),
+  // the price finder: sorted bars, cheapest lit
+  'sm-hospital-price-finder': frame(
+    `<line x1="200" y1="380" x2="1080" y2="380" stroke="${LINE}" stroke-width="3"/>
+     ${[110, 160, 205, 240, 285, 320].map((h, i) =>
+      `<rect x="${240 + i * 135}" y="${380 - h}" width="90" height="${h}" rx="8" fill="${i === 0 ? GGREEN : 'none'}" opacity="${i === 0 ? 0.55 : 1}" stroke="${i === 0 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
+     <circle cx="285" cy="220" r="34" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".7"/>
+     <line x1="310" y1="245" x2="350" y2="285" stroke="${GGREEN}" stroke-width="3" opacity=".7"/>`),
+  // the goat tracker: the traffic sparkline
+  'sm-goat-tracker': frame(
+    `<line x1="140" y1="360" x2="1140" y2="360" stroke="${LINE}" stroke-width="3"/>
+     <line x1="140" y1="360" x2="140" y2="80" stroke="${LINE}" stroke-width="3"/>
+     <path d="M140 330 L280 300 L420 315 L560 250 L700 275 L840 190 L980 210 L1120 120" fill="none" stroke="${GGREEN}" stroke-width="4"/>
+     <path d="M140 330 L280 300 L420 315 L560 250 L700 275 L840 190 L980 210 L1120 120 L1120 360 L140 360 Z" fill="${GGREEN}" opacity=".12"/>
+     ${[[280, 300], [560, 250], [840, 190], [1120, 120]].map(([x, y]) =>
+       `<circle cx="${x}" cy="${y}" r="8" fill="${GGREEN}"/>`).join('')}
+     <circle cx="1120" cy="120" r="18" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".5"/>`)
 };
 
 (async () => {

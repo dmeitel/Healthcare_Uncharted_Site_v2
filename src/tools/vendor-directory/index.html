@@ -122,6 +122,11 @@ no_footer: true
 .tag-research   { background:rgba(103,232,249,.13); color:#67e8f9; }
 .tag-orgs       { background:rgba(214,181,106,.13); color:#d6b56a; }
 .tag-cautionary { background:rgba(223,87,82,.1); color:#f08080; }
+.tag-cloud      { background:rgba(125,211,252,.13); color:#7dd3fc; }
+.tag-payer      { background:rgba(249,168,212,.13); color:#f9a8d4; }
+.tag-supply     { background:rgba(253,186,116,.13); color:#fdba74; }
+.tag-staffing   { background:rgba(190,242,100,.13); color:#bef264; }
+.tag-retail     { background:rgba(252,165,165,.13); color:#fca5a5; }
 .tag-p1  { background:rgba(78,205,196,.08); color:var(--teal); }
 .tag-p2a { background:rgba(36,120,212,.1); color:#6aabff; }
 .tag-p2b { background:rgba(124,111,205,.1); color:#a99ee8; }
@@ -187,6 +192,37 @@ no_footer: true
 .ehr-src a{color:var(--teal);text-decoration:none}
 .ehr-src a:hover{text-decoration:underline}
 
+/* ── HQ tile map: sequential teal ramp, counts printed on every tile so the
+   read never rides on color alone. Tiles are real buttons (click = filter). ── */
+.hq-map { max-width:1240px; margin:0 auto; padding:16px clamp(16px,4vw,40px) 4px; }
+.hq-head { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:10px; }
+.hq-title { display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--t3); }
+.hq-title svg { width:11px; height:11px; stroke-width:2; color:var(--teal); }
+[data-theme="light"] .hq-title svg { color:var(--teal-dk); }
+.hq-sub { font-size:12px; color:var(--t3); margin-top:4px; }
+.hq-legend { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:var(--t3); }
+.hqt-sw { display:inline-block; width:11px; height:11px; border-radius:3px; border:1px solid var(--border); }
+.hq-grid { display:grid; grid-template-columns:repeat(11, minmax(28px, 44px)); gap:3px; }
+.hqt { aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; border:1px solid var(--border); border-radius:6px; background:none; cursor:pointer; padding:0; transition:all .12s; font-family:var(--mono); }
+.hqt .ab { font-size:10px; font-weight:600; color:var(--t2); line-height:1.2; }
+.hqt .n { font-size:9px; color:var(--t3); line-height:1.2; }
+.hqt:hover:not(:disabled) { border-color:var(--teal); }
+.hqt:focus-visible { outline:2px solid var(--teal); outline-offset:1px; }
+.hqt.z { opacity:.35; cursor:default; }
+.hqt.l1, .hqt-sw.l1 { background:rgba(78,205,196,.10); }
+.hqt.l2, .hqt-sw.l2 { background:rgba(78,205,196,.22); }
+.hqt.l3, .hqt-sw.l3 { background:rgba(78,205,196,.38); }
+.hqt.l4, .hqt-sw.l4 { background:rgba(78,205,196,.60); }
+.hqt.l3 .n, .hqt.l4 .n { color:var(--t2); }
+.hqt.active { background:var(--teal); border-color:var(--teal); }
+.hqt.active .ab, .hqt.active .n { color:#062024; }
+.hq-intl { aspect-ratio:auto; padding:4px 8px; }
+[data-theme="light"] .hqt.l1, [data-theme="light"] .hqt-sw.l1 { background:rgba(27,154,144,.10); }
+[data-theme="light"] .hqt.l2, [data-theme="light"] .hqt-sw.l2 { background:rgba(27,154,144,.20); }
+[data-theme="light"] .hqt.l3, [data-theme="light"] .hqt-sw.l3 { background:rgba(27,154,144,.34); }
+[data-theme="light"] .hqt.l4, [data-theme="light"] .hqt-sw.l4 { background:rgba(27,154,144,.52); }
+@media(max-width:700px){ .hq-legend { display:none; } }
+
 /* ── Light mode: the sector/status accent palette was tuned as text on dark
    surfaces, darken it when the surfaces flip to white ── */
 [data-theme="light"] .vc-tag, [data-theme="light"] .vc-status { filter:brightness(0.68) saturate(1.4); }
@@ -235,8 +271,24 @@ no_footer: true
 <div class="vd-searchbar">
   <div class="vd-search">
     <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
-    <input type="text" id="searchInput" aria-label="Search vendors" placeholder="Search vendors, owners, or sectors..." oninput="render()">
+    <input type="text" id="searchInput" aria-label="Search vendors" placeholder="Search vendors, owners, states, or sectors..." oninput="render()">
   </div>
+</div>
+
+<div class="hq-map">
+  <div class="hq-head">
+    <div>
+      <div class="hq-title"><i data-lucide="map-pin" aria-hidden="true"></i>Headquarters</div>
+      <p class="hq-sub">Where the vendors sit. Click a state to filter the directory to companies headquartered there.</p>
+    </div>
+    <div class="hq-legend" aria-hidden="true">
+      <span><span class="hqt-sw l1"></span> 1&ndash;2</span>
+      <span><span class="hqt-sw l2"></span> 3&ndash;5</span>
+      <span><span class="hqt-sw l3"></span> 6&ndash;10</span>
+      <span><span class="hqt-sw l4"></span> 11+</span>
+    </div>
+  </div>
+  <div class="hq-grid" id="hqGrid"></div>
 </div>
 
 <div class="vd-board">
@@ -250,8 +302,24 @@ no_footer: true
       <button class="selector" id="selSector" aria-haspopup="listbox" aria-expanded="false" aria-controls="popSector" aria-label="Sector">
         <i data-lucide="layers" aria-hidden="true"></i><span class="sel-val" id="selSectorVal">All sectors</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
       </button>
-      <span class="result-count" id="resultCount">116 vendors</span>
+      <span class="result-count" id="resultCount">158 vendors</span>
       <div class="vd-tools">
+        <select class="vd-select" id="ownSel" onchange="setOwn(this.value)" aria-label="Filter by ownership">
+          <option value="all">Ownership: All</option>
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+          <option value="pe">PE-owned</option>
+          <option value="subsidiary">Subsidiary</option>
+          <option value="nonprofit">Nonprofit</option>
+          <option value="defunct">Defunct</option>
+        </select>
+        <select class="vd-select" id="shareSel" onchange="setShare(this.value)" aria-label="Filter by healthcare focus">
+          <option value="all">Focus: All</option>
+          <option value="pure">Pure-play health</option>
+          <option value="majority">Mostly health</option>
+          <option value="division">Health division</option>
+          <option value="minor">Health side line</option>
+        </select>
         <select class="vd-select" id="sortSel" onchange="setSort(this.value)" aria-label="Sort vendors">
           <option value="az">Sort: A-Z</option>
           <option value="sector">Sort: Category</option>
@@ -308,8 +376,8 @@ no_footer: true
 <script>
 let vendors = [];
 
-const SECTOR_LABEL = {scribing:'Ambient Scribing',clinical:'Clinical AI',rcm:'Revenue Cycle',radiology:'Radiology AI',ehr:'EHR / Core',rx:'Pharmacy & Rx',device:'Medical Devices',interop:'Interop / Interface',labs:'Labs / Diagnostics',imaging:'Imaging / PACS',cardio:'Cardiovascular',rpm:'Remote Monitoring',telehealth:'Telehealth',engage:'Patient Engagement',analytics:'Pop Health & Analytics',cyber:'Cybersecurity',behavioral:'Behavioral Health',research:'Clinical Research',orgs:'Professional Orgs',cautionary:'Cautionary'};
-const SECTOR_COLOR = {scribing:'#4ECDC4',clinical:'#6aabff',rcm:'#E8A838',radiology:'#a99ee8',ehr:'#4ec99a',rx:'#e879b6',device:'#38bdf8',interop:'#f59e6b',labs:'#a8c93a',imaging:'#a78bfa',cardio:'#fb7185',telehealth:'#2dd4bf',engage:'#fbbf24',rpm:'#34d399',cyber:'#94a3b8',analytics:'#818cf8',behavioral:'#f0abfc',research:'#67e8f9',orgs:'#d6b56a',cautionary:'#f08080'};
+const SECTOR_LABEL = {scribing:'Ambient Scribing',clinical:'Clinical AI',rcm:'Revenue Cycle',radiology:'Radiology AI',ehr:'EHR / Core',rx:'Pharmacy & Rx',device:'Medical Devices',interop:'Interop / Interface',labs:'Labs / Diagnostics',imaging:'Imaging / PACS',cardio:'Cardiovascular',rpm:'Remote Monitoring',telehealth:'Telehealth',engage:'Patient Engagement',analytics:'Pop Health & Analytics',cyber:'Cybersecurity',behavioral:'Behavioral Health',research:'Clinical Research',orgs:'Professional Orgs',cautionary:'Cautionary',cloud:'Cloud & AI Infrastructure',payer:'Payers & PBMs',supply:'Supply Chain & GPO',staffing:'Workforce & Staffing',retail:'Retail & Consumer Health'};
+const SECTOR_COLOR = {scribing:'#4ECDC4',clinical:'#6aabff',rcm:'#E8A838',radiology:'#a99ee8',ehr:'#4ec99a',rx:'#e879b6',device:'#38bdf8',interop:'#f59e6b',labs:'#a8c93a',imaging:'#a78bfa',cardio:'#fb7185',telehealth:'#2dd4bf',engage:'#fbbf24',rpm:'#34d399',cyber:'#94a3b8',analytics:'#818cf8',behavioral:'#f0abfc',research:'#67e8f9',orgs:'#d6b56a',cautionary:'#f08080',cloud:'#7dd3fc',payer:'#f9a8d4',supply:'#fdba74',staffing:'#bef264',retail:'#fca5a5'};
 const PS_LABEL = {p1:'Patient', p2a:'Provider · Clinical', p2b:'Provider · Docs & RCM', p3:'Payer', p4:'Policymaker'};
 const SECTOR_GROUPS = [
   {label:'Core Systems', sectors:['ehr','interop','imaging']},
@@ -317,13 +385,23 @@ const SECTOR_GROUPS = [
   {label:'Devices & Diagnostics', sectors:['device','labs','cardio','rpm','rx']},
   {label:'Care & Engagement', sectors:['telehealth','engage','behavioral']},
   {label:'Operations & Data', sectors:['rcm','analytics','research']},
+  {label:'Payers, Supply & Staffing', sectors:['payer','supply','staffing']},
+  {label:'Big Tech & Retail', sectors:['cloud','retail']},
   {label:'Security & Orgs', sectors:['cyber','orgs','cautionary']},
 ];
 const STATUS_CLASS = {active:'status-active',emerging:'status-emerging',cautionary:'status-cautionary',discontinued:'status-discontinued',org:'status-org'};
 const STATUS_ORDER = {active:0,emerging:1,org:2,cautionary:3,discontinued:4};
+const OWN_LABEL = {public:'Public', private:'Private', pe:'PE-owned', subsidiary:'Subsidiary', nonprofit:'Nonprofit', defunct:'Defunct'};
+const SHARE_LABEL = {pure:'Pure-play healthcare', majority:'Mostly healthcare', division:'Healthcare division', minor:'Healthcare side line'};
+// standard 11-column US tile cartogram, [col,row]
+const TILE_GRID = {AK:[1,1],ME:[11,1],VT:[10,2],NH:[11,2],WA:[1,3],ID:[2,3],MT:[3,3],ND:[4,3],MN:[5,3],WI:[6,3],MI:[7,3],NY:[9,3],MA:[10,3],RI:[11,3],OR:[1,4],NV:[2,4],WY:[3,4],SD:[4,4],IA:[5,4],IL:[6,4],IN:[7,4],OH:[8,4],PA:[9,4],NJ:[10,4],CT:[11,4],CA:[1,5],UT:[2,5],CO:[3,5],NE:[4,5],MO:[5,5],KY:[6,5],WV:[7,5],VA:[8,5],MD:[9,5],DE:[10,5],AZ:[2,6],NM:[3,6],KS:[4,6],AR:[5,6],TN:[6,6],NC:[7,6],SC:[8,6],DC:[9,6],OK:[4,7],LA:[5,7],MS:[6,7],AL:[7,7],GA:[8,7],HI:[1,8],TX:[4,8],FL:[9,8]};
+const STATE_NAME = {AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'Washington DC',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 
 let activeSector = 'all';
 let activeSort = 'az';
+let activeState = 'all';
+let activeOwn = 'all';
+let activeShare = 'all';
 
 function sectorCounts() { const c = {}; vendors.forEach(v => c[v.sector] = (c[v.sector] || 0) + 1); return c; }
 
@@ -347,6 +425,14 @@ const sectorName = s => s === 'all' ? 'All sectors' : (SECTOR_LABEL[s] || s);
 // repaints the sidebar active state, the selector face, and the applied strip.
 function setSector(s) { activeSector = s; render(); syncURL(); announce('Sector: ' + sectorName(s)); }
 function setSort(s) { activeSort = s; render(); }
+function setOwn(s) { activeOwn = s; render(); syncURL(); announce('Ownership: ' + (s === 'all' ? 'All' : OWN_LABEL[s])); }
+function setShare(s) { activeShare = s; render(); syncURL(); announce('Focus: ' + (s === 'all' ? 'All' : SHARE_LABEL[s])); }
+function setState(s) {
+  activeState = (activeState === s) ? 'all' : s;   // click the active tile again = clear
+  render(); syncURL();
+  announce('State: ' + (activeState === 'all' ? 'All' : (activeState === 'INTL' ? 'Outside the US' : STATE_NAME[activeState])));
+}
+const hqStr = v => v.hq ? (v.hq.city + ', ' + (v.hq.state || v.hq.country)) : '';
 
 // one polite live region — announce COMMITTED changes only, never keystrokes
 function announce(msg) {
@@ -367,7 +453,7 @@ function cardHTML(v, i) {
   return `<div class="vendor-card" onclick="openDetail(${i})">
     <div class="vc-top">
       <div class="vc-header"><div class="vc-name">${v.name}</div><div class="vc-status ${STATUS_CLASS[v.status]}">${v.statusLabel}</div></div>
-      <div class="vc-owner">${v.owner}</div>
+      <div class="vc-owner">${v.owner}${v.hq ? ' &middot; ' + hqStr(v) : ''}</div>
       <div class="vc-desc">${v.desc}</div>
     </div>
     <div class="vc-bottom">
@@ -380,14 +466,22 @@ function render() {
   const q = (document.getElementById('searchInput').value || '').toLowerCase();
   let list = vendors.map((v, i) => ({ v, i })).filter(({ v }) => {
     const sectorMatch = activeSector === 'all' || v.sector === activeSector;
-    const searchMatch = !q || v.name.toLowerCase().includes(q) || v.owner.toLowerCase().includes(q) || (v.desc + ' ' + v.detail).toLowerCase().includes(q) || SECTOR_LABEL[v.sector].toLowerCase().includes(q);
-    return sectorMatch && searchMatch;
+    const stateMatch = activeState === 'all' || (v.hq && (activeState === 'INTL' ? !!v.hq.country : v.hq.state === activeState));
+    const ownMatch = activeOwn === 'all' || v.ownership === activeOwn;
+    const shareMatch = activeShare === 'all' || v.hcShare === activeShare;
+    // search sweeps the whole record: name, owner, prose, watch line, stats, HQ, parent, ticker
+    const hay = [v.name, v.owner, v.desc, v.detail, v.watch || '', SECTOR_LABEL[v.sector], v.parent || '', v.ticker || '', hqStr(v), (v.hq && v.hq.state && STATE_NAME[v.hq.state]) || '', (v.stats || []).map(s => s.join(' ')).join(' ')].join(' ').toLowerCase();
+    const searchMatch = !q || hay.includes(q);
+    return sectorMatch && stateMatch && ownMatch && shareMatch && searchMatch;
   });
   list = sortList(list);
   const grid = document.getElementById('vendorGrid');
   grid.innerHTML = list.length ? list.map(({ v, i }) => cardHTML(v, i)).join('') : '<div class="empty-state"><strong>No vendors found</strong>Try a different search or filter</div>';
   document.getElementById('resultCount').textContent = list.length + (list.length === 1 ? ' vendor' : ' vendors');
   document.querySelectorAll('#vdNav .vd-cat').forEach(b => { const on = b.dataset.sector === activeSector; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
+  document.querySelectorAll('#hqGrid .hqt').forEach(b => { const on = b.dataset.st === activeState; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
+  document.getElementById('ownSel').value = activeOwn;
+  document.getElementById('shareSel').value = activeShare;
   document.getElementById('selSectorVal').textContent = sectorName(activeSector);
   renderAppliedStrip();
 }
@@ -446,6 +540,9 @@ const PRESETS = [
   { name: 'The ambient scribe boom', q: '?sector=scribing' },
   { name: 'The EHR incumbents',      q: '?sector=ehr' },
   { name: 'Proceed with caution',    q: '?sector=cautionary' },
+  { name: 'Big tech moves in',       q: '?sector=cloud' },
+  { name: 'The payer giants',        q: '?sector=payer' },
+  { name: 'The Utah cluster',        q: '?state=UT' },
 ];
 function buildViewsPop() {
   document.getElementById('popViewsList').innerHTML = PRESETS.map(p =>
@@ -464,11 +561,22 @@ document.getElementById('popViewsList').addEventListener('click', e => {
 // CSS hides the strip at >=1100px, where the sidebar already IS the state.
 function renderAppliedStrip() {
   const strip = document.getElementById('vdApplied'); if (!strip) return;
-  strip.innerHTML = activeSector === 'all' ? '' :
-    `<span class="applied-chip">Sector: <b>${SECTOR_LABEL[activeSector]}</b><button class="ac-x" data-clear="sector" aria-label="Clear the sector filter">&#10005;</button></span>`;
-  strip.hidden = activeSector === 'all';
+  const chips = [];
+  if (activeSector !== 'all') chips.push(`<span class="applied-chip">Sector: <b>${SECTOR_LABEL[activeSector]}</b><button class="ac-x" data-clear="sector" aria-label="Clear the sector filter">&#10005;</button></span>`);
+  if (activeState !== 'all') chips.push(`<span class="applied-chip">HQ: <b>${activeState === 'INTL' ? 'Outside the US' : STATE_NAME[activeState]}</b><button class="ac-x" data-clear="state" aria-label="Clear the state filter">&#10005;</button></span>`);
+  if (activeOwn !== 'all') chips.push(`<span class="applied-chip">Ownership: <b>${OWN_LABEL[activeOwn]}</b><button class="ac-x" data-clear="own" aria-label="Clear the ownership filter">&#10005;</button></span>`);
+  if (activeShare !== 'all') chips.push(`<span class="applied-chip">Focus: <b>${SHARE_LABEL[activeShare]}</b><button class="ac-x" data-clear="share" aria-label="Clear the focus filter">&#10005;</button></span>`);
+  strip.innerHTML = chips.join('');
+  strip.hidden = !chips.length;
 }
-document.getElementById('vdApplied').addEventListener('click', e => { if (e.target.closest('[data-clear]')) setSector('all'); });
+document.getElementById('vdApplied').addEventListener('click', e => {
+  const t = e.target.closest('[data-clear]'); if (!t) return;
+  const k = t.dataset.clear;
+  if (k === 'sector') setSector('all');
+  else if (k === 'state') { activeState = 'all'; render(); syncURL(); }
+  else if (k === 'own') setOwn('all');
+  else if (k === 'share') setShare('all');
+});
 
 // ── URL-addressable views: ?sector=<key>, default (all) omitted ──────────
 // Sector keys are stable slugs (scribing, ehr, rcm...), so shared links
@@ -477,6 +585,9 @@ document.getElementById('vdApplied').addEventListener('click', e => { if (e.targ
 function stateToParams() {
   const p = new URLSearchParams();
   if (activeSector !== 'all') p.set('sector', activeSector);
+  if (activeState !== 'all') p.set('state', activeState);
+  if (activeOwn !== 'all') p.set('own', activeOwn);
+  if (activeShare !== 'all') p.set('share', activeShare);
   return p;
 }
 function syncURL() {
@@ -484,18 +595,30 @@ function syncURL() {
   try { history.replaceState(null, '', q ? ('?' + q) : location.pathname); } catch (e) {}
 }
 function applyURLState() {
-  const s = new URLSearchParams(location.search).get('sector');
+  const p = new URLSearchParams(location.search);
+  const s = p.get('sector'), st = p.get('state'), ow = p.get('own'), sh = p.get('share');
   activeSector = (s && SECTOR_LABEL[s]) ? s : 'all';  // invalid params degrade silently to the default
+  activeState = (st && (TILE_GRID[st] || st === 'INTL')) ? st : 'all';
+  activeOwn = (ow && OWN_LABEL[ow]) ? ow : 'all';
+  activeShare = (sh && SHARE_LABEL[sh]) ? sh : 'all';
 }
 // popstate = reset to defaults, re-apply from the URL, render — one path
-window.addEventListener('popstate', () => { activeSector = 'all'; applyURLState(); render(); });
+window.addEventListener('popstate', () => { activeSector = 'all'; activeState = 'all'; activeOwn = 'all'; activeShare = 'all'; applyURLState(); render(); });
 
 function openDetail(idx) {
   const v = vendors[idx];
   document.getElementById('dp-name').textContent = v.name;
-  document.getElementById('dp-owner').textContent = v.owner;
+  document.getElementById('dp-owner').textContent = v.owner + (v.hq ? ' · ' + hqStr(v) : '');
   document.getElementById('dp-detail').textContent = v.detail;
-  document.getElementById('dp-stats').innerHTML = v.stats.map(([k, val]) =>
+  // structured schema rows first, then the editorial stats (minus a duplicate Founded)
+  const meta = [];
+  if (v.hq) meta.push(['HQ', hqStr(v)]);
+  if (v.founded) meta.push(['Founded', v.founded]);
+  if (v.ownership) meta.push(['Ownership', OWN_LABEL[v.ownership] + (v.ticker ? ' · ' + v.ticker : '')]);
+  if (v.parent) meta.push(['Parent', v.parent]);
+  if (v.hcShare) meta.push(['Healthcare focus', SHARE_LABEL[v.hcShare]]);
+  const editorial = v.stats.filter(([k]) => !(k === 'Founded' && v.founded));
+  document.getElementById('dp-stats').innerHTML = meta.concat(editorial).map(([k, val]) =>
     `<div class="dp-stat-row"><span class="dp-stat-key">${k}</span><span class="dp-stat-val">${val}</span></div>`).join('');
   document.getElementById('dp-tags').innerHTML =
     `<span class="vc-tag tag-${v.sector}">${SECTOR_LABEL[v.sector]}</span>` +
@@ -507,9 +630,25 @@ function openDetail(idx) {
 
 function closeDetail() { document.getElementById('detailPanel').classList.remove('open'); }
 
+// ── HQ tile map: one button per state, count printed on the tile ─────────
+function buildHQMap() {
+  const counts = {}; let intl = 0;
+  vendors.forEach(v => { if (!v.hq) return; if (v.hq.state) counts[v.hq.state] = (counts[v.hq.state] || 0) + 1; else intl++; });
+  const lvl = n => n >= 11 ? 'l4' : n >= 6 ? 'l3' : n >= 3 ? 'l2' : 'l1';
+  let h = '';
+  for (const st of Object.keys(TILE_GRID)) {
+    const [col, row] = TILE_GRID[st], n = counts[st] || 0;
+    h += `<button class="hqt ${n ? lvl(n) : 'z'}" data-st="${st}" style="grid-column:${col};grid-row:${row}" title="${STATE_NAME[st]}: ${n} vendor${n === 1 ? '' : 's'}" aria-pressed="false" ${n ? '' : 'disabled'}><span class="ab">${st}</span><span class="n">${n || ''}</span></button>`;
+  }
+  h += `<button class="hqt hq-intl ${intl ? lvl(intl) : 'z'}" data-st="INTL" style="grid-column:10 / span 2;grid-row:8" title="Headquartered outside the US: ${intl}" aria-pressed="false" ${intl ? '' : 'disabled'}><span class="ab">Non-US</span><span class="n">${intl || ''}</span></button>`;
+  const grid = document.getElementById('hqGrid');
+  grid.innerHTML = h;
+  grid.querySelectorAll('.hqt').forEach(b => b.onclick = () => setState(b.dataset.st));
+}
+
 // restore the URL view before the first paint — a shared ?sector link lands
 // filtered; the re-serialize after render self-normalizes a mangled param
-fetch('/assets/data/vendors.json').then(function(r){return r.json();}).then(function(d){ vendors = d.vendors || d; buildSidebar(); applyURLState(); render(); syncURL(); }).catch(function(e){
+fetch('/assets/data/vendors.json').then(function(r){return r.json();}).then(function(d){ vendors = d.vendors || d; buildSidebar(); buildHQMap(); applyURLState(); render(); syncURL(); }).catch(function(e){
   console.error('vendor data load failed', e);
   document.getElementById('vendorGrid').innerHTML = '<div class="empty-state"><strong>Couldn&#39;t load the vendor directory</strong>Check your connection and refresh.</div>';
   announce('Couldn\'t load the vendor directory. Check your connection and refresh.');

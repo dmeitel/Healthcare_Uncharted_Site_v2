@@ -116,6 +116,6 @@ If any of these appear in output, rewrite before delivering:
 - Site: Healthcare Uncharted (healthcareuncharted.com)
 - Stack: Eleventy (11ty) v3.1.5, Nunjucks templating, D3.js for data viz
 - Fonts: Outfit (display/headlines), DM Sans (body), IBM Plex Mono (mono/data)
-- Primary tool: American 4Ps Map (Multi-Lens Map) at src/tools/American-4Ps-Map/index.html
+- Primary tool: Pop Health Multi-Lens Map at src/tools/multi-lens-map/index.njk (never call it "the 4Ps map" — 4Ps is a framework tag, not the tool name)
 - Data files: src/_data/stateData.json, metricsConfig.json, dataYears.json, rounds.js
 - Do NOT use passthrough copy on directories that contain processed Nunjucks templates

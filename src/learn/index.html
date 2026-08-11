@@ -1,33 +1,93 @@
 ---
 layout: base.njk
-title: "Explore · Healthcare Uncharted"
+title: "Explore"
 description: "Articles, frameworks, and talks covering clinical informatics, the 4Ps of healthcare, interoperability, AI, and the systems behind modern medicine."
 navPage: learn
 ---
 
 <style>
-.page-header{max-width:1080px;margin:0 auto;padding:64px 40px 48px}
+/* V3 hub hero (Field Office grammar): centered, search under the sub */
+.page-header{text-align:center;padding:clamp(44px,7vh,72px) clamp(20px,5vw,72px) 10px;max-width:860px;margin:0 auto}
 .page-header h1{font-family:var(--display);font-size:clamp(28px,4vw,46px);font-weight:800;letter-spacing:-.025em;line-height:1.1;margin-bottom:14px}
 .page-header h1 em{font-style:normal;color:var(--teal)}
-.page-header p{font-size:16px;color:var(--t2);max-width:620px;line-height:1.75}
+.page-header p{font-size:15px;color:var(--t2);max-width:56ch;line-height:1.7;margin:0 auto}
+.page-header .hv-search{margin:22px auto 0}
+
+/* shelf headers (tools-hub kicker grammar) */
+.lh-shelf-h{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--border);padding-bottom:7px;margin-bottom:16px}
+.lh-kicker{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin:0}
+.lh-kicker i{font-style:normal;color:var(--border2)}
+.lh-shelf-h .n{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--t3)}
+.lh-note-k{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.lh-note-k i{font-style:normal;color:var(--border2)}
+
+/* shelf headers INSIDE the card grid span the full row */
+.article-grid .lh-shelf-grid{grid-column:1/-1;margin-bottom:0}
+.article-grid .lh-shelf-grid:not(:first-child){margin-top:22px}
+
+/* course-design order: the cards ARE the route. The trailhead badge sits on
+   Article 01; read ticks land on the card numbers themselves (localStorage). */
+.ac-start{color:var(--teal);font-weight:700}
+.article-card.read .ac-num::after{content:" \2713";color:var(--teal)}
+[data-theme="light"] .ac-start{color:var(--teal-dk)}
+[data-theme="light"] .article-card.read .ac-num::after{color:var(--teal-dk)}
+
+/* the syllabus outranks the taxonomy: number reads first inside cards.
+   (Visual order only; markup order unchanged for now.) */
+.ac-num{order:1}
+.ac-tags{order:2}
+.ac-title{order:3}
+.ac-desc{order:4}
+.ac-top .card-fps{order:5}
 
 .filter-bar{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:0 40px}
 .filter-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:8px;height:52px;overflow-x:auto}
-.filter-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-family:var(--mono);flex-shrink:0;margin-right:6px}
+.filter-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-family:var(--mono);flex-shrink:0;margin-right:6px}
 .filter-btn{padding:5px 16px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font)}
 .filter-btn:hover{color:var(--t2);border-color:var(--border2)}
 .filter-btn.active{background:var(--teal);border-color:var(--teal);color:#062024!important;font-weight:700}
-.filter-btn.fp-patient.active{background:#6aadff;border-color:#6aadff}
+.filter-btn.fp-patient.active{background:#6aabff;border-color:#6aabff}
 .filter-btn.fp-provider.active{background:var(--teal);border-color:var(--teal)}
 .filter-btn.fp-payer.active{background:var(--amber);border-color:var(--amber)}
 .filter-btn.fp-policy.active{background:#b59ff5;border-color:#b59ff5}
 .filter-btn.fp-ai.active{background:#4ecb8d;border-color:#4ecb8d}
 .filter-btn.fp-leaders.active{background:#F0CF6B;border-color:#F0CF6B}
 .filter-btn.fp-guest.active{background:#4ecb8d;border-color:#4ecb8d}
+.filter-btn.ft-clinical.active{background:var(--teal);border-color:var(--teal)}
+.filter-btn.ft-management.active{background:var(--amber);border-color:var(--amber)}
+.filter-btn.ft-technology.active{background:#38b6f0;border-color:#38b6f0}
 .filter-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 4px}
 
 .content-section{padding:56px 40px}
 .content-inner{max-width:1080px;margin:0 auto}
+
+/* ── Filter rail (desktop ≥1100px, the maps' dock line) ──
+   Catalog-row grammar from DESIGN.md Tool Chrome: ▸ marker at rest,
+   filled ◆ in Signal Teal when selected. Ink and weight, never a glow.
+   Below 1100px the rail hides and the chip row does the job. */
+.lr-layout{max-width:1080px;margin:0 auto}
+.lr-rail{display:none}
+@media (min-width:1100px){
+  .lr-layout{display:grid;grid-template-columns:210px 1fr;gap:36px;align-items:start}
+  .lr-layout .content-inner{max-width:none;margin:0}
+  .lr-rail{display:block;position:sticky;top:84px}
+  .filter-bar{display:none}
+}
+.lr-k{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);padding-bottom:6px;margin:22px 0 8px}
+.lr-rail .lr-k:first-child{margin-top:0}
+.lr-row{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:none;background:none;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;text-align:left;transition:color .15s,background .15s}
+.lr-row:hover{color:var(--t1);background:var(--raised)}
+.lr-row .m{font-family:var(--mono);font-size:11px;color:var(--t4);flex:none;transition:color .15s}
+.lr-row .m::before{content:"\25B8"}
+.lr-row.on .m::before{content:"\25C6"}
+.lr-row .c{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums}
+.lr-row.on{color:var(--teal);font-weight:700}
+.lr-row.on .m{color:var(--teal)}
+.lr-row:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+[data-theme="light"] .lr-row.on{color:var(--teal-dk)}
+[data-theme="light"] .lr-row.on .m{color:var(--teal-dk)}
+.lr-reset{font-size:12px;color:var(--t3)}
+.lr-reset:hover{color:var(--t1)}
 
 .framework-card{background:none;border:none;border-left:3px solid var(--teal);border-radius:0;padding:6px 0 6px 14px;margin-bottom:40px;max-width:860px}
 .fc-title{font-family:var(--display);font-size:13px;font-weight:700;margin-bottom:10px}
@@ -37,31 +97,35 @@ navPage: learn
 .fc-p-patient{background:rgba(27,95,168,.18);border:1px solid rgba(27,95,168,.35);color:#aac8ff}
 .fc-p-provider{background:rgba(78,205,196,.12);border:1px solid rgba(78,205,196,.3);color:var(--teal)}
 .fc-p-payer{background:rgba(232,168,56,.12);border:1px solid rgba(232,168,56,.3);color:var(--amber)}
-.fc-p-policy{background:rgba(139,111,240,.12);border:1px solid rgba(139,111,240,.3);color:#b59ff5}
+.fc-p-policy{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);color:#b59ff5}
 .fc-p-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-patient{background:#6aadff}
+.dot-patient{background:#6aabff}
 .dot-provider{background:var(--teal)}
 .dot-payer{background:var(--amber)}
 .dot-policy{background:#b59ff5}
-.fc-p-label{font-size:10px;opacity:.7;font-family:var(--mono);font-weight:400;margin-left:2px}
+.fc-p-label{font-size:11px;opacity:.7;font-family:var(--mono);font-weight:400;margin-left:2px}
 
-.article-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.article-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:all .2s}
-.article-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
-.ac-top{padding:22px 24px 18px;flex:1}
+.article-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+/* hub card material (The Hub Lift Rule): raised ground, resting elevation */
+.article-card{background:#131f30;border:1px solid var(--border2);border-radius:12px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;box-shadow:0 10px 28px rgba(0,0,0,.45);transition:transform .2s,border-color .2s}
+.article-card:hover{border-color:var(--teal);transform:translateY(-3px)}
+/* flex column so the atlas pills anchor to the bottom: card guts stop floating
+   and the pills + footer line up across uneven descriptions */
+.ac-top{padding:22px 24px 18px;flex:1;display:flex;flex-direction:column}
+.article-card .card-fps{margin-top:auto!important;padding-top:14px}
 .ac-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.ac-tag{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:10px;font-family:var(--mono)}
-.tag-patient{background:rgba(27,95,168,.2);color:#6aadff;border:1px solid rgba(27,95,168,.3)}
+.ac-tag{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:10px;font-family:var(--mono)}
+.tag-patient{background:rgba(27,95,168,.2);color:#6aabff;border:1px solid rgba(27,95,168,.3)}
 .tag-provider{background:rgba(78,205,196,.1);color:var(--teal);border:1px solid rgba(78,205,196,.25)}
 .tag-payer{background:rgba(232,168,56,.12);color:var(--amber);border:1px solid rgba(232,168,56,.25)}
-.tag-policy{background:rgba(139,111,240,.12);color:#b59ff5;border:1px solid rgba(139,111,240,.25)}
+.tag-policy{background:rgba(139,92,246,.12);color:#b59ff5;border:1px solid rgba(139,92,246,.25)}
 .tag-ai{background:rgba(45,155,111,.12);color:#4ecb8d;border:1px solid rgba(45,155,111,.25)}
 .tag-interop{background:rgba(223,87,82,.1);color:#ff9090;border:1px solid rgba(223,87,82,.2)}
 .tag-guest{background:rgba(45,155,111,.12);color:#4ecb8d;border:1px solid rgba(45,155,111,.28)}
 .tag-leaders{background:rgba(232,197,71,.1);color:#F0CF6B;border:1px solid rgba(232,197,71,.25)}
 .ac-guest{border-left:3px solid #2D9B6F!important}
 .ac-guest:hover{border-color:#2D9B6F!important}
-.ac-num{font-size:10px;color:var(--t3);font-family:var(--mono);margin-bottom:6px}
+.ac-num{font-size:11px;color:var(--t3);font-family:var(--mono);margin-bottom:6px}
 .ac-title{font-size:16px;font-weight:600;color:var(--t1);line-height:1.35;margin-bottom:8px}
 .ac-desc{font-size:13px;color:var(--t2);line-height:1.6}
 .ac-bottom{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
@@ -79,18 +143,19 @@ navPage: learn
 .article-card .card-fps,.talk-card .card-fps{margin:14px 0 0}
 
 .coming-soon{opacity:.55;pointer-events:none}
-.cs-badge{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--t3);font-family:var(--mono)}
+.cs-badge{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--t3);font-family:var(--mono)}
 
-.talks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-.talk-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:all .2s}
-.talk-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.talks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.talk-card{background:#131f30;border:1px solid var(--border2);border-radius:12px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;box-shadow:0 10px 28px rgba(0,0,0,.45);transition:transform .2s,border-color .2s}
+.talk-card:hover{border-color:var(--teal);transform:translateY(-3px)}
 .tc-band{height:3px}
 .tc-band-arma{background:var(--amber)}
 .tc-band-msrc{background:var(--teal)}
-.tc-body{padding:22px 24px;flex:1}
+.tc-body{padding:22px 24px;flex:1;display:flex;flex-direction:column}
+.talk-card .card-fps{margin-top:auto!important;padding-top:14px}
 .tc-eyebrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.tc-event{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)}
-.tc-cme{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(232,168,56,.12);border:1px solid rgba(232,168,56,.25);color:var(--amber);font-family:var(--mono);font-weight:600}
+.tc-event{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)}
+.tc-cme{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(232,168,56,.12);border:1px solid rgba(232,168,56,.25);color:var(--amber);font-family:var(--mono);font-weight:600}
 .tc-title{font-size:16px;font-weight:600;color:var(--t1);line-height:1.35;margin-bottom:6px}
 .tc-sub{font-size:12px;color:var(--t3);margin-bottom:14px;font-style:italic}
 .tc-desc{font-size:13px;color:var(--t2);line-height:1.6}
@@ -110,7 +175,7 @@ navPage: learn
 .empty-state{display:none;padding:40px;text-align:center;font-size:14px;color:var(--t3);grid-column:1/-1}
 .empty-state.visible{display:block}
 
-@media(max-width:768px){.page-header{padding:48px 20px 36px}.filter-bar{padding:0 20px}.content-section{padding:48px 20px}.map-callout{flex-direction:column;gap:16px}}
+@media(max-width:699px){.page-header{padding-top:36px}.filter-bar{padding:0 20px}.content-section{padding:48px 20px}.map-callout{flex-direction:column;gap:16px}}
 /* touch: the filter chips are Learn's primary control. 42px floor, and the
    bar grows instead of clipping the taller chips */
 @media(hover:none){
@@ -121,6 +186,7 @@ navPage: learn
 
 /* ── Light mode: light accent text drops to the darker accent tokens ── */
 [data-theme="light"] .page-header h1 em{color:var(--teal-dk)}
+[data-theme="light"] .article-card,[data-theme="light"] .talk-card{background:#FFFFFF;box-shadow:0 10px 28px rgba(13,32,54,.14)}
 [data-theme="light"] .tag-leaders{color:#8A6A15}
 [data-theme="light"] .filter-btn.fp-guest{color:var(--green)!important}
 [data-theme="light"] .filter-btn.active{color:#062024!important}
@@ -140,11 +206,9 @@ navPage: learn
 </style>
 
 <div class="page-header">
-  <div class="eyebrow" style="margin-bottom:14px"><div class="eyebrow-line"></div><span>Healthcare Uncharted &middot; Explore</span></div>
   <h1>The Healthcare System,<br><em>Mapped from the Inside</em></h1>
-  <div class="section-accent-v2" style="margin:24px 0"></div>
-  <p>Articles, frameworks, and talks. Each one maps a different layer of the healthcare system. Every piece connects to the next. Every article is a node on the map.</p>
-  <button class="hv-search" type="button" data-hu-search aria-label="Search the site" style="margin-top:22px">
+  <p>Modules, frameworks, and talks. Each one maps a different layer of the healthcare system. Every piece connects to the next. Every module is a node on the map.</p>
+  <button class="hv-search" type="button" data-hu-search aria-label="Search the site">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
     <b>Try: FHIR &middot; the payer &middot; leading the AI transition</b>
     <span class="k">/</span>
@@ -154,27 +218,61 @@ navPage: learn
 <div class="filter-bar">
   <div class="filter-inner">
     <span class="filter-label">Filter by</span>
-    <button class="filter-btn active" onclick="filterCards('all', this)">All</button>
+    <button class="filter-btn active" data-filter="all" onclick="filterCards('all', this)">All</button>
     <div class="filter-sep"></div>
-    <button class="filter-btn fp-patient" onclick="filterCards('patient', this)">Patient</button>
-    <button class="filter-btn fp-provider" onclick="filterCards('provider', this)">Provider</button>
-    <button class="filter-btn fp-payer" onclick="filterCards('payer', this)">Payer</button>
-    <button class="filter-btn fp-policy" onclick="filterCards('policy', this)">Policy Makers</button>
+    <button class="filter-btn ft-clinical" data-filter="clinical" onclick="filterCards('clinical', this)">Clinical</button>
+    <button class="filter-btn ft-management" data-filter="management" onclick="filterCards('management', this)">Management</button>
+    <button class="filter-btn ft-technology" data-filter="technology" onclick="filterCards('technology', this)">Technology</button>
     <div class="filter-sep"></div>
-    <button class="filter-btn fp-ai" onclick="filterCards('ai', this)">AI</button>
-    <button class="filter-btn fp-leaders" onclick="filterCards('leaders', this)">Leadership</button>
-    <button class="filter-btn" onclick="filterCards('interop', this)" style="color:var(--t3)">Interoperability</button>
-    <button class="filter-btn" onclick="filterCards('talk', this)" style="color:var(--t3)">Talks</button>
+    <button class="filter-btn fp-patient" data-filter="patient" onclick="filterCards('patient', this)">Patient</button>
+    <button class="filter-btn fp-provider" data-filter="provider" onclick="filterCards('provider', this)">Provider</button>
+    <button class="filter-btn fp-payer" data-filter="payer" onclick="filterCards('payer', this)">Payer</button>
+    <button class="filter-btn fp-policy" data-filter="policy" onclick="filterCards('policy', this)">Policy Makers</button>
     <div class="filter-sep"></div>
-    <button class="filter-btn fp-guest" onclick="filterCards('guest', this)" style="color:#4ecb8d">Guest</button>
+    <button class="filter-btn fp-ai" data-filter="ai" onclick="filterCards('ai', this)">AI</button>
+    <button class="filter-btn fp-leaders" data-filter="leaders" onclick="filterCards('leaders', this)">Leadership</button>
+    <button class="filter-btn" data-filter="interop" onclick="filterCards('interop', this)" style="color:var(--t3)">Interoperability</button>
+    <button class="filter-btn" data-filter="talk" onclick="filterCards('talk', this)" style="color:var(--t3)">Talks</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn fp-guest" data-filter="guest" onclick="filterCards('guest', this)" style="color:#4ecb8d">Guest</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" data-unread aria-pressed="false" onclick="toggleUnread()">Unread</button>
   </div>
 </div>
 
 <section class="content-section">
-  <div class="content-inner">
+  <div class="lr-layout">
+
+    <aside class="lr-rail" aria-label="Filter modules">
+      <div class="lr-k">Filter</div>
+      <button class="lr-row on" data-filter="all" aria-pressed="true" onclick="filterCards('all', this)"><span class="m" aria-hidden="true"></span>Everything<span class="c"></span></button>
+      <div class="lr-k">Tracks</div>
+      <button class="lr-row" data-filter="clinical" aria-pressed="false" onclick="filterCards('clinical', this)"><span class="m" aria-hidden="true"></span>Clinical<span class="c"></span></button>
+      <button class="lr-row" data-filter="management" aria-pressed="false" onclick="filterCards('management', this)"><span class="m" aria-hidden="true"></span>Management<span class="c"></span></button>
+      <button class="lr-row" data-filter="technology" aria-pressed="false" onclick="filterCards('technology', this)"><span class="m" aria-hidden="true"></span>Technology<span class="c"></span></button>
+      <div class="lr-k">The Player</div>
+      <button class="lr-row" data-filter="patient" aria-pressed="false" onclick="filterCards('patient', this)"><span class="m" aria-hidden="true"></span>Patient<span class="c"></span></button>
+      <button class="lr-row" data-filter="provider" aria-pressed="false" onclick="filterCards('provider', this)"><span class="m" aria-hidden="true"></span>Provider<span class="c"></span></button>
+      <button class="lr-row" data-filter="payer" aria-pressed="false" onclick="filterCards('payer', this)"><span class="m" aria-hidden="true"></span>Payer<span class="c"></span></button>
+      <button class="lr-row" data-filter="policy" aria-pressed="false" onclick="filterCards('policy', this)"><span class="m" aria-hidden="true"></span>Policy Makers<span class="c"></span></button>
+      <div class="lr-k">Topic</div>
+      <button class="lr-row" data-filter="ai" aria-pressed="false" onclick="filterCards('ai', this)"><span class="m" aria-hidden="true"></span>AI<span class="c"></span></button>
+      <button class="lr-row" data-filter="leaders" aria-pressed="false" onclick="filterCards('leaders', this)"><span class="m" aria-hidden="true"></span>Leadership<span class="c"></span></button>
+      <button class="lr-row" data-filter="interop" aria-pressed="false" onclick="filterCards('interop', this)"><span class="m" aria-hidden="true"></span>Interoperability<span class="c"></span></button>
+      <div class="lr-k">Format</div>
+      <button class="lr-row" data-filter="talk" aria-pressed="false" onclick="filterCards('talk', this)"><span class="m" aria-hidden="true"></span>Talks<span class="c"></span></button>
+      <button class="lr-row" data-filter="guest" aria-pressed="false" onclick="filterCards('guest', this)"><span class="m" aria-hidden="true"></span>Guest<span class="c"></span></button>
+      <div class="lr-k">Progress</div>
+      <button class="lr-row" data-unread aria-pressed="false" onclick="toggleUnread()"><span class="m" aria-hidden="true"></span>Unread only<span class="c"></span></button>
+      <button class="lr-row lr-reset" type="button" onclick="resetProgress()"><span class="m" aria-hidden="true"></span>Reset read marks<span class="c"></span></button>
+    </aside>
+
+    <div class="content-inner">
     <div class="article-grid" id="article-grid">
 
-      <div class="article-card" data-tags="patient,provider,payer,policy">
+      <div class="lh-shelf-h lh-shelf-grid"><h2 class="lh-kicker"><i>&#9472; </i>The Series</h2><span class="n">start at 01 &middot; read in any order</span></div>
+
+      <div class="article-card" data-tags="patient,provider,payer,policy,clinical,management,technology">
         <div class="ac-top">
           <div class="ac-tags">
             <span class="ac-tag tag-patient">Patient</span>
@@ -182,9 +280,9 @@ navPage: learn
             <span class="ac-tag tag-payer">Payer</span>
             <span class="ac-tag tag-policy">Policy Makers</span>
           </div>
-          <div class="ac-num">Article 01</div>
+          <div class="ac-num">Module 01 <span class="ac-start">&middot; start here</span></div>
           <div class="ac-title"><a class="ac-link" href="/learn/4ps-framework/">The Four Players of U.S. Healthcare</a></div>
-          <div class="ac-desc">The framework everything else on this site hangs off of. Patients, Providers, Payers, and Policymakers — each one sees the system through a different lens, and the same relationship can mean four different things depending on which side you're standing on.</div>
+          <div class="ac-desc">The framework everything else on this site hangs off of. Patients, Providers, Payers, and Policymakers. Each one sees the system through a different lens, and the same relationship can mean four different things depending on which side you're standing on.</div>
           <div class="card-fps">
             <a class="fp fp-patient" href="/atlas/#patient/encounter">Clinical Encounter</a>
             <a class="fp fp-provider" href="/atlas/#provider/acute">Acute Care Hospital</a>
@@ -198,7 +296,191 @@ navPage: learn
         </div>
       </div>
 
-      <div class="article-card" data-tags="ai,policy,provider,interop">
+      <div class="article-card" data-tags="patient,clinical,technology">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-patient">Patient</span>
+          </div>
+          <div class="ac-num">Module 02</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/patient-data-record/">The Patient: How You Become a Data Record</a></div>
+          <div class="ac-desc">From registration to discharge: how patient identity is created, maintained, and shared across every system in a health network.</div>
+          <div class="card-fps">
+            <a class="fp fp-patient" href="/atlas/#patient/encounter">Clinical Encounter</a>
+            <a class="fp fp-provider" href="/atlas/#provider/ehr">EHR Systems</a>
+            <a class="fp fp-techeco" href="/atlas/#techeco/hie">Health Info Exchange</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Explainer &middot; Plain language &middot; Decoder</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="article-card" data-tags="provider,clinical,technology">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-provider">Provider</span>
+          </div>
+          <div class="ac-num">Module 03</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/ehr-architecture/">The Provider: EHR Architecture and Clinical Workflow</a></div>
+          <div class="ac-desc">How the major EHRs are actually built: the data chain behind the interface, the split between the chart and the reporting copy, and why workflows look the way they do.</div>
+          <div class="card-fps">
+            <a class="fp fp-provider" href="/atlas/#provider/ehr">EHR Systems</a>
+            <a class="fp fp-provider" href="/atlas/#provider/informatics">Clinical Informatics</a>
+            <a class="fp fp-medsci" href="/atlas/#medsci/fhir">FHIR &amp; Interop</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Long read &middot; Architecture &middot; Series</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="article-card" data-tags="payer,provider,policy,management,clinical">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-payer">Payer</span>
+            <span class="ac-tag tag-provider">Provider</span>
+          </div>
+          <div class="ac-num">Module 04</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/the-payer/">The Payer: Claims, Codes, and Prior Auth</a></div>
+          <div class="ac-desc">An insurer never sees your patient. It sees the codes. Claims adjudication, coding systems, and prior auth measured with federal data: 19% of claims denied, under 1% appealed, and 80% of appeals won.</div>
+          <div class="card-fps">
+            <a class="fp fp-payer" href="/atlas/#payer/commercial">Commercial Insurance</a>
+            <a class="fp fp-payer" href="/atlas/#payer/medicare">Medicare</a>
+            <a class="fp fp-techeco" href="/atlas/#techeco/rcm-vendors">Revenue Cycle Vendors</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Long read &middot; Data &middot; Series</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="article-card" data-tags="policy,provider,interop,management,technology">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-policy">Policy Makers</span>
+            <span class="ac-tag tag-interop">Interoperability</span>
+          </div>
+          <div class="ac-num">Module 05</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/hitech-to-cures/">The Policy Makers: HITECH, Meaningful Use, and the 21st Century Cures Act</a></div>
+          <div class="ac-desc">$35 billion bought near-total EHR adoption, two hours of desk work per hour of care, and data that still would not move. So Congress passed another law. The whole arc, from the Federal Register out.</div>
+          <div class="card-fps">
+            <a class="fp fp-policy" href="/atlas/#policy/aca">Federal Health Reform</a>
+            <a class="fp fp-techeco" href="/atlas/#techeco/ehr-tools">Medical Record Tools</a>
+            <a class="fp fp-techeco" href="/atlas/#techeco/interop-mid">Interoperability</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Long read &middot; Policy &middot; Series</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="article-card coming-soon" data-tags="interop,policy,provider,technology">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-interop">Interoperability</span>
+            <span class="ac-tag tag-policy">Policy Makers</span>
+            <span class="cs-badge">Coming Soon</span>
+          </div>
+          <div class="ac-num">Module 06</div>
+          <div class="ac-title">From HL7 v2 to FHIR: The History of Healthcare Interoperability</div>
+          <div class="ac-desc">Why healthcare data still doesn't flow freely: a timeline from 1987 to today, and what FHIR actually changes.</div>
+        </div>
+        <div class="ac-bottom">
+          <span class="ac-meta">In development</span>
+        </div>
+      </div>
+
+      <div class="article-card" data-tags="ai,provider,patient,clinical,technology">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-ai">AI</span>
+            <span class="ac-tag tag-provider">Provider</span>
+          </div>
+          <div class="ac-num">Module 07</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/ai-in-healthcare/">AI in Healthcare: What Works, What Doesn't, and Why</a></div>
+          <div class="ac-desc">The evidence base for AI in clinical medicine: ambient scribing, sepsis models, diagnostic tools, and the pattern behind every success and failure. Case studies with the receipts.</div>
+          <div class="card-fps">
+            <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
+            <a class="fp fp-medsci" href="/atlas/#medsci/predictive">Predictive Analytics</a>
+            <a class="fp fp-techeco" href="/atlas/#techeco/ai-vendors">AI Vendor Landscape</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Long read &middot; Evidence &middot; Case studies</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="article-card" data-tags="patient,provider,policy,clinical,management">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-patient">Patient</span>
+            <span class="ac-tag tag-policy">Policy Makers</span>
+          </div>
+          <div class="ac-num">Module 08</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/healthcare-gap/">The U.S. Healthcare Gap: Rural, Workforce, and Access</a></div>
+          <div class="ac-desc">Where the system breaks down for real people: the geographic, workforce, and structural gaps that technology alone cannot fix. One in five Americans, one in ten physicians, and the closure ledger in between.</div>
+          <div class="card-fps">
+            <a class="fp fp-pubhealth" href="/atlas/#pubhealth/rural">Rural Health Access</a>
+            <a class="fp fp-provider" href="/atlas/#provider/physicians">Physician Workforce</a>
+            <a class="fp fp-patient" href="/atlas/#patient/access">Access &amp; Navigation</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Long read &middot; Workforce &middot; Access</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="article-card" data-tags="interop,payer,provider,policy,technology,management">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-interop">Interoperability</span>
+            <span class="ac-tag tag-payer">Payer</span>
+          </div>
+          <div class="ac-num">Module 09</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/change-healthcare-stress-test/">The Change Healthcare Cyberattack: A System Stress Test</a></div>
+          <div class="ac-desc">One login without MFA froze the claims pipeline for a third of the country. 192.7 million records, a $22 million ransom, $9 billion in emergency loans. The stress test nobody ordered, from the Congressional record.</div>
+          <div class="card-fps">
+            <a class="fp fp-techeco" href="/atlas/#techeco/cyber">Cybersecurity</a>
+            <a class="fp fp-techeco" href="/atlas/#techeco/rcm-vendors">Revenue Cycle Vendors</a>
+            <a class="fp fp-payer" href="/atlas/#payer/commercial">Commercial Insurance</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Long read &middot; Case study &middot; Series</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="article-card" data-tags="leaders,ai,provider,management,technology">
+        <div class="ac-top">
+          <div class="ac-tags">
+            <span class="ac-tag tag-leaders">Leadership</span>
+            <span class="ac-tag tag-ai">AI</span>
+          </div>
+          <div class="ac-num">Module 10</div>
+          <div class="ac-title"><a class="ac-link" href="/learn/leading-the-ai-transition/">Leading the AI Transition: Run It Like a Formulary</a></div>
+          <div class="ac-desc">71% of hospitals run predictive AI. Fewer than half checked it for bias on their own patients. The governance system that closes that gap already exists down the hall in pharmacy. The leadership anchor, with receipts.</div>
+          <div class="card-fps">
+            <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
+            <a class="fp fp-techeco" href="/atlas/#techeco/ai-vendors">AI Vendor Landscape</a>
+            <a class="fp fp-policy" href="/atlas/#policy/accreditation">Accreditation Bodies</a>
+          </div>
+        </div>
+        <div class="ac-bottom">
+          <div class="ac-meta">Long read &middot; Leadership &middot; Governance</div>
+          <span class="ac-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="lh-shelf-h lh-shelf-grid"><h2 class="lh-kicker"><i>&#9472; </i>Methods &amp; Field Guides</h2><span class="n">how the site is built</span></div>
+
+      <div class="article-card" data-tags="ai,policy,provider,interop,management,technology">
         <div class="ac-top">
           <div class="ac-tags">
             <span class="ac-tag tag-ai">AI</span>
@@ -207,7 +489,7 @@ navPage: learn
           </div>
           <div class="ac-num">Field Guide 01</div>
           <div class="ac-title"><a class="ac-link" href="/learn/laws-and-paradoxes/">Healthcare Laws &amp; Paradoxes</a></div>
-          <div class="ac-desc">The recurring patterns that shape healthcare and health IT. Jevons, Goodhart, Roemer, the Productivity Paradox, Conway, Amara, the Bullwhip Effect, and Jensen. One tabbed field guide, one law per tab.</div>
+          <div class="ac-desc">The recurring patterns that shape healthcare and health IT. Jevons, Goodhart, Roemer, the Framing Effect, the Productivity Paradox, Conway, Amara, the Bullwhip Effect, and Jensen. One tabbed field guide, one law per tab.</div>
           <div class="card-fps">
             <a class="fp fp-policy" href="/atlas/#policy/con">Certificate of Need</a>
             <a class="fp fp-policy" href="/atlas/#policy/quality-meas">Quality Measurement</a>
@@ -215,12 +497,12 @@ navPage: learn
           </div>
         </div>
         <div class="ac-bottom">
-          <div class="ac-meta">8 tabs &middot; Field guide</div>
+          <div class="ac-meta">10 tabs &middot; Field guide</div>
           <span class="ac-arrow">&rarr;</span>
         </div>
       </div>
 
-      <div class="article-card" data-tags="provider,payer,policy">
+      <div class="article-card" data-tags="provider,payer,policy,management,clinical">
         <div class="ac-top">
           <div class="ac-tags">
             <span class="ac-tag tag-provider">Provider</span>
@@ -242,7 +524,7 @@ navPage: learn
         </div>
       </div>
 
-      <div class="article-card" data-tags="patient,provider,payer,policy">
+      <div class="article-card" data-tags="patient,provider,payer,policy,technology">
         <div class="ac-top">
           <div class="ac-tags">
             <span class="ac-tag tag-provider">Infrastructure</span>
@@ -263,198 +545,18 @@ navPage: learn
         </div>
       </div>
 
-      <div class="article-card" data-tags="patient">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-patient">Patient</span>
-          </div>
-          <div class="ac-num">Article 02</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/patient-data-record/">The Patient: How You Become a Data Record</a></div>
-          <div class="ac-desc">From registration to discharge: how patient identity is created, maintained, and shared across every system in a health network.</div>
-          <div class="card-fps">
-            <a class="fp fp-patient" href="/atlas/#patient/encounter">Clinical Encounter</a>
-            <a class="fp fp-provider" href="/atlas/#provider/ehr">EHR Systems</a>
-            <a class="fp fp-techeco" href="/atlas/#techeco/hie">Health Info Exchange</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Explainer &middot; Plain language &middot; Decoder</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
+      <div class="lh-shelf-h lh-shelf-grid"><h2 class="lh-kicker"><i>&#9472; </i>Field Reports</h2><span class="n">guest authors</span></div>
 
-      <div class="article-card" data-tags="provider">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-provider">Provider</span>
-          </div>
-          <div class="ac-num">Article 03</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/ehr-architecture/">The Provider: EHR Architecture and Clinical Workflow</a></div>
-          <div class="ac-desc">How the major EHRs are actually built &mdash; the data chain behind the interface, the split between the chart and the reporting copy, and why workflows look the way they do.</div>
-          <div class="card-fps">
-            <a class="fp fp-provider" href="/atlas/#provider/ehr">EHR Systems</a>
-            <a class="fp fp-provider" href="/atlas/#provider/informatics">Clinical Informatics</a>
-            <a class="fp fp-medsci" href="/atlas/#medsci/fhir">FHIR &amp; Interop</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Long read &middot; Architecture &middot; Series</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <div class="article-card" data-tags="payer,provider,policy">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-payer">Payer</span>
-            <span class="ac-tag tag-provider">Provider</span>
-          </div>
-          <div class="ac-num">Article 04</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/the-payer/">The Payer: Claims, Codes, and Prior Auth</a></div>
-          <div class="ac-desc">An insurer never sees your patient. It sees the codes. Claims adjudication, coding systems, and prior auth measured with federal data: 19% of claims denied, under 1% appealed, and 80% of appeals won.</div>
-          <div class="card-fps">
-            <a class="fp fp-payer" href="/atlas/#payer/commercial">Commercial Insurance</a>
-            <a class="fp fp-payer" href="/atlas/#payer/medicare">Medicare</a>
-            <a class="fp fp-techeco" href="/atlas/#techeco/rcm-vendors">Revenue Cycle Vendors</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Long read &middot; Data &middot; Series</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <div class="article-card" data-tags="policy,provider,interop">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-policy">Policy Makers</span>
-            <span class="ac-tag tag-interop">Interoperability</span>
-          </div>
-          <div class="ac-num">Article 05</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/hitech-to-cures/">The Policy Makers: HITECH, Meaningful Use, and the 21st Century Cures Act</a></div>
-          <div class="ac-desc">$35 billion bought near-total EHR adoption, two hours of desk work per hour of care, and data that still would not move. So Congress passed another law. The whole arc, from the Federal Register out.</div>
-          <div class="card-fps">
-            <a class="fp fp-policy" href="/atlas/#policy/aca">Federal Health Reform</a>
-            <a class="fp fp-techeco" href="/atlas/#techeco/ehr-tools">Medical Record Tools</a>
-            <a class="fp fp-techeco" href="/atlas/#techeco/interop-mid">Interoperability</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Long read &middot; Policy &middot; Series</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <div class="article-card coming-soon" data-tags="interop,policy,provider">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-interop">Interoperability</span>
-            <span class="ac-tag tag-policy">Policy Makers</span>
-            <span class="cs-badge">Coming Soon</span>
-          </div>
-          <div class="ac-num">Article 06</div>
-          <div class="ac-title">From HL7 v2 to FHIR: The History of Healthcare Interoperability</div>
-          <div class="ac-desc">Why healthcare data still doesn't flow freely &mdash; a timeline from 1987 to today, and what FHIR actually changes.</div>
-        </div>
-        <div class="ac-bottom">
-          <span class="ac-meta">In development</span>
-          <span class="ac-arrow">?</span>
-        </div>
-      </div>
-
-      <div class="article-card" data-tags="ai,provider,patient">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-ai">AI</span>
-            <span class="ac-tag tag-provider">Provider</span>
-          </div>
-          <div class="ac-num">Article 07</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/ai-in-healthcare/">AI in Healthcare: What Works, What Doesn't, and Why</a></div>
-          <div class="ac-desc">The evidence base for AI in clinical medicine &mdash; ambient scribing, sepsis models, diagnostic tools, and the pattern behind every success and failure. Case studies with the receipts.</div>
-          <div class="card-fps">
-            <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
-            <a class="fp fp-medsci" href="/atlas/#medsci/predictive">Predictive Analytics</a>
-            <a class="fp fp-techeco" href="/atlas/#techeco/ai-vendors">AI Vendor Landscape</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Long read &middot; Evidence &middot; Case studies</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <div class="article-card" data-tags="patient,provider,policy">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-patient">Patient</span>
-            <span class="ac-tag tag-policy">Policy Makers</span>
-          </div>
-          <div class="ac-num">Article 08</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/healthcare-gap/">The U.S. Healthcare Gap: Rural, Workforce, and Access</a></div>
-          <div class="ac-desc">Where the system breaks down for real people &mdash; the geographic, workforce, and structural gaps that technology alone cannot fix. One in five Americans, one in ten physicians, and the closure ledger in between.</div>
-          <div class="card-fps">
-            <a class="fp fp-pubhealth" href="/atlas/#pubhealth/rural">Rural Health Access</a>
-            <a class="fp fp-provider" href="/atlas/#provider/physicians">Physician Workforce</a>
-            <a class="fp fp-patient" href="/atlas/#patient/access">Access &amp; Navigation</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Long read &middot; Workforce &middot; Access</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <div class="article-card" data-tags="interop,payer,provider,policy">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-interop">Interoperability</span>
-            <span class="ac-tag tag-payer">Payer</span>
-          </div>
-          <div class="ac-num">Article 09</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/change-healthcare-stress-test/">The Change Healthcare Cyberattack: A System Stress Test</a></div>
-          <div class="ac-desc">One login without MFA froze the claims pipeline for a third of the country. 192.7 million records, a $22 million ransom, $9 billion in emergency loans. The stress test nobody ordered, from the Congressional record.</div>
-          <div class="card-fps">
-            <a class="fp fp-techeco" href="/atlas/#techeco/cyber">Cybersecurity</a>
-            <a class="fp fp-techeco" href="/atlas/#techeco/rcm-vendors">Revenue Cycle Vendors</a>
-            <a class="fp fp-payer" href="/atlas/#payer/commercial">Commercial Insurance</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Long read &middot; Case study &middot; Series</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <div class="article-card" data-tags="leaders,ai,provider">
-        <div class="ac-top">
-          <div class="ac-tags">
-            <span class="ac-tag tag-leaders">Leadership</span>
-            <span class="ac-tag tag-ai">AI</span>
-          </div>
-          <div class="ac-num">Article 10</div>
-          <div class="ac-title"><a class="ac-link" href="/learn/leading-the-ai-transition/">Leading the AI Transition: Run It Like a Formulary</a></div>
-          <div class="ac-desc">71% of hospitals run predictive AI. Fewer than half checked it for bias on their own patients. The governance system that closes that gap already exists down the hall in pharmacy. The leadership anchor, with receipts.</div>
-          <div class="card-fps">
-            <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
-            <a class="fp fp-techeco" href="/atlas/#techeco/ai-vendors">AI Vendor Landscape</a>
-            <a class="fp fp-policy" href="/atlas/#policy/accreditation">Accreditation Bodies</a>
-          </div>
-        </div>
-        <div class="ac-bottom">
-          <div class="ac-meta">Long read &middot; Leadership &middot; Governance</div>
-          <span class="ac-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <div class="article-card ac-guest" data-tags="payer,policy,guest">
+      <div class="article-card ac-guest" data-tags="payer,policy,guest,clinical,management">
         <div class="ac-top">
           <div class="ac-tags">
             <span class="ac-tag tag-guest">Guest &middot; Chrysalis Ashton</span>
             <span class="ac-tag tag-payer">Payer</span>
             <span class="ac-tag tag-policy">Policy Makers</span>
           </div>
+          <div class="ac-num">Field Report 01</div>
           <div class="ac-title"><a class="ac-link" href="/learn/oxygen-payment-cuts/">Decades of Deliberate Erosion</a></div>
-          <div class="ac-desc">How 36 years of successive legislation dismantled the financial foundation of home respiratory therapy &mdash; cutting Medicare oxygen reimbursement by over 75% in real terms and eliminating the economic model that funded RT clinical services in the home.</div>
+          <div class="ac-desc">How 36 years of successive legislation dismantled the financial foundation of home respiratory therapy, cutting Medicare oxygen reimbursement by over 75% in real terms and eliminating the economic model that funded RT clinical services in the home.</div>
           <div class="card-fps">
             <a class="fp fp-payer" href="/atlas/#payer/medicare">Medicare</a>
             <a class="fp fp-provider" href="/atlas/#provider/resp-therapy">Respiratory Therapy</a>
@@ -467,15 +569,16 @@ navPage: learn
         </div>
       </div>
 
-      <div class="article-card ac-guest" data-tags="policy,provider,guest">
+      <div class="article-card ac-guest" data-tags="policy,provider,guest,clinical">
         <div class="ac-top">
           <div class="ac-tags">
             <span class="ac-tag tag-guest">Guest &middot; Chrysalis Ashton</span>
             <span class="ac-tag tag-policy">Policy Makers</span>
             <span class="ac-tag tag-provider">Provider</span>
           </div>
+          <div class="ac-num">Field Report 02</div>
           <div class="ac-title"><a class="ac-link" href="/learn/home-respiratory-timeline/">History of Home Respiratory Therapy</a></div>
-          <div class="ac-desc">From oxygen orderlies in the 1940s to modern PAP therapy, home ventilation, and the fight for clinical recognition &mdash; a century of evolution in the home care setting.</div>
+          <div class="ac-desc">From oxygen orderlies in the 1940s to modern PAP therapy, home ventilation, and the fight for clinical recognition. A century of evolution in the home care setting.</div>
           <div class="card-fps">
             <a class="fp fp-provider" href="/atlas/#provider/resp-therapy">Respiratory Therapy</a>
             <a class="fp fp-provider" href="/atlas/#provider/post-acute">Post-Acute Care</a>
@@ -488,20 +591,19 @@ navPage: learn
         </div>
       </div>
 
-      <div class="empty-state" id="empty-state">No articles match this filter yet. More content is coming.</div>
+      <div class="empty-state" id="empty-state">No modules match this filter yet. More content is coming.</div>
+    </div>
     </div>
   </div>
 </section>
 
 <section class="content-section alt-bg" id="talks">
   <div class="content-inner">
-    <div class="eyebrow" style="margin-bottom:var(--space-3)"><div class="eyebrow-line"></div><span>Talks &amp; Presentations</span></div>
-    <h2 class="section-h-v2">CME Sessions &amp; Conference Talks</h2>
-    <div class="section-accent-v2"></div>
-    <p class="section-intro">Full talk pages with downloads, source citations, and reference frameworks from live presentations. All claims cite primary sources.</p>
+    <div class="lh-shelf-h"><h2 class="lh-kicker"><i>&#9472; </i>CME Sessions &amp; Conference Talks</h2><span class="n">all claims cite primary sources</span></div>
+    <p class="section-intro">Full talk pages with downloads, source citations, and reference frameworks from live presentations.</p>
 
     <div class="talks-grid" id="talks-grid">
-      <div class="talk-card" data-tags="talk,ai,provider,policy">
+      <div class="talk-card" data-tags="talk,ai,provider,policy,clinical,technology">
         <div class="tc-band tc-band-arma"></div>
         <div class="tc-body">
           <div class="tc-eyebrow">
@@ -510,7 +612,7 @@ navPage: learn
           </div>
           <div class="tc-title"><a class="tc-link" href="/learn/talks/arma-2026/">AI in Healthcare: Value vs. Hype</a></div>
           <div class="tc-sub">A Practical Framework for Evaluating AI in Your Practice</div>
-          <div class="tc-desc">The 5-question evaluation framework for AI tools &mdash; with case studies on the Epic Sepsis Model, the Optum algorithm, and what actually works. Includes downloadable slides and take-home framework.</div>
+          <div class="tc-desc">The 5-question evaluation framework for AI tools, with case studies on the Epic Sepsis Model, the Optum algorithm, and what actually works. Includes downloadable slides and take-home framework.</div>
           <div class="card-fps">
             <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
             <a class="fp fp-techeco" href="/atlas/#techeco/ai-vendors">AI Vendor Landscape</a>
@@ -519,11 +621,11 @@ navPage: learn
         </div>
         <div class="tc-foot">
           <span class="tc-date">May 2, 2026 &middot; Phoenix, AZ</span>
-          <span class="tc-arrow">?</span>
+          <span class="tc-arrow">&rarr;</span>
         </div>
       </div>
 
-      <div class="talk-card" data-tags="talk,ai,provider,policy">
+      <div class="talk-card" data-tags="talk,ai,provider,policy,clinical,management">
         <div class="tc-band tc-band-msrc"></div>
         <div class="tc-body">
           <div class="tc-eyebrow">
@@ -532,7 +634,7 @@ navPage: learn
           </div>
           <div class="tc-title"><a class="tc-link" href="/learn/talks/msrc-2026/">AI in Healthcare: Operational Value, Limitations, and Oversight</a></div>
           <div class="tc-sub">Evidence-based review for clinical and operational audiences</div>
-          <div class="tc-desc">Overview of AI's current role in healthcare operations &mdash; where evidence supports adoption, where it doesn't, and the governance structures physicians need to understand.</div>
+          <div class="tc-desc">Overview of AI's current role in healthcare operations: where evidence supports adoption, where it doesn't, and the governance structures physicians need to understand.</div>
           <div class="card-fps">
             <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
             <a class="fp fp-patient" href="/atlas/#patient/prior-auth">Prior Authorization</a>
@@ -541,7 +643,7 @@ navPage: learn
         </div>
         <div class="tc-foot">
           <span class="tc-date">April 10, 2026 &middot; Kalispell, MT</span>
-          <span class="tc-arrow">?</span>
+          <span class="tc-arrow">&rarr;</span>
         </div>
       </div>
     </div>
@@ -552,7 +654,7 @@ navPage: learn
   <div class="content-inner">
     <div class="map-callout">
       <div class="mc-text">
-        <div class="eyebrow" style="margin-bottom:var(--space-2)"><div class="eyebrow-line"></div><span>Now Live in the Map</span></div>
+        <div class="lh-note-k"><i>&#9472; </i>Now Live in the Map</div>
         <div class="mc-title">The Healthcare Atlas</div>
         <div class="mc-body">Every article on this page maps to a node on a clickable, interactive map of the entire healthcare system. Navigate from Patient to Provider to Payer to Policy, and see how every piece connects. Each article you read now is a node on that map.</div>
       </div>
@@ -567,7 +669,7 @@ navPage: learn
   <div class="content-inner">
     <div class="map-callout">
       <div class="mc-text">
-        <div class="eyebrow" style="margin-bottom:var(--space-2)"><div class="eyebrow-line"></div><span>Reference Appendix</span></div>
+        <div class="lh-note-k"><i>&#9472; </i>Reference Appendix</div>
         <div class="mc-title">Sources, Standards &amp; External References</div>
         <div class="mc-body">Every claim on this site traces to a source. All {{ references.items | length }} of them now live on their own page: government data, standards bodies, peer-reviewed research, credentialing boards, each tagged with the tools and articles that use it.</div>
       </div>
@@ -577,17 +679,44 @@ navPage: learn
 </section>
 
 <script>
-function filterCards(tag, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+// one selected filter + an unread modifier; read marks live in localStorage
+// (on-device only, never sent anywhere; clearing site data clears them)
+let currentTag = 'all', unreadOnly = false, readList = [];
+const READ_KEY = 'hu-learn-route';
+try { readList = JSON.parse(localStorage.getItem(READ_KEY) || '[]'); } catch (e) { /* private mode */ }
 
+function filterCards(tag, btn) {
+  currentTag = tag;
+  // sync the phone chips and the desktop rail
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === tag));
+  document.querySelectorAll('.lr-row[data-filter]').forEach(r => {
+    const on = r.dataset.filter === tag;
+    r.classList.toggle('on', on);
+    r.setAttribute('aria-pressed', String(on));
+  });
+  applyFilters();
+
+  // Talks selection takes you to the talks shelf instead of stranding you
+  const talksSection = document.getElementById('talks');
+  if (tag === 'talk' && talksSection && talksSection.scrollIntoView) {
+    talksSection.scrollIntoView({
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'start'
+    });
+  }
+}
+
+function applyFilters() {
+  const tag = currentTag;
   const articles = document.querySelectorAll('#article-grid .article-card, #article-grid .article-card.coming-soon');
   const talks = document.querySelectorAll('#talks-grid .talk-card');
   const talksSection = document.getElementById('talks');
 
   articles.forEach(card => {
     const tags = (card.dataset.tags || '').split(',').map(t => t.trim());
-    const show = tag === 'all' || tags.includes(tag);
+    let show = tag === 'all' || tags.includes(tag);
+    if (show && unreadOnly && card.classList.contains('read')) show = false;
     card.style.display = show ? '' : 'none';
   });
 
@@ -595,7 +724,7 @@ function filterCards(tag, btn) {
     const showTalks = tag === 'all' || tag === 'talk';
     talks.forEach(card => {
       const tags = (card.dataset.tags || '').split(',').map(t => t.trim());
-      const show = showTalks || tags.includes(tag);
+      const show = showTalks || tags.includes(tag);   // talks carry no read state
       card.style.display = show ? '' : 'none';
     });
     const anyTalkVisible = [...talks].some(c => c.style.display !== 'none');
@@ -605,6 +734,83 @@ function filterCards(tag, btn) {
   const allArticleCards = document.querySelectorAll('#article-grid .article-card');
   const anyArticleVisible = [...allArticleCards].some(c => c.style.display !== 'none');
   const empty = document.getElementById('empty-state');
-  if (empty) empty.classList.toggle('visible', !anyArticleVisible);
+  if (empty) {
+    empty.textContent = tag === 'talk'
+      ? 'Talks live one shelf down.'
+      : (unreadOnly && !anyArticleVisible
+        ? 'Nothing unread under this filter. You have read it all.'
+        : 'No modules match this filter yet. More content is coming.');
+    empty.classList.toggle('visible', !anyArticleVisible);
+  }
+
+  // a shelf header with nothing visible under it hides too
+  document.querySelectorAll('#article-grid .lh-shelf-grid').forEach(h => {
+    let sib = h.nextElementSibling, any = false;
+    while (sib && !sib.classList.contains('lh-shelf-grid')) {
+      if (sib.classList.contains('article-card') && sib.style.display !== 'none') { any = true; break; }
+      sib = sib.nextElementSibling;
+    }
+    h.style.display = any ? '' : 'none';
+  });
 }
+
+function toggleUnread() {
+  unreadOnly = !unreadOnly;
+  document.querySelectorAll('[data-unread]').forEach(el => {
+    el.classList.toggle(el.classList.contains('lr-row') ? 'on' : 'active', unreadOnly);
+    el.setAttribute('aria-pressed', String(unreadOnly));
+  });
+  applyFilters();
+}
+
+function resetProgress() {
+  try { localStorage.removeItem(READ_KEY); } catch (e) {}
+  readList = [];
+  document.querySelectorAll('.article-card.read').forEach(c => c.classList.remove('read'));
+  updateProgress();
+  applyFilters();
+}
+
+function updateProgress() {
+  const total = document.querySelectorAll('#article-grid .ac-link').length;
+  const done = document.querySelectorAll('#article-grid .article-card.read').length;
+  const u = document.querySelector('.lr-row[data-unread] .c');
+  if (u) u.textContent = total - done;
+  const r = document.querySelector('.lr-reset .c');
+  if (r) r.textContent = done ? done + ' read' : '';
+}
+
+// rail counts, from the real cards on the page
+(function () {
+  const cards = document.querySelectorAll('#article-grid [data-tags], #talks-grid [data-tags]');
+  document.querySelectorAll('.lr-row[data-filter]').forEach(row => {
+    const tag = row.dataset.filter;
+    let n = 0;
+    cards.forEach(c => {
+      const tags = (c.dataset.tags || '').split(',').map(t => t.trim());
+      if (tag === 'all' || tags.includes(tag)) n++;
+    });
+    const cEl = row.querySelector('.c');
+    if (cEl) cEl.textContent = n;
+  });
+})();
+
+// read ticks on the card numbers (arriving by search or deep link won't tick,
+// honest limit of a static site with no accounts)
+(function () {
+  const mark = s => {
+    if (readList.indexOf(s) < 0) {
+      readList.push(s);
+      try { localStorage.setItem(READ_KEY, JSON.stringify(readList)); } catch (e) {}
+    }
+  };
+  document.querySelectorAll('#article-grid .ac-link').forEach(a => {
+    const m = (a.getAttribute('href') || '').match(/^\/learn\/([a-z0-9-]+)\//);
+    if (!m) return;
+    const card = a.closest('.article-card');
+    if (card && readList.indexOf(m[1]) >= 0) card.classList.add('read');
+    a.addEventListener('click', () => mark(m[1]));
+  });
+  updateProgress();
+})();
 </script>

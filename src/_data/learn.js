@@ -33,9 +33,9 @@ module.exports = {
       category: 'Field Guide',
       ps:       'P2a / P2b / P3 / P4',
       title:    'Healthcare Laws & Paradoxes',
-      desc:     'The recurring patterns that shape healthcare and health IT. Jevons, Goodhart, Roemer, the Productivity Paradox, Conway, Amara, the Bullwhip Effect, and Jensen. One tabbed field guide, one law per tab.',
+      desc:     'The recurring patterns that shape healthcare and health IT. Jevons, Goodhart, Roemer, the Framing Effect, the Productivity Paradox, Conway, Amara, the Bullwhip Effect, and Jensen. One tabbed field guide, one law per tab.',
       url:      '/learn/laws-and-paradoxes/',
-      tags:     ['Jevons', 'Goodhart', 'Roemer', 'Conway'],
+      tags:     ['Jevons', 'Goodhart', 'Roemer', 'Framing', 'Conway'],
       status:   'live',
       featured: false,
       atlasLinks: [

@@ -118,6 +118,16 @@ module.exports = {
       'behavioral':      { sectors: ['behavioral'] },   // pubhealth (Behavioral Health)
       'accreditation':   { sectors: ['orgs'] },         // policy (Accreditation Bodies)
       'vendor-dir':      { sectors: ['cautionary'] },   // techeco landmark — the directory's cautionary tales
+      // v2 sectors (2026-08)
+      'cloud':           { sectors: ['cloud'] },        // techeco (Cloud Infrastructure)
+      'insurance':       { sectors: ['payer'] },        // payer zone — the payer giants
+      'pbm':             { match: /UnitedHealth|CVS Health|Cigna/ }, // the big-three PBM parents on the PBM hex
+      'pharmacy':        { sectors: ['retail'] },       // retail & consumer health lives at the pharmacy counter
+      'nursing':         { sectors: ['staffing'] },     // provider — who staffs the units
+      'physicians':      { sectors: ['staffing'] },     // provider — locums and scheduling live here too
+      'sdoh':            { match: /Unite Us|Findhelp/ },// pubhealth — the social-care referral networks
+      // NOTE: supply (McKesson/Cencora/GPOs) has no honest hex yet — needs its own
+      // "Supply Chain" tile before binding. Deliberately unbound, not forgotten.
     };
     let vdata = null;
     try { vdata = read('src/assets/data/vendors.json'); } catch (e) { vdata = null; }

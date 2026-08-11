@@ -1,78 +1,97 @@
 ---
 layout: base.njk
-title: "Rounds — Healthcare Uncharted"
+title: "Rounds"
 description: "Current events, takes, and guest commentary on healthcare policy, technology, and the systems behind modern medicine."
 navPage: rounds
 ---
-
-{% from "components/card.njk" import card %}
+<!-- ROUNDS HUB · V3 hub grammar (Field Office): centered hero + search,
+     hc-card shelves. Thumbs = the posts' own 1080² share cards (og/rounds-<slug>.png),
+     so every new post brings its own art. Cards ride rounds.js; nothing hand-listed. -->
 
 <style>
-.rounds-hero{max-width:1080px;margin:0 auto;padding:64px 40px 48px}
-.rounds-hero-inner{max-width:680px}
+.rh-hero { text-align:center; padding:clamp(44px,7vh,72px) clamp(20px,5vw,72px) 10px; max-width:860px; margin:0 auto; }
+.rh-hero h1 { font-family:var(--display); font-size:clamp(30px,4.5vw,44px); font-weight:800; letter-spacing:-.03em; color:var(--t1); }
+.rh-sub { font-size:15px; color:var(--t2); line-height:1.7; max-width:56ch; margin:10px auto 0; }
+.rh-hero .hv-search { margin:22px auto 0; }
 
-.rounds-about{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 40px}
-.rounds-about-inner{max-width:1080px;margin:0 auto;display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap}
-.rounds-about-icon{width:44px;height:44px;border-radius:10px;background:rgba(123,146,171,.14);border:1px solid rgba(123,146,171,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#7B92AB}
-.rounds-about-text{flex:1;min-width:220px}
-.rounds-about-text p{font-size:14px;color:var(--t2);line-height:1.75;margin:0}
+.rh-shelves { max-width:1100px; margin:0 auto; padding:26px clamp(20px,5vw,80px) 64px; }
 
-.rounds-section{padding:56px 40px}
-.rounds-inner{max-width:1080px;margin:0 auto}
+/* What Rounds is · margin note (The Margin Note Rule), slate identity */
+.rh-callout { border-left:3px solid #7B92AB; padding:6px 0 6px 14px; max-width:860px; margin-bottom:30px; }
+.rh-callout p { font-size:14px; color:var(--t2); line-height:1.75; margin:0; }
 
-.rounds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.rh-shelf-h { display:flex; align-items:baseline; gap:12px; border-bottom:1px solid var(--border); padding-bottom:7px; }
+.rh-kicker { font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); margin:0; }
+.rh-kicker i { font-style:normal; color:var(--border2); }
+.rh-shelf-h .n { margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--t3); }
+.rh-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; padding:16px 0 4px; }
 
-.rounds-empty{padding:80px 40px;text-align:center}
-.rounds-empty-inner{max-width:480px;margin:0 auto}
-.re-icon{width:56px;height:56px;border-radius:14px;background:rgba(123,146,171,.1);border:1px solid rgba(123,146,171,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#7B92AB}
-.re-title{font-family:var(--display);font-size:20px;font-weight:700;margin-bottom:10px}
-.re-body{font-size:14px;color:var(--t2);line-height:1.75}
+/* stretched title link so the atlas pills stay real links (learn's pattern);
+   .card-fps already carries z-index:2 in hu-global */
+.rh-grid .hc-card { position:relative; }
+.rc-link { color:inherit; text-decoration:none; }
+.rc-link::after { content:""; position:absolute; inset:0; z-index:1; border-radius:12px; }
+.rc-link:focus-visible { outline:none; }
+.rc-link:focus-visible::after { outline:2px solid var(--teal); outline-offset:-2px; }
+.rh-grid .card-fps { margin-top:12px; }
 
-@media(max-width:768px){.rounds-hero{padding:48px 20px 36px}.rounds-about{padding:24px 20px}.rounds-section{padding:48px 20px}.rounds-about-inner{gap:20px}}
+.rounds-empty { padding:80px 40px; text-align:center; }
+.rounds-empty-inner { max-width:480px; margin:0 auto; }
+.re-icon { width:56px; height:56px; border-radius:14px; background:rgba(123,146,171,.1); border:1px solid rgba(123,146,171,.2); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:#7B92AB; }
+.re-title { font-family:var(--display); font-size:20px; font-weight:700; margin-bottom:10px; }
+.re-body { font-size:14px; color:var(--t2); line-height:1.75; }
+
+@media (max-width:699px) {
+  .rh-hero { padding-top:36px; }
+  .rh-grid { grid-template-columns:1fr; }
+}
 </style>
 
-<div class="rounds-hero">
-  <div class="rounds-hero-inner">
-    <div class="eyebrow" style="margin-bottom:14px"><div class="eyebrow-line" style="background:#7B92AB"></div><span>Healthcare Uncharted &middot; Rounds</span></div>
-    <h1 class="page-title-v2">Current Events &amp; Takes</h1>
-    <div class="section-accent-v2" style="background:#7B92AB;margin:24px 0"></div>
-    <p class="page-sub-v2">News, commentary, and guest perspectives on what&rsquo;s happening in healthcare policy, technology, and clinical practice &mdash; less tutorial, more take.</p>
-  </div>
+<div class="rh-hero">
+  <h1>Current Events &amp; Takes</h1>
+  <p class="rh-sub">News, commentary, and guest perspectives on what's happening in healthcare policy, technology, and clinical practice. Less tutorial, more take.</p>
+  <button class="hv-search" type="button" data-hu-search aria-label="Search the site">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
+    <b>Try: steward &middot; wound care &middot; AI promise</b>
+    <span class="k">/</span>
+  </button>
 </div>
 
-<div class="rounds-about">
-  <div class="rounds-about-inner">
-    <div class="rounds-about-icon" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-    </div>
-    <div class="rounds-about-text">
-      <p><strong style="color:var(--t1)">Rounds</strong> is the current-events arm of Healthcare Uncharted. While the <a href="/learn/">Learn</a> section builds frameworks and deep dives, Rounds is where we respond to what&rsquo;s happening now &mdash; policy shifts, industry moves, and the clinical and operational implications nobody explains clearly. Guest authors welcome.</p>
-    </div>
+<section class="rh-shelves" aria-label="All rounds posts">
+
+  <div class="rh-callout">
+    <p><strong style="color:var(--t1)">Rounds</strong> is the current-events arm of Healthcare Uncharted. While the <a href="/learn/">Learn</a> section builds frameworks and deep dives, Rounds is where we respond to what's happening now: policy shifts, industry moves, and the clinical and operational implications nobody explains clearly. Guest authors welcome.</p>
   </div>
-</div>
 
-<section class="rounds-section">
-  <div class="rounds-inner">
-
-    {% if rounds.entries and rounds.entries.length %}
-    <div class="rounds-grid">
-      {% for entry in rounds.entries %}
-        {% if entry.status === 'published' %}
-          {{ card("rounds", entry.title, entry.summary, "/rounds/" + entry.slug + "/", [], entry.posted, entry.readMinutes, null, entry.atlasLinks) }}
-        {% endif %}
-      {% endfor %}
-    </div>
-    {% else %}
-    <div class="rounds-empty">
-      <div class="rounds-empty-inner">
-        <div class="re-icon" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+  {% if rounds.entries and rounds.entries.length %}
+  <div class="rh-shelf-h"><h2 class="rh-kicker"><i>&#9472; </i>On the Board</h2><span class="n">newest first</span></div>
+  <div class="rh-grid">
+    {% for entry in rounds.entries %}
+      {% if entry.status === 'published' %}
+      <div class="hc-card">
+        <div class="hc-thumb" aria-hidden="true" style="background-image:url('/assets/images/og/rounds-{{ entry.slug }}.png')"></div>
+        <div class="hc-title"><a class="rc-link" href="/rounds/{{ entry.slug }}/">{{ entry.title }}</a></div>
+        <div class="hc-desc">{{ entry.summary }}</div>
+        {% if entry.atlasLinks and entry.atlasLinks.length %}
+        <div class="card-fps">
+          {% for lnk in entry.atlasLinks %}{% if lnk.to %}<a class="fp fp-{{ lnk.zone }}" href="/atlas/#{{ lnk.to }}">{{ lnk.label }}</a>{% else %}<span class="fp fp-{{ lnk.zone }}">{{ lnk.label }}</span>{% endif %}{% endfor %}
         </div>
-        <div class="re-title">New rounds drop soon.</div>
-        <p class="re-body">The next Rounds post is on deck. Check back shortly, or explore the <a href="/learn/">Learn</a> section in the meantime.</p>
+        {% endif %}
+        <div class="hc-meta">Rounds &middot; {{ entry.posted | dateFilter }}{% if entry.readMinutes %} &middot; {{ entry.readMinutes }} min{% endif %}</div>
       </div>
-    </div>
-    {% endif %}
-
+      {% endif %}
+    {% endfor %}
   </div>
+  {% else %}
+  <div class="rounds-empty">
+    <div class="rounds-empty-inner">
+      <div class="re-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+      </div>
+      <div class="re-title">New rounds drop soon.</div>
+      <p class="re-body">The next Rounds post is on deck. Check back shortly, or explore the <a href="/learn/">Learn</a> section in the meantime.</p>
+    </div>
+  </div>
+  {% endif %}
+
 </section>

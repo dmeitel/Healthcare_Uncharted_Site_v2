@@ -20,6 +20,25 @@ module.exports = {
   entries: [
 
     {
+      slug:            'problem-and-product',
+      title:           'The Problem and the Product',
+      posted:          '2026-08-10',
+      summary:         'Before healthcare buys a cure, somebody sells it the disease. The AI era didn\'t retire the trick. It moved it downstream.',
+      tags:            ['problem-framing', 'disease-mongering', 'health-ai', 'pharma-marketing'],
+      fourPs:          ['provider-p2a', 'payer', 'policy'],
+      readMinutes:     10,
+      featured:        true,
+      status:          'published',
+      map_node:        'rounds-problem-and-product',
+      map_connections: ['provider-p2a', 'payer-incentives', 'policy-ai-oversight'],
+      atlasLinks: [
+        { label: 'CDSS & AI Tools',    zone: 'provider', to: 'provider/cdss' },
+        { label: 'CMS & Fed Agencies', zone: 'policy',   to: 'policy/cms' },
+        { label: 'Patient Safety',     zone: 'patient',  to: 'patient/pt-safety' }
+      ]
+    },
+
+    {
       slug:            'wound-and-workload',
       title:           'The Wound and the Workload',
       posted:          '2026-06-18',

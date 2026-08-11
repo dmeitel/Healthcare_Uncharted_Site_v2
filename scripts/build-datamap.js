@@ -148,7 +148,7 @@ const NODES = [
     consumers: ['Career Tree (eager)'] },
   { id: 'ds-vendors', kind: 'dataset', label: 'vendors.json', stat: 'src/assets/data/vendors.json',
     refresh: 'hand-maintained', provenance: 'editorial',
-    detail: '117 vendors across 20 healthcare-tech sectors.', consumers: ['Vendor Directory (eager)'] },
+    detail: '158 vendors across 25 healthcare-tech sectors.', consumers: ['Vendor Directory (eager)'] },
   { id: 'ds-search-graph', kind: 'dataset', label: 'derived/search-graph.json', stat: 'src/assets/data/derived/search-graph.json',
     refresh: 'derived', provenance: 'derived',
     detail: '23,090-node unified graph. The one build-entities artifact that deploys; lazy-loaded since 2026-07.',
@@ -208,7 +208,7 @@ const NODES = [
   { id: 'tool-career-tree', kind: 'tool', label: 'Career Tree', path: '/tools/career-tree/',
     detail: 'Tiered-hex role progression with BLS pay/outlook enrichment.' },
   { id: 'tool-vendor-directory', kind: 'tool', label: 'Vendor Directory', path: '/tools/vendor-directory/',
-    detail: '20 sectors, 117 vendors, sourced market-share carousel.' },
+    detail: '25 sectors, 158 vendors, HQ map, sourced market-share carousel.' },
   { id: 'tool-atlas', kind: 'tool', label: 'Atlas (search + HUD)', path: '/atlas/',
     detail: 'The hex atlas. Search rides the unified graph, lazy-fetched on first use.' },
   { id: 'tool-atlas-craft', kind: 'tool', label: 'Atlas Craft', path: '/atlas/craft/',
@@ -399,7 +399,7 @@ const PLAIN = {
   'ds-career-tree-bls':   'Real pay and job growth per role, matched to government occupation codes. The Career Tree\'s salary heatmap.',
   'ds-career-tree-growth':'The how-to text behind each expertise tile: how you build the skill, how you show it.',
   'ds-career-tree-creds': 'The credential reality file: exam pass rates, fees, program lengths, and what getting into each program takes. Powers the credential panels, the plan\'s bill, and the Getting-in checklists.',
-  'ds-vendors':           'The healthcare-tech vendor directory: 117 companies across 20 sectors, with sourced market-share notes.',
+  'ds-vendors':           'The healthcare-tech vendor directory: 158 companies across 25 sectors, with HQ/ownership data and sourced market-share notes.',
   'ds-search-graph':      'One big web connecting everything on this page: hospitals, states, metrics, careers, concepts. Atlas search reads it, and it is only fetched when someone actually searches.',
 
   // build-time intermediates
