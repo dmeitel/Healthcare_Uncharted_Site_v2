@@ -6,7 +6,7 @@ section: tool
 status: live
 order: 3
 title: U.S. Hospital Operations Map
-description: "A live national map of U.S. healthcare infrastructure from CMS data: hospitals, dialysis, surgery centers, pharmacies, and equipment suppliers as stackable layers. Drill from states to counties to a single facility, draw your own search area, or let the map find your county."
+description: "Every U.S. hospital, dialysis center, and surgery center on one map, from the CMS Provider of Services file. Drill from states to counties to a single facility."
 tags: [interactive, maps, hospitals, systems, data-viz]
 has_interactive: true
 og_image: /brand/og-operators-map.jpg
@@ -184,6 +184,8 @@ og_image: /brand/og-operators-map.jpg
 @media (max-width:699px){
   .gv-bottombar .hu-fab { width:46px; height:46px; }
   .gv-listbtn { height:46px; }
+  .gv-scope, .gv-pill, .gv-rpill { height:44px; }   /* 44px floor: the search/readout row was 38px (fleet-day parity with multi-lens) */
+  .gv-pill .clr { padding:13px 12px; }
 }
 /* under 1100px the sheet rises from the bottom. The whole cluster climbs
    above its peek so it never drowns under an open sheet */
@@ -269,7 +271,7 @@ og_image: /brand/og-operators-map.jpg
 </style>
 
 <div class="gv-shell">
-  <div id="gvMap" role="application" aria-label="Hospital map demo. Tap a state or county for its profile, a dot for the facility."></div>
+  <div id="gvMap" role="application" aria-label="U.S. facility map. Tap a state or county for its profile, a dot for the facility."></div>
 
   <div class="gv-top">
     <div class="gv-srow">
@@ -293,7 +295,7 @@ og_image: /brand/og-operators-map.jpg
     <div class="gv-search-list" id="gvSearchList"></div>
   </div>
 
-  <div class="gv-status" id="gvStatus">Painting the basemap…</div>
+  <div class="gv-status" id="gvStatus" role="status">Painting the basemap…</div>
   <div class="gv-insets" id="gvInsets">
     <button class="gv-inset" id="gvInsetAK" type="button" aria-label="Go to Alaska"><span class="gv-inset-map" id="gvInsetAKmap"></span><b>AK <span id="gvInsetAKn"></span></b></button>
     <button class="gv-inset" id="gvInsetHI" type="button" aria-label="Go to Hawaii"><span class="gv-inset-map" id="gvInsetHImap"></span><b>HI <span id="gvInsetHIn"></span></b></button>
@@ -1063,7 +1065,7 @@ og_image: /brand/og-operators-map.jpg
     const beds = hs.reduce((a,f) => a + (+f.properties.beds || 0), 0);
     const cpop = (CPOP && CPOP[selCounty.fips]) ? CPOP[selCounty.fips].p : null;
     const b = cardScaffold('County · ' + selState.abbr, selCounty.name + ' County',
-      hs.length + ' ' + (hs.length === 1 ? NOUN().replace(/ies$/,'y').replace(/als$/,'al') : NOUN()) + (activeTypes && LAYER_ON.has('hosp') ? ' (filtered)' : ''));
+      hs.length + ' ' + (hs.length === 1 ? NOUN().replace(/ies$/,'y').replace(/als$/,'al').replace(/([^s])s$/,'$1') : NOUN()) + (activeTypes && LAYER_ON.has('hosp') ? ' (filtered)' : ''));
     const stats = [{ v:hs.length.toLocaleString('en-US'), k: LAYER_ON.size === 1 ? DATASETS[[...LAYER_ON][0]].label : 'Facilities' }];
     if (beds > 0){
       stats.push({ v:beds.toLocaleString('en-US'), k:'Beds' });
@@ -1213,6 +1215,7 @@ og_image: /brand/og-operators-map.jpg
       if (shown.length && shown.length < Object.keys(TYPES).length) p.set('types', shown.join(','));
     }
     if (p.get('county') && !/^\d{5}$/.test(p.get('county'))) p.delete('county');
+    if (p.get('metric') === 'cah' && !p.get('types')) p.set('types', 'cah');   // healthcare-gap article deep link (?metric=cah) — honored, not dropped
     try {
       const ty = p.get('types');
       if (ty){
@@ -1347,6 +1350,10 @@ og_image: /brand/og-operators-map.jpg
     updateCount();   // fill the live per-chip tallies
   }
   // one delegated listener survives every rebuild
+  $('gvDisplayBody').addEventListener('keydown', e => {   // the switches are focusable; Enter/Space must work them
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.getAttribute && e.target.getAttribute('role') === 'switch'){ e.preventDefault(); e.target.click(); }
+  });
   $('gvDisplayBody').addEventListener('click', e => {
     const only = e.target.closest('[data-only]');
     if (only){

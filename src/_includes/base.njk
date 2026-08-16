@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title }} — Healthcare Uncharted</title>
+  <title>{{ title }} &middot; Healthcare Uncharted</title>
   {% if description %}<meta name="description" content="{{ description }}">{% endif %}
 
   <!-- Search engines: index normally, unless the page opts out. AI scrapers: always opt out. -->
@@ -36,7 +36,7 @@
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Healthcare Uncharted">
-  <meta property="og:title" content="{{ title }} — Healthcare Uncharted">
+  <meta property="og:title" content="{{ title }} &middot; Healthcare Uncharted">
   <meta property="og:description" content="{{ description or site.tagline }}">
   <meta property="og:type" content="{{ og_type or 'website' }}">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
@@ -44,7 +44,7 @@
 
   <!-- Twitter / X Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ title }} — Healthcare Uncharted">
+  <meta name="twitter:title" content="{{ title }} &middot; Healthcare Uncharted">
   <meta name="twitter:description" content="{{ description or site.tagline }}">
   <meta name="twitter:image" content="{{ site.url }}{{ og_image or '/brand/og-image.png' }}">
 
@@ -79,7 +79,7 @@
         "name": "David Eitel",
         "url": "{{ site.url }}/about/",
         "image": "{{ site.url }}/assets/images/David_Picture.jpg",
-        "jobTitle": "Senior Clinical Informatics Analyst",
+        "jobTitle": "Clinical Informatics Team Manager",
         "honorificSuffix": "RRT, MHA, MSRT, RRT-ACCS",
         "worksFor": { "@type": "Organization", "name": "Intermountain Health" },
         "affiliation": { "@type": "CollegeOrUniversity", "name": "Utah Valley University" },
@@ -127,10 +127,11 @@
 
 <a class="skip-to-main" href="#main-content">Skip to main content</a>
 
-<nav>
-  <a class="nav-brand" href="/" aria-label="Healthcare Uncharted — home">
-    <img src="/brand/hu-logo-inline-dark.svg" alt="Healthcare Uncharted" class="hu-logo-nav hu-logo-ondark">
-    <img src="/brand/hu-logo-inline.svg" alt="Healthcare Uncharted" class="hu-logo-nav hu-logo-onlight">
+<nav aria-label="Primary">
+  <a class="nav-brand" href="/" aria-label="Healthcare Uncharted, home">
+    {# the LINK carries the accessible name; child alts stay empty so nothing announces twice #}
+    <img src="/brand/hu-logo-inline-dark.svg" alt="" class="hu-logo-nav hu-logo-ondark">
+    <img src="/brand/hu-logo-inline.svg" alt="" class="hu-logo-nav hu-logo-onlight">
   </a>
   <div class="nav-links" id="navLinks">
     <a class="nav-link {% if navPage == 'home' %}active{% endif %}" href="/">Home</a>
@@ -183,10 +184,10 @@
     </div>
     <div class="footer-subscribe">
       <div class="footer-col-title">Field Notes</div>
-      <p class="fs-sub">New tools, new data, no noise. When something ships, you hear about it.</p>
+      <p class="fs-sub">New tools and new data, silence in between. When something ships, you hear about it.</p>
       <form name="field-notes" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="bot-field" class="fs-form">
         <input type="hidden" name="form-name" value="field-notes">
-        <p class="fs-hp" aria-hidden="true"><label>Skip this field: <input name="bot-field"></label></p>
+        <p class="fs-hp" aria-hidden="true"><label>Skip this field: <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
         <label class="fs-label" for="fsEmail">Email</label>
         <div class="fs-row">
           <input class="fs-input" id="fsEmail" type="email" name="email" required autocomplete="email" placeholder="you@hospital.org">
@@ -212,7 +213,10 @@
   </div>
 </footer>{% endif %}
 
-{% if navPage == 'home' or navPage == 'tools' or navPage == 'learn' or navPage == 'rounds' or navPage == 'secret' %}
+{# HUB PAGES ONLY, by exact URL: the old navPage test also matched every TOOL detail page
+   (they set navPage: tools) and the fixed bar buried each tool's own thumb-zone controls —
+   all six tool audits flagged it as their shared blocker. #}
+{% if page.url == '/' or page.url == '/tools/' or page.url == '/learn/' or page.url == '/rounds/' or page.url == '/secret-menu/' %}
 <!-- Phone bottom bar (V3 phase 3): the hub pages carry it; the lit slot
      follows navPage. Rounds and the Secret Menu ride the bar with no lit
      slot (both live in More). Search rides the center; More opens the nav menu. -->
@@ -241,15 +245,25 @@ function setMenu(open) {
 if (ham) ham.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
 const bbMore = document.getElementById('bbMore');
 if (bbMore) bbMore.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
+// Escape closes the open menu and hands focus back to whichever control opened it
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !navLinks.classList.contains('open')) return;
+  setMenu(false);
+  const opener = (bbMore && getComputedStyle(bbMore).display !== 'none') ? bbMore : ham;
+  if (opener) opener.focus();
+});
 </script>
 
 <script>
 const themeToggle = document.getElementById('themeToggle');
 function syncToggleLabel() {
-  themeToggle.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☽' : '☀';
+  if (!themeToggle) return;
+  const light = document.documentElement.getAttribute('data-theme') === 'light';
+  themeToggle.textContent = light ? '☽' : '☀';
+  themeToggle.setAttribute('aria-pressed', String(light));   // the toggle announces its state, not just its name
 }
 syncToggleLabel();
-themeToggle.addEventListener('click', () => {
+if (themeToggle) themeToggle.addEventListener('click', () => {
   const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('hu-theme', next);

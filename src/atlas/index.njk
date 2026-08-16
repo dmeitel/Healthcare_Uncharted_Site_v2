@@ -1,7 +1,7 @@
 ---
 layout: base.njk
 title: Healthcare Atlas
-description: The Healthcare Uncharted Atlas — a Foxhole-style hex territory map of the U.S. healthcare system.
+description: "The whole U.S. healthcare system as one hex territory map: nine zones, the routes between them, and an expansion under every landmark. Start anywhere and follow the connections."
 no_footer: true
 navPage: atlas
 permalink: /atlas/
@@ -12,7 +12,7 @@ permalink: /atlas/
 <style>
 #atlas-shell {
   background: #06100a;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 64px);height: calc(100dvh - 64px);
   display: flex; flex-direction: column;
   overflow: hidden; position: relative;
   font-family: var(--font);
@@ -51,10 +51,11 @@ permalink: /atlas/
   background: rgba(78,205,196,0.04); border: 1px solid rgba(78,205,196,0.18);
   color: rgba(78,205,196,0.60); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; transition: all .12s; font-family: inherit;
+  font-size: 16px; transition: background-color .12s, border-color .12s, color .12s; font-family: inherit;
 }
 .atlas-btn:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.50); color: #4ECDC4; }
-.atlas-craft-link { display: flex; align-items: center; gap: 5px; font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: 0.03em; color: #4ECDC4; background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.35); padding: 5px 12px; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: all .12s; }
+.atlas-btn svg { width: 15px; height: 15px; stroke-width: 2; }   /* the Lucide set replaced the tuned-per-glyph + − ⊙ ? characters */
+.atlas-craft-link { display: flex; align-items: center; gap: 5px; font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: 0.03em; color: #4ECDC4; background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.35); padding: 5px 12px; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background-color .12s, border-color .12s, color .12s; }
 .atlas-craft-link:hover { background: rgba(78,205,196,0.16); border-color: rgba(78,205,196,0.6); color: #7fead9; }
 [data-theme='light'] .atlas-craft-link { color: #1B5FA8; background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.30); }
 [data-theme='light'] .atlas-craft-link:hover { background: rgba(27,95,168,0.12); border-color: rgba(27,95,168,0.55); color: #1B5FA8; }
@@ -185,7 +186,7 @@ permalink: /atlas/
   display: flex; align-items: center; gap: 9px; padding: 7px 11px;
   background: rgba(78,205,196,0.04); border: 1px solid rgba(78,205,196,0.12);
   color: rgba(140,180,215,0.85); font-family: var(--font);
-  font-size: 12px; text-decoration: none; transition: all .12s;
+  font-size: 12px; text-decoration: none; transition: background-color .12s, border-color .12s, color .12s;
 }
 .hud-link:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.32); color: #E2EEF4; }
 #hud-close {
@@ -193,7 +194,7 @@ permalink: /atlas/
   width: 26px; height: 26px; flex-shrink: 0;
   background: rgba(78,205,196,0.06); border: 1px solid rgba(78,205,196,0.20);
   color: rgba(78,205,196,0.55); cursor: pointer; font-size: 16px;
-  display: flex; align-items: center; justify-content: center; transition: all .12s;
+  display: flex; align-items: center; justify-content: center; transition: background-color .12s, border-color .12s, color .12s;
 }
 #hud-close:hover { background: rgba(78,205,196,0.14); border-color: rgba(78,205,196,0.45); color: #4ECDC4; }
 #atlas-hint {
@@ -233,7 +234,7 @@ permalink: /atlas/
   width: 26px; height: 26px; background: rgba(78,205,196,0.06);
   border: 1px solid rgba(78,205,196,0.18); color: rgba(78,205,196,0.55);
   cursor: pointer; font-size: 15px; display: flex; align-items: center;
-  justify-content: center; transition: all .12s;
+  justify-content: center; transition: background-color .12s, border-color .12s, color .12s;
 }
 #help-close:hover { background: rgba(78,205,196,0.14); color: #4ECDC4; }
 #help-body { flex: 1; overflow-y: auto; padding: 18px; }
@@ -267,6 +268,24 @@ permalink: /atlas/
    one-time desktop hint is viewport-conditional. */
 #atlas-desk-hint { display: none; }
 
+
+/* ── PHONE (≤699): the toolbar WRAPS (the controls row overflowed the right edge at every
+   portrait width — first real-browser run), controls hit the 44px floor, and the
+   "best on a desktop screen" hint retires (it was rendering UNDER the search bar) ── */
+@media (max-width: 699px){
+  #atlas-tb { flex-wrap: wrap; row-gap: 6px; height: auto; min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
+  #atlas-controls { margin-left: auto; }
+  .atlas-btn { width: 44px; height: 44px; }
+  #atlas-layers-btn { min-height: 44px; }
+  #atlas-desk-hint { display: none !important; }
+  #hud-close, #help-close, #conn-panel-close { width: 44px; height: 44px; }
+  #atlas-find { top: 110px; }   /* clear the wrapped two-row toolbar (was 64px, sat ON the controls) */
+}
+/* coarse pointers: panel closes + connection filter chips clear the 44px floor (fleet-day parity) */
+@media (hover:none){
+  #hud-close, #help-close, #conn-panel-close { width:44px; height:44px; }
+  .cf-chip { padding:13px 14px; font-size:11px; }
+}
 @media (max-width: 768px) {
   /* instrument chrome steps back on small screens */
   #atlas-stamp { display: none; }
@@ -337,6 +356,7 @@ permalink: /atlas/
 [data-theme='light'] .hub-tint { fill: #1B5FA8; fill-opacity: 0.05; }
 [data-theme='light'] .hub-label-text { fill: #1B5FA8; fill-opacity: 1; }
 [data-theme='light'] .az-lbl text { fill: #1a2a3a; fill-opacity: 0.82; }
+[data-theme='light'] .exp-sub text { fill: #1a2a3a !important; }   /* JS sets #E2EEF4 inline — light theme was white-on-white on every expansion */
 
 /* ── TILE NAMES · tracked caps (Cartographic Quiet) ─────────────────────────
    Node, landmark, and expansion sub-tile names go uppercase at their existing
@@ -389,7 +409,7 @@ permalink: /atlas/
   width: 26px; height: 26px; background: rgba(78,205,196,0.06);
   border: 1px solid rgba(78,205,196,0.18); color: rgba(78,205,196,0.55);
   cursor: pointer; font-size: 15px; display: flex; align-items: center;
-  justify-content: center; transition: all .12s;
+  justify-content: center; transition: background-color .12s, border-color .12s, color .12s;
 }
 #conn-panel-close:hover { background: rgba(78,205,196,0.14); color: #4ECDC4; }
 #conn-search {
@@ -408,7 +428,7 @@ permalink: /atlas/
   letter-spacing: 0.07em; text-transform: uppercase;
   padding: 4px 8px; cursor: pointer;
   background: rgba(78,205,196,0.05); border: 1px solid rgba(78,205,196,0.16);
-  color: rgba(140,180,200,0.62); transition: all .12s;
+  color: rgba(140,180,200,0.62); transition: background-color .12s, border-color .12s, color .12s;
 }
 .cf-chip.on { background: var(--teal); color: #062024; border-color: var(--teal); font-weight: 700; }
 #conn-list { flex: 1; overflow-y: auto; padding: 6px 0; }
@@ -548,10 +568,10 @@ permalink: /atlas/
     <a class="atlas-craft-link" href="/atlas/craft/" title="Atlas Craft: search the atlas and wire your own relationship diagrams">Craft &#8599;</a>
     <div class="atlas-sep"></div>
     <div id="atlas-controls">
-      <button class="atlas-btn" id="a-zi">+</button>
-      <button class="atlas-btn" id="a-zo">−</button>
-      <button class="atlas-btn" id="a-rst" style="font-size:14px">⊙</button>
-      <button class="atlas-btn" id="a-help" style="font-size:13px" title="How to use">?</button>
+      <button class="atlas-btn" id="a-zi" aria-label="Zoom in"><i data-lucide="plus" aria-hidden="true"></i></button>
+      <button class="atlas-btn" id="a-zo" aria-label="Zoom out"><i data-lucide="minus" aria-hidden="true"></i></button>
+      <button class="atlas-btn" id="a-rst" aria-label="Reset the view" title="Reset the view"><i data-lucide="crosshair" aria-hidden="true"></i></button>
+      <button class="atlas-btn" id="a-help" aria-label="How to use" aria-expanded="false" title="How to use"><i data-lucide="help-circle" aria-hidden="true"></i></button>
     </div>
   </div>
   <h1 class="vh">Healthcare Atlas</h1>
@@ -613,9 +633,9 @@ permalink: /atlas/
   <div id="atlas-conn" class="hu-ticks">
     <div id="conn-hdr">
       <span id="conn-hdr-title">Connections</span>
-      <button id="conn-panel-close">×</button>
+      <button id="conn-panel-close" aria-label="Close connections">×</button>
     </div>
-    <input id="conn-search" type="text" placeholder="Search connections…" autocomplete="off">
+    <input id="conn-search" type="text" aria-label="Search connections" placeholder="Search connections…" autocomplete="off">
     <div id="conn-filters">
       <button class="cf-chip on" data-type="all">All</button>
       <button class="cf-chip" data-type="clinical">Clinical</button>
@@ -630,7 +650,7 @@ permalink: /atlas/
   <div id="atlas-find">
     <div id="find-bar">
       <i data-lucide="search" aria-hidden="true"></i>
-      <input id="find-input" type="text" placeholder="Search the whole atlas: roles, facilities, metrics, suppliers, concepts…" autocomplete="off" spellcheck="false">
+      <input id="find-input" aria-label="Search the atlas" type="text" placeholder="Search the whole atlas: roles, facilities, metrics, suppliers, concepts…" autocomplete="off" spellcheck="false">
       <span id="find-count"></span>
     </div>
     <div id="find-results"></div>
@@ -641,7 +661,7 @@ permalink: /atlas/
         <div id="hud-id">
           <div class="hud-badge" id="h-badge"></div>
           <div class="hud-ktype" id="h-type"></div>
-          <div id="hud-title" id="h-title"></div>
+          <div id="hud-title"></div>
         </div>
         <div id="hud-body">
           <div id="hud-desc-col"><div id="hud-desc"></div><div id="hud-data" style="display:none"></div></div>
@@ -650,7 +670,7 @@ permalink: /atlas/
             <div id="hud-links"></div>
           </div>
         </div>
-        <button id="hud-close">×</button>
+        <button id="hud-close" aria-label="Close detail card">×</button>
       </div>
     </div>
   </div>
@@ -658,32 +678,31 @@ permalink: /atlas/
   <div id="atlas-help" class="hu-ticks">
     <div id="help-hdr">
       <span id="help-hdr-title">How to Use</span>
-      <button id="help-close">×</button>
+      <button id="help-close" aria-label="Close help">×</button>
     </div>
     <div id="help-body">
       <div class="help-section">
         <div class="help-section-title">Navigation</div>
-        <div class="help-item"><span class="help-icon">⊕</span><span class="help-text"><strong>Scroll</strong> to zoom in or out on the map.</span></div>
-        <div class="help-item"><span class="help-icon">✥</span><span class="help-text"><strong>Drag</strong> to pan across the map canvas.</span></div>
-        <div class="help-item"><span class="help-icon">⊙</span><span class="help-text">The <strong>reset button</strong> in the toolbar snaps back to the full overview.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">⊕</span><span class="help-text"><strong>Scroll</strong> to zoom in or out on the map.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">✥</span><span class="help-text"><strong>Drag</strong> to pan across the map canvas.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">⊙</span><span class="help-text">The <strong>crosshair button</strong> in the toolbar snaps back to the full overview.</span></div>
       </div>
       <div class="help-section">
         <div class="help-section-title">Exploring Nodes</div>
-        <div class="help-item"><span class="help-icon">◆</span><span class="help-text"><strong>Click any hex</strong> to open its detail card at the bottom of the screen.</span></div>
-        <div class="help-item"><span class="help-icon">⤢</span><span class="help-text"><strong>Landmark nodes</strong> expand into sub-nodes when selected. Look for the diamond markers.</span></div>
-        <div class="help-item"><span class="help-icon">↕</span><span class="help-text"><strong>Drag the grip bar</strong> on the detail card to resize the panel.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">◆</span><span class="help-text"><strong>Click any hex</strong> to open its detail card.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">⤢</span><span class="help-text"><strong>Landmark nodes</strong> expand into sub-nodes when selected. Look for the chevron markers.</span></div>
       </div>
       <div class="help-section">
         <div class="help-section-title">Connections</div>
-        <div class="help-item"><span class="help-icon">─</span><span class="help-text"><strong>Hover any route line</strong> to see the relationship between two zones.</span></div>
-        <div class="help-item"><span class="help-icon">◉</span><span class="help-text">Route colors indicate type: <strong>teal</strong> = clinical, <strong>gold</strong> = financial, <strong>purple</strong> = regulatory, <strong>green</strong> = population.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">─</span><span class="help-text"><strong>Hover any route line</strong> to see the relationship between two zones.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">◉</span><span class="help-text">Route colors indicate type: <strong>teal</strong> = clinical, <strong>gold</strong> = financial, <strong>purple</strong> = regulatory, <strong>green</strong> = population.</span></div>
       </div>
       <div class="help-section">
         <div class="help-section-title">Layers &amp; Legend</div>
-        <div class="help-item"><span class="help-icon">≡</span><span class="help-text">The <strong>Layers</strong> button in the toolbar opens one panel with every layer toggle plus the map legend.</span></div>
-        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Zone labels</strong> toggles the zone name overlays. <strong>Routes</strong> shows or hides all connection lines between zones.</span></div>
-        <div class="help-item"><span class="help-icon">≡</span><span class="help-text"><strong>Tool nodes</strong> highlights hexes that link to interactive tools on this site.</span></div>
-        <div class="help-item"><span class="help-icon">≡</span><span class="help-text">Anything switched away from its default shows as a chip under the toolbar. Hit its ✕ to restore.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">≡</span><span class="help-text">The <strong>Layers</strong> button in the toolbar opens one panel with every layer toggle plus the map legend.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">≡</span><span class="help-text"><strong>Zone labels</strong> toggles the zone name overlays. <strong>Routes</strong> shows or hides all connection lines between zones.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">≡</span><span class="help-text"><strong>Tool nodes</strong> highlights hexes that link to interactive tools on this site.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">≡</span><span class="help-text">Anything switched away from its default shows as a chip under the toolbar. Hit its ✕ to restore.</span></div>
       </div>
     </div>
   </div>
@@ -796,7 +815,7 @@ const ZONE_DEFS = [
         desc:'Repair, fibrosis, and maladaptive remodeling after injury. Wound healing, scar formation, cardiac and pulmonary fibrosis. When the repair process becomes the disease.',
         links:[]},
       {q:2,  r:-3, type:'node', label:'Organ System\nPhysiology', nodeId:'organ-physio',
-        desc:'Normal function of the major organ systems — cardiac output, pulmonary mechanics, renal filtration, hepatic metabolism. The baseline everything pathophysiology departs from.',
+        desc:'Normal function of the major organ systems: cardiac output, pulmonary mechanics, renal filtration, hepatic metabolism. The baseline everything pathophysiology departs from.',
         links:[]},
       {q:4,  r:-6, type:'node', label:'Biomarker\nScience',   nodeId:'biomarkers',
         desc:'Troponin, BNP, CRP, HbA1c, PSA. Measurable signals that reflect underlying disease state. The translation layer between lab and diagnosis. Sensitivity vs. specificity is where clinical judgment lives.',
@@ -848,7 +867,7 @@ const ZONE_DEFS = [
         desc:'Intensive care unit. Highest nurse-to-patient ratio, highest cost per day. Ventilators, pressors, continuous monitoring.',
         links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
       {q:5,  r:-2, type:'node',    label:'Med-Surg\nFloor',        nodeId:'med-surg',
-        desc:'General inpatient units. Highest volume. Nurse-to-patient ratios matter here more than anywhere else — too high and outcomes drop.',
+        desc:'General inpatient units. Highest volume. Nurse-to-patient ratios matter here more than anywhere else: too high and outcomes drop.',
         links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
       {q:6,  r:-2, type:'node',    label:'Operating\nRoom',        nodeId:'or',
         desc:'Surgical services. Block scheduling, case volume, turnaround time. Highest revenue per hour of any hospital space.',
@@ -884,7 +903,7 @@ const ZONE_DEFS = [
   // ── PATIENT EXPERIENCE — southeast ────────────────────────────────────────
   {
     id:'patient', label:'Patient Experience', displayLabel:'Patient', abbr:'PAT', color:'#4ECDC4',
-    desc:'Every interaction a person has with the healthcare system — from first symptom to final bill. Access, encounter, chronic disease, and the financial aftermath.',
+    desc:'Every interaction a person has with the healthcare system: from first symptom to final bill. Access, encounter, chronic disease, and the financial aftermath.',
     cells:[
       {q:1,  r:1,  type:'node',    label:'Patient\nFinancials',    nodeId:'pt-fin',
         desc:'What the patient actually pays, understands, and disputes. Medical debt, surprise bills, EOBs in a language nobody taught them to read.',
@@ -906,7 +925,7 @@ const ZONE_DEFS = [
         desc:'How patients find, enter, and move through the system. Insurance status, geography, and cost all filter who gets in the door.',
         links:[]},
       {q:4,  r:2,  type:'node',    label:'ED\nAccess',             nodeId:'ed-access',
-        desc:'Emergency department as primary care for the uninsured. EMTALA guarantees stabilization — not ongoing care.',
+        desc:'Emergency department as primary care for the uninsured. EMTALA guarantees stabilization, not ongoing care.',
         links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
       {q:5,  r:2,  type:'terrain', label:'', nodeId:null, desc:''},
       {q:1,  r:3,  type:'node',    label:'Primary\nCare',          nodeId:'primary-care',
@@ -994,7 +1013,7 @@ const ZONE_DEFS = [
       {q:-4, r:3,  type:'node',    label:'Telehealth\nPlatforms',  nodeId:'telehealth-plat',
         desc:'Teladoc, Amwell, Wheel. The pandemic-driven infrastructure that expanded rapidly then contracted. Now integrating into health system workflows.',
         links:[{label:'Vendor Directory', url:'/tools/vendor-directory/', icon:'📋'}]},
-      {q:-5, r:3,  type:'node',    label:'AI Vendor\nLandscape',   nodeId:'ai-vendors',
+      {q:-5, r:3,  type:'node',    label:'AI Vendor\nField',   nodeId:'ai-vendors',
         desc:'Nuance (ambient docs), Olive, Waymark, Cohere Health. Concentrated in administrative automation. Clinical AI still in early deployment.',
         links:[{label:'Vendor Directory', url:'/tools/vendor-directory/', icon:'📋'}]},
       {q:-3, r:4,  type:'node',    label:'RCM\nVendors',           nodeId:'rcm-vendors',
@@ -1035,7 +1054,7 @@ const ZONE_DEFS = [
   // ── POLICY & REGULATION — west ─────────────────────────────────────────────
   {
     id:'policy', label:'Policy & Regulation', displayLabel:'Policy', abbr:'POL', color:'#8B5CF6',
-    desc:'Laws, regulations, and agencies that set the rules. Federal legislation, state variation, CMS rulemaking, accreditation — the architecture everything else must conform to.',
+    desc:'Laws, regulations, and agencies that set the rules. Federal legislation, state variation, CMS rulemaking, accreditation: the architecture everything else must conform to.',
     cells:[
       {q:-2, r:0,  type:'landmark', label:'Federal\nLegislation',  nodeId:'fed-law',
         desc:'ACA, HIPAA, HITECH, No Surprises Act, 21st Century Cures. The statutory skeleton the industry operates within.',
@@ -1071,7 +1090,7 @@ const ZONE_DEFS = [
         desc:'510(k) clearance, PMA approval, AI/ML software as a medical device. Regulatory pathway determines who enters the market and how fast.',
         links:[{label:'Vendor Directory', url:'/tools/vendor-directory/', icon:'📋'}]},
       {q:-5, r:2,  type:'landmark', label:'Scope of\nPractice',    nodeId:'scope',
-        desc:'Who can do what. NPs, PAs, respiratory therapists, pharmacists — all operating under state-determined practice boundaries. The primary access lever.',
+        desc:'Who can do what. NPs, PAs, respiratory therapists, pharmacists: all operating under state-determined practice boundaries. The primary access lever.',
         links:[{label:'Multi-Lens Map', url:'/tools/multi-lens-map/', icon:'🗺'}]},
       {q:-6, r:2,  type:'node',    label:'RCIC / RRT\nLicensure',   nodeId:'rcic',
         desc:'Respiratory Care Interstate Compact. Multistate licensure for RRTs. State scope-of-practice variation is still the primary workforce bottleneck.',
@@ -1145,7 +1164,7 @@ const CONNECTIONS = [
    desc:'Pathophysiology, genomics, and medical research underpin what patients understand about their conditions. The knowledge gap between lab science and patient comprehension is where health literacy lives.'},
   {from:'medsci',    to:'payer',     type:'financial',
    label:'Evidence-Based Coverage',
-   desc:'Clinical research and outcomes data drive formulary decisions, coverage policies, and reimbursement frameworks. FDA approval triggers payer coverage determination — usually with a 6-12 month lag.'},
+   desc:'Clinical research and outcomes data drive formulary decisions, coverage policies, and reimbursement frameworks. FDA approval triggers payer coverage determination: usually with a 6-12 month lag.'},
   {from:'medsci',    to:'pubhealth', type:'population',
    label:'Population Health Science',
    desc:'Epidemiology, genomics, and clinical data feed into surveillance, screening programs, and preventive health policy. The distance from bench to public health recommendation is measured in years.'},
@@ -1160,13 +1179,13 @@ const CONNECTIONS = [
    desc:'The core clinical encounter: patient symptoms, preferences, and history meeting provider assessment, diagnosis, and treatment. Every encounter generates a data point, a bill, and a downstream decision.'},
   {from:'patient',   to:'payer',     type:'financial',
    label:'Coverage Interface',
-   desc:'Patients navigate the financial architecture through premiums, deductibles, prior authorizations, and the appeals process. Most patients do not understand their benefits until they get the bill.'},
+   desc:'Patients work through the financial architecture through premiums, deductibles, prior authorizations, and the appeals process. Most patients do not understand their benefits until they get the bill.'},
   {from:'patient',   to:'pubhealth', type:'population',
    label:'Individual to Population',
    desc:'Individual care encounters roll up into population-level health data. What happens at the bedside informs what the epidemiologist tracks. The connection runs both directions through disease surveillance.'},
   {from:'patient',   to:'techeco',   type:'clinical',
    label:'Digital Health Access',
-   desc:'Patient portals, telehealth, wearables, and digital therapeutics — where patients interact with health technology directly. Access and health literacy determine who actually uses it.'},
+   desc:'Patient portals, telehealth, wearables, and digital therapeutics: where patients interact with health technology directly. Access and health literacy determine who actually uses it.'},
   {from:'patient',   to:'policy',    type:'regulatory',
    label:'Patient Protections',
    desc:'No Surprises Act, balance billing protections, ACA preexisting condition rules, EMTALA. Federal and state law defines the floor of patient rights. Enforcement is uneven.'},
@@ -1175,7 +1194,7 @@ const CONNECTIONS = [
    desc:'EHRs, CDSS, and telehealth built around clinical workflows. Providers are the primary users and the primary source of friction. Epic\'s install base is why interoperability is still a problem.'},
   {from:'provider',  to:'payer',     type:'financial',
    label:'Reimbursement Architecture',
-   desc:'Every clinical service becomes a claim. DRG rates, fee schedules, and value-based contracts define what providers get paid — and therefore what services exist. Prior auth is the friction in both directions.'},
+   desc:'Every clinical service becomes a claim. DRG rates, fee schedules, and value-based contracts define what providers get paid, and therefore what services exist. Prior auth is the friction in both directions.'},
   {from:'provider',  to:'pubhealth', type:'population',
    label:'Community Health Integration',
    desc:'Hospitals serving high-need populations, CHNAs, HRSA-funded FQHCs, and quality reporting that flows into public health surveillance. The provider is where the population-level data gets captured.'},
@@ -1196,7 +1215,7 @@ const CONNECTIONS = [
    desc:'Federal and state health policy determines funding for surveillance, vaccination programs, and population health interventions. Title X, CDC funding, and the ACA prevention fund are the levers.'},
   {from:'policy',    to:'payer',     type:'regulatory',
    label:'Insurance Market Rules',
-   desc:'MLR requirements, essential health benefits, rate review, Medicaid expansion — the regulatory architecture that defines what insurance is and how it operates. States have wide latitude within the federal floor.'},
+   desc:'MLR requirements, essential health benefits, rate review, Medicaid expansion: the regulatory architecture that defines what insurance is and how it operates. States have wide latitude within the federal floor.'},
   {from:'pubhealth', to:'payer',     type:'population',
    label:'Risk Pool Dynamics',
    desc:'Population health data shapes actuarial modeling, risk stratification, and premium setting for both public and private payers. A healthy population costs less to insure. The gap between that fact and policy is enormous.'},
@@ -1223,11 +1242,11 @@ const PATHOPHYS_SUBS = [
   {label:'Hematology',              nodeId:'path-heme',
    desc:'Anemia (iron deficiency, hemolytic, aplastic), coagulopathy, thrombophilia, bone marrow failure. DIC is the prototype coagulation catastrophe. Iron deficiency anemia is the most prevalent nutritional deficiency worldwide.'},
   {label:'Infectious\nDisease',     nodeId:'path-infx',
-   desc:'Bacterial, viral, fungal, parasitic disease mechanisms. Sepsis — dysregulated host response to infection — is the primary driver of ICU mortality. Antimicrobial resistance is the structural long-game threat.'},
+   desc:'Bacterial, viral, fungal, parasitic disease mechanisms. Sepsis: dysregulated host response to infection: is the primary driver of ICU mortality. Antimicrobial resistance is the structural long-game threat.'},
   {label:'Musculo-\nskeletal',       nodeId:'path-msk',
    desc:'Rheumatoid arthritis (autoimmune synovitis), osteoarthritis (degenerative cartilage), crystal arthropathy, osteoporosis. RA is autoimmune. OA is degenerative. A critical mechanism distinction for treatment.'},
   {label:'Inflammation\n& Immunity',nodeId:'path-immune',
-   desc:'Acute and chronic inflammation, hypersensitivity (Type I-IV), autoimmunity. TNF-alpha, IL-6, NF-kB — the molecular language of most chronic disease. Target of the most successful drug class of the past 30 years.'},
+   desc:'Acute and chronic inflammation, hypersensitivity (Type I-IV), autoimmunity. TNF-alpha, IL-6, NF-kB: the molecular language of most chronic disease. Target of the most successful drug class of the past 30 years.'},
   {label:'Neoplasia &\nOncology',   nodeId:'path-onco',
    desc:'Hallmarks of cancer: sustained proliferation, evading apoptosis, genomic instability, angiogenesis, invasion, immune evasion. The Hanahan-Weinberg framework applies to every solid tumor and hematologic malignancy.'},
   {label:'Cell &\nMolecular',       nodeId:'path-cell',
@@ -1794,9 +1813,9 @@ const EXPAND_ACCESS = {
     {nodeId:'acc-referral',    label:'Referral\nPathways',
      desc:'PCP-to-specialist handoff. Warm handoffs, fax-based referrals, e-referral platforms. Wait times averaging 26 days for specialist appointments in urban areas, longer in rural. The handoff where patients get lost.'},
     {nodeId:'acc-transport',   label:'Transportation\nBarriers',
-     desc:'3.6 million missed or delayed appointments annually due to lack of transportation. NEMT — non-emergency medical transport — is a Medicaid-covered benefit that most eligible patients do not know to request.'},
+     desc:'3.6 million missed or delayed appointments annually due to lack of transportation. NEMT: non-emergency medical transport: is a Medicaid-covered benefit that most eligible patients do not know to request.'},
     {nodeId:'acc-sdoh-screen', label:'SDOH\nScreening',
-     desc:'PRAPARE, AHC-HRSN, Hunger Vital Sign. Standardized social needs screening at the point of access. The data collected here feeds community health worker referrals and population health programs — when systems actually connect.'},
+     desc:'PRAPARE, AHC-HRSN, Hunger Vital Sign. Standardized social needs screening at the point of access. The data collected here feeds community health worker referrals and population health programs: when systems actually connect.'},
     {nodeId:'acc-navigator',   label:'Patient\nNavigators',
      desc:'Community health workers, patient navigators, care coordinators. The human layer between patients and the system. Evidence-based for reducing disparities. Chronically underfunded and often the first cut in budget cycles.'},
     {nodeId:'acc-wayfinding',  label:'Health\nLiteracy',
@@ -1817,7 +1836,7 @@ const EXPAND_POP_HEALTH = {
     {nodeId:'ph-engage',   label:'Community\nEngagement',
      desc:'CHNAs, community benefit spending, hospital-community partnerships, and the public health workforce that bridges clinical and community settings. The difference between a health system and a healthcare system.'},
     {nodeId:'ph-analytics',label:'Population\nAnalytics',
-     desc:'Healthy Planet, Arcadia, Lightbeam, HealthEC. The platforms that aggregate multi-source data into actionable population views. As good as the data quality feeding them — which is often not great.'},
+     desc:'Healthy Planet, Arcadia, Lightbeam, HealthEC. The platforms that aggregate multi-source data into actionable population views. As good as the data quality feeding them: which is often not great.'},
     {nodeId:'ph-equity',   label:'Equity\nMeasurement',
      desc:'Race and ethnicity-stratified quality data, disparity dashboards, and social determinants measurement. The OMB standard for race/ethnicity data collection is changing in 2025 for the first time since 1997.'},
   ],
@@ -1838,7 +1857,7 @@ const EXPAND_FED_LAW = {
     {nodeId:'law-aca2',    label:'ACA\nMandates',
      desc:'Employer mandate, individual mandate (reduced to zero), essential health benefits, guaranteed issue. The architecture of the non-Medicare/Medicaid insurance market. Actively contested in federal courts since passage.'},
     {nodeId:'law-cms-rule',label:'CMS Annual\nRulemaking',
-     desc:'IPPS, OPPS, PFS, MA final rules — published every fall, effective January 1. The rate-setting and policy vehicle that reshapes reimbursement, quality programs, and coverage every year. 2,000+ pages most cycles.'},
+     desc:'IPPS, OPPS, PFS, MA final rules: published every fall, effective January 1. The rate-setting and policy vehicle that reshapes reimbursement, quality programs, and coverage every year. 2,000+ pages most cycles.'},
   ],
 };
 
@@ -1847,13 +1866,13 @@ const EXPAND_SCOPE = {
   zoneId: 'policy', nodeId: 'scope',
   subs: [
     {nodeId:'scp-np',      label:'NP Full\nPractice',
-     desc:'27 states + DC grant full practice authority to nurse practitioners — independent prescribing, diagnosing, treating without physician collaboration agreements. Remaining states: reduced or restricted practice. The single biggest addressable lever for primary care access.'},
+     desc:'27 states + DC grant full practice authority to nurse practitioners: independent prescribing, diagnosing, treating without physician collaboration agreements. Remaining states: reduced or restricted practice. The single biggest addressable lever for primary care access.'},
     {nodeId:'scp-pa',      label:'PA\nAutonomy',
      desc:'Physician Assistants in most states operate under physician supervision, though the definition varies widely. The PA profession officially transitioned to "physician associate" in 2021. Practice agreements, formulary authority, and independent prescribing all vary by state.'},
     {nodeId:'scp-rrt',     label:'RRT\nAdvanced\nPractice',
      desc:'Respiratory therapists can initiate ventilator protocols, perform bronchoscopies, and run rapid response teams in some states. Protocol-driven practice is evidence-based and reduces cost. Scope still limited by state licensure boards in most jurisdictions.'},
     {nodeId:'scp-pharm',   label:'Pharmacist\nPrescribing',
-     desc:'30+ states allow pharmacists to prescribe under collaborative practice agreements, statewide protocols, or independent authority for defined conditions. Statins, hormonal contraceptives, naloxone — expanding list. Access impact is real in rural pharmacy deserts.'},
+     desc:'30+ states allow pharmacists to prescribe under collaborative practice agreements, statewide protocols, or independent authority for defined conditions. Statins, hormonal contraceptives, naloxone: expanding list. Access impact is real in rural pharmacy deserts.'},
     {nodeId:'scp-compact', label:'Interstate\nCompacts',
      desc:'Nurse Licensure Compact (NLC): 41 states. Physician Interstate Compact (IMLC). RCIC for respiratory therapists. Compact membership enables telehealth, travel practice, and disaster response across state lines without relicensure. Coverage still spotty.'},
     {nodeId:'scp-barriers',label:'Regulatory\nBarriers',
@@ -2646,6 +2665,7 @@ ZONE_DEFS.forEach(z => {
   const connPopout = document.getElementById('leg-conn-popout');
   if (connPopout) connPopout.addEventListener('click', () => {
     closePop(true);   // the connections panel takes over from the layers panel
+    document.getElementById('atlas-help').classList.remove('open');   // and from help (one transient at a time)
     document.getElementById('atlas-conn').classList.toggle('open');
   });
 }
@@ -2966,6 +2986,7 @@ function zoomToZone(zone) {
   const zW=Math.max(...xs)-Math.min(...xs)+pad*2, zH=Math.max(...ys)-Math.min(...ys)+pad*2;
   const k=Math.min((vw-60)/zW,(vh-60)/zH,2.6);
   activeZone=zone; updateBC(zone,null);
+  updateHash(zone, null);   // zone framing is a scope — addressable + walkable (was silently unaddressable)
   svg.transition().duration(680).ease(d3.easeCubicInOut)
     .call(zoom.transform,d3.zoomIdentity.translate(vw/2-zCX*k,vh/2-zCY*k).scale(k));
 }
@@ -2984,6 +3005,7 @@ function zoomToCell(cell) {
 function resetView() {
   activeZone=null; activeNode=null;
   updateHash(null, null);
+  clearSelectionInk();
   closeHud(); updateBC(null,null);
   svg.transition().duration(560).ease(d3.easeCubicInOut).call(zoom.transform,getInitT());
 }
@@ -3001,10 +3023,17 @@ function updateBC(zone,node) {
   if (bz&&zone) bz.addEventListener('click',()=>zoomToZone(zone));
 }
 
-// ── URL HASH STATE ────────────────────────────────────────────────────────────
+// ── URL HASH STATE (push on scope, replace on tweak — HU-CONTROL-ARCHITECTURE-V2) ──
+// The old always-replaceState left deep-link arrivals with ONE history entry, so
+// hardware back EXITED THE SITE from every article funnel. Scope = the breadcrumb
+// (zone / zone+node): a scope change pushes, same-scope rewrites replace.
+let applyingURL = false, lastURLScope = location.hash.replace('#','');
 function updateHash(zone, cell) {
-  const h = cell ? `#${zone.id}/${cell.nodeId}` : zone ? `#${zone.id}` : '';
-  history.replaceState(null, '', location.pathname + location.search + h);
+  if (applyingURL) return;   // a restore must never write history
+  const scope = cell ? `${zone.id}/${cell.nodeId}` : zone ? zone.id : '';
+  const method = (scope !== lastURLScope) ? 'pushState' : 'replaceState';
+  lastURLScope = scope;
+  try { history[method](null, '', location.pathname + location.search + (scope ? '#' + scope : '')); } catch (e) {}
 }
 
 function applyHash() {
@@ -3020,10 +3049,15 @@ function applyHash() {
   zoomToZone(zone);
 }
 
+// back/forward traversal between fragment entries fires hashchange — this IS the restore path
 window.addEventListener('hashchange', () => {
+  applyingURL = true;
+  lastURLScope = location.hash.replace('#','');
+  activeNode = null; clearSelectionInk();
+  closeHud();   // restore frames from a clean camera (zoomToCell measures the live HUD height)
   const raw = location.hash.replace('#','');
-  if (!raw) { resetView(); return; }
-  applyHash();
+  if (!raw) resetView(); else applyHash();
+  applyingURL = false;
 });
 
 // ── BOTTOM HUD ────────────────────────────────────────────────────────────────
@@ -3071,6 +3105,7 @@ const CONTENT_LINKS = {};
 
 function selectNode(zone,cell) {
   activeNode=cell; activeZone=zone;
+  document.getElementById('atlas-help').classList.remove('open');   // the HUD displaces help (one transient at a time; conn stays — route sync uses it)
   if (typeof window._deselectRoute === 'function') window._deselectRoute();
   if (typeof window._focusZoneRoutes === 'function') window._focusZoneRoutes(zone.id);
   updateHash(zone, cell);
@@ -3125,9 +3160,7 @@ function getCellBaseOpacity(c2) {
   return { fill: lm?0.18:terrain?0.14:frontier?0.07:0.10, strk: lm?0.78:terrain?0.52:frontier?0.22:0.46 };
 }
 
-function deselectNode() {
-  if (!activeNode) return;
-  activeNode=null; closeHud(); updateBC(activeZone,null);
+function clearSelectionInk() {   // shared by deselect, reset, and history restores (stale glow was surviving back-presses)
   d3.selectAll('.az-node-cell').each(function(){
     const el=d3.select(this), zid=el.attr('data-zoneid'), nid=el.attr('data-nodeid');
     const z2=ZONE_DEFS.find(z=>z.id===zid), c2=z2&&z2.cells.find(c=>c.nodeId===nid);
@@ -3137,6 +3170,12 @@ function deselectNode() {
   if (typeof window._focusZoneRoutes === 'function') window._focusZoneRoutes(null);
   if (typeof window._clrRoutes === 'function') window._clrRoutes();
   if (typeof window._deselectRoute === 'function') window._deselectRoute();
+}
+function deselectNode() {
+  if (!activeNode) return;
+  activeNode=null; closeHud(); updateBC(activeZone,null);
+  updateHash(activeZone, null);   // the URL stops lying after a close (used to keep the dead #zone/node)
+  clearSelectionInk();
 }
 
 function closeHud() { document.getElementById('atlas-hud').classList.remove('open'); }
@@ -3148,7 +3187,15 @@ document.getElementById('a-zo').addEventListener('click',()=>svg.transition().du
 document.getElementById('hud-close').addEventListener('click',deselectNode);
 
 document.getElementById('a-help').addEventListener('click', () => {
-  document.getElementById('atlas-help').classList.toggle('open');
+  const help = document.getElementById('atlas-help');
+  const opening = !help.classList.contains('open');
+  if (opening){   // one transient at a time (the Esc walk's own order): help displaces the rest
+    closePop(false);
+    document.getElementById('atlas-conn').classList.remove('open');
+    closeHud();
+  }
+  help.classList.toggle('open', opening);
+  document.getElementById('a-help').setAttribute('aria-expanded', String(opening));
 });
 document.getElementById('help-close').addEventListener('click', () => {
   document.getElementById('atlas-help').classList.remove('open');
@@ -3224,7 +3271,16 @@ function openPopover(btn,pop,build){
   if(f) f.focus();
 }
 document.addEventListener('click',e=>{ if(openPop&&!e.target.closest('.selector-pop')&&!e.target.closest('.selector')) closePop(false); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&openPop) closePop(true); });
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(openPop){ closePop(true); return; }   // one step per press: popover first
+  const help=document.getElementById('atlas-help');
+  if(help&&help.classList.contains('open')){ help.classList.remove('open'); return; }
+  const conn=document.getElementById('atlas-conn');
+  if(conn&&conn.classList.contains('open')){ conn.classList.remove('open'); return; }
+  const hud=document.getElementById('atlas-hud');
+  if(hud&&hud.classList.contains('open')) deselectNode();   // the HUD's X routes through deselectNode; Esc matches it
+});
 const layersBtn=document.getElementById('atlas-layers-btn');
 const layersPop=document.getElementById('atlas-layers-pop');
 layersPop.addEventListener('keydown',e=>{
@@ -3349,8 +3405,8 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
   const t=getInitT();
   svg.call(zoom.transform,t);
   updateLOD(t.k);
-  // Apply deep link if URL has a hash on load
-  if (location.hash) setTimeout(applyHash, 80);
+  // Apply deep link if URL has a hash on load (guarded: an arrival restore must not push)
+  if (location.hash) setTimeout(() => { applyingURL = true; applyHash(); applyingURL = false; }, 80);
 }));
 
 /* ── UNIFIED ATLAS SEARCH — the entity graph over the whole dataset ───────
@@ -3498,12 +3554,15 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
   if(inp.value.trim()) ensureGraph();
   window.addEventListener('pageshow',()=>{ if(inp.value.trim()) ensureGraph(); });
 
-  // Idle warm-up: desktop visitors who linger get the index before they type.
-  // Never blocks load, and skipped entirely when the visitor asked to save data.
+  // Idle warm-up: DESKTOP visitors who linger get the index before they type. The old gate
+  // leaked on phones two ways: iOS has neither requestIdleCallback nor navigator.connection,
+  // so the setTimeout fallback shipped every iPhone the 11.5MB graph (and its JSON.parse) 8s
+  // after load. Now: no idle warm-up on the phone line or without a real idle hook — the
+  // intent triggers (search focus, first keystroke, hex select) still fetch on demand.
   const conn=navigator.connection;
-  if(!(conn&&conn.saveData)){
-    if('requestIdleCallback' in window) requestIdleCallback(()=>ensureGraph(),{timeout:8000});
-    else setTimeout(ensureGraph,8000);
+  const phone=window.matchMedia('(max-width: 699px)').matches;
+  if(!(conn&&conn.saveData) && !phone && 'requestIdleCallback' in window){
+    requestIdleCallback(()=>ensureGraph(),{timeout:8000});
   }
 })();
 

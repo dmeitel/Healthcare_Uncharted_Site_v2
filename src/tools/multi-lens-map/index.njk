@@ -6,7 +6,7 @@ section: tool
 status: published
 order: 1
 title: U.S. Pop Health Multi-Lens Map
-description: "Explore U.S. state healthcare through six lenses: Patient, Clinical, Operations, Payer, Policy, and Economics. Compare all 50 states on 40+ metrics, drill to real county boundaries, walk the years, and let the map find your county."
+description: "Explore U.S. state healthcare through 62 metrics in seven lens groups: Patient, Clinical, Operations, Payer, Policy, Economics, and baseline context. Tap a state, drill to real county boundaries."
 tags: [interactive, maps, policy, data-viz]
 has_interactive: true
 og_image: /brand/og-multi-lens-map.jpg
@@ -47,6 +47,8 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 /* teal border = tappable, same control language as the scope chip. The pill
    is the tool's PRIMARY selector; it must not dress like the inert ident pill */
 [data-theme="light"] .lv-metric { border-color:var(--teal-dk); }
+.lv-metric svg { width:14px; height:14px; stroke-width:1.75; color:var(--teal); flex:none; }   /* the Lucide metric icon sizes like the site selector grammar (was the 📊 emoji) */
+[data-theme="light"] .lv-metric svg { color:var(--teal-dk); }
 .lv-metric:hover { border-color:var(--teal); box-shadow:0 4px 16px rgba(0,0,0,.35); }
 .lv-metric:active { transform:scale(.985); }
 .lv-metric .mq { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -101,7 +103,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
 #lvMetricList .pinbtn.on { color:#062024; border-color:var(--amber); background:var(--amber); font-weight:700; }
 /* coarse pointers: the pair keeps the touch floor, labels and all */
 @media (hover:none){
-  #lvMetricList .ovbtn, #lvMetricList .pinbtn { min-height:40px; padding:0 12px; font-size:11px; }
+  #lvMetricList .ovbtn, #lvMetricList .pinbtn { min-height:44px; padding:0 12px; font-size:11px; }
 }
 /* light: amber as TEXT drops to the deep step; the solid .on fill keeps its
    #062024 ink (passes on both themes), so only the resting hover flips */
@@ -294,14 +296,14 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       <button class="lv-scope" id="lvScope" type="button" hidden>◀ United States</button>
       <div class="lv-viewgrp">
         <button class="lv-mstep" id="lvMetricPrev" type="button" aria-label="Previous metric">‹</button>
-        <button class="lv-metric" id="lvMetricBtn" type="button" aria-label="Change the metric. Opens the metric catalog">
-          <span aria-hidden="true">📊</span><span class="mq" id="lvMetricName">Pick a metric…</span><span class="yr" id="lvMetricYear"></span><span class="car" aria-hidden="true">▾</span>
+        <button class="lv-metric" id="lvMetricBtn" type="button" title="Change the metric. Opens the metric catalog">
+          <i data-lucide="bar-chart-2" aria-hidden="true"></i><span class="mq" id="lvMetricName">Pick a metric…</span><span class="yr" id="lvMetricYear"></span><span class="car" aria-hidden="true">▾</span>
         </button>
         <button class="lv-mstep" id="lvMetricNext" type="button" aria-label="Next metric">›</button>
       </div>
     </div>
   </div>
-  <div class="lv-status" id="lvStatus">Painting the basemap…</div>
+  <div class="lv-status" id="lvStatus" role="status">Painting the basemap…</div>
   <div class="lv-bottombar">
     <div class="lv-yearpill" id="lvYearPill">
       <button id="lvYearPrev" type="button" aria-label="Earlier year">‹</button>
@@ -313,7 +315,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle></svg>
     </button>
   </div>
-  <div class="lv-cleg" id="lvCleg" hidden aria-hidden="true"></div>
+  <div class="lv-cleg" id="lvCleg" hidden></div>
   <div class="lv-insets" id="lvInsets">
     <button class="lv-inset" id="lvInsetAK" type="button" aria-label="Go to Alaska"><span class="lv-inset-map" id="lvInsetAKmap"></span><b>AK <span id="lvInsetAKn"></span></b></button>
     <button class="lv-inset" id="lvInsetHI" type="button" aria-label="Go to Hawaii"><span class="lv-inset-map" id="lvInsetHImap"></span><b>HI <span id="lvInsetHIn"></span></b></button>
@@ -1111,12 +1113,12 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
   // every view is already in the URL (syncURL) — this just hands it over
   function linkChip(){
     const b = document.createElement('button');
-    b.className = 'hu-chip'; b.type = 'button'; b.textContent = '🔗 Copy link to this view';
+    b.className = 'hu-chip'; b.type = 'button'; b.textContent = 'Copy link to this view';
     b.addEventListener('click', () => {
       const done = ok => {
         b.textContent = ok ? '✓ Link copied' : 'Copy blocked. The address bar has it';
         announce(ok ? 'Link copied to the clipboard.' : 'Copy was blocked. The address bar holds the same link.');
-        setTimeout(() => { b.textContent = '🔗 Copy link to this view'; }, 2000);
+        setTimeout(() => { b.textContent = 'Copy link to this view'; }, 2000);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(() => done(true), () => done(false));
       else done(false);
@@ -1218,7 +1220,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     });
     moreBlock(b.querySelector('.lv-more'), sec);
     b.querySelector('.lv-actions').appendChild(linkChip());
-    b.querySelector('.lv-src').textContent = 'County grain: CDC PLACES / BLS / Census, same joins as the production map.';
+    b.querySelector('.lv-src').textContent = 'County grain: CDC PLACES / BLS / Census, same county joins the state map uses.';
     const det = cardDetent('dt-half');
     sheetEl.classList.add('open');
     setDetQuiet(det);
@@ -1361,7 +1363,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       '<div class="lv-dsec"><h5>Pinned to cards <span class="sub">' + PINS.length + '/4</span></h5>' + (PINS.length
         ? '<div class="lv-drow">' + PINS.map((pn, k) =>
             '<button class="hu-chip on" type="button" data-unpin="' + k + '">★ ' + CFG[pn.l].items[pn.i].name + ' ✕</button>').join('') + '</div>'
-        : '<div class="lv-src" style="margin-top:0">Tap the ☆ on any metric to add its value to every state and county card — the card holds what the map can\'t.</div>') +
+        : '<div class="lv-src" style="margin-top:0">Tap the ☆ on any metric to add its value to every state and county card. The card holds what the map can\'t.</div>') +
       '</div>' +
       '<div class="lv-dsec"><h5>Map labels <span class="sub">basemap text</span></h5>' +
       '<div class="lv-tgl">State names <span class="lv-sw' + (p.state ? ' on' : '') + '" id="lvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
@@ -1377,6 +1379,10 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
       else if (e.key === 'Escape' && find.value){ find.value = ''; buildMetricList(); e.stopPropagation(); }
     });
   }
+  $('lvDisplayBody').addEventListener('keydown', e => {   // the switches are focusable; Enter/Space must work them
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.getAttribute && e.target.getAttribute('role') === 'switch'){ e.preventDefault(); e.target.click(); }
+  });
   $('lvDisplayBody').addEventListener('click', e => {
     if (e.target.id === 'lvLabState'){ toggleLabelPref('state'); return; }
     if (e.target.id === 'lvLabCity'){ toggleLabelPref('city'); return; }
@@ -1669,7 +1675,7 @@ window.DATA_YEARS = {{ dataYears | dump | safe }};
     syncInsets();
     await applyURLState();   // old v1 links land exactly where they pointed
     lastScope = scopeKey();  // the first drill after load must PUSH, not replace
-    signal('✓ Six lenses + baseline, 50+ metrics · tap a state');
+    signal('✓ Seven lens groups, 62 metrics · tap a state');
     signalDone(3000);
     maybeCoach();   // first-ever visit: one bubble, one lesson, then gone
   });

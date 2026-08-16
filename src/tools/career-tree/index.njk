@@ -1,7 +1,7 @@
 ---
 layout: base.njk
 title: Healthcare Career Tree
-description: An interactive, branching map of healthcare careers. Start with the roles that need no license, follow the credentials down through specialty, leadership, and technology, and pin your own path. A second track maps the patient journey from healthy to critical.
+description: An interactive map of 164 real healthcare careers. Start at the entry rungs and follow any credential upward. Pin the roles you hold and the ones you want, and the tool prices the path.
 no_footer: true
 navPage: tools
 section: tool
@@ -31,6 +31,7 @@ og_image: /brand/og-career-tree.jpg
   .hct-sep { width: 1px; height: 22px; background: rgba(78,205,196,0.15); flex-shrink: 0; }
   /* Segmented controls */
   .hct-seg { display: flex; background: rgba(255,255,255,0.04); border: 1px solid rgba(78,205,196,0.18); border-radius: 8px; overflow: hidden; }
+  @media (max-width: 379px) { #hct-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; } #hct-tabs::-webkit-scrollbar { display: none; } }   /* 360px: four tabs run 14px past the box — scroll, don't clip (real-browser find) */
   .hct-seg button {
     appearance: none; border: none; background: transparent; cursor: pointer; flex: 1;
     font-family: var(--font); font-size: 12.5px; font-weight: 600;
@@ -444,7 +445,7 @@ og_image: /brand/og-career-tree.jpg
   .bp-addbtn:hover { background: rgba(120,200,190,0.2); }
   .bp-addmenu { position: absolute; right: 0; top: calc(100% + 4px); min-width: 190px; background: #0a1712; border: 1px solid rgba(78,205,196,0.3); border-radius: 8px; padding: 4px; display: none; z-index: 40; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
   .bp-addmenu.open { display: block; }
-  .bp-addmenu-item { padding: 6px 10px; font-size: 12px; color: rgba(214,234,238,0.88); cursor: pointer; border-radius: 6px; font-family: var(--font); }
+  .bp-addmenu-item { padding: 6px 10px; font-size: 12px; color: rgba(214,234,238,0.88); cursor: pointer; border-radius: 6px; font-family: var(--font); display: block; width: 100%; text-align: left; background: none; border: 0; }
   .bp-addmenu-item:hover { background: rgba(120,200,190,0.14); color: #fff; }
   /* the toolbar's ⋯ More overflow reuses the addmenu dress, anchored under its button */
   .mp-more { margin-left: 0; display: inline-flex; }
@@ -666,7 +667,7 @@ og_image: /brand/og-career-tree.jpg
   .bp-h-link:hover { opacity: 1; text-decoration: underline; }
   .bp-card-h .bp-h-link { margin-left: 0; text-transform: none; }
   [data-theme='light'] .bp-h-link { color: var(--teal-dk); }
-  .hct-jump { display: block; background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--teal); opacity: 0.85; padding: 0; margin: 9px 0 2px; text-align: left; text-decoration: none; }
+  .hct-jump { min-height: 44px; display: inline-flex; align-items: center; display: block; background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--teal); opacity: 0.85; padding: 0; margin: 9px 0 2px; text-align: left; text-decoration: none; }
   /* the on-ramp block inside the credential-reality box */
   .hct-cred-onramp { border-bottom: 1px solid var(--border); padding-bottom: 9px; margin-bottom: 9px; }
   .hct-cred-oh { font-family: var(--display); font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #8FE8DC; margin: 2px 0 5px; }
@@ -1227,6 +1228,7 @@ og_image: /brand/og-career-tree.jpg
     #hct-panel,
     #hct-canvas-wrap[data-view="path"] #hct-panel {
       width: 100%; max-width: 100%; left: 0; right: 0; top: auto; bottom: 0;
+      padding-bottom: env(safe-area-inset-bottom);
       height: auto; max-height: 52vh; max-height: 52dvh;
       border-left: none; border-top: 2px solid var(--border);
       box-shadow: 0 -10px 30px rgba(0,0,0,.55);
@@ -1385,7 +1387,7 @@ og_image: /brand/og-career-tree.jpg
     <!-- PRIMARY TABS: which view is on screen -->
     <div class="hct-seg hct-tabs" id="hct-tabs">
       <button data-view="path" class="on" title="Your buildable career sheet. Pin roles, degrees, and skills; saves in your browser"><i data-lucide="pin" aria-hidden="true"></i><span class="tab-full">My Path</span><span class="tab-short">Path</span><span class="tab-badge" id="hct-mp-count">0</span></button>
-      <button data-view="career" title="158 real roles across 8 pathways. Click a hex for detail, ☆ pins it to your path"><i data-lucide="hexagon" aria-hidden="true"></i><span class="tab-full">Career Matrix</span><span class="tab-short">Careers</span></button>
+      <button data-view="career" title="164 real roles across 8 pathways. Click a hex for detail, ☆ pins it to your path"><i data-lucide="hexagon" aria-hidden="true"></i><span class="tab-full">Career Matrix</span><span class="tab-short">Careers</span></button>
       <button data-view="edu" id="hct-tab-edu" title="Degrees, licenses, and certs stacked by level. See what each one unlocks"><i data-lucide="graduation-cap" aria-hidden="true"></i><span class="tab-full">Education Matrix</span><span class="tab-short">Education</span></button>
       <button data-view="atlas" id="hct-tab-atlas" title="The skills layer. Clinical and operational expertise areas to tag onto your path"><i data-lucide="shapes" aria-hidden="true"></i><span class="tab-full">Areas of Expertise</span><span class="tab-short">Skills</span></button>
     </div>
@@ -1440,10 +1442,10 @@ og_image: /brand/og-career-tree.jpg
       <button class="mp-fbtn" id="hct-mp-goals" title="Theorycraft: hide what you have and see just the plan" aria-pressed="false"><i data-lucide="diamond" aria-hidden="true"></i>Goals only</button>
       <span class="bp-addwrap mp-more"><button class="mp-fbtn" id="hct-mp-more" title="Save, load, export, reset" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-horizontal" aria-hidden="true"></i>More</button>
         <div class="bp-addmenu" id="hct-mp-menu">
-          <div class="bp-addmenu-item" id="hct-mp-data" title="Back up your path to a code/file, or restore one"><i data-lucide="save" aria-hidden="true"></i>Save / Load</div>
-          <div class="bp-addmenu-item" id="hct-mp-export" title="Download your path as an image"><i data-lucide="download" aria-hidden="true"></i>Export JPEG</div>
-          <div class="bp-addmenu-item" id="hct-mp-share" title="A square 1080 card of your build, made for sharing"><i data-lucide="share-2" aria-hidden="true"></i>Share card</div>
-          <div class="bp-addmenu-item" id="hct-mp-clear"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Reset build</div>
+          <button type="button" class="bp-addmenu-item" id="hct-mp-data" title="Back up your path to a code/file, or restore one"><i data-lucide="save" aria-hidden="true"></i>Save / Load</button>
+          <button type="button" class="bp-addmenu-item" id="hct-mp-export" title="Download your path as an image"><i data-lucide="download" aria-hidden="true"></i>Export JPEG</button>
+          <button type="button" class="bp-addmenu-item" id="hct-mp-share" title="A square 1080 card of your build, made for sharing"><i data-lucide="share-2" aria-hidden="true"></i>Share card</button>
+          <button type="button" class="bp-addmenu-item" id="hct-mp-clear"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Reset build</button>
         </div>
       </span>
     </span>
@@ -1514,7 +1516,7 @@ og_image: /brand/og-career-tree.jpg
           <svg id="hct-edu-svg"></svg>
           <div id="hct-edu-clegend" class="hct-clegend" style="display:none"></div>
         </div>
-        <aside id="hct-edu-detail" class="edu-detail hu-ticks"></aside>
+        <aside id="hct-edu-detail" aria-label="Credential detail" class="edu-detail hu-ticks"></aside>
       </div>
     </section>
 
@@ -1565,7 +1567,7 @@ og_image: /brand/og-career-tree.jpg
             <!-- conditional follow-ups: each status answer earns its own question -->
             <div class="hw-cond" id="hw-cond-working" hidden>
               <span class="hw-q-lbl hw-cond-lbl">Your current role <i>optional; it anchors your line</i></span>
-              <input id="hw-role-in" class="hw-search-in" type="text" placeholder="Search 158 real roles&hellip;" autocomplete="off" aria-label="Search roles">
+              <input id="hw-role-in" class="hw-search-in" type="text" placeholder="Search 164 real roles&hellip;" autocomplete="off" aria-label="Search roles">
               <div class="hw-suggest" id="hw-role-list" hidden></div>
             </div>
             <div class="hw-cond" id="hw-cond-school" hidden>
@@ -1733,7 +1735,7 @@ og_image: /brand/og-career-tree.jpg
     </section>
 
     <!-- Detail panel overlay (fades in, docked right) -->
-    <aside id="hct-panel" class="hu-ticks">
+    <aside id="hct-panel" class="hu-ticks" aria-label="Role detail">
       <!-- phone detent grabber (hidden on desktop): tap = half⇄full, drag = peek/half/full, drag past the bottom = dismiss -->
       <button class="hu-sheet-grab hct-p-grab" id="hct-p-grab" type="button" aria-label="Resize the detail sheet. Drag down past the bottom to close"><span></span></button>
       <div class="hct-p-head">
@@ -3000,11 +3002,12 @@ og_image: /brand/og-career-tree.jpg
     en.append('path').attr('class', 'act-ic');
     const allA = en.merge(sel);
     allA.attr('data-kind', d => d.kind)
-      .attr('role', 'button').attr('aria-label', d => d.kind === 'arm' ? 'Focus this career line' : 'Show all roles')
+      .attr('role', 'button').attr('tabindex', 0).attr('aria-label', d => d.kind === 'arm' ? 'Focus this career line' : 'Show all roles')
       .style('pointer-events', 'all')
       .on('mousedown.hexact', e => e.stopPropagation())
       .on('touchstart.hexact', e => e.stopPropagation())
-      .on('click', (e, d) => { e.stopPropagation(); if (d.kind === 'arm') armFocus(d.id); else { exitFocus(); announce('Showing all roles'); } });
+      .on('click', (e, d) => { e.stopPropagation(); if (d.kind === 'arm') armFocus(d.id); else { exitFocus(); announce('Showing all roles'); } })
+      .on('keydown', (e, d) => { if (e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); e.stopPropagation(); if (d.kind === 'arm') armFocus(d.id); else { exitFocus(); announce('Showing all roles'); } });
     allA.select('title').text(d => d.kind === 'arm' ? 'Focus this career line' : 'Show all roles');
     // icon per verb: crosshair = collapse to this line, out-arrows = open the field back up
     allA.select('circle').style('display', d => d.kind === 'arm' ? null : 'none');
@@ -4273,7 +4276,7 @@ og_image: /brand/og-career-tree.jpg
     if (key === 'who'){
       const cur = build.career.filter(n => !n.anchor && nodeLayer(n) === 'current');
       let hh = '<div class="bp-modal-lbl">Your current role. Search the catalog; picking one lights your line on every board.</div>'
-        + '<input id="st-role-in" class="hw-search-in" type="text" placeholder="Search 158 real roles…" autocomplete="off">'
+        + '<input id="st-role-in" class="hw-search-in" type="text" placeholder="Search 164 real roles…" autocomplete="off">'
         + '<div class="hw-suggest" id="st-role-list" hidden></div>';
       if (cur.length) hh += '<div class="st-rows">' + cur.map(n =>
         '<div class="st-row">'+esc(tileDisplayName(n,'career'))+'<span class="st-sub">current</span><button type="button" class="st-x" data-rm="'+esc(n.id)+'" title="Remove">×</button></div>').join('') + '</div>';
@@ -4298,7 +4301,7 @@ og_image: /brand/og-career-tree.jpg
     if (key === 'goal'){
       const goals = build.career.filter(n => !n.anchor && nodeLayer(n) === 'future');
       let hh = '<div class="bp-modal-lbl">The role you\'re aiming at. Pin more than one if you\'re weighing options.</div>'
-        + '<input id="st-goal-in" class="hw-search-in" type="text" placeholder="Search 158 real roles…" autocomplete="off">'
+        + '<input id="st-goal-in" class="hw-search-in" type="text" placeholder="Search 164 real roles…" autocomplete="off">'
         + '<div class="hw-suggest" id="st-goal-list" hidden></div>';
       if (goals.length) hh += '<div class="st-rows">' + goals.map(n =>
         '<div class="st-row">'+esc(tileDisplayName(n,'career'))+'<span class="st-sub">goal</span><button type="button" class="st-x" data-rm="'+esc(n.id)+'" title="Remove">×</button></div>').join('') + '</div>';
@@ -4650,7 +4653,7 @@ og_image: /brand/og-career-tree.jpg
       const titleEl = isOtherKey(key)   // the Other card's title is renamable (and persists)
         ? '<input class="bp-card-t bp-card-t-edit" value="'+esc(panelTitle(key))+'" maxlength="28" placeholder="Other" title="Rename this section">'
         : '<span class="bp-card-t">'+esc(panelTitle(key))+'</span>';
-      card.innerHTML = '<div class="bp-card-h"><span class="bp-grip" title="Drag to move">⠿</span>'+titleEl+'<button class="bp-card-x" title="Remove section">×</button></div>'+body;
+      card.innerHTML = '<div class="bp-card-h"><span class="bp-grip" title="Drag to move">⠿</span>'+titleEl+'<button class="bp-card-x" title="Remove section" aria-label="Remove section">×</button></div>'+body;
       host.appendChild(card);
       const hdr = card.querySelector('.bp-card-h');
       hdr.setAttribute('draggable','true');
@@ -4685,8 +4688,8 @@ og_image: /brand/og-career-tree.jpg
     const menu = document.getElementById('bp-add-menu'), btn = document.getElementById('bp-add-section'); if (!menu || !btn) return;
     const hiddenFixed = build.layout.hidden.filter(k => PANELS[k] && PANELS[k].kind === 'text' && k !== 'other');   // 'other' is managed by the always-on "+ Other section"; zones/next are structural, never listed
     btn.style.display = '';   // you can always add another Other section
-    menu.innerHTML = hiddenFixed.map(k => '<div class="bp-addmenu-item" data-key="'+k+'">+ '+esc(panelTitle(k))+'</div>').join('')
-      + '<div class="bp-addmenu-item" data-newother="1">+ Other section</div>';
+    menu.innerHTML = hiddenFixed.map(k => '<button type="button" class="bp-addmenu-item" data-key="'+k+'">+ '+esc(panelTitle(k))+'</button>').join('')
+      + '<button type="button" class="bp-addmenu-item" data-newother="1">+ Other section</button>';
     menu.querySelectorAll('[data-key]').forEach(el => el.onclick = () => {
       const k = el.dataset.key; build.layout.hidden = build.layout.hidden.filter(x => x!==k);
       if (!build.layout.order.includes(k)) build.layout.order.push(k);
