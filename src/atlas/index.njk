@@ -42,6 +42,13 @@ permalink: /atlas/
 .atlas-sep { width: 1px; height: 22px; background: rgba(78,205,196,0.15); flex-shrink: 0; }
 #atlas-bc { display: flex; align-items: center; flex: 1; overflow: hidden; }
 .abc-item { font-size: 13px; color: rgba(140,180,215,0.50); cursor: pointer; padding: 4px 7px; white-space: nowrap; transition: color .12s; flex-shrink: 0; }
+button.abc-item, button.conn-row, button.hud-drow, button.find-row, button.fd-chip {
+  font: inherit; color: inherit; text-align: inherit; background: none; border: 0;
+  -webkit-appearance: none; appearance: none;
+}
+button.conn-row, button.hud-drow, button.find-row { display: flex; width: 100%; }
+button.abc-item:focus-visible, button.conn-row:focus-visible, button.hud-drow:focus-visible,
+button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
 .abc-item:hover { color: #E2EEF4; }
 .abc-item.active { color: #9B8FE0; font-weight: 600; }
 .abc-sep { font-size: 13px; color: rgba(78,205,196,0.25); margin: 0 2px; flex-shrink: 0; }
@@ -279,7 +286,7 @@ permalink: /atlas/
   #atlas-layers-btn { min-height: 44px; }
   #atlas-desk-hint { display: none !important; }
   #hud-close, #help-close, #conn-panel-close { width: 44px; height: 44px; }
-  #atlas-find { top: 110px; }   /* clear the wrapped two-row toolbar (was 64px, sat ON the controls) */
+  #atlas-find { top: 170px; }   /* clear BOTH wrapped toolbar rows (run-2 QA: 110px still sat on the controls row, which bottoms at ~164) */
 }
 /* coarse pointers: panel closes + connection filter chips clear the 44px floor (fleet-day parity) */
 @media (hover:none){
@@ -555,11 +562,12 @@ permalink: /atlas/
 [data-theme='light'] .conn-row-label { color: rgba(20,40,60,0.9); }
 </style>
 
+<noscript><p class="hu-noscript">This tool runs entirely in your browser and needs JavaScript turned on. Nothing you do here is sent to a server.</p></noscript>
 <div id="atlas-shell">
   <div id="atlas-tb">
     <span class="atlas-logo tool-bar-title">Healthcare <span>Atlas</span></span>
     <div class="atlas-sep"></div>
-    <div id="atlas-bc"><span class="abc-item active" id="bc-ov">Overview</span></div>
+    <div id="atlas-bc"><button type="button" class="abc-item active" id="bc-ov">Overview</button></div>
     <div class="atlas-sep"></div>
     <button class="selector" id="atlas-layers-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="atlas-layers-pop" aria-label="Layers">
       <i data-lucide="layers" aria-hidden="true"></i><span class="sel-val">Layers</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
@@ -796,13 +804,13 @@ const ZONE_DEFS = [
         desc:'Natural language processing on clinical notes, discharge summaries, radiology reports. The model sees what the note says, not what happened.',
         links:[{label:'Vendor Directory', url:'/tools/vendor-directory/', icon:'📋'}]},
       {q:4,  r:-5, type:'node',    label:'Predictive\nAnalytics',  nodeId:'predictive',
-        desc:'Sepsis prediction, readmission risk, no-show models. Most clinical AI in production is here. Calibration drift and alert fatigue are the primary failure modes.',
+        desc:'Sepsis prediction, readmission risk, no-show models. Most clinical AI in production is here. What breaks them: calibration drift, and alerts that fire so often clinicians stop reading them.',
         links:[{label:'Vendor Directory', url:'/tools/vendor-directory/', icon:'📋'}]},
       {q:1,  r:-6, type:'node',    label:'Medical\nDevices',       nodeId:'med-devices',
         desc:'FDA-regulated hardware. Ventilators, infusion pumps, monitors, implantables. Supply chain fragility was exposed in 2020. Cybersecurity risk is underestimated.',
         links:[{label:'Vendor Directory', url:'/tools/vendor-directory/', icon:'📋'}]},
       {q:3,  r:-6, type:'node',    label:'Wearables\n& RPM',       nodeId:'rpm',
-        desc:'Remote patient monitoring. CGMs, cardiac monitors, SpO2 wearables. The data is real. Clinical workflow integration is not. Alert fatigue is the chokepoint.',
+        desc:'Remote patient monitoring. CGMs, cardiac monitors, SpO2 wearables. The devices stream good data around the clock; the clinical workflows to absorb it haven\'t caught up, so the alerts stack up faster than anyone can answer them.',
         links:[]},
       {q:2,  r:-7, type:'node',    label:'FHIR &\nInterop',        nodeId:'fhir',
         desc:'HL7 FHIR R4. The standard making EHR data moveable. SMART on FHIR apps, patient-facing APIs, and the 21st Century Cures mandate behind it.',
@@ -831,7 +839,7 @@ const ZONE_DEFS = [
         desc:'The bench-to-bedside pipeline. Taking basic science findings and moving them into clinical trials, then clinical practice. The gap here is where most discoveries stall.',
         links:[]},
       {q:1,  r:-2, type:'node', label:'Biostatistics\n& Methods',  nodeId:'biostatistics',
-        desc:'Study design, sample size, regression, survival analysis. The methodological layer everything else depends on. Misunderstood and underresourced in most health systems.',
+        desc:'Study design, sample size, regression, survival analysis. Get the methods wrong here and every finding built on top of them inherits the error. Misunderstood and underresourced in most health systems.',
         links:[]},
     ]
   },
@@ -857,7 +865,7 @@ const ZONE_DEFS = [
         desc:'Airway management, ventilator management, pulmonary diagnostics. Critical in ICU and ED. Understaffed, underseen, undervalued in most health systems.',
         links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
       {q:5,  r:-1, type:'landmark', label:'Acute Care\nHospital',  nodeId:'acute',
-        desc:'Inpatient and ED services. Every specialty, every floor, every workflow. The most operationally complex environment in healthcare.',
+        desc:'Inpatient and ED services. Every specialty in one building, and every one of their workflows colliding in real time. The most operationally complex environment in healthcare.',
         links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'},{label:'Iceberg Map', url:'/tools/iceberg-map/', icon:'🧊'}]},
       {q:6,  r:-1, type:'node',    label:'Emergency\nDept',        nodeId:'ed',
         desc:'EMTALA-required care for all. 24/7 operations, highest acuity. Where the gaps in primary care show up at 2 AM.',
@@ -906,7 +914,7 @@ const ZONE_DEFS = [
     desc:'Every interaction a person has with the healthcare system: from first symptom to final bill. Access, encounter, chronic disease, and the financial aftermath.',
     cells:[
       {q:1,  r:1,  type:'node',    label:'Patient\nFinancials',    nodeId:'pt-fin',
-        desc:'What the patient actually pays, understands, and disputes. Medical debt, surprise bills, EOBs in a language nobody taught them to read.',
+        desc:'What the patient actually pays, and the fight over it when the numbers don\'t add up. Medical debt, surprise bills, EOBs in a language nobody taught them to read.',
         links:[]},
       {q:2,  r:1,  type:'node',    label:'Prior\nAuthorization',   nodeId:'prior-auth',
         desc:'Payer-required approval before services. Denies care, delays treatment, and consumes clinical hours that should go to patients.',
@@ -922,10 +930,10 @@ const ZONE_DEFS = [
         desc:'Whether a patient has coverage, and what type, determines almost everything before a clinician even walks in.',
         links:[{label:'Multi-Lens Map', url:'/tools/multi-lens-map/', icon:'🗺'}]},
       {q:3,  r:2,  type:'landmark', label:'Access &\nNavigation',  nodeId:'access',
-        desc:'How patients find, enter, and move through the system. Insurance status, geography, and cost all filter who gets in the door.',
+        desc:'How patients find a way into the system, and how far they get once inside. Insurance status, geography, and cost all filter who gets in the door.',
         links:[]},
       {q:4,  r:2,  type:'node',    label:'ED\nAccess',             nodeId:'ed-access',
-        desc:'Emergency department as primary care for the uninsured. EMTALA guarantees stabilization, not ongoing care.',
+        desc:'Emergency department as primary care for the uninsured. EMTALA guarantees stabilization, and stabilization is exactly where the guarantee ends.',
         links:[{label:'Hospital Ops Map', url:'/tools/hospital-map/', icon:'🏥'}]},
       {q:5,  r:2,  type:'terrain', label:'', nodeId:null, desc:''},
       {q:1,  r:3,  type:'node',    label:'Primary\nCare',          nodeId:'primary-care',
@@ -997,7 +1005,7 @@ const ZONE_DEFS = [
       {q:1,  r:6,  type:'terrain', label:'', nodeId:null, desc:''},
       {q:0,  r:7,  type:'terrain', label:'', nodeId:null, desc:''},
       {q:-1, r:2,  type:'node', label:'Community\nHealth', nodeId:'community-health',
-        desc:'FQHCs, CHCs, school-based health, mobile clinics, and the community health worker model. The healthcare layer closest to where people actually live. Chronically underfunded and over-relied upon.',
+        desc:'FQHCs, CHCs, school-based health, mobile clinics, and the community health worker model. The healthcare layer closest to where people actually live, which the rest of the system leans on hard and funds thin.',
         links:[]},
     ]
   },
@@ -1063,7 +1071,7 @@ const ZONE_DEFS = [
         desc:'Scope of practice, certificate of need, Medicaid expansion decisions. Where the real variation in care delivery originates. Fifty different healthcare systems.',
         links:[{label:'Multi-Lens Map', url:'/tools/multi-lens-map/', icon:'🗺'}]},
       {q:-4, r:0,  type:'node',    label:'CMS &\nFed Agencies',     nodeId:'cms',
-        desc:'CMS, ONC, FDA, CDC, AHRQ, HRSA. They write, interpret, and enforce the rules providers operate under daily. Rulemaking cycles are the industry calendar.',
+        desc:'CMS, ONC, FDA, CDC, AHRQ, HRSA. They write the rules providers operate under daily, and when a rule is ambiguous they are also the ones who interpret and enforce it. Rulemaking cycles are the industry calendar.',
         links:[]},
       {q:-5, r:0,  type:'node',    label:'Accreditation\nBodies',   nodeId:'accreditation',
         desc:'Joint Commission, DNV, NCQA, URAC. Third-party accreditation functioning as a de facto conditions-of-participation proxy. Annual survey cycles.',
@@ -1176,7 +1184,7 @@ const CONNECTIONS = [
    desc:'Diagnostic AI, genomic sequencing, and clinical data infrastructure built on the science of disease measurement and detection. The quality of the science determines the quality of the model.'},
   {from:'patient',   to:'provider',  type:'clinical',
    label:'Care Relationship',
-   desc:'The core clinical encounter: patient symptoms, preferences, and history meeting provider assessment, diagnosis, and treatment. Every encounter generates a data point, a bill, and a downstream decision.'},
+   desc:'The core clinical encounter: patient symptoms, preferences, and history meeting provider assessment, diagnosis, and treatment. Every encounter generates a data point and a bill, and somewhere downstream, a decision that traces back to both.'},
   {from:'patient',   to:'payer',     type:'financial',
    label:'Coverage Interface',
    desc:'Patients work through the financial architecture through premiums, deductibles, prior authorizations, and the appeals process. Most patients do not understand their benefits until they get the bill.'},
@@ -1819,7 +1827,7 @@ const EXPAND_ACCESS = {
     {nodeId:'acc-navigator',   label:'Patient\nNavigators',
      desc:'Community health workers, patient navigators, care coordinators. The human layer between patients and the system. Evidence-based for reducing disparities. Chronically underfunded and often the first cut in budget cycles.'},
     {nodeId:'acc-wayfinding',  label:'Health\nLiteracy',
-     desc:'How patients find the right care, understand their options, and make decisions in a system not designed for them. Low health literacy affects ~36% of U.S. adults. Discharge instructions written at 10th grade. Most patients read at 6th.'},
+     desc:'How patients find the right care and understand their options in a system built for the people who work in it. Low health literacy affects ~36% of U.S. adults. Discharge instructions written at 10th grade. Most patients read at 6th.'},
   ],
 };
 
@@ -2587,7 +2595,8 @@ ZONE_DEFS.forEach(z => {
     ZONE_DEFS.forEach(z => { ZONE_NAME[z.id] = z.displayLabel || z.label; });
 
     const rows = builtRoutes.map(route => {
-      const row = document.createElement('div');
+      const row = document.createElement('button');
+      row.type = 'button';
       row.className = 'conn-row';
       const dot = document.createElement('span');
       dot.className = 'conn-dot';
@@ -3013,9 +3022,9 @@ function resetView() {
 // ── BREADCRUMB ────────────────────────────────────────────────────────────────
 function updateBC(zone,node) {
   const bc=document.getElementById('atlas-bc');
-  let h='<span class="abc-item" id="bc-ov">Overview</span>';
-  if (zone) h+=`<span class="abc-sep">›</span><span class="abc-item${!node?' active':''}" id="bc-z" style="color:${zone.color}">${zone.label}</span>`;
-  if (node) h+=`<span class="abc-sep">›</span><span class="abc-item active">${(node.label||'').replace('\n',' ')}</span>`;
+  let h='<button type="button" class="abc-item" id="bc-ov">Overview</button>';
+  if (zone) h+=`<span class="abc-sep">›</span><button type="button" class="abc-item${!node?' active':''}" id="bc-z" style="color:${zone.color}">${zone.label}</button>`;
+  if (node) h+=`<span class="abc-sep">›</span><span class="abc-item active" aria-current="location">${(node.label||'').replace('\n',' ')}</span>`;
   if (!zone) h=h.replace('class="abc-item"','class="abc-item active"');
   bc.innerHTML=h;
   document.getElementById('bc-ov').addEventListener('click',resetView);
@@ -3075,11 +3084,11 @@ function fillHudData(nodeId){
   if (!items || !items.length){ el.innerHTML = ''; el.style.display = 'none'; return; }
   let h = '<div class="hud-dhdr">Live data</div>';
   for (const it of items){
-    h += '<div class="hud-drow"' + (it.uid ? (' data-uid="' + it.uid + '"') : '') + '>' +
+    h += (it.uid ? '<button type="button" class="hud-drow" data-uid="' + it.uid + '">' : '<div class="hud-drow">') +
          '<span class="hud-dlabel">' + it.label + '</span>' +
          (it.value ? ('<span class="hud-dval">' + it.value + '</span>') : '') +
          (it.sub ? ('<span class="hud-dsub">' + it.sub + '</span>') : '') +
-         '</div>';
+         (it.uid ? '</button>' : '</div>');
   }
   el.innerHTML = h; el.style.display = 'block';
   el.querySelectorAll('.hud-drow[data-uid]').forEach(r => { r.onclick = () => { if (window.__atlasSelect) window.__atlasSelect(r.getAttribute('data-uid')); }; });
@@ -3495,10 +3504,10 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
       html+='<div class="find-grp"><div class="find-grp-h"><span class="find-dot" style="background:'+col+'"></span>'+(TL[t]||t)+' <span class="gn">'+arr.length+'</span></div>';
       arr.slice(0,CAP).forEach(n=>{
         const nid=nodeIdOf(n.uid), onAtlas=!!(nid&&CELL_BY_NODE.has(nid)), sub=subOf(n);
-        html+='<div class="find-row" data-uid="'+esc(n.uid)+'">'
+        html+='<button type="button" class="find-row" data-uid="'+esc(n.uid)+'">'
           +'<span class="find-dot" style="background:'+col+'"></span>'
           +'<span class="find-lbl">'+hl(n.label,toks)+'</span>'
-          +(onAtlas?'<span class="find-on">on map</span>':(sub?'<span class="find-sub">'+esc(sub)+'</span>':''))+'</div>';
+          +(onAtlas?'<span class="find-on">on map</span>':(sub?'<span class="find-sub">'+esc(sub)+'</span>':''))+'</button>';
       });
       if(arr.length>CAP) html+='<div class="find-more">+'+(arr.length-CAP)+' more · add a word to narrow</div>';
       html+='</div>';
@@ -3519,7 +3528,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
     let out='';
     for(const rel in g){ const arr=g[rel];
       out+='<div class="fd-rel"><div class="fd-rv'+(incoming?' inc':'')+'">'+(incoming?'← ':'')+esc(rel.replace(/-/g,' '))+' <span class="fd-rn">'+arr.length+'</span></div><div class="fd-chips">';
-      arr.slice(0,12).forEach(p=>{ const t=GBY.get(p[0]), col=t?(TC[t.type]||'#9AA7B2'):'#9AA7B2'; out+='<span class="fd-chip" data-uid="'+esc(p[0])+'"><span class="fd-cdot" style="background:'+col+'"></span>'+esc(t?t.label:p[0])+(p[1]!=null?'<span class="fd-cv">'+esc(p[1])+'</span>':'')+'</span>'; });
+      arr.slice(0,12).forEach(p=>{ const t=GBY.get(p[0]), col=t?(TC[t.type]||'#9AA7B2'):'#9AA7B2'; out+='<button type="button" class="fd-chip" data-uid="'+esc(p[0])+'"><span class="fd-cdot" style="background:'+col+'"></span>'+esc(t?t.label:p[0])+(p[1]!=null?'<span class="fd-cv">'+esc(p[1])+'</span>':'')+'</button>'; });
       if(arr.length>12) out+='<span class="fd-chip" style="cursor:default;opacity:.55">+'+(arr.length-12)+' more</span>';
       out+='</div></div>';
     }

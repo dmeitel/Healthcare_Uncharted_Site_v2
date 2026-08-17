@@ -12,3 +12,5 @@ metadata:
 - Detail sheets here often stay mounted after close (hu-drawer pattern) — check visibility/class (`rp-open`), not just presence.
 - Buffered PerformanceObserver layout-shift works for CLS after the fact; the "Deprecated API for given entry type" console warning is from the probe itself, not the site.
 - goatcounter "not counting because of: localhost" warning is expected noise on every page.
+- hospital-map's .hu-sheet-grab button carries aria-label "Resize. Drag down past the bottom to close" — any `[aria-label*="close" i]` selector hits IT before the real .hm-dp-close X. Target `button.hm-dp-close` explicitly.
+- Atlas "desktop hint" text also lives inside a <style> tag as a CSS string; text-search for hint copy must exclude STYLE elements or it false-positives.

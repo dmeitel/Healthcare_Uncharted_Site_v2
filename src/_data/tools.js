@@ -51,7 +51,7 @@ module.exports = [
     status:      'live',
     featured:    true,
     title:       'Healthcare Vendor Directory',
-    desc:        'A searchable, filterable directory of major healthcare technology vendors. What sector they operate in, which layers of the system they touch, and whether their technology is proven, emerging, or cautionary.',
+    desc:        'A searchable directory of 158 healthcare technology vendors across 25 sectors. Each entry says who owns them, what they actually sell, and one thing worth watching.',
     url:         '/tools/vendor-directory/',
     type:        'reference',
     badge:       'Reference',

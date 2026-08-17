@@ -56,9 +56,24 @@
       if (opts.onDetent) opts.onDetent(d);
     }
     function dismiss() {
+      /* idempotent: a closed sheet dismisses to a no-op. Without the guard, an adopter
+         whose onDismiss calls back into close() recursed forever (hospital-map, run-2
+         mobile QA: RangeError on every X press). The kit now owns removing 'open';
+         onDismiss handles the adopter's state, not the class. */
+      if (!el.classList.contains('open')) return;
+      el.classList.remove('open');
       if (opts.onDismiss) opts.onDismiss();
-      else el.classList.remove('open');
+      if (opts.escape && opener && document.contains(opener) && opener.focus) { opener.focus(); }
+      opener = null;
     }
+    /* opts.escape (opt-in, David 2026-08-16): the kit closes the sheet on Escape and
+       returns focus to whatever opened it. Existing tools keep their own Esc walkers —
+       do NOT set this where a page already handles Escape, or presses double-fire. */
+    var opener = null;
+    document.addEventListener('keydown', function (e) {
+      if (!opts.escape || e.key !== 'Escape') return;
+      if (el.classList.contains('open')) dismiss();
+    });
 
     /* drag writes are rAF-batched (one style write per frame, not per event),
        and release honors FLICK VELOCITY — a fast swipe steps one detent in the
@@ -110,7 +125,10 @@
 
     return {
       el: el,
-      open: function (det) { el.classList.add('open'); setDet(det || opts.startDetent || 'dt-half'); },
+      open: function (det) {
+        if (!el.classList.contains('open')) opener = document.activeElement;
+        el.classList.add('open'); setDet(det || opts.startDetent || 'dt-half');
+      },
       close: dismiss,
       setDetent: setDet,
       isOpen: function () { return el.classList.contains('open'); }

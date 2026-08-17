@@ -1378,6 +1378,7 @@ og_image: /brand/og-career-tree.jpg
   }
   </style>
 
+<noscript><p class="hu-noscript">This tool runs entirely in your browser and needs JavaScript turned on. Nothing you do here is sent to a server.</p></noscript>
 <div id="hct-shell">
   <!-- ── TOP BAR — slim tabs on the left, contextual controls on the right ── -->
   <div id="hct-tb" data-view="path">
@@ -1548,7 +1549,7 @@ og_image: /brand/og-career-tree.jpg
     <section id="hct-mypath" class="hct-view active" data-view="path">
       <!-- FIRST-RUN WELCOME — state-driven: renderMyPath shows it only while the build is empty.
            No dismissal cookie, no tour. Pin one thing and it's gone. -->
-      <div class="bp-modal hw-modal" id="hct-welcome-modal">
+      <div class="bp-modal hw-modal" id="hct-welcome-modal" role="dialog" aria-modal="true" aria-label="Start here: three quick questions">
       <div class="hct-welcome bp-modal-card hu-ticks" id="hct-welcome">
         <button class="bp-modal-x icon-btn" id="hw-x" type="button" title="Close" aria-label="Close the start-here questions"><i data-lucide="x" aria-hidden="true"></i></button>
         <div class="hw-kicker">Start here</div>
@@ -1647,7 +1648,7 @@ og_image: /brand/og-career-tree.jpg
            below: who you are + what you're becoming (①), the road (②), your
            specialization (③), the plan (④). Each header carries a guide chip; the
            first incomplete one gets the arrow and opens a focused picker. State, not tour. -->
-      <div id="bp-station-modal" class="bp-modal">
+      <div id="bp-station-modal" class="bp-modal" role="dialog" aria-modal="true" aria-labelledby="bp-station-h">
         <div class="bp-modal-card">
           <button class="bp-modal-x icon-btn" id="bp-station-x" type="button" title="Close" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button>
           <div class="bp-modal-h" id="bp-station-h"></div>
@@ -1710,7 +1711,7 @@ og_image: /brand/og-career-tree.jpg
         </div>
       </div>
       <!-- Save / Load (export-import the whole build as a code/file) -->
-      <div id="bp-data-modal" class="bp-modal">
+      <div id="bp-data-modal" class="bp-modal" role="dialog" aria-modal="true" aria-label="Save or load your path">
         <div class="bp-modal-card">
           <button class="bp-modal-x icon-btn" id="bp-data-x" type="button" title="Close" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button>
           <div class="bp-modal-h">Save / Load your path</div>
@@ -4070,7 +4071,19 @@ og_image: /brand/og-career-tree.jpg
       renderNextSteps(); renderSectionGuides();   // progress counts stay honest
     };
     document.addEventListener('click', e => { const el = e.target.closest('[data-ck]'); if (el){ e.stopPropagation(); toggle(el); } });
-    document.addEventListener('keydown', e => {
+    // shared modal focus trap: Tab stays inside the open .bp-modal (dialog contract)
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const modal = document.querySelector('.bp-modal.open');
+    if (!modal) return;
+    const focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    else if (!modal.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+  }, true);
+  document.addEventListener('keydown', e => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const el = e.target.closest && e.target.closest('[data-ck]'); if (el){ e.preventDefault(); toggle(el); } });
   }
@@ -4603,7 +4616,7 @@ og_image: /brand/og-career-tree.jpg
       ['grp','The sheet'],
       ['<svg width="56" height="20"><circle cx="28" cy="10" r="8" style="fill:none;stroke:rgba(78,205,196,0.6);stroke-width:1.5"/><text x="28" y="13.5" text-anchor="middle" font-size="9" class="lg-teal" style="font-family:var(--display);font-weight:800">1</text></svg>', '<b>Numbered sections</b>. The sheet reads top to bottom: your line, the road, your expertise, the plan. The chip on each header opens a focused picker; the arrow marks the next move.'],
       ['<svg width="56" height="20"><circle cx="18" cy="10" r="5" style="fill:none;stroke:rgba(150,180,190,0.55);stroke-width:1.5"/><circle cx="38" cy="10" r="5" style="fill:#5AC8BE"/></svg>', '<b>Requirement ticks</b>. The small circles inside a Next Steps item (and on a pinned role\'s panel) are its requirements. Tick what you hold. A count, never a score.'],
-      ['<svg width="56" height="20"><rect x="10" y="3" width="36" height="14" rx="3" style="fill:rgba(232,197,71,0.1);stroke:rgba(232,197,71,0.5)"/><text x="28" y="13.5" text-anchor="middle" font-size="8" style="fill:#E8C547;font-family:var(--mono);font-weight:700">$</text></svg>', '<b>The bill</b>. Next Steps prices your road: rough years of school, board exams, posted exam fees. Typical numbers, not quotes.'],
+      ['<svg width="56" height="20"><rect x="10" y="3" width="36" height="14" rx="3" style="fill:rgba(232,197,71,0.1);stroke:rgba(232,197,71,0.5)"/><text x="28" y="13.5" text-anchor="middle" font-size="8" style="fill:#E8C547;font-family:var(--mono);font-weight:700">$</text></svg>', '<b>The bill</b>. Next Steps prices your road: rough years of school, board exams, posted exam fees. Typical numbers. Verify before you budget.'],
       ['grp','My Path · lines'],
       [legendLine('solid'), 'Your path from one role to the next.'],
       [legendLine('step'), 'A change in job type. The trunk steps up or down.'],
