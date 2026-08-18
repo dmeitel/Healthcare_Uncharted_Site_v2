@@ -16,6 +16,14 @@
    HUKit.backGuard(opts) -> phone hardware-back interceptor: transient
                            drawer views consume back one X-step at a
                            time; scope entries stay history-native.
+   HUKit.urlState(opts) -> the serializer convention in one place: scope
+                           changes push, tweaks replace, restores never
+                           write back.
+   HUKit.pop(opts)      -> selector-popover controller: open/close,
+                           anchor + right-edge clamp, outside-click,
+                           arrow/Home/End walk, focus return. The kit
+                           owns the POPOVER rung of the Esc walk only;
+                           the page keeps its own next rung.
 ================================================================ */
 (function () {
   'use strict';
@@ -225,6 +233,161 @@
     return { consumed: function () { return consumedFlag; }, arm: arm };
   }
 
+  /* ── Selector popover ─────────────────────────────────────────
+     ONE implementation of the pattern four tools had each pasted a
+     copy of (atlas, career-tree, iceberg, vendor). Every difference
+     between those copies is an option here, so nothing regressed:
+
+       anchorEl    element the popover hangs under. Default: the
+                   trigger itself. Atlas passes its toolbar, because
+                   its triggers sit inside a bar that scrolls.
+       triggerSel  outside-click allowlist. Default '[aria-haspopup]'
+                   (atlas keys on '.selector' instead, since its Views
+                   pin is an icon-btn that is a legitimate trigger).
+       focusSelected  focus '[aria-selected=true]' first when present,
+                   else the first .pop-opt. Default true; atlas passes
+                   false to keep landing on the first option.
+       onOpen()    ran after the close-others pass, before build().
+                   Career-tree drops its detail sheet here: the phone
+                   budget is ONE transient surface.
+
+     The page still owns its own Esc chain. Call api.escape() first:
+     it returns true when it consumed the press (one step, popover
+     rung), false when there was nothing open and the page should walk
+     its next rung. Same one-step-back contract, one implementation.
+  */
+  function pop(opts) {
+    opts = opts || {};
+    var triggerSel = opts.triggerSel || '[aria-haspopup]';
+    var focusSelected = opts.focusSelected !== false;
+    var open = null;   // { pop, btn }
+
+    function close(refocus) {
+      if (!open) return;
+      var p = open; open = null;
+      p.pop.hidden = true;
+      p.btn.setAttribute('aria-expanded', 'false');
+      if (refocus) p.btn.focus();
+    }
+
+    function openPopover(btn, popEl, build) {
+      if (open && open.pop === popEl) { close(true); return; }   // same trigger = toggle
+      close(false);
+      if (opts.onOpen) opts.onOpen();
+      if (build) build();
+      popEl.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      /* desktop anchor: under the anchor element, left-aligned to the trigger.
+         The phone sheet CSS (hu-global, <700px) overrides both with !important. */
+      var a = opts.anchorEl || btn;
+      popEl.style.left = btn.offsetLeft + 'px';
+      popEl.style.top = (a.offsetTop + a.offsetHeight + 6) + 'px';
+      /* right-edge clamp: a trigger flush right must not overflow its host.
+         Run TWICE. The first pass measures a popover whose width may still be its
+         CSS min-width, because the display face fonts land after first layout and
+         then push the content wider (career-tree's Help and Search pops measured
+         220 then settled at 228, landing flush against the viewport with no
+         gutter). The rAF pass re-measures once the real width exists. */
+      var clamp = function () {
+        var host = popEl.offsetParent;
+        if (!host || popEl.hidden) return;
+        var w = popEl.getBoundingClientRect().width || popEl.offsetWidth;
+        var max = host.clientWidth - w - 8;
+        if (max > 0 && btn.offsetLeft > max) popEl.style.left = max + 'px';
+      };
+      clamp();
+      requestAnimationFrame(clamp);
+      open = { pop: popEl, btn: btn };
+      var f = (focusSelected && popEl.querySelector('[aria-selected="true"]')) || popEl.querySelector('.pop-opt');
+      if (f) f.focus();
+    }
+
+    document.addEventListener('click', function (e) {
+      if (open && !e.target.closest('.selector-pop') && !e.target.closest(triggerSel)) close(false);
+    });
+    /* the option walk, delegated: works for popovers built after wiring */
+    document.addEventListener('keydown', function (e) {
+      if (!open) return;
+      var host = e.target.closest && e.target.closest('.selector-pop');
+      if (!host) return;
+      var optsList = [].slice.call(host.querySelectorAll('.pop-opt'));
+      if (!optsList.length) return;
+      var i = optsList.indexOf(document.activeElement), next = null;
+      if (e.key === 'ArrowDown') next = optsList[i + 1] || optsList[0];
+      else if (e.key === 'ArrowUp') next = optsList[i - 1] || optsList[optsList.length - 1];
+      else if (e.key === 'Home') next = optsList[0];
+      else if (e.key === 'End') next = optsList[optsList.length - 1];
+      if (next) { e.preventDefault(); next.focus(); }
+    });
+
+    return {
+      open: openPopover,
+      close: close,
+      isOpen: function () { return !!open; },
+      current: function () { return open; },
+      /* the popover rung of the one-step-back walk. true = consumed. */
+      escape: function () { if (!open) return false; close(true); return true; }
+    };
+  }
+
+  /* ── URL state ────────────────────────────────────────────────
+     The serializer convention (HU-CONTROL-ARCHITECTURE-V2) in one place:
+     SCOPE CHANGES PUSH, tweaks REPLACE, and a restore never writes back.
+     Seven tools had each hand-rolled this; the drift was in the guard,
+     not the intent.
+
+       url()     -> the relative URL to write ('?a=1', '#zone', or
+                    location.pathname). The tool owns its params, so this
+                    works for query strings and hashes alike.
+       scope()   -> the current scope key. When it CHANGES, the write
+                    pushes (back walks out of it). Otherwise it replaces.
+       seeded    -> true when the page arrived already scoped (a deep
+                    link). The first write then replaces instead of
+                    pushing a duplicate entry on top of the arrival.
+       debounce  -> ms for queue(); typing must not spam replaceState,
+                    which Safari rate-limits.
+
+     suspend(fn) runs fn with writes disabled: the popstate restore path
+     wraps itself in this so re-applying the URL cannot write it back.
+  */
+  function urlState(opts) {
+    opts = opts || {};
+    var SEED = '§init';
+    var applying = false;
+    var last = opts.seeded ? SEED : '';
+    var timer = null;
+
+    function sync() {
+      if (applying) return;
+      var u = opts.url();
+      var s = String(opts.scope ? opts.scope() : '');
+      /* a seeded arrival replaces once, then behaves normally */
+      var method = (last !== SEED && s !== last) ? 'pushState' : 'replaceState';
+      last = s;
+      try { history[method](null, '', u || location.pathname); } catch (e) {}
+    }
+    return {
+      sync: sync,
+      queue: function () {
+        clearTimeout(timer);
+        timer = setTimeout(sync, opts.debounce || 300);
+      },
+      suspend: function (fn) {
+        applying = true;
+        try { fn(); } finally { applying = false; }
+      },
+      /* begin()/end() are suspend() for restore blocks that cannot become a
+         closure without changing meaning (an early return inside a long
+         try/finally). Always pair them in a finally. */
+      begin: function () { applying = true; },
+      end: function () { applying = false; },
+      isApplying: function () { return applying; },
+      /* after a restore, tell the controller what the scope now is so the
+         next real change is measured against it (and pushes) */
+      mark: function (s) { last = String(s == null ? '' : s); }
+    };
+  }
+
   /* ── interior label point ─────────────────────────────────────
      Where a region's label belongs: the area centroid of its largest
      polygon, and when a concave shape throws the centroid outside
@@ -276,5 +439,5 @@
     return [bx, y];
   }
 
-  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, PHONE_MQ: PHONE_MQ };
+  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, PHONE_MQ: PHONE_MQ };
 })();

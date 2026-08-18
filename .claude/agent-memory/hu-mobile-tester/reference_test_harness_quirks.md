@@ -1,16 +1,26 @@
 ---
 name: test-harness-quirks
-description: Playwright/measurement quirks specific to testing this site (screenshot paths, canvas hit-testing, false positives)
+description: Playwright/measurement quirks specific to testing this site (dev-server reload loop, touch emulation, screenshot paths, canvas hit-testing, false positives)
 metadata:
   type: reference
 ---
 
-- Screenshot save path MUST use lowercase drive letter: `c:/Users/david/...` — capital `C:` fails the allowed-roots check in browser_take_screenshot. tmp/mobile/ under the project root works.
-- Career-tree and atlas boards are SVG canvases with `touch-action:none`; a11y snapshot `box=` coords for hex children can be pre-transform — trust elementFromPoint + getBoundingClientRect instead.
-- Career-tree deck controls are `g.hct-cact` (rect+path, no aria-label); find them by class, not label.
-- Tap-target sweeps return many false positives from closed drawers/dialogs (bp-* blueprint cards, conn-panel, help modals). Filter by walking ancestors for display:none AND sanity-check against a screenshot before reporting.
-- Detail sheets here often stay mounted after close (hu-drawer pattern) — check visibility/class (`rp-open`), not just presence.
-- Buffered PerformanceObserver layout-shift works for CLS after the fact; the "Deprecated API for given entry type" console warning is from the probe itself, not the site.
-- goatcounter "not counting because of: localhost" warning is expected noise on every page.
-- hospital-map's .hu-sheet-grab button carries aria-label "Resize. Drag down past the bottom to close" — any `[aria-label*="close" i]` selector hits IT before the real .hm-dp-close X. Target `button.hm-dp-close` explicitly.
-- Atlas "desktop hint" text also lives inside a <style> tag as a CSS string; text-search for hint copy must exclude STYLE elements or it false-positives.
+- **Eleventy `--serve` live-reload fires a FULL PAGE RELOAD every time any file lands in the project dir, and Playwright MCP writes its snapshots/console logs into `<project>/.playwright-mcp/` and screenshots into `tmp/mobile/`. That is a feedback loop: mid-test the page silently reloads and every multi-step sequence lies.** Seen 2026-08-18: 8 reloads in 17 seconds, plus one navigation to `about:blank`. Fix at the start of any dev-server session: `await page.route('**/.11ty/**', r => r.abort())` inside `browser_run_code_unsafe`. That kills the injected reload client only (dev-server code, not site code) and the page goes stable. Cost: one bogus console error, `Failed to load resource: net::ERR_FAILED @ /.11ty/reload-client.js` — filter it out of console reports. Also verify page identity with `performance.timeOrigin` before trusting a sequence.
+- **Tap-target floors on this site are behind `@media (hover:none)` (hu-global.css ~line 717), so `browser_resize` / `setViewportSize` alone measures the DESKTOP sizes and produces false "under 44px" findings.** Measured `.pop-opt` at 30px and the sheet close X at 24px that way; with CDP `Emulation.setTouchEmulationEnabled{enabled:true,maxTouchPoints:5}` + `Emulation.setDeviceMetricsOverride{mobile:true}` the same elements are exactly 44px. Always flip touch emulation on (and confirm `matchMedia('(hover:none)').matches === true`) before reporting any tap-target defect. Note `Emulation.setEmulatedMedia` with hover/pointer features does NOT work for this.
+- Screenshot save path MUST use lowercase drive letter: `c:/Users/david/...` — capital `C:` fails the allowed-roots check in browser_take_screenshot. Inside `browser_run_code_unsafe`, `page.screenshot({path:'tmp/mobile/x.png'})` works and is relative to the project root.
+- Serve the freshly built `_site` yourself (`npx http-server _site -p 8099 -s`) when you own the server; the Eleventy dev server caches `_data`. When the parent hands you a running dev server, use it but state the staleness caveat.
+- **The viewport can silently reset to a desktop size** after a long pause or session interruption. Always re-assert the size and confirm `window.innerWidth` before measuring.
+- Real touch gestures: `browser_run_code_unsafe` + a CDP session (`Input.dispatchTouchEvent` with touchStart/touchMove loop/touchEnd) works well and is the only way to test scroll-vs-tap disambiguation, map pan/pinch, and sheet drags. Playwright's `.click()` does not exercise touch handlers.
+- Sheet drag detents: dragging the `.hu-sheet-grab` handle steps full → half → peek and only closes on a SECOND drag from peek. One long swipe landing on peek instead of closing is by design.
+- Career-tree and atlas boards are SVG canvases with `touch-action:none`; a11y snapshot `box=` coords for hex children can be pre-transform — trust elementFromPoint + getBoundingClientRect. Atlas hexes are NOT `<canvas>`: the board is `#atlas-svg > #atlas-g`, terrain rings are `#frontier-g` paths, and `elementFromPoint` over terrain returns the `url(#bg-dot)` rect, not the hex.
+- Atlas board coordinates that reliably hit distinct nodes at 1280x900: (413,375) payer/drg · (450,410) payer/commercial · (520,470) payer/medicare · (600,350) medsci/evidence · (700,600) patient/pt-fin · (540,650) techeco/hie · (820,400) provider/informatics.
+- Career-tree deck controls are `g.hct-cact` (rect+path, no aria-label); find them by class. Hex LABELS are canvas-rendered, so verify expand/collapse by counting `svg g` elements, not text.
+- Career-tree phone flow selectors: `#hct-phone-flow`, `.hpf-deck`, `.hpf-lhd`, `.hpf-role`. Sheet = `#hct-panel.open`, real close X = `button.hct-p-close`.
+- Iceberg nodes are `.nc` DIVs; selected node carries `sl`; the phone sheet is `#rp` (`rp-open`).
+- Tap-target sweeps return many false positives from closed drawers/dialogs. Filter by walking ancestors for display:none AND sanity-check against a screenshot.
+- Detail sheets here often stay mounted after close (hu-drawer pattern) — check visibility/class, not just presence.
+- hospital-map's `.hu-sheet-grab` carries aria-label "Resize. Drag down past the bottom to close" — `[aria-label*="close" i]` hits IT before the real X. Target `button.hm-dp-close` / `button.hct-p-close` explicitly.
+- Buffered PerformanceObserver layout-shift works for CLS after the fact; the "Deprecated API" warning is from the probe.
+- goatcounter "not counting because of: localhost" is expected noise on every page. Both MapLibre tools also log a MapLibre `Image "circle-11" could not be loaded` warning on load.
+- assignment-compass logs a 404 on `/.netlify/functions/perdiem?...` against any local server (the function only exists on Netlify). The tool degrades to an "Offline: standard rate" badge, so it is env noise, not a defect.
+- When a CSS fix "landed in source" but the browser disagrees, check rule ORDER in the built file before re-measuring: same-specificity ID rules where a later base rule beats an earlier `@media` override bit the atlas find-bar twice.

@@ -213,8 +213,8 @@ no_footer: true
 [data-theme="light"] .vc-tag, [data-theme="light"] .vc-status { filter:brightness(0.5) saturate(1.5); }   /* interim: 0.68 left all 30 hues at 2.4-3.6:1; per-hue ink overrides are the real fix (audit A1) */
 [data-theme="light"] .status-org { color:#475569; }
 /* .vd-cat.active needs no light flip: solid teal fill + #062024 ink passes on both themes */
-[data-theme="light"] .ehr-src a { color:var(--teal-dk); }
-[data-theme="light"] .ms-arrow:hover { color:var(--teal-dk); }
+[data-theme="light"] .ehr-src a { color:var(--teal-ink); }
+[data-theme="light"] .ms-arrow:hover { color:var(--teal-ink); }
 [data-theme="light"] .ms-track { background:rgba(71,105,134,0.12); }
 [data-theme="light"] .ms-fill.other { background:rgba(71,105,134,0.45); }
 [data-theme="light"] .vendor-card:hover { box-shadow:0 6px 24px rgba(13,32,54,0.12); }
@@ -359,6 +359,7 @@ no_footer: true
   </div>
 </div>
 
+<script src="/assets/js/hu-kit.js?v=20260817"></script>
 <script>
 let vendors = [];
 
@@ -481,42 +482,18 @@ function render() {
 // One popover open at a time; Esc closes and returns focus to the trigger;
 // outside click closes; arrows walk the options; under 700px the popover
 // renders as a bottom sheet (CSS). The face always shows the current sector.
-let openPop = null;
-function closePop(refocus) {
-  if (!openPop) return;
-  const p = openPop; openPop = null;
-  p.pop.hidden = true; p.btn.setAttribute('aria-expanded', 'false');
-  if (refocus) p.btn.focus();
-}
-function openPopover(btn, pop, build) {
-  if (openPop && openPop.pop === pop) { closePop(true); return; }
-  closePop(false);
-  build();
-  pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
-  pop.style.left = btn.offsetLeft + 'px'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 6) + 'px'; // desktop anchor; the phone sheet CSS overrides both
-  // right-edge clamp: never overflow the toolbar the popover is anchored in
-  const bar = pop.offsetParent;
-  if (bar) { const max = bar.clientWidth - pop.offsetWidth - 8; if (max > 0 && btn.offsetLeft > max) pop.style.left = max + 'px'; }
-  openPop = { pop, btn };
-  const f = pop.querySelector('[aria-selected="true"]') || pop.querySelector('.pop-opt');
-  if (f) f.focus();
-}
-document.addEventListener('click', e => { if (openPop && !e.target.closest('.selector-pop') && !e.target.closest('[aria-haspopup]')) closePop(false); });
+// the contract itself is HUKit.pop's now (kit extraction 2026-08-17)
+const popCtl = HUKit.pop({});
+function closePop(refocus) { popCtl.close(refocus); }
+function openPopover(btn, pop, build) { popCtl.open(btn, pop, build); }
 document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
-      if (openPop) { closePop(true); return; }   // one step per press: popover first
+      if (popCtl.escape()) return;   // one step per press: the kit owns the popover rung
       const dp = document.getElementById('detailPanel');
       if (dp && dp.classList.contains('open')) closeDetail();   // then the detail panel, same walk as its X
     });
+// (arrows / Home / End are the kit's, delegated across every .selector-pop)
 document.querySelectorAll('.selector-pop').forEach(pop => {
-  pop.addEventListener('keydown', e => {
-    const opts = [...pop.querySelectorAll('.pop-opt')], i = opts.indexOf(document.activeElement);
-    if (!opts.length) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); (opts[i + 1] || opts[0]).focus(); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); (opts[i - 1] || opts[opts.length - 1]).focus(); }
-    else if (e.key === 'Home') { e.preventDefault(); opts[0].focus(); }
-    else if (e.key === 'End') { e.preventDefault(); opts[opts.length - 1].focus(); }
-  });
   pop.querySelector('[data-close]').addEventListener('click', () => closePop(true));
 });
 function buildSectorPop() {
@@ -552,9 +529,10 @@ document.getElementById('popViewsList').addEventListener('click', e => {
   // a preset lands CLEAN: zero every state the URL can carry, then re-apply from it
   activeSector = 'all'; activeState = 'all'; activeOwn = 'all'; activeShare = 'all';
   activeSort = 'az'; document.getElementById('searchInput').value = ''; openVendor = null;
-  applyingURL = true; applyURLState(); render();
-  if (openVendor) openDetail(bySlug.get(openVendor)); else closeDetail();
-  applyingURL = false;
+  urlCtl.suspend(() => {
+    applyURLState(); render();
+    if (openVendor) openDetail(bySlug.get(openVendor)); else closeDetail();
+  });
   announce('View: ' + t.textContent);
 });
 
@@ -595,15 +573,15 @@ function stateToParams() {
   if (openVendor) p.set('vendor', openVendor);
   return p;
 }
-let applyingURL = false, lastURLScope = null;
-let qsu; function queueSyncURL(){ clearTimeout(qsu); qsu = setTimeout(syncURL, 300); }   // typing must not spam replaceState (Safari rate-limits it)
-function syncURL() {
-  if (applyingURL) return;
-  const q = stateToParams().toString();
-  const method = (openVendor !== lastURLScope) ? 'pushState' : 'replaceState';   // the open vendor is the scope: back walks OUT of it; filter/search churn replaces
-  lastURLScope = openVendor;
-  try { history[method](null, '', q ? ('?' + q) : location.pathname); } catch (e) {}
-}
+// the open vendor is the scope: back walks OUT of it; filter/search churn replaces.
+// debounce, because typing must not spam replaceState (Safari rate-limits it).
+const urlCtl = HUKit.urlState({
+  url: () => { const q = stateToParams().toString(); return q ? ('?' + q) : location.pathname; },
+  scope: () => openVendor || '',
+  debounce: 300
+});
+function syncURL() { urlCtl.sync(); }
+function queueSyncURL() { urlCtl.queue(); }
 function applyURLState() {
   const p = new URLSearchParams(location.search);
   const s = p.get('sector'), st = p.get('state'), ow = p.get('own'), sh = p.get('share');
@@ -614,16 +592,16 @@ function applyURLState() {
   const qq = p.get('q'); document.getElementById('searchInput').value = qq || '';
   const so = p.get('sort'); activeSort = (so === 'sector' || so === 'status') ? so : 'az';
   const vv = p.get('vendor'); openVendor = (vv && bySlug.has(vv)) ? vv : null;
-  lastURLScope = openVendor;
+  urlCtl.mark(openVendor || '');   // the next real change is measured from where we landed
 }
 // popstate = reset to defaults, re-apply from the URL, render — one path
 window.addEventListener('popstate', () => {
-  applyingURL = true;
-  activeSector = 'all'; activeState = 'all'; activeOwn = 'all'; activeShare = 'all';
-  activeSort = 'az'; document.getElementById('searchInput').value = ''; openVendor = null;
-  applyURLState(); render();
-  if (openVendor) openDetail(bySlug.get(openVendor)); else closeDetail();
-  applyingURL = false;
+  urlCtl.suspend(() => {
+    activeSector = 'all'; activeState = 'all'; activeOwn = 'all'; activeShare = 'all';
+    activeSort = 'az'; document.getElementById('searchInput').value = ''; openVendor = null;
+    applyURLState(); render();
+    if (openVendor) openDetail(bySlug.get(openVendor)); else closeDetail();
+  });
 });
 
 function openDetail(idx) {
@@ -651,14 +629,14 @@ function openDetail(idx) {
   if (!panel.classList.contains('open')) detailOpener = document.activeElement;   // focus returns here on close
   panel.classList.add('open');
   const x = panel.querySelector('.icon-btn, button');
-  if (x && !applyingURL) x.focus();
+  if (x && !urlCtl.isApplying()) x.focus();
   syncURL();
 }
 
 function closeDetail() {
   document.getElementById('detailPanel').classList.remove('open');
   openVendor = null; syncURL();
-  if (detailOpener && detailOpener.focus && !applyingURL) detailOpener.focus();   // the popover contract, same as closePop(true)
+  if (detailOpener && detailOpener.focus && !urlCtl.isApplying()) detailOpener.focus();   // the popover contract, same as closePop(true)
   detailOpener = null;
 }
 
@@ -680,7 +658,7 @@ function buildHQMap() {
 
 // restore the URL view before the first paint — a shared ?sector link lands
 // filtered; the re-serialize after render self-normalizes a mangled param
-fetch('/assets/data/vendors.json').then(function(r){return r.json();}).then(function(d){ vendors = d.vendors || d; bySlug = new Map(vendors.map(function(v,i){ return [slug(v.name), i]; })); buildSidebar(); buildHQMap(); applyURLState(); render(); if (openVendor) { applyingURL = true; openDetail(bySlug.get(openVendor)); applyingURL = false; } syncURL(); }).catch(function(e){
+fetch('/assets/data/vendors.json').then(function(r){return r.json();}).then(function(d){ vendors = d.vendors || d; bySlug = new Map(vendors.map(function(v,i){ return [slug(v.name), i]; })); buildSidebar(); buildHQMap(); applyURLState(); render(); if (openVendor) { urlCtl.suspend(function(){ openDetail(bySlug.get(openVendor)); }); } syncURL(); }).catch(function(e){
   console.error('vendor data load failed', e);
   document.getElementById('vendorGrid').innerHTML = '<div class="empty-state"><strong>Couldn&#39;t load the vendor directory</strong>Check your connection and refresh.</div>';
   announce('Couldn\'t load the vendor directory. Check your connection and refresh.');

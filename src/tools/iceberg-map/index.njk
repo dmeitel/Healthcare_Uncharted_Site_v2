@@ -153,7 +153,7 @@ permalink: /tools/iceberg-map/
 [data-theme="light"] .bi{color:rgba(20,50,100,0.5)}
 [data-theme="light"] .bi:hover{color:#0B1929}
 [data-theme="light"] .hi{border-color:rgba(78,205,196,0.32);background:rgba(78,205,196,0.07);color:rgba(5,120,110,0.72)}
-[data-theme="light"] .hi:hover{color:var(--teal-dk);background:rgba(78,205,196,0.14)}
+[data-theme="light"] .hi:hover{color:var(--teal-ink);background:rgba(78,205,196,0.14)}
 [data-theme="light"] #tblk{background:rgba(222,240,255,0.97);border-bottom-color:rgba(78,205,196,0.18)}
 [data-theme="light"] .tt{color:#0B1929}
 [data-theme="light"] .tsub{color:rgba(30,65,110,0.44)}
@@ -222,7 +222,7 @@ permalink: /tools/iceberg-map/
 [data-theme="light"] .nc.sl .ni{color:#0B1929!important}
 [data-theme="light"] .rb[style]{color:rgba(30,65,110,0.55)!important}
 [data-theme="light"] #rpMobClose{color:rgba(5,120,110,0.85)!important;border-color:rgba(78,205,196,0.6)!important}
-[data-theme="light"] .pz-reset-btn{background:rgba(240,249,255,0.94);border-color:rgba(27,154,144,0.55);color:#0D7268}
+[data-theme="light"] .pz-reset-btn{background:rgba(240,249,255,0.94);border-color:rgba(27,154,144,0.55);color:var(--teal-ink)}
 [data-theme="light"] .pz-hint{background:rgba(240,249,255,0.9);border-color:rgba(27,154,144,0.35);color:rgba(5,110,100,0.9)}
 /* ── TEXT LEGIBILITY ────────────────────────────────────── */
 .nc span,.lt,.lsu,.wlt,.sml-lbl,.ll-icon,.rnt,.rh,.rb,.rbl,.pain-txt,.lgt,.lgt-s,.ptilab,.mv,.ml,.bi,.bi.cur{text-shadow:0 1px 3px rgba(0,0,0,0.95),0 0 8px rgba(0,0,0,0.65)}
@@ -533,6 +533,7 @@ permalink: /tools/iceberg-map/
 {% set ta_fixed = true %}
 {% include "components/tool-attribution.njk" %}
 
+<script src="/assets/js/hu-kit.js?v=20260817"></script>
 <script>
 const LD=[
   {n:1,t:'Patient Experience',st:'What the patient feels',c:'#4ECDC4',
@@ -1426,42 +1427,18 @@ function announce(msg){
 // One popover open at a time; Esc closes and returns focus to the trigger;
 // outside click closes; arrows walk the options; the phone renders the
 // popover as a bottom sheet (CSS). The face always shows the current focus.
-let openPop=null;
-function closePop(refocus){
-  if(!openPop)return;
-  const p=openPop;openPop=null;
-  p.pop.hidden=true;p.btn.setAttribute('aria-expanded','false');
-  if(refocus)p.btn.focus();
-}
-function openPopover(btn,pop,build){
-  if(openPop&&openPop.pop===pop){closePop(true);return;}
-  closePop(false);
-  build();
-  pop.hidden=false;btn.setAttribute('aria-expanded','true');
-  pop.style.left=btn.offsetLeft+'px';pop.style.top=(btn.offsetTop+btn.offsetHeight+6)+'px'; // desktop anchor; the phone sheet CSS overrides both
-  // right-edge clamp: the popover must not overflow the toolbar
-  const bar=pop.offsetParent;
-  if(bar){const max=bar.clientWidth-pop.offsetWidth-8;if(max>0&&btn.offsetLeft>max)pop.style.left=max+'px';}
-  openPop={pop,btn};
-  const f=pop.querySelector('[aria-selected="true"]')||pop.querySelector('.pop-opt');
-  if(f)f.focus();
-}
-document.addEventListener('click',e=>{if(openPop&&!e.target.closest('.selector-pop')&&!e.target.closest('[aria-haspopup]'))closePop(false);});
+// the contract itself is HUKit.pop's now (kit extraction 2026-08-17)
+const popCtl = HUKit.pop({});
+function closePop(refocus){ popCtl.close(refocus); }
+function openPopover(btn,pop,build){ popCtl.open(btn,pop,build); }
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  if(openPop){closePop(true);return;}   // one step per press: popover first
+  if(popCtl.escape()) return;   // one step per press: the kit owns the popover rung
   const rp=document.getElementById('rp');
   if(rp&&rp.classList.contains('rp-open'))rp.classList.remove('rp-open');   // then the layer sheet, same walk as its X
 });
+// (arrows / Home / End are the kit's, delegated across every .selector-pop)
 document.querySelectorAll('.selector-pop').forEach(pop=>{
-  pop.addEventListener('keydown',e=>{
-    const opts=[...pop.querySelectorAll('.pop-opt')],i=opts.indexOf(document.activeElement);
-    if(!opts.length)return;
-    if(e.key==='ArrowDown'){e.preventDefault();(opts[i+1]||opts[0]).focus();}
-    else if(e.key==='ArrowUp'){e.preventDefault();(opts[i-1]||opts[opts.length-1]).focus();}
-    else if(e.key==='Home'){e.preventDefault();opts[0].focus();}
-    else if(e.key==='End'){e.preventDefault();opts[opts.length-1].focus();}
-  });
   pop.querySelector('[data-close]').addEventListener('click',()=>closePop(true));
 });
 
@@ -1511,10 +1488,10 @@ document.getElementById('popViewsList').addEventListener('click',e=>{
   const t=e.target.closest('[data-view-q]');if(!t)return;
   closePop(true);
   try{history.pushState(null,'',t.dataset.viewQ);}catch(err){}
-  applyingURL=true;
+  urlCtl.begin();
   sel='H';subSel=null;activeFilter='all';hiddenLayers=new Set();
   applyURLState();
-  applyingURL=false;
+  urlCtl.end();
   const rpEl=document.getElementById('rp');
   if(rpEl&&sel==='H')rpEl.classList.remove('rp-open');   // back to no-selection closes the phone sheet (it kept showing the DEFAULT node)
   updateSelectorFace();renderAppliedStrip();go();
@@ -1570,7 +1547,8 @@ function resetAll(){
 // scope: the breadcrumb changes); focus/visibility/sub-node tweaks REPLACE.
 const FOCUS_KEY={Experience:'patient',Operational:'ops',Financial:'financial'};
 const KEY_FOCUS={patient:'Experience',ops:'Operational',financial:'Financial'};
-let applyingURL=false,lastURLScope='H';
+const urlCtl=HUKit.urlState({url:()=>{const q=stateToParams().toString();return q?('?'+q):location.pathname;},scope:()=>sel});
+urlCtl.mark('H');   // the default node is the baseline
 function stateToParams(){
   const p=new URLSearchParams();
   if(sel!=='H')p.set('n',sel);
@@ -1579,13 +1557,7 @@ function stateToParams(){
   if(hiddenLayers.size)p.set('hide',[...hiddenLayers].sort((a,b)=>a-b).join(','));
   return p;
 }
-function syncURL(){
-  if(applyingURL)return;
-  const q=stateToParams().toString();
-  const method=(sel!==lastURLScope)?'pushState':'replaceState';
-  lastURLScope=sel;
-  try{history[method](null,'',q?('?'+q):location.pathname);}catch(e){}
-}
+function syncURL(){ urlCtl.sync(); }
 // Idempotent: callers zero the state first (popstate) or start from defaults
 // (init); invalid params degrade silently and the first sync re-serializes.
 function applyURLState(){
@@ -1595,15 +1567,15 @@ function applyURLState(){
   const f=p.get('focus');if(f&&KEY_FOCUS[f])activeFilter=KEY_FOCUS[f];
   const hide=p.get('hide');
   if(hide)hide.split(',').forEach(t=>{const v=+t;if(Number.isInteger(v)&&v>=1&&v<=8)hiddenLayers.add(v);});
-  lastURLScope=sel;
+  urlCtl.mark(sel);
 }
 window.addEventListener('popstate',()=>{
-  applyingURL=true;
+  urlCtl.begin();
   sel='H';subSel=null;activeFilter='all';hiddenLayers=new Set();
   applyURLState();
   const rpP=document.getElementById('rp');
   if(rpP&&sel==='H')rpP.classList.remove('rp-open');   // back to no-selection closes the phone sheet (run-2 QA: the first fix landed in the preset handler, not here)
-  applyingURL=false;
+  urlCtl.end();
   updateSelectorFace();renderAppliedStrip();go();
   announce('Now at '+gN(sel));
 });

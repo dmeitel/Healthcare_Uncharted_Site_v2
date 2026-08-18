@@ -1019,7 +1019,7 @@ footer { position: relative; z-index: 10; }
 </style>
 <div class="hm-subbar">
   <span class="tool-bar-kicker">Tool</span>
-  <span class="tool-bar-title">Hospital <span>Blueprint</span></span>
+  <h1 class="tool-bar-title">Hospital <span>Blueprint</span></h1>
   <span class="tool-bar-spacer"></span>
   <div class="hm-subbar-legend" role="group" aria-label="Category legend. Select a category to spotlight its units.">
     <span class="hm-leg-label"><i data-lucide="map" aria-hidden="true"></i>Legend</span>
@@ -2932,17 +2932,12 @@ document.addEventListener('click', e => {
 });
 
 // ── ?unit= (HU-CONTROL-ARCHITECTURE-V2: the open department is the scope) ──
-let applyingURL = false, lastScope = new URLSearchParams(location.search).get('unit') ? '§init' : '';
-function syncURL() {
-  if (applyingURL) return;
-  const p = new URLSearchParams();
-  if (activeUnitId) p.set('unit', activeUnitId);
-  const q = p.toString();
-  const key = activeUnitId || '';
-  const method = (lastScope !== '§init' && key !== lastScope) ? 'pushState' : 'replaceState';
-  lastScope = key;
-  try { history[method](null, '', q ? ('?' + q) : location.pathname); } catch (e) {}
-}
+const urlCtl = HUKit.urlState({
+  url: () => { const p = new URLSearchParams(); if (activeUnitId) p.set('unit', activeUnitId); const q = p.toString(); return q ? ('?' + q) : location.pathname; },
+  scope: () => activeUnitId || '',
+  seeded: !!new URLSearchParams(location.search).get('unit')   // a deep-link arrival replaces once instead of pushing a duplicate
+});
+function syncURL() { urlCtl.sync(); }
 // hardware back closes the open sheet BEFORE walking the URL (guard created FIRST — its
 // popstate listener must run before ours so consumed() is fresh for the same press)
 const backGd = (window.HUKit && HUKit.backGuard) ? HUKit.backGuard({
@@ -2952,12 +2947,11 @@ const backGd = (window.HUKit && HUKit.backGuard) ? HUKit.backGuard({
 }) : null;
 window.addEventListener('popstate', () => {
   if (backGd && backGd.consumed()) return;
-  applyingURL = true;
-  try {
+  urlCtl.suspend(() => {
     const id = new URLSearchParams(location.search).get('unit');
     if (id && UNIT_MAP[id]) openUnit(id); else closePanel();
-    lastScope = activeUnitId || '';
-  } finally { applyingURL = false; }
+  });
+  urlCtl.mark(activeUnitId || '');   // the next real change is measured from where we landed
 });
 
 // dep chips: one delegated listener (the per-chip inline onclick string interpolation retires)
@@ -2970,9 +2964,8 @@ dpBody.addEventListener('click', e => {
 (function applyURLState() {
   const id = new URLSearchParams(location.search).get('unit');
   if (id && UNIT_MAP[id]) {
-    applyingURL = true;
-    try { openUnit(id); } finally { applyingURL = false; }
-    lastScope = activeUnitId || '';
+    urlCtl.suspend(() => openUnit(id));
+    urlCtl.mark(activeUnitId || '');
     syncURL();
     return;
   }

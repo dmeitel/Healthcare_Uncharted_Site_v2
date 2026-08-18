@@ -7,7 +7,8 @@ navPage: atlas
 permalink: /atlas/
 ---
 
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="/assets/js/hu-kit.js?v=20260817"></script>
 
 <style>
 #atlas-shell {
@@ -175,7 +176,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] #hud-data { border-top-color: rgba(27,95,168,0.16); }
 [data-theme='light'] .hud-dlabel { color: #22405c; }
 [data-theme='light'] .hud-dval { color: #0d1117; }
-[data-theme='light'] .hud-dhdr { color: var(--teal-dk); }
+[data-theme='light'] .hud-dhdr { color: var(--teal-ink); }
 [data-theme='light'] .hud-dhdr::before { background: var(--teal-dk); box-shadow: none; }
 [data-theme='light'] .hud-dsub { color: rgba(40,70,100,0.65); }
 /* zone accent (--hz) arrives dark-tuned from JS · darken badge for contrast on white */
@@ -286,14 +287,13 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   #atlas-layers-btn { min-height: 44px; }
   #atlas-desk-hint { display: none !important; }
   #hud-close, #help-close, #conn-panel-close { width: 44px; height: 44px; }
-  #atlas-find { top: 170px; }   /* clear BOTH wrapped toolbar rows (run-2 QA: 110px still sat on the controls row, which bottoms at ~164) */
 }
 /* coarse pointers: panel closes + connection filter chips clear the 44px floor (fleet-day parity) */
 @media (hover:none){
   #hud-close, #help-close, #conn-panel-close { width:44px; height:44px; }
   .cf-chip { padding:13px 14px; font-size:11px; }
 }
-@media (max-width: 768px) {
+@media (max-width: 699px) {
   /* instrument chrome steps back on small screens */
   #atlas-stamp { display: none; }
   .atlas-logo { font-size: 12px; }
@@ -362,6 +362,12 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] .hub-glow-ring { stroke: #1B5FA8; stroke-opacity: 0.10; }
 [data-theme='light'] .hub-tint { fill: #1B5FA8; fill-opacity: 0.05; }
 [data-theme='light'] .hub-label-text { fill: #1B5FA8; fill-opacity: 1; }
+/* frontier terrain beyond the mapped zones. Dark values are the originals; light
+   needs its own pair or the board grows dark wings on a pale canvas (#eaf0eb). */
+.ft-r2 { fill: #060e07; fill-opacity: 0.30; }
+.ft-r1 { fill: #08130a; fill-opacity: 0.50; }
+[data-theme='light'] .ft-r2 { fill: #d8e2d9; fill-opacity: 0.30; }
+[data-theme='light'] .ft-r1 { fill: #cddacf; fill-opacity: 0.50; }
 [data-theme='light'] .az-lbl text { fill: #1a2a3a; fill-opacity: 0.82; }
 [data-theme='light'] .exp-sub text { fill: #1a2a3a !important; }   /* JS sets #E2EEF4 inline — light theme was white-on-white on every expansion */
 
@@ -481,6 +487,11 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 
 /* ── Unified entity search (the whole dataset, attached to the atlas) ─── */
 #atlas-find { position: absolute; top: 64px; right: 16px; width: min(400px, calc(100% - 32px)); z-index: 30; font-family: var(--font); }
+/* The phone override MUST sit after the base rule: same specificity, and a media query
+   adds none, so the later declaration wins. Run-2 raised the value (110 then 170) inside
+   the early phone block and it never applied — computed top stayed 64 and the search bar
+   sat on top of the wrapped controls row, which bottoms at ~164 (run-3 root cause). */
+@media (max-width: 699px){ #atlas-find { top: 170px; } }
 #find-bar { display: flex; align-items: center; gap: 9px; background: rgba(8,14,20,0.92); border: 1px solid rgba(78,205,196,0.30); border-radius: 11px; padding: 9px 13px; backdrop-filter: blur(8px); box-shadow: 0 10px 34px rgba(0,0,0,0.45); }
 #find-bar svg { flex: none; opacity: .6; width: 16px; height: 16px; stroke-width: 2; color: #4ECDC4; }
 #find-input { flex: 1; background: none; border: none; outline: none; color: #dcefe9; font-size: 14px; font-family: inherit; }
@@ -512,7 +523,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] .find-lbl { color: #14283c; }
 [data-theme='light'] .find-lbl mark { background: rgba(27,154,144,0.18); color: #0d6b63; }
 [data-theme='light'] .find-sub { color: rgba(40,70,100,0.6); }
-[data-theme='light'] .find-on { color: var(--teal-dk); border-color: rgba(27,154,144,0.45); }
+[data-theme='light'] .find-on { color: var(--teal-ink); border-color: rgba(27,154,144,0.45); }
 [data-theme='light'] .find-more { color: rgba(40,70,100,0.55); }
 /* search-result detail summary (the entity card, on the atlas) ·
    instrument inspector: tabular numerals + hairline section dividers */
@@ -550,11 +561,11 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] .fd-uid { color: rgba(40,70,100,0.55); }
 [data-theme='light'] .fd-facets .fk { color: var(--t2); }
 [data-theme='light'] .fd-sec { color: rgba(40,70,100,0.6); border-top-color: rgba(27,95,168,0.12); }
-[data-theme='light'] .fd-rv { color: var(--teal-dk); }
+[data-theme='light'] .fd-rv { color: var(--teal-ink); }
 [data-theme='light'] .fd-rv.inc { color: #946905; }
-[data-theme='light'] .fd-cv { color: var(--teal-dk); }
+[data-theme='light'] .fd-cv { color: var(--teal-ink); }
 [data-theme='light'] .fd-chip:hover { color: #0d1117; border-color: rgba(27,95,168,0.4); }
-[data-theme='light'] .fd-link { color: var(--teal-dk); border-color: rgba(27,154,144,0.45); }
+[data-theme='light'] .fd-link { color: var(--teal-ink); border-color: rgba(27,154,144,0.45); }
 [data-theme='light'] .fd-link:hover { background: rgba(27,154,144,0.08); }
 [data-theme='light'] .conn-row.active { box-shadow: inset 3px 0 0 #1B5FA8; }
 [data-theme='light'] .conn-row.active::before { color: #1B5FA8; }
@@ -2126,14 +2137,14 @@ ZONE_DEFS.forEach(z => {
     const [q,r] = key.split(',').map(Number);
     const [fx,fy] = hPx(q,r);
     ftG.append('path').attr('d',hPath(fx,fy,s-2))
-      .attr('fill','#060e07').attr('fill-opacity',0.30)
+      .attr('class','ft-r2')
       .attr('stroke','rgba(78,205,196,0.04)').attr('stroke-width',0.4);
   });
   ring1.forEach(key => {
     const [q,r] = key.split(',').map(Number);
     const [fx,fy] = hPx(q,r);
     ftG.append('path').attr('d',hPath(fx,fy,s-2))
-      .attr('fill','#08130a').attr('fill-opacity',0.50)
+      .attr('class','ft-r1')
       .attr('stroke','rgba(78,205,196,0.07)').attr('stroke-width',0.5);
   });
 }
@@ -3036,13 +3047,15 @@ function updateBC(zone,node) {
 // The old always-replaceState left deep-link arrivals with ONE history entry, so
 // hardware back EXITED THE SITE from every article funnel. Scope = the breadcrumb
 // (zone / zone+node): a scope change pushes, same-scope rewrites replace.
-let applyingURL = false, lastURLScope = location.hash.replace('#','');
+let hashScope = location.hash.replace('#','');
+const urlCtl = HUKit.urlState({
+  url: () => location.pathname + location.search + (hashScope ? '#' + hashScope : ''),
+  scope: () => hashScope
+});
+urlCtl.mark(hashScope);   // an arrival's own hash is the baseline, so the first real move pushes
 function updateHash(zone, cell) {
-  if (applyingURL) return;   // a restore must never write history
-  const scope = cell ? `${zone.id}/${cell.nodeId}` : zone ? zone.id : '';
-  const method = (scope !== lastURLScope) ? 'pushState' : 'replaceState';
-  lastURLScope = scope;
-  try { history[method](null, '', location.pathname + location.search + (scope ? '#' + scope : '')); } catch (e) {}
+  hashScope = cell ? `${zone.id}/${cell.nodeId}` : zone ? zone.id : '';
+  urlCtl.sync();
 }
 
 function applyHash() {
@@ -3060,13 +3073,14 @@ function applyHash() {
 
 // back/forward traversal between fragment entries fires hashchange — this IS the restore path
 window.addEventListener('hashchange', () => {
-  applyingURL = true;
-  lastURLScope = location.hash.replace('#','');
-  activeNode = null; clearSelectionInk();
-  closeHud();   // restore frames from a clean camera (zoomToCell measures the live HUD height)
-  const raw = location.hash.replace('#','');
-  if (!raw) resetView(); else applyHash();
-  applyingURL = false;
+  hashScope = location.hash.replace('#','');
+  urlCtl.mark(hashScope);
+  urlCtl.suspend(() => {
+    activeNode = null; clearSelectionInk();
+    closeHud();   // restore frames from a clean camera (zoomToCell measures the live HUD height)
+    const raw = location.hash.replace('#','');
+    if (!raw) resetView(); else applyHash();
+  });
 });
 
 // ── BOTTOM HUD ────────────────────────────────────────────────────────────────
@@ -3253,36 +3267,20 @@ svg.on('wheel.hint',hideHint);
 }
 
 // ── LAYERS PANEL — toggles + legend behind one trigger (Control Architecture v2)
-// Popover contract per the Operators Map reference: one open at a time, Esc
-// closes and refocuses the trigger, outside click closes, arrows walk options.
-let openPop=null;
-function closePop(refocus){
-  if(!openPop) return;
-  const p=openPop; openPop=null;
-  p.pop.hidden=true; p.btn.setAttribute('aria-expanded','false');
-  if(refocus) p.btn.focus();
-}
-function openPopover(btn,pop,build){
-  if(openPop&&openPop.pop===pop){ closePop(true); return; }
-  closePop(false);
-  build();
-  pop.hidden=false; btn.setAttribute('aria-expanded','true');
-  // desktop anchor: under the toolbar, left-aligned to the trigger; the phone
-  // sheet CSS (hu-global, <700px) overrides both with !important
-  const tb=document.getElementById('atlas-tb');
-  pop.style.left=btn.offsetLeft+'px';
-  pop.style.top=(tb.offsetTop+tb.offsetHeight+6)+'px';
-  // right-edge clamp: the popover must never overflow the shell
-  const host=pop.offsetParent;
-  if(host){ const max=host.clientWidth-pop.offsetWidth-8; if(max>0&&btn.offsetLeft>max) pop.style.left=max+'px'; }
-  openPop={pop,btn};
-  const f=pop.querySelector('.pop-opt');
-  if(f) f.focus();
-}
-document.addEventListener('click',e=>{ if(openPop&&!e.target.closest('.selector-pop')&&!e.target.closest('.selector')) closePop(false); });
+// Popover contract now lives in HUKit.pop (kit extraction 2026-08-17): one open at
+// a time, Esc closes and refocuses the trigger, outside click closes, arrows walk.
+// Atlas's two drifts are options: it anchors to the TOOLBAR (its triggers sit in a
+// bar that wraps on phones) and it lands on the first option, not the selected one.
+const popCtl = HUKit.pop({
+  anchorEl: document.getElementById('atlas-tb'),
+  triggerSel: '.selector',       // the Views pin is an icon-btn but a legitimate trigger
+  focusSelected: false
+});
+function closePop(refocus){ popCtl.close(refocus); }
+function openPopover(btn,pop,build){ popCtl.open(btn,pop,build); }
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  if(openPop){ closePop(true); return; }   // one step per press: popover first
+  if(popCtl.escape()) return;   // one step per press: the kit owns the popover rung
   const help=document.getElementById('atlas-help');
   if(help&&help.classList.contains('open')){ help.classList.remove('open'); return; }
   const conn=document.getElementById('atlas-conn');
@@ -3292,14 +3290,7 @@ document.addEventListener('keydown',e=>{
 });
 const layersBtn=document.getElementById('atlas-layers-btn');
 const layersPop=document.getElementById('atlas-layers-pop');
-layersPop.addEventListener('keydown',e=>{
-  const opts=[...layersPop.querySelectorAll('.pop-opt')], i=opts.indexOf(document.activeElement);
-  if(!opts.length) return;
-  if(e.key==='ArrowDown'){e.preventDefault();(opts[i+1]||opts[0]).focus();}
-  else if(e.key==='ArrowUp'){e.preventDefault();(opts[i-1]||opts[opts.length-1]).focus();}
-  else if(e.key==='Home'){e.preventDefault();opts[0].focus();}
-  else if(e.key==='End'){e.preventDefault();opts[opts.length-1].focus();}
-});
+// (the arrow / Home / End walk is HUKit.pop's now, delegated across every .selector-pop)
 layersPop.querySelector('[data-close]').addEventListener('click',()=>closePop(true));
 layersBtn.addEventListener('click',()=>openPopover(layersBtn,layersPop,syncLayersPop));
 
@@ -3396,7 +3387,7 @@ document.getElementById('conn-panel-close').addEventListener('click', () => {
 // The layers panel needs no per-viewport JS — the .selector-pop primitive
 // renders as a bottom sheet under 700px on its own.
 {
-  const mq = window.matchMedia('(max-width: 768px)');
+  const mq = window.matchMedia('(max-width: 699px)');
   const strip = document.getElementById('atlas-desk-hint');
   if (strip) {
     let seen = false;
@@ -3415,7 +3406,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
   svg.call(zoom.transform,t);
   updateLOD(t.k);
   // Apply deep link if URL has a hash on load (guarded: an arrival restore must not push)
-  if (location.hash) setTimeout(() => { applyingURL = true; applyHash(); applyingURL = false; }, 80);
+  if (location.hash) setTimeout(() => { urlCtl.suspend(applyHash); }, 80);
 }));
 
 /* ── UNIFIED ATLAS SEARCH — the entity graph over the whole dataset ───────
