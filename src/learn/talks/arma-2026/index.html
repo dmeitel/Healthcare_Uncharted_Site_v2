@@ -113,18 +113,26 @@ section{padding:64px 40px}
 
 /* AI STACK VISUAL */
 .ai-stack{display:flex;flex-direction:column;gap:9px;max-width:840px}
-.ai-layer{border-radius:10px;padding:16px 22px;display:flex;align-items:flex-start;gap:16px;cursor:pointer;transition:all .2s;border:1px solid rgba(255,255,255,.04)}
+.ai-layer{border-radius:10px;transition:border-color .2s ease,transform .2s ease;border:1px solid rgba(255,255,255,.04)}
+/* The header row is the control now: a real button, so Tab reaches it and Enter
+   and Space work. The detail sits OUTSIDE the button, because an open panel's
+   prose would otherwise be read out as the button's name. Its padding rebuilds
+   the column the body used to sit in (22 left pad + 34 number + 16 gap = 72),
+   so the divider still starts under the label instead of under the number. */
+.al-head{width:100%;padding:16px 22px;display:flex;align-items:flex-start;gap:16px;cursor:pointer;background:none;border:0;color:inherit;font:inherit;text-align:left}
+.al-head:focus-visible{outline:2px solid var(--hu-teal);outline-offset:-3px;border-radius:10px}
+.ai-layer.open .al-head{padding-bottom:0}
 .ai-layer:hover{border-color:var(--hu-border-2);transform:translateX(4px)}
 .ai-layer.open{transform:translateX(6px)}
 .al-num{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:800;flex-shrink:0;margin-top:2px}
-.al-body{flex:1}
-.al-cat{font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;margin-bottom:3px;font-family:var(--mono)}
-.al-name{font-size:15px;font-weight:600;color:var(--hu-text-1);margin-bottom:2px}
-.al-eg{font-size:12px;color:var(--hu-text-3)}
-.al-detail{font-size:13px;color:var(--hu-text-2);line-height:1.7;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);display:none}
+.al-body{display:block;flex:1}
+.al-cat{display:block;font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;margin-bottom:3px;font-family:var(--mono)}
+.al-name{display:block;font-size:15px;font-weight:600;color:var(--hu-text-1);margin-bottom:2px}
+.al-eg{display:block;font-size:12px;color:var(--hu-text-3)}
+.al-detail{font-size:13px;color:var(--hu-text-2);line-height:1.7;margin-top:12px;padding:12px 58px 16px 72px;border-top:1px solid rgba(255,255,255,.07);display:none}
 .ai-layer.open .al-detail{display:block}
 .al-risk{display:inline-block;font-size:10px;padding:2px 9px;border-radius:10px;font-family:var(--mono);margin-top:8px;font-weight:600}
-.al-toggle{width:20px;height:20px;border-radius:50%;border:1px solid var(--hu-border-2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--hu-text-3);flex-shrink:0;margin-top:6px;transition:all .2s}
+.al-toggle{width:20px;height:20px;border-radius:50%;border:1px solid var(--hu-border-2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--hu-text-3);flex-shrink:0;margin-top:6px;transition:background-color .2s ease,color .2s ease}
 .ai-layer.open .al-toggle{background:var(--hu-border-2);color:var(--hu-text-1)}
 
 .al-1{background:rgba(78,205,196,.07)} .al-1 .al-num{background:rgba(78,205,196,.18);color:var(--hu-teal);border:2px solid rgba(78,205,196,.3)} .al-1 .al-cat{color:var(--hu-teal)}
@@ -387,70 +395,82 @@ footer{background:var(--hu-dark);border-top:1px solid var(--hu-border);padding:4
 
     <div class="ai-stack">
 
-      <div class="ai-layer al-1" onclick="toggleLayer(this)">
-        <div class="al-num">1</div>
-        <div class="al-body">
-          <div class="al-cat">Foundation Layer</div>
-          <div class="al-name">Machine Learning (ML)</div>
-          <div class="al-eg">Risk scores · Readmission prediction · Sepsis alerts</div>
-          <div class="al-detail">The statistical foundation most clinical AI is built on. ML models find patterns in labeled training data and apply them to new inputs. The Epic Sepsis Model is ML. Most EHR-embedded risk scores are ML. Well-understood mathematically, but only as good as the data it was trained on. That is where bias enters. Nationally deployed without independent external validation is a documentation problem, not a technology problem.<br><span class="al-risk risk-med">Risk: Moderate · Performance depends heavily on training data quality and whether local validation was performed</span></div>
-        </div>
-        <div class="al-toggle">+</div>
+      <div class="ai-layer al-1">
+        <button type="button" class="al-head" aria-expanded="false" aria-controls="al-d1" onclick="toggleLayer(this)">
+          <span class="al-num">1</span>
+          <span class="al-body">
+            <span class="al-cat">Foundation Layer</span>
+            <span class="al-name">Machine Learning (ML)</span>
+            <span class="al-eg">Risk scores · Readmission prediction · Sepsis alerts</span>
+          </span>
+          <span class="al-toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="al-detail" id="al-d1">The statistical foundation most clinical AI is built on. ML models find patterns in labeled training data and apply them to new inputs. The Epic Sepsis Model is ML. Most EHR-embedded risk scores are ML. Well-understood mathematically, but only as good as the data it was trained on. That is where bias enters. Nationally deployed without independent external validation is a documentation problem, not a technology problem.<br><span class="al-risk risk-med">Risk: Moderate · Performance depends heavily on training data quality and whether local validation was performed</span></div>
       </div>
 
-      <div class="ai-layer al-2" onclick="toggleLayer(this)">
-        <div class="al-num">2</div>
-        <div class="al-body">
-          <div class="al-cat">Foundation Layer</div>
-          <div class="al-name">Deep Learning (DL)</div>
-          <div class="al-eg">Image classification · EKG analysis · Pathology pattern recognition</div>
-          <div class="al-detail">A subset of ML using layered neural networks. Excels at unstructured data: images, waveforms, pathology slides. The majority of FDA-cleared radiology AI (the largest category of approved AI devices) is deep learning. High performance when the training images match the clinical environment. The critical failure mode: performance degradation in out-of-distribution cases that is invisible until it produces a miss.<br><span class="al-risk risk-med">Risk: Moderate-High · Performance gaps in edge cases can be undetectable without prospective validation in your environment</span></div>
-        </div>
-        <div class="al-toggle">+</div>
+      <div class="ai-layer al-2">
+        <button type="button" class="al-head" aria-expanded="false" aria-controls="al-d2" onclick="toggleLayer(this)">
+          <span class="al-num">2</span>
+          <span class="al-body">
+            <span class="al-cat">Foundation Layer</span>
+            <span class="al-name">Deep Learning (DL)</span>
+            <span class="al-eg">Image classification · EKG analysis · Pathology pattern recognition</span>
+          </span>
+          <span class="al-toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="al-detail" id="al-d2">A subset of ML using layered neural networks. Excels at unstructured data: images, waveforms, pathology slides. The majority of FDA-cleared radiology AI (the largest category of approved AI devices) is deep learning. High performance when the training images match the clinical environment. The critical failure mode: performance degradation in out-of-distribution cases that is invisible until it produces a miss.<br><span class="al-risk risk-med">Risk: Moderate-High · Performance gaps in edge cases can be undetectable without prospective validation in your environment</span></div>
       </div>
 
-      <div class="ai-layer al-3" onclick="toggleLayer(this)">
-        <div class="al-num">3</div>
-        <div class="al-body">
-          <div class="al-cat">Perception Layer</div>
-          <div class="al-name">Computer Vision (CV)</div>
-          <div class="al-eg">Radiology triage · Dermatology screening · Wound assessment</div>
-          <div class="al-detail">Applied deep learning focused specifically on visual interpretation. Triage prioritization in radiology (detecting critical findings on CT and X-ray and surfacing them to radiologists faster) is the most proven clinical use case in the entire AI field. FDA has cleared over 500 radiology AI devices. The clinical evidence base here is more mature than any other AI category. The key question remains: flagging (lower risk) or autonomous interpretation (higher risk)?<br><span class="al-risk risk-low">Risk: Lower for flagging/triage functions · increases significantly for autonomous diagnostic interpretation</span></div>
-        </div>
-        <div class="al-toggle">+</div>
+      <div class="ai-layer al-3">
+        <button type="button" class="al-head" aria-expanded="false" aria-controls="al-d3" onclick="toggleLayer(this)">
+          <span class="al-num">3</span>
+          <span class="al-body">
+            <span class="al-cat">Perception Layer</span>
+            <span class="al-name">Computer Vision (CV)</span>
+            <span class="al-eg">Radiology triage · Dermatology screening · Wound assessment</span>
+          </span>
+          <span class="al-toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="al-detail" id="al-d3">Applied deep learning focused specifically on visual interpretation. Triage prioritization in radiology (detecting critical findings on CT and X-ray and surfacing them to radiologists faster) is the most proven clinical use case in the entire AI field. FDA has cleared over 500 radiology AI devices. The clinical evidence base here is more mature than any other AI category. The key question remains: flagging (lower risk) or autonomous interpretation (higher risk)?<br><span class="al-risk risk-low">Risk: Lower for flagging/triage functions · increases significantly for autonomous diagnostic interpretation</span></div>
       </div>
 
-      <div class="ai-layer al-4" onclick="toggleLayer(this)">
-        <div class="al-num">4</div>
-        <div class="al-body">
-          <div class="al-cat">Communication Layer</div>
-          <div class="al-name">Generative AI / Large Language Models (LLMs)</div>
-          <div class="al-eg">Ambient scribes · Patient message drafts · Discharge summaries</div>
-          <div class="al-detail">The category driving most of the current AI conversation in healthcare. LLMs generate natural language. They predict text based on patterns, they do not reason. Ambient scribing (the top proven win in this session) is LLMs applied to a bounded operational problem: converting speech to structured notes. When LLMs are deployed for clinical reasoning or diagnosis, the evidence base does not support the claims. The GPT-4 diagnostic RCT (Goh et al., JAMA Network Open 2024) found no statistically significant improvement over unassisted physicians (p=0.60).<br><span class="al-risk risk-high">Risk: High when applied to clinical reasoning · proven effective only in bounded operational tasks like documentation</span></div>
-        </div>
-        <div class="al-toggle">+</div>
+      <div class="ai-layer al-4">
+        <button type="button" class="al-head" aria-expanded="false" aria-controls="al-d4" onclick="toggleLayer(this)">
+          <span class="al-num">4</span>
+          <span class="al-body">
+            <span class="al-cat">Communication Layer</span>
+            <span class="al-name">Generative AI / Large Language Models (LLMs)</span>
+            <span class="al-eg">Ambient scribes · Patient message drafts · Discharge summaries</span>
+          </span>
+          <span class="al-toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="al-detail" id="al-d4">The category driving most of the current AI conversation in healthcare. LLMs generate natural language. They predict text based on patterns, they do not reason. Ambient scribing (the top proven win in this session) is LLMs applied to a bounded operational problem: converting speech to structured notes. When LLMs are deployed for clinical reasoning or diagnosis, the evidence base does not support the claims. The GPT-4 diagnostic RCT (Goh et al., JAMA Network Open 2024) found no statistically significant improvement over unassisted physicians (p=0.60).<br><span class="al-risk risk-high">Risk: High when applied to clinical reasoning · proven effective only in bounded operational tasks like documentation</span></div>
       </div>
 
-      <div class="ai-layer al-5" onclick="toggleLayer(this)">
-        <div class="al-num">5</div>
-        <div class="al-body">
-          <div class="al-cat">Grounding Layer</div>
-          <div class="al-name">Retrieval-Augmented Generation (RAG)</div>
-          <div class="al-eg">Guideline-aware Q&amp;A · Protocol retrieval · Internal knowledge search</div>
-          <div class="al-detail">RAG combines an LLM with a curated knowledge base (clinical guidelines, formularies, institutional protocols) to ground responses in verified sources rather than training data alone. Reduces hallucination compared to a standalone LLM. Increasingly used for clinical decision support where the source material can be controlled and audited. The quality of the knowledge base determines the quality of the output. "Garbage in, garbage out" applies at the grounding layer.<br><span class="al-risk risk-med">Risk: Moderate · Better than standalone LLMs, but only as reliable as the knowledge base it references</span></div>
-        </div>
-        <div class="al-toggle">+</div>
+      <div class="ai-layer al-5">
+        <button type="button" class="al-head" aria-expanded="false" aria-controls="al-d5" onclick="toggleLayer(this)">
+          <span class="al-num">5</span>
+          <span class="al-body">
+            <span class="al-cat">Grounding Layer</span>
+            <span class="al-name">Retrieval-Augmented Generation (RAG)</span>
+            <span class="al-eg">Guideline-aware Q&amp;A · Protocol retrieval · Internal knowledge search</span>
+          </span>
+          <span class="al-toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="al-detail" id="al-d5">RAG combines an LLM with a curated knowledge base (clinical guidelines, formularies, institutional protocols) to ground responses in verified sources rather than training data alone. Reduces hallucination compared to a standalone LLM. Increasingly used for clinical decision support where the source material can be controlled and audited. The quality of the knowledge base determines the quality of the output. "Garbage in, garbage out" applies at the grounding layer.<br><span class="al-risk risk-med">Risk: Moderate · Better than standalone LLMs, but only as reliable as the knowledge base it references</span></div>
       </div>
 
-      <div class="ai-layer al-6" onclick="toggleLayer(this)">
-        <div class="al-num">6</div>
-        <div class="al-body">
-          <div class="al-cat">Executive Action Layer</div>
-          <div class="al-name">Agentic AI</div>
-          <div class="al-eg">Multi-step autonomous workflows · Order-writing agents · Care coordination</div>
-          <div class="al-detail">AI that does not just generate output: it takes action. Agentic systems execute multi-step workflows, interact with EHR APIs, place orders, and coordinate across systems without human approval at each step. Currently experimental in healthcare with limited proven deployment at scale. The liability and governance questions are almost entirely unresolved. This is the layer where the regulatory patchwork is most exposed and where physician governance advocacy is most urgent.<br><span class="al-risk risk-exp">Risk: Experimental · Governance, liability, and patient safety frameworks do not yet exist for most agentic healthcare use cases</span></div>
-        </div>
-        <div class="al-toggle">+</div>
+      <div class="ai-layer al-6">
+        <button type="button" class="al-head" aria-expanded="false" aria-controls="al-d6" onclick="toggleLayer(this)">
+          <span class="al-num">6</span>
+          <span class="al-body">
+            <span class="al-cat">Executive Action Layer</span>
+            <span class="al-name">Agentic AI</span>
+            <span class="al-eg">Multi-step autonomous workflows · Order-writing agents · Care coordination</span>
+          </span>
+          <span class="al-toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="al-detail" id="al-d6">AI that does not just generate output: it takes action. Agentic systems execute multi-step workflows, interact with EHR APIs, place orders, and coordinate across systems without human approval at each step. Currently experimental in healthcare with limited proven deployment at scale. The liability and governance questions are almost entirely unresolved. This is the layer where the regulatory patchwork is most exposed and where physician governance advocacy is most urgent.<br><span class="al-risk risk-exp">Risk: Experimental · Governance, liability, and patient safety frameworks do not yet exist for most agentic healthcare use cases</span></div>
       </div>
 
     </div>
@@ -639,17 +659,23 @@ footer{background:var(--hu-dark);border-top:1px solid var(--hu-border);padding:4
 </div>
 
 <script>
-function toggleLayer(el){
-  const isOpen = el.classList.contains('open');
+function toggleLayer(btn){
+  /* btn is the header button; the card is its parent. Accordion, so opening one
+     closes the rest and every button's aria-expanded gets rewritten each time. */
+  const card = btn.closest('.ai-layer');
+  const isOpen = card.classList.contains('open');
   document.querySelectorAll('.ai-layer').forEach(l=>{
     l.classList.remove('open');
     const t = l.querySelector('.al-toggle');
     if(t) t.textContent = '+';
+    const h = l.querySelector('.al-head');
+    if(h) h.setAttribute('aria-expanded','false');
   });
   if(!isOpen){
-    el.classList.add('open');
-    const t = el.querySelector('.al-toggle');
+    card.classList.add('open');
+    const t = card.querySelector('.al-toggle');
     if(t) t.textContent = '−';
+    btn.setAttribute('aria-expanded','true');
   }
 }
 </script>

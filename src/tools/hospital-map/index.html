@@ -942,7 +942,14 @@ footer { position: relative; z-index: 10; }
   .hm-dp-close { min-width: 44px; min-height: 44px; }
   /* the legend IS this tool's only filter — on phones it becomes a scrolling chip rail
      instead of vanishing (phone users had NO way to narrow 100+ units) */
-  .hm-subbar-legend { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; min-width: 0; }
+  /* justify-content:flex-end from the base rule made this rail UNREACHABLE: with
+     flex-end the overflow spills past the START edge, and scrollLeft cannot go
+     negative. Max scroll measured 2px, so 6 of the 8 category chips could never be
+     tapped. The rail also shared a 44px row with the title and painted over it.
+     It gets its own full-width row, scrolling from the left. */
+  .hm-subbar { flex-wrap: wrap; height: auto; }
+  .hm-subbar-legend { flex: 1 0 100%; justify-content: flex-start;
+    flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; min-width: 0; }
   .hm-subbar-legend::-webkit-scrollbar { display: none; }
   .hm-leg-item { flex: none; min-height: 44px; }
 
@@ -972,6 +979,11 @@ footer { position: relative; z-index: 10; }
   .hm-detail-panel.shell-sheet:not(.open) { transform: translateY(105%); }
   [data-theme="light"] .hm-detail-panel { border-top-color: rgba(78,205,196,0.55); }
   .hm-mobile-hint { display: flex; }
+  /* Two hints said the same thing and overlapped by 19px for the first 2.5s: the
+     shared pan-zoom hint ("Pinch to zoom · drag to pan") sat at bottom:50px under
+     this one at bottom:14px. This hint now carries the pinch message, so the shared
+     one stands down here rather than double-painting it. */
+  #hmPzHint { display: none !important; }
 
   /* Pinch-zoom: lock scroll, allow transform */
   .hm-building-scroll {
@@ -1301,7 +1313,7 @@ footer { position: relative; z-index: 10; }
 <!-- Tooltip -->
 <div class="hm-tooltip" id="hmTooltip"></div>
 <!-- Mobile tap hint (fades out automatically) -->
-<div class="hm-mobile-hint">Tap any department to explore</div>
+<div class="hm-mobile-hint">Pinch to zoom &middot; tap any department</div>
 
 <script src="/assets/js/hu-kit.js?v=20260816"></script>
 <script>

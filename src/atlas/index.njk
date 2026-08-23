@@ -282,6 +282,11 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
    "best on a desktop screen" hint retires (it was rendering UNDER the search bar) ── */
 @media (max-width: 699px){
   #atlas-tb { flex-wrap: wrap; row-gap: 6px; height: auto; min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
+  /* the breadcrumb is both the where-am-I and the one-step-back path, and it was
+     collapsing to a 30px window over a 400px trail ("Ove"), so the zone step was
+     unreachable. Own row, scrolls instead of clipping. */
+  #atlas-bc { flex: 1 0 100%; order: 3; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+  #atlas-bc::-webkit-scrollbar { display: none; }
   #atlas-controls { margin-left: auto; }
   .atlas-btn { width: 44px; height: 44px; }
   #atlas-layers-btn { min-height: 44px; }
@@ -298,7 +303,12 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   #atlas-stamp { display: none; }
   .atlas-logo { font-size: 12px; }
   /* the Layers trigger compacts to its icon in the crowded phone toolbar */
-  #atlas-layers-btn .sel-val, #atlas-layers-btn .sel-caret { display: none; }
+  /* The value used to be stripped here because the toolbar was crowded. It wraps now,
+     so the state comes back: "state has a face" (instrument grammar, law 6). Icon-only
+     next to four zoom buttons read as a fifth zoom button, and nothing on the phone
+     said which layers were on. The caret stays hidden; the sheet is the affordance. */
+  #atlas-layers-btn .sel-caret { display: none; }
+  #atlas-layers-btn .sel-val { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #hud-inner { grid-template-columns: 1fr; }
   #hud-id { border-right: none; border-bottom: 1px solid rgba(78,205,196,0.10); }
   #hud-desc-col { border-right: none; }
@@ -3091,9 +3101,18 @@ function fillHudData(nodeId){
   const el = document.getElementById('hud-data');
   if (!el) return;
   window.__lastHudNode = nodeId;
-  // Graph is lazy-loaded; first hex select kicks it off. Until it lands this
-  // renders empty, then the load's .then re-fills via __lastHudNode.
+  // Graph is lazy-loaded; the first hex select kicks it off, and the load's .then
+  // re-fills via __lastHudNode. Since the idle prefetch was removed, that wait is now
+  // a real download on a real connection, so say so instead of showing nothing and
+  // materialising a block seconds later. The search field already does this.
+  const graphReady = !!window.__atlasBind;
   if (nodeId && window.__atlasEnsureGraph) window.__atlasEnsureGraph();
+  if (nodeId && !graphReady){
+    el.innerHTML = '<div class="hud-dhdr">Live data</div>'
+                 + '<div class="hud-drow"><span class="hud-dsub">loading…</span></div>';
+    el.style.display = '';
+    return;
+  }
   const items = (nodeId && window.__atlasBind) ? window.__atlasBind(nodeId) : [];
   if (!items || !items.length){ el.innerHTML = ''; el.style.display = 'none'; return; }
   let h = '<div class="hud-dhdr">Live data</div>';
@@ -3559,11 +3578,14 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
   // so the setTimeout fallback shipped every iPhone the 11.5MB graph (and its JSON.parse) 8s
   // after load. Now: no idle warm-up on the phone line or without a real idle hook — the
   // intent triggers (search focus, first keystroke, hex select) still fetch on demand.
-  const conn=navigator.connection;
-  const phone=window.matchMedia('(max-width: 699px)').matches;
-  if(!(conn&&conn.saveData) && !phone && 'requestIdleCallback' in window){
-    requestIdleCallback(()=>ensureGraph(),{timeout:8000});
-  }
+  /* No idle prefetch. The graph is ~11.5MB raw, which measured as 94% of this page's
+     weight, downloaded for every desktop visitor who never searched and never picked
+     a hex. The three intent paths below already cover every real use, and they cost
+     one fetch at the moment someone actually asks:
+       · focusing the search field       · the first keystroke
+       · selecting a hex that wants HUD data
+     The old gate also tested WIDTH only, so a phone held sideways is 844px and got
+     the whole payload anyway. */
 })();
 
 }());

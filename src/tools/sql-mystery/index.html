@@ -77,12 +77,13 @@ no_footer: true
 .side-lbl,.schema-lbl{display:flex;align-items:center;gap:6px}
 .side-lbl svg,.schema-lbl svg{width:11px;height:11px;stroke-width:2;color:var(--teal);flex-shrink:0}
 [data-theme="light"] .side-lbl svg,[data-theme="light"] .schema-lbl svg{color:var(--teal-dk)}
-.case-btn{padding:10px 14px;cursor:pointer;border-left:3px solid transparent;transition:background-color .12s, border-left-color .12s;position:relative}
+.case-btn{display:block;width:100%;text-align:left;background:none;border:0;font:inherit;color:inherit;padding:10px 14px;cursor:pointer;border-left:3px solid transparent;transition:background-color .12s, border-left-color .12s;position:relative}
 .case-btn:hover{background:var(--sql-surface2)}
+.case-btn:focus-visible{outline:2px solid var(--sql-teal-text);outline-offset:-2px}
 .case-btn.active{background:var(--sql-surface2);border-left-color:var(--sql-blue-text)}
 .case-btn.solved{border-left-color:var(--sql-green-text)}
-.case-num{font-family:var(--mono);font-size:9px;font-weight:600;color:var(--sql-text3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px}
-.case-name{font-size:12px;font-weight:500;color:var(--sql-text);line-height:1.4;margin-bottom:5px;padding-right:16px}
+.case-num{display:block;font-family:var(--mono);font-size:9px;font-weight:600;color:var(--sql-text3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px}
+.case-name{display:block;font-size:12px;font-weight:500;color:var(--sql-text);line-height:1.4;margin-bottom:5px;padding-right:16px}
 /* catalog-row markers: the case list is a picked catalog. The selected ◆ rides the
    tool's blue selection vocabulary (this editor world selects in blue, not teal). */
 .case-name::before{content:'▸ ';color:var(--t4)}
@@ -156,8 +157,9 @@ textarea#editor::placeholder{color:var(--sql-text3)}
 .quick-btn{display:block;width:100%;text-align:left;background:var(--sql-surface2);border:1px solid var(--sql-border);border-radius:8px;padding:5px 9px;margin-bottom:4px;font-family:var(--mono);font-size:11px;color:var(--sql-blue-text);cursor:pointer;transition:background-color .12s, border-color .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .quick-btn:hover{background:var(--sql-blue-dim);border-color:var(--sql-blue-text)}
 .tbl-grp{border-bottom:1px solid var(--sql-border)}
-.tbl-hdr{padding:8px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .1s}
+.tbl-hdr{width:100%;background:none;border:0;font:inherit;color:inherit;text-align:left;padding:8px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .1s}
 .tbl-hdr:hover{background:var(--sql-surface2)}
+.tbl-hdr:focus-visible{outline:2px solid var(--sql-teal-text);outline-offset:-2px}
 .tbl-name{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--sql-teal-text)}
 .tbl-tog{color:var(--sql-text3);font-size:10px;transition:transform .2s}
 .tbl-tog.open{transform:rotate(90deg)}
@@ -577,12 +579,12 @@ async function init(){
 function renderCases(){
   const el=document.getElementById('case-list');
   el.innerHTML=CASES.map((c,i)=>`
-    <div class="case-btn ${i===curCase?'active':''} ${solved.has(i)?'solved':''}" onclick="loadCase(${i})">
+    <button type="button" class="case-btn ${i===curCase?'active':''} ${solved.has(i)?'solved':''}" aria-current="${i===curCase}" onclick="loadCase(${i})">
       ${solved.has(i)?'<span class="case-check">✓</span>':''}
-      <div class="case-num">Case ${c.id}</div>
-      <div class="case-name">${c.title}</div>
+      <span class="case-num">Case ${c.id}</span>
+      <span class="case-name">${c.title}</span>
       <span class="lvl-tag lvl-${c.level}">${c.levelLabel}</span>
-    </div>
+    </button>
   `).join('');
   const s=solved.size;
   const badge=document.getElementById('solved-badge');
@@ -697,10 +699,10 @@ function renderSchema(){
   const el=document.getElementById('schema-tables');
   el.innerHTML=SCHEMA.map((t,ti)=>`
     <div class="tbl-grp">
-      <div class="tbl-hdr" onclick="toggleT(${ti})">
+      <button type="button" class="tbl-hdr" aria-expanded="false" aria-controls="tc-${ti}" id="th-${ti}" onclick="toggleT(${ti})">
         <span class="tbl-name">${t.name}</span>
-        <span class="tbl-tog" id="tt-${ti}">▶</span>
-      </div>
+        <span class="tbl-tog" id="tt-${ti}" aria-hidden="true">▶</span>
+      </button>
       <div class="tbl-cols" id="tc-${ti}">
         ${t.cols.map(c=>`<div class="col-row"><span class="col-n">${c.n}</span>${c.pk?'<span class="pk">PK</span>':''}${c.fk?'<span class="fk">FK</span>':''}<span class="col-t">${c.t}</span></div>`).join('')}
       </div>
@@ -710,9 +712,9 @@ function renderSchema(){
 }
 
 function toggleT(i){
-  const c=document.getElementById(`tc-${i}`),t=document.getElementById(`tt-${i}`);
+  const c=document.getElementById(`tc-${i}`),t=document.getElementById(`tt-${i}`),h=document.getElementById(`th-${i}`);
   c.classList.toggle('open');t.classList.toggle('open');
+  if(h) h.setAttribute('aria-expanded', c.classList.contains('open')?'true':'false');
 }
-
 init();
 </script>

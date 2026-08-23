@@ -137,50 +137,8 @@ module.exports = {
       ]
     },
 
-    {
-      id:       'ehr-data-model',
-      num:      '01',
-      category: 'EHR Fundamentals',
-      ps:       'P2a / P2b',
-      title:    'The Universal Healthcare Data Chain',
-      desc:     'Patient \u2192 Encounter \u2192 Clinical Event \u2192 Data Point. This structure is not a design choice \u2014 it is forced by medicine, billing law, and 30 years of regulatory pressure. Understanding it unlocks everything else.',
-      url:      '#',
-      tags:     ['Epic', 'Cerner', 'FHIR'],
-      tagAmber: 'Coming soon',
-      status:   'coming',
-      featured: false,
-      labNode:  'ehr-data-model'
-    },
 
-    {
-      id:       'hitech',
-      num:      '02',
-      category: 'Healthcare Policy',
-      ps:       'P4',
-      title:    'The $25.9 Billion Law That Built Modern Healthcare IT',
-      desc:     'The HITECH Act didn\u2019t just pay hospitals to buy software. It restructured how clinical data is created, stored, and shared \u2014 and created the fragmented landscape we still navigate today.',
-      url:      '#',
-      tags:     ['HITECH', 'Meaningful Use', 'History'],
-      tagAmber: 'Coming soon',
-      status:   'coming',
-      featured: false,
-      labNode:  'hitech-act'
-    },
 
-    {
-      id:       'event-vs-request',
-      num:      '03',
-      category: 'FHIR Data Model',
-      ps:       'P2a',
-      title:    'Event vs. Request vs. Observation',
-      desc:     'The three building blocks of clinical data in every modern EHR. A medication order, a lab result, and a vital sign are fundamentally different \u2014 and treating them the same breaks everything downstream.',
-      url:      '#',
-      tags:     ['FHIR R4', 'Data Model', 'Clinical'],
-      tagAmber: 'Coming soon',
-      status:   'coming',
-      featured: false,
-      labNode:  'fhir-concepts'
-    },
 
     {
       id:       'ai-in-healthcare',
@@ -219,6 +177,78 @@ module.exports = {
       ]
     },
 
+{
+      id:       'the-payer',
+      num:      '04',
+      category: 'Payers & Claims',
+      ps:       'P3 / P2b',
+      title:    'The Payer: Claims, Codes, and Prior Auth',
+      desc:     'The insurer never sees your patient, it sees an 837 file full of codes. How claims adjudication, coding systems, and prior authorization actually work, and why a denial is a process step with a documented overturn rate rather than a verdict.',
+      url:      '/learn/the-payer/',
+      tags:     ['Payers', 'Claims', 'Prior Auth'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Commercial Payers',   zone: 'payer',   to: 'payer/commercial' },
+        { label: 'Medicare',            zone: 'payer',   to: 'payer/medicare' },
+        { label: 'RCM Vendors',         zone: 'techeco', to: 'techeco/rcm-vendors' }
+      ]
+    },
+
+    {
+      id:       'hitech-to-cures',
+      num:      '05',
+      category: 'Policy & Regulation',
+      ps:       'P4 / P2a',
+      title:    'The Policy Makers: HITECH, Meaningful Use, and the 21st Century Cures Act',
+      desc:     'In 2008, 9% of hospitals had a basic EHR. Washington spent $35 billion and got 96% adoption, two hours of desk work per hour of care, and data that still would not move. The screen you use is the output of an incentive structure.',
+      url:      '/learn/hitech-to-cures/',
+      tags:     ['Policy', 'HITECH', 'Interoperability'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'ACA & Health Policy',  zone: 'policy',  to: 'policy/aca' },
+        { label: 'EHR Platforms',        zone: 'techeco', to: 'techeco/ehr-tools' },
+        { label: 'Interoperability',     zone: 'techeco', to: 'techeco/interop-mid' }
+      ]
+    },
+
+    {
+      id:       'change-healthcare-stress-test',
+      num:      '09',
+      category: 'Security & Resilience',
+      ps:       'P2b / P3',
+      title:    'The Change Healthcare Cyberattack: A System Stress Test',
+      desc:     'One compromised login, no MFA, nine days of quiet access, and the patient records of a third of the country. What February 2024 proved about concentration risk, and why the blast radius was structural rather than technical.',
+      url:      '/learn/change-healthcare-stress-test/',
+      tags:     ['Cybersecurity', 'Claims', 'Resilience'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Commercial Payers',    zone: 'payer',   to: 'payer/commercial' },
+        { label: 'Cybersecurity',        zone: 'techeco', to: 'techeco/cyber' },
+        { label: 'RCM Vendors',          zone: 'techeco', to: 'techeco/rcm-vendors' }
+      ]
+    },
+
+    {
+      id:       'leading-the-ai-transition',
+      num:      '10',
+      category: 'Leadership & Governance',
+      ps:       'P2a / P4',
+      title:    'Leading the AI Transition: Run It Like a Formulary',
+      desc:     '71% of hospitals run predictive AI. Fewer than half bias-checked it on their own patients. The governance system that closes that gap already exists in every hospital, and it is the pharmacy formulary.',
+      url:      '/learn/leading-the-ai-transition/',
+      tags:     ['Leadership', 'Governance', 'AI'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Accreditation',        zone: 'policy',   to: 'policy/accreditation' },
+        { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' },
+        { label: 'AI Vendor Landscape',  zone: 'techeco',  to: 'techeco/ai-vendors' }
+      ]
+    },
+
     {
       id:       'healthcare-gap',
       num:      '08',
@@ -237,35 +267,7 @@ module.exports = {
       ]
     },
 
-    {
-      id:       'interoperability',
-      num:      '05',
-      category: 'Interoperability',
-      ps:       'P4',
-      title:    'What Interoperability Actually Means (And Why It\u2019s Hard)',
-      desc:     'HL7, FHIR, the 21st Century Cures Act, information blocking rules. The full picture of why healthcare data still doesn\u2019t flow freely despite decades of effort and billions in federal investment.',
-      url:      '#',
-      tags:     ['HL7', 'FHIR', 'ONC', 'Cures Act'],
-      tagAmber: 'Coming soon',
-      status:   'coming',
-      featured: false,
-      labNode:  'interoperability'
-    },
 
-    {
-      id:       'revenue-cycle',
-      num:      '06',
-      category: 'Revenue Cycle',
-      ps:       'P2b / P3',
-      title:    'How a Clinical Encounter Becomes a Paid Claim',
-      desc:     'From the moment a patient is registered to the moment a payer deposits money. Charge capture, coding, claims submission, adjudication, denial management, and why clinical documentation matters beyond care.',
-      url:      '#',
-      tags:     ['RCM', 'ICD-10', 'Claims', 'Billing'],
-      tagAmber: 'Coming soon',
-      status:   'coming',
-      featured: false,
-      labNode:  'revenue-cycle'
-    }
 
   ],
 

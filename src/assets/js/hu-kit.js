@@ -126,6 +126,15 @@
       setDet(h < vh * 0.32 ? 'dt-peek' : (h < vh * 0.68 ? 'dt-half' : 'dt-full'));
     }
     g.addEventListener('pointerup', settle);
+    /* Keyboard parity. The grabber is a real <button> with a real label, so it takes
+       focus, and until now Enter and Space did nothing: only pointer events were
+       bound. detail === 0 identifies a click synthesized from the keyboard, which is
+       what lets this run WITHOUT double-toggling after a pointer tap (that path has
+       already gone through settle()). Same half <-> full step a tap performs. */
+    g.addEventListener('click', function (e) {
+      if (e.detail !== 0) return;
+      setDet(el.classList.contains('dt-full') ? 'dt-half' : 'dt-full');
+    });
     g.addEventListener('pointercancel', function () {
       sy = null; if (raf) { cancelAnimationFrame(raf); raf = 0; }
       el.classList.remove('dragging'); el.style.height = ''; el.style.maxHeight = '';
@@ -303,12 +312,14 @@
     }
 
     document.addEventListener('click', function (e) {
-      if (open && !e.target.closest('.selector-pop') && !e.target.closest(triggerSel)) close(false);
+      var t = /** @type {Element} */ (e.target);
+      if (open && t.closest && !t.closest('.selector-pop') && !t.closest(triggerSel)) close(false);
     });
     /* the option walk, delegated: works for popovers built after wiring */
     document.addEventListener('keydown', function (e) {
       if (!open) return;
-      var host = e.target.closest && e.target.closest('.selector-pop');
+      var t = /** @type {Element} */ (e.target);
+      var host = t.closest && t.closest('.selector-pop');
       if (!host) return;
       var optsList = [].slice.call(host.querySelectorAll('.pop-opt'));
       if (!optsList.length) return;

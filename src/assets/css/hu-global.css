@@ -14,6 +14,13 @@
   --teal-dk: #1B9A90;   /* teal on light surfaces: 3.46:1 on white, icons/borders/large text ONLY */
   --teal-ink: #0D7268;  /* the small-text teal step (David 2026-08-16): 5.9:1 on white; light-theme teal TEXT under WCAG-large sizes lives here */
   --amber-dk:#946905;   /* amber as TEXT on light surfaces */
+  /* Every semantic hue gets a deep step for light grounds. Teal and amber already had
+     one; green and red never did, so pages were inventing their own darker green
+     inline. Measured against the real page ground (#EEF2F7), not just white. */
+  --green-dk:#1B6B4C;   /* 5.74:1 on the page ground · green as TEXT on light surfaces */
+  --red-dk:  #A8352F;   /* 5.81:1 on the page ground · red as TEXT on light surfaces */
+  --blue-deep:#17538F;  /* white text on a blue FILL: hover darkens, because --blue-hi
+                           lightens to 4.46:1 and misses AA by four hundredths */
   --green:   #2D9B6F;
   --amber:   #E8A838;
   --red:     #DF5752;
@@ -49,6 +56,16 @@
 [data-theme="light"] .footer-nav-link:hover,
 [data-theme="light"] .cp-text a:hover { color:var(--teal-ink); }
 [data-theme="light"] .section-tag { color:var(--teal-ink); }
+/* Same rule, the last four holdouts. Measured against the light page ground
+   (#EEF2F7), where brand teal as text is 1.72:1. The deep step is 5.15:1 there and
+   4.70:1 on the raised surface, so it clears AA small text everywhere it lands.
+   The eyebrow's rule flips with its label: they read as one mark. */
+[data-theme="light"] .eyebrow { color:var(--teal-ink); }
+[data-theme="light"] .eyebrow-line { background:var(--teal-ink); }
+[data-theme="light"] .tool-bar-title span { color:var(--teal-ink); }
+[data-theme="light"] .tool-attribution .ta-brand span,
+[data-theme="light"] .tool-attribution a:hover { color:var(--teal-ink); }
+[data-theme="light"] .nav-theme-btn:hover { color:var(--teal-ink); border-color:var(--teal-ink); }
 
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html { scroll-behavior:smooth; }
@@ -91,7 +108,7 @@ nav {
 .nav-link:hover { color:var(--t1); background:var(--raised); }
 .nav-link.active { color:var(--teal); }
 .nav-pill { padding:7px 16px; background:var(--blue); color:#fff; border-radius:8px; font-size:13px; font-weight:600; transition:background-color .15s, color .15s; margin-left:6px; border-bottom:none; }
-.nav-pill:hover { background:var(--blue-hi); color:#fff; }
+.nav-pill:hover { background:var(--blue-deep); color:#fff; }
 .nav-ham { display:none; background:none; color:var(--t2); font-size:22px; padding:4px; }
 .nav-theme-btn { padding:5px 10px; border-radius:7px; font-size:16px; font-weight:600; color:var(--t2); background:none; border:1px solid var(--border); transition:color .15s, border-color .15s; margin-left:4px; line-height:1; }
 .nav-theme-btn:hover { color:var(--teal); border-color:rgba(78,205,196,.5); }
@@ -125,12 +142,15 @@ footer {
   color:var(--t1); font-family:var(--font); font-size:13px;
 }
 .fs-input::placeholder { color:var(--t3); }
-.fs-input:focus { outline:none; border-color:rgba(78,205,196,.5); }
+/* the outline used to be removed and replaced with a 1px 50%-alpha border, which
+   measured 1.27:1 in light theme: effectively no focus indicator, on every page */
+.fs-input:focus-visible { outline:2px solid var(--teal); outline-offset:1px; border-color:var(--teal); }
+[data-theme="light"] .fs-input:focus-visible { outline-color:var(--teal-ink); border-color:var(--teal-ink); }
 .fs-btn {
   padding:9px 18px; border-radius:8px; background:var(--blue); color:#fff;
   font-family:var(--font); font-size:13px; font-weight:600; transition:background .15s;
 }
-.fs-btn:hover { background:var(--blue-hi); }
+.fs-btn:hover { background:var(--blue-deep); }
 
 .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
 .footer-copy { font-size:12px; color:var(--t3); }
@@ -150,7 +170,7 @@ footer {
 .section-sub { font-size:15px; color:var(--t2); max-width:620px; line-height:1.75; margin-bottom:48px; }
 
 .btn-primary { padding:13px 26px; background:var(--blue); color:#fff; border-radius:10px; font-size:14px; font-weight:600; transition:background-color .2s, color .2s, transform .2s; display:inline-block; }
-.btn-primary:hover { background:var(--blue-hi); color:#fff; transform:translateY(-1px); }
+.btn-primary:hover { background:var(--blue-deep); color:#fff; transform:translateY(-1px); }
 .btn-ghost { padding:13px 26px; background:transparent; color:var(--t2); border:1px solid var(--border2); border-radius:10px; font-size:14px; font-weight:500; transition:border-color .15s, color .15s; display:inline-block; }
 .btn-ghost:hover { border-color:var(--teal); color:var(--teal); }
 .btn-secondary { padding:13px 26px; background:rgba(78,205,196,.08); color:var(--teal); border:1px solid rgba(78,205,196,.25); border-radius:10px; font-size:14px; font-weight:500; transition:background-color .15s; display:inline-block; }
@@ -554,6 +574,16 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
 .tool-bar-crumb { font-family:var(--mono); font-size:11px; color:var(--t3); white-space:nowrap; }
 .tool-bar-spacer { flex:1; }
 .tool-bar-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+/* PHONE: the bar is nowrap with three nowrap children, so its min-content ran past
+   360px and .hu-shell's overflow-x:clip ate the actions with no scroll to recover
+   them. On assignment-compass that hid the ONLY trigger for the methodology sheet.
+   The crumb retires first (the title already says which tool you are in), and wrap
+   is the backstop: actions drop to a second row rather than off the screen.
+   Same move the atlas toolbar made for the same reason. */
+@media (max-width:699px){
+  .tool-bar { flex-wrap:wrap; row-gap:4px; height:auto; }
+  .tool-bar-crumb { display:none; }
+}
 
 /* Standard toggle chip · the "teal pill" pattern, one way only */
 .toggle-chip {
@@ -571,6 +601,16 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
   color:#062024; font-weight:700;
 }
 .toggle-chip:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+
+/* Lucide swaps every <i data-lucide> for an <svg> only after its script runs, and
+   that script sits at the end of <body>. Until it fires each placeholder is a 0x0
+   box, so every icon on the page pops to size after first paint and shoves whatever
+   sits beside it: layout shift, worst on icon-dense tool chrome. Give the
+   placeholder the box its icon will take. 1em carries the general case; the sized
+   components name their own, matching the svg rules further down. */
+i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
+.icon-btn i[data-lucide], .nav-search-btn i[data-lucide] { width:16px; height:16px; }
+.pop-head-title i[data-lucide], .selector > i[data-lucide] { width:14px; height:14px; }
 
 /* Standard icon button · Lucide icons only (loaded sitewide via base.njk).
    Usage: <button class="icon-btn" aria-label="…"><i data-lucide="x"></i></button>
@@ -1051,6 +1091,7 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
     font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--t3);
   }
   .hu-bbar .bb-item svg, .hu-bbar .bb-search svg { width:19px; height:19px; stroke-width:1.75; }
+  .hu-bbar .bb-item i[data-lucide], .hu-bbar .bb-search i[data-lucide] { width:19px; height:19px; }
   .hu-bbar .bb-item.on { color:var(--teal); font-weight:700; }
   [data-theme="light"] .hu-bbar .bb-item.on { color:var(--teal-ink); }
   .hu-bbar .bb-search { flex:1.15; }

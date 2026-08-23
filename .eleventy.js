@@ -7,6 +7,22 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/brand");                                  // brand kit -> /brand/
   eleventyConfig.addPassthroughCopy({ "src/brand/favicon.ico": "favicon.ico" });   // root /favicon.ico for auto-discovery
 
+  /* Data files under src/assets/data that no page ever fetches. All of src/assets
+     is passed through, so without this they ship: 6.7MB of dead weight per deploy.
+     us-suppliers-pharmacy.json is a pipeline input (build-geo-serving.js and
+     build-hospital-enrichment.js read it from the repo, not from the site).
+     us-lakes.json is a leftover of the pre-MapLibre canvas maps, which drew their
+     own water; the vector basemap has drawn it since. Confirm a candidate is
+     really orphaned by grepping the built _site for its filename before adding it. */
+  const NOT_SHIPPED = ["us-suppliers-pharmacy.json", "us-lakes.json"];
+  eleventyConfig.on("eleventy.after", ({ dir }) => {
+    const fs = require("fs"), path = require("path");
+    for (const name of NOT_SHIPPED) {
+      const f = path.join(dir.output, "assets", "data", name);
+      if (fs.existsSync(f)) fs.rmSync(f);
+    }
+  });
+
   // ── COLLECTIONS ──────────────────────────────────────────────────────────
   // Define named collections for site architecture (avoiding data-file shadowing)
   

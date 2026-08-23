@@ -193,7 +193,7 @@ function isOpen() { return wrap && !wrap.hidden; }
 document.addEventListener('keydown', function (ev) {
   if (ev.key === 'Escape' && isOpen()) { close(); return; }
   if (ev.key === '/' && !isOpen()) {
-    var t = document.activeElement;
+    var t = /** @type {HTMLElement} */ (document.activeElement);
     var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
     if (!typing) { ev.preventDefault(); open(null); }
   }
@@ -201,7 +201,8 @@ document.addEventListener('keydown', function (ev) {
 
 /* any element carrying data-hu-search opens the switchboard */
 document.addEventListener('click', function (ev) {
-  var btn = ev.target.closest('[data-hu-search]');
+  var target = /** @type {Element} */ (ev.target);
+  var btn = target.closest && target.closest('[data-hu-search]');
   if (btn) { ev.preventDefault(); open(btn); }
 });
 
