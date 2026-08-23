@@ -288,10 +288,48 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   #atlas-bc { flex: 1 0 100%; order: 3; overflow-x: auto; scrollbar-width: none; min-width: 0; }
   #atlas-bc::-webkit-scrollbar { display: none; }
   #atlas-controls { margin-left: auto; }
+
+  /* The bar was 148px on a 844px phone: a quarter of the screen spent before the map
+     starts, against 8% on the two MapLibre maps. Everything here is either duplicated
+     elsewhere or fits in less room, so the map gets the difference back.
+     The wordmark goes: the site nav one row up already says Healthcare Uncharted, and
+     the breadcrumb says which tool you are in. The hairline separators go: on a wrapped
+     multi-row bar they divide nothing. Craft keeps its link but drops to its glyph. */
+  #atlas-tb .atlas-logo { display: none; }
+  #atlas-tb .atlas-sep { display: none; }
+  .atlas-craft-link { font-size: 0; gap: 0; padding-left: 12px; padding-right: 12px; min-height: 44px; }
+  .atlas-craft-link::after { content: '↗'; font-size: 15px; line-height: 1; }
   .atlas-btn { width: 44px; height: 44px; }
   #atlas-layers-btn { min-height: 44px; }
   #atlas-desk-hint { display: none !important; }
   #hud-close, #help-close, #conn-panel-close { width: 44px; height: 44px; }
+
+  /* The HUD stops being an in-flow block that pushes the canvas down and becomes the
+     shared kit sheet: fixed to the bottom, peek/half/full detents, drag with flick,
+     and the hardware back button walks it one step instead of leaving the page. Same
+     primitive the two maps and the career tree already use (instrument grammar,
+     checklist item 2: zero hand-rolled twins). */
+  #atlas-hud {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 300;
+    margin: 0; width: auto; max-height: none;
+    border-radius: 16px 16px 0 0; border-left: none; border-right: none;
+    display: flex;
+    transform: translateY(105%);
+    transition: transform .28s cubic-bezier(.2,.8,.2,1), max-height .2s ease, height .2s ease;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* closed sheets leave the tab order and the a11y tree; the delay lets the slide finish */
+  #atlas-hud:not(.open) { visibility: hidden;
+    transition: transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s linear .28s; }
+  #atlas-hud.open { transform: translateY(0); visibility: visible; }
+  #atlas-hud.dt-peek { max-height: 120px; overflow: hidden; }
+  #atlas-hud.dt-half { max-height: 52vh; max-height: 52dvh; overflow-y: auto; }
+  #atlas-hud.dt-full { height: 92vh; height: 92dvh; max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
+  #atlas-hud.dragging { transition: none !important; }
+  /* opened by a path that did not name a detent: behave like half rather than unbounded */
+  #atlas-hud.open:not(.dt-peek):not(.dt-half):not(.dt-full) { max-height: 52vh; max-height: 52dvh; overflow-y: auto; }
+  /* the kit injects its own grabber, so the hand-rolled resize grip retires here */
+  #hud-grip { display: none !important; }
 }
 /* coarse pointers: panel closes + connection filter chips clear the 44px floor (fleet-day parity) */
 @media (hover:none){
@@ -656,7 +694,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
     <svg id="atlas-svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="chart-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div id="atlas-stamp" aria-hidden="true">HU ATLAS &middot; UNIFIED DATASET</div>
-    <div id="atlas-hint">Scroll to zoom · Drag to pan · Click any hex to explore</div>
+    <div id="atlas-hint"><span class="hint-mouse">Scroll to zoom · Drag to pan · Click any hex to explore</span><span class="hint-touch">Pinch to zoom · Drag to pan · Tap any hex to explore</span></div>
     <div id="conn-tooltip"><div class="ctt-label" id="ctt-label"></div><div class="ctt-desc" id="ctt-desc"></div></div>
   </div>
   <div id="atlas-conn" class="hu-ticks">
@@ -718,7 +756,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
       </div>
       <div class="help-section">
         <div class="help-section-title">Exploring Nodes</div>
-        <div class="help-item"><span class="help-icon" aria-hidden="true">◆</span><span class="help-text"><strong>Click any hex</strong> to open its detail card.</span></div>
+        <div class="help-item"><span class="help-icon" aria-hidden="true">◆</span><span class="help-text"><strong><span class="hint-mouse">Click any hex</span><span class="hint-touch">Tap any hex</span></strong> to open its detail card.</span></div>
         <div class="help-item"><span class="help-icon" aria-hidden="true">⤢</span><span class="help-text"><strong>Landmark nodes</strong> expand into sub-nodes when selected. Look for the chevron markers.</span></div>
       </div>
       <div class="help-section">

@@ -1725,13 +1725,21 @@ function makePinchZoom(outer, inner, minS, maxS, autoCenter) {
   if (autoCenter) {
     // Double-RAF: first frame commits layout, second reads settled dimensions
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const cw = inner.offsetWidth;
       const ow = outer.clientWidth;
+      /* Fit the MAIN BUILDING, not the whole campus. The campus is a 1,988px row of
+         seventeen buildings; fitting all of it into a 390px phone asks for scale 0.196,
+         gets clamped up to the 0.3 floor, and every label inside then renders around
+         3.6px. That illegible smear is the first thing every phone visitor sees.
+         The acute-care tower is 820px and fits around 0.48: still small, but a coherent
+         subject instead of a blur. Pinch out and the reset button both still reach the
+         full campus, so nothing is lost, only reordered. */
+      const primary = inner.querySelector('.hm-campus-bldg--hospital');
+      const target = primary || inner;
+      const cw = target.offsetWidth || inner.offsetWidth;
       if (!cw || !ow) return;
-      // Scale to fit the full building width into the viewport
       initS = Math.max(minS, Math.min(1, ow / cw));
-      // Center horizontally at the chosen scale; start from the top vertically
-      initOx = (ow - cw * initS) / 2;
+      // centre the CHOSEN building, which means offsetting past whatever sits left of it
+      initOx = (ow - cw * initS) / 2 - (primary ? primary.offsetLeft * initS : 0);
       initOy = 0;
       s = initS; ox = initOx; oy = initOy;
       apply();

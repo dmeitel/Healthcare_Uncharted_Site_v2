@@ -153,6 +153,19 @@ document.addEventListener('keydown', e => {
       const dp = document.getElementById('detailPanel');
       if (dp && dp.classList.contains('open')) closeDetail();   // then the detail panel, same walk as its X
     });
+
+    /* Hardware back walks the same one step the X and Esc already do. Without it the
+       detail panel is a full-screen overlay that Android's back button escapes by
+       leaving the SITE, which is the dismiss a phone user reaches for first. The focus
+       contract above (opener stored, focus moved in, focus handed back) was already
+       right; this was the missing rung. */
+    if (HUKit.backGuard) {
+      HUKit.backGuard({
+        watch: document.getElementById('detailPanel'),
+        active: () => HUKit.phone() && document.getElementById('detailPanel').classList.contains('open'),
+        step: closeDetail
+      });
+    }
 // (arrows / Home / End are the kit's, delegated across every .selector-pop)
 document.querySelectorAll('.selector-pop').forEach(pop => {
   pop.querySelector('[data-close]').addEventListener('click', () => closePop(true));

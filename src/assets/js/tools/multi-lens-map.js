@@ -164,6 +164,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     padScale = k;
     return { top: Math.round(top * k), bottom: Math.round(bottom * k), left: side, right: side };
   };
+
   const fitPadFree = () => ({ top:118, bottom:96, left:14, right:14 });
 
   // ── sheet ──
@@ -418,8 +419,31 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     $('lvMetricName').textContent = (HUKit.phone() ? '' : LENSES[lens] + ' · ') + item().name + (ovItem() ? '  + ◯ ' + ovItem().name : '');
     const y = DY[lens] && DY[lens][String(mIdx)];
     // position first, year second — mid-shuffle you want to know where you are
-    $('lvMetricYear').textContent = (mIdx + 1) + '/' + CFG[lens].items.length + (y ? ' · ' + y : '');
+    /* On phone the year stepper sits directly beside this button, so printing the year
+       here too said it twice in one row and cost the metric name the width it needed to
+       stop truncating to "Life exp…". Position only on phone; both on desktop, where
+       there is room and the stepper is further away. */
+    /* Phone shows NEITHER the position counter nor the year. The year stepper sits
+       directly beside this button so printing it here said it twice, and "7/15" was
+       spending about 40px telling you where you are in a list you cannot see, while
+       the metric NAME (the thing you actually need) truncated to "Life expectanc…".
+       Desktop keeps both: there is room, and the stepper is further away. */
+    $('lvMetricYear').textContent = HUKit.phone() ? ''
+      : ((mIdx + 1) + '/' + CFG[lens].items.length + (y ? ' · ' + y : ''));
+    rankCount();
   }
+  /* Name what is underneath and how much of it. "Rankings" alone told you nothing
+     about scale, so the sheet stayed shut; the operators map's "List · 2,607 in view"
+     is the version that gets opened. The number is not decoration: states without a
+     reading for this metric and year are filtered out of the list, so it moves, and
+     that movement is the honest signal about how complete the data actually is. */
+  function rankCount(){
+    const el = $('lvRankCount');
+    if (!el || typeof STATES === 'undefined' || !STATES.features) return;
+    const n = STATES.features.filter(f => vYear(f.properties.abbr) != null).length;
+    el.textContent = '· ' + n;
+  }
+
   // ‹ › shuffle: one metric per tap, wraps at the ends of the lens
   function stepMetric(d){
     coachDone();   // they've found the metric machinery — the coach's job is over
@@ -594,6 +618,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     lbl.innerHTML = yrs[yearIdx] + (isCurrentYear() ? '' : ' <i>est.</i>');
     $('lvYearPrev').disabled = !trend || yearIdx === 0;
     $('lvYearNext').disabled = !trend || isCurrentYear();
+    rankCount();
   }
   function stepYear(d){
     if (!hasTrend()) return;
@@ -719,7 +744,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     b.querySelector('.lv-sub').textContent = 'Best first · tap a state to open it';
     const host = b.querySelector('.lv-rows');
     host.innerHTML = rows.map((r,i) =>
-      '<button class="pop-opt lv-rank-row" type="button" data-ab="' + r.abbr + '" aria-selected="' + (selState && selState.abbr === r.abbr) + '"><b>#' + (i+1) + '</b><span class="rn"></span><span class="gv-sr-meta" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--t3)">' + fmtV(r.v) + '</span></button>').join('');
+      '<button class="pop-opt lv-rank-row" type="button" data-ab="' + r.abbr + '" aria-selected="' + (selState && selState.abbr === r.abbr) + '"><b>#' + (i+1) + '</b><span class="rn"></span><span class="lv-rank-v">' + fmtV(r.v) + '</span></button>').join('');
     host.querySelectorAll('.lv-rank-row').forEach((el,i) => {
       el.querySelector('.rn').textContent = rows[i].name;
       el.addEventListener('click', () => {
@@ -761,7 +786,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   function moreBlock(host, sec){
     if (!sec.length){ host.innerHTML = ''; return; }
     host.innerHTML = '<div class="lv-tgl">More metrics · ' + sec.length +
-      ' <span class="lv-sw' + (moreOpen ? ' on' : '') + '" id="lvMoreSw" role="switch" aria-checked="' + moreOpen + '" tabindex="0" aria-label="Show secondary metrics"></span></div>' +
+      ' <span class="hu-sw' + (moreOpen ? ' on' : '') + '" id="lvMoreSw" role="switch" aria-checked="' + moreOpen + '" tabindex="0" aria-label="Show secondary metrics"></span></div>' +
       '<div class="hu-stats" id="lvMoreTiles">' +
       sec.map(s => '<div class="hu-stat"><div class="v' + (s.cls || '') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('') + '</div>';
     const tilesEl = $('lvMoreTiles');
@@ -829,7 +854,10 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     const rank = v == null ? null : sorted.indexOf(v) + 1;
     const avg = vals.length ? vals.reduce((a,x) => a + x, 0) / vals.length : null;
     const b = $('lvSheetBody');
-    b.innerHTML = '<div class="lv-kicker">State · ' + LENSES[lens] + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-ptable"></div><div class="lv-more"></div><div class="lv-trend"></div><div class="lv-actions"></div><div class="lv-src"></div>';
+    /* The kicker names the METRIC, not the lens (David's call, 2026-08-23 phone QA):
+       "what am I measuring" reads before "where", and "Patient" was internal taxonomy
+       the reader never asked for. The lens still lives in the metric picker. */
+    b.innerHTML = '<div class="lv-kicker">Metric · ' + item().name + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-ptable"></div><div class="lv-more"></div><div class="lv-trend"></div><div class="lv-actions"></div><div class="lv-src"></div>';
     b.querySelector('.lv-name').textContent = selState.name;
     // phone: the peek sheet must carry the answer — value rides the name row,
     // rank leads the sub, so a parked card still tells the story
@@ -838,7 +866,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       pv.className = 'pv'; pv.textContent = fmtV(v);
       b.querySelector('.lv-name').appendChild(pv);
     }
-    b.querySelector('.lv-sub').textContent = item().name + ' · ' + yearTag() + (hasCounty() ? ' · tap a county' : '');
+    b.querySelector('.lv-sub').textContent = yearTag() + (hasCounty() ? ' · tap a county' : '');
     if (rank){
       const pr = document.createElement('span');
       pr.className = 'pr'; pr.textContent = '#' + rank + ' of ' + vals.length + ' · ';
@@ -932,14 +960,17 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     const sorted = vals.slice().sort((a,b) => item().dir === -1 ? a - b : b - a);
     const rank = v == null ? null : sorted.indexOf(v) + 1;
     const b = $('lvSheetBody');
-    b.innerHTML = '<div class="lv-kicker">County · ' + selState.abbr + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-ptable"></div><div class="lv-more"></div><div class="lv-actions"></div><div class="lv-src"></div>';
+    b.innerHTML = '<div class="lv-kicker">Metric · ' + item().name + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-ptable"></div><div class="lv-more"></div><div class="lv-actions"></div><div class="lv-src"></div>';
     b.querySelector('.lv-name').textContent = selCounty.name + ' County';
     if (v != null){
       const pv = document.createElement('span');
       pv.className = 'pv'; pv.textContent = fmtV(v);
       b.querySelector('.lv-name').appendChild(pv);
     }
-    b.querySelector('.lv-sub').textContent = item().name + (isCurrentYear() ? '' : ' · county grain shows the latest data year');
+    /* the metric moved up into the kicker; the selected state-year can differ from the
+    county data's year, so the sub says the honest thing instead of printing a year
+    that may not match what is on screen */
+  b.querySelector('.lv-sub').textContent = isCurrentYear() ? yearTag() : 'county grain shows the latest data year';
     if (rank){
       const pr = document.createElement('span');
       pr.className = 'pr'; pr.textContent = '#' + rank + ' of ' + vals.length + ' in ' + selState.abbr + ' · ';
@@ -1134,8 +1165,8 @@ window.DATA_YEARS = mlmData('mlm-data-years');
         : '<div class="lv-src" style="margin-top:0">Tap the ☆ on any metric to add its value to every state and county card. The card holds what the map can\'t.</div>') +
       '</div>' +
       '<div class="lv-dsec"><h5>Map labels <span class="sub">basemap text</span></h5>' +
-      '<div class="lv-tgl">State names <span class="lv-sw' + (p.state ? ' on' : '') + '" id="lvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
-      '<div class="lv-tgl">City names <span class="lv-sw' + (p.city ? ' on' : '') + '" id="lvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>' +
+      '<div class="lv-tgl">State names <span class="hu-sw' + (p.state ? ' on' : '') + '" id="lvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
+      '<div class="lv-tgl">City names <span class="hu-sw' + (p.city ? ' on' : '') + '" id="lvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>' +
       '<div class="lv-dsec"><h5>Reading the map</h5>' +
       '<div class="lv-src" style="margin-top:0">Colors are quintiles of the current metric, red = worse end, teal = better. Metrics marked "county grain" drill to county detail inside a state. Years before the data year are drift-model estimates, labeled est.</div></div>';
     buildMetricList();

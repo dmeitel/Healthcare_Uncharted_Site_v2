@@ -99,10 +99,6 @@ og_image: /brand/og-operators-map.jpg
 .gv-only:hover { color:var(--teal); }
 .gv-drow .hu-chip.on .gv-only { color:#062024; }
 .gv-tgl { display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:12.5px; color:var(--t2); }
-.gv-sw { width:34px; height:19px; border-radius:999px; background:var(--raised2); border:1px solid var(--border2); position:relative; cursor:pointer; flex:none; }
-.gv-sw::after { content:''; position:absolute; left:2px; top:2px; width:13px; height:13px; border-radius:50%; background:var(--t3); transition:left .15s; }
-.gv-sw.on { background:var(--teal); border-color:var(--teal); }
-.gv-sw.on::after { left:17px; background:#062024; }
 /* desktop has the room: the sheet docks RIGHT as the Inspector panel
    (grammar: docked panel on desktop, detent sheet on phone) */
 @media (min-width:1100px){
@@ -162,6 +158,7 @@ og_image: /brand/og-operators-map.jpg
    only half the viewport. Both FABs are flex:none, so the whole squeeze landed here
    and "1,096 in view" wrapped to three lines and clipped at every phone width. */
 .gv-listbtn { flex:none; white-space:nowrap; }
+.gv-fabcol { display:contents; }   /* invisible on desktop; becomes the phone tool column below */
 /* the clear-search control measured 11x18 against the 44px floor */
 @media (hover:none){
   #gvPillClr { width:44px; height:44px; }
@@ -196,6 +193,31 @@ og_image: /brand/og-operators-map.jpg
   .gv-listbtn { height:46px; }
   .gv-scope, .gv-pill, .gv-rpill { height:44px; }   /* 44px floor: the search/readout row was 38px (fleet-day parity with multi-lens) */
   .gv-pill .clr { padding:13px 12px; }
+  /* Same restack as multi-lens: the control bar and the info chip both sat INSIDE the
+     map-credit band (bar 764-810, chip 790-834, credit 800-844), so the bottom of the
+     map read as three things piled on one strip. Give each its own row.
+     No .gv-shell ancestor on the attribution: it is a sibling of the shell, not a
+     child, and this style block only loads on this page. */
+  /* Same one-surface move as the multi-lens dock (design phase 2026-08-23). Three
+     separate pills read as clutter however they were spaced. Now: List is the way
+     into the data and draws the dock box bottom-left; draw and locate both act ON
+     the map, so they share one corner tool column the way every map app stacks its
+     zoom controls. Bordered objects at rest: 3 -> 2. */
+  .gv-bottombar { bottom:56px; left:10px; right:10px; transform:none;
+    justify-content:space-between; align-items:flex-end; }
+  .gv-fabcol { display:flex; flex-direction:column;
+    background:color-mix(in srgb, var(--surface) 94%, transparent);
+    border:1px solid var(--border); border-radius:14px; overflow:hidden;
+    backdrop-filter:blur(10px); box-shadow:0 6px 20px rgba(0,0,0,.35); }
+  .gv-fabcol .hu-fab { background:none; border:none; border-radius:0; box-shadow:none; }
+  .gv-fabcol .hu-fab + .hu-fab { border-top:1px solid var(--border); }
+  .tool-attribution--fixed { bottom:166px; right:10px; }
+  /* Parity with multi-lens (David's call: same UI grammar on both maps). One surface
+     at a time: when the sheet is up it IS the interface, so the List pill and the
+     tool column stop floating over the map behind it. The sheet's X, Esc and the
+     hardware back all close it; dismissing brings the cluster back. */
+  .gv-shell:has(#gvSheet.open) .gv-bottombar { display:none; }
+  main:has(#gvSheet.open) .tool-attribution--fixed { display:none; }
 }
 /* under 1100px the sheet rises from the bottom. The whole cluster climbs
    above its peek so it never drowns under an open sheet */
@@ -232,7 +254,12 @@ og_image: /brand/og-operators-map.jpg
    at peek (<1100). The desktop dock shows the stat tiles already. */
 .gv-card-name .pv { display:none; margin-left:auto; flex:none; font-size:15px; color:var(--teal); }
 [data-theme="light"] .gv-card-name .pv { color:var(--teal-ink); }
-@media (max-width:1099px){ .gv-card-name .pv { display:inline; } }
+@media (max-width:1099px){
+  /* parity with multi-lens: the parked card carries the answer, and the answer leads.
+     Same voice as .hu-stat .v — display face, 800, tabular. */
+  .gv-card-name .pv { display:inline; font-size:27px; font-weight:800; font-family:var(--display);
+    font-variant-numeric:tabular-nums; line-height:1; }
+}
 .gv-copylink { margin-top:12px; align-self:flex-start; }
 .gv-card-sub { font-family:var(--mono); font-size:11.5px; color:var(--t2); margin:3px 0 12px; }
 .gv-card-sys { font-size:12px; color:var(--t2); margin-top:12px; }
@@ -254,6 +281,13 @@ og_image: /brand/og-operators-map.jpg
   padding:10px 4px; cursor:pointer; font-family:var(--font); }
 .gv-row:hover { background:color-mix(in srgb, var(--teal) 7%, transparent); }
 .gv-row .rn { font-size:13px; font-weight:700; color:var(--t1); line-height:1.3; }
+/* the vitals line: solid ink, the row's answer (Zillow's price-and-beds line) */
+.gv-row .rv { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--t2); margin-top:3px;
+  display:flex; flex-wrap:wrap; align-items:baseline; }
+.gv-row .rv b { font-weight:400; color:var(--t3); margin:0 6px; }
+.gv-row .rv .st { color:var(--amber); }
+[data-theme="light"] .gv-row .rv .st { color:var(--amber-dk); }
+/* the address line stays quiet under it */
 .gv-row .rs { font-family:var(--mono); font-size:10px; color:var(--t3); margin-top:2px; display:flex; gap:8px; align-items:center; }
 .gv-row .rs i { width:8px; height:8px; border-radius:50%; flex:none; }
 .gv-row .rs .st { color:var(--amber); }
@@ -321,6 +355,7 @@ og_image: /brand/og-operators-map.jpg
   <div class="gv-cleg" id="gvCleg" hidden aria-hidden="true"></div>
   <div class="gv-bottombar">
     <button class="gv-listbtn" id="gvListBtn" type="button" hidden>List <b id="gvCount">·</b></button>
+    <div class="gv-fabcol">
     <button class="hu-fab gv-drawfab" id="gvDraw" type="button" aria-label="Draw an area to search" title="Draw an area to search">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
     </button>
@@ -329,6 +364,7 @@ og_image: /brand/og-operators-map.jpg
         <circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle>
       </svg>
     </button>
+    </div>
   </div>
 
   <aside class="shell-sheet" id="gvSheet" aria-label="Detail">

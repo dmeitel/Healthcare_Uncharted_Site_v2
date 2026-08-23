@@ -148,10 +148,6 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-view .lv-vdefn { font-size:11.5px; line-height:1.55; color:var(--t2); margin:2px 0 6px 64px; }
 .lv-view .lv-vdefn .src { display:block; font-family:var(--mono); font-size:10px; color:var(--t2); margin-top:3px; }
 .lv-tgl { display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:12.5px; color:var(--t2); }
-.lv-sw { width:34px; height:19px; border-radius:999px; background:var(--raised2); border:1px solid var(--border2); position:relative; cursor:pointer; flex:none; }
-.lv-sw::after { content:''; position:absolute; left:2px; top:2px; width:13px; height:13px; border-radius:50%; background:var(--t3); transition:left .15s; }
-.lv-sw.on { background:var(--teal); border-color:var(--teal); }
-.lv-sw.on::after { left:17px; background:#062024; }
 .lv-status { position:absolute; bottom:88px; left:50%; transform:translateX(-50%); z-index:20; white-space:nowrap;
   font-family:var(--mono); font-size:10.5px; color:var(--t2); padding:6px 12px; border-radius:999px;
   background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
@@ -183,7 +179,14 @@ og_image: /brand/og-multi-lens-map.jpg
 @media (max-width:699px){ .lv-insets { display:none; } }   /* phone portrait already frames AK+HI; GL contexts are precious there */
 /* the legend and the control bar both sat at bottom:34px, and the bar wins on
    z-index, so the worse-to-better key was 6px tall at 360. Lift it clear. */
-@media (max-width:699px){ .lv-cleg { bottom:84px; } }
+@media (max-width:699px){
+  /* The ramp retires at rest. Every state on this map already prints its own value
+     ("78.5 yrs"), so the ramp was encoding a second time what the reader can simply
+     read, and paying a whole row for it. It is still in the sheet for anyone who
+     wants the scale. This is the removal the two earlier passes kept avoiding: they
+     packed the chrome tighter instead of asking what had earned its place. */
+  .lv-cleg { display:none; }
+}
 /* year + rankings + locate: ONE thumb-zone cluster, bottom center (David's
    call 2026-07-26: the GPS button lives with its siblings, not in a corner).
    The FAB drops its corner-float positioning and rides the row in-flow. */
@@ -194,6 +197,40 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-yearpill button { width:34px; height:34px; border:none; background:none; color:var(--t2); font-size:17px; cursor:pointer; border-radius:50%; }
 .lv-yearpill button:hover { color:var(--teal); background:var(--raised); }
 .lv-yearpill button:disabled { opacity:.3; cursor:default; }
+/* Touch floor rides POINTER TYPE, the pattern assignment-compass already uses: a
+   touch laptop taps too, and a width query cannot see that. The pill drew at 42px
+   with 34px arrows, so both were under the floor on the one control people press
+   repeatedly while reading a time series. */
+@media (hover:none) {
+  .lv-yearpill { height:44px; }
+  .lv-yearpill button { width:44px; height:44px; }
+}
+/* Bottom chrome restack is a WIDTH question, not a pointer one: it is about how
+   little room the strip has, and a touch tablet at 1200px has plenty. */
+@media (max-width:699px){
+  /* Three clean bands instead of four strips fighting over one strip of screen.
+     Measured before: legend 733-760, year+Rankings bar 762-810, info chip 790-834,
+     map credit 800-844, so three of the four overlapped inside the same 80px. That
+     overlap is what read as clutter. Declared HERE, after the base rules, because
+     the earlier block sat above them and lost on cascade order.
+     No .lv-shell ancestor on the attribution: it is a sibling of the shell, not a
+     child, and this style block only loads on this page anyway. */
+  /* Locate stays a floating button: it acts ON the map rather than describing it, and
+     a corner FAB is what every map app trains people to look for. It just has to sit
+     CLEAR of the dock instead of on top of it. */
+  .lv-bottombar { bottom:160px; left:auto; right:10px; transform:none; }
+  /* One surface at a time: when the sheet is up it IS the dock. Before this the
+     sheet slid over the dock and left its top edge peeking out behind the grabber,
+     which read as two broken layers (David's phone QA). The sheet header already
+     names the state, the metric and the year, so nothing the dock says is lost;
+     dismissing the sheet brings it back. */
+  .lv-shell:has(#lvSheet.open) .lv-top { display:none; }
+  /* the info chip sat alone above the dock, the last orphan. Tuck it against the
+     dock's top edge so it reads as part of the cluster rather than a fifth thing. */
+  .tool-attribution--fixed { bottom:160px; right:66px; }
+  .lv-shell:has(#lvSheet.open) ~ .tool-attribution--fixed,
+  main:has(#lvSheet.open) .tool-attribution--fixed { display:none; }
+}
 .lv-yearpill span { font-family:var(--mono); font-size:11.5px; font-weight:600; color:var(--t1); min-width:74px; text-align:center; }
 .lv-yearpill span i { font-style:normal; color:var(--amber); }
 [data-theme="light"] .lv-yearpill span i { color:var(--amber-dk); }
@@ -202,11 +239,27 @@ og_image: /brand/og-multi-lens-map.jpg
   background:var(--surface); border:1px solid var(--border2); color:var(--t1);
   font-family:var(--font); font-size:12.5px; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.45); }
 .lv-rankbtn:hover { border-color:var(--teal); }
+/* The live count, same weight as the operators map's 'in view' tally.
+   nowrap is load-bearing: the bottom bar has 370px, the year pill takes 176 of it and
+   grows again for '2023 est.', which left the button 132px. The long form
+   ('· 49 states') measured 159 and wrapped to two lines, which threw the whole row
+   out of alignment. The short form fits at 118 and never re-wraps, whatever the year
+   label does. The sheet header says the rest the moment it opens. */
+.lv-rankbtn { white-space:nowrap; }
+.lv-rankbtn b { font-weight:600; color:var(--teal); }
+[data-theme="light"] .lv-rankbtn b { color:var(--teal-ink); }
 .lv-trend { margin-top:12px; }
 .lv-spark { width:100%; max-width:260px; height:54px; display:block; }
 .lv-trend-lbl { font-family:var(--mono); font-size:10px; color:var(--t2); margin-top:4px; line-height:1.5; }
 .lv-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
 .lv-rank-row b { font-family:var(--mono); font-size:10px; color:var(--t3); margin-right:8px; }
+/* The value holds a COLUMN so the numbers line up down all 51 rows. It used to ride
+   .gv-sr-meta, a class defined only in the Operators Map's page CSS, so on this page
+   it resolved to nothing and the value just followed the state name: 32px of ragged
+   right edge. The name takes the slack and truncates; the number never moves. */
+.lv-rank-row .rn { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lv-rank-row .lv-rank-v { flex:none; margin-left:8px; text-align:right; min-width:64px;
+  font-family:var(--mono); font-size:10px; color:var(--t3); }
 @media (max-width:1099px){
   .lv-shell:has(#lvSheet.open) .lv-bottombar { bottom:150px; }   /* the FAB rides the bar now */
 }
@@ -237,17 +290,32 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-name .pv { display:none; margin-left:auto; flex:none; font-size:15px; color:var(--teal);
   text-transform:none; letter-spacing:normal; font-variant-numeric:tabular-nums; }   /* the VALUE keeps its own case */
 [data-theme="light"] .lv-name .pv { color:var(--teal-ink); }
-@media (max-width:1099px){ .lv-name .pv { display:inline; } }
+@media (max-width:1099px){
+  /* The parked card must carry the answer, and at 15px it did not: the value sat one
+     point bigger than the state name, so nothing led. This is the same hierarchy
+     Zillow's card uses (the price is the headline, the address is the label) and the
+     same voice as the house stat tile (.hu-stat .v): display face, 800, tabular.
+     Rank steps up to solid ink; the metric and year stay small mono underneath. */
+  .lv-name .pv { display:inline; font-size:27px; font-weight:800; font-family:var(--display);
+    font-variant-numeric:tabular-nums; line-height:1; }
+  .lv-sub .pr { color:var(--t1); font-weight:700; }
+}
 @media (min-width:1100px){ .lv-sub .pr { display:none; } }
 /* readable sub text (David's call): brighter tier + a size up, drawer-wide */
 .lv-sub { font-family:var(--mono); font-size:11.5px; color:var(--t2); margin:3px 0 12px; }
 #lvSheet .hu-stat .k { font-size:10px; color:var(--t2); }
 /* the primary table (David's spec): rows = Value/Rank/Population, columns =
    the two geographies. One glance, one structure, every card the same. */
-.lv-ptable { display:grid; grid-template-columns:auto 1fr 1fr; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-.lv-ptable > div { padding:9px 12px; border-bottom:1px solid var(--border); }
+/* The comparison table on the Ruled Figure (DESIGN.md Do: dissolve boxes into rules
+   where the content can stand on open ground). It was a boxed grid with a shaded
+   header row; now the 2px header rule carries the structure, hairlines divide the
+   rows, and the figures stand on the card's own ground. Same cells, same data, less
+   chrome. The county table shares these classes and inherits all of it. */
+.lv-ptable { display:grid; grid-template-columns:auto 1fr 1fr; }
+.lv-ptable > div { padding:9px 12px 9px 0; border-bottom:1px solid var(--border); }
 .lv-ptable > div:nth-last-child(-n+3) { border-bottom:none; }
-.lv-ptable .th { background:var(--raised); font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--t2); }
+.lv-ptable .th { font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--t2);
+  border-bottom:2px solid var(--border2); }
 .lv-ptable .rl { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--t2); align-self:center; }   /* mono caption (The Caption Rule, Fog Blue ink) */
 .lv-ptable .val { font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); }
 .lv-ptable .val.sm { font-size:14px; font-weight:700; }
@@ -288,11 +356,65 @@ og_image: /brand/og-multi-lens-map.jpg
 @media (max-width:699px){
   .lv-srow { flex-wrap:wrap; }
   .lv-viewgrp { flex-basis:100%; max-width:none; min-width:0; }
+
+  /* ── DESIGN PHASE 2026-08-23 · both maps ────────────────────────────────────
+     Every control moves to the thumb zone and the map runs clean from the nav
+     down. Before this the chrome sat at BOTH ends: a 90px cluster pinned to the
+     top and three bands at the bottom, so the eye had two places to check and
+     the map was a noticeboard with a map behind it.
+     Watch Duty and Zillow both do the same thing: one surface, controls where
+     the thumb already is, nothing floating over the middle.
+     The identity chip goes on phone. The site nav one row up already says
+     Healthcare Uncharted and the metric button says what you are looking at, so
+     the chip was spending a row to repeat both. */
+  /* TWO rows, not four. The metric and the year are one thought ("what am I looking
+     at, and when") so they share a row; the colour ramp and the way into the ranked
+     list share the next. The metric ‹ › steppers retire on phone only: they duplicate
+     the picker the metric button already opens, and they were spending about 70px and
+     two targets to save one tap. That is a Tier 3 call, available because the design
+     phase in CLAUDE.md suspends Tier 3 on this surface. */
+  /* ONE SURFACE, not six pills.
+     Three passes were spent rearranging these controls and it still read as clutter,
+     because the clutter was never the arrangement. Every control carried its own
+     border, its own background and its own blur, so the eye counted six floating
+     objects however they were stacked. Watch Duty has one surface with things inside
+     it. So does this now: the dock draws the box, and the metric, the year and the
+     way into the list live INSIDE it as plain content divided by hairlines. */
+  .lv-top { top:auto; bottom:56px; }
+  .lv-viewgrp {
+    background:color-mix(in srgb, var(--surface) 94%, transparent);
+    border:1px solid var(--border); border-radius:14px;
+    backdrop-filter:blur(10px); box-shadow:0 6px 20px rgba(0,0,0,.35);
+    display:grid; grid-template-columns:1fr auto; align-items:center;
+    padding:0; overflow:hidden; gap:0;
+  }
+  /* the metric is the headline: its own line, full width, nothing competing */
+  .lv-metric {
+    grid-column:1 / -1; background:none; border:none; box-shadow:none;
+    border-radius:0; border-bottom:1px solid var(--border); backdrop-filter:none;
+    justify-content:flex-start; padding:11px 13px; min-height:0;
+  }
+  /* the two actions share the line below, divided by a hairline, not by borders */
+  .lv-yearpill, .lv-rankbtn {
+    background:none; border:none; box-shadow:none; border-radius:0;
+    backdrop-filter:none; height:46px;
+  }
+  .lv-yearpill { justify-self:start; padding-left:4px; }
+  .lv-rankbtn { justify-self:end; border-left:1px solid var(--border); padding:0 15px; }
+  .lv-mstep { display:none; }
+  .lv-viewgrp { flex-wrap:nowrap; gap:6px; }
+  .lv-metric { flex:1 1 auto; min-width:0; }
+  .lv-yearpill { flex:none; }
+  .lv-yearpill span { min-width:38px; }
+  .lv-metric { padding-left:10px; padding-right:8px; }
+  .lv-ident { display:none; }
+  .lv-srow { gap:6px; }
   .lv-scope { height:44px; font-size:13px; max-width:70vw; }
   .lv-metric { height:44px; font-size:13px; min-width:0; }
   .lv-mstep { width:44px; height:44px; }
-  .lv-yearpill { height:46px; }
-  .lv-yearpill button { width:42px; height:42px; }
+  .lv-yearpill { height:48px; }
+  /* was 42px: an earlier pass aimed at the touch floor and stopped two short. */
+  .lv-yearpill button { width:44px; height:44px; }
   .lv-rankbtn { height:46px; }
   .lv-bottombar .hu-fab { width:46px; height:46px; }
 }
@@ -312,17 +434,17 @@ og_image: /brand/og-multi-lens-map.jpg
           <i data-lucide="bar-chart-2" aria-hidden="true"></i><span class="mq" id="lvMetricName">Pick a metric…</span><span class="yr" id="lvMetricYear"></span><span class="car" aria-hidden="true">▾</span>
         </button>
         <button class="lv-mstep" id="lvMetricNext" type="button" aria-label="Next metric">›</button>
+      <div class="lv-yearpill" id="lvYearPill">
+        <button id="lvYearPrev" type="button" aria-label="Earlier year">‹</button>
+        <span id="lvYearLbl">2024</span>
+        <button id="lvYearNext" type="button" aria-label="Later year">›</button>
+      </div>
+    <button class="lv-rankbtn" id="lvRankBtn" type="button">Rankings <b id="lvRankCount"></b></button>
       </div>
     </div>
   </div>
   <div class="lv-status" id="lvStatus" role="status">Painting the basemap…</div>
   <div class="lv-bottombar">
-    <div class="lv-yearpill" id="lvYearPill">
-      <button id="lvYearPrev" type="button" aria-label="Earlier year">‹</button>
-      <span id="lvYearLbl">2024</span>
-      <button id="lvYearNext" type="button" aria-label="Later year">›</button>
-    </div>
-    <button class="lv-rankbtn" id="lvRankBtn" type="button">Rankings</button>
     <button class="hu-fab" id="lvLocate" type="button" aria-label="Find my state and county" title="My location">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8"></circle></svg>
     </button>

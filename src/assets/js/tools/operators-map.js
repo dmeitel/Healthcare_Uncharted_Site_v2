@@ -390,6 +390,7 @@
     padScale = k;
     return { top: Math.round(top * k), bottom: Math.round(bottom * k), left: side, right: side };
   };
+
   const fitPadFree = () => ({ top:130, bottom:96, left:20, right:20 });
   // states ship a precomputed camera-safe bb; geometry walk is the fallback
   const stateBounds = f => f.properties.bb
@@ -723,7 +724,12 @@
     const hs = inState(selState.abbr);
     const beds = hs.reduce((a,f) => a + (+f.properties.beds || 0), 0);
     const pop = statePop(selState.fips);
-    const b = cardScaffold('State', selState.name, hs.length + ' ' + NOUN() + (activeTypes && LAYER_ON.has('hosp') ? ' (filtered)' : '') + ' · tap a county for its profile');
+    /* The count said itself three times on this card: the headline value, the sub line
+    and the first stat tile (David's phone QA, 2026-08-23). Now the kicker names WHAT
+    is counted, the value says how many, and the sub only says what to do next. The
+    tile stays for desktop, where the headline value is hidden. */
+    const b = cardScaffold(NOUN() + (activeTypes && LAYER_ON.has('hosp') ? ' · filtered' : ''),
+      selState.name, 'tap a county for its profile');
     // phone: the peek sheet must carry the answer — the count rides the name row
     const pv = document.createElement('span');
     pv.className = 'pv'; pv.textContent = hs.length.toLocaleString('en-US');
@@ -808,8 +814,12 @@
     const hs = inState(selState.abbr).filter(f => pip(f.geometry.coordinates, geom));
     const beds = hs.reduce((a,f) => a + (+f.properties.beds || 0), 0);
     const cpop = (CPOP && CPOP[selCounty.fips]) ? CPOP[selCounty.fips].p : null;
-    const b = cardScaffold('County · ' + selState.abbr, selCounty.name + ' County',
-      hs.length + ' ' + (hs.length === 1 ? NOUN().replace(/ies$/,'y').replace(/als$/,'al').replace(/([^s])s$/,'$1') : NOUN()) + (activeTypes && LAYER_ON.has('hosp') ? ' (filtered)' : ''));
+    const b = cardScaffold(NOUN() + (activeTypes && LAYER_ON.has('hosp') ? ' · filtered' : ''),
+      selCounty.name + ' County', selState.name);
+    /* the count rides the name row here too, same as the state card */
+    { const pv = document.createElement('span');
+      pv.className = 'pv'; pv.textContent = hs.length.toLocaleString('en-US');
+      b.querySelector('.gv-card-name').appendChild(pv); }
     const stats = [{ v:hs.length.toLocaleString('en-US'), k: LAYER_ON.size === 1 ? DATASETS[[...LAYER_ON][0]].label : 'Facilities' }];
     if (beds > 0){
       stats.push({ v:beds.toLocaleString('en-US'), k:'Beds' });
@@ -1024,9 +1034,13 @@
     mode = 'list'; backTo = null;
     clearPin();
     showTab('details');   // the list is a Details view of the current scope
-    renderList();
     const det = revealDetent();
     sheetEl.classList.add('open');
+    /* renderList bails unless the sheet already carries .open, so it has to run AFTER
+       the class lands. It used to run before, which meant the FIRST tap on the List
+       button opened an empty sheet; the rows only appeared once a map move fired the
+       moveend renderList. Found by tapping the button, not by any measurement. */
+    renderList();
     setDetQuiet(det);
   }
   function renderList(){
@@ -1040,11 +1054,24 @@
     h += cap.map((f,i) => {
       const p = f.properties, T = TYPES[p.t] || {};
       const mi = milesTo(f.geometry.coordinates);
+      /* The Zillow row anatomy (David's archetype call, 2026-08-23: this map functions
+         like Zillow for healthcare facilities). Every row answers the same questions in
+         the same order: WHO (name), WHAT DO I GET (the vitals line, solid ink: rating,
+         size, trauma level, ER), WHERE (the address line, muted). The old row mashed
+         vitals into the address line at one muted size, so scanning thirty rows meant
+         re-reading each one. Trauma and ER were not in the row at all, and for this
+         audience they are the bd/ba/sqft of the listing. */
+      const vitals = [];
+      if (+p.r) vitals.push('<span class="st">' + '★'.repeat(+p.r) + '</span>');
+      if (+p.beds) vitals.push('<span>' + Number(p.beds).toLocaleString('en-US') + ' beds</span>');
+      if (+p.st) vitals.push('<span>' + Number(p.st).toLocaleString('en-US') + ' stations</span>');
+      if (p.trauma) vitals.push('<span>' + String(p.trauma).replace('Level ', 'Trauma ') + '</span>');
+      if (TYPES[p.t]) vitals.push('<span>' + (+p.e ? 'ER' : 'No ER') + '</span>');
       return '<button class="gv-row" type="button" data-i="' + i + '"><div class="rn"></div>' +
+        (vitals.length ? '<div class="rv">' + vitals.join('<b>·</b>') + '</div>' : '') +
         '<div class="rs"><i style="background:' + (T.color||'#4ECDC4') + '"></i><span>' + p.c + ', ' + p.s + '</span>' +
         (mi != null ? '<span>' + mi.toFixed(1) + ' mi</span>' : '') +
-        (+p.r ? '<span class="st">' + '★'.repeat(+p.r) + '</span>' : '') +
-        (+p.beds ? '<span>' + Number(p.beds).toLocaleString('en-US') + ' beds</span>' : '') + '</div></button>';
+        (p.sys ? '<span>' + p.sys + '</span>' : '') + '</div></button>';
     }).join('');
     h += '</div>';
     if (rows.length > cap.length) h += '<div class="gv-more">Zoom in to narrow the other ' + (rows.length - cap.length).toLocaleString('en-US') + '</div>';
@@ -1085,8 +1112,8 @@
           '<button class="hu-chip' + (countyMetric === k ? ' on' : '') + '" type="button" data-m="' + k + '">' + m.label + '</button>').join('') + '</div></div>';
     }
     h += '<div class="gv-dsec"><h5>Map labels <span class="sub">basemap text</span></h5>' +
-      '<div class="gv-tgl">State names <span class="gv-sw' + (p.state ? ' on' : '') + '" id="gvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
-      '<div class="gv-tgl">City names <span class="gv-sw' + (p.city ? ' on' : '') + '" id="gvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>';
+      '<div class="gv-tgl">State names <span class="hu-sw' + (p.state ? ' on' : '') + '" id="gvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
+      '<div class="gv-tgl">City names <span class="hu-sw' + (p.city ? ' on' : '') + '" id="gvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>';
     host.innerHTML = h;
     updateCount();   // fill the live per-chip tallies
   }

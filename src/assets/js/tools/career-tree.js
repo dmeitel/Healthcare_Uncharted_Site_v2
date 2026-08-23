@@ -5791,9 +5791,22 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     // the survey is a MODAL: dismissal is session-only (no cookie); while the build
     // stays empty a slim strip holds its place so there's always a way back in
     const hwModal = document.getElementById('hct-welcome-modal');
+    /* The dialog carries role="dialog" and aria-modal="true", which promises focus is
+       inside it. It was not: focus stayed on <body>, so tabbing walked the page behind
+       the overlay and a keyboard user never reached the four questions. Move focus in
+       on open, hand it back on dismiss. */
+    let hwLastFocus = null;
+    function hwOpen(){
+      if (!hwModal) return;
+      hwLastFocus = document.activeElement;
+      hwModal.classList.add('open');
+      hwModal.setAttribute('tabindex', '-1');
+      hwModal.focus({ preventScroll: true });
+    }
     function hwDismiss(){
       hwDismissed = true;
       if (hwModal) hwModal.classList.remove('open');
+      if (hwLastFocus && hwLastFocus.focus) { asEl(hwLastFocus).focus({ preventScroll: true }); hwLastFocus = null; }
       const s = document.getElementById('hct-welcome-strip'); if (s) s.hidden = totalNodes() > 0;
     }
     asEl(document.getElementById('hw-x')).onclick = hwDismiss;
@@ -5804,7 +5817,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     asEl(document.getElementById('hw-reopen')).onclick = () => {
       hwDismissed = false;
       const s = document.getElementById('hct-welcome-strip'); if (s) s.hidden = true;
-      if (hwModal) hwModal.classList.add('open');
+      hwOpen();
     };
     document.getElementById('hct-welcome').addEventListener('click', e => {
       const chip = hit(e,'.hw-chip');

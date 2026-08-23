@@ -348,26 +348,105 @@ Tactile and confident: controls respond to touch like they enjoy it, one state a
 ### Lens Pills (signature)
 - The 4Ps and Atlas-zone vocabulary: pill-shaped mono tags tinted per lens (patient teal, provider blue, payer amber, policy purple, and kin) at 12% alpha fills with .34-alpha borders. Lenses render as pills and section headers, never as page chrome.
 
-## Do's and Don'ts
+## The Rules, By Tier
 
-### Do:
-- **Do** point with Signal Teal and act with Chart Blue; keep the two jobs separate.
-- **Do** caption every data element in Plex Mono with its source; a number without a walkable source does not ship.
-- **Do** draw containers with Sounding Line borders and tonal steps; save shadows for movement and floating chrome.
+Every rule below is unchanged in wording. What is new is the SORT, because these were
+never one kind of thing and treating them as one is what made a redesign feel illegal.
+
+CLAUDE.md's DECLARED DESIGN PHASE reads these tiers directly: on a named surface in an
+open phase, Tier 3 is suspended and Tier 1 and Tier 2 still bind.
+
+---
+
+### TIER 1 · Physics
+
+Breaking these hurts a reader. They are not taste and they are never suspended, phase
+or no phase. A redesign that breaks one is a regression wearing better colors.
+
 - **Do** keep the 44px touch floor, the 699px phone line, and the 250ms phone motion cap on every interactive surface.
-- **Do** let cards lift (-4px), buttons press, and arrows slide; tactile response is the brand's handshake, within the budget.
 - **Do** flip accent text to its deep step on light surfaces (The Deep-Step Rule).
-- **Do** dissolve boxes into rules where the content can stand on open ground: ruled stat figures, margin-note callouts, masthead toolbars.
 - **Do** check every reskinned surface in BOTH themes; a rule that vanishes on light is a regression, not a style.
-
-### Don't:
-- **Don't** use em dashes anywhere, including UI strings, aria labels, and CSS comments; middots join fragments.
-- **Don't** color data the reader did not ask for; resting maps stay neutral (The Earned Color Rule).
-- **Don't** ship literal pictogram icons on maps or dashboards; geometric symbols only.
 - **Don't** stack transient surfaces; one sheet, drawer, or overlay at a time on phones.
-- **Don't** render the 4Ps as page structure or labeled headers; they are pills and picker sections only.
+- **Don't** set body or description text at weight 300 on dark; 400 is the floor.
+
+Also physics, and living in .claude/rules/css.md rather than here: animate transform and
+opacity only, respect prefers-reduced-motion, 100dvh never bare 100vh, env(safe-area-inset-bottom)
+on anything fixed to the viewport bottom, 11px functional text floor.
+
+---
+
+### TIER 2 · System
+
+These make the NEXT change cheaper. They are not about how the site looks, they are about
+whether a fix lands in one place or twenty. Keep them through a phase; a new look built on
+hand-rolled twins is a new maintenance problem.
+
+- **Don't** color data the reader did not ask for; resting maps stay neutral (The Earned Color Rule).
+- **Do** dissolve boxes into rules where the content can stand on open ground: ruled stat figures, margin-note callouts, masthead toolbars.
+
+Also system, and living in the instrument grammar: HUKit for sheet, back, motion, phone
+line and selector-pop, with zero hand-rolled twins. Tokens over raw hex. Shared partials
+over repeated fixes.
+
+---
+
+### TIER 3 · This era's look · SUSPENDABLE
+
+This is the Quiet Precision world, written down so it would stop being relitigated. That
+worked. It is also the tier that stops a redesign, so a declared design phase suspends all
+of it on the named surface.
+
+Nothing here is wrong. It is a previous decision, and when a phase closes this section gets
+REWRITTEN to describe whatever actually shipped.
+
+- **Do** point with Signal Teal and act with Chart Blue; keep the two jobs separate.
+- **Do** draw containers with Sounding Line borders and tonal steps; save shadows for movement and floating chrome.
+- **Do** let cards lift (-4px), buttons press, and arrows slide; tactile response is the brand's handshake, within the budget.
+- **Don't** ship literal pictogram icons on maps or dashboards; geometric symbols only.
 - **Don't** introduce new fonts, new accent hues, or a fifth tonal step; the ladder is the system.
 - **Don't** glow: no zero-offset halos, no colored hover radiance, no box-shadow as emphasis (The Ink State Rule).
 - **Don't** run gradient accent bars or gradient text; accents are solid, one hue, drawn like rules.
-- **Don't** set body or description text at weight 300 on dark; 400 is the floor.
 - **Don't** put survey ticks on nested elements or draw them in accent color; two corners, border gray, outer surfaces only (The Survey Tick Rule).
+
+#### The instrument grammar · shipped on the maps 2026-08-23 · applies to EVERY tool
+
+Built and QA'd on the two MapLibre maps first, then PROMOTED to all instruments by
+David's call the same day. These rules bind every tool. A tool that does not yet
+conform is an INCONSISTENCY with a documented pattern, which the change budget
+explicitly permits fixing: bringing a tool onto this grammar is maintenance and needs
+no design phase. (Extends, and defers to, the seven laws in
+docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md.)
+
+- **One surface, not pills.** At rest an instrument carries at most three bordered
+  floating objects: ONE dock (the box is drawn once; what-you-are-looking-at, its
+  dimension, and the way into the list live inside it as content divided by
+  hairlines), ONE corner tool column (canvas-acting tools stacked with hairline
+  dividers, the way map apps stack zoom), and the info chip. Search, where a tool has
+  one, stays a top row; everything else lives in the thumb zone.
+- **The card grammar.** Kicker names the MEASURE (the metric, or the counted noun),
+  never internal taxonomy. The name row carries the place and the headline value: 27px
+  display 800 tabular, the .hu-stat voice, Zillow's price-is-the-headline. The sub
+  says the rank or the next action, and NOTHING on the card says a number twice.
+- **The sheet contract.** One surface at a time: when the sheet is open on a phone,
+  every floating control hides; dismissing restores them. X, Esc and hardware back all
+  walk ONE level.
+- **The list row (the Zillow anatomy).** Name in solid ink, then the vitals line
+  (mono 600, solid: rating, size, trauma, ER), then the address line muted with the
+  type dot and the system name. Every row answers the same questions in the same order.
+- **Encode once.** When every feature prints its own value, the legend or ramp
+  retires at rest and lives in the sheet. Nothing on screen encodes what the reader
+  can already read.
+- **Comparison tables stand on rules, not in boxes** (the Ruled Figure, applied).
+
+---
+
+### TIER 4 · Identity
+
+Not design rules. These are who the site is, and a phase does not touch them.
+
+- **Don't** use em dashes anywhere, including UI strings, aria labels, and CSS comments; middots join fragments.
+- **Do** caption every data element in Plex Mono with its source; a number without a walkable source does not ship.
+- **Don't** render the 4Ps as page structure or labeled headers; they are pills and picker sections only.
+
+Also identity, and load-bearing per CLAUDE.md: the compass rose, the hex grid, the secret
+menu, the map information model, and the brand palette anchors.

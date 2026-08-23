@@ -252,7 +252,7 @@ permalink: /tools/iceberg-map/
 [data-theme="light"] .nc span,[data-theme="light"] .lt,[data-theme="light"] .lsu,[data-theme="light"] .wlt,[data-theme="light"] .sml-lbl,[data-theme="light"] .rnt,[data-theme="light"] .rh,[data-theme="light"] .rb,[data-theme="light"] .rbl,[data-theme="light"] .pain-txt,[data-theme="light"] .lgt,[data-theme="light"] .lgt-s,[data-theme="light"] .ptilab,[data-theme="light"] .mv,[data-theme="light"] .ml,[data-theme="light"] .bi,[data-theme="light"] .bi.cur{text-shadow:0 1px 3px rgba(255,255,255,0.95),0 0 6px rgba(255,255,255,0.75)}
 
 /* ── MOBILE / TABLET  ≤ 768px ───────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 699px) {
   /* ── Structural: let page scroll naturally ── */
   .lab-shell { padding: 0; }
   .lab-scaler { height: auto; min-height: 0; }
@@ -361,8 +361,10 @@ permalink: /tools/iceberg-map/
     position: fixed !important;
     bottom: 0; left: 0; right: 0;
     width: auto !important;
-    height: 0; overflow: hidden;
-    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; flex-direction: column;
+    transform: translateY(105%);
+    transition: transform .28s cubic-bezier(.2,.8,.2,1), max-height .2s ease, height .2s ease;
+    padding-bottom: env(safe-area-inset-bottom);
     z-index: 200;
     border-left: none !important;
     border-right: none !important;
@@ -371,7 +373,15 @@ permalink: /tools/iceberg-map/
     margin: 0;
     background: #060E1C;
   }
-  #rp.rp-open { height: 55vh; overflow-y: auto; }
+  /* Detent contract, so HUKit.sheet drives this panel instead of a hand-rolled
+     height animation. dt-peek/half/full mirror the kit's own numbers; the slide is
+     transform, which is both the CSS rule (never animate a layout property) and the
+     only version that composites. */
+  #rp.open { transform: translateY(0); }
+  #rp.dt-peek { max-height: 120px; overflow: hidden; }
+  #rp.dt-half { max-height: 52vh; max-height: 52dvh; overflow-y: auto; }
+  #rp.dt-full { height: 92vh; height: 92dvh; max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
+  #rp.dragging { transition: none !important; }
   [data-theme="light"] #rp { background: #f0f7ff; }
   #rpMobClose { display: flex !important; }
 }
@@ -411,6 +421,8 @@ permalink: /tools/iceberg-map/
 
 /* instrument numerals: the right detail panel's stats read in tabular figures */
 #rp{font-variant-numeric:tabular-nums}
+/* the kit injects a drag grabber for the phone sheet; the desktop panel is docked */
+@media (min-width:700px){ #rp .hu-sheet-grab{ display:none } }
 
 /* standard icon sizing on the (static) control-section labels + reset buttons */
 .rh svg{width:11px;height:11px;stroke-width:2;color:rgba(78,205,196,0.8);vertical-align:-1.5px;margin-right:5px}
@@ -439,7 +451,7 @@ permalink: /tools/iceberg-map/
 }
 #as{position:absolute;top:52px;left:0;right:0;z-index:19;background:rgba(3,7,16,0.97);border-bottom:1px solid rgba(78,205,196,0.18)}
 [data-theme="light"] #as{background:rgba(228,243,255,0.97);border-bottom-color:rgba(78,205,196,0.35)}
-@media (max-width: 768px){
+@media (max-width: 699px){
   #as{position:static} /* toolbar and content are static in the phone stack · the strip joins the flow */
   #tb .tool-bar-kicker{display:none} /* room for the Layer selector next to the breadcrumb */
 }

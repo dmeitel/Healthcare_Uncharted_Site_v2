@@ -2490,6 +2490,22 @@ function deselectNode() {
 
 function closeHud() { document.getElementById('atlas-hud').classList.remove('open'); }
 
+/* On phones the HUD is driven by the shared kit sheet rather than the hand-rolled
+   grip resize below: detents, drag, flick, and a hardware-back step. The atlas was
+   the only canvas tool still missing both HUKit.sheet and HUKit.backGuard, so on a
+   phone the back button left the site instead of closing the panel. */
+const hudSheetEl = document.getElementById('atlas-hud');
+const hudSheet = (window.HUKit && HUKit.sheet && hudSheetEl)
+  ? HUKit.sheet(hudSheetEl, { startDetent: 'dt-half', onDismiss: closeHud })
+  : null;
+if (window.HUKit && HUKit.backGuard && hudSheetEl) {
+  HUKit.backGuard({
+    watch: hudSheetEl,
+    active: () => HUKit.phone() && hudSheetEl.classList.contains('open'),
+    step: closeHud
+  });
+}
+
 // ── CONTROLS ──────────────────────────────────────────────────────────────────
 document.getElementById('a-rst').addEventListener('click',resetView);
 document.getElementById('a-zi').addEventListener('click',()=>svg.transition().duration(230).call(zoom.scaleBy,1.45));
@@ -2523,7 +2539,8 @@ svg.on('wheel.hint',hideHint);
 // ── HUD RESIZE ────────────────────────────────────────────────────────────────
 {
   const hudEl = document.getElementById('atlas-hud');
-  const grip  = document.getElementById('hud-grip');
+  /* desktop only: the kit's grabber owns the phone drag */
+  const grip  = (window.HUKit && HUKit.phone()) ? null : document.getElementById('hud-grip');
   const MIN_H = 64, MAX_H = 420;
 
   function startResize(e) {
@@ -2549,8 +2566,10 @@ svg.on('wheel.hint',hideHint);
     document.addEventListener('touchend',  onEnd);
   }
 
-  grip.addEventListener('mousedown',  startResize);
-  grip.addEventListener('touchstart', startResize, {passive:false});
+  if (grip) {
+    grip.addEventListener('mousedown',  startResize);
+    grip.addEventListener('touchstart', startResize, {passive:false});
+  }
 }
 
 // ── LAYERS PANEL — toggles + legend behind one trigger (Control Architecture v2)

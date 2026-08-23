@@ -933,7 +933,7 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   if(popCtl.escape()) return;   // one step per press: the kit owns the popover rung
   const rp=document.getElementById('rp');
-  if(rp&&rp.classList.contains('rp-open'))rp.classList.remove('rp-open');   // then the layer sheet, same walk as its X
+  if(rp&&rp.classList.contains('open'))rp.classList.remove('open');   // then the layer sheet, same walk as its X
 });
 // (arrows / Home / End are the kit's, delegated across every .selector-pop)
 document.querySelectorAll('.selector-pop').forEach(pop=>{
@@ -991,7 +991,7 @@ document.getElementById('popViewsList').addEventListener('click',e=>{
   applyURLState();
   urlCtl.end();
   const rpEl=document.getElementById('rp');
-  if(rpEl&&sel==='H')rpEl.classList.remove('rp-open');   // back to no-selection closes the phone sheet (it kept showing the DEFAULT node)
+  if(rpEl&&sel==='H')rpEl.classList.remove('open');   // back to no-selection closes the phone sheet (it kept showing the DEFAULT node)
   updateSelectorFace();renderAppliedStrip();go();
   announce('View: '+t.textContent);
 });
@@ -1072,7 +1072,7 @@ window.addEventListener('popstate',()=>{
   sel='H';subSel=null;activeFilter='all';hiddenLayers=new Set();
   applyURLState();
   const rpP=document.getElementById('rp');
-  if(rpP&&sel==='H')rpP.classList.remove('rp-open');   // back to no-selection closes the phone sheet (run-2 QA: the first fix landed in the preset handler, not here)
+  if(rpP&&sel==='H')rpP.classList.remove('open');   // back to no-selection closes the phone sheet (run-2 QA: the first fix landed in the preset handler, not here)
   urlCtl.end();
   updateSelectorFace();renderAppliedStrip();go();
   announce('Now at '+gN(sel));
@@ -1107,11 +1107,29 @@ function renderLeftPanel(){
 // legal but invisible from the call sites. Same behaviour, stated where it happens.
 // The width is still read once at load, so a rotate mid-session does not switch
 // you between the two behaviours, exactly as before.
-const RAISE_SHEET_ON_SELECT = window.innerWidth <= 768;
+/* The detail panel is the shared kit sheet on phones now, not a hand-rolled height
+   animation: peek/half/full detents, drag with flick, and the hardware back button
+   walks it one step instead of leaving the page.
+
+   The old gate was `window.innerWidth <= 768`, wrong twice over: 768 is not the house
+   phone line (699 is), and a `const` read once at load never notices a rotation.
+   HUKit.phone() reads the media query live. */
+const rpEl = document.getElementById('rp');
+const rpSheet = (window.HUKit && HUKit.sheet && rpEl)
+  ? HUKit.sheet(rpEl, { startDetent: 'dt-half', onDismiss: () => rpEl.classList.remove('open') })
+  : null;
+if (window.HUKit && HUKit.backGuard && rpEl) {
+  HUKit.backGuard({
+    watch: rpEl,
+    active: () => HUKit.phone() && rpEl.classList.contains('open'),
+    step: () => closeSheet()
+  });
+}
+function closeSheet(){ if (rpEl) rpEl.classList.remove('open'); }
 function raiseSheet(){
-  if (!RAISE_SHEET_ON_SELECT) return;
-  const rp = document.getElementById('rp');
-  if (rp) rp.classList.add('rp-open');
+  if (!(window.HUKit && HUKit.phone()) || !rpEl) return;
+  rpEl.classList.add('open');
+  if (rpSheet) rpSheet.setDetent('dt-half');
 }
 
 function selectNode(id){sel=id;subSel=null;go();syncURL();raiseSheet();announce('Selected: '+gN(id));}
@@ -1261,5 +1279,5 @@ document.getElementById('lpf').addEventListener('click', e => {
 asEl(document.querySelector('.hics .hi')).addEventListener('click', () => resetAll());
 document.getElementById('lines-toggle').addEventListener('click', () => toggleLines());
 document.getElementById('rpMobClose').addEventListener('click', () => {
-  document.getElementById('rp').classList.remove('rp-open');
+  document.getElementById('rp').classList.remove('open');
 });
