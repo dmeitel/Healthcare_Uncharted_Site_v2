@@ -86,9 +86,57 @@ The sequence, smallest and safest first. **One tool per session**, each verified
 | 3 | multi-lens-map | 73KB | DONE 08-22 |
 | 4 | operators-map | 88KB | DONE 08-22 |
 | 5 | iceberg-map | 120KB | DONE 08-22 · page 170KB to 49KB |
-| 6 | atlas | 165KB | |
-| 7 | hospital-map | 174KB | |
-| 8 | career-tree | 416KB | last, and probably split across sessions |
+| 6 | atlas | 165KB | DONE 08-22 · page 247KB to 66KB |
+| 7 | hospital-map | 174KB | DONE 08-22 · page 256KB to 73KB |
+| 8 | career-tree | 416KB | DONE 08-22 · page 601KB to 168KB |
+
+**ALL EIGHT LANDED 2026-08-22.** Combined, the eight tool pages went from 1.68MB to
+573KB of HTML, and the JS behind them is now eight cacheable files instead of eight
+payloads re-sent inside every page response.
+
+**What career-tree added to the pattern.** It was the biggest and turned out to be the
+plainest: no inline handlers, no build-time Nunjucks, data already arriving by runtime
+`fetch`. The lift itself was clean. What it cost was type checking: **234 errors** on
+first sight, against 112 for atlas and 9 for hospital-map. Almost all of it was one
+shape repeated, `querySelector` handing back `Element` and `event.target` handing back
+`EventTarget`, so the `qsa` / `asEl` / `hit` shims plus a fourth, `asInput`, cleared
+about 200 of them mechanically. The rest were declaration-site casts: fifteen variables
+that are really form controls accounted for 39 errors between them.
+
+Two entries earned a deliberate exception rather than a fix. `render` is reassigned to
+wrap the board paint with the phone-flow refresh, which JavaScript permits for a
+function declaration and TypeScript does not, so it carries a `@ts-ignore` with the
+reason. And `hexVtx`'s dead fourth argument, described under atlas below, was the only
+thing in three tools that looked like a latent defect.
+
+One test had to move with it. `tests/career-phone-flow.test.js` brace-matches
+`renderPhoneFlow` out of shipped output and executes it against the real dataset; it
+reads the built module now instead of the built page. That test passing is the best
+evidence the lift preserved behaviour, because it runs the actual shipped function.
+
+**What atlas added to the pattern.** Two couplings the earlier five did not have.
+
+First, the page is a `.njk` and its script carried a build-time Nunjucks loop that
+inverted `atlasLinks` from rounds, modules, and talks into `CONTENT_LINKS`. A static
+`.js` cannot run Nunjucks, so that loop moved to `src/_data/atlasContentLinks.js` and
+the page now emits the result as an `application/json` island the module parses. That
+is the pattern multi-lens-map already used for `mlm-lens-config`, so it was borrowed
+rather than invented. A JSON island is also CSP-clean: nothing executes, so it needs
+no `unsafe-inline`. The refactor was checked by diffing the generated map against the
+old build: 37 keys, 61 entries, byte-identical.
+
+Second, `scripts/lib/adapters/atlas-concepts.js` TEXT-PARSES `ZONE_DEFS` and
+`EXPAND_EHR` straight out of the page. Moving the JS meant repointing it, now via one
+`ATLAS_SRC` constant. It fails loudly by design, and `data-build/entities.json` came
+out unchanged afterward: 7 zones, 101 concepts, 11 expansion-subs.
+
+Atlas was also the first tool to hit `tsc` with real volume: **112 errors** on first
+sight, which is what the migration is for. 44 were an undeclared `d3`, 25 were window
+handles the page publishes so its halves can reach each other, and the rest was DOM
+narrowing, fixed with the same `qsa` / `asEl` / `hit` shims iceberg settled on. One
+was a genuine find: `hexVtx(q, r, vi)` takes three parameters and two of its seven
+call sites passed a fourth argument that JavaScript silently discarded. Dead, not
+broken, but it read as if it did something.
 
 **What iceberg added to the pattern.** It was the first tool carrying inline
 `onclick` attributes, and module scope breaks those outright: the functions stop
@@ -112,6 +160,24 @@ export nothing the page does not need, and let `tsc` see it for the first time.
   `script-src` directive in `netlify.toml`, where a comment currently explains it is
   there specifically for inline tool scripts. That is a real security improvement and
   it is the milestone worth aiming at.
+
+**Measured after all eight landed (2026-08-22).** 887KB of inline JS still ships,
+across 45 pages. 29 of those carry nothing but the base.njk chrome. The rest:
+
+| KB | page |
+|---|---|
+| 482 | atlas/craft (prototype) |
+| 121 | secret-menu/uncharted-general |
+| 61 | learn/home-respiratory-timeline |
+| 28 | tools/sql-mystery |
+| 24 | learn/oxygen-payment-cuts |
+| 19 | secret-menu/data-observatory |
+| 18 | the home page |
+
+The three named below were the ones known when this was written. sql-mystery,
+oxygen-payment-cuts, data-observatory and the home page were not, and they are the
+difference between "three more pages" and a real second pass. Nothing here is urgent;
+it is the shape of the work between here and dropping `'unsafe-inline'`.
 
 **The eight tools are necessary but not sufficient for the CSP milestone.**
 Measured 08-22 after iceberg landed: every page carries 2,189 bytes of inline JS
@@ -164,7 +230,7 @@ skills advise.
 
 ---
 
-## 6 · OPEN: LANDSCAPE PHONE MAP FIT (needs a design call, not a patch)
+## 6 · LANDSCAPE PHONE MAP FIT · ROUTE 1 SHIPPED 2026-08-22
 
 Found during the multi-lens migration, attempted twice, **not solved**. Recorded here
 so the next attempt starts from the evidence instead of the symptom.
@@ -192,7 +258,35 @@ The actual landscape chrome is roughly 232px of the 326px shell (a 120px peek sh
 the 46px floating bar, its 34px offset, the top pill row), which leaves ~94px. No pad
 arithmetic reaches a useful zoom while the peek sheet eats 37% of the viewport.
 
-**Two honest routes, David's call:**
+**DAVID CHOSE ROUTE 1 on 2026-08-22 and it shipped.** The deciding argument was
+proportionality: map traffic was single digits per 30 days at the last GoatCounter read,
+and route 2 means maintaining a third layout forever. The change budget says ship the
+smaller one when both work.
+
+**What shipped.** `fitPad` now records its clamp factor in `padScale`, and both maps
+route `fitScope` / `refitScope` through a new `fitOrCentre(b, z, dur)`. When `padScale`
+is below 1, it asks `map.cameraForBounds()` first, and if the answer is a zoom lower
+than the camera's current one it holds the zoom and `easeTo`s the centre instead.
+
+**Why gated on the clamp and not on "the zoom went down".** The doc's own warning: a
+plain never-zoom-out rule breaks county to state to whole-country, which are legitimate
+zoom-outs. `padScale` drops below 1 only when the shell is too short for the chrome,
+and that happens in exactly one place. Verified live at three sizes:
+
+| viewport | shell | padScale | fit box | guard |
+|---|---|---|---|---|
+| 844x390 landscape | 326 | 0.806 | 60px | **ACTIVE** |
+| 390x844 portrait | 780 | 1 | 450px | off |
+| 1280x800 desktop | 736 | 1 | 456px | off |
+
+`refitFree()` was deliberately left alone: it runs `fitPadFree()`, which never clamps,
+and it is gated on `HUKit.phone()`, which a landscape phone fails anyway.
+
+**Still true, and still the better answer eventually:** this stops the wrong behaviour,
+it does not make landscape roomy. The state still fits a 60px slot. Route 2 below stays
+the real fix if map traffic ever justifies it.
+
+**The two routes as they were written:**
 
 1. *Minimum diff.* Refuse to fit when the fit would pull the camera backwards: ask
    `map.cameraForBounds()` first and `easeTo` the centre at the current zoom instead.

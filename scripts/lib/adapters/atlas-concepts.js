@@ -1,7 +1,7 @@
 'use strict';
 /**
  * atlas-concepts adapter — lift the hand-authored ZONE_DEFS out of
- * src/atlas/index.njk into the entity layer as 'concept' nodes, WITHOUT
+ * src/assets/js/tools/atlas.js into the entity layer as 'concept' nodes, WITHOUT
  * touching the Atlas. The .njk is read as TEXT and the ZONE_DEFS statement is
  * evaluated in isolation (as code, so comments / \n escapes / nested brackets
  * are handled by the JS engine, not a hand-rolled parser).
@@ -17,10 +17,14 @@
  */
 const { makeNode, edge, uid } = require('../entity');
 
+// The atlas JS moved out of the template into a module on 2026-08-22 (roadmap rung 6).
+// ZONE_DEFS and EXPAND_EHR live here now; the template is markup only.
+const ATLAS_SRC = 'src/assets/js/tools/atlas.js';
+
 // This is a TEXT parse of a live page — brittle by nature, so it FAILS LOUDLY.
-// If a reformat of atlas/index.njk moves an anchor, the build stops here with a
+// If a reformat of the atlas module moves an anchor, the build stops here with a
 // named error instead of quietly shipping a graph with zero concept nodes.
-const FAIL = (msg) => { throw new Error('[atlas-concepts] ' + msg + ' — the adapter text-parses src/atlas/index.njk; if the atlas was reformatted, update the anchors in scripts/lib/adapters/atlas-concepts.js'); };
+const FAIL = (msg) => { throw new Error('[atlas-concepts] ' + msg + ' — the adapter text-parses ' + ATLAS_SRC + '; if the atlas was reformatted, update the anchors in scripts/lib/adapters/atlas-concepts.js'); };
 
 function parseZoneDefs(src) {
   const start = src.indexOf('const ZONE_DEFS');
@@ -48,7 +52,7 @@ const MIN_ZONES = 5, MIN_CONCEPTS = 60;
 module.exports = {
   name: 'atlas-concepts',
   run(read, readText) {
-    const zones = parseZoneDefs(readText('src/atlas/index.njk'));
+    const zones = parseZoneDefs(readText(ATLAS_SRC));
     const byUid = new Map();
 
     for (const z of zones) {
@@ -144,7 +148,7 @@ module.exports = {
 
     // EHR expansion sub-tiles -> concepts, each representing its EHR vendor, so a
     // sub-tile's "Live data" surfaces that vendor. Parsed from EXPAND_EHR in the .njk.
-    const ehrExp = parseExpand(readText('src/atlas/index.njk'), 'EXPAND_EHR');
+    const ehrExp = parseExpand(readText(ATLAS_SRC), 'EXPAND_EHR');
     if (ehrExp && Array.isArray(ehrExp.subs)) {
       const zoneUid = uid('concept', 'zone', ehrExp.zoneId);
       for (const sub of ehrExp.subs) {

@@ -109,6 +109,28 @@ interface Window {
   LENS_CONFIG?: any;
   STATE_DATA?: any;
   DATA_YEARS?: any;
+
+  /* Atlas publishes these so its two halves can reach each other without a module
+     graph: the routes layer drives the map, and the lazily-fetched search graph
+     re-enters the HUD after it lands. Named with underscores because they were
+     never meant to be a public API, only a seam inside one page. */
+  __atlasBind?: (...args: any[]) => any;
+  __atlasSelect?: (...args: any[]) => any;
+  __atlasEnsureGraph?: (...args: any[]) => any;
+  __lastHudNode?: any;
+  updateRoutes?: (...args: any[]) => any;
+  _hlRoutes?: (...args: any[]) => any;
+  _clrRoutes?: (...args: any[]) => any;
+  _focusZoneRoutes?: (...args: any[]) => any;
+  _selectRoute?: (...args: any[]) => any;
+  _deselectRoute?: (...args: any[]) => any;
+  _toggleRouteType?: (...args: any[]) => any;
+  _syncConnPanel?: (...args: any[]) => any;
+
+  /* Career Tree loads these two on demand, so they are absent until the user asks
+     for a share card or imports a build code from a PDF. */
+  html2canvas?: any;
+  pdfjsLib?: any;
 }
 
 /** The tools reference HUKit bare, not window.HUKit; hu-kit.js is a classic script
@@ -123,3 +145,14 @@ declare const lucide: LucideApi;
 
 /** MapLibre GL, loaded from the CDN as a classic script by both map tools. */
 declare const maplibregl: any;
+
+/** D3 v7, loaded from the CDN as a classic script by the atlas and the career tree.
+    Untyped on purpose: @types/d3 is a 30-package dependency tree for a build that
+    takes pride in having none, and the atlas uses maybe a dozen of its calls. */
+declare const d3: any;
+
+/** html2canvas and pdf.js, both injected on demand by the Career Tree: html2canvas
+    for the 1080 square share card, pdf.js to read a build code back out of a PDF.
+    Neither is on the page until the user asks for that feature. */
+declare const html2canvas: any;
+declare const pdfjsLib: any;

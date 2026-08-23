@@ -376,6 +376,9 @@
   // phone (844x390) has a ~326px shell that the phone pad alone would overflow:
   // MapLibre then logs "Map cannot fit within canvas" and declines to move at all.
   // Scale the pad down so at least 60px of real fit box always survives.
+  /* set by fitPad on every call: below 1 means the pad had to be scaled to fit
+     the shell, which is the landscape-phone letterbox case and nothing else. */
+  let padScale = 1;
   const fitPad = () => {
     const short = HUKit.phone() || window.innerHeight < 500;
     const top = short ? 130 : 130;
@@ -384,6 +387,7 @@
     const shell = document.querySelector('.gv-shell');
     const h = shell ? shell.clientHeight : window.innerHeight;
     const k = Math.min(1, Math.max(0, (h - 60) / (top + bottom)));
+    padScale = k;
     return { top: Math.round(top * k), bottom: Math.round(bottom * k), left: side, right: side };
   };
   const fitPadFree = () => ({ top:130, bottom:96, left:20, right:20 });
@@ -419,8 +423,37 @@
   // explicit reveals (list, Display, system) claim at least half, but never
   // yank a full-height sheet down
   const revealDetent = () => sheetEl.classList.contains('open') && sheetEl.classList.contains('dt-full') ? 'dt-full' : 'dt-half';
-  function fitScope(b, z, dur){ lastCam = { b, z }; userCam = false; map.fitBounds(b, { padding:fitPad(), maxZoom:z, duration:dcap(dur) }); }
-  function refitScope(){ if (lastCam) map.fitBounds(lastCam.b, { padding:fitPad(), maxZoom:lastCam.z, duration:dcap(600) }); }
+  /* The letterbox guard. fitPad only scales itself down when the shell is too short
+     for the chrome, and in practice that means exactly one thing: a phone held
+     sideways. 844x390 leaves a 326px shell and a 60px fit box, while a state like
+     Colorado already draws about 89px tall at the boot zoom, so fitBounds answers with
+     a zoom BELOW where the camera already sits. Tapping a state pulled the view
+     BACKWARDS. Two earlier attempts treated this as a padding bug; it is not, no pad
+     arithmetic reaches a useful zoom while the peek sheet owns 37% of the viewport.
+
+     So ask the camera what it would do before letting it move, and when the answer is
+     a retreat, hold the zoom and slide to the middle instead. Gated on the clamp
+     rather than on "the zoom went down", because zooming out is usually correct:
+     county to state to the whole country are all legitimate, and none of them clamp.
+
+     This is the small fix, chosen 2026-08-22. It stops the wrong behaviour; it does
+     not make sideways roomy. The real fix is landscape-specific chrome (a ~64px peek
+     detent, bar off centre), written up in docs/HU-BUILD-HARDENING-2026-08-22.md. */
+  function fitOrCentre(b, z, dur){
+    const padding = fitPad();
+    if (padScale < 1) {
+      const cam = map.cameraForBounds(b, { padding, maxZoom: z });
+      if (!cam || cam.zoom < map.getZoom()) {
+        const centre = cam ? cam.center
+          : (b && b.getCenter ? b.getCenter() : [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2]);
+        map.easeTo({ center: centre, duration: dcap(dur) });
+        return;
+      }
+    }
+    map.fitBounds(b, { padding, maxZoom: z, duration: dcap(dur) });
+  }
+  function fitScope(b, z, dur){ lastCam = { b, z }; userCam = false; fitOrCentre(b, z, dur); }
+  function refitScope(){ if (lastCam) fitOrCentre(lastCam.b, lastCam.z, 600); }
   function refitFree(){ if (HUKit.phone() && lastCam && !userCam) map.fitBounds(lastCam.b, { padding:fitPadFree(), maxZoom:lastCam.z, duration:dcap(600) }); }
   map.on('movestart', e => { if (e && e.originalEvent) userCam = true; });
   // the list is a VIEW of the current scope — closing it returns to the scope's card

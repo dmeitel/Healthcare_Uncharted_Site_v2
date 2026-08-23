@@ -1,7 +1,10 @@
 /**
- * Career Tree phone flow — executes the SHIPPED renderPhoneFlow against the real
+ * Career Tree phone flow: executes the SHIPPED renderPhoneFlow against the real
  * dataset, rather than a reimplementation of it. Built output is the source, so a
- * change that breaks the template breaks this test.
+ * change that breaks the tool breaks this test.
+ *
+ * The tool moved from an inline <script> to an ES module on 2026-08-22, so the
+ * shipped copy is now the built module rather than the built page.
  */
 'use strict';
 const { test } = require('node:test');
@@ -10,7 +13,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const BUILT = path.join(__dirname, '..', '_site', 'tools', 'career-tree', 'index.html');
+const BUILT = path.join(__dirname, '..', '_site', 'assets', 'js', 'tools', 'career-tree.js');
 const DATA = path.join(__dirname, '..', 'src', 'assets', 'data', 'career-tree.json');
 const built = fs.existsSync(BUILT);
 
@@ -18,7 +21,7 @@ const built = fs.existsSync(BUILT);
 function extract() {
   const src = fs.readFileSync(BUILT, 'utf8');
   const from = src.indexOf('function renderPhoneFlow');
-  assert.notEqual(from, -1, 'renderPhoneFlow must ship in the built page');
+  assert.notEqual(from, -1, 'renderPhoneFlow must ship in the built module');
   const tail = src.slice(from);
   let depth = 0, started = false, end = -1;
   for (let i = 0; i < tail.length; i++) {
