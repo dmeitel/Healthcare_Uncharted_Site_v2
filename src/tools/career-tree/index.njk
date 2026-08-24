@@ -340,7 +340,12 @@ og_image: /brand/og-career-tree.jpg
   /* On My Path the content is centered (.bp-col, ~1240px) · nest the panel's LEFT edge against the column's right
      border (sit in the margin beside it), clamped so it never runs past the screen on narrower windows. */
   #hct-canvas-wrap[data-view="path"] #hct-panel { left: min(calc(50% + 620px), calc(100% - 340px)); right: auto; }
-  .hct-p-head { padding: 16px 18px 14px; border-bottom: 1px solid rgba(78,205,196,0.12); position: relative; }
+  /* flex:none = the squish guard the maps needed (the sheet is a flex column, and at
+     a short detent shrinkable children compress; the maps' card title got swallowed
+     that way). This panel already had the right anatomy, the body scrolls; the
+     header and tabs just declare they never shrink. */
+  .hct-p-head { padding: 16px 18px 14px; border-bottom: 1px solid rgba(78,205,196,0.12); position: relative; flex: none; }
+  .hct-p-tabs { flex: none; }
   .hct-p-close { position: absolute; top: 12px; right: 14px; cursor: pointer; font-size: 20px; line-height: 1; color: rgba(180,205,215,0.5); background: none; border: none; }
   .hct-p-close:hover { color: #E2EEF4; }
   .hct-p-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 9px; border-radius: 20px; margin-bottom: 9px; }
@@ -413,6 +418,23 @@ og_image: /brand/og-career-tree.jpg
   .mp-fbtn:hover { background: rgba(232,197,71,0.14); border-color: rgba(232,197,71,0.4); color: #F0CF6B; }
   /* ── My Path: build planner ────────────────────────────── */
   /* career "character sheet": identity bar + trunk-centric 3-column sheet */
+  /* ── THE STATUS CARD (mini design phase on My Path, 2026-08-23): the Strava read.
+     A returning student's first glance answers: what am I aiming at, how far is it,
+     and what do I do next. Same data the bill and the checklists already carry; this
+     is the summary the archetype opens with. Ruled figures, open ground, no box. */
+  #bp-status { margin: 10px 14px 4px; padding: 12px 4px 14px; border-top: 2px solid var(--border2); }
+  #bp-status .st-kicker { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin-bottom: 4px; }
+  #bp-status .st-goal { font-family: var(--display); font-size: 19px; font-weight: 800; color: var(--t1); line-height: 1.2; margin-bottom: 10px; }
+  #bp-status .st-goal.nogoal { color: var(--t3); font-weight: 600; font-size: 14px; }
+  #bp-status .st-row { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 10px; }
+  #bp-status .st-fig .v { font-family: var(--display); font-size: 20px; font-weight: 800; color: var(--t1); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  #bp-status .st-fig .v.hi { color: var(--teal); }
+  #bp-status .st-fig .k { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--t2); margin-top: 3px; }
+  #bp-status .st-next { font-size: 13px; color: var(--t1); border-left: 3px solid var(--teal); padding: 3px 0 3px 10px; }
+  #bp-status .st-next b { color: var(--teal); font-weight: 700; }
+  [data-theme='light'] #bp-status .st-kicker, [data-theme='light'] #bp-status .st-next b { color: var(--teal-ink); }
+  [data-theme='light'] #bp-status .st-next { border-left-color: var(--teal-ink); }
+  [data-theme='light'] #bp-status .st-fig .v.hi { color: var(--teal-ink); }
   .bp-id { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 9px 16px 10px; border-bottom: 1px solid rgba(78,205,196,0.14); }
   .bp-id-center { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; }
   /* shifter + score chips */
@@ -1245,7 +1267,12 @@ og_image: /brand/og-career-tree.jpg
     #hct-panel.open { transform: none; transition: opacity .2s ease, transform .2s ease, max-height .2s ease, height .2s ease; }
     #hct-panel.dt-peek { max-height: 120px; }
     #hct-panel.dt-peek .hct-p-body { overflow: hidden; }
-    #hct-panel.dt-full { height: 92vh; height: 92dvh; max-height: 92vh; max-height: 92dvh; }
+    /* 92dvh is the KIT sheets' full detent, but those anchor to the VIEWPORT. This
+       panel anchors absolute inside its view section, so 92dvh overflowed the section's
+       top by ~176px and buried the header (grabber, X, title) under the toolbar and the
+       site nav — David's soft lock. Full = 100% OF THE SECTION: the sheet fills every
+       pixel below the fixed chrome and its header is always on screen. */
+    #hct-panel.dt-full { height: 100%; max-height: 100%; }
     #hct-panel.dragging { transition: none; }
     .hct-p-grab { display: block; }
     .hct-p-close, .bp-modal-x { font-size: 26px; min-width: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; top: 2px; right: 2px; }   /* 44px floor: the X was a 34px target */
@@ -1404,35 +1431,70 @@ og_image: /brand/og-career-tree.jpg
     #hct-career #hct-p-focus { display: none !important; }   /* the camera verb has no subject here; the ladder is the line's phone answer */
     #hct-phone-flow { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
       padding: 4px 12px calc(28px + env(safe-area-inset-bottom)); }
-    .hpf-hd { font-family: var(--mono); font-size: 11px; color: var(--t3); letter-spacing: .05em; padding: 6px 2px 12px; }
-    .hpf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    @media (max-width: 379px){ .hpf-grid { grid-template-columns: 1fr; } }
-    .hpf-deck { display: flex; flex-direction: column; gap: 4px; text-align: left; min-height: 64px;
-      background: var(--raised); border: 1px solid var(--border2); border-left: 3px solid var(--fc, var(--teal));
-      border-radius: 10px; padding: 12px 12px 10px; cursor: pointer; font: inherit; color: inherit;
-      -webkit-appearance: none; appearance: none; }
-    .hpf-deck-name { font-size: 13.5px; font-weight: 700; line-height: 1.25; }
-    .hpf-deck-meta { font-family: var(--mono); font-size: 11px; color: var(--t3); }
-    .hpf-lhd { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px;
-      padding: 6px 0; background: var(--surface); border-bottom: 1px solid var(--border2); }
-    .hpf-back { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px 0 2px;
-      background: none; border: 0; color: var(--teal); font-family: var(--mono); font-size: 12px; cursor: pointer;
-      -webkit-appearance: none; appearance: none; }
-    [data-theme='light'] .hpf-back { color: var(--teal-ink); }
-    .hpf-lname { font-size: 14px; font-weight: 800; }
-    .hpf-lcount { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-left: auto; }
-    .hpf-tier { margin-top: 14px; }
-    .hpf-tier-lbl { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
-      text-transform: uppercase; color: var(--t3); padding: 0 2px 2px; }
-    .hpf-role { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; text-align: left;
-      background: var(--raised); border: 1px solid var(--border2); border-radius: 9px; padding: 8px 12px;
-      margin-top: 6px; font: inherit; color: inherit; cursor: pointer; -webkit-appearance: none; appearance: none; }
-    .hpf-role.on { border-color: var(--fc, var(--teal)); box-shadow: inset 3px 0 0 var(--fc, var(--teal)); }   /* Ink State: edge ink, no glow */
-    .hpf-role-name { font-size: 13.5px; font-weight: 600; line-height: 1.3; flex: 1; }
-    .hpf-role-abbr { font-family: var(--mono); font-size: 11px; color: var(--t3); flex: none; }
-    .hpf-role-pin { color: var(--amber); font-size: 12px; flex: none; }
-    .hpf-deck:focus-visible, .hpf-role:focus-visible, .hpf-back:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+    /* EDUCATION and SKILLS get the same phone answer the careers board got (David's
+       phone QA 2026-08-23: "we need education and Skills to be built like careers").
+       Same hpf components, same contracts; only the data differs. The edu detail aside
+       keeps its own inline presentation below the ladder (it already reflows and hides
+       itself when empty); the skills flow opens the shared sheet via openGrowthPanel. */
+    #hct-schooling #hct-phone-edu, #hct-atlas #hct-phone-atlas {
+      display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 4px 12px calc(28px + env(safe-area-inset-bottom)); }
+    #hct-schooling .edu-layers { display: none; }
+    #hct-schooling .edu-hud { flex: none; }
+    #hct-atlas #hct-atlas-board { display: none; }
+    #hct-schooling .view-head .view-hint, #hct-atlas .view-head .view-hint { display: none; }
+    /* .hpf-* phone-flow components now live in hu-global.css (promoted 2026-08-23:
+       the atlas became their third consumer; zero hand-rolled twins) */
   }
+
+@media (max-width: 699px) {
+  /* ── APP TABS (David's call, phone QA 2026-08-23): "maybe it needs to run more like
+     the home page, the menus have swaps at the bottom and a dedicated screen for each
+     thing." He is right: Path / Careers / Education / Skills are SCREENS, not
+     controls, and screens belong in a bottom tab bar the way the home page already
+     works. The pull-up sheet keeps only DETAILS; navigation never hides in it.
+     Same chrome contract as .hu-bbar: 56px items, blur, safe-area, teal active. */
+  #hct-tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 150;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: color-mix(in srgb, var(--dark) 96%, transparent);
+    backdrop-filter: blur(16px);
+    border: none; border-top: 1px solid var(--border2); border-radius: 0;
+    padding-bottom: env(safe-area-inset-bottom); overflow: visible;
+  }
+  #hct-tabs button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; min-height: 56px; position: relative;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    background: none; border: none; border-radius: 0; color: var(--t3);
+  }
+  #hct-tabs button.on { background: none; color: var(--teal); font-weight: 700; }
+  [data-theme="light"] #hct-tabs button.on { color: var(--teal-ink); }
+  #hct-tabs button svg, #hct-tabs button i[data-lucide] { width: 19px; height: 19px; }
+  /* the pin-count badge rides the icon's corner instead of the label line */
+  #hct-tabs .tab-badge, #hct-tabs .tab-count { position: absolute; top: 5px; right: calc(50% - 22px); }
+  /* the canvas clears the bar */
+  #hct-shell { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  /* the wordmark retires: the site nav one row up already says it (same call as the
+     atlas and multi-lens) */
+  #hct-tb .hct-logo, #hct-tb .hct-sep { display: none; }
+  /* THE SOFT-LOCK FIX (David hit it live, 2026-08-23): the toolbar is z-40 and the
+     panel was z-30, so a sheet dragged to full slid its header UNDER the toolbar —
+     grabber, X and title all buried beneath fixed chrome, tab bar already yielded,
+     and the careers view is exempt from the off-panel tap dismisser. Every visible
+     exit gone at once. One surface at a time means the sheet COVERS the chrome, not
+     ducks under it. */
+  #hct-panel { z-index: 60; }
+  /* The board verbs leave the phone (David: "do we need these icons up at all times?").
+     Family / Pathways / Discipline filter the desktop canvas; fit and free-look frame
+     it. The canvas is display:none on phone, so every one of them commanded a surface
+     the reader cannot see. The flows are the phone answer and they need none of it.
+     What stays: search, your saved build, help — one slim row — and Path's own
+     controls, which act on the planner itself. */
+  #tbc-career, #tbc-edu, #tbc-atlas { display: none !important; }
+  /* one surface at a time: the sheet owns the screen, the tab bar returns on dismiss */
+  #hct-shell:has(#hct-panel.open) #hct-tabs { display: none; }
+}
   </style>
 
 <noscript><p class="hu-noscript">This tool runs entirely in your browser and needs JavaScript turned on. Nothing you do here is sent to a server.</p></noscript>
@@ -1570,6 +1632,7 @@ og_image: /brand/og-career-tree.jpg
     <!-- Education Matrix view — career-board style: credential hexes in family lanes, degree levels as bands, ladder edges -->
     <section id="hct-schooling" class="hct-view" data-view="edu">
       <div class="view-head"><span class="view-ttl">Education Matrix</span><span class="view-hint"><span class="hint-mouse">credentials by level. Click one to see the jobs it opens, add it to your Education</span><span class="hint-touch">credentials by level · tap one to see the jobs it opens</span></span><span class="edu-search-wrap"><span class="hct-search-box"><i data-lucide="search" class="hct-search-ico" aria-hidden="true"></i><input id="hct-edu-search" class="edu-search" type="text" placeholder="Search a credential, role, or what you think is a degree…" autocomplete="off"></span><span id="hct-edu-searchnote" class="edu-searchnote"></span></span></div>
+      <div id="hct-phone-edu" aria-label="Education levels by degree"></div>
       <div class="edu-hud">
         <div id="hct-edu-layers" class="edu-layers">
           <svg id="hct-edu-svg"></svg>
@@ -1582,6 +1645,7 @@ og_image: /brand/og-career-tree.jpg
     <!-- Areas of Expertise Matrix view — one map, three zones (Skills · Specializations · Experience) -->
     <section id="hct-atlas" class="hct-view" data-view="atlas">
       <div class="view-head"><span class="view-ttl">Areas of Expertise Matrix</span><span class="view-hint"><span class="hint-mouse">click a hex for detail, or turn on Select to add several at once</span><span class="hint-touch">tap a hex for detail · Select adds several at once</span></span><span class="atlas-tools"><button id="hct-atlas-multi" class="atlas-multibtn" type="button">✓ Select</button><span class="hct-search-box"><i data-lucide="search" class="hct-search-ico" aria-hidden="true"></i><input id="hct-atlas-search" class="edu-search" type="text" placeholder="Search a skill, specialty, setting, or population…" autocomplete="off"></span><span id="hct-atlas-searchnote" class="edu-searchnote"></span></span></div>
+      <div id="hct-phone-atlas" aria-label="Areas of expertise"></div>
       <div id="hct-atlas-board">
         <svg id="hct-atlas-svg"></svg>
         <!-- the lens: the survey's "what pulls you," flippable right on the map. Dims what doesn't lean your way; your own tiles never dim -->
@@ -1686,6 +1750,7 @@ og_image: /brand/og-career-tree.jpg
         <span class="hw-strip-txt"><b>New sheet.</b> Four questions set up your map, or load a saved build from More in the toolbar.</span>
         <button class="hw-strip-btn" id="hw-reopen" type="button">Start here →</button>
       </div>
+      <div id="bp-status" hidden></div>
       <!-- IDENTITY BAR -->
       <div class="bp-id">
         <div class="bp-id-block">
@@ -1818,4 +1883,4 @@ og_image: /brand/og-career-tree.jpg
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="/assets/js/hu-kit.js"></script>
-<script type="module" src="/assets/js/tools/career-tree.js?v=20260822"></script>
+<script type="module" src="/assets/js/tools/career-tree.js?v=20260823"></script>

@@ -437,6 +437,11 @@ docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md.)
   retires at rest and lives in the sheet. Nothing on screen encodes what the reader
   can already read.
 - **Comparison tables stand on rules, not in boxes** (the Ruled Figure, applied).
+- **Views are navigation, not controls** (David's call, career-tree phone QA
+  2026-08-23). A tool with multiple SCREENS puts them in a bottom app-tab bar on
+  phones, the way the home page and the career tree do: 56px items, icon over a mono
+  label, safe-area padding, teal active. The sheet carries details only; navigation
+  never hides inside a pull-up.
 
 ---
 

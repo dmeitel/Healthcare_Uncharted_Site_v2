@@ -1836,7 +1836,91 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
   // the hardware-back sentinel covers the ladder too (one guard, rung-aware — two
   // guards would both answer the same popstate and eat two levels)
   function ensurePhoneArm(){
-    if (backGd && isPhone() && curView === 'career' && phoneFam && !document.getElementById('hct-panel').classList.contains('open')) backGd.arm();
+    const rung = (curView === 'career' && phoneFam) || (curView === 'atlas' && phoneAtlasZone);
+    if (backGd && isPhone() && rung && !document.getElementById('hct-panel').classList.contains('open')) backGd.arm();
+  }
+
+  /* ── EDUCATION + SKILLS phone flows (David's phone QA 2026-08-23: "we need education
+     and Skills to be built like careers, different design for phone compared to PC").
+     Same components and contracts as renderPhoneFlow above; only the data differs.
+     Education is a LADDER already (seven degree levels), so it skips the deck step:
+     levels are the tier sections, credentials the rows, and a tap opens the same
+     inline detail the matrix uses. Skills mirrors careers exactly: zone decks, then
+     group sections, then openGrowthPanel — the same sheet, the same back walk. */
+  let phoneAtlasZone = null;
+  function renderPhoneEdu(){
+    const host = document.getElementById('hct-phone-edu');
+    if (!host || !DATA || !eduCards.length) return;
+    let h = '<div class="hpf-hd">' + eduCards.length + ' credentials by level. Tap one for its detail.</div>';
+    DEG_ORDER.forEach((deg, t) => {
+      const cards = eduCards.map((c, idx) => ({ c, idx })).filter(x => x.c.lvl === t);
+      if (!cards.length) return;
+      const dm = DATA.meta.degrees[deg] || {};
+      h += '<div class="hpf-tier"><span class="hpf-tier-lbl" style="color:' + (dm.color || 'var(--t3)') + '">'
+        + esc(dm.label || deg) + '</span>';
+      cards.forEach(({ c, idx }) => {
+        const on = eduMatrixSel === idx;
+        /* the matrix disambiguates same-face cards by LANE; a flat list cannot, so the
+           row says which role the credential opens. "HS / GED -> Pharmacy Technician"
+           reads; five identical "HS / GED · 1 role" rows do not. */
+        const rl = c.kind === 'degree' ? (c.roles || []) : (c.role ? [c.role] : []);
+        const meta = rl.length === 1 ? String(rl[0].label || '').replace(/\n/g, ' ')
+                   : rl.length > 1 ? rl.length + ' roles' : '';
+        h += '<button type="button" class="hpf-role' + (on ? ' on' : '') + '" data-idx="' + idx + '"'
+          + ' style="--fc:' + (dm.color || 'var(--teal)') + '"' + (on ? ' aria-current="true"' : '') + '>'
+          + '<span class="hpf-role-name">' + esc(c.kind === 'degree' ? (c.label || c.face) : c.face) + '</span>'
+          + (meta ? '<span class="hpf-role-abbr">' + esc(meta) + '</span>' : '')
+          + '</button>';
+      });
+      h += '</div>';
+    });
+    host.innerHTML = h;
+  }
+  function renderPhoneAtlas(){
+    const host = document.getElementById('hct-phone-atlas');
+    if (!host || !DATA || !DATA.growth) return;
+    const g = DATA.growth;
+    if (phoneAtlasZone && !g.zones[phoneAtlasZone]) phoneAtlasZone = null;
+    let h = '';
+    if (!phoneAtlasZone){
+      h += '<div class="hpf-hd">' + g.zoneOrder.length + ' tracks. Tap one to browse its areas.</div><div class="hpf-grid" role="list">';
+      g.zoneOrder.forEach(zk => {
+        const z = g.zones[zk] || {}; const n = g.nodes.filter(x => x.zone === zk);
+        if (!n.length) return;
+        h += '<button type="button" class="hpf-deck" role="listitem" data-zone="' + esc(zk) + '" style="--fc:' + (z.color || 'var(--teal)') + '">'
+          + '<span class="hpf-deck-name">' + esc(z.label || zk) + '</span>'
+          + '<span class="hpf-deck-meta">' + n.length + ' areas</span></button>';
+      });
+      h += '</div>';
+    } else {
+      const z = g.zones[phoneAtlasZone] || {}; const col = z.color || 'var(--teal)';
+      const zn = g.nodes.filter(x => x.zone === phoneAtlasZone);
+      h += '<div class="hpf-lhd"><button type="button" class="hpf-back" id="hpa-back">&larr; All tracks</button>'
+        + '<span class="hpf-lname" style="color:' + col + '">' + esc(z.label || phoneAtlasZone) + '</span>'
+        + '<span class="hpf-lcount">' + zn.length + ' areas</span></div>';
+      const groups = [...new Set(zn.map(x => x.group))];
+      groups.forEach(grp => {
+        h += '<div class="hpf-tier"><span class="hpf-tier-lbl">' + esc(grp) + '</span>';
+        zn.filter(x => x.group === grp).forEach(n => {
+          const on = n.id === atActiveId;
+          h += '<button type="button" class="hpf-role' + (on ? ' on' : '') + '" data-id="' + esc(n.id) + '" style="--fc:' + col + '"'
+            + (on ? ' aria-current="true"' : '') + '>'
+            + '<span class="hpf-role-name">' + esc(n.label) + '</span>'
+            + (n.abbr ? '<span class="hpf-role-abbr">' + esc(n.abbr) + '</span>' : '')
+            + '</button>';
+        });
+        h += '</div>';
+      });
+    }
+    host.innerHTML = h;
+  }
+  // leaving the track list is ONE step, mirroring closePhoneFam
+  function closePhoneZone(focusBack){
+    const z = phoneAtlasZone; phoneAtlasZone = null;
+    if (document.getElementById('hct-panel').classList.contains('open')) closePanel();
+    renderPhoneAtlas();
+    announce('All tracks');
+    if (focusBack && z){ const d = document.querySelector('.hpf-deck[data-zone="' + z + '"]'); if (d) asEl(d).focus(); }
   }
   // Home the shared detail panel INSIDE the active view's section — exactly like the Education panel lives inside its view.
   // Because inactive views are display:none, the panel then hides itself on a tab switch and can never leak to another tab.
@@ -2413,6 +2497,8 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
         x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false');
         const g = x.querySelector('.bp-chk-g'); if (g) g.textContent = on ? '●' : '○'; } });
       renderNextSteps(); renderSectionGuides();   // progress counts stay honest
+      // the status card counts these ticks; keep its figures live without a full repaint
+      renderStatusCard();
     };
     document.addEventListener('click', e => { const el = hit(e,'[data-ck]'); if (el){ e.stopPropagation(); toggle(el); } });
     // shared modal focus trap: Tab stays inside the open .bp-modal (dialog contract)
@@ -2468,6 +2554,41 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     planFromFutureTiles().school.forEach(s => { const k = s.face + '|' + s.degree; if (!seen.has(k)){ seen.add(k); road.push({ face: s.face, degree: s.degree }); } });
     return road;
   }
+  /* ── THE STATUS CARD (mini design phase on My Path, 2026-08-23). The archetype is
+     Strava/Duolingo: a returning student's first glance answers what am I aiming at,
+     how far it is, and what to do next. Every number here already existed — the bill,
+     the checklists, the pinned goals; this is the summary they never had. */
+  function renderStatusCard(){
+    const host = document.getElementById('bp-status'); if (!host) return;
+    if (!totalNodes()){ host.hidden = true; return; }
+    const targets = build.career.filter(n => nodeLayer(n) === 'future');
+    // aggregate requirement progress + the first unticked item, in checklist order
+    let done = 0, total = 0, nextItem = null, nextFor = null;
+    const scan = (kind, id, items, label) => { items.forEach(it => {
+      total++;
+      if (build.checks && build.checks[ckKey(kind, id, it)]) done++;
+      else if (!nextItem){ nextItem = it; nextFor = label; } }); };
+    targets.forEach(n => { if (n.roleId && nodeById.has(n.roleId)){ const node = nodeById.get(n.roleId);
+      scan('r', node.id, (node.req && node.req.items) || [], tileDisplayName(n, 'career')); } });
+    futureOf('education').forEach(n => { if (n.kind === 'real')
+      scan('c', credCkId(n.label), credEntryItems(n.label), n.label); });
+    const bill = planBill(planRoad());
+    let h = '<div class="st-kicker">Your path</div>';
+    h += targets.length
+      ? '<div class="st-goal">&rarr; ' + targets.map(n => esc(tileDisplayName(n, 'career'))).join(' &middot; ') + '</div>'
+      : '<div class="st-goal nogoal">No goal pinned yet</div>';
+    const figs = [];
+    if (total) figs.push('<div class="st-fig"><div class="v' + (done === total ? ' hi' : '') + '">' + done + '<span style="font-size:13px;font-weight:600;color:var(--t2)"> of ' + total + '</span></div><div class="k">requirements done</div></div>');
+    if (bill.years) figs.push('<div class="st-fig"><div class="v">~' + (bill.years % 1 ? bill.years.toFixed(1) : bill.years) + '</div><div class="k">years to go</div></div>');
+    if (bill.exams) figs.push('<div class="st-fig"><div class="v">' + bill.exams + '</div><div class="k">board exam' + (bill.exams !== 1 ? 's' : '') + '</div></div>');
+    if (bill.fees) figs.push('<div class="st-fig"><div class="v">~$' + bill.fees.toLocaleString('en-US') + '</div><div class="k">exam fees</div></div>');
+    if (figs.length) h += '<div class="st-row">' + figs.join('') + '</div>';
+    if (nextItem) h += '<div class="st-next"><b>Next:</b> ' + esc(nextItem) + (nextFor ? ' <span style="color:var(--t3)">&middot; ' + esc(nextFor) + '</span>' : '') + '</div>';
+    else if (!targets.length) h += '<div class="st-next"><b>Next:</b> pin a role you want (&#9733; on any role) and your plan builds here.</div>';
+    else if (total && done === total) h += '<div class="st-next"><b>Next:</b> every requirement is ticked. Pick your next credential in Education.</div>';
+    host.innerHTML = h; host.hidden = false;
+  }
+
   function billHTML(){
     const road = planRoad();
     if (!road.length) return '';
@@ -3074,6 +3195,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     const hwEmpty = totalNodes() === 0;
     const hwm = document.getElementById('hct-welcome-modal'); if (hwm && !hwEmpty) hwm.classList.remove('open');
     const hws = document.getElementById('hct-welcome-strip'); if (hws) hws.hidden = !hwEmpty;
+    renderStatusCard();
     if (!document.getElementById('bp-grid-career')) return;   // planner not in the DOM yet
     if (DATA) renderSectionGuides();   // the header guide chips track every build change
     if (!zonePickersWired && DATA){    // the four zone pickers live in static markup now — wire once
@@ -5355,12 +5477,14 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
   const backGd = (window.HUKit && HUKit.backGuard) ? HUKit.backGuard({
     watch: document.getElementById('hct-panel'),
     active: () => document.getElementById('hct-panel').classList.contains('open')
-               || (isPhone() && curView === 'career' && !!phoneFam),
+               || (isPhone() && curView === 'career' && !!phoneFam)
+               || (isPhone() && curView === 'atlas' && !!phoneAtlasZone),
     step: () => {
       if (document.getElementById('hct-panel').classList.contains('open')){
         dismissPanel();
         setTimeout(ensurePhoneArm, 80);   // the ladder beneath keeps its own back step
-      } else closePhoneFam(false);
+      } else if (curView === 'atlas' && phoneAtlasZone) closePhoneZone(false);
+      else closePhoneFam(false);
     }
   }) : null;
   window.addEventListener('popstate', () => {
@@ -5384,7 +5508,12 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     selectedId = null; eduSelId = null; eduMatrixSel = null; snapArmed = false; focusId = null; edResetSnap(); atResetSnap(); closePanel();
     if (had && DATA && curView === 'career') render(false);   // re-render the board we're leaving to drop its selection highlight
     curView = v;
-    const cw = document.getElementById('hct-canvas-wrap'); if (cw) cw.setAttribute('data-view', v);   // lets CSS nest the panel per view
+    const cw = document.getElementById('hct-canvas-wrap'); if (cw) cw.setAttribute('data-view', v);
+    // the phone flows are each view's phone home; paint the one that just came on screen
+    if (typeof HUKit !== 'undefined' && HUKit.phone() && DATA){
+      if (v === 'edu') renderPhoneEdu();
+      else if (v === 'atlas'){ phoneAtlasZone = null; renderPhoneAtlas(); }
+    }   // lets CSS nest the panel per view
     qsa(document,'#hct-tabs button').forEach(b => { const on = b.dataset.view === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
     qsa(document,'.hct-view').forEach(s => s.classList.toggle('active', s.dataset.view === v));
     renderAppliedStrip();   // the hidden-pathways chip only reads while the Career Matrix is on screen
@@ -5917,6 +6046,33 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     const boardRender = render;
     // @ts-ignore  deliberate wrap: JS allows reassigning a function declaration, TS does not
     render = function(animate){ boardRender(animate); if (isPhone() && DATA) renderPhoneFlow(); };
+    // EDUCATION flow: tap a credential row -> the matrix's own inline detail
+    const peHost = document.getElementById('hct-phone-edu');
+    if (peHost) peHost.addEventListener('click', e => {
+      const r = hit(e, '.hpf-role'); if (!r) return;
+      const idx = +asEl(r).dataset.idx;
+      if (!eduCards[idx]) return;
+      eduMatrixSel = idx;
+      openEduMatrixPanel(eduCards[idx]);
+      /* re-render DEFERRED: rebuilding innerHTML now would detach the clicked row
+         mid-bubble, and the document-level off-panel dismisser then can't see that
+         the tap came from inside this flow (closest() on a detached node finds no
+         host) and closes what we just opened. One frame later the event is done. */
+      requestAnimationFrame(renderPhoneEdu);
+      announce(eduCards[idx].face + ' details below the list');
+    });
+    // SKILLS flow: zone decks -> group sections -> the shared sheet
+    const paHost = document.getElementById('hct-phone-atlas');
+    if (paHost) paHost.addEventListener('click', e => {
+      if (hit(e, '#hpa-back')){ closePhoneZone(true); return; }
+      const d = hit(e, '.hpf-deck');
+      if (d){ phoneAtlasZone = asEl(d).dataset.zone; ensurePhoneArm();
+              announce(((DATA.growth.zones[phoneAtlasZone] || {}).label || phoneAtlasZone) + ' areas');
+              requestAnimationFrame(renderPhoneAtlas); return; }   // deferred: see the edu note
+      const r = hit(e, '.hpf-role');
+      if (r){ const n = DATA.growth.nodes.find(x => x.id === asEl(r).dataset.id);
+              if (n){ openGrowthPanel(n); requestAnimationFrame(renderPhoneAtlas); } }
+    });
     const pfHost = document.getElementById('hct-phone-flow');
     if (pfHost) pfHost.addEventListener('click', e => {
       const d = hit(e,'.hpf-deck');
@@ -5941,7 +6097,9 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
       const p = document.getElementById('hct-panel');
       if (!p.classList.contains('open')) return;
       if (curView === 'career') return;                 // the board's svg background-click manages the role panel
-      if (hit(e,'#hct-panel, .bp-sp-cell, .hct-chip, .bp-sg, [data-go]')) return;   // panel + things that open/switch a panel
+      // the phone flows are OPENERS, not empty space: without this exclusion the same
+    // tap that opened the sheet bubbled here and closed it in the same breath
+    if (hit(e,'#hct-panel, .bp-sp-cell, .hct-chip, .bp-sg, [data-go], #hct-phone-atlas, #hct-phone-edu')) return;
       selectedId = null; eduSelId = null; closePanel();
       if (curView === 'path') renderMyPath();
     });

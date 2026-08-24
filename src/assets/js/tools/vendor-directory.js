@@ -105,6 +105,13 @@ function cardHTML(v, i) {
   return `<div class="vendor-card" data-vendor-idx="${i}" role="button" tabindex="0">
     <div class="vc-top">
       <div class="vc-header"><div class="vc-name">${v.name}</div><div class="vc-status ${STATUS_CLASS[v.status]}">${v.statusLabel}</div></div>
+      ${(() => {
+        /* the vitals line (instrument grammar: the row's answer in solid ink, the
+           Crunchbase read: how it is owned, how much of it is healthcare). The
+           structured schema carried these since V2; the card never showed them. */
+        const vit = [OWN_LABEL[v.ownership], SHARE_LABEL[v.hcShare], v.ticker].filter(Boolean);
+        return vit.length ? '<div class="vc-vitals">' + vit.join('<b>&middot;</b>') + '</div>' : '';
+      })()}
       <div class="vc-owner">${v.owner}${v.hq ? ' &middot; ' + hqStr(v) : ''}</div>
       <div class="vc-desc">${v.desc}</div>
     </div>
@@ -280,6 +287,9 @@ window.addEventListener('popstate', () => {
 
 function openDetail(idx) {
   const v = vendors[idx];
+  // the kicker names the sector (card grammar: what kind of thing, then which one)
+  const k = document.getElementById('dp-kicker');
+  if (k) k.textContent = SECTOR_LABEL[v.sector] || '';
   document.getElementById('dp-name').textContent = v.name;
   document.getElementById('dp-owner').textContent = v.owner + (v.hq ? ' · ' + hqStr(v) : '');
   document.getElementById('dp-detail').textContent = v.detail;

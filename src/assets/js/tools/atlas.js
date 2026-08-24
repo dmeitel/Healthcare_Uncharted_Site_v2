@@ -1053,7 +1053,7 @@ function initExpansion(cfg) {
       document.getElementById('hud-desc').textContent  = sub.desc;
       document.getElementById('hud-links').innerHTML   = '';
       document.getElementById('hud-links-col').classList.remove('has-links');
-      document.getElementById('atlas-hud').classList.add('open');
+      openHudSheet();
       fillHudData(sub.nodeId);
     });
 
@@ -1842,7 +1842,7 @@ ZONE_DEFS.forEach(z => {
     document.getElementById('hud-links').innerHTML = '';
     document.getElementById('hud-links-col').classList.remove('has-links');
     fillHudData(null);   // connections are routes, not concept hexes — clear any bound data
-    document.getElementById('atlas-hud').classList.add('open');
+    openHudSheet();
     if (window._syncConnPanel) window._syncConnPanel();
   };
 
@@ -2280,6 +2280,17 @@ function getInitT() {
   const vw=svgEl.clientWidth||1300, vh=svgEl.clientHeight||720;
   // Zones pulled inward to border the ring-1 moat. Map spans ~x:750–1516, y:490–1370.
   const mapCX=1150, mapCY=950, mapW=1060, mapH=1020;
+  /* Phones start ZOOMED IN (David's call, 2026-08-23): fitting the whole map at
+     390px lands near k=0.29 and every tile is a smear. First cut booted at k=0.85
+     on the compass, which failed twice over: node labels are opacity 0 below
+     k=0.90 (see updateLOD), and dead-centering the rose fills a phone screen with
+     the blank hub moat. So boot past the label threshold, framed on the labeled
+     territory southwest of the hub, rose still in frame top-right. Panning
+     discovers the rest, the way a paper map opens to where you are. */
+  if (window.HUKit && HUKit.phone()){
+    const k = 1.1, bx = mapCX - 80, by = mapCY + 170;
+    return d3.zoomIdentity.translate(vw/2-bx*k, vh/2-by*k).scale(k);
+  }
   const k = Math.min((vw-80)/mapW, (vh-80)/mapH, 0.70);
   return d3.zoomIdentity.translate(vw/2-mapCX*k, vh/2-mapCY*k).scale(k);
 }
@@ -2359,6 +2370,9 @@ function applyHash() {
 
 // back/forward traversal between fragment entries fires hashchange — this IS the restore path
 window.addEventListener('hashchange', () => {
+  // the guard ate this traversal to close the sheet — NOT a navigation, no restore
+  // (the career tree's popstate handler does exactly this; same kit, same contract)
+  if (atlasBackGd && atlasBackGd.consumed()) return;
   hashScope = location.hash.replace('#','');
   urlCtl.mark(hashScope);
   urlCtl.suspend(() => {
@@ -2441,7 +2455,7 @@ function selectNode(zone,cell) {
     a.innerHTML=`<span>${lk.icon}</span><span>${lk.label}</span>`;
     linksEl.appendChild(a);
   });
-  document.getElementById('atlas-hud').classList.add('open');
+  openHudSheet();
   fillHudData(cell.nodeId);
 
   d3.selectAll('.az-node-cell').each(function(){
@@ -2490,6 +2504,9 @@ function deselectNode() {
 
 function closeHud() { document.getElementById('atlas-hud').classList.remove('open'); }
 
+/* The phone browse-flow that lived here 2026-08-23 was reverted the same day on
+   David's ruling: the hex grid IS the atlas. See CLAUDE.md LOAD-BEARING. */
+
 /* On phones the HUD is driven by the shared kit sheet rather than the hand-rolled
    grip resize below: detents, drag, flick, and a hardware-back step. The atlas was
    the only canvas tool still missing both HUKit.sheet and HUKit.backGuard, so on a
@@ -2498,12 +2515,23 @@ const hudSheetEl = document.getElementById('atlas-hud');
 const hudSheet = (window.HUKit && HUKit.sheet && hudSheetEl)
   ? HUKit.sheet(hudSheetEl, { startDetent: 'dt-half', onDismiss: closeHud })
   : null;
-if (window.HUKit && HUKit.backGuard && hudSheetEl) {
-  HUKit.backGuard({
-    watch: hudSheetEl,
-    active: () => HUKit.phone() && hudSheetEl.classList.contains('open'),
-    step: closeHud
-  });
+/* stored so the hashchange restore path below can ask consumed(): the guard's own
+   history walk (arm/disarm) traverses hash entries, and without this check the
+   restore listener replayed the PREVIOUS hash after every X press and resurrected
+   the node the reader just dismissed (found via David's phone flow, 2026-08-23) */
+const atlasBackGd = (window.HUKit && HUKit.backGuard && hudSheetEl) ? HUKit.backGuard({
+  watch: hudSheetEl,
+  active: () => HUKit.phone() && hudSheetEl.classList.contains('open'),
+  step: closeHud
+}) : null;
+
+/* Every HUD-open path routes here. On phones a selection answers at a glance:
+   the sheet opens at PEEK (kicker, name, short description) and the reader
+   scrolls or pulls for the deep data; it no longer leaps to half-screen on
+   every tap (David, 2026-08-23). Desktop keeps the in-flow HUD. */
+function openHudSheet(){
+  if (hudSheet && window.HUKit && HUKit.phone()) hudSheet.open('dt-peek');
+  else hudSheetEl.classList.add('open');
 }
 
 // ── CONTROLS ──────────────────────────────────────────────────────────────────

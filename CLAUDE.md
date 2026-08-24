@@ -68,6 +68,21 @@ If a session cannot tell whether a surface is in a phase, it is not.
 
 ### OPEN PHASES
 
+**The Atlas · opened and CLOSED 2026-08-23 by David's ruling, phone flow REVERTED.**
+His words: "the grid a core concept with the hex tiles. other tools can change but not
+the Atlas, its the brain/Grid of the whole website." A browse-flow replacement for the
+phone canvas shipped for hours and was fully reverted. THE RULING, now Tier 4 identity:
+the hex grid IS the atlas, on every device; pinch and zoom are the phone answer. What
+survived the phase: the back-guard consumed() fix in the hash restore path (a real bug),
+and the hpf-* kit components (the career tree remains their consumer).
+
+**My Path (career tree) · opened and CLOSED 2026-08-23, shipped.** One component: the
+STATUS CARD at the top of My Path, the Strava read the tool's archetype demanded: goal,
+requirements done, years/exams/fees to go, and the single next action, live-updating as
+requirements get ticked. Built on the card grammar; all data pre-existed (the bill, the
+checklists). Core design ruled GOOD, no redesign: the gap was emotional (worksheet vs
+companion), closed by this one summary.
+
 **The two MapLibre maps · opened 2026-08-23 · CLOSED 2026-08-23, shipped.**
 Tier 3 in DESIGN.md now carries "The map instrument grammar", which is what shipped.
 The change budget applies to the maps again; the grammar below is the record of the phase.

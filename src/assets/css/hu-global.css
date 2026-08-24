@@ -931,6 +931,11 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
 }
 /* a real grabber (injected by HUKit.sheet) replaces the static ::before line */
 .shell-sheet.has-grab::before, .shell-dock--sheet.has-grab::before { display:none; }
+/* Sticky: the drag handle stays reachable however deep the sheet is scrolled
+   (David's phone QA 2026-08-23: everything scrolled away, the card title got
+   swallowed by the sheet edge). Solid background so content slides under, not
+   through. */
+.hu-sheet-grab { position:sticky; top:0; z-index:6; background:var(--surface); }
 .hu-sheet-grab { display:block; width:100%; border:none; background:none; padding:10px 0 6px; cursor:grab; touch-action:none; flex:none; }
 .hu-sheet-grab span { display:block; width:44px; height:4px; border-radius:2px; background:var(--border2); margin:0 auto; }
 .hu-sheet-x { position:absolute; top:10px; right:10px; z-index:2; }
@@ -1125,6 +1130,49 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
   body:has(#huBottomBar) .nav-ham,
   body:has(#huBottomBar) .nav-search-btn { display:none; }
   body:has(#huBottomBar) { padding-bottom:calc(64px + env(safe-area-inset-bottom)); }
+}
+
+/* Long source URLs printed as their own link text cannot wrap: a URL has no spaces,
+   so one PDF link ran 630px through a 342px column and dragged the whole article
+   wider than the phone (David's device QA, 2026-08-23, the wound-and-workload refs).
+   References render from references.js on Rounds, the talks and the sources appendix,
+   so the fix lives here in the kit, once. `anywhere` only fires when a word cannot
+   fit, so ordinary link text never breaks. */
+.ref-item a, .refs a, .src-row a, .src-list a { overflow-wrap: anywhere; }
+
+/* ── Phone-flow components (.hpf-*) · promoted from career-tree 2026-08-23 when the
+   atlas became their third consumer. The browse-first phone answer for any canvas
+   tool: deck grid (one deck per family/zone/track) → sectioned rows → the tool's own
+   detail surface. Built and QA'd across four career-tree views first. */
+@media (max-width: 699px){
+    .hpf-hd { font-family: var(--mono); font-size: 11px; color: var(--t3); letter-spacing: .05em; padding: 6px 2px 12px; }
+    .hpf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 379px){ .hpf-grid { grid-template-columns: 1fr; } }
+    .hpf-deck { display: flex; flex-direction: column; gap: 4px; text-align: left; min-height: 64px;
+      background: var(--raised); border: 1px solid var(--border2); border-left: 3px solid var(--fc, var(--teal));
+      border-radius: 10px; padding: 12px 12px 10px; cursor: pointer; font: inherit; color: inherit;
+      -webkit-appearance: none; appearance: none; }
+    .hpf-deck-name { font-size: 13.5px; font-weight: 700; line-height: 1.25; }
+    .hpf-deck-meta { font-family: var(--mono); font-size: 11px; color: var(--t3); }
+    .hpf-lhd { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; background: var(--surface); border-bottom: 1px solid var(--border2); }
+    .hpf-back { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px 0 2px;
+      background: none; border: 0; color: var(--teal); font-family: var(--mono); font-size: 12px; cursor: pointer;
+      -webkit-appearance: none; appearance: none; }
+    [data-theme='light'] .hpf-back { color: var(--teal-ink); }
+    .hpf-lname { font-size: 14px; font-weight: 800; }
+    .hpf-lcount { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-left: auto; }
+    .hpf-tier { margin-top: 14px; }
+    .hpf-tier-lbl { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--t3); padding: 0 2px 2px; }
+    .hpf-role { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; text-align: left;
+      background: var(--raised); border: 1px solid var(--border2); border-radius: 9px; padding: 8px 12px;
+      margin-top: 6px; font: inherit; color: inherit; cursor: pointer; -webkit-appearance: none; appearance: none; }
+    .hpf-role.on { border-color: var(--fc, var(--teal)); box-shadow: inset 3px 0 0 var(--fc, var(--teal)); }   /* Ink State: edge ink, no glow */
+    .hpf-role-name { font-size: 13.5px; font-weight: 600; line-height: 1.3; flex: 1; }
+    .hpf-role-abbr { font-family: var(--mono); font-size: 11px; color: var(--t3); flex: none; }
+    .hpf-role-pin { color: var(--amber); font-size: 12px; flex: none; }
+    .hpf-deck:focus-visible, .hpf-role:focus-visible, .hpf-back:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
 }
 
 /* Scrollbar */

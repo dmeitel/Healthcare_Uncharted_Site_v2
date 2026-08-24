@@ -79,6 +79,23 @@ og_image: /brand/og-operators-map.jpg
 .gv-tabs button { flex:1; border:1px solid transparent; background:none; border-radius:7px; padding:6px 0;
   font-family:var(--font); font-size:11.5px; font-weight:700; color:var(--t3); cursor:pointer; }
 .gv-tabs button.on { background:var(--surface); border-color:var(--border2); color:var(--t1); }
+/* ── Fixed header, scrolling body (David's phone QA 2026-08-23). The sheet is a flex
+   column, and at a short detent its children SQUISHED: the tabs crushed toward zero
+   and the card title compressed into the sheet edge, which is the half-swallowed
+   "Utah County" in his screenshot. Not a scroll bug, a flex-shrink bug, so sticky
+   alone could not fix it. Now the header pieces refuse to shrink, the BODY is the
+   scroll container (the anatomy every sheet app uses), and the name row with the
+   value pins inside it while the kicker and facts scroll under. The X becomes a
+   pinned flex child, which also stops it sitting ON the Display tab. */
+.hu-sheet-x.gv-x { position:sticky; top:6px; align-self:flex-end;
+  margin:0 4px -44px 0; z-index:7; flex:none; }
+.gv-tabs { flex:none; margin-right:52px; }
+.gv-card-name { position:sticky; top:0; z-index:4; background:var(--surface); flex:none; }
+/* the body's children hold their natural height; the BODY is what scrolls. Without
+   this the card content flex-shrank inside the body and nothing ever overflowed, so
+   the "scrolling body" was scrolling three pixels. */
+#gvSheetBody > * { flex-shrink:0; }
+
 #gvDisplayBody { overflow-y:auto; min-height:0; flex:1; }
 .gv-dsec { border-bottom:1px dotted var(--border); padding:12px 0; }
 .gv-dsec:last-child { border-bottom:none; }
@@ -212,6 +229,10 @@ og_image: /brand/og-operators-map.jpg
   .gv-fabcol .hu-fab { background:none; border:none; border-radius:0; box-shadow:none; }
   .gv-fabcol .hu-fab + .hu-fab { border-top:1px solid var(--border); }
   .tool-attribution--fixed { bottom:166px; right:10px; }
+  /* the load toast sat at bottom:88px, inside the List pill's band (56-102), so
+     "5,366 hospitals · tap a state" rendered THROUGH the button during boot
+     (David's phone QA). One row up clears the whole dock. */
+  .gv-status { bottom:116px; }
   /* Parity with multi-lens (David's call: same UI grammar on both maps). One surface
      at a time: when the sheet is up it IS the interface, so the List pill and the
      tool column stop floating over the map behind it. The sheet's X, Esc and the
@@ -374,7 +395,7 @@ og_image: /brand/og-operators-map.jpg
       <button type="button" data-tab="details" class="on" role="tab" aria-selected="true">Details</button>
       <button type="button" data-tab="display" role="tab" aria-selected="false">Display</button>
     </div>
-    <div id="gvSheetBody" style="display:flex;flex-direction:column;min-height:0;flex:1"></div>
+    <div id="gvSheetBody" style="display:flex;flex-direction:column;min-height:0;flex:1;overflow-y:auto"></div>
     <div id="gvDisplayBody" hidden></div>
   </aside>
   <div id="gvLive" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
@@ -382,7 +403,7 @@ og_image: /brand/og-operators-map.jpg
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
 <script src="/assets/js/hu-kit.js?v=20260816"></script>
-<script type="module" src="/assets/js/tools/operators-map.js?v=20260822"></script>
+<script type="module" src="/assets/js/tools/operators-map.js?v=20260823"></script>
 
 {% endraw %}
 {% set ta_fixed = true %}
