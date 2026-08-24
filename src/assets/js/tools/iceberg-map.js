@@ -476,7 +476,7 @@ const SMD={
     pain:['Report proliferation creates inconsistent metric definitions organization-wide','Analysts spend ~70% of time on maintenance rather than new analysis','Executives request real-time data the warehouse refresh cycle cannot support']},
   // PLT — Plan Type Breakdown
   D_HMO:{t:'HMO – Gatekeeper Model',parent:'PLT',
-    w:['Primary care physician controls all referrals to specialists','Patients must obtain prior authorization before specialist visits','Network is narrow — out-of-network care is not covered except for emergencies','Administrative burden is highest among plan types due to referral requirements'],
+    w:['Primary care physician controls all referrals to specialists','Patients must obtain prior authorization before specialist visits','Network is narrow: out-of-network care is not covered except for emergencies','Administrative burden is highest among plan types due to referral requirements'],
     m:[['38%','Commercial HMO Share'],['~$420/mo','Avg. Premium (individual)'],['62%','Prior Auth Referral Rate']],
     actors:'Patient · PCP · Plan Admin · Specialist',
     sys:'Payer Portal · Prior Auth System · Referral Management',
@@ -488,7 +488,7 @@ const SMD={
     sys:'Payer Portal · Benefits Admin Platform · Claims System',
     pain:['Higher premiums burden lower-wage workers and small employers','Surprise billing risk for out-of-network services is common','Patients frequently do not understand cost-share differences between tiers']},
   D_EPO:{t:'EPO – Exclusive Provider Org.',parent:'PLT',
-    w:['No referral required — patients self-refer to in-network specialists','Coverage is strictly limited to in-network providers except for emergencies','Premiums are lower than PPO but network restrictions apply','Growing as a middle-ground option between HMO and PPO models'],
+    w:['No referral required: patients self-refer to in-network specialists','Coverage is strictly limited to in-network providers except for emergencies','Premiums are lower than PPO but network restrictions apply','Growing as a middle-ground option between HMO and PPO models'],
     m:[['~12%','Commercial EPO Share'],['~$480/mo','Avg. Premium (individual)'],['0%','Out-of-Network Coverage']],
     actors:'Patient · In-Network Provider · Plan Admin',
     sys:'Payer Portal · Network Directory · Claims System',
@@ -905,14 +905,14 @@ function renderPanel(){
 }
 
 const LTT={
-  1:'Click to hide/show — covers the patient journey and health status progression',
-  2:'Click to hide/show — where care is delivered: home, clinic, urgent care, hospital',
-  3:'Click to hide/show — evidence-based clinical care pathways and decision points',
-  4:'Click to hide/show — behind-the-scenes operational processes and coordination',
-  5:'Click to hide/show — insurance coverage rules, authorizations, and cost structures',
-  6:'Click to hide/show — EHR systems, interfaces, and digital infrastructure',
-  7:'Click to hide/show — quality metrics, utilization data, and performance tracking',
-  8:'Click to hide/show — payers, labs, specialists, and community resources',
+  1:'Click to hide/show. Covers the patient journey and health status progression',
+  2:'Click to hide/show. Where care is delivered: home, clinic, urgent care, hospital',
+  3:'Click to hide/show. Evidence-based clinical care pathways and decision points',
+  4:'Click to hide/show. Behind-the-scenes operational processes and coordination',
+  5:'Click to hide/show. Insurance coverage rules, authorizations, and cost structures',
+  6:'Click to hide/show. EHR systems, interfaces, and digital infrastructure',
+  7:'Click to hide/show. Quality metrics, utilization data, and performance tracking',
+  8:'Click to hide/show. Payers, labs, specialists, and community resources',
 };
 // ── A11Y — one polite live region; announce COMMITTED state changes only ──
 function announce(msg){
@@ -1129,7 +1129,10 @@ function closeSheet(){ if (rpEl) rpEl.classList.remove('open'); }
 function raiseSheet(){
   if (!(window.HUKit && HUKit.phone()) || !rpEl) return;
   rpEl.classList.add('open');
-  if (rpSheet) rpSheet.setDetent('dt-half');
+  /* a selection answers at a glance: land at peek (name + short description)
+     and the reader scrolls or pulls for the depth. Same ruling as the atlas
+     (David, 2026-08-23): the sheet never leaps to half-screen on its own. */
+  if (rpSheet) rpSheet.setDetent('dt-peek');
 }
 
 function selectNode(id){sel=id;subSel=null;go();syncURL();raiseSheet();announce('Selected: '+gN(id));}

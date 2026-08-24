@@ -1836,7 +1836,8 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
   // the hardware-back sentinel covers the ladder too (one guard, rung-aware — two
   // guards would both answer the same popstate and eat two levels)
   function ensurePhoneArm(){
-    const rung = (curView === 'career' && phoneFam) || (curView === 'atlas' && phoneAtlasZone);
+    const rung = (curView === 'career' && phoneFam) || (curView === 'atlas' && phoneAtlasZone)
+              || (curView === 'path' && pathFocus);
     if (backGd && isPhone() && rung && !document.getElementById('hct-panel').classList.contains('open')) backGd.arm();
   }
 
@@ -1935,6 +1936,48 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
 
   // ── My Path: build planner — five GROWTH tracks (Career · Education · Skill · Specialization · Experience) ──
   // each track is an array on `build`; TRACKS drives rendering/wiring
+  /* ── MY PATH phone flow (David 2026-08-23: "too much stuff stacked... fill
+     out each of those sections as their own pop ups or windows"). At rest the
+     sheet's story sections fold to a deck of summary cards, same hpf grammar
+     as the other three tabs; a tap gives one section the whole screen. CSS
+     gates every piece to the phone; desktop keeps the full sheet. */
+  let pathFocus = null;
+  const pathCnt = (n, u) => n + ' ' + u + (n === 1 ? '' : 's');
+  const PATH_SECS = [
+    { k:'line',  t:'Career Path',        meta:() => pathCnt((build.career||[]).length, 'role') },
+    { k:'road',  t:'Education',          meta:() => pathCnt((build.education||[]).length, 'credential') },
+    { k:'spec',  t:'Areas of Expertise', meta:() => pathCnt(['skill','spec','experience','population'].reduce((a,z) => a + ((build[z]||[]).length), 0), 'area') },
+    { k:'plan',  t:'Next Steps',         meta:() => pathCnt(qsa(document,'#bp-next .bp-next-item[data-id]').length, 'step') },
+    { k:'notes', t:'Notes',              meta:() => pathCnt(build.layout.order.filter(x => { const p = panelOf(x); return p && p.kind === 'text' && !build.layout.hidden.includes(x); }).length, 'section') }
+  ];
+  function renderPathDeck(){
+    const host = document.getElementById('bp-pdeck'); if (!host) return;
+    let h = '<div class="hpf-hd">Your sheet in five sections. Tap one to work in it.</div><div class="hpf-grid" role="list">';
+    PATH_SECS.forEach(s => {
+      h += '<button type="button" class="hpf-deck" role="listitem" data-psec="' + s.k + '" style="--fc:var(--teal)">'
+         + '<span class="hpf-deck-name">' + esc(s.t) + '</span>'
+         + '<span class="hpf-deck-meta">' + esc(s.meta()) + '</span></button>';
+    });
+    host.innerHTML = h + '</div>';
+    qsa(host, '.hpf-deck').forEach(b => b.onclick = () => setPathFocus(b.dataset.psec, false));
+  }
+  function setPathFocus(k, focusBack){
+    const prev = pathFocus;
+    pathFocus = k || null;
+    const v = document.getElementById('hct-mypath'); if (!v) return;
+    if (pathFocus) v.setAttribute('data-psec', pathFocus); else v.removeAttribute('data-psec');
+    const bb = document.getElementById('bp-pback');
+    const sec = PATH_SECS.find(s => s.k === pathFocus);
+    if (bb){ bb.hidden = !pathFocus; const t = document.getElementById('bp-pback-t'); if (t) t.textContent = sec ? sec.t : ''; }
+    v.scrollTop = 0;
+    if (pathFocus){ ensurePhoneArm(); announce((sec ? sec.t : '') + ' section'); }
+    else {
+      renderPathDeck();   // counts may have changed while the section was open
+      if (focusBack && prev){ const d = document.querySelector('#bp-pdeck .hpf-deck[data-psec="' + prev + '"]'); if (d) asEl(d).focus(); }
+      announce('My Path overview');
+    }
+  }
+
   const TRACKS = [
     { key:'career',     grid:'bp-grid-career',     kind:'role',   title:'Career Path' },
     { key:'education',  grid:'bp-grid-education',   kind:'cred',   title:'Education' },
@@ -3214,6 +3257,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     updateEduPins();                    // and the Education Matrix card rings
     const sw = asInput(document.getElementById('bp-sw'));     if (sw && document.activeElement !== sw) sw.value = build.sw || '';
     const nt = asInput(document.getElementById('bp-notes'));  if (nt && document.activeElement !== nt) nt.value = build.notes || '';
+    renderPathDeck();   // the phone deck's counts track every build change (runs after Next Steps so the step count is fresh)
   }
 
   // ── "Common around your family" — expertise suggestions keyed off your current role.
@@ -5478,12 +5522,14 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     watch: document.getElementById('hct-panel'),
     active: () => document.getElementById('hct-panel').classList.contains('open')
                || (isPhone() && curView === 'career' && !!phoneFam)
-               || (isPhone() && curView === 'atlas' && !!phoneAtlasZone),
+               || (isPhone() && curView === 'atlas' && !!phoneAtlasZone)
+               || (isPhone() && curView === 'path' && !!pathFocus),
     step: () => {
       if (document.getElementById('hct-panel').classList.contains('open')){
         dismissPanel();
         setTimeout(ensurePhoneArm, 80);   // the ladder beneath keeps its own back step
-      } else if (curView === 'atlas' && phoneAtlasZone) closePhoneZone(false);
+      } else if (curView === 'path' && pathFocus) setPathFocus(null, false);
+      else if (curView === 'atlas' && phoneAtlasZone) closePhoneZone(false);
       else closePhoneFam(false);
     }
   }) : null;
@@ -5513,7 +5559,9 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     if (typeof HUKit !== 'undefined' && HUKit.phone() && DATA){
       if (v === 'edu') renderPhoneEdu();
       else if (v === 'atlas'){ phoneAtlasZone = null; renderPhoneAtlas(); }
-    }   // lets CSS nest the panel per view
+    }
+    if (pathFocus && v !== 'path') setPathFocus(null, false);   // leaving Path drops its focused section, the way the other flows drop theirs
+    else if (v === 'path' && isPhone()) setPathFocus(null, false);   // and every entry lands on the deck
     qsa(document,'#hct-tabs button').forEach(b => { const on = b.dataset.view === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
     qsa(document,'.hct-view').forEach(s => s.classList.toggle('active', s.dataset.view === v));
     renderAppliedStrip();   // the hidden-pathways chip only reads while the Career Matrix is on screen
@@ -6073,6 +6121,8 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
       if (r){ const n = DATA.growth.nodes.find(x => x.id === asEl(r).dataset.id);
               if (n){ openGrowthPanel(n); requestAnimationFrame(renderPhoneAtlas); } }
     });
+    // MY PATH flow: the back bar returns the deck (the section cards wire on render)
+    { const pb = document.getElementById('bp-pback-btn'); if (pb) pb.onclick = () => setPathFocus(null, true); }
     const pfHost = document.getElementById('hct-phone-flow');
     if (pfHost) pfHost.addEventListener('click', e => {
       const d = hit(e,'.hpf-deck');

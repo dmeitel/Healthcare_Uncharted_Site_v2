@@ -799,6 +799,72 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
   .tool-attribution--fixed.ta-open { left:10px; }
 }
 
+/* A tool that ships its own search does not need the nav's site-search button
+   beside it on a phone (David 2026-08-23: "we do not need multiple search
+   buttons within tools"). Keyed on each tool's search element, so site search
+   stays on every page without an in-tool search, and everywhere on desktop. */
+@media (max-width:699px) {
+  body:has(#atlas-find) .nav-search-btn,
+  body:has(#hct-sel-search) .nav-search-btn,
+  body:has(#gvSearchIn) .nav-search-btn,
+  body:has(#searchInput) .nav-search-btn { display:none; }
+}
+
+/* ── READING LAYER · Learn + Rounds articles (reading phase, 2026-08-24) ──
+   The progress hairline and chrome that yields while you read. base.njk sets
+   body.is-reading from `section`; reading.js drives both behaviors. */
+#read-progress { position:fixed; top:0; left:0; right:0; height:2px; z-index:300;
+  background:var(--teal); transform-origin:0 50%; transform:scaleX(0);
+  pointer-events:none; }
+[data-theme="light"] #read-progress { background:var(--teal-ink); }
+body.is-reading nav[aria-label="Primary"] { transition: transform .22s ease; }
+@media (prefers-reduced-motion: reduce) {
+  body.is-reading nav[aria-label="Primary"] { transition: none; }
+}
+nav.nav-yield { transform: translateY(-100%); }
+/* keyboard focus into the retracted nav brings it back: nothing is
+   reachable-but-invisible */
+nav.nav-yield:focus-within { transform: none; }
+
+/* the KEEP READING handoff card (components/read-next.njk): every article
+   hands the reader the next one instead of ending in the site footer. The
+   rn-* card classes are UNSCOPED on purpose: the Continue-reading card on the
+   section indexes (reading-continue.js) reuses the same grammar. */
+.read-next { max-width:720px; margin:46px auto 40px; padding:0 22px;
+  display:flex; flex-direction:column; gap:12px; }
+.rn-card { display:block; padding:16px 18px; border-radius:12px;
+  background:color-mix(in srgb, var(--surface) 92%, transparent);
+  border:1px solid var(--border); }
+.rn-card:hover { border-color:var(--teal); }
+[data-theme="light"] .rn-card:hover { border-color:var(--teal-ink); }
+.rn-k { display:block; font-family:var(--mono); font-size:11px;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--teal);
+  margin-bottom:6px; }
+[data-theme="light"] .rn-k { color:var(--teal-ink); }
+.rn-t { display:block; font-family:var(--display); font-weight:700;
+  font-size:19px; line-height:1.3; color:var(--t1); margin-bottom:6px; }
+.rn-d { display:-webkit-box; -webkit-line-clamp:2;
+  -webkit-box-orient:vertical; overflow:hidden;
+  font-size:14px; line-height:1.55; color:var(--t3); }
+.rn-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.rn-all { font-family:var(--mono); font-size:12px; color:var(--t2);
+  min-height:44px; display:inline-flex; align-items:center; }
+.rn-share { appearance:none; background:none; border:1px solid var(--border);
+  border-radius:10px; color:var(--t2); font-family:var(--mono); font-size:12px;
+  min-height:44px; padding:0 16px; cursor:pointer; }
+.rn-share:hover { border-color:var(--teal); color:var(--teal); }
+[data-theme="light"] .rn-share:hover { border-color:var(--teal-ink); color:var(--teal-ink); }
+.rn-shared { font-family:var(--mono); font-size:12px; color:var(--teal); }
+[data-theme="light"] .rn-shared { color:var(--teal-ink); }
+/* the Continue-reading card's progress track: a static render of where you
+   left off, not an animation */
+.rn-bar { display:block; height:3px; border-radius:2px; margin-top:12px;
+  background:color-mix(in srgb, var(--border) 60%, transparent); overflow:hidden; }
+.rn-bar > span { display:block; height:100%; border-radius:2px; background:var(--teal); }
+[data-theme="light"] .rn-bar > span { background:var(--teal-ink); }
+#continue-slot { display:block; margin:0 0 16px; }
+#continue-slot .rn-card { text-decoration:none; }
+
 /* ================================================================
    HU TOOL SHELL v1 · the standard layout for interactive tools
    Desktop (>=1100): fixed cockpit, no page scroll.

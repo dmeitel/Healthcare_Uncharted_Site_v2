@@ -86,7 +86,11 @@ test('site build', { skip: built ? false : 'run the build first' }, async t => {
 
   await t.test('no em dashes reach the reader', () => {
     // house rule (CLAUDE.md, ALWAYS TRUE). Code comments are not prose.
-    const inProse = pages.filter(p => read(p)
+    // Entities decode first: &mdash; slipped this scan for months because the
+    // check compared characters while the page shipped the entity (found on
+    // the game and the MSRC talk, 2026-08-24).
+    const deEntity = s => s.replace(/&mdash;|&#8212;|&#x2014;/gi, EM_DASH);
+    const inProse = pages.filter(p => deEntity(read(p))
       .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->|<[^>]+>/g, ' ')
       .includes(EM_DASH)).map(rel);
     assert.deepEqual(inProse, []);
@@ -98,6 +102,69 @@ test('site build', { skip: built ? false : 'run the build first' }, async t => {
       return (title + desc).includes(EM_DASH);
     }).map(rel);
     assert.deepEqual(inHead, []);
+  });
+
+  await t.test('no em dashes hide in JS strings (the channel the prose scan cannot see)', () => {
+    // The prose check above strips <script> blocks, which is how Uncharted
+    // General shipped two dozen em dashes in its game copy for months
+    // (found 2026-08-24). This walks every string literal in inline scripts
+    // and shipped JS assets. Comments are not prose and stay exempt; a
+    // literal that is EXACTLY one em dash is the no-data placeholder glyph
+    // and stays legal (the maps use it for missing values).
+    const stringsOf = src => {
+      const out = [];
+      let i = 0, mode = null, cur = '', prev = '';
+      const tmpl = [];   // template-literal nesting: {cur, braces} per suspended template
+      const regexCanFollow = ch => ch === '' || '=(,:[!&|?{};+-*%<>~^'.includes(ch);
+      while (i < src.length) {
+        const c = src[i], n = src[i + 1];
+        if (mode === null) {
+          if (c === '/' && n === '/') { i += 2; while (i < src.length && src[i] !== '\n') i++; continue; }
+          if (c === '/' && n === '*') { i += 2; while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) i++; i += 2; continue; }
+          if (c === '/' && regexCanFollow(prev)) {
+            // a regex literal: consume it whole so quotes inside cannot open phantom strings
+            i++; let cls = false;
+            while (i < src.length) {
+              const r = src[i];
+              if (r === '\\') { i += 2; continue; }
+              if (r === '[') cls = true; else if (r === ']') cls = false;
+              else if (r === '/' && !cls) break; else if (r === '\n') break;
+              i++;
+            }
+            i++; prev = '/'; continue;
+          }
+          if (tmpl.length && c === '{') { tmpl[tmpl.length - 1].braces++; prev = c; i++; continue; }
+          if (tmpl.length && c === '}') {
+            const top = tmpl[tmpl.length - 1];
+            if (top.braces > 0) { top.braces--; prev = c; i++; continue; }
+            // the ${ } interpolation ends: resume the suspended template literal
+            tmpl.pop(); mode = '`'; cur = top.cur; i++; continue;
+          }
+          if (c === "'" || c === '"' || c === '`') { mode = c; cur = ''; i++; continue; }
+          if (!/\s/.test(c)) prev = c;
+          i++; continue;
+        }
+        if (c === '\\') { cur += src.substr(i, 2); i += 2; continue; }
+        if (mode === '`' && c === '$' && n === '{') {
+          // interpolation: suspend this template, tokenize the interior as code
+          tmpl.push({ cur: cur, braces: 0 }); mode = null; cur = ''; prev = '{'; i += 2; continue;
+        }
+        if (c === mode) { out.push(cur); mode = null; prev = '"'; i++; continue; }
+        cur += c; i++;
+      }
+      return out;
+    };
+    const hits = [];
+    const check = (label, src) => {
+      // entities render as the character, so they count (same lesson as prose)
+      src = src.replace(/&mdash;|&#8212;|&#x2014;/gi, EM_DASH);
+      for (const s of stringsOf(src)) {
+        if (s.includes(EM_DASH) && s !== EM_DASH) { hits.push(label + ': ' + s.slice(0, 60)); return; }
+      }
+    };
+    for (const p of pages) for (const block of inlineScripts(read(p))) check(rel(p), block);
+    for (const f of all.filter(f => f.endsWith('.js') && rel(f).startsWith('assets/js'))) check(rel(f), read(f));
+    assert.deepEqual(hits, []);
   });
 
   await t.test('no banned vocabulary in rendered copy', () => {

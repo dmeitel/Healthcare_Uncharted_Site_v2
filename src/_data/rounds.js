@@ -1,4 +1,4 @@
-module.exports = {
+const rounds = {
 
   // ── ROUNDS ──────────────────────────────────────────────────────────────────
   // Short structured commentaries on healthcare news.
@@ -98,3 +98,22 @@ module.exports = {
   ]
 
 };
+
+// ── NEXT ROUND ────────────────────────────────────────────────────────────────
+// Drives the KEEP READING handoff (read-next.njk): published rounds walk in
+// posted order, oldest first, so a reader who starts at the beginning reads
+// the series the way it was written. The newest round hands off to /rounds/.
+{
+  const published = rounds.entries
+    .filter(e => e.status === 'published')
+    .slice()
+    .sort((a, b) => (a.posted < b.posted ? -1 : 1));
+  rounds.nextByUrl = {};
+  published.forEach((e, i) => {
+    const n = published[i + 1]; if (!n) return;
+    rounds.nextByUrl['/rounds/' + e.slug + '/'] =
+      { url: '/rounds/' + n.slug + '/', kick: 'Next round', title: n.title, desc: n.summary };
+  });
+}
+
+module.exports = rounds;

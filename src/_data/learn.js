@@ -1,4 +1,4 @@
-module.exports = {
+const learn = {
 
   // ── MODULES ─────────────────────────────────────────────────────────────────
   // Add new modules here. status: 'live' | 'coming'
@@ -386,3 +386,32 @@ module.exports = {
   ]
 
 };
+
+// ── READING ORDER ─────────────────────────────────────────────────────────────
+// Drives the KEEP READING handoff at the end of every module (read-next.njk).
+// The numbered arc first, then the field guide, methods, and guest shelf.
+// Keep every URL live; a page absent from this list hands off to /learn/ only.
+learn.readingOrder = [
+  '/learn/4ps-framework/',
+  '/learn/patient-data-record/',
+  '/learn/ehr-architecture/',
+  '/learn/the-payer/',
+  '/learn/hitech-to-cures/',
+  '/learn/ai-in-healthcare/',
+  '/learn/healthcare-gap/',
+  '/learn/change-healthcare-stress-test/',
+  '/learn/leading-the-ai-transition/',
+  '/learn/laws-and-paradoxes/',
+  '/learn/process-engineering/',
+  '/learn/healthcare-data-sources/',
+  '/learn/oxygen-payment-cuts/',
+  '/learn/home-respiratory-timeline/'
+];
+learn.nextByUrl = {};
+learn.readingOrder.forEach((u, i) => {
+  const nu = learn.readingOrder[i + 1]; if (!nu) return;
+  const m = learn.modules.find(x => x.url === nu && x.status === 'live'); if (!m) return;
+  learn.nextByUrl[u] = { url: nu, kick: 'Keep reading · ' + m.num, title: m.title, desc: m.desc };
+});
+
+module.exports = learn;

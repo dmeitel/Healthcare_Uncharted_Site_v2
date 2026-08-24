@@ -838,7 +838,7 @@ function computeProceduralPushes(lq, lr, subs, excludeNodeId, zoneId) {
       if (fb) {
         subTargets.set(sub.nodeId, {q: fb.q, r: fb.r, fallback: true});
         claimed.set(`${fb.q},${fb.r}`, {type: 'sub', nodeId: sub.nodeId});
-        console.info(`[atlas] sub ${sub.nodeId} fell back to (${fb.q},${fb.r}) — no in-zone candidate available`);
+        console.info(`[atlas] sub ${sub.nodeId} fell back to (${fb.q},${fb.r}): no in-zone candidate available`);
       }
       // no in-zone candidate and no fallback: the sub simply stays unplaced
     }

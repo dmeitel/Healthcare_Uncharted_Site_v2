@@ -455,6 +455,9 @@ og_image: /brand/og-career-tree.jpg
   .bp-vital.goal .bp-vital-n { color: #E8C547; }
   .bp-vital-l { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--t2); font-family: var(--mono); }
   .bp-sheet { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 12px; }
+  /* the My Path phone deck + back bar exist only under the phone media block
+     (the atlas lesson: a phone flow with no desktop base rule leaks onto desktop) */
+  #bp-pdeck, #bp-pback { display: none; }
   .bp-col { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
   .bp-sheet::-webkit-scrollbar { width: 6px; }
   .bp-sheet::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.2); border-radius: 3px; }
@@ -1201,8 +1204,13 @@ og_image: /brand/og-career-tree.jpg
     .tab-full { display: none; }
     .tab-short { display: inline; }   /* Path · Careers · Education · Skills — four labels that actually FIT a phone row */
     /* context controls: ONE thumb row, scrollable (the atlas-lens rail pattern), soft right
-       fade signals there is more — no more tall wrap stack over the canvas */
-    .tb-ctx { width: 100%; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+       fade signals there is more — no more tall wrap stack over the canvas.
+       The row SHARES with the persistent icon trio instead of claiming its own:
+       width:100% plus a greedy flex spacer wrapped the bar to 116px on My Path
+       (58px on every other tab) and spent 22% of the phone on chrome before a
+       word of content. Measured on David's device pass, 2026-08-23. */
+    #hct-tb .hct-spacer { display: none; }
+    .tb-ctx { flex: 1 1 auto; min-width: 0; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
       -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
       mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); }
     .tb-ctx::-webkit-scrollbar { display: none; }
@@ -1296,7 +1304,10 @@ og_image: /brand/og-career-tree.jpg
      mobile bottom sheet z30, modals) so they cover it rather than the
      reverse. In the Areas of Expertise view the bottom-right zoombar
      lives at bottom:8px, so lift the strip clear of it there. */
-  .tool-attribution--fixed { bottom: 6px; right: 12px; padding: 4px 10px; z-index: 25; }
+  /* z-28, not 25: the view sections are z-26, and at 25 the chip was visible
+     through their transparent ground but UNCLICKABLE (hit-tests landed on the
+     view). Above the views, still under every overlay (panel, toolbar, tabs). */
+  .tool-attribution--fixed { bottom: 6px; right: 12px; padding: 4px 10px; z-index: 28; }
 
   /* ── FIELD INSTRUMENT chrome · Quiet Precision 2026-08-06 ──────
      The old accent ruler-tick strip under the toolbar retired; the
@@ -1492,6 +1503,40 @@ og_image: /brand/og-career-tree.jpg
      What stays: search, your saved build, help — one slim row — and Path's own
      controls, which act on the planner itself. */
   #tbc-career, #tbc-edu, #tbc-atlas { display: none !important; }
+  /* the tab bar (z-150) was burying the z-25 attribution chip: lift it clear */
+  .tool-attribution--fixed { bottom: calc(63px + env(safe-area-inset-bottom)); }
+  /* ── MY PATH phone flow (David 2026-08-23: "too much stuff stacked... fill out
+     each of those sections as their own pop ups or windows"). The sheet was a
+     2100px wall inside a 234px scroll strip: swiping most of the screen moved
+     NOTHING. The view is now ONE scroll surface. At rest, the four story
+     sections + notes fold to a deck of summary cards (the same hpf grammar as
+     the other three tabs); a tap gives one section the whole screen with a back
+     bar, and hardware back walks it. Desktop keeps the full sheet. */
+  #hct-mypath { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #hct-mypath > * { flex-shrink: 0; }   /* scroll, never squish (the maps' sheet lesson) */
+  #hct-mypath .bp-sheet { flex: none; overflow: visible; }
+  #bp-pdeck { display: block; padding: 4px 10px calc(14px + env(safe-area-inset-bottom)); }
+  #hct-mypath:not([data-psec]) .bp-sheet { display: none; }
+  #hct-mypath[data-psec] #bp-pdeck,
+  #hct-mypath[data-psec] #bp-status,
+  #hct-mypath[data-psec] .bp-id,
+  #hct-mypath[data-psec] .hw-strip { display: none; }
+  #hct-mypath[data-psec="line"] .bp-sec:not([data-sec="line"]),
+  #hct-mypath[data-psec="road"] .bp-sec:not([data-sec="road"]),
+  #hct-mypath[data-psec="spec"] .bp-sec:not([data-sec="spec"]),
+  #hct-mypath[data-psec="plan"] .bp-sec:not([data-sec="plan"]),
+  #hct-mypath[data-psec="notes"] .bp-sec { display: none; }
+  #hct-mypath[data-psec]:not([data-psec="notes"]) .bp-dash-bar,
+  #hct-mypath[data-psec]:not([data-psec="notes"]) #bp-dash { display: none; }
+  #hct-mypath[data-psec]:not([data-psec="spec"]) .bp-suggest-strip { display: none; }
+  #bp-pback:not([hidden]) { position: sticky; top: 0; z-index: 8; display: flex; align-items: center; gap: 8px;
+    padding: 4px 10px; background: color-mix(in srgb, var(--dark) 96%, transparent);
+    backdrop-filter: blur(10px); border-bottom: 1px solid var(--border2); }
+  #bp-pback-btn { appearance: none; background: none; border: none; color: var(--teal);
+    font-family: var(--mono); font-size: 12px; min-height: 44px; padding: 0 8px; cursor: pointer; }
+  [data-theme="light"] #bp-pback-btn { color: var(--teal-ink); }
+  [data-theme="light"] #bp-pback:not([hidden]) { background: color-mix(in srgb, #ffffff 94%, transparent); }
+  #bp-pback-t { font-family: var(--display); font-weight: 700; font-size: 13px; color: var(--t1); }
   /* one surface at a time: the sheet owns the screen, the tab bar returns on dismiss */
   #hct-shell:has(#hct-panel.open) #hct-tabs { display: none; }
 }
@@ -1779,6 +1824,11 @@ og_image: /brand/og-career-tree.jpg
         </div>
       </div>
 
+      <!-- PHONE ONLY: the sheet folds to this deck of section cards plus a back
+           bar (see the phone media block). Desktop never shows either. -->
+      <div id="bp-pdeck"></div>
+      <div id="bp-pback" hidden><button type="button" id="bp-pback-btn">&larr; My Path</button><span id="bp-pback-t"></span></div>
+
       <!-- THE SHEET reads as the story, top to bottom: ① your line ② the road
            ③ your specialization ④ the plan. Notes ride below as an appendix dash. -->
       <div class="bp-sheet">
@@ -1883,4 +1933,4 @@ og_image: /brand/og-career-tree.jpg
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="/assets/js/hu-kit.js"></script>
-<script type="module" src="/assets/js/tools/career-tree.js?v=20260823"></script>
+<script type="module" src="/assets/js/tools/career-tree.js?v=20260823b"></script>

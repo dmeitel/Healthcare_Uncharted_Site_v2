@@ -68,6 +68,31 @@ If a session cannot tell whether a surface is in a phase, it is not.
 
 ### OPEN PHASES
 
+**Learn + Rounds reading surface · opened 2026-08-24 · PARKED same day by David's
+call.** His words: the articles "will need like complete rewrites and tooling in the
+future", the pages "do not follow a format nor is there consistency in the writing
+style", so no more reading-surface work until he reopens it; focus is Tools, Atlas,
+and the Secret Menu. What was built in rounds 1 and 2 below is content-agnostic
+chrome (it reads any article regardless of format) and stands unless he wants it
+pulled. Original record: The archetype: NYT-app-grade
+reading, floated 2026-08-23 and unvetoed. The audit found the TYPE already right
+(17px/1.78, ~40ch measure, editorial mastheads, callouts) and left it alone; the gaps
+were the experience layer. Round 1 shipped: the KEEP READING handoff (authored
+readingOrder in _data/learn.js, posted order for Rounds; no article dead-ends into
+the footer any more), a 2px reading-progress hairline, and the nav yielding on
+read-down / returning on scroll-up (phones only, focus-within brings it back,
+reduced-motion drops the transition). Tier 1 and 2 bound throughout: tokens only,
+transform-only motion under 250ms, 44px targets. Round 2 shipped same day: READING
+MEMORY (hu-reading in localStorage, on-device only, saves your spot per article),
+the CONTINUE READING card on both section indexes (most recent unfinished article,
+progress track, resumes via #continue), SHARE at the end of every article (native
+sheet on phones, copy-link elsewhere), and finishing an article now EARNS its Learn
+index tick, closing the read-ticks script's own documented honest limit (it could
+only mark on click, so deep-link arrivals never ticked). The rn-* card classes are
+deliberately unscoped: one grammar serves the handoff and the continue card. Phase
+stays open pending David's device read; closing it means writing "the reading
+grammar" into DESIGN.md Tier 3.
+
 **The Atlas · opened and CLOSED 2026-08-23 by David's ruling, phone flow REVERTED.**
 His words: "the grid a core concept with the hex tiles. other tools can change but not
 the Atlas, its the brain/Grid of the whole website." A browse-flow replacement for the
