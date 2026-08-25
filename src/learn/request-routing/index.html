@@ -1,0 +1,1881 @@
+---
+layout: base.njk
+section: learn
+title: "Informatics Work: Routing Requests"
+description: "What a clinical informatics team actually does: route every request that hits the queue, then prove the change in production before it closes. A working team standard, written down and ready to steal."
+navPage: learn
+editorial: true
+editorial_reason: "Editorial module on HU tokens: a working informatics team's request classification standard turned into a public field method, with an inline router."
+status: published
+date: 2026-08-24
+---
+<style>
+  /* ── Request Routing (M03) · page-scoped, layered on HU tokens ── */
+  .rr{
+    --fix:  var(--red);    --fix-t:  var(--red);
+    --enh:  var(--blue-hi);--enh-t:  #6aabff; /* blue as TEXT on dark; same step the fp pills use */
+    --opt:  var(--green);  --opt-t:  var(--green);
+    --nw:   var(--purple); --nw-t:   #b59ff5; /* purple as TEXT on dark; fp-pill precedent */
+    --rr-accent: var(--teal);
+    background:var(--dark); color:var(--t2); font-family:var(--font); line-height:1.66;
+  }
+  [data-theme="light"] .rr{
+    --fix-t: var(--red-dk);
+    --enh-t: var(--blue-deep);
+    --opt-t: var(--green-dk);
+    --nw-t:  #574A9E; /* purple as TEXT on light surfaces; same job as --red-dk etc. */
+    --rr-accent: var(--teal-ink);
+  }
+  .rr *,.rr *::before,.rr *::after{ box-sizing:border-box; }
+  .rr :focus-visible{ outline:2px solid var(--rr-accent); outline-offset:2px; }
+  .rr a{ color:var(--rr-accent); }
+
+  /* ── HERO ── */
+  .rr-hero{ border-bottom:1px solid var(--border); }
+  .rr-hero-inner{ max-width:1100px; margin:0 auto; padding:76px 36px 56px;
+                  display:grid; grid-template-columns:1fr auto; gap:48px; align-items:start; }
+  @media (max-width:820px){ .rr-hero-inner{ grid-template-columns:1fr; gap:34px; padding:54px 22px 40px; } }
+
+  .rr-eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+               color:var(--rr-accent); margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:500; }
+  .rr-eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--teal); flex-shrink:0; }
+  .rr-eyebrow .sep{ width:4px; height:4px; border-radius:50%; background:var(--t4); }
+
+  .rr-h1{ font-family:var(--display); font-weight:700; font-size:clamp(40px, 6vw, 64px);
+          line-height:1.04; letter-spacing:-.02em; color:var(--t1); margin:0 0 22px; }
+  .rr-h1 em{ font-style:normal; color:var(--rr-accent); }
+
+  .rr-hero-sub{ font-size:18px; line-height:1.55; color:var(--t2); max-width:620px; margin:0 0 28px; }
+  .rr-hero-sub strong{ color:var(--t1); font-weight:600; }
+
+  .rr-thesis{ border-left:3px solid var(--teal); padding:6px 0 6px 14px; max-width:660px; }
+  .rr-thesis-label{ color:var(--rr-accent); font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+                    text-transform:uppercase; font-weight:600; margin-right:10px; }
+  .rr-thesis-text{ font-size:15px; line-height:1.6; color:var(--t2); display:inline; }
+  .rr-thesis-text strong{ color:var(--t1); font-weight:600; }
+
+  .rr-byline{ margin-top:24px; font-family:var(--mono); font-size:11px; color:var(--t3);
+              display:flex; flex-wrap:wrap; gap:8px 18px; }
+  .rr-byline strong{ color:var(--t2); font-weight:500; }
+
+  .rr-hero-classes{ display:flex; flex-direction:column; gap:10px; min-width:250px; margin:8px 0 0;
+                    list-style:none; padding:0; }
+  .rr-hc{ border:1px solid var(--border); border-left:3px solid var(--acc); border-radius:10px;
+          background:var(--surface); padding:11px 14px; }
+  .rr-hc b{ display:block; font-family:var(--display); font-size:15px; font-weight:600; color:var(--acc); }
+  .rr-hc span{ display:block; font-size:12.5px; color:var(--t3); margin-top:1px; }
+
+  .rr-topnav{ display:flex; justify-content:flex-start; border-bottom:1px solid var(--border2); margin:44px 0 0;
+              overflow-x:auto; position:sticky; top:64px; z-index:150; }
+  .rr-tnav{ display:inline-flex; align-items:center; gap:9px; font-family:var(--display); font-size:15px;
+            font-weight:500; padding:12px 22px; min-height:44px; background:none; border:none;
+            border-bottom:3px solid transparent; color:var(--t3); white-space:nowrap; cursor:pointer;
+            margin-bottom:-1px; }
+  .rr-tnav .n{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; color:var(--rr-accent); }
+  .rr-tnav:hover{ color:var(--t1); }
+  .rr-tnav[aria-selected="true"]{ color:var(--t1); border-bottom-color:var(--rr-accent); font-weight:600; }
+  .rr-section[hidden]{ display:none; }
+  .rr-section.rr-page{ margin:44px 0 0; }
+
+  /* ── BODY SHELL ── */
+  .rr-body{ max-width:1100px; margin:0 auto; padding:0 36px 40px; }
+  @media (max-width:820px){ .rr-body{ padding:0 22px 32px; } }
+
+  .rr-tldr{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:36px 0 10px; }
+  .rr-tldr-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+  .rr-tldr-h{ font-family:var(--display); font-size:16px; font-weight:600; color:var(--t1); margin-bottom:6px; }
+  .rr-tldr-p{ font-size:14px; line-height:1.6; color:var(--t3); }
+  .rr-tldr-p strong{ color:var(--t2); font-weight:600; }
+
+  .rr-section{ margin:64px 0 0; scroll-margin-top:90px; }
+  .rr-kick{ font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+            color:var(--rr-accent); font-weight:600; margin-bottom:10px; }
+  .rr-h2{ font-family:var(--display); font-size:clamp(24px, 3vw, 38px); font-weight:700; letter-spacing:-.015em;
+          line-height:1.12; color:var(--t1); margin:0 0 18px; }
+  .rr-h2 em{ font-style:normal; color:var(--rr-accent); }
+  .rr-h3{ font-family:var(--display); font-size:20px; font-weight:600; color:var(--t1); margin:38px 0 12px; }
+  .rr-h4{ font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.15em; text-transform:uppercase;
+          color:var(--t3); margin:26px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--border); }
+  .rr-p{ font-size:16px; line-height:1.72; color:var(--t2); max-width:70ch; margin:0 0 18px; }
+  .rr-p strong{ color:var(--t1); font-weight:600; }
+  .rr-pull{ font-family:var(--display); font-size:21px; line-height:1.4; color:var(--t1); font-weight:500;
+            border-left:3px solid var(--teal); padding:4px 0 4px 18px; margin:28px 0; max-width:56ch; }
+
+  /* ── FIGURES ── */
+  .rr-fig{ background:var(--surface); border:1px solid var(--border); border-radius:14px;
+           padding:22px 20px 16px; margin:26px 0 10px; max-width:560px; }
+  .rr-fig svg{ display:block; width:100%; max-width:460px; height:auto; margin:0 auto; }
+  .rr-fig-head{ display:flex; justify-content:space-between; gap:14px; align-items:baseline; margin-bottom:14px; }
+  .rr-fig-title{ font-family:var(--display); font-size:16px; font-weight:600; color:var(--t1); }
+  .rr-fig-key{ font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:var(--t3); }
+  .rr-fig-cap{ font-size:13.5px; line-height:1.6; color:var(--t3); margin:14px 0 26px; max-width:70ch; }
+  .rr-fig-cap strong{ color:var(--t2); font-weight:600; }
+  @media (max-width:699px){ .rr-fig{ padding:16px 10px 12px; } }
+
+  .rr-svg .st{ font-family:var(--display); font-size:16px; font-weight:600; fill:var(--t1); }
+  .rr-svg .sc{ font-family:var(--display); font-size:16px; font-weight:600; }
+  .rr-svg .sn{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; fill:var(--t3); }
+  .rr-svg .sk{ font-family:var(--mono); font-size:10px; letter-spacing:.03em; fill:var(--t3); }
+  .rr-svg .sm{ font-family:var(--display); font-size:13px; font-weight:600; fill:var(--t1); }
+
+  .rr-fleg{ display:flex; flex-wrap:wrap; gap:8px 18px; margin:12px 0 4px; font-size:12.5px; color:var(--t3); }
+  .rr-fleg i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:7px; vertical-align:-1px; }
+  .rr-fleg i.gate{ background:none; border:2px solid var(--amber); }
+  .rr-fleg i.dashline{ background:none; border:none; border-top:2px dashed var(--border2); height:0; width:16px; vertical-align:2px; }
+  .rr-svg .box{ fill:var(--raised); stroke:var(--border2); stroke-width:1.5; }
+  .rr-svg .pill{ fill:var(--t1); }
+  .rr-svg .pilltext{ font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; fill:var(--dark); font-weight:500; }
+  .rr-svg .ln{ stroke:var(--border2); stroke-width:1.5; fill:none; }
+  .rr-svg .dash{ stroke-dasharray:5 4; }
+  .rr-svg .head{ fill:var(--border2); }
+  .rr-svg .gate{ stroke:var(--amber); }
+
+  @media (prefers-reduced-motion:reduce){
+    .rr *{ transition:none !important; }
+  }
+
+  /* ── TREE highlight wiring ── */
+  .rr-tree g[data-p]{ transition:opacity .2s ease; }
+  .rr-tree[data-lit] g[data-p]{ opacity:.26; }
+  .rr-tree[data-lit="fix"] g[data-p~="fix"],
+  .rr-tree[data-lit="enh"] g[data-p~="enh"],
+  .rr-tree[data-lit="opt"] g[data-p~="opt"],
+  .rr-tree[data-lit="nw"]  g[data-p~="nw"]{ opacity:1; }
+  .rr-tree .c-fix{ stroke:var(--fix); } .rr-tree .t-fix{ fill:var(--fix-t); }
+  .rr-tree .c-enh{ stroke:var(--enh); } .rr-tree .t-enh{ fill:var(--enh-t); }
+  .rr-tree .c-opt{ stroke:var(--opt); } .rr-tree .t-opt{ fill:var(--opt-t); }
+  .rr-tree .c-nw{  stroke:var(--nw); }  .rr-tree .t-nw{  fill:var(--nw-t); }
+
+  /* ── CALLOUTS ── */
+  .rr-callout{ border:1px solid var(--border); border-left:4px solid var(--acc, var(--teal));
+               border-radius:10px; background:var(--surface); padding:15px 18px; font-size:14.5px;
+               line-height:1.6; color:var(--t2); margin:22px 0; max-width:76ch; }
+  .rr-callout strong{ color:var(--t1); font-weight:600; }
+
+  /* ── STEP LIST ── */
+  .rr-steps{ list-style:none; counter-reset:rrstep; padding:0; margin:0 0 8px; max-width:76ch; }
+  .rr-steps li{ display:grid; grid-template-columns:24px 1fr; column-gap:16px;
+                padding:13px 0; border-bottom:1px solid var(--border); }
+  .rr-steps li:last-child{ border-bottom:none; }
+  .rr-steps li::before{ counter-increment:rrstep; content:counter(rrstep, decimal-leading-zero);
+                        grid-row:1 / span 2; font-family:var(--mono); font-size:11px; color:var(--t3); padding-top:4px; }
+  .rr-steps b{ grid-column:2; display:block; font-family:var(--display); font-size:15px; font-weight:600; color:var(--t1); }
+  .rr-steps span{ grid-column:2; display:block; font-size:13.5px; line-height:1.55; color:var(--t3); margin-top:2px; }
+  .rr-steps li.hot::before{ color:var(--acc, var(--teal)); }
+  .rr-steps li.hot b{ color:var(--acc, var(--teal)); }
+
+  /* ── CLASS TABS + PANELS ── */
+  .rr-tabs{ display:flex; border-bottom:1px solid var(--border2); overflow-x:auto; margin-top:30px; }
+  .rr-tab{ font-family:var(--display); font-size:15px; font-weight:500; padding:12px 20px; min-height:44px;
+           background:none; border:none; border-bottom:3px solid transparent; color:var(--t3);
+           white-space:nowrap; cursor:pointer; margin-bottom:-1px; }
+  .rr-tab:hover{ color:var(--t1); }
+  .rr-tab[aria-selected="true"]{ color:var(--acc); border-bottom-color:var(--acc); font-weight:600; }
+  .rr-panel{ background:var(--surface); border:1px solid var(--border); border-top:none;
+             border-left:4px solid var(--acc); border-radius:0 0 14px 14px; padding:26px 26px 30px; }
+  .rr-panel[hidden]{ display:none; }
+  @media (max-width:699px){ .rr-panel{ padding:20px 16px 24px; } }
+  .rr-testline{ font-family:var(--display); font-size:21px; font-weight:600; letter-spacing:-.01em;
+                line-height:1.32; margin:0 0 10px; color:var(--acc); max-width:38ch; }
+  .rr-lede{ margin:0 0 22px; color:var(--t2); font-size:15px; line-height:1.65; max-width:72ch; }
+
+  .rr-facts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:2px 28px; }
+  .rr-fact{ padding:0 0 16px; margin:0; }
+  .rr-fact dt{ font-family:var(--mono); font-size:10px; letter-spacing:.11em; text-transform:uppercase;
+               color:var(--t3); margin-bottom:3px; }
+  .rr-fact dd{ margin:0; font-size:14.5px; line-height:1.55; color:var(--t2); }
+
+  /* ── DOMAIN CARDS + SCOPE LADDER ── */
+  .rr-domains{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:22px 0; }
+  .rr-dom{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:17px 19px; }
+  .rr-dom b{ display:block; font-family:var(--display); font-size:17px; font-weight:600; color:var(--t1); }
+  .rr-dom .who{ font-size:13.5px; color:var(--t2); margin-top:6px; line-height:1.5; }
+  .rr-dom .what{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+                 color:var(--t3); margin-top:2px; }
+
+  .rr-ladder{ margin:22px 0 8px; max-width:76ch; }
+  .rr-rung{ display:grid; grid-template-columns:118px 1fr; gap:6px 18px; padding:14px 16px;
+            border:1px solid var(--border); border-left:4px solid var(--teal); background:var(--surface);
+            border-radius:10px; margin-bottom:8px; align-items:baseline; }
+  .rr-rung:nth-child(3){ border-left-color:var(--amber); }
+  .rr-rung:nth-child(4){ border-left-color:var(--amber); }
+  .rr-rung b{ font-family:var(--display); font-size:15px; font-weight:600; color:var(--t1); }
+  .rr-rung .who{ font-size:14px; color:var(--t2); }
+  .rr-rung .note{ grid-column:2; font-size:12.5px; color:var(--t3); line-height:1.5; }
+  @media (max-width:520px){ .rr-rung{ grid-template-columns:1fr; } .rr-rung .note{ grid-column:1; } }
+
+  .rr-formula{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:26px 0;
+               font-family:var(--mono); }
+  .rr-formula .term{ border:1px solid var(--border2); border-radius:8px; background:var(--raised);
+                     padding:8px 13px; font-size:12px; color:var(--t1); letter-spacing:.06em; }
+  .rr-formula .term small{ display:block; font-size:9.5px; color:var(--t3); letter-spacing:.1em; margin-top:2px; }
+  .rr-formula .op{ color:var(--t3); font-size:15px; }
+  .rr-formula .out{ border-color:var(--teal); color:var(--t1); }
+
+  /* ── TABLE ── */
+  .rr-tblwrap{ overflow-x:auto; background:var(--surface); border:1px solid var(--border2); border-radius:12px; margin:22px 0 8px; }
+  .rr-grid{ width:100%; min-width:680px; border-collapse:collapse; font-size:14px; }
+  .rr-grid th,.rr-grid td{ border:1px solid var(--border); padding:12px 14px; text-align:left; vertical-align:top; }
+  .rr-grid thead th{ background:var(--raised); font-family:var(--mono); font-size:10.5px; letter-spacing:.11em;
+                     text-transform:uppercase; color:var(--t3); font-weight:500; }
+  .rr-grid tbody th{ font-family:var(--display); font-size:14.5px; font-weight:600; background:var(--raised);
+                     color:var(--t1); width:120px; white-space:nowrap; }
+  .rr-grid td b{ display:block; font-weight:600; color:var(--t1); font-size:14.5px; line-height:1.4; }
+  .rr-grid td span{ display:block; color:var(--t3); font-size:13px; margin-top:3px; line-height:1.5; }
+
+  .rr-rules{ max-width:72ch; padding-left:20px; margin:0 0 8px; color:var(--t2); }
+  .rr-rules li{ padding:7px 0; font-size:15px; line-height:1.6; }
+  .rr-rules b{ color:var(--t1); font-weight:600; }
+
+  /* ── ROUTER ── */
+  .rr-router{ background:var(--surface); border:1px solid var(--border); border-radius:16px;
+              padding:30px 28px 32px; margin-top:30px; }
+  @media (max-width:699px){ .rr-router{ padding:22px 16px 26px; } }
+  .rr-q{ display:flex; gap:14px; align-items:flex-start; padding:15px 0; border-bottom:1px solid var(--border); }
+  .rr-q[hidden]{ display:none; }
+  .rr-qn{ font-family:var(--mono); font-size:11px; color:var(--t3); padding-top:12px; min-width:24px; }
+  .rr-qb{ flex:1; min-width:0; }
+  .rr-qq{ font-size:15px; margin:0 0 10px; font-weight:500; color:var(--t1); line-height:1.5; padding-top:8px; }
+  .rr-q.answered .rr-qq{ color:var(--t3); font-weight:400; }
+  .rr-qbtns{ display:flex; gap:8px; flex-wrap:wrap; }
+  .rr-qbtns button{ min-height:44px; padding:9px 20px; border:1px solid var(--border2); border-radius:9px;
+                    background:var(--raised); color:var(--t1); font-family:var(--font); font-size:14.5px; cursor:pointer; }
+  .rr-qbtns button:hover{ border-color:var(--rr-accent); }
+  .rr-qbtns button.on{ background:var(--t1); border-color:var(--t1); color:var(--dark); }
+
+  .rr-verdict{ margin-top:22px; padding:20px; border-radius:12px; background:var(--raised);
+               border-left:4px solid var(--acc, var(--teal)); opacity:1; transform:none;
+               transition:opacity .22s ease, transform .22s ease; }
+  .rr-verdict[hidden]{ display:none; }
+  .rr-verdict.enter{ opacity:0; transform:translateY(8px); }
+  .rr-verdict[data-cls="fix"]{ --acc:var(--fix); --acc-t:var(--fix-t); }
+  .rr-verdict[data-cls="enh"]{ --acc:var(--enh); --acc-t:var(--enh-t); }
+  .rr-verdict[data-cls="opt"]{ --acc:var(--opt); --acc-t:var(--opt-t); }
+  .rr-verdict[data-cls="nw"]{  --acc:var(--nw);  --acc-t:var(--nw-t); }
+  .rr-vlabel{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+              color:var(--t3); margin:0 0 10px; }
+  .rr-sr{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+          clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .rr-quad{ display:flex; flex-wrap:wrap; border:1px solid var(--border2); border-radius:10px;
+            background:var(--surface); margin:0 0 14px; overflow:hidden; }
+  .rr-quad div{ flex:1; min-width:110px; padding:10px 14px; border-right:1px solid var(--border); }
+  .rr-quad div:last-child{ border-right:none; }
+  .rr-quad span{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.11em;
+                 text-transform:uppercase; color:var(--t3); }
+  .rr-quad b{ font-family:var(--display); font-size:17px; font-weight:600; line-height:1.3; color:var(--acc-t, var(--t1)); }
+  .rr-quad div.plain b{ color:var(--t1); }
+  .rr-vd{ margin:0 0 14px; font-size:14.5px; color:var(--t2); line-height:1.6; }
+  .rr-vmeta{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px 20px; margin:0 0 18px; }
+  .rr-vmeta span{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em;
+                  text-transform:uppercase; color:var(--t3); }
+  .rr-vmeta b{ font-size:14px; font-weight:500; color:var(--t1); line-height:1.45; }
+  .rr-vbtns{ display:flex; gap:10px; flex-wrap:wrap; }
+  .rr-vbtns button{ min-height:44px; padding:9px 20px; border-radius:9px; cursor:pointer; font-size:14.5px; font-family:var(--font); }
+  .rr-vbtns .go{ background:var(--t1); border:1px solid var(--t1); color:var(--dark); font-weight:500; }
+  .rr-vbtns .again{ background:none; border:1px solid var(--border2); color:var(--t2); }
+  .rr-vbtns .again:hover{ border-color:var(--rr-accent); color:var(--t1); }
+
+  /* ── THE REFERENCE ── */
+  .rr-pocket{ border:1.5px dashed var(--border2); border-radius:12px; background:var(--surface);
+              max-width:78ch; margin:0 0 26px; overflow:hidden; }
+  .rr-pocket-head{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 12px;
+                   padding:8px 10px 8px 16px; border-bottom:1.5px dashed var(--border2); }
+  .rr-pocket-k{ font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+                color:var(--t3); font-weight:600; }
+  .rr-pocket pre{ margin:0; padding:14px 16px 18px; font-family:var(--mono); font-size:11.5px; line-height:1.7;
+                  color:var(--t2); max-height:240px; overflow:auto; white-space:pre; }
+  .rr-copy{ min-height:44px; padding:9px 20px; border-radius:9px; border:1px solid var(--t1); background:var(--t1);
+            color:var(--dark); font-family:var(--font); font-size:14.5px; font-weight:500; cursor:pointer; flex-shrink:0; }
+  .rr-copy:hover, .rr-drill-next:hover, .rr-vbtns .go:hover, .rr a.rr-career-btn:hover{ opacity:.92; }
+  .rr-ref{ background:var(--surface); border:1px solid var(--border); border-radius:14px;
+           padding:20px 22px; margin:0 0 16px; max-width:78ch; }
+  @media (max-width:699px){ .rr-ref{ padding:16px 14px; } }
+  .rr-ref-k{ font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+             color:var(--rr-accent); font-weight:600; margin-bottom:12px; }
+  .rr-why-acc{ max-width:76ch; margin-top:6px; border-top:1px solid var(--border); }
+  .rr-why-acc details{ border-bottom:1px solid var(--border); }
+  .rr-why-acc summary{ cursor:pointer; padding:13px 4px; min-height:44px; font-family:var(--display);
+                       font-size:15px; font-weight:600; color:var(--t1); list-style:none;
+                       display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .rr-why-acc summary:hover{ color:var(--rr-accent); }
+  .rr-why-acc summary::-webkit-details-marker{ display:none; }
+  .rr-why-acc summary::after{ content:'+'; font-family:var(--mono); font-size:16px; color:var(--t3);
+                              transition:transform .15s ease; }
+  .rr-why-acc details[open] summary::after{ transform:rotate(45deg); }
+  .rr-why-acc details p{ margin:0 0 14px; padding:0 4px; font-size:14px; line-height:1.65; color:var(--t2); max-width:70ch; }
+
+  /* ── OPERATING DAY ── */
+  .rr-day{ display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:16px; margin-top:24px; }
+  .rr-daycard{ background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--border2);
+               border-radius:12px; padding:19px 20px; }
+  .rr-daycard h3{ font-family:var(--display); font-size:16px; font-weight:600; margin:0 0 2px; color:var(--t1); }
+  .rr-daycard .k{ margin:0 0 12px; font-size:12.5px; color:var(--t3); }
+  .rr-daycard.optional{ border-style:dashed; border-top-style:solid; border-top-color:var(--teal); }
+  .rr-daycard.optional h3::after{ content:"optional"; font-family:var(--mono); font-size:9px; letter-spacing:.11em;
+    text-transform:uppercase; color:var(--rr-accent); border:1px solid var(--rr-accent); border-radius:5px;
+    padding:2px 7px; margin-left:10px; vertical-align:2px; }
+  .rr-check{ list-style:none; padding:0; margin:0; }
+  .rr-check li{ border-bottom:1px solid var(--border); }
+  .rr-check li:last-child{ border-bottom:none; }
+  .rr-check label{ display:flex; gap:11px; align-items:flex-start; padding:11px 0; font-size:14.5px;
+                   cursor:pointer; line-height:1.45; min-height:44px; color:var(--t2); }
+  .rr-check input{ margin:3px 0 0; flex-shrink:0; width:17px; height:17px; accent-color:var(--rr-accent); }
+  .rr-check label:has(input:checked){ color:var(--t4); text-decoration:line-through; text-decoration-color:var(--border2); }
+  .rr-why{ margin:13px 0 0; font-size:13px; color:var(--t3); border-left:2px solid var(--border2);
+           padding-left:11px; line-height:1.55; }
+  .rr-daynote{ margin:20px 0 0; font-size:13px; color:var(--t3); }
+  .rr-reset{ background:none; border:none; padding:6px 8px; min-height:44px; font-size:13px; color:var(--t3);
+             text-decoration:underline; cursor:pointer; font-family:var(--font); }
+  .rr-reset:hover{ color:var(--t1); }
+
+  /* ── THE BRIDGE ── */
+  .rr-bridge{ margin:56px 0 0; }
+  .rr-bmap{ display:grid; grid-template-columns:1fr 1.1fr 1fr; grid-template-areas:". gov ." "clin team tech";
+            gap:14px 16px; align-items:start; margin-top:8px; }
+  .rr-bcol{ display:flex; flex-direction:column; gap:10px; min-width:0; }
+  .rr-bcol.teamcol{ align-self:center; }
+  @media (max-width:820px){ .rr-bmap{ grid-template-columns:1fr; grid-template-areas:"gov" "clin" "team" "tech"; } }
+  .rr-blab{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+            color:var(--t3); margin-bottom:2px; }
+  .rr-party{ background:var(--surface); border:1px solid var(--border); border-radius:10px; min-width:0; }
+  .rr-party > button{ display:block; width:100%; text-align:left; background:none; border:none; border-radius:10px;
+                      padding:12px 14px; cursor:pointer; color:var(--t2); font-family:var(--font); min-height:44px; }
+  .rr-party b{ display:block; font-family:var(--display); font-size:15px; font-weight:600; color:var(--t1); }
+  .rr-party .r{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em;
+                text-transform:uppercase; color:var(--t3); margin-top:2px; }
+  .rr-party .d{ display:none; font-size:13px; line-height:1.6; color:var(--t2); margin:0; padding:0 14px 12px; }
+  .rr-party:hover{ border-color:var(--border2); }
+  .rr-party.open{ border-color:var(--rr-accent); }
+  .rr-party.open .d{ display:block; }
+  .rr-party.rr-team{ border-color:var(--rr-accent); background:var(--raised); }
+  .rr-party.rr-team b{ color:var(--rr-accent); }
+
+  /* ── CASE FILES ── */
+  .rr-case{ border:1px solid var(--border); border-left:4px solid var(--acc); border-radius:10px;
+            background:var(--raised); padding:16px 18px 14px; margin:0 0 24px; max-width:76ch; }
+  .rr-case-k{ font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+              color:var(--acc); margin-bottom:10px; font-weight:600; }
+  .rr-case-msg{ margin:0 0 13px; font-size:14.5px; line-height:1.55; color:var(--t1); font-style:italic;
+                border-left:2px solid var(--border2); padding:2px 0 2px 12px; }
+  .rr-case-beats div{ margin-bottom:10px; }
+  .rr-case-beats div:last-child{ margin-bottom:2px; }
+  .rr-case-beats span{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.11em;
+                       text-transform:uppercase; color:var(--t3); }
+  .rr-case-beats p{ margin:2px 0 0; font-size:13.5px; line-height:1.6; color:var(--t2); }
+
+  /* ── TRIAGE DRILL ── */
+  .rr-drill{ margin-top:52px; }
+  .rr-drill-box{ background:var(--surface); border:1px solid var(--border); border-radius:14px;
+                 padding:22px 22px 24px; max-width:640px; }
+  .rr-drill-prog{ font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+                  color:var(--t3); margin-bottom:12px; }
+  .rr-drill-prog span{ color:var(--rr-accent); }
+  .rr-drill-msg{ margin:0 0 16px; font-size:16px; line-height:1.55; color:var(--t1); font-style:italic;
+                 border-left:3px solid var(--border2); padding:4px 0 4px 14px; min-height:52px; }
+  .rr-drill-opts{ display:flex; flex-wrap:wrap; gap:8px; }
+  .rr-drill-opts button{ min-height:44px; padding:9px 18px; border:1.5px solid var(--border2); border-radius:9px;
+                         background:var(--raised); color:var(--t1); font-family:var(--display); font-size:14.5px;
+                         font-weight:500; cursor:pointer; }
+  .rr-drill-opts button:hover{ border-color:var(--k); color:var(--k); }
+  .rr-drill-opts button.good{ border-color:var(--k); color:var(--k); font-weight:600; }
+  .rr-drill-opts button.bad{ text-decoration:line-through; opacity:.55; }
+  .rr-drill-opts.locked button{ cursor:default; }
+  .rr-drill-fb{ margin:14px 0 0; font-size:14px; line-height:1.6; color:var(--t2); min-height:22px; }
+  .rr-drill-fb b{ color:var(--t1); }
+  .rr-drill-next{ margin-top:12px; min-height:44px; padding:9px 20px; border-radius:9px; border:1px solid var(--t1);
+                  background:var(--t1); color:var(--dark); font-family:var(--font); font-size:14.5px; cursor:pointer; }
+  .rr-drill-end{ padding-top:4px; }
+  .rr-drill-score{ font-family:var(--display); font-size:34px; font-weight:700; color:var(--t1); }
+  .rr-drill-line{ margin:6px 0 4px; font-size:14.5px; color:var(--t2); }
+
+  /* ── THE PATH ── */
+  .rr-career{ margin:56px 0 0; border:1px solid var(--border); border-radius:14px; background:var(--surface);
+              padding:24px 26px; max-width:640px; }
+  .rr-career-h{ font-family:var(--display); font-size:22px; font-weight:700; color:var(--t1); margin:4px 0 8px; }
+  .rr-career p{ margin:0 0 16px; font-size:14.5px; line-height:1.65; color:var(--t2); max-width:60ch; }
+  .rr a.rr-career-btn{ display:inline-flex; align-items:center; min-height:44px; padding:9px 20px; border-radius:9px;
+                       background:var(--t1); color:var(--dark); text-decoration:none; font-size:14.5px; font-weight:500; }
+
+  /* ── SOURCES ── */
+  .rr-sources{ margin:64px 0 0; padding-top:22px; border-top:1px solid var(--border); max-width:76ch; }
+  .rr-sources-title{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+                     color:var(--t3); margin-bottom:12px; font-weight:600; }
+  .rr-source{ font-size:13.5px; line-height:1.6; color:var(--t3); margin-bottom:9px; }
+  .rr-source em{ color:var(--t2); }
+</style>
+
+<article class="rr">
+
+  <!-- ══════════ HERO ══════════ -->
+  <header class="rr-hero">
+    <div class="rr-hero-inner">
+      <div>
+        <div class="rr-eyebrow">
+          <span class="dot"></span>
+          <span>Method</span>
+          <span class="sep"></span>
+          <span>Clinical informatics</span>
+        </div>
+
+        <h1 class="rr-h1">Informatics work: <em>routing requests.</em></h1>
+
+        <p class="rr-hero-sub">Break/fix. Enhancement. Optimization. Net new. I run a clinical informatics team, and every ask that reaches us gets one of those four labels before anyone opens the build. Sounds like paperwork. It is the fastest consequential decision we make all day: <strong>the label picks the queue, the approver, and the owner</strong>, and a wrong label sends all three to the wrong place at once.</p>
+
+        <div class="rr-thesis">
+          <span class="rr-thesis-label">Principle</span>
+          <span class="rr-thesis-text">The class is not a description of the work. It is the routing decision. <strong>By the time you have named it correctly, most of the arguing is already over.</strong></span>
+        </div>
+
+        <div class="rr-byline">
+          <span><strong>By David Eitel</strong></span>
+          <span>~19 min · four tabs</span>
+          <span>From a working team standard</span>
+        </div>
+
+        <div class="card-fps" style="margin-top:18px;margin-bottom:0">
+          <a class="fp fp-provider" href="/atlas/#provider/informatics">Clinical Informatics</a>
+          <a class="fp fp-provider" href="/atlas/#provider/ehr">EHR Systems</a>
+          <a class="fp fp-techeco" href="/atlas/#techeco/ehr-tools">EHR Platforms</a>
+        </div>
+
+      </div>
+
+      <ul class="rr-hero-classes" aria-label="The four request classes">
+        <li class="rr-hc" style="--acc:var(--fix-t)"><b>Break / fix</b><span>it worked, and it stopped</span></li>
+        <li class="rr-hc" style="--acc:var(--enh-t)"><b>Enhancement</b><span>new records on owned capability</span></li>
+        <li class="rr-hc" style="--acc:var(--opt-t)"><b>Optimization</b><span>adjust what already exists</span></li>
+        <li class="rr-hc" style="--acc:var(--nw-t)"><b>Net new</b><span>capability nobody owns yet</span></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="rr-body">
+
+    <!-- ── TLDR ── -->
+    <div class="rr-tldr">
+      <div class="rr-tldr-card">
+        <div class="rr-tldr-h">Classify before you analyze.</div>
+        <div class="rr-tldr-p">The class decides the system of record, the approval path, and the owner. <strong>Get it wrong and every later step inherits the error.</strong></div>
+      </div>
+      <div class="rr-tldr-card">
+        <div class="rr-tldr-h">The build settles it.</div>
+        <div class="rr-tldr-p">All three tests are answered by opening the build and looking. Two analysts, same request, same answer. Effort estimates cannot do that.</div>
+      </div>
+      <div class="rr-tldr-card">
+        <div class="rr-tldr-h">Closure means verified in production.</div>
+        <div class="rr-tldr-p">A launched change is a hypothesis. It closes when production behavior matches the expectation. <strong>A failed check sends it back to option development.</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════ THE BRIDGE ══════════ -->
+    <section class="rr-bridge" aria-label="Where informatics sits">
+      <div class="rr-kick">The job</div>
+      <h2 class="rr-h3" style="margin-top:6px">Where informatics sits.</h2>
+      <p class="rr-p">Clinical informatics is the trade of sitting between the people who deliver care and the people who run the system, fluent in both directions. I translate a nurse's "this is broken" into a build requirement, and a build constraint back into language a unit can use. Open any card for what that group owns and when the work crosses to them.</p>
+      <div class="rr-bmap">
+        <div class="rr-bcol" style="grid-area:gov">
+          <div class="rr-party"><button type="button" aria-expanded="false" aria-controls="bp-gov"><b>Governance</b><span class="r">Prioritization · enterprise standards</span></button><div class="d" id="bp-gov">Owns sequencing across teams and the yes on region and enterprise change. Everything net new lands here. Our job: it arrives classified and scoped, so the meeting can argue about order.</div></div>
+        </div>
+        <div class="rr-bcol" style="grid-area:clin">
+          <div class="rr-blab">The care side</div>
+          <div class="rr-party"><button type="button" aria-expanded="false" aria-controls="bp-clin"><b>Clinicians &amp; clinical leads</b><span class="r">The expected standard</span></button><div class="d" id="bp-clin">Own what correct care looks like on the unit. They confirm the baseline in a break/fix and the outcome in everything else, and the customer consult is theirs at every scope.</div></div>
+          <div class="rr-party"><button type="button" aria-expanded="false" aria-controls="bp-champ"><b>Physician champion</b><span class="r">Clinical standards</span></button><div class="d" id="bp-champ">Owns any change to clinical practice, whatever class the request wears. Leads clinical enhancements while informatics documents the workflow that results.</div></div>
+          <div class="rr-party"><button type="button" aria-expanded="false" aria-controls="bp-ops"><b>Operations &amp; site leads</b><span class="r">Scheduling and resulting</span></button><div class="d" id="bp-ops">Own how the day actually runs at a site. They hold the authoritative answer on operational requests and the approval at site scope.</div></div>
+        </div>
+        <div class="rr-bcol teamcol" style="grid-area:team">
+          <div class="rr-blab">The junction</div>
+          <div class="rr-party rr-team"><button type="button" aria-expanded="false" aria-controls="bp-team"><b>Clinical informatics</b><span class="r">My team</span></button><div class="d" id="bp-team">Owns the workflow: what the system should do for the person at the bedside. We triage every request, run the classification, define the requirement, and validate that what shipped matches what care needed. We rarely hold the build keys, and we always hold the accountability.</div></div>
+        </div>
+        <div class="rr-bcol" style="grid-area:tech">
+          <div class="rr-blab">The build side</div>
+          <div class="rr-party"><button type="button" aria-expanded="false" aria-controls="bp-apps"><b>Applications team</b><span class="r">The build itself</span></button><div class="d" id="bp-apps">Owns the records and executes the change: corrections, new records, the whole configuration surface. Informatics defines the requirement; applications makes it exist.</div></div>
+          <div class="rr-party"><button type="button" aria-expanded="false" aria-controls="bp-tech"><b>Technical services</b><span class="r">Infrastructure</span></button><div class="d" id="bp-tech">Owns servers, printers, the network, and the plumbing underneath the applications. Failures that turn out to be infrastructure hand off here after triage.</div></div>
+          <div class="rr-party"><button type="button" aria-expanded="false" aria-controls="bp-biomed"><b>Biomedical engineering</b><span class="r">Devices and interfaces</span></button><div class="d" id="bp-biomed">Owns the medical devices and the interfaces that carry their data into the chart. A vent that stops sending data is theirs. The flowsheet that stops showing it starts as ours.</div></div>
+        </div>
+      </div>
+      <p class="rr-fig-cap" style="margin:14px 0 0">Every request crosses at least one of these seams. The standard below exists because seams are where work gets lost.</p>
+    </section>
+
+    <!-- ══════════ SECTION TABS ══════════ -->
+    <nav class="rr-topnav" role="tablist" aria-label="Sections of this module">
+      <button type="button" class="rr-tnav" role="tab" id="nav-standard" aria-controls="standard" aria-selected="true"><span class="n">01</span>The standard</button>
+      <button type="button" class="rr-tnav" role="tab" id="nav-flowsheet" aria-controls="flowsheet" aria-selected="false"><span class="n">02</span>The flowsheet</button>
+      <button type="button" class="rr-tnav" role="tab" id="nav-reference" aria-controls="reference" aria-selected="false"><span class="n">03</span>The reference</button>
+      <button type="button" class="rr-tnav" role="tab" id="nav-day" aria-controls="operating-day" aria-selected="false"><span class="n">04</span>The operating day</button>
+    </nav>
+
+    <!-- ══════════ TAB 1 · THE STANDARD ══════════ -->
+    <section class="rr-section rr-page" id="standard" role="tabpanel" aria-labelledby="nav-standard">
+      <h2 class="rr-h2">One pipeline, <em>two levels</em> of routing.</h2>
+      <p class="rr-p">Requests reach an informatics team through four doors: the ticket queue, email, chat, and the follow-up somebody promised in a meeting. Whatever the door, they converge on a single classification point before any analysis starts. Analysis and design produce a tested set of options. Change control settles approval and the production timeline. And implementation is finished when production behavior is verified, which is a stricter bar than "launched."</p>
+      <h3 class="rr-h3">The lifecycle, step by step</h3>
+      <p class="rr-p">Every class walks the same eight steps. What changes by class is where the work is tracked, who leads it, and how far the approval reaches. The sequence itself never changes.</p>
+
+      <div class="rr-fig hu-ticks">
+        <div class="rr-fig-head">
+          <div class="rr-fig-title">The request lifecycle</div>
+          <div class="rr-fig-key">Eight steps, one gate</div>
+        </div>
+        <svg class="rr-svg" id="rrLife" viewBox="0 0 400 684" role="img" aria-label="The request lifecycle in eight steps: request received, information gathering, option development, approval, production timeline, execute the launch, verify and support, and close out. A dashed failure path returns from verification to option development.">
+          <rect class="box" x="16" y="16" width="300" height="48" rx="8"/>
+          <text class="st" x="32" y="35">Request received</text>
+          <text class="sn" x="300" y="35" text-anchor="end">01</text>
+          <text class="sk" x="32" y="53">ARRIVES BY TICKET, EMAIL, CHAT, OR MEETING</text>
+          <line class="ln" x1="166" y1="64" x2="166" y2="76"/>
+          <polygon class="head" points="166,80 161,71 171,71"/>
+          <rect class="box" x="16" y="84" width="300" height="80" rx="8"/>
+          <text class="st" x="32" y="103">Information gathering</text>
+          <text class="sn" x="300" y="103" text-anchor="end">02</text>
+          <text class="sk" x="32" y="121">DESCRIBE THE ISSUE AND RECREATE THE ERROR</text>
+          <text class="sk" x="32" y="137">CONFIRM THE OUTCOME THE REQUESTER NEEDS</text>
+          <text class="sk" x="32" y="153">REVIEW WITH THE REQUESTER BEFORE BUILDING</text>
+          <line class="ln" x1="166" y1="164" x2="166" y2="176"/>
+          <polygon class="head" points="166,180 161,171 171,171"/>
+          <rect class="box" x="16" y="184" width="300" height="64" rx="8"/>
+          <text class="st" x="32" y="203">Option development</text>
+          <text class="sn" x="300" y="203" text-anchor="end">03</text>
+          <text class="sk" x="32" y="221">BUILD THE LIST OF CHANGES THAT DELIVER IT</text>
+          <text class="sk" x="32" y="237">TEST EACH ONE FOR NEW PROBLEMS</text>
+          <line class="ln" x1="166" y1="248" x2="166" y2="260"/>
+          <polygon class="head" points="166,264 161,255 171,255"/>
+          <rect class="box" x="16" y="268" width="300" height="64" rx="8"/>
+          <text class="st" x="32" y="287">Approval</text>
+          <text class="sn" x="300" y="287" text-anchor="end">04</text>
+          <text class="sk" x="32" y="305">LEADERSHIP SIGNS OFF ON THE CHANGE</text>
+          <text class="sk" x="32" y="321">THE CUSTOMER IS CONSULTED IN EVERY CASE</text>
+          <line class="ln" x1="166" y1="332" x2="166" y2="344"/>
+          <polygon class="head" points="166,348 161,339 171,339"/>
+          <rect class="box" x="16" y="352" width="300" height="64" rx="8"/>
+          <text class="st" x="32" y="371">Production timeline</text>
+          <text class="sn" x="300" y="371" text-anchor="end">05</text>
+          <text class="sk" x="32" y="389">TESTING AND EDUCATION WRITTEN BEFORE LAUNCH</text>
+          <text class="sk" x="32" y="405">THE TICKET DOCUMENTS THE DECISION</text>
+          <line class="ln" x1="166" y1="416" x2="166" y2="428"/>
+          <polygon class="head" points="166,432 161,423 171,423"/>
+          <rect class="box" x="16" y="436" width="300" height="48" rx="8"/>
+          <text class="st" x="32" y="455">Execute the launch</text>
+          <text class="sn" x="300" y="455" text-anchor="end">06</text>
+          <text class="sk" x="32" y="473">SHORT, WHEN THE FIVE STEPS BEFORE WERE HONEST</text>
+          <line class="ln" x1="166" y1="484" x2="166" y2="496"/>
+          <polygon class="head" points="166,500 161,491 171,491"/>
+          <rect class="box gate" x="16" y="504" width="300" height="80" rx="8"/>
+          <text class="st" x="32" y="523">Verify and support</text>
+          <text class="sn" x="300" y="523" text-anchor="end">07</text>
+          <text class="sk" x="32" y="541">PRODUCTION BEHAVIOR MUST MATCH EXPECTATION</text>
+          <text class="sk" x="32" y="557">ON FAILURE: BACK OUT, CORRECT, OR WITHDRAW</text>
+          <text class="sk" x="32" y="573">ALL THREE ARE NORMAL OUTCOMES</text>
+          <line class="ln" x1="166" y1="584" x2="166" y2="596"/>
+          <polygon class="head" points="166,600 161,591 171,591"/>
+          <rect class="box" x="16" y="604" width="300" height="64" rx="8"/>
+          <text class="st" x="32" y="623">Close out</text>
+          <text class="sn" x="300" y="623" text-anchor="end">08</text>
+          <text class="sk" x="32" y="641">CHANGE DOCUMENTATION CLOSED</text>
+          <text class="sk" x="32" y="657">THE REQUESTER'S THREAD ANSWERED AND CLOSED</text>
+
+          <path class="ln dash" d="M316,544 H350 V216 H324"/>
+          <polygon class="head" points="320,216 328,212 328,220"/>
+          <text class="sn" transform="rotate(90 368 380)" text-anchor="middle" x="368" y="380">FAILED · RETURN TO STEP 03</text>
+        </svg>
+        <button type="button" class="rr-copy" id="rrLifeDl" style="margin:10px 0 6px">Download as JPG</button>
+        <div class="rr-fig-cap"><strong>The gate makes the closure honest.</strong> Step 07 verifies production behavior against expectation, and a failure returns the request to step 03 with the work still open and still owned. Classification has already happened before step 02 begins; the flowsheet tab draws that part, then compresses this same spine into its delivery band. The download renders in your current theme.</div>
+      </div>
+
+      <!-- ── LEVEL 1: THE TESTS ── -->
+      <h3 class="rr-h3" style="margin-top:52px">Level 1 · Three tests, four classes</h3>
+      <p class="rr-p">Class comes from three questions asked in order, stopping at the first yes. Each one is answerable by inspecting the existing build. That constraint is deliberate: a test you answer by looking produces the same class no matter which analyst is on triage that day.</p>
+
+      <div class="rr-fig hu-ticks">
+        <div class="rr-fig-head">
+          <div class="rr-fig-title">The classification tree</div>
+          <div class="rr-fig-key">Stop at the first yes</div>
+        </div>
+        <svg class="rr-svg rr-tree" id="rrTree" viewBox="0 0 380 660" role="img" aria-label="Classification decision tree. Test one: was it operating as designed and now it isn't? Yes gives break/fix. Test two: is the capability or record type absent from the current build? Yes gives net new. Test three: does delivery require new records or record types? Yes gives enhancement, and no to all three gives optimization.">
+          <g data-p="fix enh opt nw">
+            <rect class="pill" x="100" y="6" width="180" height="32" rx="16"/>
+            <text class="pilltext" x="190" y="26" text-anchor="middle">REQUEST RECEIVED</text>
+            <line class="ln" x1="190" y1="38" x2="190" y2="58"/>
+            <polygon class="head" points="190,63 185,54 195,54"/>
+            <rect class="box" x="16" y="66" width="348" height="68" rx="8"/>
+            <text class="sn" x="32" y="88">TEST 01</text>
+            <text class="st" x="32" y="108">Was it operating as designed,</text>
+            <text class="st" x="32" y="126">and now it isn't?</text>
+          </g>
+          <g data-p="fix">
+            <line class="ln" x1="283" y1="134" x2="283" y2="150"/>
+            <polygon class="head" points="283,156 278,147 288,147"/>
+            <text class="sn" x="295" y="149">YES</text>
+            <rect class="box c-fix" x="100" y="158" width="264" height="56" rx="8"/>
+            <text class="sc t-fix" x="118" y="184">Break / fix</text>
+            <text class="sk" x="118" y="202">INCIDENT · SHARED WITH APPLICATIONS</text>
+          </g>
+          <g data-p="enh opt nw">
+            <line class="ln" x1="60" y1="134" x2="60" y2="234"/>
+            <polygon class="head" points="60,240 55,231 65,231"/>
+            <text class="sn" x="70" y="190">NO</text>
+            <rect class="box" x="16" y="240" width="348" height="68" rx="8"/>
+            <text class="sn" x="32" y="262">TEST 02</text>
+            <text class="st" x="32" y="282">Is the capability or record type</text>
+            <text class="st" x="32" y="300">absent from the current build?</text>
+          </g>
+          <g data-p="nw">
+            <line class="ln" x1="283" y1="308" x2="283" y2="324"/>
+            <polygon class="head" points="283,330 278,321 288,321"/>
+            <text class="sn" x="295" y="323">YES</text>
+            <rect class="box c-nw" x="100" y="332" width="264" height="56" rx="8"/>
+            <text class="sc t-nw" x="118" y="358">Net new</text>
+            <text class="sk" x="118" y="376">DEMAND RECORD · GOVERNANCE PRIORITIZES</text>
+          </g>
+          <g data-p="enh opt">
+            <line class="ln" x1="60" y1="308" x2="60" y2="408"/>
+            <polygon class="head" points="60,414 55,405 65,405"/>
+            <text class="sn" x="70" y="364">NO</text>
+            <rect class="box" x="16" y="414" width="348" height="68" rx="8"/>
+            <text class="sn" x="32" y="436">TEST 03</text>
+            <text class="st" x="32" y="456">Does delivery require new records</text>
+            <text class="st" x="32" y="474">or new record types?</text>
+          </g>
+          <g data-p="enh">
+            <line class="ln" x1="283" y1="482" x2="283" y2="498"/>
+            <polygon class="head" points="283,504 278,495 288,495"/>
+            <text class="sn" x="295" y="497">YES</text>
+            <rect class="box c-enh" x="100" y="506" width="264" height="56" rx="8"/>
+            <text class="sc t-enh" x="118" y="532">Enhancement</text>
+            <text class="sk" x="118" y="550">TASK · LINKED TO A CHANGE RECORD</text>
+          </g>
+          <g data-p="opt">
+            <line class="ln" x1="60" y1="482" x2="60" y2="582"/>
+            <polygon class="head" points="60,588 55,579 65,579"/>
+            <text class="sn" x="70" y="538">NO</text>
+            <rect class="box c-opt" x="16" y="588" width="348" height="60" rx="8"/>
+            <text class="sc t-opt" x="34" y="614">Optimization</text>
+            <text class="sn" x="34" y="634">TASK · PACED ON THE TEAM PLANNER</text>
+          </g>
+        </svg>
+        <div class="rr-fig-cap"><strong>Pick a class below and the tree lights its path.</strong> Optimization is the fall-through: everything the change touches already exists, so no test fires.</div>
+      </div>
+
+      <div class="rr-callout"><strong>One modifier.</strong> When an enhancement or a net new build is bigger than the team can absorb inside its normal cadence, it gets designated a PROJECT. A project manager takes the lead, and the demand record becomes the system of record. Break/fix and optimization never ride that track.</div>
+
+      <!-- ── THE FOUR CLASSES ── -->
+      <div class="rr-tabs" role="tablist" aria-label="The four request classes">
+        <button type="button" class="rr-tab" style="--acc:var(--fix-t)" role="tab" id="tab-fix" aria-controls="p-fix" aria-selected="true" data-cls="fix">Break / fix</button>
+        <button type="button" class="rr-tab" style="--acc:var(--enh-t)" role="tab" id="tab-enh" aria-controls="p-enh" aria-selected="false" data-cls="enh">Enhancement</button>
+        <button type="button" class="rr-tab" style="--acc:var(--opt-t)" role="tab" id="tab-opt" aria-controls="p-opt" aria-selected="false" data-cls="opt">Optimization</button>
+        <button type="button" class="rr-tab" style="--acc:var(--nw-t)" role="tab" id="tab-nw" aria-controls="p-nw" aria-selected="false" data-cls="nw">Net new</button>
+      </div>
+
+      <section class="rr-panel" style="--acc:var(--fix-t)" id="p-fix" role="tabpanel" aria-labelledby="tab-fix">
+        <p class="rr-testline">A process that was operating as designed has stopped.</p>
+        <p class="rr-lede">Break/fix outranks everything else in the queue, because an established workflow is interrupted and clinical or operational work is impeded right now. The root cause, an upstream system change, an interface failure, a version upgrade, gets identified during analysis and has no bearing on the class. A request for capability that was never built fails Test 01. Back through the tree it goes.</p>
+
+        <aside class="rr-case" aria-label="Case file: break/fix">
+          <div class="rr-case-k">Case file · Break / fix</div>
+          <blockquote class="rr-case-msg">"The vent flowsheet on 4 West stopped totaling intake and output overnight. It was fine yesterday."</blockquote>
+          <div class="rr-case-beats">
+            <div><span>The tests</span><p>Operating as designed, and now it isn't. Test 01 says yes, and the tree stops there.</p></div>
+            <div><span>The route</span><p>Incident, shared with applications. We reproduced it on a test patient, compared against 3 East where totals still ran, and found an overnight upgrade had changed a calculation record.</p></div>
+            <div><span>The close</span><p>The first correction fixed the totals and quietly broke a different column, so it went back to option development. The second option verified on the next shift. That detour is the dashed loop from the pipeline, live.</p></div>
+          </div>
+        </aside>
+
+        <h4 class="rr-h4">Governance</h4>
+        <div class="rr-facts">
+          <dl class="rr-fact"><dt>System of record</dt><dd>An incident in the ticketing system, shared between informatics and the applications team.</dd></dl>
+          <dl class="rr-fact"><dt>Responsible party</dt><dd>Informatics triages and defines the workflow break. Applications owns the build correction. Technical services or biomedical engineering take it when the failure is hardware or an interface.</dd></dl>
+          <dl class="rr-fact"><dt>Approval path</dt><dd>Customer consultation before anything moves in production. Governance rarely enters the path.</dd></dl>
+        </div>
+
+        <h4 class="rr-h4">Execution sequence</h4>
+        <ol class="rr-steps">
+          <li><b>Establish the expected workflow</b><span>The documented baseline comes first. You cannot declare a departure from a design nobody wrote down.</span></li>
+          <li><b>Reproduce the failure</b><span>Capture the user, the context, and the exact step where behavior diverges.</span></li>
+          <li><b>Compare against a functioning equivalent</b><span>The same build in another department, or the same order in another location. The delta is usually the answer.</span></li>
+          <li><b>Develop and test corrective options</b><span>Confirm each candidate resolves the failure without introducing a second one.</span></li>
+          <li><b>Consult the customer, then implement</b><span>Testing, education, and ticket documentation all precede the production move.</span></li>
+          <li class="hot"><b>Verify in production, then close</b><span>On failure: back out, correct before closure, or withdraw and return to step 04.</span></li>
+        </ol>
+      </section>
+
+      <section class="rr-panel" style="--acc:var(--enh-t)" id="p-enh" role="tabpanel" aria-labelledby="tab-enh" hidden>
+        <p class="rr-testline">The capability is owned and installed, but delivery needs records that do not exist yet.</p>
+        <p class="rr-lede">Enhancement covers work that extends existing build by creating new records or new <a href="/learn/ehr-architecture/">record types</a>: a new worklist, a new note template, a new order set. The change adds to the technical footprint, so the applications team creates the build ticket and links it to the change record. That link is what keeps the addition visible a year from now.</p>
+
+        <aside class="rr-case" aria-label="Case file: enhancement">
+          <div class="rr-case-k">Case file · Enhancement</div>
+          <blockquote class="rr-case-msg">"New bronchoscopy service starts next month. We need an order set and a procedure note."</blockquote>
+          <div class="rr-case-beats">
+            <div><span>The tests</span><p>Ordering and documentation are owned and installed, and the records for this service do not exist. Test 03 says yes.</p></div>
+            <div><span>The route</span><p>A task linked to the change record. We wrote the requirement with the physician champion, applications built the records, and the customer group confirmed priority at the weekly review.</p></div>
+            <div><span>The close</span><p>Launched with education ready, verified on the first live case, then closed. The footprint grew, and the change record says exactly where.</p></div>
+          </div>
+        </aside>
+
+        <h4 class="rr-h4">Governance</h4>
+        <div class="rr-facts">
+          <dl class="rr-fact"><dt>System of record</dt><dd>A task in the ticketing system. Applications creates the build ticket and links it to the change record.</dd></dl>
+          <dl class="rr-fact"><dt>Responsible party</dt><dd>Informatics owns workflow configuration enhancements. Changes to a clinical standard are led by a physician champion working with the applications team.</dd></dl>
+          <dl class="rr-fact"><dt>Approval path</dt><dd>Customer consultation in all cases. Governance joins according to scope.</dd></dl>
+          <dl class="rr-fact"><dt>Cadence</dt><dd>A weekly team review for sizing and sequencing, then a weekly or biweekly review with the customer group to confirm priority.</dd></dl>
+        </div>
+
+        <h4 class="rr-h4">Execution sequence</h4>
+        <ol class="rr-steps">
+          <li><b>Establish the desired outcome</b><span>The operational result required, which is a different thing from the solution the requester proposed.</span></li>
+          <li><b>Confirm understanding with the requester</b><span>Restate the requirement in writing or in session before build work begins.</span></li>
+          <li><b>Identify affected records and record types</b><span>This inventory confirms the classification and scopes the applications effort in one move.</span></li>
+          <li><b>Develop and test options</b><span>Confirm the change delivers the outcome without downstream effect.</span></li>
+          <li><b>Approval and production timeline</b><span>Test plan, education material, and ticket documentation completed before launch.</span></li>
+          <li class="hot"><b>Launch, verify, close</b><span>Closure follows verified production behavior. Implementation alone earns nothing.</span></li>
+        </ol>
+      </section>
+
+      <section class="rr-panel" style="--acc:var(--opt-t)" id="p-opt" role="tabpanel" aria-labelledby="tab-opt" hidden>
+        <p class="rr-testline">Everything the change touches already exists.</p>
+        <p class="rr-lede">Optimization adjusts values on records currently in the build: modify schedule hours, correct displayed text, add an option to a note that already has options. No record gets created, the technical footprint holds still, and the approval path is correspondingly short. Short, and still real.</p>
+
+        <aside class="rr-case" aria-label="Case file: optimization">
+          <div class="rr-case-k">Case file · Optimization</div>
+          <blockquote class="rr-case-msg">"Can you add 'family at bedside' to the options on the rounding note?"</blockquote>
+          <div class="rr-case-beats">
+            <div><span>The tests</span><p>The note exists, the option list exists, nothing new gets created. Three noes, and the fall-through lands on optimization.</p></div>
+            <div><span>The route</span><p>A planner task. The shared-use check mattered here: two other units chart on that same note, and both got consulted before the value changed.</p></div>
+            <div><span>The close</span><p>Changed, verified, closed inside the week. Smallest class on the page, same verification bar.</p></div>
+          </div>
+        </aside>
+
+        <h4 class="rr-h4">Governance</h4>
+        <div class="rr-facts">
+          <dl class="rr-fact"><dt>System of record</dt><dd>A task in the ticketing system, paced through the team planner.</dd></dl>
+          <dl class="rr-fact"><dt>Responsible party</dt><dd>Informatics, working with the site or operational owner.</dd></dl>
+          <dl class="rr-fact"><dt>Approval path</dt><dd>Customer consultation before production. Without exception, including the tiny ones.</dd></dl>
+          <dl class="rr-fact"><dt>The boundary with enhancement</dt><dd>Think carpentry. Driving another nail or straightening a slanted one is optimization. Adding a shelf is enhancement. New material decides it, whatever the hours say.</dd></dl>
+        </div>
+
+        <h4 class="rr-h4">Execution sequence</h4>
+        <ol class="rr-steps">
+          <li><b>Identify the record and its current value</b><span>Document the present configuration before altering it. Future you will need the before state.</span></li>
+          <li><b>Determine shared use</b><span>A record edited for one site changes behavior everywhere that record is referenced. This step is where quiet disasters get caught.</span></li>
+          <li><b>Consult the customer</b><span>Brief, required, and documented on the task.</span></li>
+          <li class="hot"><b>Implement, verify, close</b><span>Verification requirements do not scale down with the size of the change.</span></li>
+        </ol>
+
+        <div class="rr-callout" style="--acc:var(--opt-t)"><strong>Visibility risk.</strong> Optimization and enhancement are the two classes with no incident or demand record behind them. Work that never lands on the planner has no enterprise footprint, so at review time it cannot be reported, prioritized, or defended. It happened, and officially it didn't.</div>
+      </section>
+
+      <section class="rr-panel" style="--acc:var(--nw-t)" id="p-nw" role="tabpanel" aria-labelledby="tab-nw" hidden>
+        <p class="rr-testline">The capability, module, or record type is absent from the current build.</p>
+        <p class="rr-lede">Net new requests concern capability the organization has not bought or has not installed. They are managed as demand, and prioritization is held by a governance body outside the team. When a project manager is assigned, informatics moves to a supporting role and keeps responsibility for one thing that never transfers: whether the resulting workflow is actually correct.</p>
+
+        <aside class="rr-case" aria-label="Case file: net new">
+          <div class="rr-case-k">Case file · Net new</div>
+          <blockquote class="rr-case-msg">"Radiology wants the AI triage module the vendor demoed last month. Can we just turn it on?"</blockquote>
+          <div class="rr-case-beats">
+            <div><span>The tests</span><p>The organization does not own it and has not installed it. Test 02 says yes, and "just turn it on" leaves the vocabulary immediately.</p></div>
+            <div><span>The route</span><p>A demand record. Governance holds prioritization; a project manager was assigned, so the team moved to support and kept ownership of workflow accuracy.</p></div>
+            <div><span>The close</span><p>Still open, and that is normal. Net new closes when governance sequences it, and sometimes the sequence says not this year.</p></div>
+          </div>
+        </aside>
+
+        <h4 class="rr-h4">Governance</h4>
+        <div class="rr-facts">
+          <dl class="rr-fact"><dt>System of record</dt><dd>A demand record. It lives outside the incident and task queues entirely.</dd></dl>
+          <dl class="rr-fact"><dt>Responsible party</dt><dd>The assigned project manager where one exists. Where none is assigned, informatics leads.</dd></dl>
+          <dl class="rr-fact"><dt>Approval path</dt><dd>The governance body. Prioritization and sequencing live outside the team, at every scope.</dd></dl>
+        </div>
+
+        <h4 class="rr-h4">Execution sequence</h4>
+        <ol class="rr-steps">
+          <li><b>Establish meeting frequency</b><span>Large efforts fail from irregular contact more often than from bad decisions.</span></li>
+          <li><b>Create the demand record</b><span>The point at which the request becomes visible outside the team.</span></li>
+          <li><b>Settle who leads</b><span>Project manager assigned: the team supports, and schedule ownership transfers. No project manager: informatics leads the effort end to end.</span></li>
+          <li class="hot"><b>Fact finding, then approval and execution</b><span>Data collection and workflow documentation produce the option list. Follow-up is required, on a schedule, in writing.</span></li>
+        </ol>
+
+        <div class="rr-callout" style="--acc:var(--nw-t)"><strong>Supporting is an active role.</strong> Handing the schedule to a project manager transfers the timeline. Responsibility for whether the workflow is right stays with informatics, and it stays there for the life of the build.</div>
+      </section>
+
+      <!-- ── THE DRILL ── -->
+      <section class="rr-drill" id="drill" aria-label="Triage drill">
+        <div class="rr-kick">Check yourself</div>
+        <h3 class="rr-h3" style="margin-top:6px">Eight requests. You call the class.</h3>
+        <p class="rr-p">These are the shapes that actually come through the door, sharp edges included. The tests are a scroll away if you need them. Nobody is watching.</p>
+        <div class="rr-drill-box">
+          <div class="rr-drill-quiz" id="rrDrillQuiz">
+            <div class="rr-drill-prog"><span id="rrDrillN">01</span> of 08</div>
+            <blockquote class="rr-drill-msg" id="rrDrillMsg"></blockquote>
+            <div class="rr-drill-opts" id="rrDrillOpts">
+              <button type="button" data-k="fix" style="--k:var(--fix-t)">Break / fix</button>
+              <button type="button" data-k="enh" style="--k:var(--enh-t)">Enhancement</button>
+              <button type="button" data-k="opt" style="--k:var(--opt-t)">Optimization</button>
+              <button type="button" data-k="nw" style="--k:var(--nw-t)">Net new</button>
+            </div>
+            <p class="rr-drill-fb" id="rrDrillFb" aria-live="polite"></p>
+            <button type="button" class="rr-drill-next" id="rrDrillNext" hidden>Next request</button>
+          </div>
+          <div class="rr-drill-end" id="rrDrillEnd" hidden>
+            <div class="rr-drill-score" id="rrDrillScore"></div>
+            <p class="rr-drill-line" id="rrDrillLine"></p>
+            <button type="button" class="rr-drill-next" id="rrDrillAgain">Run it again</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── LEVEL 2 ── -->
+      <h3 class="rr-h3" style="margin-top:52px">Level 2 · Domain and scope</h3>
+      <p class="rr-p">Class alone cannot route a request. Domain identifies which discipline holds the authoritative answer. Scope establishes how far the change reaches, and with it, whether governance enters the approval path. So the routing decision is the combination of all three, and it takes about thirty seconds once the tests are answered.</p>
+
+      <div class="rr-formula" role="img" aria-label="Class plus domain plus scope equals the routing decision">
+        <span class="term">CLASS<small>what the work is</small></span>
+        <span class="op">+</span>
+        <span class="term">DOMAIN<small>who holds the answer</small></span>
+        <span class="op">+</span>
+        <span class="term">SCOPE<small>how far it reaches</small></span>
+        <span class="op">=</span>
+        <span class="term out">THE ROUTING DECISION<small>queue · owner · approver</small></span>
+      </div>
+
+      <h4 class="rr-h4">Domain · who holds the answer</h4>
+      <div class="rr-domains">
+        <div class="rr-dom"><b>Clinical</b><div class="what">Protocols and practice</div><div class="who">The physician champion and clinical leads. What correct care looks like is answered here and nowhere else.</div></div>
+        <div class="rr-dom"><b>Operational</b><div class="what">Scheduling and resulting</div><div class="who">Operations and site leads. The people who run the day own the answer about the day.</div></div>
+        <div class="rr-dom"><b>Technical</b><div class="what">Hardware, software, interfaces</div><div class="who">Applications, technical services, biomedical engineering. If it has a cable or a queue, it is theirs.</div></div>
+      </div>
+
+      <h4 class="rr-h4">Scope · the approval ladder</h4>
+      <div class="rr-ladder">
+        <div class="rr-rung"><b>Department</b><div class="who">Customer and the department owner</div><div class="note">Consult, then move. No governance step.</div></div>
+        <div class="rr-rung"><b>Site</b><div class="who">Customer and site leadership</div><div class="note">Effects on adjacent departments get reviewed before implementation.</div></div>
+        <div class="rr-rung"><b>Region</b><div class="who">Customer, then governance review</div><div class="note">Alignment across sites is confirmed before build.</div></div>
+        <div class="rr-rung"><b>Enterprise</b><div class="who">Customer, then governance approval</div><div class="note">The change becomes an enterprise standard. Prioritization is held by governance.</div></div>
+      </div>
+      <p class="rr-p" style="font-size:14px;color:var(--t3)">Two class modifiers ride the ladder. Break/fix runs an expedited path at every scope, because somebody's workflow is down. Net new needs governance at every scope, because the ask concerns capability the organization does not own yet.</p>
+
+      <!-- ── LEVEL 3 ── -->
+      <h3 class="rr-h3" style="margin-top:52px">Level 3 · Who leads, who builds</h3>
+      <p class="rr-p">Class, domain, and scope generate forty-eight combinations. Nobody consults a forty-eight cell grid, and nobody should. The escape is noticing that the three variables answer different questions. Domain settles who holds the authoritative answer. Who leads and who builds falls out of class and domain together. Scope, on its own, sets how far the approval has to reach. That collapses the grid to twelve lead assignments and the one ladder above, and both fit on a page.</p>
+      <p class="rr-p">The table names the lead and the executor separately, on purpose. In several combinations they are different parties, and the classic routing failure is assigning a request to a team that holds the accountability without the build access, or the access without the accountability.</p>
+
+      <div class="rr-tblwrap" tabindex="0" role="region" aria-label="Lead and executor by class and domain">
+        <table class="rr-grid">
+          <thead><tr><th scope="col">Class</th><th scope="col">Clinical domain</th><th scope="col">Operational domain</th><th scope="col">Technical domain</th></tr></thead>
+          <tbody>
+            <tr>
+              <th scope="row">Break / fix</th>
+              <td><b>Informatics leads</b><span>Applications executes the correction. Clinical leads confirm the expected standard.</span></td>
+              <td><b>Informatics leads</b><span>Applications executes. Operations or the site lead confirms expected behavior.</span></td>
+              <td><b>Applications or technical services leads</b><span>Informatics triages and hands off. Biomedical engineering when the failure is device based.</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Enhancement</th>
+              <td><b>Physician champion leads</b><span>Applications executes. Informatics documents the resulting workflow change.</span></td>
+              <td><b>Informatics leads</b><span>Informatics owns the configuration requirement. Applications executes the build.</span></td>
+              <td><b>Applications leads</b><span>Informatics defines the workflow requirement and validates the result.</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Optimization</th>
+              <td><b>Informatics leads</b><span>The clinical lead confirms. Escalates to the physician champion if the clinical standard changes.</span></td>
+              <td><b>Informatics leads</b><span>The site or operational owner confirms the change before implementation.</span></td>
+              <td><b>Applications leads</b><span>Informatics submits and validates. No new records are created.</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Net new</th>
+              <td><b>Project manager, or informatics if unassigned</b><span>The physician champion defines clinical requirements. Governance prioritizes.</span></td>
+              <td><b>Project manager, or informatics if unassigned</b><span>Operations and site leads define requirements. Governance prioritizes.</span></td>
+              <td><b>Project manager, or informatics if unassigned</b><span>Applications and technical services establish feasibility. Governance prioritizes.</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="rr-p" style="font-size:14px;color:var(--t3)">The table governs the standard track. Once a request is designated a project, the project manager leads regardless of class and domain, and these assignments describe supporting responsibility.</p>
+
+      <p class="rr-p">Some requests hit the table and bounce: two parties pointed at, a project overriding a class, a lead without build access. The precedence rules for those collisions live on <a href="#reference">the reference tab</a>, with the rest of the pocket card.</p>
+
+      <!-- ── THE ROUTER ── -->
+      <section class="rr-router" id="router" aria-label="The request router">
+        <div class="rr-kick">Try it</div>
+        <h2 class="rr-h2" style="font-size:28px">Route one <em>for real.</em></h2>
+        <p class="rr-p">Take the last ask that hit your queue and walk it through. The questions arrive in the same order the standard asks them: class, then track, then domain, then scope.</p>
+
+        <div class="rr-q" id="rq1">
+          <div class="rr-qn">01</div>
+          <div class="rr-qb">
+            <p class="rr-qq">Was it operating as designed, and now it isn't?</p>
+            <div class="rr-qbtns"><button type="button" data-q="1" data-a="y">Yes</button><button type="button" data-q="1" data-a="n">No</button></div>
+          </div>
+        </div>
+        <div class="rr-q" id="rq2" hidden>
+          <div class="rr-qn">02</div>
+          <div class="rr-qb">
+            <p class="rr-qq">Is the capability or record type absent from the current build?</p>
+            <div class="rr-qbtns"><button type="button" data-q="2" data-a="y">Yes</button><button type="button" data-q="2" data-a="n">No</button></div>
+          </div>
+        </div>
+        <div class="rr-q" id="rq3" hidden>
+          <div class="rr-qn">03</div>
+          <div class="rr-qb">
+            <p class="rr-qq">Does delivery require new records or new record types?</p>
+            <div class="rr-qbtns"><button type="button" data-q="3" data-a="y">Yes</button><button type="button" data-q="3" data-a="n">No</button></div>
+          </div>
+        </div>
+        <div class="rr-q" id="rqT" hidden>
+          <div class="rr-qn">04</div>
+          <div class="rr-qb">
+            <p class="rr-qq">Is delivery bigger than the team can absorb in its normal cadence?</p>
+            <div class="rr-qbtns"><button type="button" data-q="t" data-a="project">Yes, manage as a project</button><button type="button" data-q="t" data-a="standard">No, standard track</button></div>
+          </div>
+        </div>
+        <div class="rr-q" id="rqD" hidden>
+          <div class="rr-qn">04</div>
+          <div class="rr-qb">
+            <p class="rr-qq">What is the domain of the issue?</p>
+            <div class="rr-qbtns"><button type="button" data-q="d" data-a="clinical">Clinical</button><button type="button" data-q="d" data-a="operational">Operational</button><button type="button" data-q="d" data-a="technical">Technical</button></div>
+          </div>
+        </div>
+        <div class="rr-q" id="rqS" hidden>
+          <div class="rr-qn">05</div>
+          <div class="rr-qb">
+            <p class="rr-qq">How far does it reach?</p>
+            <div class="rr-qbtns"><button type="button" data-q="s" data-a="department">Department</button><button type="button" data-q="s" data-a="site">Site</button><button type="button" data-q="s" data-a="region">Region</button><button type="button" data-q="s" data-a="enterprise">Enterprise</button></div>
+          </div>
+        </div>
+
+        <p class="rr-sr" aria-live="polite" id="rrRouteLive"></p>
+        <div class="rr-verdict" id="rrVerdict" hidden>
+          <p class="rr-vlabel">Routing decision</p>
+          <div class="rr-quad">
+            <div><span>Class</span><b id="rv-name"></b></div>
+            <div class="plain"><span>Domain</span><b id="rv-domain"></b></div>
+            <div class="plain"><span>Scope</span><b id="rv-scope"></b></div>
+            <div class="plain"><span>Track</span><b id="rv-track"></b></div>
+          </div>
+          <p class="rr-vd" id="rv-desc"></p>
+          <div class="rr-vmeta">
+            <div><span>System of record</span><b id="rv-sor"></b></div>
+            <div><span>Leads the work</span><b id="rv-lead"></b></div>
+            <div><span>Holds the answer</span><b id="rv-owner"></b></div>
+            <div><span>Approval path</span><b id="rv-appr"></b></div>
+          </div>
+          <div class="rr-vbtns">
+            <button type="button" class="go" id="rv-open">Open the class detail</button>
+            <button type="button" class="again" id="rv-reset">Start over</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ══════════ TAB 2 · THE FLOWSHEET ══════════ -->
+    <section class="rr-section rr-page" id="flowsheet" role="tabpanel" aria-labelledby="nav-flowsheet">
+      <h2 class="rr-h2">The whole standard, <em>one sheet.</em></h2>
+      <p class="rr-p">Everything the first tab teaches, connected on a single sheet. Requests converge on one classification point. Three tests assign the class. An ownership check then decides whether the work stays with the team or hands off, to a project manager when the scale demands one, to another team when the domain does. Domain and scope produce the routing decision, and one execution spine carries the request to verified closure. Read it top to bottom; that is the whole standard.</p>
+
+      <div class="rr-fig hu-ticks">
+        <div class="rr-fig-head">
+          <div class="rr-fig-title">The request routing flowsheet</div>
+          <div class="rr-fig-key">Intake to closure</div>
+        </div>
+        <svg class="rr-svg rr-tree" id="rrFlow" viewBox="0 0 400 2048" role="img" aria-label="The complete request routing flowsheet. Four intake channels converge on a single classification point. Three sequential tests sort the request into break/fix, net new, enhancement, or optimization, each with its system of record. An ownership check then decides whether the work stays with the team: scale, crossover, and scope can hand the lead to a project manager or to another team, with informatics supporting either way. Domain and scope produce the routing decision: the queue, the lead and executor, and the approver. One execution spine follows: gather, develop options, consult and approve, ready the launch, launch, then verify in production, where failure returns the request to option development and success closes it.">
+          <text class="sn" x="16" y="16">INTAKE · ALL REQUESTS CONVERGE ON ONE POINT</text>
+          <rect class="box" x="16" y="26" width="88" height="30" rx="7"/>
+          <text class="sk" x="60" y="45" text-anchor="middle">TICKETS</text>
+          <rect class="box" x="112" y="26" width="88" height="30" rx="7"/>
+          <text class="sk" x="156" y="45" text-anchor="middle">EMAIL</text>
+          <rect class="box" x="208" y="26" width="88" height="30" rx="7"/>
+          <text class="sk" x="252" y="45" text-anchor="middle">CHAT</text>
+          <rect class="box" x="304" y="26" width="88" height="30" rx="7"/>
+          <text class="sk" x="348" y="45" text-anchor="middle">MEETINGS</text>
+          <path class="ln" d="M60,56 V70 H348 V56"/>
+          <path class="ln" d="M156,56 V70"/>
+          <path class="ln" d="M252,56 V70"/>
+          <line class="ln" x1="200" y1="70" x2="200" y2="82"/>
+          <polygon class="head" points="200,86 195,77 205,77"/>
+          <rect class="pill" x="110" y="88" width="180" height="32" rx="16"/>
+          <text class="pilltext" x="200" y="108" text-anchor="middle">REQUEST RECEIVED</text>
+          <line class="ln" x1="200" y1="120" x2="200" y2="154"/>
+          <polygon class="head" points="200,158 195,149 205,149"/>
+
+          <rect class="box" x="16" y="162" width="348" height="64" rx="8"/>
+          <text class="sn" x="32" y="182">TEST 01</text>
+          <text class="st" x="32" y="202">Was it operating as designed,</text>
+          <text class="st" x="32" y="220">and now it isn't?</text>
+          <line class="ln" x1="283" y1="226" x2="283" y2="242"/>
+          <polygon class="head" points="283,246 278,237 288,237"/>
+          <text class="sn" x="295" y="240">YES</text>
+          <rect class="box c-fix" x="100" y="248" width="264" height="46" rx="8"/>
+          <text class="sc t-fix" x="116" y="268">Break / fix</text>
+          <text class="sk" x="116" y="284">INCIDENT · SHARED WITH APPLICATIONS</text>
+          <path class="ln" d="M364,271 H382"/>
+
+          <line class="ln" x1="60" y1="226" x2="60" y2="300"/>
+          <polygon class="head" points="60,304 55,295 65,295"/>
+          <text class="sn" x="70" y="268">NO</text>
+          <rect class="box" x="16" y="306" width="348" height="64" rx="8"/>
+          <text class="sn" x="32" y="326">TEST 02</text>
+          <text class="st" x="32" y="346">Is the capability or record type</text>
+          <text class="st" x="32" y="364">absent from the current build?</text>
+          <line class="ln" x1="283" y1="370" x2="283" y2="386"/>
+          <polygon class="head" points="283,390 278,381 288,381"/>
+          <text class="sn" x="295" y="384">YES</text>
+          <rect class="box c-nw" x="100" y="392" width="264" height="46" rx="8"/>
+          <text class="sc t-nw" x="116" y="412">Net new</text>
+          <text class="sk" x="116" y="428">DEMAND RECORD · GOVERNANCE PRIORITIZES</text>
+          <path class="ln" d="M364,415 H382"/>
+
+          <line class="ln" x1="60" y1="370" x2="60" y2="444"/>
+          <polygon class="head" points="60,448 55,439 65,439"/>
+          <text class="sn" x="70" y="412">NO</text>
+          <rect class="box" x="16" y="450" width="348" height="64" rx="8"/>
+          <text class="sn" x="32" y="470">TEST 03</text>
+          <text class="st" x="32" y="490">Does delivery require new records</text>
+          <text class="st" x="32" y="508">or new record types?</text>
+          <line class="ln" x1="283" y1="514" x2="283" y2="530"/>
+          <polygon class="head" points="283,534 278,525 288,525"/>
+          <text class="sn" x="295" y="528">YES</text>
+          <rect class="box c-enh" x="100" y="536" width="264" height="46" rx="8"/>
+          <text class="sc t-enh" x="116" y="556">Enhancement</text>
+          <text class="sk" x="116" y="572">TASK · LINKED TO A CHANGE RECORD</text>
+          <path class="ln" d="M364,559 H382"/>
+
+          <line class="ln" x1="60" y1="514" x2="60" y2="588"/>
+          <polygon class="head" points="60,592 55,583 65,583"/>
+          <text class="sn" x="70" y="556">NO</text>
+          <rect class="box c-opt" x="16" y="594" width="348" height="46" rx="8"/>
+          <text class="sc t-opt" x="32" y="614">Optimization</text>
+          <text class="sk" x="32" y="630">TASK · PACED ON THE TEAM PLANNER</text>
+          <path class="ln" d="M364,617 H382"/>
+
+          <line class="ln" x1="382" y1="271" x2="382" y2="664"/>
+          <path class="ln" d="M382,664 H200"/>
+          <line class="ln" x1="200" y1="664" x2="200" y2="676"/>
+          <polygon class="head" points="200,680 195,671 205,671"/>
+
+          <rect class="box" x="16" y="684" width="348" height="72" rx="8"/>
+          <text class="sn" x="32" y="704">THE OWNERSHIP CHECK</text>
+          <text class="st" x="32" y="724">Does the work stay with this team?</text>
+          <text class="sk" x="32" y="742">SCALE, CROSSOVER, AND SCOPE DECIDE</text>
+
+          <line class="ln" x1="283" y1="756" x2="283" y2="782"/>
+          <polygon class="head" points="283,786 278,777 288,777"/>
+          <text class="sn" x="295" y="776">NO</text>
+          <rect class="box" x="100" y="790" width="264" height="64" rx="8"/>
+          <text class="st" x="116" y="812">Hand it off</text>
+          <text class="sk" x="116" y="830">PROJECT SCALE: A PROJECT MANAGER LEADS</text>
+          <text class="sk" x="116" y="846">ANOTHER TEAM'S DOMAIN: THAT TEAM OWNS IT</text>
+
+          <line class="ln" x1="60" y1="756" x2="60" y2="878"/>
+          <text class="sn" x="70" y="774">YES · STANDARD TRACK</text>
+          <line class="ln" x1="232" y1="854" x2="232" y2="878"/>
+          <path class="ln" d="M60,878 H232"/>
+          <line class="ln" x1="200" y1="878" x2="200" y2="892"/>
+          <polygon class="head" points="200,896 195,887 205,887"/>
+
+          <text class="sn" x="16" y="920">LEVEL 2 · THE ROUTING VARIABLES</text>
+          <text class="sn" x="16" y="938">DOMAIN · WHO HOLDS THE AUTHORITATIVE ANSWER</text>
+          <rect class="box" x="16" y="946" width="348" height="34" rx="7"/>
+          <text class="sm" x="30" y="968">Clinical</text>
+          <text class="sk" x="352" y="967" text-anchor="end">PHYSICIAN CHAMPION + CLINICAL LEADS</text>
+          <rect class="box" x="16" y="988" width="348" height="34" rx="7"/>
+          <text class="sm" x="30" y="1010">Operational</text>
+          <text class="sk" x="352" y="1009" text-anchor="end">OPERATIONS + SITE LEADS</text>
+          <rect class="box" x="16" y="1030" width="348" height="34" rx="7"/>
+          <text class="sm" x="30" y="1052">Technical</text>
+          <text class="sk" x="352" y="1051" text-anchor="end">APPLICATIONS, TECHNICAL SERVICES, BIOMED</text>
+
+          <text class="sn" x="16" y="1088">SCOPE · REACH DETERMINES THE APPROVAL PATH</text>
+          <text class="sk" x="16" y="1102">THE CUSTOMER IS CONSULTED AT EVERY SCOPE</text>
+          <text class="sk" x="16" y="1116">GOVERNANCE REVIEWS REGION AND ENTERPRISE CHANGES</text>
+          <rect class="box" x="16" y="1124" width="84" height="34" rx="7"/>
+          <text class="sm" x="58" y="1146" text-anchor="middle" font-size="11">Department</text>
+          <rect class="box" x="106" y="1124" width="84" height="34" rx="7"/>
+          <text class="sm" x="148" y="1146" text-anchor="middle" font-size="11">Site</text>
+          <rect class="box gate" x="196" y="1124" width="84" height="34" rx="7"/>
+          <text class="sm" x="238" y="1146" text-anchor="middle" font-size="11">Region</text>
+          <rect class="box gate" x="286" y="1124" width="84" height="34" rx="7"/>
+          <text class="sm" x="328" y="1146" text-anchor="middle" font-size="11">Enterprise</text>
+
+          <line class="ln" x1="200" y1="1164" x2="200" y2="1194"/>
+          <polygon class="head" points="200,1198 195,1189 205,1189"/>
+          <rect class="pill" x="60" y="1202" width="280" height="54" rx="10"/>
+          <text class="pilltext" x="200" y="1224" text-anchor="middle">THE ROUTING DECISION</text>
+          <text class="pilltext" x="200" y="1242" text-anchor="middle" font-size="9" opacity="0.72">CLASS + DOMAIN + SCOPE</text>
+          <path class="ln" d="M200,1256 V1264 H75 V1272"/>
+          <polygon class="head" points="75,1276 70,1267 80,1267"/>
+          <line class="ln" x1="200" y1="1264" x2="200" y2="1272"/>
+          <polygon class="head" points="200,1276 195,1267 205,1267"/>
+          <path class="ln" d="M200,1264 H326 V1272"/>
+          <polygon class="head" points="326,1276 321,1267 331,1267"/>
+          <rect class="box" x="16" y="1278" width="118" height="40" rx="8"/>
+          <text class="sn" x="75" y="1295" text-anchor="middle">THE QUEUE</text>
+          <text class="sk" x="75" y="1309" text-anchor="middle">SYSTEM OF RECORD</text>
+          <rect class="box" x="142" y="1278" width="116" height="40" rx="8"/>
+          <text class="sn" x="200" y="1295" text-anchor="middle">THE LEAD</text>
+          <text class="sk" x="200" y="1309" text-anchor="middle">AND THE EXECUTOR</text>
+          <rect class="box" x="266" y="1278" width="118" height="40" rx="8"/>
+          <text class="sn" x="325" y="1295" text-anchor="middle">THE APPROVER</text>
+          <text class="sk" x="325" y="1309" text-anchor="middle">SET BY SCOPE</text>
+
+          <path class="ln" d="M200,1318 V1330 H166 V1352"/>
+          <polygon class="head" points="166,1356 161,1347 171,1347"/>
+
+          <text class="sn" x="16" y="1372">DELIVERY · HOW THE WORK GETS DONE</text>
+          <rect class="box" x="16" y="1380" width="300" height="80" rx="8"/>
+          <text class="st" x="32" y="1399">Gather and confirm</text>
+          <text class="sn" x="300" y="1399" text-anchor="end">01</text>
+          <text class="sk" x="32" y="1417">DESCRIBE AND REPRODUCE THE ISSUE</text>
+          <text class="sk" x="32" y="1433">ESTABLISH THE OUTCOME THE REQUESTER NEEDS</text>
+          <text class="sk" x="32" y="1449">REVIEW RECORDS: USERS, SECURITY, LOGS, ORDERS</text>
+          <line class="ln" x1="166" y1="1460" x2="166" y2="1472"/>
+          <polygon class="head" points="166,1476 161,1467 171,1467"/>
+          <rect class="box" x="16" y="1480" width="300" height="80" rx="8"/>
+          <text class="st" x="32" y="1499">Develop and test options</text>
+          <text class="sn" x="300" y="1499" text-anchor="end">02</text>
+          <text class="sk" x="32" y="1517">BUILD THE LIST OF WORKABLE CHANGES</text>
+          <text class="sk" x="32" y="1533">COMPARE AGAINST A FUNCTIONING EQUIVALENT</text>
+          <text class="sk" x="32" y="1549">CONFIRM NO NEW PROBLEMS DOWNSTREAM</text>
+          <line class="ln" x1="166" y1="1560" x2="166" y2="1572"/>
+          <polygon class="head" points="166,1576 161,1567 171,1567"/>
+          <rect class="box" x="16" y="1580" width="300" height="80" rx="8"/>
+          <text class="st" x="32" y="1599">Consult and approve</text>
+          <text class="sn" x="300" y="1599" text-anchor="end">03</text>
+          <text class="sk" x="32" y="1617">THE CUSTOMER IS CONSULTED IN EVERY CASE</text>
+          <text class="sk" x="32" y="1633">LEADERSHIP SIGNS OFF ON THE CHANGE</text>
+          <text class="sk" x="32" y="1649">GOVERNANCE JOINS WHEN SCOPE REQUIRES IT</text>
+          <line class="ln" x1="166" y1="1660" x2="166" y2="1672"/>
+          <polygon class="head" points="166,1676 161,1667 171,1667"/>
+          <rect class="box" x="16" y="1680" width="300" height="80" rx="8"/>
+          <text class="st" x="32" y="1699">Ready the launch</text>
+          <text class="sn" x="300" y="1699" text-anchor="end">04</text>
+          <text class="sk" x="32" y="1717">TEST PLAN WRITTEN AND EXECUTED</text>
+          <text class="sk" x="32" y="1733">EDUCATION PREPARED FOR EVERY AFFECTED ROLE</text>
+          <text class="sk" x="32" y="1749">THE TICKET DOCUMENTS THE FULL DECISION</text>
+          <line class="ln" x1="166" y1="1760" x2="166" y2="1772"/>
+          <polygon class="head" points="166,1776 161,1767 171,1767"/>
+          <rect class="box" x="16" y="1780" width="300" height="64" rx="8"/>
+          <text class="st" x="32" y="1799">Launch</text>
+          <text class="sn" x="300" y="1799" text-anchor="end">05</text>
+          <text class="sk" x="32" y="1817">THE SCHEDULED MOVE TO PRODUCTION</text>
+          <text class="sk" x="32" y="1833">SUPPORT COVERAGE READY ON DAY ONE</text>
+          <line class="ln" x1="166" y1="1844" x2="166" y2="1856"/>
+          <polygon class="head" points="166,1860 161,1851 171,1851"/>
+          <rect class="box gate" x="16" y="1864" width="300" height="80" rx="8"/>
+          <text class="st" x="32" y="1883">Verify in production</text>
+          <text class="sn" x="300" y="1883" text-anchor="end">06</text>
+          <text class="sk" x="32" y="1901">PRODUCTION BEHAVIOR MUST MATCH EXPECTATION</text>
+          <text class="sk" x="32" y="1917">ON FAILURE: BACK OUT, CORRECT, OR WITHDRAW</text>
+          <text class="sk" x="32" y="1933">ALL THREE ARE NORMAL OUTCOMES</text>
+
+          <path class="ln dash" d="M316,1904 H350 V1520 H324"/>
+          <polygon class="head" points="320,1520 328,1516 328,1524"/>
+          <text class="sn" transform="rotate(90 368 1712)" text-anchor="middle" x="368" y="1712">FAILED · RETURN TO OPTIONS</text>
+
+          <line class="ln" x1="166" y1="1944" x2="166" y2="1964"/>
+          <polygon class="head" points="166,1968 161,1959 171,1959"/>
+          <rect class="pill" x="106" y="1972" width="120" height="40" rx="20"/>
+          <text class="pilltext" x="166" y="1997" text-anchor="middle">CLOSED</text>
+          <text class="sk" x="16" y="2034">DOCUMENTATION CLOSED AND THE REQUESTER'S THREAD ANSWERED</text>
+        </svg>
+        <div class="rr-fleg" aria-hidden="true">
+          <span><i style="background:var(--fix)"></i>Break / fix</span>
+          <span><i style="background:var(--enh)"></i>Enhancement</span>
+          <span><i style="background:var(--opt)"></i>Optimization</span>
+          <span><i style="background:var(--nw)"></i>Net new</span>
+          <span><i class="gate"></i>The verify gate</span>
+          <span><i class="dashline"></i>The fail loop</span>
+        </div>
+        <button type="button" class="rr-copy" id="rrFlowDl" style="margin:10px 0 6px">Download as JPG</button>
+        <div class="rr-fig-cap"><strong>One request, end to end.</strong> Classification settles what the work is. The ownership check settles who carries it: scale, crossover, and scope can hand the lead to a project manager or another team, and informatics keeps responsibility for workflow accuracy either way. Domain and scope set the answer and the approval path. The delivery band is deliberately the busiest part of the sheet: routing decides who owns the work, and those six steps are the work. Nothing leaves the sheet without production verification. The download renders the sheet in your current theme.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ TAB 3 · THE REFERENCE ══════════ -->
+    <section class="rr-section rr-page" id="reference" role="tabpanel" aria-labelledby="nav-reference">
+      <h2 class="rr-h2">The <em>pocket card.</em></h2>
+      <p class="rr-p">The first tab teaches the standard. This one is for the shift where you actually need it: the tests, the grid, the ladder, and the precedence rules, compressed to one screen. The dashed card is the take-away version. Copy it and pin it wherever your team keeps the things it actually uses.</p>
+
+      <div class="rr-pocket">
+        <div class="rr-pocket-head">
+          <span class="rr-pocket-k">The pocket card · plain text</span>
+          <button type="button" class="rr-copy" id="rrCopyCard">Copy the card</button>
+        </div>
+<pre id="rrPocketText">REQUEST ROUTING · POCKET CARD
+healthcareuncharted.com/learn/request-routing/
+
+THE THREE TESTS · in order, stop at the first yes
+01  Was it operating as designed, and now it isn't?     YES = BREAK/FIX
+02  Is the capability or record type absent
+    from the current build?                             YES = NET NEW
+03  Does delivery require new records or record types?  YES = ENHANCEMENT
+    No to all three = OPTIMIZATION
+    Too big for normal cadence (enh or net new only):
+    PROJECT track. PM leads, demand record holds it.
+
+THE CLASSES
+BREAK/FIX     incident, shared with applications
+              informatics triages, applications corrects
+              customer consult, expedited at every scope
+NET NEW       demand record
+              PM if assigned, otherwise informatics
+              governance approval at every scope
+ENHANCEMENT   task, linked to the change record
+              informatics leads; physician champion for clinical standards
+              customer, plus governance by scope
+OPTIMIZATION  task, paced on the team planner
+              informatics leads · customer consult
+
+DOMAIN · who holds the answer
+clinical = physician champion + clinical leads
+operational = operations + site leads
+technical = applications, technical services, biomedical
+
+SCOPE · who approves
+department = customer + owner        site = adds site leadership
+region = adds governance review      enterprise = adds governance approval
+
+PRECEDENCE
+1  Project designation overrides the table
+2  Domain decides the answer; class decides the lead
+3  Clinical standard changes: physician champion leads, whatever the class
+4  Lead without build access: applications executes, the lead validates
+5  No owner: escalate to governance before it goes stale
+
+Customer consultation happens at every scope, every class.
+Nothing closes without verified production behavior.</pre>
+      </div>
+
+      <div class="rr-ref">
+        <div class="rr-ref-k">The three tests · in order, stop at the first yes</div>
+        <ol class="rr-steps">
+          <li><b>Was it operating as designed, and now it isn't?</b><span>Yes lands on <strong style="color:var(--fix-t)">break/fix</strong>. Priority, incident, done classifying.</span></li>
+          <li><b>Is the capability or record type absent from the current build?</b><span>Yes lands on <strong style="color:var(--nw-t)">net new</strong>. Demand, governed outside the team.</span></li>
+          <li><b>Does delivery require new records or new record types?</b><span>Yes lands on <strong style="color:var(--enh-t)">enhancement</strong>. No to all three lands on <strong style="color:var(--opt-t)">optimization</strong>.</span></li>
+        </ol>
+        <p class="rr-p" style="font-size:13.5px;color:var(--t3);margin:10px 0 0">One modifier: an enhancement or net new too big for normal cadence rides the PROJECT track. Project manager leads, demand record holds it.</p>
+      </div>
+
+      <div class="rr-ref">
+        <div class="rr-ref-k">The classes at a glance</div>
+        <div class="rr-tblwrap" tabindex="0" role="region" aria-label="The classes at a glance" style="border:none;border-radius:0;background:none;margin:0">
+          <table class="rr-grid" style="min-width:640px">
+            <thead><tr><th scope="col">Class</th><th scope="col">System of record</th><th scope="col">Default lead</th><th scope="col">Approval</th></tr></thead>
+            <tbody>
+              <tr><th scope="row" style="color:var(--fix-t)">Break / fix</th><td>Incident, shared with applications</td><td>Informatics triages, applications corrects</td><td>Customer consult, expedited at every scope</td></tr>
+              <tr><th scope="row" style="color:var(--nw-t)">Net new</th><td>Demand record</td><td>Project manager, or informatics if unassigned</td><td>Governance, at every scope</td></tr>
+              <tr><th scope="row" style="color:var(--enh-t)">Enhancement</th><td>Task, linked to the change record</td><td>Informatics; physician champion for clinical standards</td><td>Customer, plus governance by scope</td></tr>
+              <tr><th scope="row" style="color:var(--opt-t)">Optimization</th><td>Task, paced on the team planner</td><td>Informatics</td><td>Customer consult</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="rr-ref">
+        <div class="rr-ref-k">Domain and scope in one breath</div>
+        <div class="rr-facts">
+          <dl class="rr-fact"><dt>Domain · who holds the answer</dt><dd>Clinical: physician champion and clinical leads. Operational: operations and site leads. Technical: applications, technical services, biomedical engineering.</dd></dl>
+          <dl class="rr-fact"><dt>Scope · who approves</dt><dd>Department: customer and owner. Site: adds site leadership. Region: adds governance review. Enterprise: adds governance approval.</dd></dl>
+        </div>
+      </div>
+
+      <div class="rr-ref">
+        <div class="rr-ref-k">Precedence · when the routing does not resolve cleanly</div>
+        <ol class="rr-rules">
+          <li><b>Project designation overrides the table.</b> The project manager holds accountability and the demand record is the system of record. Informatics keeps responsibility for workflow accuracy.</li>
+          <li><b>Domain decides the answer; class decides the lead.</b> When the two point at different parties, the lead coordinates the request and the domain owner defines what correct looks like.</li>
+          <li><b>A change to clinical standard is led by the physician champion, whatever the class.</b> This overrides the table, including for optimization.</li>
+          <li><b>When the lead has no build access for the target record type, applications executes and the lead validates.</b> Accountability does not transfer with a login.</li>
+          <li><b>An unassigned request escalates.</b> Where no party accepts the lead, it goes up to governance before it goes stale. An open request with no owner is the one state the standard forbids.</li>
+        </ol>
+        <p class="rr-p" style="font-size:13.5px;color:var(--t3);margin:10px 0 0">Two lines hold everywhere. The customer is consulted at every scope and every class, and nothing closes without verified production behavior.</p>
+      </div>
+
+      <div class="rr-ref">
+        <div class="rr-ref-k">The vocabulary</div>
+        <div class="rr-facts">
+          <dl class="rr-fact"><dt>The build</dt><dd>The configured state of the system: every record and rule currently live.</dd></dl>
+          <dl class="rr-fact"><dt>Record · record type</dt><dd>One configured unit in the build (an order, a template, a schedule), and the species it belongs to. New species draws governance.</dd></dl>
+          <dl class="rr-fact"><dt>Incident</dt><dd>The ticket class for break/fix. Shared with applications, carries priority.</dd></dl>
+          <dl class="rr-fact"><dt>Task</dt><dd>The ticket class for enhancement and optimization work.</dd></dl>
+          <dl class="rr-fact"><dt>Change record</dt><dd>The documentation trail a change rides through approval, launch, and closure.</dd></dl>
+          <dl class="rr-fact"><dt>Demand record</dt><dd>Where net new lives. Visible to governance, sequenced outside the team.</dd></dl>
+          <dl class="rr-fact"><dt>The planner</dt><dd>The team's paced queue for tasks. Work missing from it has no enterprise footprint.</dd></dl>
+          <dl class="rr-fact"><dt>Governance</dt><dd>The body holding prioritization across teams and the yes on enterprise standards.</dd></dl>
+          <dl class="rr-fact"><dt>Physician champion</dt><dd>The physician who owns changes to clinical standards, whatever class the request wears.</dd></dl>
+          <dl class="rr-fact"><dt>Customer consult</dt><dd>The conversation with the people who run the workflow. Required at every scope, without exception.</dd></dl>
+        </div>
+      </div>
+
+      <h3 class="rr-h3">Why it's built this way</h3>
+      <p class="rr-p">The arguments behind the rules, for when somebody pushes back. Open the one you need.</p>
+      <div class="rr-why-acc">
+        <details>
+          <summary>Classification precedes analysis</summary>
+          <p>The class determines the system of record, the approval path, and the responsible party, and those three diverge immediately. A break/fix becomes an incident shared with applications. An enhancement becomes a task tied to a change record. A net new request becomes demand and leaves the team's hands entirely. Misclassify, and the work lands in the wrong queue, in front of the wrong approver, under an owner who never agreed to own it. Every step after that inherits the error and compounds it.</p>
+        </details>
+        <details>
+          <summary>The enhancement line is drawn in records</summary>
+          <p>Effort estimates are contested. Build inspection is settled. Ask whether a change is big or small and you get a meeting; ask whether it requires a new record and you get an answer, the same answer, from any analyst who opens the build. A test two people can apply identically is the only kind that survives a busy week.</p>
+          <p>The carpentry version holds up in every argument I have had about it. Another nail, a straightened slant: optimization. A new shelf: enhancement. What decides it is the presence of new material. The hours are somebody else's argument.</p>
+        </details>
+        <details>
+          <summary>Break/fix depends on a documented baseline</summary>
+          <p>The break/fix test is comparative. "It stopped operating as designed" requires a written design to compare against, and where the expected workflow was never documented, the classification defaults to whoever argues most forcefully. You can predict what happens next. Requests for capability that never existed arrive dressed as failures, jump the queue on incident priority, and burn the exact hours the real incidents needed.</p>
+          <p>This is the point where the build knowledge base stops being a nice-to-have. The classification standard depends on it.</p>
+        </details>
+        <details>
+          <summary>Class, domain, and scope stay separate</summary>
+          <p>Each answers its own question, and conflating them is the main source of routing disputes with partner teams. Two requests can share a class and a domain and still need entirely different governance, because their scope differs. Held separate, a disagreement becomes locatable: the parties can name which of the three variables they read differently, and argue about that one. Merged into a single judgment call, the same disagreement is just two teams repeating their conclusions at each other.</p>
+        </details>
+        <details>
+          <summary>Customer consultation is invariant; governance is conditional</summary>
+          <p>Governance participation varies by class and scope, so it gets judged per request. Customer consultation never varies. The people executing the workflow hold information about the practical effect of a change that you cannot recover from the build, no matter how carefully you read it. A technically correct change that disrupts established practice is a failed change. The build being right does not appeal that verdict.</p>
+        </details>
+        <details>
+          <summary>Closure requires verified production behavior</summary>
+          <p>Verification is a decision point with three live outcomes: back out, correct before closure, or withdraw and return to option development. All three are normal, and the standard says so out loud, because a team that treats backing out as failure will stop reporting the failures. Close a ticket on the assumption of success and the change leaves active tracking while its behavior is still unknown. You have converted a contained problem into an unattributed one, and unattributed problems come back with interest.</p>
+        </details>
+        <details>
+          <summary>What the standard cannot do</summary>
+          <p>Prioritization across teams belongs to governance, and no routing table changes that. What the team controls is the state of a request when it arrives there: classified and scoped, with an owner attached. Get that right and the governance discussion is about sequence, which is a real discussion. Get it wrong and the meeting is spent arguing about definitions, which is the same meeting, every month, forever.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ══════════ TAB 4 · THE OPERATING DAY ══════════ -->
+    <section class="rr-section rr-page" id="operating-day" role="tabpanel" aria-labelledby="nav-day">
+      <h2 class="rr-h2">The day that <em>moves</em> the queue.</h2>
+      <p class="rr-p">The standard describes how a request moves through the team. This is how the working day is built to move it. The ordering carries the logic: queues with a person already waiting get cleared before queues without one, and synchronous obligations settle before focused work starts. The checkboxes are live. They save on this device, and they reset each morning.</p>
+
+      <div class="rr-day">
+        <section class="rr-daycard">
+          <h3>Start of shift</h3>
+          <p class="k">Repeated on return from any extended break</p>
+          <ul class="rr-check">
+            <li><label><input type="checkbox"> Check for active escalations</label></li>
+            <li><label><input type="checkbox"> Team huddle or check-in, clear outstanding chat</label></li>
+            <li><label><input type="checkbox"> Settle synchronous obligations before focused work</label></li>
+          </ul>
+        </section>
+
+        <section class="rr-daycard">
+          <h3>Queue review</h3>
+          <p class="k">Completed in the order shown</p>
+          <ul class="rr-check">
+            <li><label><input type="checkbox"> Ticket queue: new incidents and tasks</label></li>
+            <li><label><input type="checkbox"> HR and approvals system</label></li>
+            <li><label><input type="checkbox"> Email</label></li>
+            <li><label><input type="checkbox"> Team chat and channels</label></li>
+          </ul>
+          <p class="rr-why">The ticket queue is the only one of the four with somebody already waiting on an answer. Email and chat go last because they are the least bounded. They will take whatever you give them.</p>
+        </section>
+
+        <section class="rr-daycard">
+          <h3>Follow-up execution</h3>
+          <p class="k">The primary work of the day</p>
+          <ul class="rr-check">
+            <li><label><input type="checkbox"> Respond to email in priority order</label></li>
+            <li><label><input type="checkbox"> Schedule outstanding meetings</label></li>
+            <li><label><input type="checkbox"> Prepare for today's meetings</label></li>
+            <li><label><input type="checkbox"> Close out actions from previous meetings</label></li>
+          </ul>
+        </section>
+
+        <section class="rr-daycard">
+          <h3>Scheduled breaks</h3>
+          <p class="k">Planned, and on the calendar</p>
+          <ul class="rr-check">
+            <li><label><input type="checkbox"> Industry policy and news review</label></li>
+            <li><label><input type="checkbox"> Organizational news and community channels</label></li>
+            <li><label><input type="checkbox"> Walk</label></li>
+            <li><label><input type="checkbox"> Change work location</label></li>
+          </ul>
+        </section>
+
+        <section class="rr-daycard optional">
+          <h3>Capability development</h3>
+          <p class="k">Scheduled into open capacity while it still exists</p>
+          <ul class="rr-check">
+            <li><label><input type="checkbox"> Education and certification work</label></li>
+            <li><label><input type="checkbox"> Technical deep dive into the application stack</label></li>
+            <li><label><input type="checkbox"> Workflow mapping and documentation</label></li>
+            <li><label><input type="checkbox"> Build knowledge base contribution</label></li>
+            <li><label><input type="checkbox"> Forward planning: upcoming builds, expansion, roadmap</label></li>
+            <li><label><input type="checkbox"> Partner team relationship building</label></li>
+          </ul>
+          <p class="rr-why">This block is the first thing sacrificed under load. It is also the only block that changes what the team is capable of next year. Protecting it is a decision you make on purpose, every week. Quiet weeks have nothing to do with it.</p>
+        </section>
+      </div>
+
+      <p class="rr-daynote">Selections live in this browser only and reset daily. <button type="button" class="rr-reset" id="rrDayClear">Clear now</button></p>
+    </section>
+
+    <!-- ══════════ CLOSE ══════════ -->
+    <section class="rr-section">
+      <div class="rr-kick">The point</div>
+      <h2 class="rr-h2">The routing happens <em>either way.</em></h2>
+      <p class="rr-p">None of this is glamorous. A label, two lookups, a rule about closing tickets. But watch a team run without it. Every request gets negotiated from scratch and every closure is an assumption. The misses surface in the worst possible venue, which is an escalation with an executive on the thread.</p>
+      <p class="rr-pull">"Unwritten, the routing happens in a hallway, decided by whoever argues loudest, renegotiated forever. Written, it takes thirty seconds and a lookup."</p>
+      <p class="rr-p">Steal the tests. Redraw the table for your own team's seams, because yours sit somewhere different from mine. The specific assignments matter less than the move: fix the answers to the questions you keep re-answering, and spend the argument budget on the questions that deserve it. I know which team I'd rather run.</p>
+    </section>
+
+    <!-- ── THE PATH ── -->
+    <aside class="rr-career hu-ticks" aria-label="The career path">
+      <div class="rr-case-k" style="color:var(--rr-accent)">The path</div>
+      <h2 class="rr-career-h">Want this seat?</h2>
+      <p>Clinical informatics is a destination on the Career Tree, priced out in credentials, years, and fees. My route ran through respiratory therapy and a lot of night shifts. Yours does not have to.</p>
+      <a class="rr-career-btn" href="/tools/career-tree/?role=clin-informatics">Open the Career Tree</a>
+    </aside>
+
+    <!-- ── LINEAGE ── -->
+    <div class="rr-sources">
+      <h2 class="rr-sources-title">Lineage &amp; kin</h2>
+      <div class="rr-source">The incident / change / service request / demand vocabulary descends from ITSM practice, ITIL most visibly. This standard keeps the routing spine and drops the ceremony.</div>
+      <div class="rr-source">The record-based enhancement test is EHR-shaped: it works because build inspection is cheap and unambiguous in record-oriented systems. <em><a href="/learn/ehr-architecture/">EHR Architecture</a></em> covers what a record type is and why it is the natural unit.</div>
+      <div class="rr-source">Sibling methods on this site: <em><a href="/learn/process-engineering/">Process Engineering (M01)</a></em> is the mapping discipline underneath the lifecycle, and <em><a href="/learn/leading-the-ai-transition/">Run It Like a Formulary</a></em> is the same governance instinct pointed at AI.</div>
+    </div>
+
+  </div>
+</article>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ── Class tabs + tree lighting ── */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.rr-tab'));
+  var tree = document.getElementById('rrTree');
+  function selectClass(tab, focus){
+    tabs.forEach(function(t){
+      var on = (t === tab);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (tree) tree.setAttribute('data-lit', tab.dataset.cls);
+    if (focus) tab.focus();
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener('click', function(){ selectClass(t); });
+    t.addEventListener('keydown', function(e){
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      selectClass(tabs[(i + d + tabs.length) % tabs.length], true);
+    });
+  });
+
+  /* ── Section tabs · panels ship visible for the no-JS reader; JS folds them ── */
+  var tnavs = Array.prototype.slice.call(document.querySelectorAll('.rr-tnav'));
+  tnavs.forEach(function(n, i){
+    var p = document.getElementById(n.getAttribute('aria-controls'));
+    if (p) p.hidden = (i !== 0);
+  });
+  var reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  function selectPage(nav, scroll){
+    tnavs.forEach(function(n){
+      var on = (n === nav);
+      n.setAttribute('aria-selected', on ? 'true' : 'false');
+      var p = document.getElementById(n.getAttribute('aria-controls'));
+      if (p) p.hidden = !on;
+    });
+    try { history.replaceState(null, '', '#' + nav.getAttribute('aria-controls')); } catch (e) {}
+    if (scroll){
+      var bar = document.querySelector('.rr-topnav');
+      var top = bar.getBoundingClientRect().top + window.scrollY - 76;
+      if (window.scrollY > top) window.scrollTo({ top: top, behavior: (reduceMq && reduceMq.matches) ? 'auto' : 'smooth' });
+    }
+  }
+  tnavs.forEach(function(n, i){
+    n.addEventListener('click', function(){ selectPage(n, true); });
+    n.addEventListener('keydown', function(e){
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var next = tnavs[(i + d + tnavs.length) % tnavs.length];
+      next.focus(); selectPage(next, false);
+    });
+  });
+  function applyHash(scroll){
+    var h = (location.hash || '').slice(1);
+    if (!/^[a-z-]+$/.test(h)) return;
+    var nav = document.querySelector('.rr-tnav[aria-controls="' + h + '"]');
+    if (nav) selectPage(nav, scroll === true);
+  }
+  applyHash();
+  window.addEventListener('hashchange', function(){ applyHash(true); });
+
+  /* ── Copy the pocket card · the visible <pre> is the single source ── */
+  var copyBtn = document.getElementById('rrCopyCard');
+  var pocketPre = document.getElementById('rrPocketText');
+  if (copyBtn && pocketPre){
+    var POCKET = pocketPre.textContent.replace(/^\n+/, '');
+    copyBtn.addEventListener('click', function(){
+      function reset(){ setTimeout(function(){ copyBtn.textContent = 'Copy the card'; }, 1800); }
+      function selectPre(){
+        try {
+          var r = document.createRange();
+          r.selectNodeContents(pocketPre);
+          var s = window.getSelection();
+          s.removeAllRanges();
+          s.addRange(r);
+        } catch (e) {}
+      }
+      function done(ok){
+        if (ok){ copyBtn.textContent = 'Copied.'; }
+        else { copyBtn.textContent = 'Selected it for you'; selectPre(); }
+        reset();
+      }
+      function fallback(){
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = POCKET;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          var ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          done(!!ok);
+        } catch (e) { done(false); }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(POCKET).then(function(){ done(true); }, fallback);
+      } else {
+        fallback();
+      }
+    });
+  }
+
+  /* ── The router ── */
+  var CLASSES = {
+    fix:{ name:'Break / fix', tab:'tab-fix',
+      desc:'A process that was operating as designed has stopped, so it outranks everything else in the queue.',
+      sor:'Incident in the ticketing system', lead:'Informatics triages, applications corrects', appr:'Customer consultation, expedited' },
+    enh:{ name:'Enhancement', tab:'tab-enh',
+      desc:'Delivery requires records or record types that do not exist yet, so the technical footprint grows.',
+      sor:'Task, linked to the change record', lead:'Informatics, or the physician champion for clinical standards', appr:'Customer, plus governance by scope' },
+    opt:{ name:'Optimization', tab:'tab-opt',
+      desc:'Everything the change touches already exists. The work adjusts values on current records.',
+      sor:'Task, paced on the team planner', lead:'Informatics', appr:'Customer consultation' },
+    nw:{ name:'Net new', tab:'tab-nw',
+      desc:'The capability or record type is absent from the current build, so this is demand, and it leaves the team’s hands.',
+      sor:'Demand record', lead:'Project manager if assigned, otherwise informatics', appr:'Governance body, at every scope' }
+  };
+  var DOMAINS = {
+    clinical:   { name:'Clinical',    owner:'Physician champion and clinical leads', note:'a protocols and practice' },
+    operational:{ name:'Operational', owner:'Operations and site leads',             note:'a scheduling and resulting' },
+    technical:  { name:'Technical',   owner:'Applications, technical services, biomedical', note:'a hardware, software, and interfaces' }
+  };
+  var SCOPES = {
+    department:{ name:'Department', gov:'Customer and department owner' },
+    site:      { name:'Site',       gov:'Customer and site leadership' },
+    region:    { name:'Region',     gov:'Customer, then governance review' },
+    enterprise:{ name:'Enterprise', gov:'Customer, then governance approval' }
+  };
+  var LEADS = {
+    fix:{ clinical:'Informatics leads, applications executes', operational:'Informatics leads, applications executes', technical:'Applications or technical services leads, informatics triages' },
+    enh:{ clinical:'Physician champion leads, applications executes', operational:'Informatics leads, applications executes the build', technical:'Applications leads, informatics defines the requirement' },
+    opt:{ clinical:'Informatics leads, clinical lead confirms', operational:'Informatics leads, operational owner confirms', technical:'Applications leads, informatics submits and validates' },
+    nw:{ clinical:'Project manager, or informatics if unassigned', operational:'Project manager, or informatics if unassigned', technical:'Project manager, or informatics if unassigned' }
+  };
+  var state = { cls:null, domain:null, scope:null, track:null };
+  var ORDER = ['rq1','rq2','rq3','rqT','rqD','rqS'];
+  var verdict = document.getElementById('rrVerdict');
+
+  function step(id){ return document.getElementById(id); }
+  function showStep(id){ step(id).hidden = false; renumber(); }
+  function renumber(){
+    var n = 0;
+    ORDER.forEach(function(id){
+      var el = step(id);
+      if (el && !el.hidden){ n++; el.querySelector('.rr-qn').textContent = ('0' + n).slice(-2); }
+    });
+  }
+  function markAnswered(id, btn){
+    var s = step(id);
+    s.classList.add('answered');
+    Array.prototype.forEach.call(s.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+  function render(){
+    if (!verdict) return;
+    if (!(state.cls && state.domain && state.scope && state.track)){ verdict.hidden = true; return; }
+    var c = CLASSES[state.cls], d = DOMAINS[state.domain], s = SCOPES[state.scope];
+    var proj = (state.track === 'project');
+    verdict.setAttribute('data-cls', state.cls);
+    document.getElementById('rv-name').textContent = c.name;
+    document.getElementById('rv-domain').textContent = d.name;
+    document.getElementById('rv-scope').textContent = s.name;
+    document.getElementById('rv-track').textContent = proj ? 'Project' : 'Standard';
+    document.getElementById('rv-desc').textContent = c.desc + ' As ' + d.note + ' matter, the authoritative answer is held by ' + d.owner.toLowerCase() + '.';
+    document.getElementById('rv-sor').textContent = proj ? 'Demand record' : c.sor;
+    document.getElementById('rv-lead').textContent = proj ? 'Project manager leads; informatics supports' : LEADS[state.cls][state.domain];
+    document.getElementById('rv-owner').textContent = d.owner;
+    document.getElementById('rv-appr').textContent = s.gov;
+    var live = document.getElementById('rrRouteLive');
+    if (live) live.textContent = 'Routing decision: ' + c.name + ', ' + d.name + ' domain, ' + s.name + ' scope, ' + (proj ? 'project' : 'standard') + ' track.';
+    var wasHidden = verdict.hidden;
+    verdict.hidden = false;
+    if (wasHidden){
+      verdict.classList.add('enter');
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ verdict.classList.remove('enter'); }); });
+    }
+  }
+  function setClass(key){
+    state.cls = key;
+    if (key === 'enh' || key === 'nw'){ state.track = null; showStep('rqT'); }
+    else {
+      state.track = 'standard';
+      var t = step('rqT');
+      t.hidden = true;
+      t.classList.remove('answered');
+      Array.prototype.forEach.call(t.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
+      showStep('rqD');
+    }
+    render();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.rr-qbtns button'), function(btn){
+    btn.addEventListener('click', function(){
+      var q = btn.getAttribute('data-q'), a = btn.getAttribute('data-a');
+      if (q === '1'){
+        markAnswered('rq1', btn);
+        step('rq2').hidden = true; step('rq3').hidden = true;
+        if (a === 'y'){ setClass('fix'); } else { state.cls = null; render(); showStep('rq2'); }
+      } else if (q === '2'){
+        markAnswered('rq2', btn);
+        step('rq3').hidden = true;
+        if (a === 'y'){ setClass('nw'); } else { state.cls = null; render(); showStep('rq3'); }
+      } else if (q === '3'){
+        markAnswered('rq3', btn);
+        setClass(a === 'y' ? 'enh' : 'opt');
+      } else if (q === 't'){
+        markAnswered('rqT', btn);
+        state.track = a; showStep('rqD'); render();
+      } else if (q === 'd'){
+        markAnswered('rqD', btn);
+        state.domain = a; showStep('rqS'); render();
+      } else {
+        markAnswered('rqS', btn);
+        state.scope = a; render();
+      }
+    });
+  });
+  var openBtn = document.getElementById('rv-open');
+  if (openBtn) openBtn.addEventListener('click', function(){
+    if (!state.cls) return;
+    var t = document.getElementById(CLASSES[state.cls].tab);
+    selectClass(t);
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  });
+  var resetBtn = document.getElementById('rv-reset');
+  if (resetBtn) resetBtn.addEventListener('click', function(){
+    state = { cls:null, domain:null, scope:null, track:null };
+    verdict.hidden = true;
+    ORDER.forEach(function(id, i){
+      var s = step(id);
+      s.classList.remove('answered');
+      Array.prototype.forEach.call(s.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
+      if (i > 0) s.hidden = true;
+    });
+    renumber();
+  });
+
+  /* ── Operating-day checklist · this device only, resets daily ── */
+  var DAYKEY = 'hu-informatics-day';
+  var now = new Date();
+  var today = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
+  function boxes(){ return Array.prototype.slice.call(document.querySelectorAll('.rr-check input')); }
+  function saveDay(){
+    try {
+      localStorage.setItem(DAYKEY, JSON.stringify({ d: today, v: boxes().map(function(b){ return b.checked; }) }));
+    } catch (e) {}
+  }
+  function loadDay(){
+    try {
+      var raw = localStorage.getItem(DAYKEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (!saved || saved.d !== today || !saved.v) return;
+      boxes().forEach(function(b, i){ b.checked = !!saved.v[i]; });
+    } catch (e) {}
+  }
+  boxes().forEach(function(b){ b.addEventListener('change', saveDay); });
+  var clearBtn = document.getElementById('rrDayClear');
+  if (clearBtn) clearBtn.addEventListener('click', function(){
+    boxes().forEach(function(b){ b.checked = false; });
+    saveDay();
+  });
+  loadDay();
+
+  /* ── The bridge: expand a party card ── */
+  Array.prototype.forEach.call(document.querySelectorAll('.rr-party > button'), function(b){
+    b.addEventListener('click', function(){
+      var open = b.getAttribute('aria-expanded') === 'true';
+      b.setAttribute('aria-expanded', open ? 'false' : 'true');
+      b.parentElement.classList.toggle('open', !open);
+    });
+  });
+
+  /* ── Triage drill ── */
+  var DRILL = [
+    { q:'"Add Dr. Nguyen to the on-call list in the paging system."', k:'opt',
+      why:'Every record involved already exists. You are changing a value on the on-call list, and the footprint holds still.' },
+    { q:'"Orders placed on 2 South have printed to the wrong pharmacy printer since the move."', k:'fix',
+      why:'It was operating as designed and now it does the wrong thing. The move is the cause; the class was settled the moment the workflow broke.' },
+    { q:'"Respiratory wants a charge to fire for bedside spirometry. There is no charge record for it today."', k:'enh',
+      why:'Charging is owned and installed; this charge record is not built. A new record on owned capability is an enhancement.' },
+    { q:'"Can we get the patient texting platform the medical group uses? We have nothing like it."', k:'nw',
+      why:'The capability is absent from the build entirely. It enters as demand, and governance holds the order of the line.' },
+    { q:'"Discharge instructions print English-only for Spanish-speaking patients. Interpreter services says they used to print bilingual."', k:'fix',
+      why:'There is a documented baseline and current behavior departs from it. Verify the baseline, then it is an incident with priority.' },
+    { q:'"The unit census report we asked about last year still does not exist. This is broken. Please fix it urgently."', k:'enh',
+      why:'A thing that never existed cannot break, so Test 01 fails no matter how the request is worded. A new report is a new record.' },
+    { q:'"Change the default follow-up interval on the clinic scheduling template from two weeks to four."', k:'opt',
+      why:'The template and its interval field are already in the build. One value changes, and the shared-use check does the real work.' },
+    { q:'"Leadership saw an ambient documentation tool at a conference and wants a pilot on one unit."', k:'nw',
+      why:'The organization does not own the module, and the class survives the word pilot. Demand record, governance prioritizes.' }
+  ];
+  var DRILL_NAMES = { fix:'Break / fix', enh:'Enhancement', opt:'Optimization', nw:'Net new' };
+  var dQuiz = document.getElementById('rrDrillQuiz');
+  if (dQuiz){
+    var dMsg = document.getElementById('rrDrillMsg'), dN = document.getElementById('rrDrillN'),
+        dOpts = document.getElementById('rrDrillOpts'), dFb = document.getElementById('rrDrillFb'),
+        dNext = document.getElementById('rrDrillNext'), dEnd = document.getElementById('rrDrillEnd'),
+        dScore = document.getElementById('rrDrillScore'), dLine = document.getElementById('rrDrillLine');
+    var dIdx = 0, dHits = 0, dLocked = false;
+    var dBtns = Array.prototype.slice.call(dOpts.querySelectorAll('button'));
+    function drillRender(){
+      dLocked = false;
+      dN.textContent = ('0' + (dIdx + 1)).slice(-2);
+      dMsg.textContent = DRILL[dIdx].q;
+      dFb.textContent = '';
+      dOpts.classList.remove('locked');
+      dBtns.forEach(function(b){ b.classList.remove('good', 'bad'); });
+      dNext.hidden = true;
+    }
+    function scoreLine(n){
+      if (n === 8) return 'Perfect triage. The queue is hiring.';
+      if (n >= 6) return 'You would survive a Monday on our queue.';
+      if (n >= 3) return 'The tests are short, and they are right up there. One more pass.';
+      return 'Good news: classification is a skill, and the tree above teaches it.';
+    }
+    dBtns.forEach(function(b){
+      b.addEventListener('click', function(){
+        if (dLocked) return;
+        dLocked = true;
+        dOpts.classList.add('locked');
+        var item = DRILL[dIdx];
+        var hit = (b.dataset.k === item.k);
+        dBtns.forEach(function(x){ if (x.dataset.k === item.k) x.classList.add('good'); });
+        if (!hit) b.classList.add('bad');
+        if (hit) dHits++;
+        dFb.innerHTML = (hit ? '<b>Called it.</b> ' : '<b>It’s ' + DRILL_NAMES[item.k] + '.</b> ') + item.why;
+        dNext.textContent = (dIdx === DRILL.length - 1) ? 'See the score' : 'Next request';
+        dNext.hidden = false;
+      });
+    });
+    dNext.addEventListener('click', function(){
+      dIdx++;
+      if (dIdx >= DRILL.length){
+        dQuiz.hidden = true;
+        dEnd.hidden = false;
+        dScore.textContent = ('0' + dHits).slice(-2) + ' of 08';
+        dLine.textContent = scoreLine(dHits);
+      } else {
+        drillRender();
+      }
+    });
+    document.getElementById('rrDrillAgain').addEventListener('click', function(){
+      dIdx = 0; dHits = 0;
+      dEnd.hidden = true;
+      dQuiz.hidden = false;
+      drillRender();
+    });
+    drillRender();
+  }
+
+  /* ── SVG to JPG export · replays shapes and text onto a canvas with the page's fonts ── */
+  function wireSvgJpg(btnId, svgId, filename){
+  var flowDl = document.getElementById(btnId);
+  if (flowDl) flowDl.addEventListener('click', function(){
+    try {
+      var svg = document.getElementById(svgId);
+      var vb = svg.viewBox.baseVal;
+      var SCALE = 2.5;
+      var cv = document.createElement('canvas');
+      cv.width = Math.round(vb.width * SCALE);
+      cv.height = Math.round(vb.height * SCALE);
+      var ctx = cv.getContext('2d');
+      ctx.fillStyle = getComputedStyle(document.querySelector('.rr')).backgroundColor;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.scale(SCALE, SCALE);
+      function dash(cs){
+        var d = cs.strokeDasharray;
+        ctx.setLineDash(d && d !== 'none' ? d.split(/[, ]+/).map(parseFloat) : []);
+      }
+      Array.prototype.forEach.call(svg.querySelectorAll('rect, line, path, polygon, text'), function(el){
+        var cs = getComputedStyle(el);
+        var tag = el.tagName.toLowerCase();
+        var fill = cs.fill, stroke = cs.stroke, sw = parseFloat(cs.strokeWidth) || 1;
+        ctx.save();
+        var tr = el.getAttribute('transform');
+        if (tr){
+          var m = /rotate\(\s*([\-\d.]+)[ ,]+([\-\d.]+)[ ,]+([\-\d.]+)\s*\)/.exec(tr);
+          if (m){ ctx.translate(+m[2], +m[3]); ctx.rotate(+m[1] * Math.PI / 180); ctx.translate(-m[2], -m[3]); }
+        }
+        var op = el.getAttribute('opacity');
+        if (op) ctx.globalAlpha = parseFloat(op);
+        if (tag === 'rect'){
+          var x = +el.getAttribute('x'), y = +el.getAttribute('y'),
+              w = +el.getAttribute('width'), h = +el.getAttribute('height'),
+              rx = +(el.getAttribute('rx') || 0);
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(x, y, w, h, rx); else ctx.rect(x, y, w, h);
+          if (fill && fill !== 'none'){ ctx.fillStyle = fill; ctx.fill(); }
+          if (stroke && stroke !== 'none'){ ctx.strokeStyle = stroke; ctx.lineWidth = sw; dash(cs); ctx.stroke(); }
+        } else if (tag === 'line'){
+          if (stroke && stroke !== 'none'){
+            ctx.beginPath();
+            ctx.moveTo(+el.getAttribute('x1'), +el.getAttribute('y1'));
+            ctx.lineTo(+el.getAttribute('x2'), +el.getAttribute('y2'));
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = sw; dash(cs); ctx.stroke();
+          }
+        } else if (tag === 'path'){
+          var p = new Path2D(el.getAttribute('d'));
+          if (fill && fill !== 'none'){ ctx.fillStyle = fill; ctx.fill(p); }
+          if (stroke && stroke !== 'none'){ ctx.strokeStyle = stroke; ctx.lineWidth = sw; dash(cs); ctx.stroke(p); }
+        } else if (tag === 'polygon'){
+          var pts = el.getAttribute('points').trim().split(/[\s,]+/).map(Number);
+          ctx.beginPath(); ctx.moveTo(pts[0], pts[1]);
+          for (var i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]);
+          ctx.closePath();
+          ctx.fillStyle = (fill && fill !== 'none') ? fill : stroke;
+          ctx.fill();
+        } else if (tag === 'text'){
+          ctx.font = cs.fontWeight + ' ' + parseFloat(cs.fontSize) + 'px ' + cs.fontFamily;
+          if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing;
+          var an = el.getAttribute('text-anchor');
+          ctx.textAlign = an === 'middle' ? 'center' : (an === 'end' ? 'right' : 'left');
+          ctx.fillStyle = fill;
+          ctx.fillText(el.textContent, +el.getAttribute('x'), +el.getAttribute('y'));
+        }
+        ctx.restore();
+      });
+      var url = cv.toDataURL('image/jpeg', 0.92);
+      flowDl.dataset.bytes = url.length;
+      var a = document.createElement('a');
+      a.download = filename;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      flowDl.textContent = 'Downloaded.';
+    } catch (e) {
+      flowDl.textContent = 'Export failed in this browser';
+    }
+    setTimeout(function(){ flowDl.textContent = 'Download as JPG'; }, 1800);
+  });
+  }
+  wireSvgJpg('rrFlowDl', 'rrFlow', 'request-routing-flowsheet.jpg');
+  wireSvgJpg('rrLifeDl', 'rrLife', 'request-lifecycle.jpg');
+
+})();
+</script>

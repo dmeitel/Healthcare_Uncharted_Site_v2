@@ -102,6 +102,24 @@ const learn = {
     },
 
     {
+      id:       'request-routing',
+      num:      'M03',
+      category: 'Method',
+      ps:       'P2a / P2b',
+      title:    'Informatics Work: Routing Requests',
+      desc:     'What a clinical informatics team actually does: route every request that hits the queue, then prove the change in production before it closes. A working team standard, written down and ready to steal.',
+      url:      '/learn/request-routing/',
+      tags:     ['Informatics', 'Routing', 'Governance', 'Interactive'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Clinical Informatics', zone: 'provider', to: 'provider/informatics' },
+        { label: 'EHR Systems',          zone: 'provider', to: 'provider/ehr' },
+        { label: 'EHR Platforms',        zone: 'techeco',  to: 'techeco/ehr-tools' }
+      ]
+    },
+
+    {
       id:       'oxygen-payment-cuts',
       num:      'G01',
       category: 'Guest — Chrysalis Ashton',
@@ -404,6 +422,7 @@ learn.readingOrder = [
   '/learn/laws-and-paradoxes/',
   '/learn/process-engineering/',
   '/learn/healthcare-data-sources/',
+  '/learn/request-routing/',
   '/learn/oxygen-payment-cuts/',
   '/learn/home-respiratory-timeline/'
 ];
