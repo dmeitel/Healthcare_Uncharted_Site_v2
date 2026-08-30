@@ -9,6 +9,12 @@ metadata:
 
 **Budget interpretation ruled during the pass:** laws-and-paradoxes is one file but TEN tabbed articles, each with its own byline/read-time/sources. Applied the negation-contrast budget PER TAB, not per file. One-per-file would have gutted the piece. If David disagrees, this is the decision to revisit.
 
+**SUPERSEDED IN PART, 2026-08-27:** David ordered a FULL TEXTBOOK STRIP of the Learn
+register. The ehr-architecture keepers below are OVERTURNED (its H1 negation no longer
+exists on the page, and "One patient deep, not all patients wide" was named in his own
+flag list). See [[learn-textbook-strip]]. The laws-and-paradoxes keepers were NOT part
+of that order and still stand.
+
 **Deliberately KEPT budget-holders (do not strip in future passes):**
 - Laws/Jevons: "Efficiency did not bend the curve. It steepened it."
 - Laws/Goodhart: "That did not make measurement honest. It made it CHEAP."

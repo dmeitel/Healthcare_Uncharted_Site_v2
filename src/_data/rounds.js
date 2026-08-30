@@ -21,9 +21,9 @@ const rounds = {
 
     {
       slug:            'problem-and-product',
-      title:           'The Problem and the Product',
+      title:           'How Healthcare Gets Sold Its Problems',
       posted:          '2026-08-10',
-      summary:         'Before healthcare buys a cure, somebody sells it the disease. The AI era didn\'t retire the trick. It moved it downstream.',
+      summary:         'Before healthcare buys a cure, somebody sells it the disease. The AI era runs the same trick one step downstream.',
       tags:            ['problem-framing', 'disease-mongering', 'health-ai', 'pharma-marketing'],
       fourPs:          ['provider-p2a', 'payer', 'policy'],
       readMinutes:     10,
@@ -40,9 +40,9 @@ const rounds = {
 
     {
       slug:            'wound-and-workload',
-      title:           'The Wound and the Workload',
+      title:           'Clinician Burnout Is a Workplace Problem',
       posted:          '2026-06-18',
-      summary:         'We called it burnout and told people to be more resilient. The data says it was the workplace all along.',
+      summary:         'We called it burnout and aimed the fix at the worker. Five years of data point at the workplace.',
       tags:            ['clinician-burnout', 'workforce', 'mental-health', 'nurse-staffing'],
       fourPs:          ['provider-p2a', 'patient', 'policy'],
       readMinutes:     11,
@@ -59,9 +59,9 @@ const rounds = {
 
     {
       slug:            'ai-promise-vs-bill',
-      title:           'The Promise and the Bill',
+      title:           'What Medicare Is Actually Paying for AI',
       posted:          '2026-06-03',
-      summary:         'AI was sold as the cure for health care’s cost problem. Medicare’s own billing data tells a different story.',
+      summary:         'AI was sold as the cure for health care’s cost problem. Medicare’s own billing data shows it arriving as a new line item.',
       tags:            ['health-ai', 'health-costs', 'medicare', 'reimbursement'],
       fourPs:          ['payer', 'provider-p2a', 'policy'],
       readMinutes:     8,

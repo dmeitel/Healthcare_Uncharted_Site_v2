@@ -9,9 +9,10 @@ One person wrote this site. He ran vents in an ICU, moved through health
 administration into clinical informatics, and now manages an informatics
 team. The prose should sound like that person has opinions and scars.
 
-This skill extends the HU VOICE KERNEL in the root CLAUDE.md. Where they
-overlap, they agree; where this file is stricter (the budgets below), this
-file wins for prose work.
+This skill extends the HU VOICE KERNEL in the root CLAUDE.md and the full
+voice profile at docs/voice-profile.md (calibration passages live there).
+Where they overlap, they agree; where this file is stricter (the budgets
+below), this file wins for prose work.
 
 ## Hard rules
 
@@ -29,7 +30,9 @@ file wins for prose work.
 - Ask a question out loud mid-thought when the argument earns it.
 - Lists read like someone talking themselves through a problem, not a
   corporate outline with parallel stems.
-- Endings land on dry wit or defiance. Never a sing-song three-part summary.
+- One flat closer per piece, maximum. No antithesis flips, noun-phrase
+  verdicts, or imperative punchlines (the kernel's aphorism ban, 2026-08-26).
+  Never a sing-song three-part summary either.
 
 ## Structural budgets, per page
 
