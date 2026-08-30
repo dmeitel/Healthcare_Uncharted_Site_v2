@@ -123,7 +123,7 @@
     })();
   </script>
 </head>
-<body{% if section == 'learn' or section == 'rounds' %} class="is-reading"{% endif %}>
+<body{% if section == 'learn' or section == 'rounds' %} class="is-reading"{% elif nav_merged %} class="nav-merged"{% endif %}>
 
 {% if section == 'learn' or section == 'rounds' %}<div id="read-progress" aria-hidden="true"></div>{% endif %}
 <a class="skip-to-main" href="#main-content">Skip to main content</a>
@@ -176,10 +176,10 @@
         <div class="footer-col-title">Tools</div>
         <div class="footer-nav-list">
           <a class="footer-nav-link" href="/atlas/">Healthcare Atlas</a>
-          <a class="footer-nav-link" href="/tools/iceberg-map/">Iceberg Map</a>
+          <a class="footer-nav-link" href="/tools/iceberg-map/">System Layers</a>
           <a class="footer-nav-link" href="/tools/multi-lens-map/">Pop Health Multi-Lens Map</a>
           <a class="footer-nav-link" href="/tools/vendor-directory/">Vendor Directory</a>
-          <a class="footer-nav-link" href="/tools/assignment-compass/">Assignment Compass</a>
+          <a class="footer-nav-link" href="/tools/assignment-compass/">Cost of Living Compare</a>
           <a class="footer-nav-link" href="/tools/sql-mystery/">Clinical SQL Mystery</a>
         </div>
       </div>
@@ -254,6 +254,33 @@ document.addEventListener('keydown', (e) => {
   const opener = (bbMore && getComputedStyle(bbMore).display !== 'none') ? bbMore : ham;
   if (opener) opener.focus();
 });
+// THE MERGED BAND (design phase 2026-08-30): on nav-merged pages the toolbar's
+// [data-nav-summon] control slides the parked nav down; Esc, outside taps, and the
+// same control dismiss it. The links dropdown folds with the bar.
+const summonBtns = document.querySelectorAll('[data-nav-summon]');
+function setSummoned(on) {
+  document.body.classList.toggle('nav-summoned', on);
+  summonBtns.forEach((b) => b.setAttribute('aria-expanded', String(on)));
+  if (!on) setMenu(false);
+}
+if (summonBtns.length) {
+  summonBtns.forEach((b) => b.addEventListener('click', () => {
+    const on = !document.body.classList.contains('nav-summoned');
+    setSummoned(on);
+    if (on) { const brand = document.querySelector('nav .nav-brand'); if (brand) brand.focus(); }
+  }));
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || navLinks.classList.contains('open')) return;
+    if (!document.body.classList.contains('nav-summoned')) return;
+    setSummoned(false);
+    if (summonBtns[0]) summonBtns[0].focus();
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (!document.body.classList.contains('nav-summoned')) return;
+    if (e.target.closest('nav') || e.target.closest('[data-nav-summon]')) return;
+    setSummoned(false);
+  });
+}
 </script>
 
 <script>

@@ -68,6 +68,32 @@ If a session cannot tell whether a surface is in a phase, it is not.
 
 ### OPEN PHASES
 
+**Cost of Living Comparison (the compass) · opened 2026-08-30 on David's brief: "make it
+more like SmartAsset Cost of Living Calculator or other finance apps", easier to understand
+and use.** The archetype: one plain-sentence answer first, minimal jargon, progressive
+disclosure. ROUND 1 SHIPPED same day: THE ANSWER card leads the results (the breakeven
+equivalence as a sentence: "$78,624 in Salt Lake County, UT goes about as far as $100,159
+in Sacramento County, CA", live-updating, county-aware, with the monthly consequence as the
+sub); the example state now announces itself via an amber chip on that card ("Example
+numbers · edit anything to make them yours") that drops on first edit; jargon stripped
+site-of-tool-wide ("The assignment" -> "The new location" in form + JS strings, "Breakeven"
+-> "The pay you would need there", "Monthly ledger" -> "Monthly costs, side by side",
+"Presets" -> "Try an example"). ROUND 2, THE REAL RESTRUCTURE, awaits David's read: on
+phones the form stack buries the answer below a full screen of dropdowns; the SmartAsset
+move is a compact question-band (two places + pay) at the top with the detail sections
+folded behind it. Closing this phase = the answer-first grammar into DESIGN.md Tier 3.
+
+**The merged band (nav + tool toolbar) · opened 2026-08-30 on David's go ("yes lets
+move on it, i want to see that").** Named surface: the chrome band on tool pages that
+declare `nav_merged: true`. The mechanism is site-shared and shipped: `--nav-h` (the
+layout offset) splits from `--nav-bar-h` (the bar's physical height); a merged page
+sets the offset to 0 so every shell and sticky reflows to full height, the real nav
+parks offscreen, and the toolbar carries a `.tb-brand` mark plus a `[data-nav-summon]`
+control that slides the one true nav down over the canvas (Esc, outside tap, or the
+control dismisses; the links dropdown folds with the bar; reduced-motion drops the
+transition; nothing is duplicated). ROLLED OUT 2026-08-30 on David’s approval ("we can apply this in other places"): ALL EIGHT toolbar pages are merged (atlas, craft, career-tree, hospital-map, iceberg, sql-mystery, assignment-compass, observatory). Career-tree’s phone answer: brand and toolbar summon yield, the site menu rides the bottom tab bar as a fifth item (.hct-site), and the tool’s tab wiring is scoped to [data-view]. NOT converted: the two MapLibre maps (own chrome, twins rule, their own session) and the hub pages (full nav + bottom bar by design). AWAITING David’s device QA of all eight. Closing this phase
+means writing the merged band into DESIGN.md Tier 3.
+
 **Learn + Rounds reading surface · opened 2026-08-24 · PARKED same day by David's
 call.** His words: the articles "will need like complete rewrites and tooling in the
 future", the pages "do not follow a format nor is there consistency in the writing

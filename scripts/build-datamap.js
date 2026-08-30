@@ -219,7 +219,7 @@ const NODES = [
     detail: 'Camera-zoom map. No external data files.' },
   { id: 'tool-sql-mystery', kind: 'tool', label: 'Clinical SQL Mystery', path: '/tools/sql-mystery/',
     detail: 'Synthetic in-page data. Nothing fetched.' },
-  { id: 'tool-iceberg-map', kind: 'tool', label: 'Iceberg Map', path: '/tools/iceberg-map/',
+  { id: 'tool-iceberg-map', kind: 'tool', label: 'System Layers', path: '/tools/iceberg-map/',
     detail: 'Hand-drawn concept map. No data files.' },
   { id: 'tool-learn-rounds', kind: 'tool', label: 'Learn / Rounds pages', path: '/learn/',
     detail: 'Editorial pages that pull stateData-derived stats at build.' },

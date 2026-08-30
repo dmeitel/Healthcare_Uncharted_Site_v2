@@ -5562,7 +5562,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     }
     if (pathFocus && v !== 'path') setPathFocus(null, false);   // leaving Path drops its focused section, the way the other flows drop theirs
     else if (v === 'path' && isPhone()) setPathFocus(null, false);   // and every entry lands on the deck
-    qsa(document,'#hct-tabs button').forEach(b => { const on = b.dataset.view === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+    qsa(document,'#hct-tabs button[data-view]').forEach(b => { const on = b.dataset.view === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });   /* [data-view]: the phone site-summon button rides this bar but is not a view */
     qsa(document,'.hct-view').forEach(s => s.classList.toggle('active', s.dataset.view === v));
     renderAppliedStrip();   // the hidden-pathways chip only reads while the Career Matrix is on screen
     syncURL();              // view tabs are URL scope — this pushes; in-view tweaks replace
@@ -6140,7 +6140,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
       if (e.matches) renderPhoneFlow();
       else if (curView === 'career'){ userZoomed = false; fitDefaultGroup(false); }   // the board returns framed
     });
-    qsa(document,'#hct-tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));   // setView resets any open detail on a view change
+    qsa(document,'#hct-tabs button[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));   // setView resets any open detail on a view change; [data-view] skips the site summon
     // click ANYWHERE off the open panel → dismiss it. Global (not scoped to one view) so a click in any empty area works.
     // The Career Matrix board has its own background-click handler; here we cover My Path + Areas of Expertise.
     document.addEventListener('click', e => {

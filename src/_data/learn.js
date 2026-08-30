@@ -300,7 +300,7 @@ const learn = {
       date:       'May 2, 2026',
       location:   'Phoenix, AZ',
       title:      'AI in Healthcare: Value vs. Hype',
-      desc:       'A practical framework for evaluating AI tools in clinical and operational settings — the 5-question evaluation model, case studies on the Epic Sepsis Model and a widely used risk algorithm, and what actually delivers ROI. Includes CME credit.',
+      desc:       'A practical framework for evaluating AI tools in clinical and operational settings — the 5-question evaluation model, case studies on the Epic Sepsis Model and Optum algorithm, and what actually delivers ROI. Includes CME credit.',
       url:        '/learn/talks/arma-2026/',
       cme:        '1.0 AMA PRA Category 1',
       downloads: {

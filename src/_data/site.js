@@ -24,7 +24,7 @@ module.exports = {
 
   // ── NAV CTA ─────────────────────────────────────────────────────────────────
   navCta: {
-    label: 'Healthcare Iceberg Map \u2192',
+    label: 'Healthcare Atlas \u2192',
     url:   '/atlas/'
   },
 

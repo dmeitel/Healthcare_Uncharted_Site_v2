@@ -1,5 +1,5 @@
 /**
- * The Healthcare Iceberg Map.
+ * Healthcare System Layers (the iceberg map).
  *
  * Lifted out of an inline <script> on 2026-08-22, fifth of the eight tools to
  * move (docs/HU-BUILD-HARDENING-2026-08-22.md). Loaded as type="module": deferred,

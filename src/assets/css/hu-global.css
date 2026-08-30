@@ -86,7 +86,7 @@ nav {
   background:color-mix(in srgb, var(--dark) 96%, transparent);
   backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);
-  height:64px;
+  height:var(--nav-bar-h);
   display:flex; align-items:center; justify-content:space-between;
   padding:0 clamp(16px,4vw,48px);
 }
@@ -217,6 +217,14 @@ footer {
   --semantic-success: var(--green);     /* success states */
   --semantic-alert:   var(--red);       /* errors, warnings, destructive */
   --semantic-caution: var(--amber);     /* caution, pending */
+
+  /* Structural chrome · the one place the nav height is written (refactor 2026-08-30):
+     every sticky top, shell height, and phone-menu offset below rides --nav-h, the
+     LAYOUT OFFSET the fixed chrome takes from the page. --nav-bar-h is the bar’s
+     PHYSICAL height; they differ only on nav-merged pages, where the offset drops
+     to 0 and the parked bar keeps its height for when it is summoned. */
+  --nav-bar-h: 64px;
+  --nav-h: 64px;
 
   /* Spacing scale · use instead of raw pixel values on new components */
   --space-1:  4px;    /* hairline, icon internal padding */
@@ -546,12 +554,39 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
 }
 
 /* ================================================================
+   THE MERGED BAND · design phase opened 2026-08-30, atlas first.
+   A tool page with a complete toolbar declares nav_merged and runs
+   chrome as ONE band: --nav-h drops to 0 so every shell and sticky
+   reflows to full height, the real nav parks offscreen above the
+   viewport, and the toolbar carries a compact brand mark plus a
+   summon control ([data-nav-summon]) that slides the nav down over
+   the canvas. The nav is never duplicated: summoning shows the one
+   true nav, links, theme toggle, search and hamburger intact.
+================================================================ */
+body.nav-merged { --nav-h: 0px; }
+body.nav-merged > nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+  transform: translateY(-102%);
+  transition: transform .2s ease;
+}
+body.nav-merged.nav-summoned > nav {
+  transform: translateY(0);
+  box-shadow: 0 14px 34px rgba(0,0,0,.45);
+}
+@media (prefers-reduced-motion: reduce) {
+  body.nav-merged > nav { transition: none; }
+}
+/* the toolbar's brand mark: the link is the 44px target, the mark stays small */
+.tb-brand { display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 44px; min-height: 44px; border-bottom: none; }
+.tb-brand img { width: 24px; height: 24px; }  /* no display here: brand.css owns the ondark/onlight swap and .tb-brand img would outspecify it */
+
+/* ================================================================
    SHARED TOOL CHROME · toolbar, toggle chips, attribution strip
    One standard for every interactive tool. Tools keep their own
    control internals; they adopt these classes for the frame.
 ================================================================ */
 .tool-bar {
-  position:sticky; top:64px; z-index:150;
+  position:sticky; top:var(--nav-h); z-index:150;
   display:flex; align-items:center; gap:12px;
   min-height:46px; padding:6px clamp(12px,2.5vw,20px);
   background:color-mix(in srgb, var(--surface) 94%, transparent);
@@ -884,7 +919,7 @@ nav.nav-yield:focus-within { transform: none; }
 ================================================================ */
 .hu-shell {
   display:flex; flex-direction:column;
-  height:calc(100vh - 64px); height:calc(100dvh - 64px);
+  height:calc(100vh - var(--nav-h)); height:calc(100dvh - var(--nav-h));
   overflow:hidden; position:relative;
 }
 .hu-shell .tool-bar { position:static; }
@@ -955,7 +990,7 @@ nav.nav-yield:focus-within { transform: none; }
 
 /* Phone: unlock and stack */
 @media (max-width:699px) {
-  .hu-shell { height:auto; min-height:calc(100dvh - 64px); overflow:visible; overflow-x:clip; }
+  .hu-shell { height:auto; min-height:calc(100dvh - var(--nav-h)); overflow:visible; overflow-x:clip; }
   .shell-main { display:block; }
   .shell-canvas { height:62vh; height:62dvh; }
   .shell-deck-row { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
@@ -1252,7 +1287,7 @@ nav.nav-yield:focus-within { transform: none; }
    the site menu is the most-tapped control phones have. */
 @media (max-width:699px) {
   .nav-links { display:none; }
-  .nav-links.open { display:flex; flex-direction:column; align-items:stretch; position:absolute; top:64px; left:0; right:0;
+  .nav-links.open { display:flex; flex-direction:column; align-items:stretch; position:absolute; top:var(--nav-bar-h); left:0; right:0;
     background:color-mix(in srgb, var(--dark) 98%, transparent); border-bottom:1px solid var(--border); padding:6px 0 12px; }
   .nav-links.open .nav-link { padding:13px 22px; font-size:15px; border-radius:0; min-height:48px; display:flex; align-items:center; }
   .nav-links.open .nav-pill { margin:8px 22px 2px; padding:13px 18px; text-align:center; font-size:14px; }

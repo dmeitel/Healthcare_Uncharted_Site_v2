@@ -1,5 +1,5 @@
 /**
- * Assignment Compass · travel-pay comparison.
+ * Cost of Living Comparison (formerly Assignment Compass) · two-location take-home and cost compare.
  *
  * Lifted out of an inline <script> on 2026-08-22 (docs/HU-BUILD-HARDENING-2026-08-22.md).
  * Loaded as type="module": deferred, scoped, cacheable, and visible to `npm run check`.
@@ -150,6 +150,7 @@ function compute() {
   var delta = asg.position - cur.position;
   var be = E.breakeven(DATA, s.as, s.fil, cur.position, proj.assign.total);
 
+  renderAnswer(s, cur, asg, delta, be);
   renderTiles(s, cur, asg, delta);
   renderBreakeven(s, cur, proj, be);
   renderLedger(s, cur, asg, proj);
@@ -168,8 +169,8 @@ function compute() {
   $('acFootYear').textContent = 'Tax year ' + DATA._meta.taxYear + ' · COL ' + (DATA._meta.colSource.match(/Q\d \d{4}/) || [''])[0];
   if (s.gross > 0) {
     announce(s.gross2 != null
-      ? 'With each offer at its own pay, the assignment leaves ' + fmt(asg.position) + ' a month vs ' + fmt(cur.position) + ' now.'
-      : 'At the same gross pay, the assignment leaves ' + fmt(asg.position) + ' a month vs ' + fmt(cur.position) + ' now.');
+      ? 'With each offer at its own pay, the new location leaves ' + fmt(asg.position) + ' a month vs ' + fmt(cur.position) + ' now.'
+      : 'At the same gross pay, the new location leaves ' + fmt(asg.position) + ' a month vs ' + fmt(cur.position) + ' now.');
   }
   syncUrl(s);
   schedulePerDiem(s);
@@ -186,6 +187,44 @@ function renderSticky(s, cur, asg, delta) {
     '<span class="' + cls + '">' + fmtSign(delta) + '/mo</span>';
 }
 
+/* THE ANSWER: the one-sentence verdict (round 1, SmartAsset archetype). Same math,
+   plain words: the equivalence number first, the monthly consequence second. */
+function placeName(ab, fips) {
+  var c = fips ? countyName(ab, fips) : '';
+  return c ? c + ' County, ' + ab : STATES[ab];
+}
+function renderAnswer(s, cur, asg, delta, be) {
+  var line = $('acAnswerLine'), sub = $('acAnswerSub'), chip = $('acEgChip');
+  if (chip) chip.hidden = !(!dirty && activePreset != null);
+  if (!line) return;
+  if (s.gross <= 0) {
+    line.textContent = 'Pick two places and enter your pay, and this line becomes your answer.';
+    sub.textContent = '';
+    return;
+  }
+  var here = placeName(s.cs, s.cc), there = placeName(s.as, s.ac);
+  if (s.cs === s.as && !s.cc && !s.ac) {
+    line.innerHTML = 'You are comparing ' + here + ' to itself, so the difference is pay alone.';
+    sub.textContent = 'Pick a second state or county to see a real comparison.';
+    return;
+  }
+  if (s.gross2 != null) {
+    var cls2 = delta >= 0 ? '' : ' class="bad"';
+    line.innerHTML = 'With each offer at its own pay, the move to ' + there + ' changes what you keep by <b' + cls2 + '>' + fmtSign(delta) + '</b> a month.';
+    sub.textContent = 'Your pay here: ' + fmt(s.gross) + '. The offer there: ' + fmt(s.gross2) + '. Both are after taxes and your monthly costs, each with its own state tax math.';
+    return;
+  }
+  if (be != null) {
+    line.innerHTML = fmt(s.gross) + ' in ' + here + ' goes about as far as <b>' + fmt(be) + '</b> in ' + there + '.';
+    var conseq = delta >= 0
+      ? 'at the same pay you would actually come out ' + fmtSign(delta) + ' a month ahead there.'
+      : 'at the same pay the move would cost you ' + fmt(-delta) + ' a month.';
+    sub.textContent = 'That is the pay you would need there to keep what you keep today; ' + conseq;
+    return;
+  }
+  line.textContent = 'Enter pay and locations above, and this line becomes your answer.';
+  sub.textContent = '';
+}
 function renderTiles(s, cur, asg, delta) {
   if (s.gross <= 0) {
     $('acTiles').innerHTML = '';
@@ -201,7 +240,7 @@ function renderTiles(s, cur, asg, delta) {
   var note = 'Left over = net pay after federal, FICA, state tax, and mandatory payroll, minus modeled monthly costs. ' +
     (twoPay ? 'Each column uses its own gross with its own tax math.' : 'Same gross pay applied to both columns.');
   if (s.cs === s.as) note += ' You are comparing ' + STATES[s.cs] + ' to itself: cost ratios are flat by definition, so any delta comes from pay alone.';
-  if (!dirty && activePreset != null) note = 'EXAMPLE SCENARIO shown. Edit anything and it becomes yours. ' + note;
+  /* the example state now announces itself via the chip on the answer card */
   $('acTileNote').textContent = note;
 }
 function tile(v, k, cls) {
@@ -213,7 +252,7 @@ function renderBreakeven(s, cur, proj, be) {
   var hrs = (s.gross2 != null ? num('acHours2') : num('acHours')) || 36;
   $('acBeNum').textContent = fmt(be);
   $('acBePer').textContent = '≈ ' + fmt(be / (hrs * 52)) + '/hr at ' + hrs + ' hrs';
-  var sub = 'The assignment in ' + STATES[s.as] + ' needs to gross at least this much before it matches what ' +
+  var sub = 'Pay in ' + STATES[s.as] + ' needs to be at least this much before it matches what ' +
     fmt(s.gross) + ' leaves you in ' + STATES[s.cs] + '. Below that number you are paying to work there.';
   if (s.gross2 != null) {
     var gap = s.gross2 - be;
@@ -751,7 +790,7 @@ function wire() {
     if (!lastCalc || lastCalc.be == null || lastCalc.s.gross <= 0) return;
     var sc = lastCalc.s, hrs = (sc.gross2 != null ? num('acHours2') : num('acHours')) || 36;
     var txt = 'I need at least ' + fmt(lastCalc.be) + ' gross (about ' + fmt(lastCalc.be / (hrs * 52)) + '/hr at ' + hrs +
-      ' hrs) for the ' + STATES[sc.as] + ' assignment to beat staying in ' + STATES[sc.cs] + '.';
+      ' hrs) for ' + STATES[sc.as] + ' to beat staying in ' + STATES[sc.cs] + '.';
     var btn = $('acAskBtn');
     var done = function (okd) {
       btn.textContent = okd ? '✓ Copied' : 'Copy blocked';
@@ -814,6 +853,10 @@ Promise.all([
   DATA = res[0]; COUNTIES = res[1];
   buildStateSelects();
   wire();
+  /* the fine-tune fold ships open (no-JS safe); on phones it starts closed so the
+     answer sits one summary row below the question band */
+  var fold = document.getElementById('acMoreFold');
+  if (fold && window.innerWidth > 0 && window.matchMedia && window.matchMedia('(max-width:699px)').matches) fold.open = false;
   if (!restoreUrl()) applyPreset(0); else { fmtAllMoney(); compute(); }
 }).catch(function () {
   $('acTiles').innerHTML = '';

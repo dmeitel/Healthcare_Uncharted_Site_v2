@@ -2,6 +2,7 @@
 layout: base.njk
 title: Healthcare Career Tree
 description: An interactive map of 164 real healthcare careers. Start at the entry rungs and follow any credential upward. Pin the roles you hold and the ones you want, and the tool prices the path.
+nav_merged: true
 no_footer: true
 navPage: tools
 section: tool
@@ -13,8 +14,8 @@ og_image: /brand/og-career-tree.jpg
 <style>
   #hct-shell {
     background: #06100a;
-    height: calc(100vh - 64px);
-    height: calc(100dvh - 64px);   /* dvh: the phone URL bar collapse must not leave the sheet's peek row under the fold */
+    height: calc(100vh - var(--nav-h));
+    height: calc(100dvh - var(--nav-h));   /* dvh: the phone URL bar collapse must not leave the sheet's peek row under the fold */
     display: flex; flex-direction: column;
     overflow: hidden; position: relative;
     font-family: var(--font);
@@ -168,6 +169,7 @@ og_image: /brand/og-career-tree.jpg
     #hct-svg g.bands, #hct-svg g.axis-frozen { transition: none !important; } }
   /* Primary tabs in the top bar */
   .hct-tabs button { padding: 7px 14px; font-size: 13px; }
+  .hct-site { display: none; }   /* phone-only: the bottom-bar site summon (merged band) */
   .hct-tabs button:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }   /* inset: the seg's rounded overflow would clip an outset ring */
   .tab-short { display: none; }   /* phone swaps the long tab names for these */
   .mp-fbtn svg, .bp-addmenu-item svg { width: 12px; height: 12px; stroke-width: 2; vertical-align: -2px; margin-right: 6px; flex: none; color: var(--teal); }
@@ -1420,6 +1422,13 @@ og_image: /brand/og-career-tree.jpg
   @media (max-width: 699px) {
     /* the logo wrapper was display:none, so the h1 inside it measured 0x0 and nothing
        on a phone named the tool. Keep the short half. */
+    /* the merged band on a phone: the HU mark yields (atlas precedent: the wordmark
+       goes, the breadcrumb names the tool); site identity lives in the summoned nav.
+       The toolbar summon also yields: the row is full at 375px, so the site menu
+       rides the bottom tab bar (.hct-site) in the thumb zone instead. */
+    .tb-brand { display: none; }
+    #hct-tb > [data-nav-summon] { display: none; }
+    .hct-site { display: inline-flex; }
     .hct-logo { display: inline-flex; align-items: center; flex: none; }
     .hct-logo .tool-bar-kicker { display: none; }
     .hct-logo .tool-bar-title { font-size: 12px; }
@@ -1546,6 +1555,10 @@ og_image: /brand/og-career-tree.jpg
 <div id="hct-shell">
   <!-- ── TOP BAR — slim tabs on the left, contextual controls on the right ── -->
   <div id="hct-tb" data-view="path">
+    <a class="tb-brand" href="/" aria-label="Healthcare Uncharted, home">
+      <img src="/brand/hu-mark-dark.svg" alt="" class="hu-logo-ondark">
+      <img src="/brand/hu-mark.svg" alt="" class="hu-logo-onlight">
+    </a>
     <span class="hct-logo"><span class="tool-bar-kicker">Tool</span><h1 class="tool-bar-title">Career <span>Tree</span></h1></span>
     <span class="hct-sep"></span>
 
@@ -1555,6 +1568,8 @@ og_image: /brand/og-career-tree.jpg
       <button data-view="career" title="164 real roles across 8 pathways. Click a hex for detail, ☆ pins it to your path"><i data-lucide="hexagon" aria-hidden="true"></i><span class="tab-full">Career Matrix</span><span class="tab-short">Careers</span></button>
       <button data-view="edu" id="hct-tab-edu" title="Degrees, licenses, and certs stacked by level. See what each one unlocks"><i data-lucide="graduation-cap" aria-hidden="true"></i><span class="tab-full">Education Matrix</span><span class="tab-short">Education</span></button>
       <button data-view="atlas" id="hct-tab-atlas" title="The skills layer. Clinical and operational expertise areas to tag onto your path"><i data-lucide="shapes" aria-hidden="true"></i><span class="tab-full">Areas of Expertise</span><span class="tab-short">Skills</span></button>
+      {# phone-only site summon: rides the bottom bar (the thumb zone) since the toolbar row is full there; desktop uses the toolbar summon. No data-view, so the tab wiring skips it. #}
+      <button class="hct-site" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i><span class="tab-short">Site</span></button>
     </div>
 
     <span class="hct-spacer"></span>
@@ -1621,6 +1636,7 @@ og_image: /brand/og-career-tree.jpg
     <button class="icon-btn" id="hct-sel-views" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="hct-pop-views" aria-label="Preset views" title="Preset views"><i data-lucide="pin" aria-hidden="true"></i></button>
     <!-- how-it-works is persistent chrome — every view has grammar worth explaining -->
     <button class="icon-btn" id="hct-help" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="hct-pop-help" aria-label="How this works" title="How this works"><i data-lucide="help-circle" aria-hidden="true"></i></button>
+    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i></button>
 
     <!-- v2 selector popovers — static shells (icons render once via base.njk createIcons);
          JS rebuilds only the plain-text option lists inside .pop-body -->
