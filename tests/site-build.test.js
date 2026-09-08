@@ -163,7 +163,9 @@ test('site build', { skip: built ? false : 'run the build first' }, async t => {
       }
     };
     for (const p of pages) for (const block of inlineScripts(read(p))) check(rel(p), block);
-    for (const f of all.filter(f => f.endsWith('.js') && rel(f).startsWith('assets/js'))) check(rel(f), read(f));
+    // vendor/ holds pinned third-party libraries (d3, supabase-js): their internal strings are
+    // not site prose and are not ours to edit. Everything else under assets/js is house code.
+    for (const f of all.filter(f => f.endsWith('.js') && rel(f).startsWith('assets/js') && !rel(f).startsWith('assets/js/vendor/'))) check(rel(f), read(f));
     assert.deepEqual(hits, []);
   });
 

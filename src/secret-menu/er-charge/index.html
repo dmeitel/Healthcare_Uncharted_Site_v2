@@ -1,0 +1,594 @@
+---
+layout: base.njk
+title: "ER Charge Nurse"
+description: "A 12-minute emergency department in your hands. Place patients, watch the queues, spend your escalations well. The smallest lens in the Healthcare Uncharted game ladder."
+noindex: true
+no_footer: true
+eleventyExcludeFromCollections: true
+---
+{% raw %}
+<style>
+#er{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; --acc:#E8A838; }
+.er-wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px;font-family:var(--font)}
+.er-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none}
+.er-back:hover{color:var(--acc)}
+.er-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.er-titles h1{font-family:var(--display);font-size:clamp(22px,3.4vw,32px);font-weight:800;letter-spacing:-.03em}
+.er-titles h1 em{font-style:normal;color:var(--acc)}
+.er-hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.er-clock{font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.06em;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px}
+.er-clock.late{color:var(--acc);border-color:rgba(232,168,56,.5)}
+.er-score{font-family:var(--mono);font-size:12px;color:var(--t2);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px}
+.er-score b{color:var(--t1);font-size:16px}
+.er-pause{min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--t2);cursor:pointer;font-family:var(--font)}
+.er-pause:hover{border-color:var(--acc);color:var(--acc)}
+.er-board{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}
+@media (max-width:860px){.er-board{grid-template-columns:1fr}}
+.er-waitwrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.er-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;display:flex;justify-content:space-between}
+.er-wait{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;min-height:86px}
+.er-pt{flex:0 0 150px;text-align:left;background:var(--raised);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:grab;font-family:var(--font);color:var(--t2);position:relative;transition:border-color .12s;touch-action:pan-x;-webkit-user-select:none;user-select:none}
+.er-pt:hover{border-color:var(--acc)}
+.er-pt.sel{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,168,56,.35)}
+.er-pt.crit{border-color:rgba(223,87,82,.8);animation:erpulse 1s ease infinite}
+@keyframes erpulse{50%{box-shadow:0 0 0 4px rgba(223,87,82,.25)}}
+.er-pt .p-n{font-size:12px;font-weight:700;color:var(--t1)}
+.er-pt .p-c{font-size:11px;color:var(--t2)}
+.er-pt .p-a{position:absolute;top:7px;right:8px;font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:1px 5px}
+.er-pt .p-wait{display:flex;height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:7px;overflow:hidden}
+.er-pt .p-wait span{display:block;height:100%}
+.er-beds{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.er-bed{min-height:118px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:var(--t2);position:relative;transition:border-color .12s}
+.er-bed .b-num{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--t3)}
+.er-bed.empty{border-style:dashed}
+.er-bed.empty .b-open{color:var(--t3);font-size:12px;margin-top:26px;text-align:center}
+.er-bed.target{border-color:var(--acc);animation:erpulse 1s ease infinite}
+.er-bed.over{border-color:var(--acc);background:rgba(232,168,56,.12);box-shadow:0 0 0 3px rgba(232,168,56,.4)}
+.er-ghost{position:fixed;z-index:400;pointer-events:none;background:var(--raised);border:1px solid var(--acc);border-radius:10px;padding:7px 11px;font-family:var(--font);font-size:12px;color:var(--t1);box-shadow:0 10px 28px rgba(0,0,0,.5);transform:rotate(-2deg)}
+.er-bed.crit{border-color:rgba(223,87,82,.8)}
+.er-bed.board{border-color:rgba(106,173,255,.7)}
+.er-bed .p-n{font-size:12.5px;font-weight:700;color:var(--t1);margin-top:2px}
+.er-bed .p-c{font-size:11px;color:var(--t2)}
+.er-bed .p-a{position:absolute;top:8px;right:9px;font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:1px 5px}
+.er-bed .b-step{font-family:var(--mono);font-size:10px;margin-top:6px;color:var(--t2)}
+.er-bed .b-step.q{color:var(--acc)}
+.er-bed .b-bar{display:flex;height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}
+.er-bed .b-bar span{display:block;height:100%;background:#4ecb8d}
+.er-bed .b-next{font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:5px;letter-spacing:.03em}
+.er-side{display:flex;flex-direction:column;gap:12px;position:sticky;top:14px}
+@media (max-width:860px){.er-side{position:static}}
+.er-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.er-res{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;color:var(--t2)}
+.er-res:last-child{border-bottom:none}
+.er-res .r-pips{font-family:var(--mono);font-size:11px;letter-spacing:1px}
+.er-res .r-q{font-family:var(--mono);font-size:10px;min-width:60px;text-align:right;color:var(--t3)}
+.er-res .r-q.hot{color:#ff7a7a;font-weight:700}
+.er-cards{display:flex;flex-direction:column;gap:7px}
+.er-card{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--raised);color:var(--t1);cursor:pointer;font-family:var(--font);font-size:12px;text-align:left;transition:border-color .12s}
+.er-card:hover:not(:disabled){border-color:var(--acc)}
+.er-card.sel{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,168,56,.35)}
+.er-card:disabled{opacity:.35;cursor:not-allowed}
+.er-card .c-n{font-weight:700}
+.er-card .c-ct{font-family:var(--mono);font-size:11px;color:var(--acc)}
+.er-up{font-size:11.5px;color:var(--t2);line-height:1.55}
+.er-up b{font-family:var(--mono)}
+.er-hint{min-height:20px;font-size:12px;color:var(--acc);font-family:var(--mono);margin:8px 0 10px}
+.er-feed{position:fixed;right:16px;bottom:16px;z-index:150;display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:none}
+.er-feed .fd{font-family:var(--mono);font-size:12px;padding:6px 11px;border-radius:8px;background:rgba(23,39,63,.95);border:1px solid var(--border2);color:var(--t1);box-shadow:0 6px 18px rgba(0,0,0,.4);animation:erfeed 3s ease forwards}
+.er-feed .fd b{color:#4ecb8d}
+.er-feed .fd.admit b{color:#6aadff}
+.er-feed .fd.crit{border-color:rgba(78,203,141,.6)}
+@keyframes erfeed{0%{opacity:0;transform:translateX(20px)}12%{opacity:1;transform:translateX(0)}80%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.er-feed .fd{animation:none}}
+.er-deftip{position:fixed;z-index:300;max-width:240px;background:#0d1a2c;border:1px solid #4a6f9e;border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--t2);line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.6);pointer-events:none}
+.er-deftip[hidden]{display:none}
+.er-overlay{position:fixed;inset:0;z-index:200;background:rgba(2,8,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px}
+.er-overlay[hidden]{display:none}
+.er-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;padding:28px}
+.er-modal h2{font-family:var(--display);font-weight:800;font-size:24px;margin-bottom:8px;color:var(--acc)}
+.er-modal .mo-sub{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:14px}
+.er-go{width:100%;min-height:48px;margin-top:14px;padding:13px;border-radius:10px;border:none;font-family:var(--display);font-weight:700;font-size:15px;color:#1d1503;background:linear-gradient(135deg,#E8A838,#c98a1e);cursor:pointer}
+.er-seg{display:flex;gap:8px;margin:8px 0 2px}
+.er-seg button{flex:1;min-height:44px;padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--raised);color:var(--t2);font-family:var(--font);font-weight:600;cursor:pointer}
+.er-seg button.on{border-color:var(--acc);color:#1d1503;background:linear-gradient(135deg,#E8A838,#c98a1e)}
+.er-tally{font-family:var(--mono);font-size:12.5px;line-height:2;color:var(--t2);margin:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 0}
+.er-tally b{float:right;color:var(--t1)}
+.er-tally .neg b{color:#ff7a7a}
+.er-tally .pos b{color:#4ecb8d}
+.er-pm{font-size:12.5px;color:var(--t2);line-height:1.7}
+.er-pm b{color:var(--t1)}
+.er-pm .pm-h{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin:12px 0 4px}
+.er-grade{float:right;font-family:var(--display);font-weight:800;font-size:38px}
+</style>
+
+<div class="er-wrap" id="er">
+  <div class="er-top">
+    <div class="er-titles">
+      <a class="er-back" href="/secret-menu/">&larr; Secret Menu</a>
+      <h1>ER <em>Charge Nurse</em></h1>
+    </div>
+    <div class="er-hud">
+      <div class="er-clock" id="er-clock">07:00</div>
+      <div class="er-score" id="er-scorebox">Score <b id="er-score">0</b></div>
+      <button class="er-pause" id="er-pausebtn" data-act="pause">Pause</button>
+    </div>
+  </div>
+  <div class="er-hint" id="er-hint"></div>
+  <div class="er-board">
+    <div>
+      <div class="er-waitwrap">
+        <div class="er-lbl"><span>Waiting room</span><span id="er-waitcount"></span></div>
+        <div class="er-wait" id="er-wait"></div>
+      </div>
+      <div class="er-beds" id="er-beds"></div>
+    </div>
+    <aside class="er-side">
+      <div class="er-panel"><div class="er-lbl"><span>Department resources</span><span>busy &middot; queue</span></div><div id="er-res"></div></div>
+      <div class="er-panel"><div class="er-lbl"><span>Charge cards</span><span>spend them well</span></div><div class="er-cards" id="er-cards"></div></div>
+      <div class="er-panel"><div class="er-lbl"><span>Upstairs</span></div><div class="er-up" id="er-up"></div></div>
+    </aside>
+  </div>
+  <div class="er-feed" id="er-feed" aria-live="polite"></div>
+  <div class="er-deftip" id="er-deftip" hidden></div>
+  <div class="er-overlay" id="er-overlay" hidden></div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+  // ── THE SHIFT: 12 hours in 12 minutes. All engine time is SIM MINUTES (720 per shift);
+  // one real second is one simulated minute. The tick engine is a pure step function so the
+  // headless harness can drive time deterministically.
+  const CFG = {
+    shiftMin: 720, tickMs: 200, simPerSec: 1,
+    beds: {easy:10, normal:9, hard:8},
+    arrivalMult: {easy:1.4, normal:1, hard:0.8},        // sim-minutes BETWEEN arrivals scale (lower = busier)
+    batchBonus: 0.8,                                     // same step queued behind same step runs at 80% duration
+    adjSlow: 0.85,                                       // work beside an ACTIVE critical runs at this speed: codes pull the room
+    backlog: {easy:4, normal:6, hard:7},                 // the overnight leftovers already waiting at 07:00
+    upstairsEvery: [45,75],                              // sim-min range between upstairs bed offers
+    lwbsPenalty: 4, harmPenalty: 10,
+  };
+  const ACUITY_COLOR = {1:'#ff5a6a',2:'#ff9a5a',3:'#E8A838',4:'#8fd06c',5:'#4ecb8d'};
+  // Six resources. CT is the designed villain: one scanner, everyone's answer.
+  const RESOURCES = [
+    {id:'rn',   name:'Nurses',    cap:4},
+    {id:'prov', name:'Providers', cap:2},
+    {id:'tech', name:'Techs',     cap:2},
+    {id:'lab',  name:'Lab',       cap:3},
+    {id:'xray', name:'X-ray',     cap:1},
+    {id:'ct',   name:'CT',        cap:1},
+  ];
+  // Patient recipes: workflow SHAPES, not medicine. dur in sim minutes. admit = chance the
+  // disposition is admission (then the patient BOARDS in the bed until upstairs takes them).
+  const TYPES = [
+    {id:'flu',    label:'Flu symptoms',  acuity:5, patience:170, admit:0,   steps:[['rn',14,'Triage & vitals'],['prov',14,'Provider eval'],['rn',8,'Discharge teaching']]},
+    {id:'ankle',  label:'Ankle injury',  acuity:4, patience:200, admit:0,   steps:[['rn',16,'Triage & vitals'],['prov',12,'Provider eval'],['xray',22,'X-ray'],['rn',14,'Splint & teach']]},
+    {id:'lac',    label:'Laceration',    acuity:4, patience:190, admit:0,   steps:[['rn',14,'Triage & vitals'],['prov',30,'Repair at bedside'],['rn',8,'Wound teaching']]},
+    {id:'kid',    label:'Child w/ fever',acuity:4, patience:150, admit:0.1, steps:[['rn',16,'Triage & vitals'],['prov',16,'Provider eval'],['lab',24,'Labs'],['rn',10,'Antipyretics & recheck']]},
+    {id:'cp',     label:'Chest pain',    acuity:2, patience:240, admit:0.35,steps:[['rn',16,'Triage & vitals'],['tech',12,'ECG'],['prov',16,'Provider eval'],['lab',30,'Troponin & labs'],['prov',10,'Reassess & dispo']]},
+    {id:'abd',    label:'Abdominal pain',acuity:3, patience:250, admit:0.3, steps:[['rn',16,'Triage & vitals'],['prov',14,'Provider eval'],['lab',26,'Labs'],['ct',28,'CT abdomen'],['prov',10,'Reassess & dispo']]},
+    {id:'sob',    label:'Short of breath',acuity:3,patience:220, admit:0.5, steps:[['rn',16,'Triage & vitals'],['prov',14,'Provider eval'],['xray',18,'Chest X-ray'],['lab',24,'Labs'],['rn',16,'Neb & reassess']]},
+    {id:'elder',  label:'Weak & dizzy',  acuity:3, patience:260, admit:0.55,steps:[['rn',18,'Triage & vitals'],['prov',16,'Provider eval'],['lab',30,'Labs'],['ct',24,'CT head'],['prov',12,'Reassess & dispo']]},
+    {id:'stroke', label:'STROKE ALERT',  acuity:1, patience:60,  admit:1,   crit:true, steps:[['rn',8,'Immediate assess'],['prov',8,'Provider at bedside'],['ct',18,'STAT CT head'],['lab',18,'STAT labs'],['prov',10,'Stroke team dispo']]},
+    {id:'trauma', label:'TRAUMA',        acuity:1, patience:50,  admit:1,   crit:true, steps:[['rn',10,'Trauma bay setup'],['prov',22,'Trauma resus'],['ct',22,'Pan-scan CT'],['prov',8,'To the OR / ICU']]},
+  ];
+  const typeOf = id => TYPES.find(t=>t.id===id);
+  const CARDS = [
+    {id:'statlab', name:'STAT Labs',    n:2, target:'bed', desc:'This patient&rsquo;s lab work runs at four times speed, current or next lab step.'},
+    {id:'prict',   name:'Priority CT',  n:2, target:'bed', desc:'Front of the CT line and the scan runs twice as fast.'},
+    {id:'fast',    name:'Fast Track',   n:2, target:'bed', desc:'A low-acuity patient (level 4-5): every remaining step runs at double speed.'},
+    {id:'pull',    name:'Pull a Nurse', n:1, target:'now', desc:'One extra nurse on the floor for 90 minutes of shift time.'},
+    {id:'bedreq',  name:'Bed Request',  n:2, target:'now', desc:'Escalate upstairs: the longest-boarding admit moves up RIGHT NOW.'},
+    {id:'code',    name:'Rapid Response',n:1,target:'bed', desc:'Stabilize one deteriorating patient: their wait stops hurting and their care runs double speed for 60 minutes.'},
+  ];
+  const NAMES = ['Maria','James','Ruth','Deshawn','Elena','Walt','Priya','Sam','Dolores','Ty','Ana','Chuck','Nadia','Owen','Grace','Hector','Lily','Bo','Ivy','Ray','June','Cole','Faye','Max'];
+
+  let settings = { difficulty:'normal' };
+  try { const sv=JSON.parse(localStorage.getItem('er_settings')); if (sv) settings=Object.assign(settings,sv); } catch(e){}
+  const saveSettings=()=>{ try{ localStorage.setItem('er_settings', JSON.stringify(settings)); }catch(e){} };
+
+  let G=null, timer=null, sel=null, lastRender=0;
+  function initShift(){
+    G = {
+      t:0, over:false, paused:false, score:0, nextId:1,
+      beds:Array.from({length:CFG.beds[settings.difficulty]||9}, (_,i)=>({num:i+1, pt:null})),
+      waiting:[], done:[],
+      res:{}, pool:{}, extraRn:0, extraRnUntil:0,
+      cards:{}, cardLog:[],
+      upNext: 40+Math.random()*30, upQueue:[], feed:[], feedUid:1,
+      nextArrival: 8, scripted:[{at:250+Math.random()*80, type:'stroke'},{at:480+Math.random()*80, type:'trauma'}],
+      stats:{arrived:0, seen:0, dc:0, admit:0, lwbs:0, harm:0, crit:0, waitSum:0, waitN:0,
+             resBusy:{}, resQwait:{}, batch:0},
+      log:[],
+    };
+    RESOURCES.forEach(r=>{ G.res[r.id]={busy:[]}; G.stats.resBusy[r.id]=0; G.stats.resQwait[r.id]=0; });
+    CARDS.forEach(c=>{ G.cards[c.id]=c.n; });
+  }
+  const resCap = id => (RESOURCES.find(r=>r.id===id).cap) + (id==='rn' && G.t<G.extraRnUntil ? 1 : 0);
+  const fmtClock = t => { const m=Math.floor(t)%60, h=7+Math.floor(t/60); return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); };
+
+  function spawn(typeId){
+    const ty = typeId ? typeOf(typeId) : null;
+    const t = ty || (()=>{ const pool=['flu','flu','ankle','ankle','lac','kid','cp','cp','abd','abd','sob','elder','elder'];
+      return typeOf(pool[Math.floor(Math.random()*pool.length)]); })();
+    const p = { id:G.nextId++, name:NAMES[Math.floor(Math.random()*NAMES.length)]+', '+(t.crit?55+Math.floor(Math.random()*30):18+Math.floor(Math.random()*70)),
+      type:t.id, acuity:t.acuity, crit:!!t.crit, patience:t.patience, maxPatience:t.patience,
+      admit: Math.random()<t.admit, stepIdx:0, prog:0, claimed:null, boarding:false, arrivedAt:G.t, beddedAt:null,
+      fastUntil:0, statLab:false, priCt:false, coded:false };
+    G.waiting.push(p); G.stats.arrived++;
+    if (p.crit){ G.stats.crit++; G.log.push(fmtClock(G.t)+' '+t.label+' arrives'); hint(t.label+' in the waiting room. Bed them NOW.'); }
+    return p;
+  }
+  const stepOf = p => typeOf(p.type).steps[p.stepIdx] || null;
+  // An ACTIVE critical (acuity 1, still in workup) disturbs the beds beside it: staff and space
+  // get pulled toward the crisis. Corner beds have one neighbor; that is the placement game.
+  function crisisNear(p){
+    const b=G.beds.find(x=>x.pt===p); if (!b) return false;
+    return G.beds.some(o=> o.pt && o.pt!==p && Math.abs(o.num-b.num)===1 && o.pt.acuity===1 && !o.pt.boarding && stepOf(o.pt));
+  }
+  function queueFor(resId){
+    const q=[];
+    G.beds.forEach(b=>{ const p=b.pt; if(!p||p.boarding||p.claimed) return; const s=stepOf(p); if (s && s[0]===resId) q.push(p); });
+    q.sort((a,b)=> a.acuity-b.acuity || a.beddedAt-b.beddedAt);
+    return q;
+  }
+  // ── THE TICK: dt in sim minutes. Everything the shift does, it does here. ──
+  function tick(dt){
+    if (!G || G.over || G.paused) return;
+    G.t += dt;
+    // arrivals: the day ramps, the last half hour lets you clear the board
+    if (G.t < CFG.shiftMin-30){
+      G.scripted = G.scripted.filter(s=>{ if (G.t>=s.at){ spawn(s.type); return false; } return true; });
+      G.nextArrival -= dt;
+      if (G.nextArrival<=0){
+        spawn();
+        const base = G.t<120 ? 13 : G.t<360 ? 9 : G.t<600 ? 7 : 12;
+        G.nextArrival = (base + Math.random()*base*0.6) * (CFG.arrivalMult[settings.difficulty]||1);
+        if (settings.difficulty==='hard' && G.t>300 && Math.random()<0.06) spawn(Math.random()<0.5?'stroke':'trauma');
+      }
+    }
+    // waiting room pressure: patience drains; criticals deteriorate into harm instead of leaving
+    G.waiting.forEach(p=>{ p.patience -= dt * (p.crit?1.4:1); });
+    G.waiting = G.waiting.filter(p=>{
+      if (p.patience>0) return true;
+      if (p.crit && !p.harmed){ p.harmed=true; p.patience=25; G.stats.harm++; G.score-=CFG.harmPenalty;
+        G.log.push(fmtClock(G.t)+' '+typeOf(p.type).label+' deteriorating in the waiting room'); hint('A critical patient is deteriorating unbedded. That costs.'); return true; }
+      if (p.crit) return true;                                     // criticals never walk out; they just get worse
+      G.stats.lwbs++; G.score-=CFG.lwbsPenalty;
+      G.log.push(fmtClock(G.t)+' '+p.name.split(',')[0]+' left without being seen');
+      return false;
+    });
+    // resources: run claimed work, then hand free units to the queues (acuity first, then wait)
+    RESOURCES.forEach(r=>{
+      const R=G.res[r.id];
+      R.busy = R.busy.filter(job=>{
+        const near = crisisNear(job.p);
+        job.left -= dt * job.speed * (near?CFG.adjSlow:1);
+        if (near) G.stats.slowed = (G.stats.slowed||0) + dt;
+        G.stats.resBusy[r.id] += dt;
+        if (job.left>0) return true;
+        const p=job.p; p.claimed=null; p.stepIdx++; p.prog=0;
+        advance(p);
+        return false;
+      });
+      let free = resCap(r.id) - R.busy.length;
+      const q = queueFor(r.id);
+      G.stats.resQwait[r.id] += Math.max(0, q.length-free) * dt;
+      let prev=null;
+      while (free>0 && q.length){
+        // Priority CT jumps the line; otherwise the sorted queue stands
+        let idx = 0;
+        if (r.id==='ct'){ const j=q.findIndex(p=>p.priCt); if (j>-1) idx=j; }
+        const p=q.splice(idx,1)[0];
+        const s=stepOf(p); if (!s) continue;
+        let speed=1;
+        if (p.fastUntil>G.t || (p.codedUntil||0)>G.t) speed*=2;
+        if (r.id==='lab' && p.statLab){ speed*=4; p.statLab=false; }
+        if (r.id==='ct' && p.priCt){ speed*=2; p.priCt=false; }
+        // batching: a unit picking up the SAME step right behind a same-step patient runs it faster
+        const same = q.some(o=>o.type===p.type && stepOf(o) && stepOf(o)[2]===s[2]);
+        let dur = s[1] * (same?CFG.batchBonus:1);
+        if (same) G.stats.batch++;
+        p.claimed=r.id;
+        R.busy.push({p, left:dur, speed, batched:same});
+        free--; prev=p;
+      }
+    });
+    // upstairs: a bed opens on its own schedule; the longest boarder goes up
+    G.upNext -= dt;
+    if (G.upNext<=0){
+      G.upNext = CFG.upstairsEvery[0] + Math.random()*(CFG.upstairsEvery[1]-CFG.upstairsEvery[0]);
+      releaseBoarder();
+    }
+    if (G.t>=CFG.shiftMin){ endShift(); return; }
+  }
+  function advance(p){
+    const s=stepOf(p);
+    if (s) return;                                                 // more work: the queues will claim it
+    // recipe complete: disposition
+    if (p.admit && !p.boarding){ p.boarding=true; p.boardedAt=G.t; G.upQueue.push(p); return; }
+    finishPatient(p, 'dc');
+  }
+  function releaseBoarder(force){
+    G.upQueue.sort((a,b)=>a.boardedAt-b.boardedAt);
+    const p=G.upQueue.shift();
+    if (!p) return false;
+    finishPatient(p, 'admit');
+    return true;
+  }
+  function finishPatient(p, how){
+    const b=G.beds.find(b=>b.pt===p); if (b) b.pt=null;
+    G.upQueue=G.upQueue.filter(x=>x!==p);
+    G.done.push(p);
+    const pts={1:12,2:8,3:5,4:3,5:2}[p.acuity]||2;
+    const gain = pts + (how==='admit'?2:0);
+    G.score += gain;
+    if (how==='dc') G.stats.dc++; else G.stats.admit++;
+    // a moment of credit: the disposition feed. Rendered once per event (uid-keyed), fades on its own.
+    G.feed.push({uid:G.feedUid++, name:p.name.split(',')[0], how, gain, crit:p.crit});
+  }
+  // ── PLAYER VERBS ──────────────────────────────────────────────────────
+  function placePatient(pid, bedNum){
+    const p=G.waiting.find(x=>x.id===pid); const b=G.beds.find(x=>x.num===bedNum);
+    if (!p||!b||b.pt) return false;
+    G.waiting=G.waiting.filter(x=>x!==p);
+    b.pt=p; p.beddedAt=G.t; p.harmed=false;
+    G.stats.seen++; G.stats.waitSum += (G.t-p.arrivedAt); G.stats.waitN++;
+    return true;
+  }
+  function playCard(cardId, pid){
+    if (!G.cards[cardId]) return false;
+    const card=CARDS.find(c=>c.id===cardId);
+    const bedded = pid!=null ? G.beds.map(b=>b.pt).find(p=>p&&p.id===pid) : null;
+    const qlen = id => queueFor(id).length + G.res[id].busy.length - Math.min(G.res[id].busy.length, resCap(id));
+    let ok=false, note='';
+    if (cardId==='statlab' && bedded){ bedded.statLab=true; ok=true; note=queueFor('lab').length>=2?'good':'quiet'; }
+    else if (cardId==='prict' && bedded){ bedded.priCt=true; ok=true; note=queueFor('ct').length>=2?'good':'quiet'; }
+    else if (cardId==='fast' && bedded && bedded.acuity>=4){ bedded.fastUntil=G.t+999; ok=true; note='good'; }
+    else if (cardId==='pull'){ G.extraRnUntil=G.t+90; ok=true; note=queueFor('rn').length>=2?'good':'quiet'; }
+    else if (cardId==='bedreq'){ ok=releaseBoarder(true); note=ok&&G.upQueue.length>=1?'good':(ok?'quiet':''); }
+    else if (cardId==='code' && bedded){ bedded.codedUntil=G.t+60; bedded.patience=bedded.maxPatience; ok=true; note=bedded.crit?'good':'quiet'; }
+    if (!ok) return false;
+    G.cards[cardId]--;
+    G.cardLog.push({card:card.name, at:G.t, note});
+    G.log.push(fmtClock(G.t)+' Charge card: '+card.name+(note==='quiet'?' (quiet moment)':''));
+    return true;
+  }
+  // ── SCORE + POSTMORTEM ────────────────────────────────────────────────
+  function report(){
+    const st=G.stats, shift=Math.min(G.t, CFG.shiftMin);
+    const util={}; RESOURCES.forEach(r=>{ util[r.id]=Math.round(100*st.resBusy[r.id]/(shift*RESOURCES.find(x=>x.id===r.id).cap)); });
+    const bottle=RESOURCES.map(r=>({r, w:st.resQwait[r.id]})).sort((a,b)=>b.w-a.w);
+    const goodCards=G.cardLog.filter(c=>c.note==='good').length, quietCards=G.cardLog.filter(c=>c.note==='quiet').length;
+    const avgWait= st.waitN? Math.round(st.waitSum/st.waitN):0;
+    const raw=G.score + goodCards*2;
+    const final=clamp(Math.round(raw), 0, 100+raw);
+    const grade= raw>=190?'A':raw>=150?'B':raw>=110?'C':raw>=70?'D':'F';
+    return {seen:st.seen, arrived:st.arrived, dc:st.dc, admit:st.admit, lwbs:st.lwbs, harm:st.harm, crit:st.crit,
+      avgWait, util, bottle1:bottle[0], bottle2:bottle[1], batch:st.batch, goodCards, quietCards, raw, final, grade,
+      boarding:G.upQueue.length};
+  }
+  function endShift(){
+    G.over=true; if (timer){ clearInterval(timer); timer=null; }
+    const d=report();
+    const tal=(l,v,cls)=>`<div class="${cls||''}">${l}<b>${v>0&&cls==='pos'?'+':''}${v}</b></div>`;
+    $('er-overlay').innerHTML=`<div class="er-modal"><h2>SHIFT COMPLETE <span class="er-grade" style="color:${{A:'#4ecb8d',B:'#8fd06c',C:'#E8A838',D:'#ff9a5a',F:'#ff5a6a'}[d.grade]}">${d.grade}</span></h2>
+      <div class="mo-sub">Twelve hours on the board. Here is what the department did, and why.</div>
+      <div class="er-tally">
+        ${tal('Patients seen', d.seen, 'pos')}
+        ${tal('Discharged', d.dc, 'pos')}
+        ${tal('Admitted upstairs', d.admit, 'pos')}
+        ${tal('Critical patients handled', d.crit-d.harm, 'pos')}
+        ${tal('Left without being seen', -d.lwbs*CFG.lwbsPenalty, d.lwbs?'neg':'')}
+        ${tal('Deterioration events', -d.harm*CFG.harmPenalty, d.harm?'neg':'')}
+        ${tal('Well-timed charge cards', d.goodCards*2, d.goodCards?'pos':'')}
+        <div>FINAL SCORE<b>${d.raw}</b></div>
+      </div>
+      <div class="er-pm">
+        <div class="pm-h">The bottleneck</div>
+        <b>${d.bottle1.r.name}</b> was your primary constraint (${Math.round(d.bottle1.w)} patient-minutes spent waiting on it), with ${d.bottle2.r.name} second. ${d.util[d.bottle1.r.id]>=90?'It ran essentially saturated; nothing you staffed elsewhere could buy throughput past it.':'It clogged in bursts; spreading the load or spending a priority card there paid.'}
+        <div class="pm-h">Flow</div>
+        Average door-to-bed wait ran <b>${d.avgWait} minutes</b>. ${d.lwbs?`<b>${d.lwbs}</b> ${d.lwbs===1?'person':'people'} gave up and walked out; each was a patient the department never got credit for.`:'Nobody walked out. The waiting room believed the board was moving.'} ${d.boarding?`<b>${d.boarding}</b> admitted patient${d.boarding===1?' was':'s were'} still boarding in ED beds at shift end; every one was a bed the next patient could not have.`:''}
+        ${G.stats.slowed>1?`<div class="pm-h">Crisis drag</div>
+        <b>${Math.round(G.stats.slowed)}</b> patient-minutes ran slow in beds NEXT TO an active critical. Codes pull the room. Corner beds have one neighbor; that is what they are for.`:''}
+        <div class="pm-h">Batching</div>
+        ${d.batch? `Your placement created <b>${d.batch}</b> batched steps: same work, back to back, done faster. That is the grouping bonus working.` : 'No batched steps this shift: similar patients never landed near each other in time. Grouping look-alikes is free speed, when the queue can take it.'}
+        <div class="pm-h">Charge cards</div>
+        ${G.cardLog.length? `You played ${G.cardLog.length}: ${d.goodCards} into real pressure, ${d.quietCards} into quiet moments${d.quietCards?' (the card you spend at a calm minute is the card you will want in the storm)':''}.` : 'You never played a card. They do not carry over to the next shift.'}
+        <div class="pm-h">Utilization</div>
+        ${RESOURCES.map(r=>`${r.name} ${d.util[r.id]}%`).join(' &middot; ')}
+      </div>
+      <button class="er-go" data-act="restart">Run another shift &#9656;</button></div>`;
+    $('er-overlay').hidden=false;
+  }
+  // ── UI ────────────────────────────────────────────────────────────────
+  let hintUntil=0;
+  function hint(m){ const h=$('er-hint'); if(h){ h.textContent=m; hintUntil=Date.now()+4000; } }
+  function acuBadge(p){ return `<span class="p-a" style="color:${ACUITY_COLOR[p.acuity]};border:1px solid ${ACUITY_COLOR[p.acuity]}">A${p.acuity}</span>`; }
+  function render(){
+    if (!G) return;
+    if (drag && drag.active) return;                     // the board holds still under a live drag
+    const clock=$('er-clock'); clock.textContent=G.over?'19:00':fmtClock(G.t); clock.classList.toggle('late', G.t>560);
+    $('er-score').textContent=G.score;
+    $('er-pausebtn').textContent=G.paused?'Resume':'Pause';
+    if (Date.now()>hintUntil && $('er-hint').textContent) $('er-hint').textContent='';
+    $('er-waitcount').textContent=G.waiting.length+' waiting';
+    // triage order for the eye: criticals first, then sickest, then longest-waiting. Placement is
+    // by id so this is purely who you SEE first, which is what triage is.
+    const triaged=[...G.waiting].sort((a,b)=> (b.crit-a.crit) || (a.acuity-b.acuity) || (a.patience-b.patience));
+    $('er-wait').innerHTML = triaged.map(p=>{
+      const w=clamp(p.patience/p.maxPatience,0,1);
+      return `<button class="er-pt${sel&&sel.kind==='pt'&&sel.id===p.id?' sel':''}${p.crit?' crit':''}" data-act="pt" data-id="${p.id}">
+        ${acuBadge(p)}<div class="p-n">${p.name}</div><div class="p-c">${typeOf(p.type).label}</div>
+        <div class="p-wait"><span style="width:${Math.round(w*100)}%;background:${w>0.5?'#4ecb8d':w>0.25?'#E8A838':'#ff5a6a'}"></span></div></button>`;
+    }).join('') || '<div style="color:var(--t3);font-size:12px;align-self:center">Empty. Enjoy it while it lasts.</div>';
+    const placing = sel && sel.kind==='pt';
+    $('er-beds').innerHTML = G.beds.map(b=>{
+      if (!b.pt) return `<button class="er-bed empty${placing?' target':''}" data-act="bed" data-num="${b.num}"><span class="b-num">BED ${String(b.num).padStart(2,'0')}</span><div class="b-open">${placing?'Place here':'open'}</div></button>`;
+      const p=b.pt, ty=typeOf(p.type), s=stepOf(p);
+      const stepTxt = p.boarding ? `<span class="b-step q">Boarding &middot; awaiting upstairs bed</span>`
+        : s ? `<span class="b-step${p.claimed?'':' q'}">${p.claimed?s[2]:'Waiting: '+s[2]+' ('+RESOURCES.find(r=>r.id===s[0]).name+')'}</span>` : '';
+      const job = p.claimed ? G.res[p.claimed].busy.find(j=>j.p===p) : null;
+      const pctDone = job&&s ? Math.round(100*(1-job.left/s[1])) : 0;
+      const next = !p.boarding && typeOf(p.type).steps[p.stepIdx+1] ? `<div class="b-next">then: ${typeOf(p.type).steps.slice(p.stepIdx+1).map(x=>x[2]).join(' &rarr; ')}${p.admit?' &rarr; ADMIT':''}</div>` : (p.admit&&!p.boarding?'<div class="b-next">then: ADMIT</div>':'');
+      const near = crisisNear(p);
+      return `<button class="er-bed${p.crit?' crit':''}${p.boarding?' board':''}" data-act="bedpt" data-id="${p.id}">
+        <span class="b-num">BED ${String(b.num).padStart(2,'0')}</span>${acuBadge(p)}
+        <div class="p-n">${p.name}</div><div class="p-c">${ty.label}${(p.fastUntil>G.t)?' &middot; FAST':''}${(p.codedUntil||0)>G.t?' &middot; RRT':''}${job&&job.batched?' <span style="color:#4ecb8d">&middot; batched</span>':''}${near?' <span style="color:#ff9a5a">&middot; slowed: crisis next door</span>':''}</div>
+        ${stepTxt}${job?`<div class="b-bar"><span style="width:${pctDone}%"></span></div>`:''}${next}</button>`;
+    }).join('');
+    $('er-res').innerHTML = RESOURCES.map(r=>{
+      const busy=G.res[r.id].busy.length, cap=resCap(r.id), q=queueFor(r.id).length;
+      return `<div class="er-res"><span>${r.name}${r.id==='rn'&&G.t<G.extraRnUntil?' +1':''}</span>
+        <span class="r-pips">${'&#9679;'.repeat(busy)}<span style="color:var(--t3)">${'&#9675;'.repeat(Math.max(0,cap-busy))}</span></span>
+        <span class="r-q${q>=2?' hot':''}">${q?q+' waiting':''}</span></div>`;
+    }).join('');
+    $('er-cards').innerHTML = CARDS.map(c=>`<button class="er-card${sel&&sel.kind==='card'&&sel.id===c.id?' sel':''}" data-act="card" data-id="${c.id}" ${G.cards[c.id]?'':'disabled'} data-def="${c.desc}"><span class="c-n">${c.name}</span><span class="c-ct">&times;${G.cards[c.id]}</span></button>`).join('');
+    $('er-up').innerHTML = `${G.upQueue.length? `<b>${G.upQueue.length}</b> admitted, boarding in ED beds.` : 'No one boarding.'}<br>Next upstairs bed in about <b>${Math.max(0,Math.round(G.upNext))}</b> min.`;
+    renderFeed();
+  }
+  // Disposition toasts: append each new event ONCE (uid-keyed) so its CSS fade runs uninterrupted
+  // by the 5-per-second render loop, then drain the queue. The DOM node removes itself.
+  function renderFeed(){
+    const box=$('er-feed'); if (!box || !box.appendChild || !G.feed.length) return;
+    G.feed.forEach(f=>{
+      const el=document.createElement('div');
+      el.className='fd'+(f.how==='admit'?' admit':'')+(f.crit?' crit':'');
+      el.innerHTML=`${f.name} ${f.how==='admit'?'admitted &uarr;':'discharged'} <b>+${f.gain}</b>`;
+      box.appendChild(el);
+      setTimeout(()=>{ if (el.parentNode) el.parentNode.removeChild(el); }, 3000);
+    });
+    G.feed=[];
+  }
+  function openStartMenu(){
+    const seg=['easy','normal','hard'].map(k=>`<button data-act="diff" data-key="${k}" class="${settings.difficulty===k?'on':''}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('');
+    $('er-overlay').innerHTML=`<div class="er-modal"><h2>ER Charge Nurse</h2>
+      <div class="mo-sub">A 12-hour shift in 12 real minutes, and night shift left you a FULL lobby. You are not at the bedside; you run the BOARD. Drag a waiting patient onto an open bed (tapping one then the other works too) and the department does the work, IF the right resource is free. Watch the queues on the right: that is where shifts are won. Criticals flash red, cannot wait, and slow down the beds NEXT to them, so corner beds are a decision. Your six charge cards bend the rules; they do not come back. The clock starts when you do, and pausing stops the board too.</div>
+      <div class="er-seg">${seg}</div>
+      <div class="mo-sub" style="margin-top:10px;font-size:11.5px;color:var(--t3)">${{easy:'10 beds, gentler arrivals.',normal:'9 beds, the intended shift.',hard:'8 beds, the waiting room does not care about your feelings.'}[settings.difficulty]}</div>
+      <button class="er-go" data-act="start">Clock in &#9656;</button></div>`;
+    $('er-overlay').hidden=false;
+  }
+  // ── DRAG: pick a waiting patient up and drop them on a bed. Pointer-based so mouse and touch
+  // both work; on touch a VERTICAL pull starts the drag (horizontal still scrolls the strip);
+  // taps remain the full fallback. While a drag is live the board render freezes so the card
+  // under the pointer cannot be re-created mid-gesture.
+  let drag=null, swallowClick=false;
+  function makeGhost(p){
+    const g=document.createElement('div'); g.className='er-ghost';
+    g.innerHTML=`<b style="color:${ACUITY_COLOR[p.acuity]}">A${p.acuity}</b> ${p.name} &middot; ${typeOf(p.type).label}`;
+    document.body.appendChild(g); return g;
+  }
+  $('er').addEventListener('pointerdown', e=>{
+    if (!G || G.over || G.paused) return;
+    const t=e.target.closest('[data-act="pt"]'); if (!t) return;
+    drag={id:+t.dataset.id, x0:e.clientX, y0:e.clientY, active:false, el:t, mouse:e.pointerType==='mouse'};
+  });
+  window.addEventListener('pointermove', e=>{
+    if (!drag) return;
+    const dx=e.clientX-drag.x0, dy=e.clientY-drag.y0;
+    if (!drag.active){
+      const start = drag.mouse ? Math.hypot(dx,dy)>6 : (Math.abs(dy)>10 && Math.abs(dy)>Math.abs(dx));
+      if (!start){ if (!drag.mouse && Math.abs(dx)>14) drag=null; return; }   // touch going sideways = scrolling the strip
+      const p=G && G.waiting.find(x=>x.id===drag.id); if (!p){ drag=null; return; }
+      drag.active=true; sel=null;
+      try{ drag.el.setPointerCapture(e.pointerId); }catch(_){}
+      drag.ghost=makeGhost(p);
+      document.querySelectorAll('.er-bed.empty').forEach(b=>b.classList.add('target'));
+    }
+    drag.ghost.style.left=(e.clientX+12)+'px'; drag.ghost.style.top=(e.clientY-16)+'px';
+    document.querySelectorAll('.er-bed.over').forEach(b=>b.classList.remove('over'));
+    const under=document.elementFromPoint(e.clientX, e.clientY);
+    const bed=under && under.closest('.er-bed.empty');
+    if (bed) bed.classList.add('over');
+    if (e.cancelable) e.preventDefault();
+  }, {passive:false});
+  function endDrag(e, drop){
+    if (!drag) return;
+    if (drag.active){
+      if (drop){
+        const under=document.elementFromPoint(e.clientX, e.clientY);
+        const bed=under && under.closest('.er-bed.empty');
+        if (bed && G && !G.over && !G.paused) placePatient(drag.id, +bed.dataset.num);
+      }
+      if (drag.ghost) drag.ghost.remove();
+      swallowClick=true; setTimeout(()=>{ swallowClick=false; }, 0);
+      render();
+    }
+    drag=null;
+  }
+  window.addEventListener('pointerup', e=>endDrag(e, true));
+  window.addEventListener('pointercancel', e=>endDrag(e, false));
+
+  // ── WIRING ────────────────────────────────────────────────────────────
+  $('er').addEventListener('click', e=>{
+    if (swallowClick) return;
+    const t=e.target.closest('[data-act]'); if (!t) { sel=null; render(); return; }
+    const act=t.dataset.act;
+    if (G && !G.over && G.paused && ['pt','bed','card','bedpt'].includes(act)){ hint('The clock is stopped. So is the board.'); return; }
+    if (act==='diff'){ settings.difficulty=t.dataset.key; saveSettings(); openStartMenu(); return; }
+    if (act==='start'){ saveSettings(); startShift(); return; }
+    if (act==='restart'){ $('er-overlay').hidden=true; openStartMenu(); return; }
+    if (act==='pause'){ if (G&&!G.over){ G.paused=!G.paused; render(); } return; }
+    if (!G||G.over) return;
+    if (act==='pt'){ sel = (sel&&sel.kind==='pt'&&sel.id===+t.dataset.id) ? null : {kind:'pt', id:+t.dataset.id}; render(); return; }
+    if (act==='bed'){
+      if (sel&&sel.kind==='pt'){ if (placePatient(sel.id, +t.dataset.num)) sel=null; render(); }
+      return;
+    }
+    if (act==='card'){
+      const c=CARDS.find(x=>x.id===t.dataset.id); if (!c||!G.cards[c.id]) return;
+      if (c.target==='now'){ if (playCard(c.id)) hint(c.name+' played.'); else hint('Nothing for that card to do right now.'); sel=null; render(); return; }
+      sel = (sel&&sel.kind==='card'&&sel.id===c.id) ? null : {kind:'card', id:c.id};
+      if (sel) hint(c.name+': tap a patient in a bed.');
+      render(); return;
+    }
+    if (act==='bedpt'){
+      if (sel&&sel.kind==='card'){
+        if (playCard(sel.id, +t.dataset.id)) hint('Played.'); else hint('That card does not fit this patient.');
+        sel=null; render();
+      }
+      return;
+    }
+  });
+  // Desktop tooltips for anything carrying a [data-def] (the charge cards explain themselves).
+  $('er').addEventListener('mouseover', e=>{
+    const t=e.target.closest('[data-def]'); const dt=$('er-deftip');
+    if (!t){ dt.hidden=true; return; }
+    dt.innerHTML=t.dataset.def; dt.hidden=false;
+    const r=t.getBoundingClientRect(); let x=r.left-250, y=r.top;
+    if (x<8) x=r.right+10;
+    dt.style.left=Math.max(8,x)+'px'; dt.style.top=Math.min(y, window.innerHeight-120)+'px';
+  });
+  $('er').addEventListener('mouseout', e=>{ if(e.target.closest('[data-def]')) $('er-deftip').hidden=true; });
+  // 07:00 inherits the night shift's leftovers: a full waiting room, some of them already
+  // halfway through their patience. Day shift starts behind. It always does.
+  function seedBacklog(){
+    const mix=['flu','ankle','cp','lac','abd','sob','elder','kid'];
+    const n = CFG.backlog[settings.difficulty]||6;
+    for (let i=0;i<n;i++){
+      const p = spawn(mix[i%mix.length]);
+      const waited = p.maxPatience*(0.15+Math.random()*0.35);
+      p.patience -= waited; p.arrivedAt = -waited;
+    }
+  }
+  function startShift(){
+    initShift();
+    $('er-overlay').hidden=true; $('er-overlay').innerHTML='';
+    seedBacklog();
+    if (timer) clearInterval(timer);
+    timer = setInterval(()=>{ tick(CFG.tickMs/1000 * CFG.simPerSec); render(); }, CFG.tickMs);
+    render();
+    hint('Night shift left you a full lobby. Drag a patient onto a bed (tapping works too).');
+  }
+  openStartMenu();
+
+  if (typeof window!=='undefined' && window.__UG_TEST){ window.__er={ get G(){return G;}, get settings(){return settings;}, get sel(){return sel;},
+    CFG, TYPES, RESOURCES, CARDS, typeOf, stepOf, queueFor, resCap,
+    initShift, spawn, tick, placePatient, playCard, releaseBoarder, report, endShift, render, startShift, openStartMenu, fmtClock, seedBacklog, crisisNear }; }
+})();
+</script>
+{% endraw %}

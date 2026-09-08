@@ -1,0 +1,765 @@
+---
+layout: base.njk
+title: "Uncharted Regional"
+description: "A health system strategy game. One region, three hospitals, every tradeoff. The sequel lens to Uncharted General: the hospital becomes a card."
+noindex: true
+no_footer: true
+eleventyExcludeFromCollections: true
+---
+{% raw %}
+<style>
+#hs{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; --acc:#6aadff; }
+#hs .hs-panel,#hs .hs-kpi{box-shadow:0 3px 14px rgba(0,0,0,.45)}
+.hs-wrap{max-width:1280px;margin:0 auto;padding:28px 24px 80px;font-family:var(--font)}
+.hs-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none;margin-bottom:6px}
+.hs-back:hover{color:var(--acc)}
+.hs-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.hs-titles h1{font-family:var(--display);font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1.04}
+.hs-titles h1 em{font-style:normal;color:var(--acc)}
+.hs-titles p{font-size:13px;color:var(--t3);margin-top:6px;font-family:var(--mono)}
+.hs-kpis{display:flex;gap:10px;flex-wrap:wrap}
+.hs-kpi{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:10px 16px;min-width:104px}
+.hs-kpi .k-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.hs-kpi .k-val{font-family:var(--display);font-weight:800;font-size:20px;margin-top:2px}
+.hs-kpi.good .k-val{color:#4ecb8d}.hs-kpi.warn .k-val{color:var(--amber)}.hs-kpi.bad .k-val{color:#ff7a7a}
+.hs-mission{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:14px;margin-bottom:16px}
+@media (max-width:760px){.hs-mission{grid-template-columns:1fr}}
+.hs-obj{background:linear-gradient(135deg,rgba(106,173,255,.14),rgba(106,173,255,.05));border:1px solid rgba(106,173,255,.4);border-left:3px solid var(--acc);border-radius:12px;padding:16px 18px}
+.hs-obj .m-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:8px}
+.hs-obj .m-goal{font-family:var(--display);font-weight:700;font-size:17px;line-height:1.45}
+.hs-obj .m-note{font-size:11.5px;color:var(--t3);margin-top:9px;line-height:1.5}
+.hs-brief{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.hs-brief .brief-h{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.hs-event{display:flex;gap:12px;border:1px solid rgba(232,168,56,.4);border-radius:10px;padding:11px 13px;background:rgba(232,168,56,.06)}
+.hs-event.calm{border-color:var(--border);background:transparent}
+.hs-event .e-tag{flex:none;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(232,168,56,.5);border-radius:5px;padding:2px 7px;height:fit-content}
+.hs-event.calm .e-tag{color:var(--t3);border-color:var(--border2)}
+.hs-event .e-body strong{font-size:13.5px}
+.hs-event .e-body p{font-size:12px;color:var(--t2);line-height:1.55;margin-top:3px}
+.hs-fc{margin-top:12px;border:1px solid var(--border);border-radius:10px;padding:11px 13px;background:rgba(106,173,255,.05)}
+.hs-fc .fc-h{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:7px}
+.hs-fc .fc-row{display:flex;gap:8px;font-size:11.5px;line-height:1.55;color:var(--t2);margin-bottom:6px;align-items:baseline}
+.hs-fc .fc-row:last-child{margin-bottom:0}
+.hs-fc .fc-tag{flex:none;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid var(--border2);border-radius:5px;padding:2px 6px}
+.hs-fc .calm{color:var(--t3)}
+.hs-main{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.hs-main{grid-template-columns:1fr}}
+.hs-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}
+@media (max-width:900px){.hs-side{position:static}}
+.hs-run{width:100%;padding:16px;border:none;border-radius:11px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.02em;color:#04101f;background:linear-gradient(135deg,#6aadff,#3d7fd6);cursor:pointer;transition:all .15s;box-shadow:0 6px 18px rgba(61,127,214,.3)}
+.hs-run:hover{transform:translateY(-1px)}
+#hs-runhint{margin-top:10px;font-size:12px;color:var(--amber);text-align:center;line-height:1.5}
+#hs-runhint[hidden]{display:none}
+.hs-save{width:100%;min-height:44px;padding:11px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:12px;font-family:var(--font);cursor:pointer}
+.hs-save:hover{border-color:var(--acc);color:var(--acc)}
+.hs-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.hs-panel h3{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.hs-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--t2);margin-bottom:7px;gap:8px}
+.hs-row b{font-family:var(--mono);color:var(--t1)}
+.hs-row b.pos{color:#4ecb8d}.hs-row b.neg{color:#ff7a7a}
+.hs-div{height:1px;background:var(--border);margin:11px 0}
+.hs-hint{font-size:11px;color:var(--t3);margin-top:10px;line-height:1.5}
+.hs-svc{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;margin-top:8px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--t2);font-size:12px;font-family:var(--font);cursor:pointer;text-align:left}
+.hs-svc:hover{border-color:var(--acc)}
+.hs-svc.on{border-color:var(--acc);background:rgba(106,173,255,.08)}
+.hs-svc .sv-n{font-weight:600;color:var(--t1)}
+.hs-svc .sv-c{font-family:var(--mono);font-size:10px;color:var(--t3)}
+.hs-svc.on .sv-c{color:var(--acc)}
+.hs-zones{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+@media (max-width:760px){.hs-zones{grid-template-columns:1fr}}
+.hs-zone{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 15px}
+.hs-zone .z-n{font-family:var(--display);font-weight:700;font-size:14px}
+.hs-zone .z-s{font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:4px;line-height:1.7}
+.hs-zone .z-trust{display:flex;height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden}
+.hs-zone .z-trust span{display:block;height:100%}
+.hs-facs{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.hs-fac{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+.hs-fac .f-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px}
+.hs-fac .f-n{font-family:var(--display);font-weight:800;font-size:16px}
+.hs-fac .f-z{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.hs-fac .f-net{font-family:var(--mono);font-size:11px;margin-bottom:10px}
+.hs-staff{display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px}
+.hs-staff .s-l{font-size:12px;color:var(--t2)}
+.hs-step{display:flex;align-items:center;gap:7px}
+.hs-step button{width:32px;height:32px;border-radius:7px;border:1px solid var(--border);background:var(--raised);color:var(--t1);font-size:16px;cursor:pointer}
+.hs-step button:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+.hs-step button:disabled{opacity:.3;cursor:not-allowed}
+.hs-step .s-num{font-family:var(--mono);font-weight:600;min-width:24px;text-align:center}
+.hs-strain{margin:6px 0 10px}
+.hs-strain .st-h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.hs-strain .st-bar{display:flex;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.hs-strain .st-bar span{display:block;height:100%}
+.hs-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.05)}
+.hs-line .l-n{font-size:12.5px;color:var(--t1)}
+.hs-line .l-pips{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px}
+.hs-line .l-s{font-family:var(--mono);font-size:10px;color:var(--t3)}
+.hs-line .l-acts{display:flex;gap:5px}
+.hs-line .l-acts button{min-height:32px;padding:4px 9px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:10.5px;cursor:pointer;font-family:var(--mono)}
+.hs-line .l-acts button:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+.hs-line .l-acts button:disabled{opacity:.35;cursor:not-allowed}
+.hs-line .l-acts .x:hover:not(:disabled){border-color:#df5752;color:#df5752}
+.hs-addline{width:100%;min-height:40px;margin-top:9px;padding:8px;border-radius:8px;border:1px dashed var(--border2);background:transparent;color:var(--t3);font-size:11.5px;cursor:pointer;font-family:var(--mono)}
+.hs-addline:hover{border-color:var(--acc);color:var(--acc)}
+.hs-overlay{position:fixed;inset:0;z-index:200;background:rgba(2,8,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px}
+.hs-overlay[hidden]{display:none}
+.hs-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:720px;width:100%;max-height:88vh;overflow-y:auto;padding:30px}
+.hs-modal h2{font-family:var(--display);font-weight:800;font-size:24px;margin-bottom:8px}
+.hs-modal h2.win{color:var(--acc)}.hs-modal h2.lose{color:#ff7a7a}
+.hs-modal .mo-sub{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:14px}
+.hs-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:14px 0}
+.hs-result{background:var(--raised);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.hs-result .r-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.hs-result .r-val{font-family:var(--display);font-weight:800;font-size:17px;margin-top:3px}
+.hs-result .r-val.pos{color:#4ecb8d}.hs-result .r-val.neg{color:#ff7a7a}
+.hs-choice{display:block;width:100%;text-align:left;margin-top:10px;padding:13px 15px;border-radius:10px;border:1px solid var(--border2);background:var(--raised);color:var(--t2);cursor:pointer;font-family:var(--font)}
+.hs-choice:hover:not(:disabled){border-color:var(--acc)}
+.hs-choice .ch-l{font-weight:700;color:var(--t1);font-size:13.5px}
+.hs-choice .ch-d{font-size:12px;line-height:1.5;margin-top:3px}
+.hs-choice .ch-e{font-family:var(--mono);font-size:10px;color:var(--acc);margin-top:5px}
+.hs-end-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.hs-peek{flex:1;min-height:44px;padding:12px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--t2);cursor:pointer;font-family:var(--font)}
+.hs-restart{flex:1;min-height:44px;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#6aadff,#3d7fd6);color:#04101f;font-weight:700;cursor:pointer;font-family:var(--display)}
+.hs-seg{display:flex;gap:8px;flex-wrap:wrap}
+.hs-seg button{flex:1;min-width:70px;min-height:44px;padding:11px 6px;border-radius:9px;border:1px solid var(--border);background:var(--raised);color:var(--t2);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer}
+.hs-seg button.on{border-color:var(--acc);color:#04101f;background:linear-gradient(135deg,#6aadff,#3d7fd6)}
+.hs-set{margin-top:16px}
+.hs-set .set-l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.hs-set .set-b{font-size:11.5px;color:var(--t3);margin-top:8px;line-height:1.55}
+.hs-savebox{width:100%;font-family:var(--mono);font-size:10.5px;line-height:1.6;color:var(--t2);background:#0d1a2c;border:1px solid var(--border);border-radius:9px;padding:11px 12px;resize:none;word-break:break-all}
+.hs-savebox:focus{outline:none;border-color:var(--acc)}
+.hs-load-row{display:flex;gap:9px;align-items:stretch;margin-top:10px}
+.hs-load-row .hs-savebox{flex:1}
+.hs-load-go{min-height:44px;padding:0 16px;border:none;border-radius:9px;font-family:var(--display);font-weight:700;font-size:13px;color:#04101f;background:linear-gradient(135deg,#6aadff,#3d7fd6);cursor:pointer}
+.hs-report{margin-top:16px;border:1px solid var(--border2);border-radius:12px;padding:14px 16px;background:rgba(13,26,44,.6);text-align:left}
+.hs-report .rp-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.hs-report .rp-q{flex:1;letter-spacing:.04em;text-transform:none}
+.hs-report .rp-all{font-size:12px}
+.hs-rgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:560px){.hs-rgrid{grid-template-columns:1fr}}
+.hs-rg{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center}
+.hs-rg .rg-mark{grid-row:1/3;width:38px;height:38px;border:2px solid;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:19px}
+.hs-rg .rg-lbl{font-size:12.5px;font-weight:600;color:var(--t1)}
+.hs-rg .rg-sub{font-family:var(--mono);font-size:10px;color:var(--t3)}
+.hs-report .rp-foot{margin-top:11px;font-size:10.5px;color:var(--t3);font-family:var(--mono)}
+.hs-cause{margin-top:14px;border:1px solid rgba(223,87,82,.45);border-left:3px solid #df5752;border-radius:10px;padding:12px 14px;background:rgba(223,87,82,.06);text-align:left}
+.hs-cause .c-h{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#ff9a97;margin-bottom:6px}
+.hs-cause .c-b{font-size:12px;color:var(--t2);line-height:1.6}
+.hs-deftip{position:fixed;z-index:300;max-width:262px;background:#0d1a2c;border:1px solid #4a6f9e;border-radius:9px;padding:11px 13px;font-size:11.5px;color:var(--t2);line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.6);pointer-events:none}
+.hs-deftip[hidden]{display:none}
+.hs-deftip b{color:#fff;display:block;margin-bottom:4px;font-size:12px}
+.hs-info{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--border2);color:var(--t3);font-size:9px;font-family:var(--mono);font-style:italic;margin-left:5px;cursor:help;vertical-align:middle;font-weight:700}
+</style>
+
+<div class="hs-wrap" id="hs">
+  <a class="hs-back" href="/secret-menu/">&larr; Back to the Secret Menu</a>
+  <div class="hs-head">
+    <div class="hs-titles">
+      <h1>Uncharted <em>Regional</em></h1>
+      <p>// one region. three hospitals. every tradeoff.</p>
+    </div>
+    <div class="hs-kpis" id="hs-kpis"></div>
+  </div>
+  <div class="hs-mission" id="hs-mission"></div>
+  <div class="hs-main">
+    <aside class="hs-side">
+      <button class="hs-run" id="hs-run">RUN THE QUARTER &#9656;</button>
+      <div id="hs-runhint" hidden></div>
+      <button class="hs-save" data-act="save">Save this run</button>
+      <div class="hs-panel" id="hs-proj"></div>
+      <div class="hs-panel" id="hs-shared"></div>
+    </aside>
+    <div>
+      <div class="hs-zones" id="hs-zones"></div>
+      <div class="hs-facs" id="hs-facs"></div>
+    </div>
+  </div>
+  <div class="hs-deftip" id="hs-deftip" hidden></div>
+  <div class="hs-overlay" id="hs-overlay" hidden></div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const money=v=>{const s=v<0?'-':'';const a=Math.abs(v);return a>=1000?s+'$'+(a/1000).toFixed(2)+'M':s+'$'+Math.round(a)+'k';};
+  const num=v=>Math.round(v).toLocaleString('en-US');
+  const pct=v=>Math.round(v*100)+'%';
+
+  // ── THE WORLD STATE, made real. The hospital game's constants are this game's variables:
+  // demand comes from zone populations, payer mix from zone composition, hire costs from one
+  // shared regional workforce pool. (Design doc §7/§8: every constant is an API surface.)
+  const CFG = {
+    startCash: 900, staffWage: 30, staffHire: 15,
+    revScale: 0.78,         // global reimbursement pressure: opening net sits near +$200k, not +$1.5M
+    poolTotal: 56,          // the region's whole hireable workforce, shared by every facility
+    poolFloor: 0.82,        // pool utilization past this raises the wage index for EVERYONE
+    wageSlope: 2.2,
+    strainRecover: 12, strainSlope: 45, strainQuit: 70,
+    trustDriftGain: 8, trustPivot: 0.88,
+    closeTrustHit: 8, closeSevPer: 8,
+    capexAdd: 3.2, capexUpg: 2.2,   // multiples of a line's fixed cost
+    svc: { ehr:{cost:60, eff:1.05, name:'System EHR', desc:'One record everywhere. Every facility treats 5% more per staffed bed.'},
+           float:{cost:45, relief:0.6, name:'System Float Pool', desc:'Staff flex across facilities. Strain builds 40% slower everywhere.'},
+           gpo:{cost:30, fixedMult:0.92, name:'Group Purchasing', desc:'System-scale supply contracts. Fixed costs run 8% lighter.'} },
+    seasonMult: 1.28,       // Q3 respiratory season on ED and Med/Surg, every year
+    goalFrac: {easy:0.72, normal:0.86, hard:0.96},
+  };
+  const LINES = [
+    {id:'ed',  name:'Emergency',  rev:1.6, staffNeed:3.0, fixed:120, capUnit:220, payer:'public'},
+    {id:'med', name:'Med/Surg',   rev:2.6, staffNeed:2.5, fixed:110, capUnit:160, payer:'public'},
+    {id:'surg',name:'Surgery',    rev:7.0, staffNeed:2.0, fixed:200, capUnit:70,  payer:'comm'},
+    {id:'icu', name:'ICU',        rev:8.5, staffNeed:3.0, fixed:180, capUnit:40,  payer:'mixed'},
+    {id:'img', name:'Imaging',    rev:1.2, staffNeed:1.0, fixed:90,  capUnit:200, payer:'mixed'},
+    {id:'mat', name:'Maternity',  rev:4.0, staffNeed:2.0, fixed:140, capUnit:80,  payer:'comm'},
+    {id:'card',name:'Cardiology', rev:8.0, staffNeed:2.0, fixed:190, capUnit:60,  payer:'comm'},
+    {id:'beh', name:'Behavioral', rev:2.0, staffNeed:2.0, fixed:100, capUnit:110, payer:'public'},
+  ];
+  const lineOf = id => LINES.find(l=>l.id===id);
+  const ZONES = [
+    {id:'core', name:'Urban Core',  growth:1.004, payer:{comm:.30,mc:.36,md:.26,self:.08},
+     base:{ed:520,med:420,surg:110,icu:60,img:300,mat:90,card:80,beh:160}},
+    {id:'sub',  name:'The Suburbs', growth:1.015, payer:{comm:.55,mc:.28,md:.13,self:.04},
+     base:{ed:380,med:300,surg:90,icu:35,img:260,mat:110,card:70,beh:90}},
+    {id:'rural',name:'The County',  growth:0.997, payer:{comm:.24,mc:.44,md:.24,self:.08},
+     base:{ed:150,med:120,surg:25,icu:10,img:70,mat:40,card:20,beh:40}},
+  ];
+  const zoneOf = id => ZONES.find(z=>z.id===id);
+  const PAYER_RATE = {comm:1.15, mc:0.95, md:0.75, self:0.40};
+  // Travel is the tax on centralization: demand reaches a same-zone facility at full weight,
+  // a neighboring zone at just over half, the far side of the region at a quarter.
+  const DIST = { core:{core:1,sub:.55,rural:.25}, sub:{core:.55,sub:1,rural:.55}, rural:{core:.25,sub:.55,rural:1} };
+  const FACS = [
+    {id:'general',    name:'Uncharted General',    zone:'core',  lines:{ed:3,med:3,surg:2,icu:2,img:2,card:1,beh:1}, staff:26},
+    {id:'crossroads', name:'Crossroads Community', zone:'sub',   lines:{ed:2,med:2,surg:1,img:1,mat:2,card:1},       staff:15},
+    {id:'halloran',   name:'Halloran Memorial',    zone:'rural', lines:{ed:1,med:1,mat:1},                            staff:6},
+  ];
+  const EVENTS = [
+    {tag:'Surge',  name:'Regional Flu Wave',      desc:'A bad strain on top of the usual season. ED and Med/Surg demand climbs across all three zones.', dLine:{ed:1.3, med:1.2}},
+    {tag:'Market', name:'Competitor Billboards',  desc:'St. Elsewhere buys the suburbs. Commercial patients drift; suburban demand dips this quarter and trust takes a knock.', dZone:{sub:0.82}, trust:{sub:-3}},
+    {tag:'Labor',  name:'Regional Nursing Crunch',desc:'Two travel agencies outbid the whole region at once. The wage index spikes this quarter.', wage:0.18},
+    {tag:'Disaster',name:'County Flood',          desc:'The river takes the county roads. Rural demand surges while Halloran runs at partial capacity.', dZone:{rural:1.4}, capFac:{halloran:0.8}},
+    {tag:'Payer',  name:'Payer Records Audit',    desc:'The region&rsquo;s biggest payer audits the system. A settlement lands on HQ.', cash:-150},
+    {tag:'Legal',  name:'Verdict at the Flagship',desc:'A malpractice verdict against Uncharted General makes the front page.', cash:-100, trust:{core:-6}},
+    {tag:'Growth', name:'Suburban Boom',          desc:'Two employers relocate to the suburbs. Suburban demand steps up, and stays up.', perm:{sub:1.08}},
+    {tag:'Grant',  name:'Rural Access Grant',     desc:'The state pays systems that keep county care local. If rural access is 85%+ this quarter, HQ books $200k.', grantRural:200},
+  ];
+
+  let settings = { difficulty:'normal', years:3 };
+  try { const sv=JSON.parse(localStorage.getItem('hs_settings')); if (sv) settings=Object.assign(settings,sv); } catch(e){}
+  const saveSettings=()=>{ try{ localStorage.setItem('hs_settings', JSON.stringify(settings)); }catch(e){} };
+  const DIFFS = [
+    {key:'easy', name:'Easy', blurb:'Soft targets, gentle crises. Learn where the region&rsquo;s levers are.'},
+    {key:'normal', name:'Normal', blurb:'The intended climb. The board wants what the projection says you can do.'},
+    {key:'hard', name:'Hard', blurb:'Targets sit at the edge of the projection and every crisis hits meaner.'},
+  ];
+  const evMult = () => settings.difficulty==='easy'?0.8:settings.difficulty==='hard'?1.25:1;
+
+  let sys=null, overlayOpen=false, lastEnd=null, tutOpen=null;   // tutorial: open on quarter one until toggled
+  const tutShown = () => tutOpen===null ? (sys && sys.level===1) : tutOpen;
+  const yearOf=l=>Math.ceil(l/4), qInYear=l=>((l-1)%4)+1, isBoss=l=>qInYear(l)===4;
+
+  function initSys(){
+    sys = {
+      level:1, cash:CFG.startCash, rateComm:1.0, over:false,
+      zones:{}, facilities:FACS.map(f=>({id:f.id, name:f.name, zone:f.zone, staff:f.staff, strain:10, lines:Object.assign({},f.lines)})),
+      shared:{ehr:false, float:false, gpo:false},
+      goal:null, activeEvent:null, lastResult:null,
+      stats:{net:0, served:0, demand:0, ruralServed:0, ruralDemand:0, trustSum:0, wageSum:0, q:0, quits:0},
+      history:[],
+    };
+    ZONES.forEach(z=>{ sys.zones[z.id] = {trust: z.id==='rural'?60:56, mult:1}; });
+  }
+  const facOf = id => sys.facilities.find(f=>f.id===id);
+  const poolUsed = s => s.facilities.reduce((a,f)=>a+f.staff,0);
+  const wageIdx = (s, ev) => 1 + Math.max(0, poolUsed(s)/CFG.poolTotal - CFG.poolFloor)*CFG.wageSlope + ((ev&&ev.wage)||0);
+  const staffNeedOf = f => LINES.reduce((a,l)=> a + (f.lines[l.id]||0)*l.staffNeed, 0);
+  const staffFactor = f => { const need=staffNeedOf(f); return need<=0?1:clamp(f.staff/need, 0.25, 1.12); };
+  const strainFactor = f => 1 - 0.15*clamp((f.strain||0)/100, 0, 1);
+  const zoneRate = (s, zid) => { const p=zoneOf(zid).payer; return p.comm*PAYER_RATE.comm*s.rateComm + p.mc*PAYER_RATE.mc + p.md*PAYER_RATE.md + p.self*PAYER_RATE.self; };
+
+  // ── THE QUARTER, computed. Demand rises by zone, travels by distance, and lands where there
+  // is staffed capacity. What one facility cannot take spills to the next nearest; what nobody
+  // takes is the region's access failure, and the zone remembers.
+  function computeSystem(s, ev){
+    const wi = wageIdx(s, ev);
+    const effCap = {};   // facId -> lineId -> remaining effective capacity
+    s.facilities.forEach(f=>{
+      effCap[f.id]={};
+      const capEvent = (ev&&ev.capFac&&ev.capFac[f.id])||1;
+      LINES.forEach(l=>{ const lvl=f.lines[l.id]||0; if(!lvl) return;
+        effCap[f.id][l.id] = l.capUnit*lvl*staffFactor(f)*strainFactor(f)*(s.shared.ehr?CFG.svc.ehr.eff:1)*capEvent; });
+    });
+    const served={}, servedByZone={};
+    s.facilities.forEach(f=>{ served[f.id]={}; servedByZone[f.id]={}; });
+    const zoneServed={}, zoneDemand={};
+    ZONES.forEach(z=>{ zoneServed[z.id]=0; zoneDemand[z.id]=0; });
+    const season = qInYear(s.level)===3;
+    // Distance is a participation cap, not a suggestion: only DIST-share of a zone's patients
+    // will travel to a given facility (55% one zone over, 25% across the region). Allocation runs
+    // by DISTANCE BAND so every zone's locals claim their own hospital before anyone's overflow
+    // does; what no reachable-and-willing capacity absorbs goes unserved. THIS is the tax on
+    // centralization and the entire case for duplication. (Emergent and intended: closing a line
+    // can RAISE a staffing-starved facility's other capacity, because the same staff now cover
+    // fewer beds. Real systems rediscover this constantly.)
+    LINES.forEach(l=>{
+      const zd={}, zrem={};
+      ZONES.forEach(z=>{
+        let d = z.base[l.id]*s.zones[z.id].mult;
+        if (season && (l.id==='ed'||l.id==='med')) d*=CFG.seasonMult;
+        if (ev){ if (ev.dLine&&ev.dLine[l.id]) d*=ev.dLine[l.id]; if (ev.dZone&&ev.dZone[z.id]) d*=ev.dZone[z.id]; if (ev.dAll) d*=ev.dAll; }
+        zd[z.id]=d; zrem[z.id]=d; zoneDemand[z.id]+=d;
+      });
+      [1, 0.55, 0.25].forEach(band=>{
+        ZONES.forEach(z=>{
+          if (zrem[z.id]<=0.5) return;
+          s.facilities.forEach(f=>{
+            if (DIST[z.id][f.zone]!==band) return;
+            const cap=effCap[f.id][l.id]||0; if (cap<=0.5) return;
+            const take=Math.min(zrem[z.id], zd[z.id]*band, cap);
+            if (take<=0) return;
+            effCap[f.id][l.id]-=take; zrem[z.id]-=take;
+            served[f.id][l.id]=(served[f.id][l.id]||0)+take;
+            servedByZone[f.id][z.id]=(servedByZone[f.id][z.id]||0)+take*l.rev;
+          });
+        });
+      });
+      ZONES.forEach(z=>{ zoneServed[z.id]+=zd[z.id]-zrem[z.id]; });
+    });
+    let revenue=0, salary=0, fixed=0, servedTot=0, demandTot=0;
+    const facRes={};
+    s.facilities.forEach(f=>{
+      let fRev=0; for (const zid in servedByZone[f.id]) fRev += servedByZone[f.id][zid]*zoneRate(s, zid)*CFG.revScale;
+      const fSal = f.staff*CFG.staffWage*wi;
+      const fFix = LINES.reduce((a,l)=>a+(f.lines[l.id]||0)*l.fixed,0)*(s.shared.gpo?CFG.svc.gpo.fixedMult:1);
+      const fServed = LINES.reduce((a,l)=>a+(served[f.id][l.id]||0),0);
+      facRes[f.id]={rev:fRev, salary:fSal, fixed:fFix, net:fRev-fSal-fFix, served:fServed,
+        util: (t=>t>0?fServed/t:0)(LINES.reduce((a,l)=>a+((f.lines[l.id]||0)?l.capUnit*(f.lines[l.id]||0)*staffFactor(f)*strainFactor(f)*(s.shared.ehr?CFG.svc.ehr.eff:1):0),0)),
+        lineServed:served[f.id]};
+      revenue+=fRev; salary+=fSal; fixed+=fFix; servedTot+=fServed;
+    });
+    ZONES.forEach(z=>{ demandTot+=zoneDemand[z.id]; });
+    const sharedCost = (s.shared.ehr?CFG.svc.ehr.cost:0)+(s.shared.float?CFG.svc.float.cost:0)+(s.shared.gpo?CFG.svc.gpo.cost:0);
+    let cash=(ev&&ev.cash)||0;
+    const zoneAccess={}; ZONES.forEach(z=>{ zoneAccess[z.id]= zoneDemand[z.id]>0 ? zoneServed[z.id]/zoneDemand[z.id] : 1; });
+    if (ev&&ev.grantRural && zoneAccess.rural>=0.85) cash+=ev.grantRural;
+    const net = revenue-salary-fixed-sharedCost+cash;
+    return {revenue, salary, fixed, sharedCost, eventCash:cash, net, served:servedTot, demand:demandTot,
+      access: demandTot>0?servedTot/demandTot:1, zoneAccess, zoneDemand, zoneServed, facRes, wageIdx:wi};
+  }
+
+  // Goals size off the live projection AFTER the event is known: an honest lite version of the
+  // flagship game's feasibility engine. The board asks for a difficulty-set share of what the
+  // current configuration would deliver; skill is keeping the configuration worth projecting.
+  function makeSysGoal(){
+    const p = computeSystem(sys, sys.activeEvent);
+    const g = CFG.goalFrac[settings.difficulty]||0.86;
+    const pool=[];
+    if (p.net>60) pool.push({kind:'net', target:Math.round(p.net*g),
+      label:`Consolidate <b>${money(Math.round(p.net*g))}</b> net across the system.`, test:r=>r.net>=Math.round(p.net*g)});
+    pool.push({kind:'access', target:Math.min(96, Math.round(p.access*100*(0.9+g*0.1))),
+      label:`Serve <b>${Math.min(96, Math.round(p.access*100*(0.9+g*0.1)))}%</b> of the region&rsquo;s demand.`, test:r=>r.access*100>=Math.min(96, Math.round(p.access*100*(0.9+g*0.1)))});
+    // The rural stretch is a REACTION, not a habit: it only fires when county access is visibly
+    // failing, never on Easy, and never before year one's back half. Two points is one to two
+    // Halloran hires; the board is asking for something specific and reachable.
+    if (settings.difficulty!=='easy' && sys.level>=3 && p.zoneAccess.rural<0.85)
+      pool.push({kind:'rural', target:Math.min(94, Math.round(p.zoneAccess.rural*100)+2),
+        label:`Get county access to <b>${Math.min(94, Math.round(p.zoneAccess.rural*100)+2)}%</b>. The board read the grant terms.`, test:r=>r.zoneAccess.rural*100>=Math.min(94, Math.round(p.zoneAccess.rural*100)+2)});
+    // Lean gives slack by difficulty: standing pat clears it on Easy, Normal wants a 1.5% trim
+    // (one shared-service toggle covers it), Hard wants a real 3% cut. Never on quarter one.
+    const leanSlack = settings.difficulty==='easy'?1.005:settings.difficulty==='hard'?0.97:0.985;
+    const spendCap=Math.round((p.salary+p.fixed+p.sharedCost)*leanSlack);
+    if (p.net>0 && sys.level>1) pool.push({kind:'lean', target:spendCap,
+      label:`Run the system under <b>${money(spendCap)}</b> spend and stay in the black.`, test:r=>(r.salary+r.fixed+r.sharedCost)<spendCap && r.net>=0});
+    const opening = sys.level===1 ? pool.filter(g=>g.kind==='net'||g.kind==='access') : pool;
+    const pick = opening.length?opening:pool;
+    return pick[Math.floor(Math.random()*pick.length)];
+  }
+  function makeSysEvent(){
+    const boss=isBoss(sys.level);
+    if (sys.level<2) return null;
+    if (!boss && Math.random()>0.5) return null;
+    const e = JSON.parse(JSON.stringify(EVENTS[Math.floor(Math.random()*EVENTS.length)]));
+    const m=evMult();
+    if (e.cash) e.cash=Math.round(e.cash*m);
+    if (e.wage) e.wage=e.wage*m;
+    if (boss){ e.tag='BOSS'; e.name='Board Review: '+e.name; e.desc='BOSS QUARTER. '+e.desc+' And the whole region runs hot at once.'; e.dAll=1.08; }
+    return e;
+  }
+  function startQuarter(){
+    ZONES.forEach(z=>{ sys.zones[z.id].mult *= z.growth; });
+    sys.activeEvent = makeSysEvent();
+    if (sys.activeEvent && sys.activeEvent.perm){ for (const zid in sys.activeEvent.perm) sys.zones[zid].mult *= sys.activeEvent.perm[zid]; }
+    sys.goal = makeSysGoal();
+    renderAll();
+  }
+  function runQuarter(){
+    if (sys.over) return;
+    const r = computeSystem(sys, sys.activeEvent);
+    sys.cash += r.net;
+    sys.lastResult = r;
+    // zones remember how well they were served; events can push trust directly
+    ZONES.forEach(z=>{
+      let t = sys.zones[z.id].trust + (r.zoneAccess[z.id]-CFG.trustPivot)*CFG.trustDriftGain;
+      if (sys.activeEvent && sys.activeEvent.trust && sys.activeEvent.trust[z.id]) t += sys.activeEvent.trust[z.id];
+      sys.zones[z.id].trust = clamp(t, 0, 100);
+    });
+    // strain: each facility pays for how hot it ran; the float pool softens the slope
+    sys.facilities.forEach(f=>{
+      const util = r.facRes[f.id].util;
+      let pressure = Math.max(0, util-0.8)*CFG.strainSlope*(sys.shared.float?CFG.svc.float.relief:1);
+      f.strain = clamp((f.strain||0)+pressure-CFG.strainRecover, 0, 100);
+      if (f.strain>=CFG.strainQuit && f.staff>1){ f.staff-=1; sys.stats.quits+=1; flashHint(`${f.name}: a nurse walked. Strain is ${Math.round(f.strain)}.`); }
+    });
+    const bs=sys.stats;
+    bs.net+=r.net; bs.served+=r.served; bs.demand+=r.demand;
+    bs.ruralServed+=r.zoneServed.rural; bs.ruralDemand+=r.zoneDemand.rural;
+    bs.trustSum+=ZONES.reduce((a,z)=>a+sys.zones[z.id].trust,0)/3; bs.wageSum+=r.wageIdx; bs.q+=1;
+    sys.history.push({cash:sys.cash});
+    if (sys.cash<0) return endScreen({passed:false, title:'SYSTEM INSOLVENT', sub:'The consolidated account went red. A system that cannot make payroll across three facilities does not get a fourth chance.',
+      how:cause('What sank you', `Consolidated net ran ${money(r.net)} this quarter. Salaries ${money(r.salary)}, fixed costs ${money(r.fixed)}, shared services ${money(r.sharedCost)} against ${money(r.revenue)} revenue. Duplicated service lines pay fixed costs twice; the wage index at &times;${r.wageIdx.toFixed(2)} multiplies every salary in the region.`)});
+    const revolt = ZONES.find(z=>sys.zones[z.id].trust<=0);
+    if (revolt) return endScreen({passed:false, title:'COMMUNITY REVOLT', sub:`${revolt.name} is done with you. County commissioners, op-eds, a competing bond measure. The board dissolves the system rather than fight it.`,
+      how:cause('What sank you', `Trust in ${revolt.name} hit zero. Every quarter a zone is served under ${Math.round(CFG.trustPivot*100)}% of its demand, its trust bleeds; closures and scandals cut deeper. Access IS the product.`)});
+    if (!sys.goal.test(r)) return endScreen({passed:false, title:'BOARD LOST CONFIDENCE', sub:`<strong>The objective:</strong> ${sys.goal.label}<br><span style="color:#ffb3b3">The system delivered ${sys.goal.kind==='net'?money(r.net):sys.goal.kind==='lean'?money(r.salary+r.fixed+r.sharedCost)+' spend':pct(sys.goal.kind==='rural'?r.zoneAccess.rural:r.access)}.</span>`,
+      how:cause('How it was winnable', `The bar was sized off this exact configuration when the quarter opened. Staffing pulled from the shared pool, a line added where the demand already lives, or a transfer of load toward empty capacity all moved the number. The projection panel was the answer sheet.`)});
+    const yr=yearOf(sys.level), q=qInYear(sys.level);
+    if (q===4){
+      if (settings.years>0 && yr>=settings.years) return endScreen({passed:true, victory:true, title:'TERM COMPLETE', sub:`You ran the region for <b style="color:#6aadff">${settings.years} full year${settings.years>1?'s':''}</b>. Three facilities, one system, still standing.`});
+      return openNegotiation();
+    }
+    return endScreen({passed:true, title:'QUARTER CLEARED', sub: q===3?'Respiratory season survived. The boss review is next.':'The region holds. The pressure compounds from here.'});
+  }
+  // The Q4 ritual: the annual payer negotiation. Leverage is market share, and the odds are printed.
+  function openNegotiation(){
+    overlayOpen=true;
+    const r=sys.lastResult, share=clamp(r.served/Math.max(1,r.demand),0,1);
+    const lev=Math.round(share*100);
+    const winP=clamp(0.35+share*0.45,0,0.9);
+    sys.pendingNeg={winP};
+    $('hs-overlay').innerHTML=`<div class="hs-modal"><h2 class="win">YEAR ${yearOf(sys.level)} CLEARED &middot; Payer Renewal</h2>
+      <div class="mo-sub">The region&rsquo;s dominant commercial payer is at the table, annual ritual. Your leverage is market share: the system served <b>${lev}%</b> of regional demand this year. Commercial rates ride every surgery, cath, and delivery you do.</div>
+      <button class="hs-choice" data-act="neg" data-i="0"><span class="ch-l">Sign the standard renewal</span><div class="ch-d">Keep the current commercial rate. No drama, no upside.</div><div class="ch-e">rate stays &times;${sys.rateComm.toFixed(2)}</div></button>
+      <button class="hs-choice" data-act="neg" data-i="1"><span class="ch-l">Negotiate from share</span><div class="ch-d">Push for a raise the market position justifies.</div><div class="ch-e">${Math.round(winP*100)}% odds: rate +0.06 &middot; otherwise +0.02</div></button>
+      <button class="hs-choice" data-act="neg" data-i="2"><span class="ch-l">Play hardball</span><div class="ch-d">Threaten to go out of network. Big raise or a public fight.</div><div class="ch-e">${Math.round(winP*70)}% odds: rate +0.12 &middot; otherwise &minus;0.04 and trust &minus;2 everywhere</div></button>
+      </div>`;
+    $('hs-overlay').hidden=false;
+  }
+  function resolveNeg(i){
+    const winP=(sys.pendingNeg&&sys.pendingNeg.winP)||0.5; sys.pendingNeg=null;
+    if (i===1) sys.rateComm += Math.random()<winP?0.06:0.02;
+    else if (i===2){ if (Math.random()<winP*0.7) sys.rateComm+=0.12; else { sys.rateComm=Math.max(0.9,sys.rateComm-0.04); ZONES.forEach(z=>{sys.zones[z.id].trust=clamp(sys.zones[z.id].trust-2,0,100);}); } }
+    closeOverlay();
+    endScreen({passed:true, title:`YEAR ${yearOf(sys.level)} CLEARED`, sub:`Commercial rate for next year: <b style="color:#6aadff">&times;${sys.rateComm.toFixed(2)}</b>. The region grows either way.`});
+  }
+  const cause=(h,b)=>`<div class="hs-cause"><div class="c-h">${h}</div><div class="c-b">${b}</div></div>`;
+  const GRADE_ORDER=['A','B','C','D','F'], GRADE_COLOR={A:'#4ecb8d',B:'#8fd06c',C:'#E8A838',D:'#ff9a5a',F:'#ff5a6a'};
+  function reportData(){
+    const bs=sys.stats, q=Math.max(1,bs.q);
+    const avgNet=bs.net/q, access=bs.demand>0?bs.served/bs.demand*100:100;
+    const rural=bs.ruralDemand>0?bs.ruralServed/bs.ruralDemand*100:100;
+    const trust=bs.trustSum/q, wage=bs.wageSum/q;
+    const gf=(bands,v)=>{for(const [f,g] of bands) if(v>=f) return g; return 'F';};
+    const margin=gf([[900,'A'],[500,'B'],[200,'C'],[0,'D']],avgNet);   // system scale: standing pat opens around B-
+    let access_g=gf([[94,'A'],[89,'B'],[83,'C'],[76,'D']],access);
+    if (rural>=88 && access_g!=='A') access_g=GRADE_ORDER[GRADE_ORDER.indexOf(access_g)-1];
+    const community=gf([[70,'A'],[58,'B'],[46,'C'],[34,'D']],trust);
+    let workforce=gf([[-1.04,'A'],[-1.12,'B'],[-1.22,'C'],[-1.35,'D']],-wage);
+    if (bs.quits>=6) workforce=GRADE_ORDER[Math.min(4,GRADE_ORDER.indexOf(workforce)+1)];
+    const overall=GRADE_ORDER[Math.round([margin,access_g,community,workforce].reduce((a,g)=>a+GRADE_ORDER.indexOf(g),0)/4)];
+    return {q:bs.q, avgNet, access, rural, trust, wage, quits:bs.quits, margin, access_g, community, workforce, overall};
+  }
+  function systemReport(){
+    if (!sys.stats.q) return '';
+    const d=reportData();
+    const chip=(l,g,s)=>`<div class="hs-rg"><div class="rg-mark" style="color:${GRADE_COLOR[g]};border-color:${GRADE_COLOR[g]}">${g}</div><div class="rg-lbl">${l}</div><div class="rg-sub">${s}</div></div>`;
+    return `<div class="hs-report"><div class="rp-head"><span>The System Report</span><span class="rp-q">${d.q} quarters on the record</span><span class="rp-all" style="color:${GRADE_COLOR[d.overall]}">Overall ${d.overall}</span></div>
+      <div class="hs-rgrid">
+        ${chip('Margin', d.margin, `${d.avgNet>=0?'+':''}${money(Math.round(d.avgNet))}/qtr consolidated`)}
+        ${chip('Access', d.access_g, `${Math.round(d.access)}% region &middot; ${Math.round(d.rural)}% county`)}
+        ${chip('Community', d.community, `${Math.round(d.trust)} average trust across three zones`)}
+        ${chip('Workforce', d.workforce, `wage index &times;${d.wage.toFixed(2)} avg &middot; ${d.quits} quit`)}
+      </div>
+      <div class="rp-foot">Same four questions as the hospital game, one level up. Centralizing helped one grade and cost another; that was the game.</div></div>`;
+  }
+  function endScreen(o){
+    overlayOpen=true; lastEnd=o;
+    const gameOver=!o.passed||o.victory;
+    if (gameOver) sys.over=true;
+    const r=sys.lastResult||{net:0,access:1,served:0,wageIdx:1};
+    const stats=`<div class="hs-results">
+      <div class="hs-result"><div class="r-lbl">Patients</div><div class="r-val">${num(r.served)}</div></div>
+      <div class="hs-result"><div class="r-lbl">Region served</div><div class="r-val">${pct(r.access)}</div></div>
+      <div class="hs-result"><div class="r-lbl">Net quarter</div><div class="r-val ${r.net>=0?'pos':'neg'}">${r.net>=0?'+':''}${money(r.net)}</div></div>
+      <div class="hs-result"><div class="r-lbl">System cash</div><div class="r-val ${sys.cash>=0?'pos':'neg'}">${money(sys.cash)}</div></div>
+      <div class="hs-result"><div class="r-lbl">Wage index</div><div class="r-val">&times;${r.wageIdx.toFixed(2)}</div></div>
+    </div>`;
+    const actions = gameOver
+      ? `<div class="hs-end-actions"><button class="hs-peek" data-act="peek">&#8617; Look at the region</button><button class="hs-restart" data-act="restart">Start a New Term &#9656;</button></div>`
+      : `<button class="hs-restart" data-act="continue" style="width:100%;margin-top:14px">Continue &#9656;</button>`;
+    $('hs-overlay').innerHTML=`<div class="hs-modal"><h2 class="${o.passed?'win':'lose'}">${o.title}</h2><div class="mo-sub">${o.sub}</div>${stats}${o.how||''}${gameOver?systemReport():''}${actions}</div>`;
+    $('hs-overlay').hidden=false;
+  }
+  function advance(){ sys.level+=1; closeOverlay(); startQuarter(); }
+  function closeOverlay(){ overlayOpen=false; const ov=$('hs-overlay'); ov.hidden=true; ov.innerHTML=''; }
+  function flashHint(m){ const h=$('hs-runhint'); if(h){ h.textContent=m; h.hidden=false; } }
+
+  // ── VERBS: the allocation game. Everything mutates through here, plain data in, so a future
+  // multiplayer table wraps this exactly the way the hospital game's did.
+  function dispatchAct(act, d){
+    d=d||{};
+    if (act==='staff'){ const f=facOf(d.f), dir=parseInt(d.d,10);
+      if (!f) return;
+      if (dir>0){ if (poolUsed(sys)>=CFG.poolTotal){ flashHint('The regional pool is empty. Every hire from here is a bidding war you started.'); return; }
+        const c=Math.round(CFG.staffHire*wageIdx(sys,null)); if (sys.cash<c) return; sys.cash-=c; f.staff+=1; }
+      else if (f.staff>1){ f.staff-=1; }
+      renderAll(); }
+    else if (act==='upg'){ const f=facOf(d.f), l=lineOf(d.l); if(!f||!l) return;
+      const lvl=f.lines[l.id]||0; if (lvl>=4) return;
+      const c=Math.round(l.fixed*(lvl?CFG.capexUpg:CFG.capexAdd)); if (sys.cash<c) return;
+      sys.cash-=c; f.lines[l.id]=lvl+1; renderAll(); }
+    else if (act==='closego'){ const f=facOf(d.f), l=lineOf(d.l); if(!f||!l||!f.lines[l.id]) return;
+      const lvl=f.lines[l.id];
+      sys.cash-=Math.round(lvl*l.staffNeed*CFG.closeSevPer);
+      sys.zones[f.zone].trust=clamp(sys.zones[f.zone].trust-CFG.closeTrustHit,0,100);
+      delete f.lines[l.id];
+      closeOverlay(); renderAll();
+      flashHint(`${l.name} at ${f.name} is closed. ${zoneOf(f.zone).name} noticed.`); }
+    else if (act==='shared'){ const k=d.k; if (CFG.svc[k]){ sys.shared[k]=!sys.shared[k]; renderAll(); } }
+    else if (act==='neg') resolveNeg(parseInt(d.i,10));
+    else if (act==='continue') advance();
+    else if (act==='runq') runQuarter();
+    else if (act==='start'){ saveSettings(); initSys(); startQuarter(); closeOverlay(); }
+  }
+
+  // ── RENDER ────────────────────────────────────────────────────────────
+  const info=t=>`<span class="hs-info" data-def="${t}">i</span>`;
+  function renderKpis(){
+    const r=computeSystem(sys, sys.activeEvent);
+    const avgT=ZONES.reduce((a,z)=>a+sys.zones[z.id].trust,0)/3;
+    $('hs-kpis').innerHTML=[
+      {l:'Year &middot; Qtr', v:'Y'+yearOf(sys.level)+' Q'+qInYear(sys.level), c:isBoss(sys.level)?'bad':'', d:'A year is 4 quarters. Q3 is respiratory season; Q4 is the board review, with the payer negotiation after it.'},
+      {l:'System cash', v:money(sys.cash), c:sys.cash>=300?'good':sys.cash>=0?'warn':'bad', d:'Consolidated cash across all three facilities plus HQ. Red ends the run.'},
+      {l:'Region served', v:pct(r.access), c:r.access>=0.9?'good':r.access>=0.82?'warn':'bad', d:'The share of ALL demand, all zones, reaching care this quarter. The access story in one number.'},
+      {l:'Wage index', v:'&times;'+r.wageIdx.toFixed(2), c:r.wageIdx<=1.05?'good':r.wageIdx<=1.2?'warn':'bad', d:'What the regional labor market charges. All three facilities hire from ONE pool of '+CFG.poolTotal+' staff units; run it past '+Math.round(CFG.poolFloor*100)+'% employed and wages rise for everyone, including facilities that hired nobody.'},
+      {l:'Avg trust', v:Math.round(avgT), c:avgT>=60?'good':avgT>=45?'warn':'bad', d:'The three zone trust scores, averaged. Zones remember how well they are served. Any single zone at zero is a community revolt, and the run ends.'},
+    ].map(k=>`<div class="hs-kpi ${k.c}" data-def="${k.d}"><div class="k-lbl">${k.l}</div><div class="k-val">${k.v}</div></div>`).join('');
+  }
+  function renderMission(){
+    const yr=yearOf(sys.level), q=qInYear(sys.level), boss=q===4;
+    const lbl=`Year ${yr} &middot; Quarter ${q} of 4${boss?' &middot; <span style="color:#ff7a7a">BOARD REVIEW</span>':''}${q===3?' &middot; <span style="color:#E8A838">RESPIRATORY SEASON</span>':''}`;
+    const ev=sys.activeEvent;
+    const evHtml = ev
+      ? `<div class="hs-event"><div class="e-tag">${ev.tag}</div><div class="e-body"><strong>${ev.name}</strong><p>${ev.desc}</p></div></div>`
+      : `<div class="hs-event calm"><div class="e-tag">Quiet</div><div class="e-body"><strong>A calm quarter</strong><p>No regional crisis. Position the pieces.</p></div></div>`;
+    const next=sys.level+1, fc=[];
+    if (qInYear(next)===3) fc.push({t:'Season', d:'Respiratory season next quarter: ED and Med/Surg climb in every zone, same as every year.'});
+    if (isBoss(next)) fc.push({t:'Board', d:'Board review next quarter: a crisis is guaranteed, the whole region runs hot, and the payer comes to the table after.'});
+    const pu=poolUsed(sys);
+    if (pu/CFG.poolTotal>=0.9) fc.push({t:'Workforce', d:`The regional pool is ${Math.round(pu/CFG.poolTotal*100)}% employed. Further hiring bids wages up for all three facilities.`});
+    sys.facilities.forEach(f=>{ if ((f.strain||0)>=55) fc.push({t:'Strain', d:`${f.name} is running hot (strain ${Math.round(f.strain)}). Past ${CFG.strainQuit}, people walk.`}); });
+    const fcHtml=`<div class="hs-fc"><div class="fc-h">Looking ahead</div>${fc.length?fc.map(f=>`<div class="fc-row"><span class="fc-tag">${f.t}</span><span>${f.d}</span></div>`).join(''):'<div class="fc-row"><span class="calm">Nothing on the radar. Next quarter arrives cold.</span></div>'}</div>`;
+    // The one-minute tutorial, open by default on quarter one, a toggle after (same grammar as
+    // the hospital game's "how a quarter works").
+    const r = computeSystem(sys, sys.activeEvent);
+    const worstZ = ZONES.map(z=>({z, a:r.zoneAccess[z.id]})).sort((a,b)=>a.a-b.a)[0];
+    const worstFac = sys.facilities.find(f=>f.zone===worstZ.z.id);
+    const note = sys.level===1
+      ? `First read of the board: <b>${worstZ.z.name}</b> reaches only ${pct(worstZ.a)} of its care. ${worstFac?worstFac.name+' is the door there; its staffing stepper is the first lever worth touching.':''}`
+      : 'The bar was sized off THIS configuration when the quarter opened, event included. Change the configuration and you change what it delivers, not what the board asked.';
+    const tutBody = `You run all three hospitals as ONE system. Patients go to the nearest open door: some will travel one zone over, few will cross the region, so where a service line lives decides who gets care. Staff for all three come from one shared pool of ${CFG.poolTotal}; hire past ~${Math.round(CFG.poolFloor*100)}% of it and wages rise everywhere. Zones remember how well they are served (the trust bars); one zone at zero ends the run. Each quarter the board posts one objective sized off your CURRENT setup. Adjust staff and lines, then RUN THE QUARTER.`;
+    const tutHtml = `<div class="hs-fc" style="margin-top:12px;border-color:rgba(106,173,255,.35)">
+      <button class="fc-h" data-act="tut" style="background:none;border:none;cursor:pointer;padding:0;width:100%;display:flex;justify-content:space-between;color:var(--acc);font:inherit;letter-spacing:inherit;text-transform:inherit">
+        <span>New here? How the region works</span><span>${tutShown()?'&#9652; hide':'&#9662; show'}</span></button>
+      ${tutShown()?`<div style="font-size:12px;color:var(--t2);line-height:1.65;margin-top:8px">${tutBody}</div>`:''}</div>`;
+    $('hs-mission').innerHTML=`
+      <div class="hs-obj"><div class="m-lbl">${lbl}</div><div class="m-goal">${sys.goal?sys.goal.label:''}</div>
+        <div class="m-note">${note}</div></div>
+      <div class="hs-brief"><div class="brief-h">The Situation</div>${evHtml}${tutHtml}${fcHtml}</div>`;
+  }
+  function renderZones(){
+    const r=computeSystem(sys, sys.activeEvent);
+    $('hs-zones').innerHTML=ZONES.map(z=>{
+      const t=sys.zones[z.id].trust, a=r.zoneAccess[z.id];
+      const tc=t>=60?'#4ecb8d':t>=40?'#E8A838':'#ff5a6a';
+      return `<div class="hs-zone"><div class="z-n">${z.name}</div>
+        <div class="z-s">${num(r.zoneDemand[z.id])} pts need care &middot; <b style="color:${a>=0.9?'#4ecb8d':a>=0.8?'#E8A838':'#ff7a7a'}">${pct(a)} get it</b><br>payer lean: ${Math.round(z.payer.comm*100)}% commercial &middot; growth ${z.growth>1?'+':''}${((z.growth-1)*100).toFixed(1)}%/qtr</div>
+        <div class="z-trust" data-def="<b>Community trust &middot; ${Math.round(t)}/100</b>Zones remember how well they were served. Under ${Math.round(CFG.trustPivot*100)}% access, trust bleeds; closures and scandals cut deeper. A zone at zero ends the run."><span style="width:${t}%;background:${tc}"></span></div></div>`;
+    }).join('');
+  }
+  function renderFacs(){
+    const r=computeSystem(sys, sys.activeEvent);
+    $('hs-facs').innerHTML=sys.facilities.map(f=>{
+      const fr=r.facRes[f.id], sf=staffFactor(f), need=staffNeedOf(f);
+      const strain=f.strain||0, sc=strain>=CFG.strainQuit?'#ff5a6a':strain>=45?'#E8A838':'#4ecb8d';
+      const rows=LINES.filter(l=>f.lines[l.id]).map(l=>{
+        const lvl=f.lines[l.id], sv=fr.lineServed[l.id]||0;
+        return `<div class="hs-line"><div><div class="l-n">${l.name} <span class="l-pips">${'&#9679;'.repeat(lvl)}${'&#9675;'.repeat(4-lvl)}</span></div>
+          <div class="l-s">${num(sv)} pts/qtr projected &middot; ${money(l.fixed*lvl)} fixed</div></div>
+          <div class="l-acts">
+            <button data-act="upg" data-f="${f.id}" data-l="${l.id}" ${lvl>=4||sys.cash<Math.round(l.fixed*CFG.capexUpg)?'disabled':''}>+lvl ${money(Math.round(l.fixed*CFG.capexUpg))}</button>
+            <button class="x" data-act="closeline" data-f="${f.id}" data-l="${l.id}">close</button>
+          </div></div>`;
+      }).join('');
+      const addable=LINES.filter(l=>!f.lines[l.id]);
+      const addRow=addable.length?`<button class="hs-addline" data-act="addmenu" data-f="${f.id}">&#65291; add a service line (${addable.length} available)</button>`:'';
+      return `<div class="hs-fac"><div class="f-head"><span class="f-n">${f.name}</span><span class="f-z">${zoneOf(f.zone).name}</span></div>
+        <div class="f-net" style="color:${fr.net>=0?'#4ecb8d':'#ff7a7a'}">${fr.net>=0?'+':''}${money(fr.net)}/qtr &middot; ${num(fr.served)} pts</div>
+        <div class="hs-staff"><span class="s-l">Staff units <b style="font-family:var(--mono)">${f.staff}</b> <span style="color:${sf<0.95?'#E8A838':'var(--t3)'};font-size:10.5px">(covers ${Math.round(sf*100)}% of ${Math.round(need)} needed)</span></span>
+          <div class="hs-step"><button data-act="staff" data-f="${f.id}" data-d="-1" ${f.staff<=1?'disabled':''} aria-label="Release staff">&minus;</button><span class="s-num">${f.staff}</span><button data-act="staff" data-f="${f.id}" data-d="1" aria-label="Hire staff">+</button></div></div>
+        <div class="hs-strain"><div class="st-h"><span>Strain</span><b style="color:${sc}">${Math.round(strain)}</b></div><div class="st-bar"><span style="width:${strain}%;background:${sc}"></span></div></div>
+        ${rows}${addRow}</div>`;
+    }).join('');
+  }
+  function renderProj(){
+    const r=computeSystem(sys, sys.activeEvent);
+    $('hs-proj').innerHTML=`<h3>Projected Quarter</h3>
+      <div class="hs-row"><span>Patients reached</span><b>${num(r.served)} / ${num(r.demand)}</b></div>
+      <div class="hs-row"><span>County access</span><b style="color:${r.zoneAccess.rural>=0.85?'#4ecb8d':'#E8A838'}">${pct(r.zoneAccess.rural)}</b></div>
+      <div class="hs-div"></div>
+      <div class="hs-row"><span>Revenue</span><b>${money(r.revenue)}</b></div>
+      <div class="hs-row"><span>Salaries &times;${r.wageIdx.toFixed(2)}</span><b>-${money(r.salary)}</b></div>
+      <div class="hs-row"><span>Regional pool</span><b style="color:${poolUsed(sys)/CFG.poolTotal>=0.9?'var(--amber)':'var(--t1)'}">${poolUsed(sys)} / ${CFG.poolTotal} employed</b></div>
+      <div class="hs-row"><span>Fixed costs</span><b>-${money(r.fixed)}</b></div>
+      ${r.sharedCost?`<div class="hs-row"><span>Shared services</span><b>-${money(r.sharedCost)}</b></div>`:''}
+      ${r.eventCash?`<div class="hs-row"><span>Event</span><b class="${r.eventCash>=0?'pos':'neg'}">${r.eventCash>=0?'+':''}${money(r.eventCash)}</b></div>`:''}
+      <div class="hs-div"></div>
+      <div class="hs-row"><span>Consolidated net</span><b class="${r.net>=0?'pos':'neg'}">${r.net>=0?'+':''}${money(r.net)}</b></div>
+      <div class="hs-row"><span>Cash after</span><b>${money(sys.cash+r.net)}</b></div>
+      <div class="hs-div"></div>
+      ${sys.facilities.map(f=>`<div class="hs-row"><span>${f.name}</span><b class="${r.facRes[f.id].net>=0?'pos':'neg'}">${r.facRes[f.id].net>=0?'+':''}${money(r.facRes[f.id].net)}</b></div>`).join('')}
+      <div class="hs-hint">Commercial rate &times;${sys.rateComm.toFixed(2)}, renegotiated every board review. A facility in the red is not automatically a mistake; ask what the region loses without it.</div>`;
+  }
+  function renderShared(){
+    $('hs-shared').innerHTML=`<h3>Shared Services${info('One system, one contract. Shared services cost HQ money every quarter and change the physics for all three facilities at once.')}</h3>`+
+      Object.keys(CFG.svc).map(k=>{const s=CFG.svc[k], on=sys.shared[k];
+        return `<button class="hs-svc${on?' on':''}" data-act="shared" data-k="${k}" data-def="<b>${s.name} &middot; ${money(s.cost)}/qtr</b>${s.desc}"><span class="sv-n">${s.name}</span><span class="sv-c">${on?'ON':money(s.cost)+'/qtr'}</span></button>`;}).join('');
+  }
+  function renderAll(){ const d=$('hs-deftip'); if(d)d.hidden=true; renderKpis(); renderMission(); renderZones(); renderFacs(); renderProj(); renderShared(); }
+
+  function openAddMenu(fid){
+    const f=facOf(fid); if(!f) return;
+    overlayOpen=true;
+    const cards=LINES.filter(l=>!f.lines[l.id]).map(l=>`<button class="hs-choice" data-act="upg" data-f="${f.id}" data-l="${l.id}" ${sys.cash<Math.round(l.fixed*CFG.capexAdd)?'disabled':''}>
+      <span class="ch-l">${l.name}</span><div class="ch-d">${money(Math.round(l.fixed*CFG.capexAdd))} capex &middot; ${num(l.capUnit)} pts/lvl &middot; ${money(l.fixed)}/qtr fixed &middot; ${l.payer==='comm'?'commercial-leaning':l.payer==='public'?'safety-net':'mixed'} revenue</div></button>`).join('');
+    $('hs-overlay').innerHTML=`<div class="hs-modal"><h2 class="win">Add a line at ${f.name}</h2>
+      <div class="mo-sub">Duplication buys access and pays fixed costs twice. Centralization buys margin and taxes the region with travel. There is no neutral answer; that is the game.</div>
+      ${cards}<div class="hs-end-actions"><button class="hs-peek" data-act="cancel">Cancel</button></div></div>`;
+    $('hs-overlay').hidden=false;
+  }
+  function openCloseConfirm(fid, lid){
+    const f=facOf(fid), l=lineOf(lid); if(!f||!l||!f.lines[lid]) return;
+    overlayOpen=true;
+    const lvl=f.lines[lid], sev=Math.round(lvl*l.staffNeed*CFG.closeSevPer);
+    $('hs-overlay').innerHTML=`<div class="hs-modal"><h2 class="lose">Close ${l.name} at ${f.name}?</h2>
+      <div class="mo-sub">Severance runs <b>${money(sev)}</b> and ${zoneOf(f.zone).name} answers with a <b style="color:#ff7a7a">${CFG.closeTrustHit}-point trust</b> hit. The fixed costs go away; the patients travel, or stop coming. The system margin will thank you before the community does.</div>
+      <div class="hs-end-actions"><button class="hs-peek" data-act="cancel">Keep it open</button>
+      <button class="hs-restart" data-act="closego" data-f="${fid}" data-l="${lid}" style="background:linear-gradient(135deg,#df5752,#b03b37);color:#fff">Close the line &#9656;</button></div></div>`;
+    $('hs-overlay').hidden=false;
+  }
+  function openStartMenu(){
+    overlayOpen=true;
+    const diffBtns=DIFFS.map(x=>`<button data-act="diff" data-key="${x.key}" class="${settings.difficulty===x.key?'on':''}">${x.name}</button>`).join('');
+    const yearBtns=[2,3,5,0].map(y=>`<button data-act="years" data-val="${y}" class="${settings.years===y?'on':''}">${y===0?'&#8734;':y}</button>`).join('');
+    $('hs-overlay').innerHTML=`<div class="hs-modal"><h2 class="win">Uncharted Regional</h2>
+      <div class="mo-sub">The sequel lens. You ran ONE hospital in Uncharted General; now you hold three, one shared workforce pool, one payer table, and a region that remembers. The best move for a facility is sometimes the wrong move for the system. Find out which is which.</div>
+      <div class="hs-set"><div class="set-l">Difficulty</div><div class="hs-seg">${diffBtns}</div><div class="set-b">${DIFFS.find(x=>x.key===settings.difficulty).blurb}</div></div>
+      <div class="hs-set"><div class="set-l">Term length</div><div class="hs-seg">${yearBtns}</div><div class="set-b">${settings.years===0?'Endless: run until the region breaks.':'Survive '+settings.years+' years of board reviews to complete the term.'}</div></div>
+      <div class="hs-set"><div class="set-l">Restore a saved term</div>
+        <div class="hs-load-row"><textarea class="hs-savebox" id="hs-loadstr" rows="2" placeholder="Paste a save string (starts with HUS1)" aria-label="Save string"></textarea>
+        <button class="hs-load-go" data-act="loadsave">Restore &#9656;</button></div>
+        <div class="set-b" id="hs-loaderr" hidden></div></div>
+      <div class="hs-end-actions"><button class="hs-restart" data-act="start" style="width:100%">Take the term &#9656;</button></div></div>`;
+    $('hs-overlay').hidden=false;
+  }
+
+  // ── SAVE STRINGS: same codec as the hospital game, its own HUS1 prefix. The state is pure
+  // data by construction (no catalog references), so it packs whole.
+  const b64FromBytes=b=>{let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s);};
+  const bytesFromB64=str=>{const s=atob(str);const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b;};
+  function packSave(){ return {v:1, settings:Object.assign({},settings), sys:JSON.parse(JSON.stringify(Object.assign({},sys,{goal:sys.goal?{kind:sys.goal.kind,target:sys.goal.target}:null})))}; }
+  function applySave(data){
+    if (!data||data.v!==1||!data.sys||typeof data.sys.level!=='number') throw new Error('bad save');
+    if (data.settings) { settings=Object.assign(settings,data.settings); saveSettings(); }
+    sys=data.sys; sys.over=false; sys.pendingNeg=null;
+    sys.goal=null; sys.activeEvent=null;
+    // a restored term re-opens its quarter cleanly: fresh event roll, freshly sized goal
+    sys.activeEvent=makeSysEvent(); sys.goal=makeSysGoal();
+    return sys;
+  }
+  async function encodeSave(obj){
+    const json=JSON.stringify(obj);
+    if (typeof CompressionStream!=='undefined'&&typeof Response!=='undefined'){
+      const st=new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+      return 'HUS1.'+b64FromBytes(new Uint8Array(await new Response(st).arrayBuffer()));
+    }
+    return 'HUS1R.'+btoa(unescape(encodeURIComponent(json)));
+  }
+  async function decodeSave(str){
+    str=String(str||'').trim().replace(/\s+/g,'');
+    if (str.indexOf('HUS1R.')===0) return JSON.parse(decodeURIComponent(escape(atob(str.slice(6)))));
+    if (str.indexOf('HUS1.')!==0) throw new Error('not a save');
+    const st=new Blob([bytesFromB64(str.slice(5))]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return JSON.parse(await new Response(st).text());
+  }
+  async function openSaveModal(){
+    if (!sys||sys.over||overlayOpen) return;
+    const code=await encodeSave(packSave());
+    overlayOpen=true;
+    $('hs-overlay').innerHTML=`<div class="hs-modal"><h2 class="win">Save This Term</h2>
+      <div class="mo-sub">The whole system in one string: Year ${yearOf(sys.level)}, Quarter ${qInYear(sys.level)}, every facility, every zone. Restoring re-rolls the current quarter&rsquo;s event and bar, honestly, from the same position.</div>
+      <textarea class="hs-savebox" rows="5" readonly id="hs-savestr" data-act="selsave">${code}</textarea>
+      <div class="hs-end-actions"><button class="hs-peek" data-act="cancel">Close</button>
+      <button class="hs-restart" id="hs-copybtn" data-act="savecopy">Copy the string</button></div></div>`;
+    $('hs-overlay').hidden=false;
+  }
+  async function restoreFromMenu(){
+    const ta=$('hs-loadstr'), err=$('hs-loaderr');
+    const show=m=>{ if(err){ err.textContent=m; err.hidden=false; } };
+    if (!ta||!ta.value.trim()){ show('Paste a save string first. It starts with HUS1.'); return; }
+    try { applySave(await decodeSave(ta.value)); closeOverlay(); renderAll(); flashHint(`Term restored: Year ${yearOf(sys.level)}, Quarter ${qInYear(sys.level)}.`); }
+    catch(e){ show('That did not read as a save string. Copy the whole thing, start to end.'); }
+  }
+
+  // ── WIRING ────────────────────────────────────────────────────────────
+  $('hs').addEventListener('click', e=>{
+    const t=e.target.closest('[data-act]'); const act=t&&t.dataset.act;
+    if (overlayOpen && !e.target.closest('#hs-overlay')) return;
+    if (!t) return;
+    const frozen=sys&&sys.over;
+    if (frozen && !['peek','restart','diff','years','start','loadsave','cancel','reopen'].includes(act)) return;
+    if (act==='cancel') return closeOverlay();
+    if (act==='save') return void openSaveModal();
+    if (act==='savecopy'){ const ta=$('hs-savestr'); if(ta){ if (navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value); else { ta.select(); try{document.execCommand('copy');}catch(_){} } const b=$('hs-copybtn'); if(b) b.textContent='Copied ✓'; } return; }
+    if (act==='selsave') return t.select();
+    if (act==='loadsave') return void restoreFromMenu();
+    if (act==='tut'){ tutOpen=!tutShown(); renderMission(); return; }
+    if (act==='addmenu') return openAddMenu(t.dataset.f);
+    if (act==='closeline') return openCloseConfirm(t.dataset.f, t.dataset.l);
+    if (act==='peek'){ overlayOpen=false; $('hs-overlay').hidden=true; renderAll(); return; }
+    if (act==='restart'){ closeOverlay(); openStartMenu(); return; }
+    if (act==='diff'){ settings.difficulty=t.dataset.key; openStartMenu(); return; }
+    if (act==='years'){ settings.years=parseInt(t.dataset.val,10); openStartMenu(); return; }
+    dispatchAct(act, Object.assign({}, t.dataset));
+  });
+  $('hs').addEventListener('mouseover', e=>{
+    const t=e.target.closest('[data-def]'); const dt=$('hs-deftip');
+    if (!t){ dt.hidden=true; return; }
+    dt.innerHTML=t.dataset.def; dt.hidden=false;
+    const r=t.getBoundingClientRect(); let x=r.left, y=r.bottom+8;
+    if (x+270>window.innerWidth) x=window.innerWidth-272;
+    dt.style.left=Math.max(6,x)+'px'; dt.style.top=y+'px';
+  });
+  $('hs').addEventListener('mouseout', e=>{ if(e.target.closest('[data-def]')) $('hs-deftip').hidden=true; });
+  $('hs-run').addEventListener('click', ()=>{ if(!overlayOpen && !(sys&&sys.over)) dispatchAct('runq'); });
+
+  initSys(); startQuarter(); openStartMenu();
+
+  if (typeof window!=='undefined' && window.__UG_TEST){ window.__hs={ get sys(){return sys;}, get settings(){return settings;},
+    CFG, LINES, ZONES, FACS, EVENTS, DIST, PAYER_RATE, lineOf, zoneOf, facOf,
+    initSys, startQuarter, runQuarter, computeSystem, makeSysGoal, makeSysEvent, dispatchAct,
+    poolUsed, wageIdx, staffFactor, strainFactor, zoneRate, reportData,
+    packSave, applySave, encodeSave, decodeSave, openStartMenu, openNegotiation, resolveNeg,
+    yearOf, qInYear, isBoss }; }
+})();
+</script>
+{% endraw %}
