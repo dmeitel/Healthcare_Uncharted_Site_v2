@@ -1,0 +1,3536 @@
+---
+layout: base.njk
+nav_merged: true
+navPage: learn
+title: "Alarm Fatigue"
+description: "A med-surg shift as an idle clicker. One patient and one monitor to start. Buy more responsibility, silence more alarms, and try to hear the one that matters."
+section: fun
+no_footer: true
+---
+{% raw %}
+<style>
+  /* ALARM FATIGUE · the floor is a lit med-surg unit, deliberately light in
+     both themes (the game is a place, not a panel). Site chrome themes
+     around it; everything below is scoped to .af or the game's own ids. */
+  .af{
+    --wall:#e9ede9;
+    --ink:#22302a;
+    --panel:#0b1411;
+    --mon-green:#3fe28f;
+    --mon-cyan:#5ad7e6;
+    --amber:#ffb020;
+    --red:#ff4d55;
+    --chip:#f7faf7;
+    --line:#c9d3cc;
+  }
+  .af, .af *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  .af .mono{font-family:var(--mono);}
+
+  /* one reset for every in-game control that used to be a clickable div */
+  .af .hit{appearance:none; background:none; border:none; padding:0; margin:0;
+    font:inherit; color:inherit; text-align:inherit; cursor:pointer;}
+  .af .hit:focus-visible, .af button:focus-visible, .af .upg:focus-visible{
+    outline:3px solid #1B5FA8; outline-offset:2px;}
+
+  /* ---------- toolbar ---------- */
+  .af-stat{font-family:var(--mono); font-size:12px; color:var(--t2); white-space:nowrap;}
+  /* the bar is static inside the shell and nothing scrolls beneath it, so the
+     global backdrop blur is pure GPU cost here; solid surface instead */
+  .af .tool-bar{backdrop-filter:none; background:var(--surface);}
+
+  /* ---------- floor ---------- */
+  #floor{position:relative; overflow:hidden; background:var(--wall); color:var(--ink);
+    font-family:var(--font);}
+
+  /* ---------- EHR backdrop (ambient, aria-hidden) ----------
+     The chart is SKINNABLE: every color rides an --e* prop, and the
+     achievement themes below override the set via [data-chart]. */
+  .af{
+    /* floor ink: the clicker text and floats sit ON the EHR murk, so the
+       dark skins lift them; light skins keep the original grays */
+    --fink:#5b6a62; --cink:#22302a; --csh:rgba(255,255,255,.6);
+    --flt:#2c6e4f; --fltb:#1B5FA8;
+    --bank-h:10px;
+    --eb:#41608a; --ebf:#fff;
+    --et:#d4dce6; --etf:#3d4c5c; --elin:#b7c2cf;
+    --ebody:#eef1f5;
+    --en:#dde4ec; --enf:#33465c; --enlin:#c3cdd8;
+    --ecell:#fff; --ecellf:#2f3f50; --ecl:#d4dbe3; --eth:#eaeef3;
+    --enote:#fffceb; --enoteb:#e3d9a8; --enotef:#4a4632; --enotet:#6a6134;
+  }
+  /* CERNER (Prophet) default palette: teal banner, gray Menu, blue selection.
+     BEFORE the color-theme palettes so a chosen theme still overrides it. */
+  .af[data-ehr="prophet"]{
+    --eb:#3f8fa8; --ebf:#ffffff;
+    --et:#e4e8ec; --etf:#2a3138; --elin:#c4cad0;
+    --ebody:#f3f6f8;
+    --en:#e7ebef; --enf:#2a3138; --enlin:#c6ccd2;
+    --ecell:#ffffff; --ecellf:#26303a; --ecl:#d2d7dc; --eth:#e0e5ea;
+    --enote:#fff7e0; --enoteb:#ddcf9a; --enotef:#5a4e28; --enotet:#6a5a2e;
+  }
+  /* EPIC (Heroic) default palette: white content, teal accents, gray Storyboard. */
+  .af[data-ehr="heroic"]{
+    --eb:#1f7a8c; --ebf:#ffffff;
+    --et:#eef2f4; --etf:#2a3138; --elin:#d4d8dc;
+    --ebody:#ffffff;
+    --en:#eef0f2; --enf:#2a3138; --enlin:#d6dade;
+    --ecell:#ffffff; --ecellf:#2a3138; --ecl:#dfe3e6; --eth:#eef2f4;
+    --enote:#fff7e0; --enoteb:#ddcf9a; --enotef:#5a4e28; --enotet:#6a5a2e;
+  }
+  .af[data-chart="cobalt"]{
+    --eb:#1e3a5f; --ebf:#e3edf9; --et:#b9c9de; --etf:#2f466b; --elin:#93a9c4;
+    --ebody:#dde6f2; --en:#c7d5e6; --enf:#2f466b; --enlin:#a9bcd3;
+    --ecell:#f2f6fb; --ecellf:#243b58; --ecl:#c3d2e4; --eth:#dfe8f3;
+    --enote:#e8eefb; --enoteb:#b3c4de; --enotef:#33486a; --enotet:#3c5f92;
+  }
+  .af[data-chart="terminal"]{
+    --fink:#9fc4ad; --cink:#e6f6ec; --csh:rgba(0,0,0,.55);
+    --flt:#7fe0a8; --fltb:#8fd0ff;
+    --eb:#0d1f12; --ebf:#3fe28f; --et:#0a180e; --etf:#2f9e63; --elin:#1c4a2e;
+    --ebody:#071409; --en:#0a1a0e; --enf:#3fe28f; --enlin:#173d24;
+    --ecell:#071409; --ecellf:#3fe28f; --ecl:#1c4a2e; --eth:#0d2413;
+    --enote:#071409; --enoteb:#2f9e63; --enotef:#5fd695; --enotet:#3fe28f;
+  }
+  .af[data-chart="night"]{
+    --fink:#a7b2bf; --cink:#e8edf3; --csh:rgba(0,0,0,.55);
+    --flt:#8fd8b0; --fltb:#9cc3f5;
+    --eb:#2b3440; --ebf:#dfe5ec; --et:#333c48; --etf:#95a1b0; --elin:#46515f;
+    --ebody:#262e38; --en:#2b3440; --enf:#9daaba; --enlin:#3a4552;
+    --ecell:#2a323d; --ecellf:#b7c4d4; --ecl:#3a4552; --eth:#313b47;
+    --enote:#332f22; --enoteb:#57503a; --enotef:#cfc6a5; --enotet:#ded1a0;
+  }
+  .af[data-chart="sunset"]{
+    --eb:#a35f2f; --ebf:#fff4e6; --et:#f2d9bd; --etf:#6b4a26; --elin:#dcbd97;
+    --ebody:#faeedd; --en:#f4e0c8; --enf:#6b4a26; --enlin:#e2c8a7;
+    --ecell:#fff8ec; --ecellf:#5c452a; --ecl:#e8d3b4; --eth:#f4e4cc;
+    --enote:#ffe9c9; --enoteb:#d9b070; --enotef:#5c452a; --enotet:#8a5a20;
+  }
+  .af[data-chart="golden"]{
+    --eb:#8a6d1d; --ebf:#fff9e3; --et:#ecdfae; --etf:#5a4d1e; --elin:#d6c68a;
+    --ebody:#f8f2d8; --en:#f0e6bd; --enf:#5a4d1e; --enlin:#ddd096;
+    --ecell:#fffbe8; --ecellf:#5a4d1e; --ecl:#e0d49a; --eth:#efe5b8;
+    --enote:#fdf3cd; --enoteb:#d4bf75; --enotef:#5f5122; --enotet:#8c7420;
+  }
+  .af[data-chart="mono"]{
+    --fink:#3a352c; --cink:#1a1712; --flt:#3a352c; --fltb:#111;
+    --eb:#1a1712; --ebf:#f5f2e9; --et:#e7e1d2; --etf:#2a251c; --elin:#c9c1ad;
+    --ebody:#f5f2e9; --en:#ece6d6; --enf:#2a251c; --enlin:#cec6b2;
+    --ecell:#fffdf6; --ecellf:#231f18; --ecl:#d8d0bc; --eth:#ece6d6;
+    --enote:#f3ecd6; --enoteb:#cbbf98; --enotef:#3a3222; --enotet:#4a4028;
+  }
+  .af[data-chart="crimson"]{
+    --fink:#6a4348; --flt:#8a2634; --fltb:#5a1420;
+    --eb:#5a1420; --ebf:#ffe9ec; --et:#e7c3c8; --etf:#5a1420; --elin:#cfa0a7;
+    --ebody:#f3d9dc; --en:#e9c8cc; --enf:#5a1420; --enlin:#d3a6ac;
+    --ecell:#fdeff1; --ecellf:#4a1018; --ecl:#e0bbc0; --eth:#efd2d6;
+    --enote:#fbe0d0; --enoteb:#d9a67f; --enotef:#5a2418; --enotet:#7a2018;
+  }
+  .af[data-chart="ash"]{
+    --fink:#8a8f93; --cink:#e8eaec; --csh:rgba(0,0,0,.5); --flt:#a7adb2; --fltb:#b7bdc2;
+    --eb:#3a3f43; --ebf:#d6dadd; --et:#4a4f54; --etf:#aeb4b9; --elin:#5a5f64;
+    --ebody:#42474b; --en:#3f4448; --enf:#a4aaae; --enlin:#53585d;
+    --ecell:#484d51; --ecellf:#c1c6ca; --ecl:#565b60; --eth:#4a4f54;
+    --enote:#43443f; --enoteb:#5c5d55; --enotef:#b8bab2; --enotet:#c9cbc0;
+  }
+  /* #ehr no longer fades as a whole: the banner and body dim (.ehr-dim), but the
+     TAB BAR stays crisp and interactive so Chart Themes + Achievements live in it */
+  #ehr{position:absolute; inset:0; z-index:0; pointer-events:none; user-select:none;
+    display:flex; flex-direction:column;}
+  .ehr-dim{opacity:.55;}
+  .ehrBanner{background:var(--eb); color:var(--ebf); font-size:12px; padding:5px 12px;
+    display:flex; gap:14px; white-space:nowrap; overflow:hidden; align-items:baseline;}
+  .ehrBanner b{font-size:13px;}
+  .ehrTabs{background:var(--et); border-bottom:1px solid var(--elin); padding:4px 10px 0;
+    font-size:11px; color:var(--etf); display:flex; gap:2px; align-items:flex-end;}
+  /* decorative clinical tabs: clip first when the row is tight, live tabs never do */
+  .ehr-dimtabs{display:flex; gap:2px; flex:0 1 auto; min-width:0; overflow:hidden;}
+  .ehr-dimtabs span{padding:3px 10px; border-radius:4px 4px 0 0; opacity:.6; white-space:nowrap;}
+  .ehr-dimtabs span.on{background:var(--ebody); border:1px solid var(--elin); border-bottom-color:var(--ebody);}
+  /* the live tabs: crisp, clickable, they read as the active chart tabs */
+  .ehr-tab{
+    flex:0 0 auto; pointer-events:auto; cursor:pointer; font:inherit; font-size:11px; font-weight:700;
+    padding:4px 11px; border:1px solid var(--elin); border-bottom:none; white-space:nowrap;
+    border-radius:5px 5px 0 0; background:var(--eth); color:var(--etf);
+    display:inline-flex; align-items:center; gap:5px; min-height:26px;
+  }
+  .ehr-tab:hover{background:var(--ebody); color:var(--eb);}
+  .ehr-tab.on{background:var(--ebody); color:var(--eb); border-bottom:1px solid var(--ebody); margin-bottom:-1px;}
+  .ehr-tab:focus-visible{outline:2px solid #1B5FA8; outline-offset:1px;}
+  .ehr-tab .tb{background:#2c6e4f; color:#fff; border-radius:8px; font-size:10px;
+    padding:0 6px; font-family:var(--mono); font-weight:700;}
+  /* control-tab group: a flex row in the top bar by default */
+  #ctrlTabs{display:flex; gap:2px; align-items:flex-end; flex:0 0 auto;}
+  /* ...but a vertical menu list when it lives in Cerner's left Menu */
+  #ctrlTabs.as-menu{flex-direction:column; align-items:stretch; gap:0; width:100%;}
+  #ctrlTabs.as-menu .ehr-tab{
+    border-radius:0; border:none; border-bottom:1px solid var(--enlin);
+    background:var(--en); color:var(--enf); width:100%; justify-content:flex-start;
+    padding:9px 12px; min-height:44px; font-weight:600; margin-bottom:0;
+  }
+  #ctrlTabs.as-menu .ehr-tab:hover{background:var(--ebody); color:var(--eb);}
+  #ctrlTabs.as-menu .ehr-tab.on{background:var(--ebody); color:var(--eb);
+    border-left:3px solid var(--eb); font-weight:700;}
+
+  /* ---------- background TEMPLATES (data-ehr) ----------
+     .ehrBody.ehr-tpl beats the plain .ehrBody display:flex (equal-specificity
+     order would otherwise show all three at once) */
+  .ehrBody.ehr-tpl{display:none;}
+  .af:not([data-ehr]) .ehrBody.ehr-tpl[data-tpl="generic"],
+  .af[data-ehr="generic"] .ehrBody.ehr-tpl[data-tpl="generic"],
+  .af[data-ehr="heroic"] .ehrBody.ehr-tpl[data-tpl="heroic"],
+  .af[data-ehr="prophet"] .ehrBody.ehr-tpl[data-tpl="prophet"]{display:flex;}
+  /* Heroic (Epic): patient on the SIDE (Storyboard rail); menus stay on top.
+     Epic hides the top demographics banner since the patient lives on the side. */
+  .af[data-ehr="heroic"] .ehrBanner{display:none;}
+  /* Cerner (Prophet): the nav lives in the LEFT Menu, so the top clinical tab
+     row is redundant (its items duplicate the Menu). Hide it. */
+  .af[data-ehr="prophet"] .ehrTabs{display:none;}
+  .sb-rail{width:150px; flex:0 0 150px; background:var(--en); border-right:1px solid var(--enlin);
+    padding:10px 10px 8px; color:var(--enf); font-size:11px; overflow:hidden;}
+  .sb-photo{width:44px; height:44px; border-radius:6px; background:var(--eth); border:1px solid var(--enlin);
+    display:flex; align-items:center; justify-content:center; font-size:26px; margin-bottom:6px;}
+  .sb-name{font-weight:800; font-size:13px; color:var(--eb);}
+  .sb-sub{font-size:10px; margin-bottom:7px;}
+  .sb-chip{display:inline-block; font-size:10px; padding:1px 7px; border-radius:9px; margin:0 3px 4px 0;
+    background:var(--eth); border:1px solid var(--enlin);}
+  .sb-chip.sb-allergy{background:var(--enote); border-color:var(--enoteb); color:var(--enotet);}
+  .sb-chip.sb-code{background:var(--ebody); font-weight:700;}
+  .sb-sec{font-weight:700; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--eb);
+    margin:8px 0 3px; border-top:1px solid var(--enlin); padding-top:6px;}
+  .sb-line{font-size:11px; line-height:1.5;}
+  .sb-hm{display:flex; align-items:center; gap:6px;}
+  .sb-hm::before{content:""; width:7px; height:7px; border-radius:50%; background:#c0392b; flex:0 0 auto;}
+  /* Epic identity: blue Storyboard name, red code status, teal section rules */
+  .af[data-ehr="heroic"] .sb-name{color:#2b6c9b;}
+  .af[data-ehr="heroic"] .sb-chip.sb-code{background:#fdeaea; border-color:#e2a6a6; color:#c0392b; font-weight:700;}
+  .af[data-ehr="heroic"] .sb-photo{border-color:#bcd3dd;}
+  /* Prophet (Cerner) menu + main */
+  .pc-menu{width:132px; flex:0 0 132px; background:var(--en); border-right:1px solid var(--enlin);
+    padding:0; color:var(--enf); font-size:11px; overflow:hidden;}
+  .pc-menu-h{background:var(--eb); color:var(--ebf); font-weight:700; padding:5px 10px; font-size:11px;}
+  .pc-item{padding:6px 12px; border-bottom:1px solid var(--enlin);}
+  .pc-item.on{background:var(--ebody); font-weight:700; border-left:3px solid var(--eb);}
+  .pc-toolbar{background:var(--eth); border:1px solid var(--ecl); border-radius:4px;
+    padding:5px 10px; font-size:11px; color:var(--ecellf); margin-bottom:10px;}
+  /* Cerner identity: teal banner + gold patient name, light Menu header, blue selection */
+  .af[data-ehr="prophet"] .ehrBanner{
+    background:linear-gradient(180deg, color-mix(in srgb, var(--eb) 84%, #fff 16%), var(--eb));
+    border-bottom:1px solid color-mix(in srgb, var(--eb) 70%, #000 30%);
+  }
+  .af[data-ehr="prophet"] .ehrBanner b{color:#e6b95c;}
+  .af[data-ehr="prophet"] .pc-menu{background:var(--en);}
+  .af[data-ehr="prophet"] .pc-menu-h{background:var(--et); color:var(--enf); font-weight:600;
+    border-bottom:1px solid var(--enlin);}
+  .af[data-ehr="prophet"] .pc-item.on,
+  .af[data-ehr="prophet"] #ctrlTabs.as-menu .ehr-tab.on{
+    background:linear-gradient(180deg,#5a9fd4,#3f83c2); color:#fff; border-left:none;}
+  /* ---------- EHR tab panel (Chart Themes / Achievements) ---------- */
+  /* opens BELOW the tab row so the tabs stay clickable (switch views live) */
+  #ehrPanel{
+    position:absolute; top:50px; left:0; right:0; bottom:0; z-index:11; display:none;
+    align-items:flex-start; justify-content:center; padding:8px 16px 16px; pointer-events:auto;
+  }
+  #ehrPanel.show{display:flex;}
+  #ehrPanel .scrim{position:absolute; inset:0; background:rgba(20,30,26,.28);}
+  .ehrp-card{
+    position:relative; z-index:1; background:#fff; color:#22302a; border:1px solid var(--line);
+    border-radius:12px; width:min(360px,94vw); max-height:calc(100% - 20px); overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.35); display:flex; flex-direction:column;
+    font-family:var(--font);
+  }
+  .ehrp-head{
+    display:flex; align-items:center; justify-content:space-between; padding:12px 14px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .ehrp-head .t{font-family:var(--display); font-weight:800; font-size:17px;}
+  .ehrp-head .n{font-family:var(--mono); font-size:11px; color:#5b6a62; margin-left:8px;}
+  .ehrp-x{min-width:40px; min-height:40px; display:flex; align-items:center; justify-content:center;
+    color:#5b6a62; font-size:16px; cursor:pointer; background:none; border:none;}
+  .ehrp-x:hover{color:#22302a;}
+  .ehrp-body{padding:12px 14px 16px; overflow-y:auto;}
+  /* achievements grid */
+  .ach-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .ach{display:flex; gap:9px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--chip);}
+  .ach.locked{opacity:.55;}
+  .ach .ic{font-size:22px; line-height:1; flex:0 0 auto; filter:grayscale(1);}
+  .ach.unlocked .ic{filter:none;}
+  .ach .tx{display:flex; flex-direction:column; min-width:0;}
+  .ach .an{display:block; font-weight:700; font-size:12.5px;}
+  .ach .ah{display:block; font-size:11px; color:#5b6a62; line-height:1.35; margin-top:2px;}
+  .ach .aw{display:block; font-size:10px; color:#2c6e4f; font-family:var(--mono); margin-top:3px;}
+  /* panel section headers (EHR / Color) + EHR template swatches */
+  .ehrp-sec{font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; color:#7a8880; margin:2px 0 8px;}
+  .ehrp-sec:not(:first-child){margin-top:14px; border-top:1px solid var(--line); padding-top:12px;}
+  .thm.ehrtpl.on{border-color:#1B5FA8; box-shadow:0 0 0 1px #1B5FA8;}
+  .thm .sw.tpl-generic{background:#e7ecf1;}
+  .thm .sw.tpl-heroic{background:linear-gradient(90deg,#1B5FA8 34%,#eef2f6 34%);}
+  .thm .sw.tpl-prophet{background:linear-gradient(180deg,#1B5FA8 38%,#eef2f6 38%);}
+  .ehrBody{flex:1; display:flex; overflow:hidden; background:var(--ebody);}
+  .ehrNav{width:130px; background:var(--en); border-right:1px solid var(--enlin);
+    padding:8px 0; font-size:12px; color:var(--enf);}
+  .ehrNav div{padding:6px 12px;}
+  .ehrNav .on{background:var(--ebody); font-weight:700; border-left:3px solid var(--eb);}
+  .ehrMain{flex:1; padding:12px; overflow:hidden;}
+  .ehrTable{border-collapse:collapse; background:var(--ecell); font-size:11px; width:100%; max-width:620px;}
+  .ehrTable th,.ehrTable td{border:1px solid var(--ecl); padding:4px 8px; text-align:left; color:var(--ecellf);}
+  .ehrTable th{background:var(--eth); font-weight:700;}
+  .ehrNote{margin-top:12px; background:var(--enote); border:1px solid var(--enoteb); max-width:620px;
+    padding:10px 12px; font-size:12px; color:var(--enotef);}
+  .ehrNote .t{font-weight:700; margin-bottom:4px; color:var(--enotet);}
+
+  /* ---------- the NURSE BRAIN: the paper sheet behind every EHR ----------
+     Printed labels (<b>), handwritten entries (<i>, the stickies' hand). Drawn
+     in the --e* tokens so every color skin recolors the paper and the pen. */
+  .brain{
+    background:var(--ecell); color:var(--ecellf); border:1.5px solid var(--ecellf);
+    font-family:var(--font); font-size:10.5px; line-height:1.25; max-width:760px;
+  }
+  .brain b{display:block; font-size:9px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--ecellf); opacity:.75;}
+  .brain i{font-style:normal; font-family:"Comic Sans MS","Segoe Print",cursive; font-size:11px;
+    color:var(--enotet);}
+  .br-title{display:flex; justify-content:space-between; align-items:baseline; padding:4px 8px;
+    border-bottom:1.5px solid var(--ecellf); font-weight:800; letter-spacing:.08em; font-size:11px;}
+  .br-grid{display:grid; grid-template-columns:1fr 1fr;}
+  .br-pt{border-right:1.5px solid var(--ecellf); border-bottom:1.5px solid var(--ecellf);}
+  .br-pt:nth-child(2n){border-right:none;}
+  .br-id{display:flex; flex-wrap:wrap; gap:2px 10px; padding:4px 8px; border-bottom:1px solid var(--ecl);
+    background:var(--eth);}
+  .br-id b, .br-row b, .br-vs b, .br-todo b{display:inline; margin-right:4px;}
+  .br-2{display:grid; grid-template-columns:1.4fr 1fr; border-bottom:1px solid var(--ecl);}
+  .br-2 > div{padding:4px 8px; min-height:34px;}
+  .br-2 > div + div{border-left:1px solid var(--ecl);}
+  .br-ck{list-style:none; margin:0; padding:4px 8px; display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:1px 6px; border-bottom:1px solid var(--ecl);}
+  .br-ck li{position:relative; padding-left:15px; font-size:10px; white-space:nowrap;}
+  .br-ck li::before{content:""; position:absolute; left:0; top:2px; width:9px; height:9px;
+    border:1.2px solid var(--ecellf);}
+  .br-ck li.on::after{content:"\2713"; position:absolute; left:1px; top:-4px; font-size:13px; font-weight:700;
+    font-family:"Comic Sans MS","Segoe Print",cursive; color:var(--enotet);}
+  .br-row, .br-vs{display:flex; align-items:baseline; gap:8px; padding:4px 8px; border-bottom:1px solid var(--ecl);}
+  .br-achs{margin-left:auto; font-size:9px; letter-spacing:.04em; white-space:nowrap;}
+  .br-todo{padding:5px 8px; display:flex; gap:8px; align-items:baseline;}
+
+  /* ---------- the big button ---------- */
+  /* the game console: monitor station stacked above the button, centered */
+  /* the console: centred by placeStage() at 53% of the floor, but its top never
+     rises above the tab row, so a tall stack slides down instead of covering
+     the tabs you need to reach the menus */
+  .stage{
+    position:absolute; left:50%; top:92px; transform:translateX(-50%);
+    z-index:2; display:flex; flex-direction:column; align-items:center; gap:16px;
+    width:min(640px,92vw); pointer-events:none;
+  }
+  /* Cerner keeps its live Menu on the left: the console parks to the right of it */
+  .af[data-ehr="prophet"] .stage{left:calc(50% + 72px); width:min(640px, calc(92vw - 156px));}
+  .stage > *{pointer-events:auto;}
+  .clicker{ text-align:center; width:min(400px,86vw); max-width:100%; }
+  #bigBtn{
+    font-size:22px; font-weight:700; padding:26px 40px; border-radius:14px;
+    border:2px solid #1d2a24; background:#fdfffd; color:var(--ink);
+    cursor:pointer; box-shadow:0 4px 0 #1d2a24; width:100%; font-family:var(--font);
+    transition:transform .06s ease, box-shadow .06s ease;
+  }
+  #bigBtn:active{transform:translateY(3px); box-shadow:0 1px 0 #1d2a24;}
+  /* the readout: the numbers sit on their own plate in fixed ink, so no skin
+     and no backdrop (the brain sheet is busy) can wash them out */
+  .readout{
+    margin-top:10px; padding:10px 16px 12px; border-radius:10px; color:#22302a;
+    background:#fdfffd; border:2px solid #1d2a24; box-shadow:0 3px 0 #1d2a24;
+  }
+  .clicker .count{font-family:var(--mono); font-size:34px; font-weight:800; color:#12201a;
+    font-variant-numeric:tabular-nums; line-height:1; letter-spacing:-.01em;}
+  .clicker .count .u{font-size:14px; font-weight:600; color:#4a5a52; letter-spacing:.06em;}
+  .clicker .rate{margin-top:5px; font-family:var(--mono); font-size:13px; font-weight:600; color:#2c6e4f;}
+  .clicker .rate.down{color:#b06f00;}
+  .clicker .sub{margin-top:8px; font-size:13.5px; font-weight:500; color:#33443c; line-height:1.4;}
+  .af .float{
+    position:absolute; font-weight:700; color:var(--flt); pointer-events:none;
+    animation:afrise 1.1s ease-out forwards; z-index:20; font-size:14px;
+    text-shadow:0 1px 0 var(--csh); white-space:nowrap;
+  }
+  .af .float.big{color:var(--fltb); font-size:16px;}
+  @keyframes afrise{from{opacity:1; transform:translateY(0);} to{opacity:0; transform:translateY(-46px);}}
+  @keyframes affade{from{opacity:1;} to{opacity:0;}}
+
+  /* newly unlocked upgrades surface here, under the button, then settle into the
+     "Pick up more" menu at the top. They float in, hold, and drift away. */
+  .reveal-tray{
+    position:absolute; top:calc(100% + 12px); left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; gap:8px; align-items:center;
+    width:max-content; max-width:min(360px,86vw); pointer-events:none; z-index:6;
+  }
+  .reveal-tray > *{pointer-events:auto;}
+  .af .reveal-card{
+    display:block; text-align:left; font:inherit; width:100%; cursor:pointer;
+    background:#22302a; color:#eef4ef; border:1px solid #35473f; border-radius:10px;
+    padding:9px 13px; box-shadow:0 6px 16px rgba(0,0,0,.3);
+    animation:afreveal-in .3s ease-out;
+  }
+  .af .reveal-card:hover{border-color:#5aa17c;}
+  .af .reveal-card.out{animation:afreveal-out .5s ease-in forwards;}
+  .af .reveal-card .rc-h{font-size:10px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:#8fd8b0;}
+  .af .reveal-card .rc-nm{font-weight:700; font-size:14px; margin-top:1px;}
+  .af .reveal-card .rc-ct{font-size:12px; color:#c9d6cf; margin-top:2px;}
+  @keyframes afreveal-in{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes afreveal-out{from{opacity:1; transform:translateY(0);} to{opacity:0; transform:translateY(-16px);}}
+
+  /* ---------- shop dock ---------- */
+  #shop{background:#f2f5f2; border-left:1px solid var(--line); padding:12px;}
+  #shop h2{font-size:13px; letter-spacing:.08em; margin:2px 0 10px; color:#4a5a52;
+    font-family:var(--font); font-weight:700;}
+  .af .upg{
+    display:block; width:100%; text-align:left; font:inherit; color:var(--ink);
+    background:var(--chip); border:1px solid var(--line); border-radius:8px;
+    padding:10px; margin-bottom:8px; cursor:pointer; transition:border-color .15s;
+  }
+  .af .upg:hover{border-color:#7fa08e;}
+  .af .upg.locked{opacity:.45; cursor:default;}
+  .af .upg.owned{display:none;}
+  .af .upg .nm{font-weight:700; font-size:14px;}
+  .af .upg .ds{font-size:12px; color:#5b6a62; margin:3px 0;}
+  .af .upg .ct{font-size:12px;}
+  .af .upg .ct b{color:#2c6e4f;}
+
+  /* ---------- chart theme rows (rendered inside the EHR panel) ---------- */
+  .af .thm{display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    font:inherit; color:var(--ink); background:var(--chip); border:1px solid var(--line);
+    border-radius:8px; padding:8px 10px; margin-bottom:8px; cursor:pointer;
+    min-height:44px; transition:border-color .15s;}
+  .af .thm:hover{border-color:#7fa08e;}
+  .af .thm.locked{opacity:.5; cursor:default;}
+  .af .thm.on{border-color:#1B5FA8; box-shadow:0 0 0 1px #1B5FA8;}
+  .af .thm .sw{flex:0 0 34px; height:22px; border-radius:5px; border:1px solid var(--line);}
+  .af .thm .tx{display:flex; flex-direction:column; gap:1px; min-width:0;}
+  .af .thm .tn{font-weight:700; font-size:13px;}
+  .af .thm .td{font-size:11px; color:#5b6a62;}
+
+  /* ---------- monitors & widgets ---------- */
+  .af .widget{position:absolute; z-index:4; border-radius:8px; user-select:none;}
+  .af .monitor{
+    background:var(--panel); color:var(--mon-green); padding:8px 12px;
+    border:1px solid #263832; box-shadow:0 3px 10px rgba(0,0,0,.25);
+    min-width:120px; min-height:44px; cursor:pointer; border-radius:8px;
+  }
+  .af .monitor .lbl{font-size:11px; color:#7d948a; letter-spacing:.1em;}
+  .af .monitor .val{font-size:26px; font-weight:700;}
+  .af .monitor.warn{color:var(--amber); animation:afblink .8s step-end infinite;}
+  .af .monitor.crit{color:var(--red); animation:afblink .4s step-end infinite;}
+  /* opacity, not filter: a dozen of these can strobe at once and filter
+     repaints were part of the jank */
+  @keyframes afblink{50%{opacity:.45;}}
+
+  /* call lights ride the right wall as one vertical strip, not a corner box */
+  .af .callboard{
+    right:12px; top:50%; transform:translateY(-50%);
+    background:#fff; border:1px solid var(--line); padding:8px; display:flex;
+    flex-direction:column; align-items:center; gap:6px; width:60px; border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,.12);
+  }
+  .af .callboard .ttl{width:100%; font-size:9px; letter-spacing:.06em; color:#5b6a62;
+    text-align:center; line-height:1.25;}
+  .af .room{
+    width:44px; min-height:44px; padding:6px 0; text-align:center; border-radius:6px;
+    font-size:12px; background:#eef1ee; border:1px solid var(--line); color:#7a8880;
+    font-family:var(--font); cursor:default;
+  }
+  .af .room.lit{
+    background:var(--amber); border-color:#c98400; color:#3c2a00; font-weight:700;
+    cursor:pointer; animation:afblink .9s step-end infinite;
+  }
+
+  /* the IV pump is a job, not a passive producer: hang a bag, start it, watch
+     the bar, clear the occlusions. It pays only when the bag is done. */
+  /* the pump column lives in the console. Below 1040px it is a strip under the
+     readout; from 1040px up it is a column parked beside the monitors. Either
+     way it can never land on the bank. */
+  #pumpRow{display:none; width:100%; gap:8px; justify-content:center; align-items:stretch;}
+  #pumpRow.on{display:flex;}
+  #pumpRow .pump{flex:1 1 0; min-width:0; max-width:220px;}
+  @media (min-width:1040px){
+    #pumpRow{position:absolute; top:0; left:calc(344px - 50vw); width:176px;
+      flex-direction:column; gap:12px; justify-content:flex-start;}
+    #pumpRow .pump{flex:0 0 auto; max-width:none;}
+  }
+  /* Cerner's live Menu owns the left wall, so on Prophet the pumps sit under the
+     readout at every width instead of beside the console */
+  .af[data-ehr="prophet"] #pumpRow{position:static; width:100%; flex-direction:row; gap:8px; justify-content:center;}
+  .af[data-ehr="prophet"] #pumpRow .pump{flex:1 1 0; max-width:220px;}
+  .af .pump{cursor:default; padding:8px 10px; text-align:left;}
+  .af .pump .status{font-size:12px; font-weight:700; margin-top:2px;}
+  .af .pump .bag{font-size:10px; color:#9fb3aa; margin-top:3px; white-space:nowrap;}
+  .af .pump .bar{height:7px; background:#14211c; border:1px solid #23443f; border-radius:4px;
+    margin:6px 0; overflow:hidden;}
+  /* the fill grows by scaleX, not width: compositor-only, no layout per tick */
+  .af .pump .bar i{display:block; height:100%; width:100%; background:var(--mon-cyan);
+    transform-origin:left center; transform:scaleX(0); transition:transform .25s linear;}
+  .af .pump.warn .bar i{background:var(--amber);}
+  .af .pump.done .bar i{background:var(--mon-green);}
+  .af .pump .pbtn{
+    width:100%; min-height:36px; cursor:pointer; border:1px solid #2c3f38; border-radius:5px;
+    background:#14211c; color:#9fd8c0; font-family:var(--mono); font-size:10px; letter-spacing:.12em;
+  }
+  .af .pump .pbtn:hover{border-color:#5aa17c;}
+  .af .pump .pbtn.run{opacity:.55; cursor:default;}
+  .af .pump.warn .pbtn{border-color:var(--amber); background:#3a2c08; color:#ffd98a; opacity:1;
+    animation:afblink .8s step-end infinite;}
+  .af .pump.done .pbtn{border-color:#3fe28f; color:#3fe28f;}
+  /* soiled: a job before the next bag, not an alarm. The wipe fills in wet blue. */
+  .af .pump.dirty .status{color:#c9d6cf;}
+  .af .pump.dirty .bar i{background:#8fd0ff;}
+  .af .pump.dirty .pbtn{border-color:#5aa17c; color:#9fd8c0;}
+
+  .af .toast{
+    position:absolute; z-index:8; background:#22302a; color:#eef4ef;
+    border-radius:10px; padding:10px 12px; max-width:250px; font-size:13px;
+    box-shadow:0 6px 16px rgba(0,0,0,.3); cursor:pointer; font-family:var(--font);
+    animation:afslidein .25s ease-out;
+  }
+  .af .toast .from{font-size:11px; letter-spacing:.08em; color:#9fb3a8; margin-bottom:3px;}
+  @keyframes afslidein{from{opacity:0; transform:translateX(-16px);} to{opacity:1; transform:none;}}
+
+  .af .banner{position:absolute; top:8px; left:0; right:0; z-index:9; text-align:center; pointer-events:none;}
+  .af .banner .inner{
+    display:inline-block; background:#2b2b2b; color:#f5e9c9; padding:7px 18px;
+    border-radius:6px; font-size:14px; animation:afslidein .3s ease-out;
+  }
+  .af .bedbanner{position:absolute; top:52px; left:0; right:0; z-index:10; text-align:center;}
+  .af .bedbanner .inner{
+    display:inline-block; background:var(--red); color:#fff; font-weight:800;
+    padding:10px 22px; border-radius:8px; cursor:pointer; font-size:16px; min-height:44px;
+    animation:afblink .35s step-end infinite; box-shadow:0 4px 14px rgba(160,0,0,.4);
+  }
+
+  /* ---------- the EHR dock: In Basket + Secure Chat live IN the chart ----------
+     They ride the --e* props, so chart skins recolor them too. */
+  /* rides the EHR banner's right edge, where Epic keeps the In Basket button;
+     z above the call board so it is never buried */
+  #ehrDock{position:absolute; top:2px; right:12px; z-index:6; display:flex; gap:6px;}
+  .edock-chip{
+    display:flex; align-items:center; gap:7px; min-height:32px; padding:4px 11px;
+    background:var(--et); color:var(--etf); border:1px solid var(--elin);
+    border-bottom:none; border-radius:5px 5px 0 0; font-family:var(--font);
+    font-size:12px; cursor:pointer;
+  }
+  .edock-chip:hover{background:var(--ebody);}
+  .edock-chip .ct{
+    background:#a13030; color:#fff; border-radius:9px; padding:1px 7px;
+    font-size:11px; font-weight:700; font-family:var(--mono);
+  }
+  .edock-chip.blink{animation:afblink .9s step-end infinite;}
+
+  #chatWin{
+    position:absolute; right:16px; bottom:130px; z-index:9; width:min(300px, 82vw);
+    background:var(--ecell); color:var(--ecellf); border:1px solid var(--elin);
+    box-shadow:0 8px 24px rgba(0,0,0,.28); display:none; font-family:var(--font);
+    border-radius:6px 6px 0 0; overflow:hidden;
+  }
+  #chatWin.open{display:block;}
+
+  /* the In Basket window: a pile you clear by DRAGGING each message to the bin */
+  #ibWin{
+    position:absolute; top:52px; right:12px; z-index:9; width:min(340px, 92vw);
+    background:var(--ecell); color:var(--ecellf); border:1px solid var(--elin);
+    box-shadow:0 8px 24px rgba(0,0,0,.28); display:none; font-family:var(--font);
+    border-radius:6px; overflow:hidden;
+  }
+  #ibWin.open{display:block;}
+  .ib-hint{font-size:11px; color:var(--etf); padding:8px 12px 2px;}
+  .ib-list{max-height:216px; overflow:auto; padding:6px 8px;}
+  .ib-row{
+    display:flex; align-items:center; gap:8px; min-height:44px; padding:6px 10px; margin-bottom:4px;
+    background:var(--eth); border:1px solid var(--ecl); border-radius:6px; font-size:12px; line-height:1.3;
+    cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none;
+  }
+  .ib-row:focus-visible{outline:2px solid #1B5FA8; outline-offset:1px;}
+  .ib-row.dragging{opacity:.35;}
+  .ib-row .ib-ic{flex:0 0 auto;}
+  .ib-ghost{position:fixed; z-index:200; pointer-events:none; width:280px; margin:0; cursor:grabbing;
+    transform:translate(-50%,-50%) rotate(-2deg); box-shadow:0 12px 28px rgba(0,0,0,.35); opacity:.95;}
+  .ib-empty{font-size:12px; color:var(--etf); padding:10px 4px; font-style:italic;}
+  .ib-bin{
+    margin:4px 8px 8px; min-height:64px; border:2px dashed var(--ecl); border-radius:8px;
+    display:flex; align-items:center; justify-content:center; gap:8px; font-size:12px; color:var(--etf);
+    transition:background-color .12s ease, border-color .12s ease;
+  }
+  .ib-bin .can{font-size:26px; line-height:1;}
+  .ib-bin.over{border-color:#c0392b; background:rgba(192,57,43,.1); color:#a33;}
+  .cw-head{
+    background:var(--eb); color:var(--ebf); padding:7px 10px; font-size:12px;
+    font-weight:700; display:flex; justify-content:space-between; align-items:center;
+  }
+  .cw-x{min-width:32px; min-height:32px; color:var(--ebf); font-size:14px;
+    display:flex; align-items:center; justify-content:center;}
+  .cw-body{padding:10px 12px 12px;}
+  .cw-from{font-weight:700; font-size:12px;}
+  .cw-msg{font-size:13px; line-height:1.5; margin:6px 0 10px;}
+  .cw-opt{
+    display:block; width:100%; text-align:left; margin-top:6px; padding:9px 10px;
+    min-height:40px; background:var(--eth); border:1px solid var(--ecl);
+    border-radius:6px; color:var(--ecellf); font-size:12.5px; cursor:pointer;
+    font-family:var(--font); line-height:1.4;
+  }
+  .cw-opt:hover{border-color:var(--eb);}
+
+  /* the CENTRAL MONITOR STATION: the four patients' sats and rhythms in one
+     core space at the bottom, the way a real tele bank shows every bed as a
+     row. Grows a row per pulse ox; the rhythm side fills in when tele is ordered. */
+  /* the monitor station now floats in the console above the button */
+  #bank{
+    width:100%; z-index:1; display:none; border-radius:10px; overflow:hidden;
+    background:var(--panel); border:2px solid #263832; box-shadow:0 6px 20px rgba(0,0,0,.35);
+  }
+  #bank.on{display:block;}
+  .bank-hdr{
+    font-family:var(--mono); font-size:10px; letter-spacing:.14em; color:#7d948a;
+    padding:5px 12px 3px; display:flex; justify-content:space-between; align-items:center;
+  }
+  /* four TILES in a 2x2 grid, one per patient: the sat square, the rate, the
+     clear button, and (once tele is bought) that patient's own rhythm strip.
+     Each tile owns its canvas, so nothing shares a pen or a paint bar, and the
+     same grid fits a phone and a desktop. */
+  .bank-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:6px;}
+  .bank-tile{
+    position:relative; background:#0e1b16; border:1px solid #1f3129; border-radius:7px;
+    padding:6px 8px; font-family:var(--mono); display:grid; gap:5px; align-items:center;
+    grid-template-columns:auto 1fr auto; grid-template-areas:"rm hr clr" "box box clr" "cv cv cv";
+  }
+  .bank-tile .rm{grid-area:rm; font-size:10px; color:#7d948a; letter-spacing:.08em;}
+  .bank-tile .hr{grid-area:hr; font-size:13px; color:var(--mon-green); justify-self:end;}
+  /* SpO2 in a square that highlights as the number drops (real-monitor cyan) */
+  .bank-tile .sat-box{
+    grid-area:box; justify-self:start; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; min-width:56px; padding:3px 8px; line-height:1;
+    border:1px solid #23443f; border-radius:5px; background:#0b1411;
+  }
+  .bank-tile .sat-box .pl{font-size:8px; letter-spacing:.08em; color:#4d8f9a;}
+  .bank-tile .sat-box .sv{font-size:20px; font-weight:700; color:var(--mon-cyan);}
+  .bank-tile .sat-box.warn{border-color:var(--amber); background:#2a2109;}
+  .bank-tile .sat-box.warn .sv, .bank-tile .sat-box.warn .pl{color:var(--amber);}
+  .bank-tile .sat-box.crit{border-color:var(--red); background:#2c1113;
+    animation:afblink .5s step-end infinite;}
+  .bank-tile .sat-box.crit .sv, .bank-tile .sat-box.crit .pl{color:var(--red);}
+  /* the clear button: what you push to silence a sat, not the number itself */
+  .bank-tile .clr{
+    grid-area:clr; align-self:stretch; min-height:44px; padding:0 10px; cursor:pointer;
+    border:1px solid #2c3f38; border-radius:5px; background:#14211c; color:#6b7d76;
+    font-family:var(--mono); font-size:10px; letter-spacing:.12em;
+  }
+  .bank-tile.alarming .clr{border-color:var(--amber); background:#3a2c08; color:#ffd98a;
+    animation:afblink .8s step-end infinite;}
+  /* the strip: hidden until tele, then that patient's own trace */
+  .bank-tile .tile-cv{grid-area:cv; display:none; width:100%; height:40px; border-radius:4px; background:#0b1411;}
+  #bank.tele-on .bank-tile .tile-cv{display:block;}
+  /* eight patients (4 West + 4 East): four tiles across, a touch tighter */
+  #bank.wide .bank-grid{grid-template-columns:repeat(4,1fr); gap:5px; padding:5px;}
+  #bank.wide .bank-tile{padding:5px 6px; gap:4px;}
+  #bank.wide .bank-tile .clr{padding:0 6px; min-height:40px; font-size:9px;}
+  #bank.wide .bank-tile .sat-box{min-width:50px; padding:2px 6px;}
+  /* tele flags sit ON that patient's strip (the tile is position:relative) */
+  .af .teleflag{
+    position:absolute; left:6px; right:6px; bottom:6px; z-index:3; background:rgba(11,20,17,.92);
+    border:1px solid var(--amber); color:var(--amber); padding:8px 10px; text-align:left;
+    border-radius:5px; font-size:11px; cursor:pointer; min-height:36px;
+    animation:afblink .8s step-end infinite;
+  }
+  .af .teleflag.quiet{border-color:#3a4a44; color:#c9d6cf; animation:none;}
+
+  /* sound settings: a mixer that drops from the Sound chip in the bar */
+  .soundmenu{
+    position:absolute; top:8px; right:12px; z-index:60; width:min(300px,92vw);
+    background:#fff; color:#22302a; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 10px 26px rgba(0,0,0,.28); font-family:var(--font); padding:0 0 8px;
+    max-height:calc(100% - 16px); overflow:auto;
+  }
+  .soundmenu[hidden]{display:none;}
+  .sm-hd{background:#1d2a24; color:#dfe9e2; padding:6px 6px 6px 12px; display:flex; justify-content:space-between;
+    align-items:center; font-size:12px; font-weight:700; letter-spacing:.08em; border-radius:9px 9px 0 0;}
+  .sm-x{min-width:36px; min-height:36px; display:flex; align-items:center; justify-content:center; color:#dfe9e2; font-size:14px;}
+  .sm-row:first-of-type{margin-top:6px;}
+  .sm-sec{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:#5b6a62; padding:10px 12px 2px; font-weight:700;}
+  .sm-row{display:grid; grid-template-columns:1fr 130px; align-items:center; gap:10px; padding:0 12px; min-height:40px; font-size:13px;}
+  .sm-row input[type=range]{width:100%; min-height:44px; accent-color:#1B5FA8; cursor:pointer;}
+  .sm-row input:focus-visible, .sm-mute:focus-visible, .sm-x:focus-visible{outline:2px solid #1B5FA8; outline-offset:2px;}
+
+  /* the family member is a talking head: a small face beside a speech bubble.
+     The mouth flaps and the head bobs while a question types itself out; the
+     eyes blink between questions. Transform and opacity only. */
+  .af .family{
+    display:grid; grid-template-columns:64px 1fr; gap:10px; align-items:start;
+    background:#fff; border:1px solid var(--line); padding:10px; width:min(300px,68vw);
+    box-shadow:0 3px 10px rgba(0,0,0,.12); font-size:13px; font-family:var(--font);
+  }
+  .af .family .head{width:64px; height:64px; display:block;}
+  .af .family .head .eye{transform-origin:center; transform-box:fill-box; animation:afblinkeye 5s ease-in-out infinite;}
+  .af .family .head .eye.r{animation-delay:.15s;}
+  .af .family .head .mouth{transform-origin:center; transform-box:fill-box; transform:scaleY(.25);}
+  .af .family.talking .head{animation:afbob .5s ease-in-out infinite;}
+  .af .family.talking .head .mouth{animation:afmouth .22s ease-in-out infinite;}
+  @keyframes afmouth{0%,100%{transform:scaleY(.25);} 50%{transform:scaleY(1);}}
+  @keyframes afblinkeye{0%,92%,100%{transform:scaleY(1);} 96%{transform:scaleY(.08);}}
+  @keyframes afbob{0%,100%{transform:translateY(0) rotate(0);} 50%{transform:translateY(-2px) rotate(-2deg);}}
+  .af .family .who{font-size:11px; font-weight:700; letter-spacing:.04em; color:#5b6a62; margin-bottom:3px;}
+  .af .family .bubble{
+    position:relative; background:#f4f7f5; border:1px solid var(--line); border-radius:10px;
+    padding:7px 10px; min-height:40px; line-height:1.4;
+  }
+  .af .family .bubble::before{content:""; position:absolute; left:-7px; top:14px; width:12px; height:12px;
+    background:#f4f7f5; border-left:1px solid var(--line); border-bottom:1px solid var(--line);
+    transform:rotate(45deg);}
+  .af .family .caret{display:inline-block; width:2px; height:1em; background:#22302a; vertical-align:-2px;
+    margin-left:1px; animation:afcaret .7s step-end infinite;}
+  @keyframes afcaret{50%{opacity:0;}}
+  .af .family button{
+    grid-column:1 / -1; margin-top:2px; border:1px solid #7fa08e; background:#eef7f1; color:#2c6e4f;
+    border-radius:6px; padding:10px 12px; cursor:pointer; font-size:12px;
+    min-height:44px; font-family:var(--font);
+  }
+  .af .family button:disabled{opacity:.5; cursor:default;}
+  /* between questions the card drops away and just the head floats there */
+  .af .family.quiet{grid-template-columns:64px; width:64px; background:transparent; border-color:transparent;
+    box-shadow:none; padding:0;}
+  .af .family.quiet .who, .af .family.quiet .bubble, .af .family.quiet button{display:none;}
+  .af .family.quiet .head{animation:affloat 3.2s ease-in-out infinite;}
+  @keyframes affloat{0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);}}
+
+  /* the reporting dashboard: management's numbers about you, in the chart */
+  .ehr-tab[hidden]{display:none;}
+  .dash-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;}
+  .dash-stat{background:var(--chip); border:1px solid var(--line); border-radius:8px; padding:8px 10px; min-width:0;}
+  .dash-stat b{display:block; font-family:var(--mono); font-size:22px; font-weight:700; color:#22302a; line-height:1.1;
+    font-variant-numeric:tabular-nums; overflow-wrap:anywhere;}
+  .dash-stat span{display:block; font-size:11px; color:#5b6a62; margin-top:3px;}
+  .dash-ear{display:grid; grid-template-columns:112px 1fr 44px; gap:8px; align-items:center; font-size:12px; padding:3px 0;}
+  .dash-ear .bar{height:8px; background:#e3e9e5; border-radius:4px; overflow:hidden;}
+  .dash-ear .bar i{display:block; height:100%; background:#2c6e4f;}
+  .dash-ear .bar i.low{background:#c98400;}
+  .dash-ear .bar i.gone{background:#a33;}
+  .dash-ear .pct{font-family:var(--mono); text-align:right; color:#5b6a62;}
+  .dash-note{margin-top:10px; padding:8px 10px; background:var(--enote); border:1px solid var(--enoteb);
+    color:var(--enotef); border-radius:6px; font-size:12px; line-height:1.45;}
+
+  .af .surveyor{
+    background:#fff; border:2px solid #444; padding:10px 12px; max-width:210px;
+    font-size:12px; box-shadow:0 4px 12px rgba(0,0,0,.2); font-family:var(--font);
+  }
+  .af .surveyor .who{font-weight:800; font-size:13px;}
+  .af .surveyor .note{margin-top:6px; color:#6a4a00; font-style:italic; min-height:16px;}
+
+  /* ---------- techs ---------- */
+  .af .tech{
+    position:absolute; z-index:7; text-align:center; cursor:pointer;
+    width:64px; user-select:none;
+  }
+  .af .tech .face{font-size:30px; line-height:1; filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));}
+  .af .tech .tag{
+    font-size:11px; background:#22302a; color:#e7f0ea; border-radius:8px;
+    padding:1px 6px; display:inline-block; margin-top:2px; font-family:var(--font);
+  }
+  .af .tech .bub{
+    position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    font-size:11px; padding:2px 8px; white-space:nowrap; display:none;
+    box-shadow:0 3px 8px rgba(0,0,0,.15); color:var(--ink);
+  }
+  .af .tech.idle .bub{display:block;}
+  .af .tech.idle .face{animation:afsway 1.6s ease-in-out infinite;}
+  @keyframes afsway{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}}
+
+  /* ---------- shift huddle window (dismissable, pops back periodically) ---------- */
+  .af .huddle{
+    position:absolute; left:50%; top:96px; transform:translateX(-50%); z-index:5;
+    width:min(300px,86vw); background:#fff; color:#22302a; border:1px solid var(--line);
+    border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.2); overflow:hidden;
+    font-family:var(--font); animation:afslidein .25s ease-out;
+  }
+  .af .huddle .hd{
+    background:#1d2a24; color:#dfe9e2; padding:6px 6px 6px 12px; display:flex;
+    align-items:center; justify-content:space-between; font-size:12px; font-weight:700;
+    letter-spacing:.06em;
+  }
+  .af .huddle .hx{
+    min-width:32px; min-height:32px; display:flex; align-items:center; justify-content:center;
+    color:#dfe9e2; font-size:14px;
+  }
+  .af .huddle .hx:hover{color:#fff;}
+  .af .huddle .bd{padding:9px 12px; font-size:12.5px; line-height:1.6;}
+  .af .huddle .bd .big{font-family:var(--mono); font-size:11px; color:#4a5a52; letter-spacing:.02em;}
+  .af .huddle .bd b{color:#a33;}
+  .af .huddle .focus{margin-top:6px; color:#5b6a62; font-style:italic;}
+
+  /* hand-off report: parks top-right so the central monitors stay readable,
+     because the answers are on them */
+  .af .report{
+    position:absolute; right:16px; top:96px; z-index:7; width:min(330px,92vw);
+    background:#fff; color:#22302a; border:1px solid var(--line); border-radius:8px;
+    box-shadow:0 8px 22px rgba(0,0,0,.25); overflow:hidden; font-family:var(--font);
+    animation:afslidein .25s ease-out;
+  }
+  .af .report .hd{background:#1d2a24; color:#dfe9e2; padding:8px 12px; font-size:12px;
+    font-weight:700; letter-spacing:.06em; display:flex; justify-content:space-between; align-items:center;}
+  .af .report .hd .pg{font-family:var(--mono); font-weight:400; color:#9fb3aa;}
+  .af .report .bd{padding:10px 12px; font-size:13.5px; line-height:1.5;}
+  .af .report .who{font-size:11px; color:#5b6a62; letter-spacing:.06em; text-transform:uppercase; margin-bottom:3px;}
+  .af .report .q{font-weight:700; margin-bottom:8px;}
+  .af .report .row{display:flex; gap:8px;}
+  .af .report input{flex:1; min-width:0; min-height:44px; padding:0 10px; border:1px solid var(--line);
+    border-radius:6px; font:inherit; font-family:var(--mono); font-size:16px;}
+  .af .report .go, .af .report .done{
+    min-height:44px; padding:0 14px; border-radius:6px; border:1px solid #2c3f38;
+    background:#1d2a24; color:#eef4ef; font:inherit; font-weight:700; cursor:pointer;
+  }
+  .af .report .opt{
+    display:block; width:100%; text-align:left; min-height:44px; padding:0 12px; margin-bottom:6px;
+    border-radius:6px; border:1px solid var(--line); background:var(--chip); color:var(--ink);
+    font:inherit; font-weight:600; cursor:pointer;
+  }
+  .af .report .opt:hover{border-color:#7fa08e;}
+  .af .report .fb{margin-top:8px; font-size:12.5px; min-height:18px; color:#5b6a62;}
+  .af .report .fb.ok{color:#2c6e4f; font-weight:700;}
+  .af .report .fb.no{color:#a33;}
+  .af .report .sum{font-family:var(--display); font-weight:600; font-size:22px; margin:2px 0 6px;}
+  .af .report input:focus-visible, .af .report button:focus-visible{outline:2px solid #1B5FA8; outline-offset:1px;}
+
+  /* med pass card: sits on the chart to the right of Cerner's live Menu column */
+  .af .medcard{
+    position:absolute; left:170px; top:96px; z-index:5; width:min(300px,86vw);
+    background:#fff; color:#22302a; border:1px solid var(--line); border-radius:8px;
+    box-shadow:0 6px 18px rgba(0,0,0,.2); overflow:hidden; font-family:var(--font);
+    animation:afslidein .25s ease-out;
+  }
+  .af .medcard .hd{background:#1d2a24; color:#dfe9e2; padding:6px 12px; font-size:12px;
+    font-weight:700; letter-spacing:.06em; display:flex; justify-content:space-between; align-items:center;}
+  .af .medcard .hd .tm{font-family:var(--mono); font-weight:400; color:#9fb3aa;}
+  .af .medcard .hd .tm.late{color:var(--amber);}
+  .af .medcard .bd{padding:9px 12px; font-size:13px; line-height:1.5;}
+  .af .medcard .who{font-size:11px; color:#5b6a62; letter-spacing:.06em; text-transform:uppercase;}
+  .af .medcard .med{font-weight:700; font-size:14px; margin:1px 0 7px;}
+  .af .medcard .steps{display:flex; gap:5px; margin-bottom:8px;}
+  .af .medcard .steps i{flex:1; height:5px; border-radius:3px; background:#e3e9e5;}
+  .af .medcard .steps i.on{background:#2c6e4f;}
+  .af .medcard .acts{display:flex; gap:6px;}
+  .af .medcard .mb{
+    flex:1; min-height:44px; padding:0 6px; border-radius:6px; border:1px solid var(--line);
+    background:var(--chip); color:var(--ink); font:inherit; font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .af .medcard .mb:hover{border-color:#7fa08e;}
+  .af .medcard .mb:disabled{opacity:.5; cursor:default;}
+  .af .medcard .mb:focus-visible{outline:2px solid #1B5FA8; outline-offset:1px;}
+  .af .medcard .fb{margin-top:7px; min-height:16px; font-size:12px; color:#5b6a62;}
+  .af .medcard.wrong{border-color:#c0392b;}
+  .af .medcard.wrong .hd{background:#8d1f2c;}
+  .af .medcard.wrong .fb{color:#a33; font-weight:700; letter-spacing:.06em;}
+
+  /* ---------- clutter ---------- */
+  .af .sticky{
+    position:absolute; z-index:5; width:110px; padding:8px; font-size:11px;
+    font-family:"Comic Sans MS","Segoe Print",cursive; color:#4a3b00;
+    box-shadow:2px 3px 6px rgba(0,0,0,.2); cursor:pointer; line-height:1.3;
+    border:none; text-align:left;
+  }
+
+  /* ---------- CODE BLUE: veil + floor shake ---------- */
+  #codeVeil{
+    position:fixed; inset:0; z-index:55; display:none; pointer-events:none;
+    box-shadow:inset 0 0 140px rgba(200,30,40,.6);
+    animation:afveil .9s ease-in-out infinite alternate;
+  }
+  #codeVeil.show{display:block;}
+  @keyframes afveil{from{opacity:.45;} to{opacity:1;}}
+  @keyframes afshake{
+    0%,100%{transform:none;} 20%{transform:translate(-6px,3px);}
+    40%{transform:translate(5px,-4px);} 60%{transform:translate(-4px,2px);}
+    80%{transform:translate(3px,-2px);}
+  }
+  .af.code-on #floor{animation:afshake .45s ease-in-out;}
+
+  /* ---------- BPA modal ---------- */
+  #bpaLayer{
+    position:fixed; inset:0; z-index:50; display:none; align-items:center;
+    justify-content:center; background:rgba(20,30,26,.35);
+  }
+  #bpaLayer.show{display:flex;}
+  .bpa{
+    background:#fff; color:#22302a; width:min(440px, 90vw); border-radius:8px; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.4); font-family:var(--font);
+  }
+  .bpa .head{background:#8d1f2c; color:#fff; padding:10px 14px; font-weight:700; font-size:14px;}
+  .bpa .body{padding:16px 14px; font-size:14px; line-height:1.5;}
+  .bpa .foot{padding:10px 14px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid #e5e5e5;}
+  .bpa button{padding:10px 16px; border-radius:5px; cursor:pointer; font-size:13px;
+    border:1px solid #999; background:#f4f4f4; color:#22302a; min-height:44px; font-family:var(--font);}
+  .bpa button.primary{background:#8d1f2c; color:#fff; border-color:#8d1f2c;}
+
+  /* ---------- CODE modal ---------- */
+  #codeLayer{
+    position:fixed; inset:0; z-index:60; display:none; align-items:center;
+    justify-content:center; background:rgba(120,10,20,.45);
+  }
+  #codeLayer.show{display:flex;}
+  .codebox{
+    background:#fff; color:#22302a; width:min(480px, 92vw); border-radius:10px; overflow:hidden;
+    box-shadow:0 24px 70px rgba(0,0,0,.5); border:3px solid #ff4d55; font-family:var(--font);
+  }
+  .codebox .head{
+    background:#ff4d55; color:#fff; padding:12px 16px; font-weight:800;
+    font-size:17px; letter-spacing:.05em; animation:afblink .5s step-end infinite;
+  }
+  .codebox .body{padding:18px 16px; font-size:15px; line-height:1.6;}
+  .codebox .q{font-weight:700; margin-top:8px;}
+  /* the dose is a pick, not a typed decimal: the right answer and three slips */
+  .codebox .opts{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;}
+  .codebox .opt{
+    min-height:48px; font-size:17px; font-weight:700; font-family:var(--mono);
+    background:#fff; color:#22302a; border:2px solid #333; border-radius:6px; cursor:pointer;
+  }
+  .codebox .opt:hover{border-color:#ff4d55;}
+  .codebox .opt:focus-visible{outline:3px solid #1B5FA8; outline-offset:2px;}
+  .codebox .opt.wrong{border-color:#ff4d55; color:#ff4d55; opacity:.55; text-decoration:line-through; animation:afwrong .3s;}
+  .codebox .opt:disabled{cursor:default;}
+  @keyframes afwrong{0%,100%{transform:none;}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .codebox button{
+    font-size:15px; font-weight:700; padding:8px 18px; border-radius:6px;
+    background:#ff4d55; color:#fff; border:none; cursor:pointer; min-height:44px; font-family:var(--font);
+  }
+  .codebox .hint{font-size:12px; color:#8a5560; margin-top:10px; min-height:16px;}
+
+  /* ---------- "best on a bigger screen" notice (small screens, once/session) ---------- */
+  #afBigScreen{
+    position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center;
+    background:rgba(13,17,23,.72); padding:24px;
+  }
+  #afBigScreen.show{display:flex;}
+  .afbs-card{
+    background:var(--surface); color:var(--t1); border:1px solid var(--border2);
+    border-radius:14px; max-width:340px; padding:22px 20px 20px; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.5); font-family:var(--font);
+  }
+  .afbs-card h2{font-family:var(--display); font-size:19px; font-weight:800; margin-bottom:10px; color:var(--t1);}
+  .afbs-card p{font-size:14px; color:var(--t2); line-height:1.6; margin-bottom:16px;}
+  .afbs-card button{
+    min-height:44px; padding:10px 22px; border-radius:10px; border:1px solid var(--border2);
+    background:var(--raised); color:var(--t1); font-size:14px; font-weight:600; cursor:pointer;
+    font-family:var(--font);
+  }
+  .afbs-card button:hover{border-color:var(--teal);}
+  .afbs-card button:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+
+  /* ---------- lunch ---------- */
+  #lunch{
+    position:fixed; inset:0; z-index:100; display:none; align-items:center;
+    justify-content:center; text-align:center; color:#324a56;
+    background:linear-gradient(180deg,#dfeef2 0%, #cfe4de 60%, #c3dccf 100%);
+    opacity:0; transition:opacity 3s ease; font-family:var(--font);
+  }
+  #lunch.show{display:flex;}
+  #lunch.in{opacity:1;}
+  #lunch .card{max-width:460px; padding:20px;}
+  #lunch h1{font-family:var(--display); font-weight:600; font-size:28px; margin:0 0 14px;}
+  #lunch p{font-size:15px; line-height:1.7; margin:8px 0;}
+  #lunch .stats{margin:18px 0; font-size:14px; color:#48605c;}
+  #lunch button{
+    margin-top:16px; padding:10px 22px; border-radius:8px; cursor:pointer;
+    border:1px solid #5d7d76; background:transparent; color:#3c5a54; font-size:14px;
+    min-height:44px; font-family:var(--font);
+  }
+  #lunch .lunch-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  #lunch button.ghost{border-color:#9db3ac; color:#5a726b; opacity:.85;}
+  #lunch button#lunchStay{border-color:#3c5a54; background:rgba(60,90,84,.08); font-weight:600;}
+  #lunch .lunch-link{display:inline-block; margin:14px 0 0; padding:10px 8px;
+    color:#48605c; font-size:13px; text-decoration:underline; border-bottom:none;}
+
+  /* ---------- phone: keep the app grid, floor over dock ---------- */
+  @media (max-width:699px){
+    /* the bar earns its rows back: kicker and back-chip retire (the title
+       and the summon menu carry both), so the bar wraps to two rows max */
+    .af .tool-bar-kicker{display:none;}
+    .af .af-back{display:none;}
+    .af.hu-shell{height:calc(100vh - var(--nav-h)); height:calc(100dvh - var(--nav-h));
+      overflow:hidden; min-height:0;}
+    .af .shell-main{display:flex; flex-direction:column;}
+    .af .shell-canvas{height:auto; flex:1; min-height:0;}
+    /* console (monitors + button) sits a touch higher so the bottom stays free */
+    .stage{width:96vw;}
+    /* the whole floor on a phone outgrows the screen (eight tiles, three pumps),
+       so the console scrolls inside the floor and the big button rides its
+       bottom edge: the monitors slide under it, the button stays one thumb away */
+    .stage{max-height:calc(100% - 98px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none;}
+    .stage::-webkit-scrollbar{display:none;}
+    .stage > *{flex:0 0 auto;}   /* nothing squeezes to fit: the console scrolls instead */
+    .clicker{position:sticky; bottom:0; z-index:3; width:100%; padding:6px 0 2px;
+      background:var(--ecell); box-shadow:0 -10px 14px -10px rgba(0,0,0,.35);}
+    /* phone: no room to park beside Cerner's Menu, so the control tabs ride the
+       top row here and the console keeps the full width */
+    .af[data-ehr="prophet"] .stage{left:50%; width:96vw;}
+    .af[data-ehr="prophet"] .ehrTabs{display:flex;}
+    #bigBtn{padding:20px 28px; font-size:20px;}
+    .ehrNav{display:none;} .ehrBanner span{display:none;}
+    .pc-menu{flex-basis:112px; width:112px;}
+    .sb-rail{flex-basis:118px; width:118px;}
+    /* phone: drop the decorative clinical tabs, keep the live ones */
+    .ehr-dimtabs{display:none;}
+    .ehr-tab{min-height:34px;}
+    .ach-grid{grid-template-columns:1fr;}
+    .af .huddle .hx{min-width:44px; min-height:44px;}
+    /* phone: the vertical wall strip would cross the centered button, so the
+       call board folds back to a compact top-right block */
+    .af .callboard{top:52px; right:8px; transform:none; flex-direction:row;
+      flex-wrap:wrap; align-items:flex-start; width:auto; max-width:150px;}
+    .reveal-tray{max-width:92vw;}
+    .edock-chip{min-height:44px;}
+    .cw-x{min-width:44px; min-height:44px;}
+    .cw-opt{min-height:44px;}
+    #ibWin{left:8px; right:8px; width:auto; top:48px;}
+    .bank-tile .sat-box .sv{font-size:18px;}
+    #bank.wide .bank-grid{grid-template-columns:1fr 1fr;}
+    #bank.wide .bank-tile .clr{min-height:44px;}
+    .af .teleflag{min-height:44px;}
+    .soundmenu{left:8px; right:8px; width:auto;}
+    /* phone: three pumps share one compact strip under the readout */
+    #pumpRow{gap:5px;}
+    #pumpRow .pump{padding:6px;}
+    .af .pump .lbl{font-size:9px;}
+    .af .pump .status{font-size:10px;}
+    .af .pump .bag{font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .af .pump .pbtn{min-height:44px;}
+    /* phone: the report becomes a bottom sheet so the monitors mid-screen stay visible */
+    .af .report{right:8px; left:8px; top:auto; bottom:8px; width:auto; max-height:46vh; overflow:auto;}
+    .af .medcard{left:8px; right:8px; top:auto; bottom:8px; width:auto;}
+    .br-grid{grid-template-columns:1fr;} .brain{font-size:9.5px;}
+  }
+
+  /* ---------- reduced motion: state keeps its color, loses its strobe ---------- */
+  @media (prefers-reduced-motion: reduce){
+    .af .monitor.warn, .af .monitor.crit, .af .room.lit, .af .bedbanner .inner,
+    .af .teleflag, .codebox .head, .af .tech.idle .face,
+    .codebox .opt.wrong, .af.code-on #floor{animation:none;}
+    .af .float{animation:affade 1.1s ease-out forwards;}
+    .af .toast, .af .banner .inner{animation:none;}
+    .af .reveal-card{animation:none;}
+    .af .family .head, .af .family.quiet .head, .af .family.talking .head, .af .family .head .eye,
+    .af .family .head .mouth, .af .family.talking .head .mouth, .af .family .caret{animation:none;}
+    .af .reveal-card.out{animation:affade .5s ease-in forwards;}
+    #codeVeil{animation:none; opacity:.55;}
+    #bigBtn{transition:none;}
+    #lunch{transition-duration:.4s;}
+  }
+</style>
+
+<div class="af hu-shell" id="afShell">
+
+<header class="tool-bar">
+  <a class="tb-brand" href="/" aria-label="Healthcare Uncharted, home">
+    <img src="/brand/hu-mark-dark.svg" alt="" class="hu-logo-ondark">
+    <img src="/brand/hu-mark.svg" alt="" class="hu-logo-onlight">
+  </a>
+  <span class="tool-bar-kicker">Fun</span>
+  <h1 class="tool-bar-title">Alarm <span>Fatigue</span></h1>
+  <span class="tool-bar-crumb">4 West &middot; Med/Surg</span>
+  <span class="tool-bar-spacer"></span>
+  <div class="tool-bar-actions">
+    <span class="af-stat mono" id="clockV" title="Shift clock">0700</span>
+    <button class="toggle-chip" id="muteBtn" type="button" aria-pressed="false">&#128266; Sound</button>
+    <button class="toggle-chip" id="mixBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Sound settings" title="Sound settings">&#127898; Mixer</button>
+    <button class="toggle-chip" id="resetBtn" type="button">Restart shift</button>
+    <a href="/learn/#fun" class="toggle-chip af-back">&#8592; Learn</a>
+    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i></button>
+  </div>
+</header>
+
+<div class="shell-main">
+<div id="floor" class="shell-canvas">
+  <div id="ehr">
+    <div class="ehrBanner ehr-dim" aria-hidden="true"><b>DOE, JONATHAN</b><span>58 y.o. &middot; M</span><span>MRN 00012345</span><span>Allergies: NKDA</span><span>Code: FULL</span><span>Attending: Patel, R</span><span>Isolation: none (for now)</span></div>
+    <div class="ehrTabs">
+      <div class="ehr-dimtabs" aria-hidden="true"><span class="on">Flowsheets</span><span>MAR</span><span>Notes</span><span>Orders</span><span>Results</span><span>I&amp;O</span><span>Education</span></div>
+      <div id="ctrlTabs">
+        <button class="ehr-tab" id="tabUpg" type="button" aria-haspopup="dialog">&#128203; Pick up more <span class="tb" id="upgBadge" hidden></span></button>
+        <button class="ehr-tab" id="tabThemes" type="button" aria-haspopup="dialog">&#127912; Chart Themes</button>
+        <button class="ehr-tab" id="tabAch" type="button" aria-haspopup="dialog">&#127942; Achievements</button>
+        <button class="ehr-tab" id="tabDash" type="button" aria-haspopup="dialog" hidden>&#128202; Dashboard</button>
+      </div>
+    </div>
+
+    <!-- GENERIC template: top patient banner + top tabs, no side nav -->
+    <div class="ehrBody ehr-dim ehr-tpl" data-tpl="generic" aria-hidden="true">
+      <div class="ehrMain">
+        <!-- THE NURSE BRAIN: the paper sheet every floor nurse actually runs the
+             shift from. One sheet, four rooms (the same four on the monitors).
+             applyEhr() moves it into whichever EHR template is live. -->
+        <div id="brain" class="brain">
+          <div class="br-title"><span>NURSE BRAIN</span><i>4 West &middot; 0700 to 1900 &middot; you</i></div>
+          <div class="br-grid">
+            <section class="br-pt">
+              <div class="br-id"><span><b>Rm</b> <i>4</i></span><span><b>Name</b> <i>Doe, J</i></span><span><b>Age</b> <i>58 M</i></span><span><b>Allergies</b> <i>NKDA</i></span><span><b>Code</b> <i>FULL</i></span></div>
+              <div class="br-2"><div><b>Situation/Dx</b><i>COPD exac. 2L NC, wean as tol.</i></div><div><b>Medical Hx</b><i>HTN, HLD, GERD</i></div></div>
+              <ul class="br-ck"><li class="on">Safety</li><li>Activity/Transfer</li><li>Diet/Nutrition</li><li class="on">IV</li><li>DVT</li><li class="on">Suction/O&#8322;</li><li>Neuro &#10003;s</li><li>I+O</li><li>Shift Report</li></ul>
+              <div class="br-row"><b>Tests</b><i>CXR am &middot; BMP</i><span class="br-achs">&#9744; ACHS</span></div>
+              <div class="br-vs"><b>VS</b><i>T 98.4 &middot; HR 76 &middot; R 16 &middot; BP 128/76 &middot; O&#8322; 97%</i></div>
+              <div class="br-2"><div><b>Labs</b><i>K 3.9 &middot; Hgb 11.2</i></div><div><b>Meds</b><i>0900 metoprolol &middot; 1200 furosemide</i></div></div>
+            </section>
+            <section class="br-pt">
+              <div class="br-id"><span><b>Rm</b> <i>5</i></span><span><b>Name</b> <i>Alvarez, M</i></span><span><b>Age</b> <i>71 F</i></span><span><b>Allergies</b> <i>PCN</i></span><span><b>Code</b> <i>DNR/DNI</i></span></div>
+              <div class="br-2"><div><b>Situation/Dx</b><i>CHF exac, diuresing. Family at bedside. Questions.</i></div><div><b>Medical Hx</b><i>CHF, CKD3, DM2</i></div></div>
+              <ul class="br-ck"><li class="on">Safety</li><li>Activity/Transfer</li><li class="on">Diet/Nutrition</li><li class="on">IV</li><li>DVT</li><li>Suction/O&#8322;</li><li>Neuro &#10003;s</li><li class="on">I+O</li><li>Shift Report</li></ul>
+              <div class="br-row"><b>Tests</b><i>echo pending &middot; daily wt</i><span class="br-achs">&#9745; ACHS</span></div>
+              <div class="br-vs"><b>VS</b><i>T 97.9 &middot; HR 88 &middot; R 20 &middot; BP 142/84 &middot; O&#8322; 94%</i></div>
+              <div class="br-2"><div><b>Labs</b><i>BNP 890 &middot; Cr 1.6 &middot; K 3.4</i></div><div><b>Meds</b><i>0800 insulin &middot; 1000 furosemide IV</i></div></div>
+            </section>
+            <section class="br-pt">
+              <div class="br-id"><span><b>Rm</b> <i>7</i></span><span><b>Name</b> <i>Nguyen, T</i></span><span><b>Age</b> <i>64 M</i></span><span><b>Allergies</b> <i>sulfa</i></span><span><b>Code</b> <i>FULL</i></span></div>
+              <div class="br-2"><div><b>Situation/Dx</b><i>POD1 lap chole. Pain 7. Says he is fine.</i></div><div><b>Medical Hx</b><i>none</i></div></div>
+              <ul class="br-ck"><li>Safety</li><li class="on">Activity/Transfer</li><li class="on">Diet/Nutrition</li><li>IV</li><li class="on">DVT</li><li>Suction/O&#8322;</li><li>Neuro &#10003;s</li><li>I+O</li><li>Shift Report</li></ul>
+              <div class="br-row"><b>Tests</b><i>CBC am</i><span class="br-achs">&#9744; ACHS</span></div>
+              <div class="br-vs"><b>VS</b><i>T 99.1 &middot; HR 92 &middot; R 22 &middot; BP 109/62 &middot; O&#8322; 91%</i></div>
+              <div class="br-2"><div><b>Labs</b><i>Hgb 9.8 (was 11)</i></div><div><b>Meds</b><i>q4 oxycodone &middot; cefazolin</i></div></div>
+            </section>
+            <section class="br-pt">
+              <div class="br-id"><span><b>Rm</b> <i>8</i></span><span><b>Name</b> <i>Henderson, R</i></span><span><b>Age</b> <i>82 M</i></span><span><b>Allergies</b> <i>NKDA</i></span><span><b>Code</b> <i>FULL</i></span></div>
+              <div class="br-2"><div><b>Situation/Dx</b><i>Fall at home, r/o hip fx. WANTS TO WALK.</i></div><div><b>Medical Hx</b><i>dementia, HTN, afib</i></div></div>
+              <ul class="br-ck"><li class="on">Safety</li><li class="on">Activity/Transfer</li><li>Diet/Nutrition</li><li>IV</li><li>DVT</li><li>Suction/O&#8322;</li><li class="on">Neuro &#10003;s</li><li>I+O</li><li>Shift Report</li></ul>
+              <div class="br-row"><b>Tests</b><i>hip XR &middot; UA</i><span class="br-achs">&#9744; ACHS</span></div>
+              <div class="br-vs"><b>VS</b><i>T 98.0 &middot; HR 64 &middot; R 18 &middot; BP 150/90 &middot; O&#8322; 96%</i></div>
+              <div class="br-2"><div><b>Labs</b><i>INR 1.1</i></div><div><b>Meds</b><i>acetaminophen &middot; melatonin HS</i></div></div>
+            </section>
+          </div>
+          <div class="br-todo"><b>To do</b><i>&#9744; Rm 5 DC before noon (it is 1147) &middot; &#9744; call pharm re: heparin gtt &middot; &#9744; chart restraints &middot; &#9744; find the glucometer &middot; &#9744; eat something</i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEROIC template (Epic): patient on the SIDE (Storyboard rail),
+         menus on the TOP (the tab row). Mirror of Cerner. -->
+    <div class="ehrBody ehr-dim ehr-tpl" data-tpl="heroic" aria-hidden="true">
+      <div class="sb-rail">
+        <div class="sb-photo">&#128100;</div>
+        <div class="sb-name">Doe, Jonathan</div>
+        <div class="sb-sub">58 y &middot; M &middot; MRN 00012345</div>
+        <div class="sb-chip sb-allergy">NKDA</div>
+        <div class="sb-chip sb-code">Code: FULL</div>
+        <div class="sb-chip">Isolation: none</div>
+        <div class="sb-sec">Care Team</div>
+        <div class="sb-line">Patel, R &middot; Attending</div>
+        <div class="sb-line">You &middot; RN, primary</div>
+        <div class="sb-sec">Latest</div>
+        <div class="sb-line">HR 92 &middot; BP 109/62</div>
+        <div class="sb-line">SpO2 91% &middot; Pain 7</div>
+        <div class="sb-sec">Health Maintenance</div>
+        <div class="sb-line sb-hm">Influenza &middot; due</div>
+        <div class="sb-line sb-hm">Tdap &middot; overdue</div>
+        <div class="sb-sec">Problem List (3)</div>
+        <div class="sb-line">HTN &middot; Hyperlipidemia &middot; GERD</div>
+      </div>
+      <div class="ehrMain">
+      </div>
+    </div>
+
+    <!-- PROPHET template (Cerner): the control tabs live IN the left Menu here.
+         The body is NOT globally dimmed: decorative parts carry .ehr-dim, the
+         control-tab slot stays crisp + interactive. -->
+    <div class="ehrBody ehr-tpl" data-tpl="prophet">
+      <div class="pc-menu">
+        <div class="pc-menu-h ehr-dim" aria-hidden="true">Menu</div>
+        <div id="ctrlMenuSlot"></div>
+        <div class="ehr-dim" aria-hidden="true">
+          <div class="pc-item on">Orders</div>
+          <div class="pc-item">MAR Summary</div>
+          <div class="pc-item">Notes</div>
+          <div class="pc-item">Results Review</div>
+          <div class="pc-item">Documentation</div>
+          <div class="pc-item">Task List</div>
+          <div class="pc-item">Form Browser</div>
+        </div>
+      </div>
+      <div class="ehrMain ehr-dim" aria-hidden="true">
+        <div class="pc-toolbar">Orders &middot; + Add &middot; Document Medication by Hx &middot; Reconciliation</div>
+      </div>
+    </div>
+  </div>
+  <div id="ehrPanel" role="dialog" aria-modal="true" aria-labelledby="ehrpTitle">
+    <div class="scrim" data-ehrp-close></div>
+    <div class="ehrp-card">
+      <div class="ehrp-head"><span class="t" id="ehrpTitle">Chart Themes</span><span class="n" id="ehrpCount"></span>
+        <span style="flex:1"></span>
+        <button class="ehrp-x" type="button" data-ehrp-close aria-label="Close">&#10005;</button></div>
+      <div class="ehrp-body" id="ehrpBody"></div>
+    </div>
+  </div>
+  <!-- sound settings: a mixer that drops from the Sound chip in the bar -->
+  <div id="soundMenu" class="soundmenu" role="dialog" aria-label="Sound settings" hidden>
+    <div class="sm-hd"><span>SOUND</span><button type="button" class="hit sm-x" aria-label="Close sound settings">&#10005;</button></div>
+    <label class="sm-row"><span>Master</span><input type="range" min="0" max="100" value="100" data-vol="master"></label>
+    <div class="sm-sec">Alarms</div>
+    <label class="sm-row"><span>Pulse ox tones</span><input type="range" min="0" max="100" value="100" data-vol="spo2"></label>
+    <label class="sm-row"><span>IV pumps</span><input type="range" min="0" max="100" value="100" data-vol="pump"></label>
+    <label class="sm-row"><span>Call lights</span><input type="range" min="0" max="100" value="100" data-vol="chime"></label>
+    <label class="sm-row"><span>Bed alarm</span><input type="range" min="0" max="100" value="100" data-vol="bed"></label>
+    <label class="sm-row"><span>Code Blue</span><input type="range" min="0" max="100" value="100" data-vol="klaxon"></label>
+    <div class="sm-sec">Interruptions</div>
+    <label class="sm-row"><span>Badge calls</span><input type="range" min="0" max="100" value="100" data-vol="vocera"></label>
+    <label class="sm-row"><span>Chart dings</span><input type="range" min="0" max="100" value="100" data-vol="ding"></label>
+    <label class="sm-row"><span>Secure chat</span><input type="range" min="0" max="100" value="100" data-vol="im"></label>
+    <label class="sm-row"><span>Overhead pages</span><input type="range" min="0" max="100" value="100" data-vol="page"></label>
+    <label class="sm-row"><span>Texts and buzzes</span><input type="range" min="0" max="100" value="100" data-vol="buzz"></label>
+    <div class="sm-sec">Feedback</div>
+    <label class="sm-row"><span>Task chimes</span><input type="range" min="0" max="100" value="100" data-vol="good"></label>
+  </div>
+  <!-- the game console: vitals + EKGs sit ABOVE the button, centered -->
+  <div class="stage">
+    <div id="bank" aria-label="Central monitors">
+      <div class="bank-hdr"><span>CENTRAL MONITORS &middot; 4 WEST</span><span id="bankState">SpO2</span></div>
+      <div class="bank-grid" id="bankGrid"></div>
+    </div>
+    <div class="clicker">
+      <button id="bigBtn" type="button">Chart a vital</button>
+      <div class="readout">
+        <div class="count mono"><b id="taskCt">0</b> <span class="u">tasks</span></div>
+        <div class="rate mono" id="tpsCt" hidden>0 tasks/min</div>
+        <div class="rate mono" id="expCt" hidden></div>
+        <div class="sub" id="subLine">0700. One patient. It's quiet. Don't say it out loud.</div>
+      </div>
+    </div>
+    <!-- the pumps: beside the console on a wide screen, tucked under it anywhere narrower -->
+    <div id="pumpRow" aria-label="IV pumps"></div>
+    <div class="reveal-tray" id="revealTray" aria-live="polite"></div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<div id="codeVeil" aria-hidden="true"></div>
+<div id="bpaLayer"></div>
+<div id="codeLayer"></div>
+<div id="lunch"></div>
+
+<div id="afBigScreen" role="dialog" aria-modal="true" aria-labelledby="afbsH">
+  <div class="afbs-card">
+    <h2 id="afbsH">Best on a bigger screen</h2>
+    <p>Alarm Fatigue crowds a phone the way a real floor crowds a hallway. It plays here, but a laptop gives every monitor room to breathe.</p>
+    <button id="afbsGo" type="button">Clock in anyway</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= state ================= */
+const S = {
+  tasks:0, tps:0, mult:1, earned:0, owned:{}, muted:false, over:false, started:false,
+  stats:{clicks:0, alarms:0, saves:0, missed:0, codes:0, flubs:0, maxStreak:0, meds:0}
+};
+const TECH_TPS=10;   /* what one tech contributes, and what walks away with them */
+const timers = [];
+function later(fn, ms){ const id=setTimeout(fn, ms); timers.push(id); return id; }
+function every(fn, ms){ const id=setInterval(fn, ms); timers.push(id); return id; }
+function rand(a,b){ return a + Math.random()*(b-a); }
+function ri(a,b){ return Math.floor(rand(a,b+1)); }
+function pick(arr){ return arr[ri(0,arr.length-1)]; }
+function fmt(n){ return Math.floor(n).toLocaleString(); }
+function buzzPhone(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+const floor = document.getElementById('floor');
+const shell = document.getElementById('afShell');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* what survives between shifts: earliest clock-out, achievements, chart skin */
+let MEM={bestOut:null, ach:{}, chart:'classic', ehr:'generic', shifts:0, vol:{}};
+try{ const m=JSON.parse(localStorage.getItem('hu-alarm-fatigue')||'null'); if(m) MEM=Object.assign(MEM, m); }catch(e){}
+MEM.ach = MEM.ach || {};
+function saveMem(){ try{ localStorage.setItem('hu-alarm-fatigue', JSON.stringify(MEM)); }catch(e){} }
+
+/* PRESTIGE: every shift you actually finish (the lunch break) banks Experience.
+   Tomorrow's shift starts with the multiplier already up 5% per shift, capped
+   at twenty shifts (x2). Workflow levels stack on top of it. Walking off the
+   floor (Restart shift) banks nothing. */
+const EXP_PER=0.05, EXP_CAP=20;
+function expMult(){ return 1 + EXP_PER*Math.min(MEM.shifts||0, EXP_CAP); }
+S.mult=expMult();
+function showExp(){
+  const el=document.getElementById('expCt'); if(!el || !MEM.shifts) return;
+  el.hidden=false;
+  el.textContent='Shift '+(MEM.shifts+1)+' · +'+Math.round((expMult()-1)*100)+'% experience';
+}
+showExp();
+
+/* the floor's box, measured once: the 20fps tech loop must never call
+   getBoundingClientRect itself (forced layout every frame was the lag) */
+let floorBox=floor.getBoundingClientRect();
+window.addEventListener('resize', ()=>{
+  floorBox=floor.getBoundingClientRect();
+  issues.forEach(o=>{ o.rect=null; });
+  btnBox=null;
+});
+let btnBox=null;   /* the big button never moves between resizes either */
+
+/* a paused tab is a paused shift: nothing accrues, nothing fires while you're gone */
+/* the shift is quiet until the RN clocks in (first button press). Nothing
+   accrues, ticks, spawns, or alarms until S.started flips true. */
+/* a Code Blue freezes the shift: no accrual, no clock, no new spawns until it
+   clears or fails. codeActive is declared later; live() only runs post-boot. */
+function live(){ return S.started && !S.over && !codeActive && !reportActive && !document.hidden; }
+document.addEventListener('visibilitychange', ()=>{
+  if(!AC) return;
+  if(document.hidden){ if(AC.state==='running') AC.suspend(); }
+  else if(!S.muted && !S.over && AC.state==='suspended') AC.resume();
+});
+
+/* issues registry: things a bouncing tech can fix on contact */
+const issues=[];
+function addIssue(el, resolve, techable){
+  const o={el, resolve, techable:!!techable, dead:false, rect:null};
+  issues.push(o); return o;
+}
+function killIssue(o){
+  o.dead=true;
+  const i=issues.indexOf(o); if(i>=0) issues.splice(i,1);
+}
+/* ghosts the tech loop marked dead get swept out here, off the hot path */
+every(()=>{ for(let i=issues.length-1;i>=0;i--) if(issues[i].dead) issues.splice(i,1); }, 5000);
+
+/* ================= audio + the wear mechanic =================
+   Every alarm you silence gets a little quieter next time. That IS the
+   game: the sounds you handle most fade toward the floor of hearing.
+   Running a code resets your ears. Nothing announces any of this. */
+/* the mixer: a level per alarm family plus a master, saved on this device */
+function vol(k){ const v=MEM.vol && MEM.vol[k]; return (v==null) ? 1 : v; }
+function masterGain(){ return S.muted ? 0 : 0.5*vol('master'); }
+
+const wear={};
+function worn(k){ return wear[k]||1; }
+function tire(k){ wear[k]=Math.max(0.25,(wear[k]||1)*0.85); }
+function freshEars(){ for(const k in wear) wear[k]=1; }
+
+let AC=null, master=null, bedOsc=null;
+function audio(){
+  if(!AC){
+    AC = new (window.AudioContext||window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = masterGain();
+    master.connect(AC.destination);
+  }
+  if(AC.state==='suspended') AC.resume();
+  return AC;
+}
+function tone(freq, dur, type, vol, when){
+  if(S.over) return;
+  /* a mixer slider at zero means SILENCE. (vol||0.18 used to swap a zero for
+     the default level, which is why muting one alarm family made it louder.) */
+  const v = (vol==null) ? 0.18 : vol;
+  if(v<=0.0005) return;
+  const ac=audio(); when = ac.currentTime + (when||0);
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.type=type||'sine'; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.linearRampToValueAtTime(v, when+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
+  o.connect(g); g.connect(master);
+  o.start(when); o.stop(when+dur+0.05);
+}
+const snd = {
+  spo2:(sat)=> tone(300+((sat==null?95:sat)-70)*12, .12, 'sine', .12*worn('spo2')*vol('spo2')),
+  pump:()=>{ const v=.09*worn('pump')*vol('pump'); tone(880,.14,'square',v); tone(880,.14,'square',v,.22); },
+  chime:()=>{ const v=worn('chime')*vol('chime'); tone(659,.25,'sine',.14*v); tone(880,.3,'sine',.12*v,.18); },
+  vocera:()=>{ const v=.13*worn('vocera')*vol('vocera'); tone(523,.09,'sine',v); tone(659,.09,'sine',v,.1); tone(784,.12,'sine',v,.2); },
+  ding:()=> tone(1046,.18,'triangle',.1*worn('ding')*vol('ding')),
+  trash:()=>{ const v=.09*vol('ding'); tone(330,.06,'triangle',v); tone(196,.1,'triangle',v,.06); },
+  im:()=>{ const v=worn('im')*vol('im'); tone(740,.09,'sine',.12*v); tone(988,.12,'sine',.10*v,.12); },
+  page:()=>{ const v=.12*vol('page'); tone(587,.35,'sine',v); tone(494,.4,'sine',v,.4); },
+  buzz:()=>{ const v=.08*worn('buzz')*vol('buzz'); tone(140,.28,'sawtooth',v); tone(140,.28,'sawtooth',v,.4); },
+  good:()=>{ const v=.1*vol('good'); tone(784,.1,'sine',v); tone(1046,.15,'sine',v,.1); },
+  klaxon:()=>{ const v=.10*vol('klaxon'); tone(1200,.22,'square',v); tone(900,.22,'square',v,.26); },
+  bed:()=>{ const v=.06*vol('bed'); tone(988,.13,'square',v); tone(740,.13,'square',v,.26); },   /* the mixer's taste of it */
+  bedOn:()=>{
+    if(bedOsc || S.over) return;
+    const ac=audio();
+    const o=ac.createOscillator(), g=ac.createGain();
+    o.type='square'; g.gain.value=.06*worn('bed')*vol('bed');
+    o.connect(g); g.connect(master); o.start();
+    let hi=true;
+    const iv=every(()=>{ o.frequency.value = hi?988:740; hi=!hi; }, 260);
+    bedOsc={o,g,iv};
+  },
+  bedOff:()=>{ if(bedOsc){ try{bedOsc.o.stop();}catch(e){} clearInterval(bedOsc.iv); bedOsc=null; } }
+};
+
+/* ================= core loop ================= */
+const taskCt=document.getElementById('taskCt'), tpsCt=document.getElementById('tpsCt');
+function addTasks(n){ S.tasks+=n; if(n>0) S.earned+=n; }
+/* a tech on their phone is not producing: their +10/sec walks with them */
+function idleTechs(){ return techs.reduce((a,t)=>a+(t.stopped?1:0),0); }
+/* S.mult is the multiplier axis (Workflow optimization). It scales production
+   AND every reward, so handling alarms stays worth it as the number grows. */
+function tpsX(){ return S.tps*S.mult; }
+function effTps(){ return Math.max(0, S.tps - idleTechs()*TECH_TPS)*S.mult; }
+function renderTop(){
+  taskCt.textContent=fmt(S.tasks);
+  /* the rate is a metric you have to BUY (Productivity tracking). Until then
+     the number is happening to you, you just cannot see it. */
+  if(!S.owned.prodtrack) return;
+  const idle=idleTechs();
+  tpsCt.textContent=fmt(effTps()*60)+' tasks/min'+(idle?' · tech on phone':'');
+  tpsCt.classList.toggle('down', idle>0);
+}
+every(()=>{ if(live()){ addTasks(effTps()/10); renderTop(); renderShop(); } }, 100);
+
+/* ---- shift clock: 0700 start, one game-minute every 3 real seconds.
+   The lunch screen reads whatever it says when you clock out. ---- */
+let clockMin = 7*60;
+const clockV=document.getElementById('clockV');
+function clockStr(m){
+  const h=Math.floor(m/60)%24, mm=m%60;
+  return String(h).padStart(2,'0')+String(mm).padStart(2,'0');
+}
+every(()=>{ if(!live()) return; clockMin++; clockV.textContent=clockStr(clockMin); checkShiftChange(); }, 3000);
+
+/* ---- streaks: back-to-back saves stack a small multiplier. A code or a
+   missed Room 7 wipes it. ---- */
+let streak=0, lastRes=0;
+function bonus(mult){
+  const now=Date.now();
+  streak = (now-lastRes<5000) ? streak+1 : 1;
+  lastRes=now;
+  if(streak>S.stats.maxStreak) S.stats.maxStreak=streak;
+  const m = 1 + 0.25*Math.min(streak-1, 8);
+  const b = Math.max(5, Math.round(tpsX()*(mult||2)*m));
+  addTasks(b); S.stats.alarms++;
+  if(streak===3||streak===5||streak===8)
+    floatText(floorBox.width/2-40, 60, 'on a roll ×'+streak, true);
+  if(streak>=8) earn('streak8');
+  if(S.stats.alarms>=100) earn('alarms100');
+  return b;
+}
+function dropStreak(){ streak=0; lastRes=0; }
+
+let liveFloats=0;
+function floatText(x,y,txt,big){
+  if(liveFloats>30 && !big) return;   /* a float storm is its own kind of alarm fatigue */
+  liveFloats++;
+  const f=document.createElement('div'); f.className='float'+(big?' big':'');
+  f.textContent=txt;
+  f.style.left=Math.max(4,Math.min(x, floorBox.width-120))+'px';
+  f.style.top=Math.max(4,y)+'px';
+  floor.appendChild(f);
+  later(()=>{ f.remove(); liveFloats--; }, 1150);
+}
+function rectOf(el){ return el.getBoundingClientRect(); }
+
+/* big button */
+const bigBtn=document.getElementById('bigBtn');
+const btnLabels=['Chart a vital','Pass meds','Turn a patient','Reassess pain','Scan a band','Chart an I&O','Round again','Educate on discharge',
+  'Find a pillow','Hunt for a WOW','Call pharmacy back','Answer the desk phone','Restart the pump','Reposition the probe','Empty a Foley','Sign a note','Label a specimen','Find the glucometer'];
+let li=0;
+bigBtn.addEventListener('click', ()=>{
+  audio();
+  if(!S.started){ S.started=true; floorBox=floor.getBoundingClientRect(); }
+  if(!live()) return;   /* a code (or the break) freezes the count, clicks included */
+  const power = 1 + Object.keys(S.owned).length + (S.owned.tech||0);
+  addTasks(power); S.stats.clicks++;
+  li=(li+1)%btnLabels.length; bigBtn.textContent=btnLabels[li];
+  if(!btnBox){ const r=rectOf(bigBtn); btnBox={x:r.left-floorBox.left, y:r.top-floorBox.top, w:r.width}; }
+  floatText(btnBox.x+rand(10,btnBox.w-30), btnBox.y-8, '+'+power);
+  renderTop(); renderShop();
+});
+
+/* ================= upgrades ================= */
+/* The ladder runs in TIERS, an order of magnitude each (tier 0 one patient,
+   1 the floor, 2 the building, 3 the system = past lunch, endless territory).
+   repeat = buy it N times, esc = cost escalator per buy (default 2.4),
+   mult = a multiplier level instead of a producer. */
+const UPG=[
+ {id:'spo2', nm:'A pulse ox', cost:15, tps:1, repeat:4, tier:0,
+  ds:'One monitor. One patient. How bad could it get? You have four patients.'},
+ {id:'call', nm:'Call light system', cost:60, tps:2, tier:0,
+  ds:'They only press it when they need something. All of them. Constantly.'},
+ {id:'huddle', nm:'Shift huddle board', cost:120, tps:3, tier:0,
+  ds:'Census, admits, fall-free days. It pops up whether you asked or not.'},
+ {id:'pump', nm:'IV pump', cost:200, tps:0, repeat:3, tier:0,
+  ds:'Hang the bag, start it, wait. It pays when the bag is done, not before. Every buy is one more channel to babysit. OCCLUSION DISTAL. It is not occluded distal.'},
+ {id:'prodtrack', nm:'Productivity tracking', cost:250, tps:0, tier:0,
+  ds:'Management put your tasks-per-minute on a dashboard. You get to watch the number too.'},
+ {id:'vocera', nm:'Comm badge', cost:500, tps:8, tier:1,
+  ds:'Now anyone in the building can find you. Anyone.'},
+ {id:'medpass', nm:'Med pass', cost:800, tps:0, tier:1,
+  ds:'Scheduled meds come due. Scan the band, scan the med, confirm. In that order, every time, or the pharmacy hears about it.'},
+ {id:'bed', nm:'Bed alarm', cost:1200, tps:12, tier:1,
+  ds:'Mr. Henderson would like to walk to the bathroom. Independently. Again.'},
+ {id:'dash', nm:'Reporting dashboard', cost:1500, tps:0, tier:1,
+  ds:'Management built a dashboard about you. Now you get to look at it too. It opens as a tab in the chart.'},
+ {id:'tech', nm:'Hire a tech', cost:2500, tps:10, repeat:4, tier:1,
+  ds:'Bounces around the unit and clears whatever they bump into: call lights, bed alarms, pumps, sats, meds, the huddle, your texts. Not a code. Occasionally discovers their phone.'},
+ {id:'workflow', nm:'Workflow optimization', cost:3000, tps:0, mult:0.10, repeat:10, esc:1.6, tier:1,
+  ds:'Informatics rebuilt your click path. Every level is ten percent more out of the same shift, on everything you do.'},
+ {id:'inbasket', nm:'The EHR inbox', cost:5000, tps:20, tier:2,
+  ds:'You have (47) new messages. You will always have (47) new messages.'},
+ {id:'bpa', nm:'Decision support pop-ups', cost:9000, tps:35, tier:2,
+  ds:'The chart would like a word before you continue.'},
+ {id:'page', nm:'Overhead paging', cost:16000, tps:50, tier:2,
+  ds:'BING BONG. Environmental Services to 4 West.'},
+ {id:'tele', nm:'Telemetry bank', cost:28000, tps:80, tier:2,
+  ds:'Four more rhythms to not look at. Probably artifact. Probably.'},
+ {id:'family', nm:'Family at the desk', cost:48000, tps:120, tier:2,
+  ds:'They just have a quick question. They have never had a quick question.'},
+ {id:'staffing', nm:'Staffing office texts', cost:80000, tps:200, tier:2,
+  ds:'"We\'re short tonight 🙏" Delivered 3:47 PM.'},
+ {id:'tjc', nm:'Joint Commission survey', cost:150000, tps:300, tier:2,
+  ds:'They\'re just observing. Don\'t mind the clipboard.'},
+ {id:'lunch', nm:'An uninterrupted lunch break', cost:500000, tps:0, tier:3,
+  ds:'Thirty minutes. Someone else watching your patients. It exists. Allegedly.'},
+ {id:'east', nm:'Cover 4 East too', cost:1500000, tps:500, tier:3,
+  ds:'They are down a nurse. You are now also their nurse. Same badge, twice the hallway, and four more rooms to put on the monitors.'},
+ {id:'spo2e', nm:'A pulse ox on 4 East', cost:400000, tps:40, repeat:4, esc:1.5, tier:3, needs:'east',
+  ds:'Rooms 21, 22, 23 and 25. Yours now. The monitors do not know which hallway they are in.'},
+ {id:'housesup', nm:'House supervisor pager', cost:4000000, tps:1500, tier:3,
+  ds:'Every bed in the building is your problem now. It goes off in the parking lot.'}
+];
+/* the upgrade list is no longer a permanent dock: it moves into the EHR panel */
+const upgList=document.createElement('div'); upgList.id='upgList';
+/* the shop reads in tiers; a tier's header shows once anything in it is revealed */
+const TIER_NM=['One patient','The floor','The building','The system'];
+const tierHdr={};
+UPG.forEach(u=>{
+  u.curCost=u.cost;
+  const d=document.createElement('button');
+  d.type='button';
+  d.className='upg locked'; d.id='u_'+u.id;
+  function label(){
+    const n = S.owned[u.id]||0;
+    const cnt = u.repeat ? ' ('+n+'/'+u.repeat+')' : '';
+    d.innerHTML='<div class="nm">'+u.nm+cnt+'</div><div class="ds">'+u.ds+'</div>'+
+      '<div class="ct">Cost <b class="mono">'+fmt(u.curCost)+'</b>'+(u.tps?' &middot; +'+u.tps+'/sec':'')+
+      (u.mult?' &middot; +'+Math.round(u.mult*100)+'% on everything':'')+'</div>';
+  }
+  label();
+  u.el=d;
+  /* the shop starts with one shelf item and grows: an upgrade only appears
+     once you have EARNED 40% of its price (spending does not unreveal it) */
+  if(u.id!=='spo2') d.style.display='none'; else u.revealed=true;
+  /* one purchase path, shared by the menu button and the under-button pop-up */
+  u.buy=function(){
+    if(S.over || d.classList.contains('owned') || S.tasks<u.curCost) return false;
+    if(u.needs && !S.owned[u.needs]) return false;
+    S.tasks-=u.curCost; S.tps+=u.tps;
+    if(u.mult) S.mult=Math.round((S.mult+u.mult)*100)/100;
+    if(u.repeat){
+      S.owned[u.id]=(S.owned[u.id]||0)+1;
+      u.curCost=Math.round(u.curCost*(u.esc||2.4));
+      label();
+      if(S.owned[u.id]>=u.repeat) d.classList.add('owned');
+    } else {
+      S.owned[u.id]=1;
+      d.classList.add('owned');
+    }
+    ELEM[u.id] && ELEM[u.id]();
+    renderTop(); renderShop();
+    return true;
+  };
+  d.addEventListener('click', ()=>{ if(!d.classList.contains('locked')) u.buy(); });
+  const t=u.tier||0;
+  if(!tierHdr[t]){
+    const h=document.createElement('div'); h.className='ehrp-sec upg-tier';
+    h.textContent=TIER_NM[t]||('Tier '+t); h.hidden=true;
+    tierHdr[t]=h; upgList.appendChild(h);
+  }
+  upgList.appendChild(d);
+});
+/* a newly affordable upgrade surfaces under the button, holds a few seconds, then
+   drifts off. Tap it to buy it right there; it also stays in the Pick up more menu. */
+function announceUpgrade(u){
+  const tray=document.getElementById('revealTray'); if(!tray) return;
+  const c=document.createElement('button'); c.type='button'; c.className='reveal-card';
+  c.setAttribute('aria-label','Pick up '+u.nm+' for '+fmt(u.curCost)+' tasks');
+  function fill(){
+    c.innerHTML='<div class="rc-h">You can pick this up</div>'+
+      '<div class="rc-nm">'+u.nm+'</div>'+
+      '<div class="rc-ct">Cost '+fmt(u.curCost)+(u.tps?' &middot; +'+u.tps+'/sec':'')+' &middot; tap to pick up</div>';
+  }
+  fill();
+  function dismiss(){ if(c._gone) return; c._gone=true; c.classList.add('out'); later(()=>c.remove(), 520); }
+  c.addEventListener('click', ()=>{
+    if(c._gone) return;
+    if(u.buy()){ snd.good(); floatText(Math.max(10, floorBox.width/2-70), 90, 'Picked up: '+u.nm, true); dismiss(); }
+  });
+  tray.appendChild(c);
+  snd.good();
+  later(dismiss, 4200);
+}
+function renderShop(){
+  UPG.forEach(u=>{
+    const d=u.el;
+    if(!u.revealed){
+      if(u.needs && !S.owned[u.needs]) return;   /* some shelves open only after another buy */
+      if(S.earned < u.cost*0.4) return;
+      u.revealed=true; d.style.display='';
+    }
+    if(d.classList.contains('owned')) return;
+    const locked = S.tasks<u.curCost;
+    if(locked !== d.classList.contains('locked')){
+      d.classList.toggle('locked', locked);
+      d.setAttribute('aria-disabled', String(locked));
+    }
+    /* the first time you can actually afford it, float a one-tap buy */
+    if(!locked && !u.floated && S.started){ u.floated=true; announceUpgrade(u); }
+  });
+  for(const t in tierHdr) tierHdr[t].hidden = !UPG.some(u=>(u.tier||0)==t && u.revealed);
+  updateUpgBadge();
+}
+
+/* ================= elements ================= */
+const ELEM={};
+
+/* ===== the central monitor station: sats + rhythms in one core space ===== */
+const bank=document.getElementById('bank');
+const bankGrid=document.getElementById('bankGrid');
+const bankRows=[];
+let teleOn=false;
+const TILE_H=110, BANK_HEAD=22;
+function bankHeight(){
+  if(!bankRows.length) return 10;
+  return bank.offsetHeight || (BANK_HEAD + Math.ceil(bankRows.length/2)*TILE_H);   /* measured: the grid is 2 or 4 wide */
+}
+function syncBank(){
+  /* the bank floats in the centre console now, not pinned to the bottom, so
+     the bottom widgets no longer dodge it (--bank-h stays at its 10px default) */
+  if(!bankRows.length) return;
+  bank.classList.add('on');
+  if(!teleOn) return;   /* the strips stay hidden until telemetry is bought */
+  bankRows.forEach(r=>{
+    r.cv.width = r.cv.clientWidth || 280; r.cv.height = 40; r.mid = 20;
+    r.cx.fillStyle='#0b1411'; r.cx.fillRect(0,0,r.cv.width,r.cv.height);
+  });
+}
+function addBankRow(room){
+  const el=document.createElement('div');
+  el.className='bank-tile';
+  el.innerHTML='<span class="rm">RM '+room+'</span>'+
+    '<span class="hr" hidden></span>'+
+    '<span class="sat-box"><span class="pl">SpO₂</span><span class="sv">98</span></span>'+
+    '<button type="button" class="clr" aria-label="Silence pulse ox alarm, room '+room+'">CLEAR</button>'+
+    '<canvas class="tile-cv" aria-hidden="true"></canvas>';
+  bankGrid.appendChild(el);
+  const cv=el.querySelector('.tile-cv');
+  const row={ room, el, box:el.querySelector('.sat-box'), sv:el.querySelector('.sv'),
+    hrEl:el.querySelector('.hr'), clr:el.querySelector('.clr'), cv, cx:cv.getContext('2d'),
+    mid:20, hr:ri(62,96), ph:Math.random(), col:'#3fe28f',
+    /* each strip has its own personality: gain, a slow baseline wander, artifact
+       bursts, and Room 8 (afib in the Hx) beats irregularly irregular */
+    amp:rand(0.85,1.2), wa:rand(1,3), wf:rand(0.6,1.4), wp:rand(0,6.28),
+    afib:room===8, irr:1, art:0, leadOff:false };
+  bankRows.push(row);
+  issues.forEach(o=>{ o.rect=null; });   /* the console re-centres on a new row: re-measure */
+  if(bankRows.length>4){   /* the second hallway: the station goes four wide */
+    bank.classList.add('wide');
+    bank.querySelector('.bank-hdr span').textContent='CENTRAL MONITORS · 4 WEST + 4 EAST';
+  }
+  if(teleOn){ row.hrEl.hidden=false; row.hrEl.textContent='♥ '+row.hr; }
+  syncBank();
+  return row;
+}
+window.addEventListener('resize', ()=>{ if(bankRows.length) syncBank(); });
+
+/* --- pulse oxes: your four patients, one purchase each + CODE trigger --- */
+let codeActive=false, codeCooldownUntil=0, codeRushY=0;
+const SAT_ROOMS=[4,5,7,8];
+ELEM.spo2=function(){
+  const slot=(S.owned.spo2||1)-1;
+  spawnSat(SAT_ROOMS[slot]||4, slot);
+};
+/* Cover 4 East too opens four more rooms on the same station */
+const EAST_ROOMS=[21,22,23,25];
+ELEM.spo2e=function(){
+  const slot=(S.owned.spo2e||1)-1;
+  spawnSat(EAST_ROOMS[slot]||21, 4+slot);
+};
+/* taking the second hallway also doubles the paper: four more rooms go onto
+   the nurse brain, and the unit crumb admits where you are now */
+ELEM.east=function(){
+  const grid=document.querySelector('#brain .br-grid'); if(!grid || grid.dataset.east) return;
+  grid.dataset.east='1';
+  const pt=(rm,nm,age,alg,code,dx,hx,ck,tests,achs,vs,labs,meds)=>
+    '<section class="br-pt"><div class="br-id"><span><b>Rm</b> <i>'+rm+'</i></span><span><b>Name</b> <i>'+nm+'</i></span>'+
+    '<span><b>Age</b> <i>'+age+'</i></span><span><b>Allergies</b> <i>'+alg+'</i></span><span><b>Code</b> <i>'+code+'</i></span></div>'+
+    '<div class="br-2"><div><b>Situation/Dx</b><i>'+dx+'</i></div><div><b>Medical Hx</b><i>'+hx+'</i></div></div>'+
+    '<ul class="br-ck">'+['Safety','Activity/Transfer','Diet/Nutrition','IV','DVT','Suction/O₂','Neuro ✓s','I+O','Shift Report']
+      .map((c,i)=>'<li'+(ck.includes(i)?' class="on"':'')+'>'+c+'</li>').join('')+'</ul>'+
+    '<div class="br-row"><b>Tests</b><i>'+tests+'</i><span class="br-achs">'+(achs?'☑':'☐')+' ACHS</span></div>'+
+    '<div class="br-vs"><b>VS</b><i>'+vs+'</i></div>'+
+    '<div class="br-2"><div><b>Labs</b><i>'+labs+'</i></div><div><b>Meds</b><i>'+meds+'</i></div></div></section>';
+  grid.insertAdjacentHTML('beforeend',
+    pt(21,'Okafor, C','47 F','codeine','FULL','Cellulitis L leg, IV abx. Wants to go home. Cannot.','DM2, obesity',[0,3,2],'wound cx pending',true,'T 100.8 · HR 98 · R 18 · BP 118/70 · O₂ 96%','WBC 14.2 · glu 212','vanc q12 · sliding scale')+
+    pt(22,'Brennan, P','69 M','NKDA','FULL','Pneumonia. 3L NC. Says he quit smoking. Yesterday.','COPD, CAD',[0,5,3,4],'sputum cx · CXR am',false,'T 99.6 · HR 84 · R 24 · BP 134/80 · O₂ 92%','WBC 12.1 · lactate 1.4','ceftriaxone · azithro · duonebs q4')+
+    pt(23,'Yazzie, L','78 F','ASA','DNR','CVA r/o, L sided weakness. NPO. Swallow eval pending.','HTN, afib, prior TIA',[0,1,2,6],'MRI brain · echo',false,'T 98.2 · HR 71 · R 16 · BP 162/94 · O₂ 97%','INR 2.4 · Na 133','apixaban HELD · amlodipine')+
+    pt(25,'Kowalski, D','55 M','latex','FULL','Small bowel obstruction, NG to LIS. Asked for a sandwich. Twice.','hernia repair x2',[0,3,7],'KUB am · BMP',false,'T 98.9 · HR 90 · R 18 · BP 126/78 · O₂ 98%','K 3.2 · Cr 1.3','KCl 40 IV · ondansetron prn'));
+  const t=document.querySelector('#brain .br-title i'); if(t) t.textContent='4 West + 4 East · 0700 to 1900 · still you';
+  const crumb=document.querySelector('.tool-bar-crumb'); if(crumb) crumb.textContent='4 West + 4 East · Med/Surg';
+};
+function spawnSat(room, slot){
+  const row=addBankRow(room);
+  const box=row.box, val=row.sv;
+  let sat=98, desat=false, coding=false, issue=null;
+
+  function resolve(by){
+    if(!desat) return;
+    desat=false; coding=false; sat = by==='code' ? 93 : 96;
+    box.classList.remove('warn','crit'); row.el.classList.remove('alarming');
+    if(issue){ killIssue(issue); issue=null; }
+    if(by==='you'){
+      tire('spo2');
+      const b=bonus(2);
+      floatText(30, floorBox.height-bankHeight()-24, 'RM '+room+' probe repositioned +'+b);
+      snd.good();
+    } else if(by==='tech'){
+      const b=bonus(1.5);
+      floatText(30, floorBox.height-bankHeight()-24, 'Tech fixed the RM '+room+' probe +'+b);
+    }
+  }
+
+  every(()=>{
+    if(document.hidden) return;
+    if(codeActive){ if(coding) snd.spo2(sat); return; }
+    if(desat){ sat=Math.max(sat-1, 74); }
+    else { sat=Math.min(99, Math.max(94, sat + ri(-1,1))); }
+    val.textContent=sat;
+    const warn=sat<93 && sat>=87, crit=sat<87;
+    box.classList.toggle('warn', warn);
+    box.classList.toggle('crit', crit);
+    row.el.classList.toggle('alarming', warn||crit);
+    if((warn||crit) && desat && !issue) issue=addIssue(row.el, resolve, true);   /* a tech crossing the row clears it */
+    snd.spo2(sat);
+    /* nobody caught it: the patient codes */
+    if(desat && sat<=80 && !codeActive && Date.now()>codeCooldownUntil){
+      coding=true;
+      startCode(()=>resolve('code'), room);
+    }
+  }, 1200+slot*90);   /* staggered so four pulse tones do not chorus */
+
+  every(()=>{
+    if(!live()) return;
+    if(!desat && !codeActive && Math.random()<.35){ desat=true; }
+  }, 14000+slot*700);
+
+  row.clr.addEventListener('click', ()=>resolve('you'));
+}
+
+/* --- Productivity tracking: the rate is a metric you have to buy --- */
+ELEM.prodtrack=function(){
+  tpsCt.hidden=false;
+  renderTop();
+};
+
+/* --- Reporting dashboard: a fourth chart tab, live numbers about you --- */
+ELEM.dash=function(){
+  tabDash.hidden=false; snd.ding();
+  floatText(Math.max(10, floorBox.width/2-120), 100, 'A dashboard about you. It is in the chart tabs now.', true);
+};
+
+/* --- CODE BLUE: ACLS dose math, blocking --- */
+function makeDoseQ(){
+  const kg=pick([40,50,60,70,80,90,100]);
+  const qs=[
+    ()=>({t:'V-fib arrest. Epi comes 1 mg in 10 mL (1:10,000). You need the full 1 mg.', q:'How many mL do you push?', a:10, u:'mL'}),
+    ()=>{ const mg=pick([150,300]); return {t:'Amiodarone '+mg+' mg IV. The vial is 50 mg/mL.', q:'How many mL?', a:mg/50, u:'mL'}; },
+    ()=>{ const mcg=pick([10,20,30]); return {t:'Push-dose epi is mixed at 10 mcg/mL. You need '+mcg+' mcg.', q:'How many mL?', a:mcg/10, u:'mL'}; },
+    ()=>({t:'Adenosine 6 mg rapid push. The vial is 3 mg/mL.', q:'How many mL?', a:2, u:'mL'}),
+    ()=>({t:'Atropine 1 mg. The prefilled syringe is 0.1 mg/mL.', q:'How many mL?', a:10, u:'mL'}),
+    ()=>({t:'Lidocaine at 1 mg/kg. The patient is '+kg+' kg. The vial is 20 mg/mL.', q:'How many mL?', a:kg/20, u:'mL'}),
+    ()=>({t:'You\'re mixing an epi drip: 4 mg in 250 mL.', q:'What\'s the concentration in mcg/mL?', a:16, u:'mcg/mL'}),
+    ()=>{ const mg=pick([1,2]); return {t:'Magnesium '+mg+' g for torsades. The vial is 500 mg/mL.', q:'How many mL?', a:(mg*1000)/500, u:'mL'}; }
+  ];
+  return pick(qs)();
+}
+/* the answer plus three dose-math slips that look right on a bad night: a
+   decimal off, doubled, halved, the concentration used the wrong way round */
+function fmtDose(v){ return Number.isInteger(v) ? String(v) : String(Math.round(v*100)/100); }
+function doseOptions(a){
+  const cands=[a*10, a/10, a*2, a/2, a*5, a/5, a+1, a-1, a+2, a*100];
+  for(let i=cands.length-1;i>0;i--){ const j=ri(0,i); const t=cands[i]; cands[i]=cands[j]; cands[j]=t; }
+  const out=[a], seen={}; seen[fmtDose(a)]=1;
+  for(const c of cands){
+    if(out.length>=4) break;
+    if(!(c>0) || c>10000) continue;
+    const k=fmtDose(c); if(seen[k]) continue;
+    seen[k]=1; out.push(c);
+  }
+  let pad=a+3;
+  while(out.length<4){ const k=fmtDose(pad); if(!seen[k]){ seen[k]=1; out.push(pad); } pad+=1; }
+  for(let i=out.length-1;i>0;i--){ const j=ri(0,i); const t=out[i]; out[i]=out[j]; out[j]=t; }
+  return out;
+}
+let klaxonIv=null, curCodeQ=null;
+function startCode(onResolved, room){
+  codeActive=true; S.stats.codes++;
+  floorBox=floor.getBoundingClientRect();   /* fresh box so the rush aims true */
+  const _br=bank.getBoundingClientRect();   /* techs rush to the monitor station */
+  codeRushY = _br.height ? (_br.top - floorBox.top + _br.height/2) : floorBox.height*0.5;
+  dropStreak();
+  buzzPhone([120,60,120]);
+  document.getElementById('codeVeil').classList.add('show');
+  if(!reduceMotion){
+    shell.classList.add('code-on');
+    later(()=>shell.classList.remove('code-on'), 500);
+  }
+  const layer=document.getElementById('codeLayer');
+  const Q=makeDoseQ(), OPTS=doseOptions(Q.a); curCodeQ=Q;
+  layer.innerHTML=
+    '<div class="codebox" role="alertdialog" aria-modal="true" aria-labelledby="codeHead">'+
+      '<div class="head" id="codeHead">🚨 CODE BLUE &middot; ROOM '+(room||4)+'</div>'+
+      '<div class="body">'+
+        'The sat you\'ve been ignoring finally meant something. He\'s down. The cart is at the bedside and everyone is looking at you.'+
+        '<div class="q">'+Q.t+'<br>'+Q.q+'</div>'+
+        '<div class="opts" role="group" aria-label="Pick the dose">'+
+          OPTS.map(v=>'<button type="button" class="opt" data-v="'+v+'">'+fmtDose(v)+' '+Q.u+'</button>').join('')+
+        '</div>'+
+        '<div class="hint" id="codeHint">Nothing else happens until you get this right.</div>'+
+      '</div>'+
+    '</div>';
+  layer.classList.add('show');
+  snd.klaxon();
+  klaxonIv=every(()=>snd.klaxon(), 1400);
+  const box=layer.querySelector('.codebox');
+  const opts=[...layer.querySelectorAll('.opt')];
+  later(()=>{ if(opts[0]) opts[0].focus(); }, 50);
+  let fails=0;
+  function endCode(){
+    clearInterval(klaxonIv); klaxonIv=null;
+    layer.classList.remove('show');
+    document.getElementById('codeVeil').classList.remove('show');
+    codeActive=false; curCodeQ=null;
+    codeCooldownUntil=Date.now()+ri(90000,150000);
+    freshEars();
+    bigBtn.focus();
+    onResolved && onResolved();
+  }
+  function choose(btn){
+    if(btn.disabled || !codeActive) return;
+    const v=parseFloat(btn.dataset.v);
+    if(Math.abs(v-Q.a)<0.011){
+      endCode();
+      const b=Math.max(500, Math.round(tpsX()*15));
+      addTasks(b); S.stats.saves++;
+      earn('rosc');
+      if(fails===0) earn('firsttry');
+      floatText(floorBox.width/2-60, 140, 'ROSC. '+fmtDose(Q.a)+' '+Q.u+'. +'+b, true);
+      snd.good(); snd.good();
+    } else {
+      fails++;
+      btn.classList.add('wrong'); btn.disabled=true;   /* that one is struck out, no second look */
+      if(fails>=3){
+        /* three strikes: the room stops waiting for you (the fourth button never gets a free win) */
+        S.stats.flubs++;
+        clearInterval(klaxonIv); klaxonIv=null;
+        opts.forEach(o=>{ o.disabled=true; });
+        document.getElementById('codeHint').textContent=
+          'Dr. Patel takes the syringe. '+fmtDose(Q.a)+' '+Q.u+'. She does not look at you.';
+        later(()=>{
+          endCode();
+          floatText(floorBox.width/2-60, 140, 'ROSC. '+fmtDose(Q.a)+' '+Q.u+'. You watched.', true);
+        }, 1900);
+        later(()=>sendIM(MGR_IM()), 6500);
+      } else {
+        document.getElementById('codeHint').textContent=
+          pick(['That\'s not it. He\'s still down.',
+                'The pharmacist winces. Try again.',
+                'Compressions continue. So does the math.',
+                'Wrong dose. The room got quieter.',
+                'Wrong. The pharmacist is doing it in her head now.',
+                'That would be a lot of epi. Or not enough. It is not right.',
+                'Try again. He is not going anywhere. That is the problem.',
+                'Someone whispers the answer. You do not hear it.']);
+        const nxt=opts.find(o=>!o.disabled); if(nxt) nxt.focus();
+      }
+    }
+  }
+  opts.forEach(o=>o.addEventListener('click', ()=>choose(o)));
+  /* 1 to 4 on the keyboard picks that option */
+  box.addEventListener('keydown', e=>{ const n=parseInt(e.key,10); if(n>=1 && n<=4 && opts[n-1]) choose(opts[n-1]); });
+}
+
+/* --- call lights --- */
+ELEM.call=function(){
+  const w=document.createElement('div');
+  w.className='widget callboard';   /* positioned as a right-wall strip in CSS */
+  w.innerHTML='<div class="ttl">CALL LIGHTS</div>';
+  /* what the light was for, once you get there */
+  const callLines=[
+    'Can you fix my TV?','I need a blanket. Another blanket.','Is it time for my pain pill? It has been ten minutes.',
+    'My roommate is snoring.','The Wi-Fi is down.','I dropped my phone. Under the bed. All the way under.',
+    'My daughter is in the parking lot. Can you go get her?','My IV hurts. No, the other one.',
+    'Are you my nurse? You look different.','I pressed it by accident. Since you are here, though.',
+    'Nobody brought my tray.','I would like to speak to a doctor. Any doctor.',
+    'The chair is uncomfortable. The bed is also uncomfortable.','What day is it? No, the date.',
+    'Can you turn the lights off? And on? Off.','My neighbor got Jell-O. I did not get Jell-O.'
+  ];
+  const rooms=[2,3,5,7,8,9,11,12].map(n=>{
+    const r=document.createElement('button'); r.type='button';
+    r.className='hit room'; r.textContent=n;
+    r.setAttribute('aria-label','Call light, room '+n);
+    r._issue=null;
+    function resolve(by){
+      if(!r.classList.contains('lit')) return;
+      r.classList.remove('lit');
+      if(r._issue){ killIssue(r._issue); r._issue=null; }
+      if(by==='tech'){
+        const b=bonus(1);
+        floatText(floorBox.width-200, 120, 'Tech got room '+n+' +'+b);
+      } else {
+        tire('chime');
+        const b=bonus(1.5);
+        floatText(floorBox.width-200, 120, '“'+pick(callLines)+'” +'+b);
+        snd.good();
+      }
+    }
+    r.addEventListener('click',()=>resolve('you'));
+    r._resolve=resolve;
+    w.appendChild(r); return r;
+  });
+  floor.appendChild(w);
+  every(()=>{
+    if(!live() || codeActive) return;
+    const dark=rooms.filter(r=>!r.classList.contains('lit'));
+    if(dark.length && Math.random()<.65){
+      const r=pick(dark);
+      r.classList.add('lit'); snd.chime();
+      r._issue=addIssue(r, r._resolve, true);
+    }
+    if(rooms.some(r=>r.classList.contains('lit')) && Math.random()<.5) snd.chime();
+  }, 5000);
+};
+
+/* --- IV pump (techs cannot touch it, on purpose) ---
+   A job, not a producer. You hang a bag and start it; a bar creeps across at
+   the bag's own pace; the line can occlude mid-run and the bar stops until you
+   clear it. Nothing pays until the bag is DONE. Longer bags pay more per
+   second, and spend longer exposed to the pump's opinions. */
+const PUMP_BAGS=[
+  {nm:'NS 500 mL bolus', dur:20},
+  {nm:'Cefazolin 2 g',   dur:30},
+  {nm:'Zosyn 3.375 g',   dur:40},
+  {nm:'Heparin gtt',     dur:60},
+  {nm:'Insulin gtt',     dur:75}
+];
+ELEM.pump=function(){
+  const BAGS=PUMP_BAGS;
+  const ch=S.owned.pump||1;   /* every purchase is one more channel */
+  const w=document.createElement('div');
+  w.className='monitor pump mono';
+  w.setAttribute('aria-label','IV pump, channel '+ch);
+  w.innerHTML='<div class="lbl">IV PUMP &middot; CH '+ch+'</div>'+
+    '<div class="status">NO BAG HUNG</div>'+
+    '<div class="bag"></div>'+
+    '<div class="bar" aria-hidden="true"><i></i></div>'+
+    '<button type="button" class="pbtn">HANG IT</button>';
+  const pumpRow=document.getElementById('pumpRow'); pumpRow.classList.add('on'); pumpRow.appendChild(w);
+  /* floats for this pump rise from the pump, wherever the layout put it */
+  const pf=(m,big)=>{ const r=w.getBoundingClientRect(); floatText(Math.max(4,r.left-floorBox.left), Math.max(4,r.top-floorBox.top-8), m, big); };
+  const st=w.querySelector('.status'), bagEl=w.querySelector('.bag'),
+        fill=w.querySelector('.bar i'), btn=w.querySelector('.pbtn');
+  /* channels start on different bags so three pumps do not finish in chorus */
+  let bi=(ch-1)%BAGS.length, bag=BAGS[bi], running=false, occluded=false, elapsed=0, beeper=null;
+  let dirty=false, cleaning=false, cleanMs=0, cleanDur=0;   /* the wipe-down between bags */
+  function showBag(){ bagEl.textContent=bag.nm+' · '+bag.dur+'s'; }
+  /* per-second value rises with bag length: the risk is worth something */
+  function payout(){ return Math.max(60, Math.round(tpsX()*bag.dur*(1.2+bag.dur/100))); }
+  function setBtn(txt, label, run){ btn.textContent=txt; btn.setAttribute('aria-label',label); btn.classList.toggle('run', !!run); }
+  function idle(){
+    st.textContent='NO BAG HUNG'; showBag(); setBtn('HANG IT','Hang '+bag.nm+' and start the pump');
+  }
+  function reset(){
+    running=false; occluded=false; elapsed=0; fill.style.transform='scaleX(0)';
+    w.classList.remove('warn','done'); if(beeper){ clearInterval(beeper); beeper=null; }
+    bi=(bi+1)%BAGS.length; bag=BAGS[bi];
+    /* sometimes the empty bag leaves the pump soiled: it needs a wipe-down,
+       with a dwell time nobody agrees on, before the next bag */
+    if(Math.random()<0.35){
+      dirty=true; w.classList.add('dirty');
+      st.textContent='NEEDS CLEANING'; bagEl.textContent='Wipe down first. Dwell time applies.';
+      setBtn('WIPE IT DOWN','Wipe the pump down before the next bag');
+      return;
+    }
+    idle();
+  }
+  function finishClean(){
+    cleaning=false; dirty=false; w.classList.remove('dirty'); fill.style.transform='scaleX(0)';
+    snd.good(); pf('Clean. Dwell time served.');
+    idle();
+  }
+  function occlude(){
+    if(!running||occluded) return;
+    occluded=true; w.classList.add('warn');
+    st.textContent=pick(['OCCLUSION DISTAL','AIR IN LINE','DOOR OPEN','DOWNSTREAM OCCLUSION','BATTERY LOW (IT IS PLUGGED IN)','CHECK FLOW SENSOR','AIR IN LINE (AGAIN)']);
+    setBtn('CLEAR','Clear the pump alarm');
+    beeper=every(()=>{ if(!codeActive) snd.pump(); }, 1600); snd.pump();
+  }
+  function clearOcc(by){
+    occluded=false; w.classList.remove('warn');
+    if(beeper){ clearInterval(beeper); beeper=null; }
+    st.textContent='INFUSING'; setBtn('RUNNING','Pump running', true);
+    if(by==='you') tire('pump');
+    S.stats.alarms++;   /* handled, but it pays nothing: the bag pays when it is done */
+    pf(by==='tech' ? 'Tech cleared the pump. Still running.' : 'Cleared. Still running.');
+  }
+  function complete(){
+    running=false; w.classList.add('done');
+    const b=payout(); addTasks(b);
+    st.textContent='INFUSION COMPLETE'; fill.style.transform='scaleX(1)';
+    setBtn('NEXT BAG','Take down the empty bag');
+    snd.chime(); snd.chime();
+    pf(bag.nm+' done. +'+b, true);
+    renderTop(); renderShop();
+  }
+  function act(by){
+    if(S.over||codeActive) return;
+    if(w.classList.contains('done')){ reset(); if(by==='tech') pf('Tech took the empty bag down.'); return; }
+    if(cleaning) return;                                   /* the wipe is drying, nothing to press */
+    if(dirty){
+      cleaning=true; cleanMs=0; cleanDur=ri(4000,15000);   /* a random dwell time */
+      st.textContent='CLEANING · DWELL TIME'; bagEl.textContent='The wipe says wait. So you wait.';
+      setBtn('WIPING','Pump being wiped down', true);
+      if(by==='tech') pf('Tech is wiping the pump down.');
+      return;
+    }
+    if(!running){
+      running=true; elapsed=0; st.textContent='INFUSING';
+      setBtn('RUNNING','Pump running', true); snd.good();
+      if(by==='tech') pf('Tech hung the '+bag.nm+'.');
+      return;
+    }
+    if(occluded) clearOcc(by);
+  }
+  btn.addEventListener('click', ()=>act('you'));
+  /* a tech crossing the pump presses whatever it is waiting on: hang, clear, next bag */
+  let issue=null;
+  every(()=>{
+    const waiting = !S.over && ((!running && !cleaning) || occluded);
+    if(waiting && !issue) issue=addIssue(w, ()=>act('tech'), true);
+    else if(!waiting && issue){ killIssue(issue); issue=null; }
+  }, 300);
+  setBtn('HANG IT','Hang '+bag.nm+' and start the pump'); showBag();
+  /* the bar only moves while the shift is live and the line is clear */
+  every(()=>{
+    if(cleaning){   /* the wipe-down bar only moves while the shift does */
+      if(!live()) return;
+      cleanMs+=250; fill.style.transform='scaleX('+Math.min(1, cleanMs/cleanDur)+')';
+      if(cleanMs>=cleanDur) finishClean();
+      return;
+    }
+    if(!running||occluded||!live()) return;
+    elapsed+=0.25;
+    fill.style.transform='scaleX('+Math.min(1, elapsed/bag.dur)+')';
+    if(elapsed>=bag.dur){ complete(); return; }
+    if(Math.random()<0.01) occlude();   /* ~4% a second: a long bag almost always occludes once */
+  }, 250);
+};
+
+/* --- Vocera --- */
+ELEM.vocera=function(){
+  const msgs=[
+    ['Pharmacy','Can you verify the heparin drip rate?'],
+    ['Charge RN','Are you caught up? Asking for a reason.'],
+    ['Lab','Critical K of 2.9 on bed 7. Read back please.'],
+    ['Dr. Patel','Why was I paged? I wasn\'t paged? Okay.'],
+    ['Radiology','We\'re ready for your patient. The one on the bedpan.'],
+    ['CNA','Room 9 is asking for you. Specifically you.'],
+    ['Dietary','Room 5 ordered a cheeseburger. Room 5 is NPO. Room 5 is eating it.'],
+    ['IT','The chart will be down five minutes at 1400. It is 1412.'],
+    ['Infection Prevention','Room 8 is contact plus now. Retroactively.'],
+    ['Unit Secretary','A family member is at the desk. She has a binder.'],
+    ['Respiratory','I am in your room. Which one is yours?'],
+    ['Charge RN','Bed 11 is going to 5 North. Bed 11 does not know yet.'],
+    ['Pharmacy','That order says QD. We do not do QD. Nobody does QD.'],
+    ['Dr. Patel','Discharge Room 5. I said it in the note. In the middle of the note.']
+  ];
+  every(()=>{
+    if(Math.random()>.6 || !live() || codeActive) return;
+    snd.vocera();
+    const m=pick(msgs);
+    const t=document.createElement('button'); t.type='button';
+    t.className='hit toast';
+    t.style.left='20px'; t.style.top=(240+ri(0,120))+'px';
+    t.innerHTML='<div class="from">BADGE &middot; '+m[0]+'</div>'+m[1];
+    let issue=null;
+    function answer(by){
+      if(issue){ killIssue(issue); issue=null; }
+      if(!t.parentNode) return;
+      t.remove();
+      if(by==='tech'){ const b=bonus(1); floatText(60,300,'Tech took the call +'+b); }
+      else { tire('vocera'); const b=bonus(1.5); floatText(60,300,'+'+b); snd.good(); }
+    }
+    t.addEventListener('click',()=>answer('you'));
+    floor.appendChild(t);
+    issue=addIssue(t, answer, true);
+    later(()=>{ if(t.parentNode) t.remove(); if(issue){ killIssue(issue); issue=null; } }, 9000);
+  }, 9000);
+};
+
+/* --- bed alarm --- */
+ELEM.bed=function(){
+  every(()=>{
+    if(Math.random()>.35 || !live() || codeActive || document.querySelector('.bedbanner')) return;
+    snd.bedOn();
+    buzzPhone(40);
+    const b=document.createElement('div'); b.className='bedbanner';
+    const inner=document.createElement('button'); inner.type='button';
+    inner.className='hit inner';
+    inner.textContent='⚠ BED EXIT · ROOM 8 · GO. NOW.';
+    b.appendChild(inner);
+    let issue=null;
+    function resolve(by){
+      if(!b.parentNode) return;
+      snd.bedOff(); b.remove();
+      if(issue){ killIssue(issue); issue=null; }
+      if(by==='tech'){
+        const bn=bonus(2);
+        floatText(floorBox.width/2, 80, 'Tech caught him mid-pivot +'+bn);
+      } else {
+        tire('bed');
+        const bn=bonus(3);
+        floatText(floorBox.width/2, 80, 'Caught him mid-pivot +'+bn);
+      }
+    }
+    inner.addEventListener('click',()=>resolve('you'));
+    floor.appendChild(b);
+    issue=addIssue(inner, resolve, true);
+  }, 16000);
+};
+
+/* --- techs: they bounce, they help, they check their phones --- */
+const techs=[];
+const techNames=['Kayla','Marcus','Deb','Jaylen'];
+/* 20% quicker than they started (was 1.6-2.4 across, 1.3-2.1 down, per 50ms) */
+const TECH_VX=[1.92,2.88], TECH_VY=[1.56,2.52];
+/* back to work: by their own clock, a tap, a coworker, or a code */
+function wakeTech(t){
+  t.stopped=false; t.resumeAt=0; t.el.classList.remove('idle');
+  t.el.setAttribute('aria-label','Tech '+t.nm);
+  t.dx=pick([-1,1])*rand(TECH_VX[0],TECH_VX[1]); t.dy=pick([-1,1])*rand(TECH_VY[0],TECH_VY[1]);
+}
+const idleLines=['📱 checking their phone','☕ getting coffee','💬 mid-story at the desk','📱 “one sec”',
+  '🍩 someone brought donuts','📱 “it is my kid’s school”','🚻 “back in a sec”','📱 “what is the Wi-Fi again”'];
+const chatLines=['💬 “did you see the email?”','💬 “anyway, so then she said”','💬 “five minutes, I swear”','💬 “who has 7 tonight?”','☕ “I have not sat down”',
+  '💬 “did you hear about 5 North?”','💬 “I am not covering Saturday”','☕ “is this decaf? it is decaf.”','💬 “the surveyor asked me about fire”'];
+ELEM.tech=function(){ spawnTech(); };
+function spawnTech(){
+  floorBox=floor.getBoundingClientRect();   /* cheap re-sync at a rare moment */
+  const idx=techs.length;
+  const t={
+    x:rand(80, Math.max(120,floorBox.width-160)),
+    y:rand(90, Math.max(140,floorBox.height-220)),
+    dx:pick([-1,1])*rand(TECH_VX[0],TECH_VX[1]), dy:pick([-1,1])*rand(TECH_VY[0],TECH_VY[1]),
+    stopped:false, nm:techNames[idx%4], bumpUntil:0, resumeAt:0
+  };
+  const el=document.createElement('button'); el.type='button';
+  el.className='hit tech';
+  el.setAttribute('aria-label','Tech '+techNames[idx%4]);
+  el.innerHTML='<div class="bub"></div><div class="face">🧑‍⚕️</div><div class="tag">Tech '+techNames[idx%4]+'</div>';
+  /* techs move on transform, not left/top: the compositor carries them */
+  el.style.left='0px'; el.style.top='0px';
+  el.style.transform='translate('+t.x+'px,'+t.y+'px)';
+  el.addEventListener('click',()=>{
+    if(!t.stopped) return;
+    wakeTech(t);
+    floatText(t.x, t.y-20, '“Back to work!”');
+    snd.good();
+  });
+  floor.appendChild(el);
+  t.el=el; techs.push(t);
+}
+/* movement + collision on requestAnimationFrame with TIME-BASED steps.
+   setInterval only promises "no sooner than": measured gaps ran 50-67ms, and
+   fixed per-tick steps turned every late tick into a visible freeze-then-jump.
+   rAF renders each step the same frame it is computed, dt keeps speed honest
+   across any frame rate, and a hidden tab stops the loop for free.
+   Still ZERO layout reads in here: the floor box is cached, techs move on
+   transform from known x/y, and each issue is measured once when it appears. */
+let techLast=performance.now();
+let techLoopOn=false;
+function techFrame(now){
+  if(S.over){ techLoopOn=false; return; }   /* the break stops the loop; resume restarts it */
+  requestAnimationFrame(techFrame);
+  const dt=Math.min(100, now-techLast); techLast=now;
+  /* the break, a report, an unstarted or hidden shift: everyone holds. A code
+     is NOT a hold for techs, they rush. live() is false during one, so gate by hand. */
+  if(!S.started || reportActive || document.hidden) return;
+  const k=dt/50;   /* dx/dy stay authored in per-50ms units */
+  const W=floorBox.width, H=floorBox.height;
+  const bottomPad = 10;   /* the bank floats in the centre now, floor is free */
+  if(codeActive){
+    /* a code wakes everyone: phones down, everybody to the monitor station */
+    const n=techs.length;
+    techs.forEach((t,i)=>{
+      if(t.stopped){ t.stopped=false; t.el.classList.remove('idle'); }
+      const tx=W*0.5 + (i-(n-1)/2)*84 - 32;
+      const ty=(codeRushY||H*0.5) - 30;
+      const ddx=tx-t.x, ddy=ty-t.y, d=Math.hypot(ddx,ddy);
+      if(d>4){
+        const sp=Math.min(4.5*k, d);
+        t.x+=ddx/d*sp; t.y+=ddy/d*sp;
+        t.el.style.transform='translate('+t.x+'px,'+t.y+'px)';
+      }
+    });
+    return;
+  }
+  techs.forEach(t=>{
+    /* a stopped tech drifts back to work on their own after a random while */
+    if(t.stopped){ if(t.resumeAt && now>=t.resumeAt) wakeTech(t); return; }
+    /* random distraction (probability scaled to real elapsed time), rarer than it was */
+    if(Math.random()<0.0016*k){
+      t.stopped=true; t.resumeAt=now+ri(5000,15000);
+      t.el.querySelector('.bub').textContent=pick(idleLines);
+      t.el.classList.add('idle');
+      t.el.setAttribute('aria-label', 'Tech '+t.nm+', distracted, tap to refocus');
+      return;
+    }
+    t.x+=t.dx*k; t.y+=t.dy*k;
+    if(t.x<4){t.x=4; t.dx=Math.abs(t.dx);}
+    if(t.x>W-70){t.x=W-70; t.dx=-Math.abs(t.dx);}
+    if(t.y<58){t.y=58; t.dy=Math.abs(t.dy);}
+    if(t.y>H-bottomPad-56){t.y=H-bottomPad-56; t.dy=-Math.abs(t.dy);}
+    t.el.style.transform='translate('+t.x+'px,'+t.y+'px)';
+    /* running into a stopped coworker: a coin flip between "come on, rounds"
+       and both of them stopping to chat. A short cooldown keeps one bump from
+       re-rolling every frame. */
+    if(t.bumpUntil<=now){
+      for(const u of techs){
+        if(u===t || !u.stopped || u.bumpUntil>now) continue;
+        if(Math.abs(u.x-t.x)<60 && Math.abs(u.y-t.y)<56){
+          t.bumpUntil=now+4000; u.bumpUntil=now+4000;
+          if(Math.random()<0.5){
+            wakeTech(u);
+            t.dx=-t.dx;
+            floatText(t.x, t.y-20, pick(['“Come on. Rounds.”','“Charge is looking.”','“Up. Now.”','“Was that a code? That was a code.”','“Rounds. Bring the WOW.”']));
+          } else {
+            const line=pick(chatLines);
+            t.stopped=true; t.resumeAt=now+ri(5000,15000); u.resumeAt=now+ri(5000,15000);   /* the chat ends on its own too */
+            t.el.classList.add('idle'); t.el.querySelector('.bub').textContent=line;
+            t.el.setAttribute('aria-label','Tech '+t.nm+', chatting, tap to refocus');
+            u.el.querySelector('.bub').textContent=line;
+            u.el.setAttribute('aria-label','Tech '+u.nm+', chatting, tap to refocus');
+          }
+          break;
+        }
+      }
+      if(t.stopped) return;
+    }
+    /* collision with fixable issues (viewport space, from the cached box) */
+    const tl=floorBox.left+t.x, tt=floorBox.top+t.y, tr2=tl+64, tb=tt+60;
+    for(const o of issues){
+      if(!o.techable || o.dead) continue;
+      if(!o.el.isConnected){ o.dead=true; continue; }   /* left the DOM some other way: a ghost, not a target */
+      if(!o.rect){
+        const r=o.el.getBoundingClientRect();
+        o.rect={left:r.left, right:r.right, top:r.top, bottom:r.bottom};
+        /* a scrolling console (phones) clips its tiles: only the visible part is
+           a target, so a tech never clears a monitor that is scrolled off-screen */
+        const sc=o.el.closest('.stage');
+        if(sc && sc.scrollHeight>sc.clientHeight+1){
+          const s=sc.getBoundingClientRect();
+          o.rect.top=Math.max(r.top, s.top); o.rect.bottom=Math.min(r.bottom, s.bottom);
+          if(o.rect.bottom<=o.rect.top){ o.rect.top=-1e9; o.rect.bottom=-1e9; }
+        }
+      }
+      const ir=o.rect;
+      if(tl<ir.right && tr2>ir.left && tt<ir.bottom && tb>ir.top){
+        o.resolve('tech');
+        break;
+      }
+    }
+  });
+}
+/* guarded so a resume can never stack a second loop on top of a live one */
+function startTechLoop(){ if(techLoopOn) return; techLoopOn=true; techLast=performance.now(); requestAnimationFrame(techFrame); }
+startTechLoop();
+
+/* --- In Basket: a chip in the chart chrome, where it actually lives --- */
+ELEM.inbasket=function(){
+  /* the In Basket is a pile you clear ONE message at a time, by dragging it to
+     the bin (a finger or a mouse; a focused row also clears on Delete). It
+     refills between clears and caps at 47, because it will always have 47. */
+  const IB_MSGS=[
+    'Result: CBC · Room 4 · Hgb 9.8 (L)',
+    'Result: BMP · Room 8 · K 3.4 (L)',
+    'Refill request · Room 5 · metoprolol',
+    'Cosign needed · verbal order · Dr. Patel',
+    'Order clarification · pharmacy · "which protocol?"',
+    'Patient message · "is this rash normal" · photo attached',
+    'Staff message · "please clean the break room"',
+    'Care Everywhere · outside records · 212 pages',
+    'Quality reminder · pain reassessment overdue',
+    'Education due · module: medication math',
+    'FYI · Room 7 family requests a call',
+    'Survey · "How was your chart experience today?"',
+    'Duplicate · this is the same message as the one above'
+  ];
+  let ibSeq=0; const mk=t=>({id:++ibSeq, t});   /* stable ids: a drop deletes the row you held, not an index */
+  const IB=[mk(pick(IB_MSGS))];
+  const chip=document.createElement('button'); chip.type='button';
+  chip.className='hit edock-chip';
+  chip.setAttribute('aria-haspopup','dialog'); chip.setAttribute('aria-expanded','false');
+  chip.innerHTML='📥 In Basket <span class="ct" id="ibCt">1</span>';
+  ehrDock.insertBefore(chip, ehrDock.firstChild);
+  const win=document.createElement('div'); win.id='ibWin';
+  win.setAttribute('role','dialog'); win.setAttribute('aria-label','In Basket');
+  win.innerHTML='<div class="cw-head"><span>In Basket</span><button class="hit cw-x ib-x" type="button" aria-label="Close In Basket">&#10005;</button></div>'+
+    '<div class="ib-hint">Drag a message to the bin to clear it. Keyboard: focus one, press Delete.</div>'+
+    '<div class="ib-list" role="listbox" aria-label="Messages"></div>'+
+    '<div class="ib-bin" aria-hidden="true"><span class="can">&#128465;</span><span>Drag here to clear</span></div>';
+  floor.appendChild(win);
+  const list=win.querySelector('.ib-list'), bin=win.querySelector('.ib-bin'), ct=document.getElementById('ibCt');
+  function paint(){
+    ct.textContent=IB.length;
+    chip.setAttribute('aria-label','EHR in basket, '+IB.length+' message'+(IB.length===1?'':'s'));
+    if(win.classList.contains('open')){ if(drag) needRender=true; else render(); }
+  }
+  function render(){
+    needRender=false; list.innerHTML='';
+    if(!IB.length){ list.innerHTML='<div class="ib-empty">Nothing. It will not last.</div>'; return; }
+    IB.forEach(m=>{
+      const r=document.createElement('div'); r.className='ib-row'; r.setAttribute('role','option');
+      r.tabIndex=0; r.dataset.id=m.id; r.setAttribute('aria-label', m.t+'. Drag to the bin or press Delete.');
+      r.innerHTML='<span class="ib-ic" aria-hidden="true">&#128233;</span><span class="ib-t">'+m.t+'</span>';
+      list.appendChild(r);
+    });
+  }
+  function trash(id){
+    const i=IB.findIndex(m=>m.id===id); if(i<0) return;
+    IB.splice(i,1);
+    tire('ding');
+    const b=Math.max(4, Math.round(tpsX()*0.4)); addTasks(b); S.stats.alarms++;
+    snd.trash();
+    floatText(Math.max(10, floorBox.width-300), 70, 'Deleted. +'+b);
+    paint(); renderTop();
+  }
+  /* pointer drag: a mouse and a finger work the same way. Move and release
+     listen on the DOCUMENT, so the gesture never depends on pointer capture or
+     on the pointer staying inside the list (the bin is outside it). The list
+     does not re-render under a live drag; the pile catches up on release. */
+  let drag=null, needRender=false;
+  function track(e){
+    if(!drag) return;
+    if(!drag.live){
+      if(Math.hypot(e.clientX-drag.sx, e.clientY-drag.sy)<4) return;   /* a tap is not a drag */
+      drag.live=true; drag.ghost.style.visibility='visible'; drag.row.classList.add('dragging');
+    }
+    drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px';
+    const br=bin.getBoundingClientRect();
+    drag.over = e.clientX>=br.left && e.clientX<=br.right && e.clientY>=br.top && e.clientY<=br.bottom;
+    bin.classList.toggle('over', drag.over);
+  }
+  function endDrag(e){
+    if(!drag || (e && e.pointerId!==drag.pid)) return;
+    const d=drag; drag=null;
+    d.ghost.remove(); d.row.classList.remove('dragging'); bin.classList.remove('over');
+    if(d.live && d.over) trash(d.id);
+    else if(needRender) render();
+  }
+  list.addEventListener('pointerdown', e=>{
+    const r=e.target.closest('.ib-row'); if(!r || drag || e.button) return;
+    e.preventDefault();
+    try{ r.setPointerCapture(e.pointerId); }catch(err){}
+    const ghost=r.cloneNode(true); ghost.classList.add('ib-ghost');
+    ghost.removeAttribute('tabindex'); ghost.setAttribute('aria-hidden','true');
+    ghost.style.visibility='hidden'; ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px';
+    document.body.appendChild(ghost);
+    drag={row:r, ghost, id:+r.dataset.id, pid:e.pointerId, sx:e.clientX, sy:e.clientY, live:false, over:false};
+  });
+  document.addEventListener('pointermove', e=>{ if(drag && e.pointerId===drag.pid) track(e); });
+  document.addEventListener('pointerup', e=>{ if(drag && e.pointerId===drag.pid) endDrag(e); });
+  document.addEventListener('pointercancel', e=>{ if(drag && e.pointerId===drag.pid) endDrag(e); });
+  /* keyboard: Delete or Backspace on a focused row */
+  list.addEventListener('keydown', e=>{
+    const r=e.target.closest('.ib-row'); if(!r) return;
+    if(e.key==='Delete' || e.key==='Backspace'){
+      e.preventDefault(); trash(+r.dataset.id);
+      const n=list.querySelector('.ib-row'); if(n) n.focus(); else win.querySelector('.ib-x').focus();
+    }
+  });
+  function openIB(){
+    win.classList.add('open'); chip.setAttribute('aria-expanded','true'); render();
+    const f=list.querySelector('.ib-row')||win.querySelector('.ib-x'); f.focus();
+  }
+  function closeIB(){ if(!win.classList.contains('open')) return; endDrag(); win.classList.remove('open'); chip.setAttribute('aria-expanded','false'); chip.focus(); }
+  chip.addEventListener('click', ()=>{ if(win.classList.contains('open')) closeIB(); else openIB(); });
+  win.querySelector('.ib-x').addEventListener('click', closeIB);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && win.classList.contains('open')) closeIB(); });
+  /* the pile refills whether or not you are looking at it */
+  every(()=>{
+    if(document.hidden) return;
+    const n=ri(1,3); for(let k=0;k<n && IB.length<47;k++) IB.push(mk(pick(IB_MSGS)));
+    paint(); if(Math.random()<.5) snd.ding();
+  }, 4000);
+  paint();
+  /* secure chat traffic arrives with the inbox: same system, more of it */
+  every(()=>{
+    if(Math.random()>.4 || !live() || codeActive) return;
+    if(IMQ.length>=4) return;
+    sendIM(pick(IMS));
+  }, 22000);
+};
+
+/* --- BPA (Esc = Defer, per the one-step-back contract) --- */
+ELEM.bpa=function(){
+  const layer=document.getElementById('bpaLayer');
+  const bodies=[
+    'Patient may benefit from a fall risk reassessment. A fall risk reassessment may benefit the patient.',
+    'This patient has not been screened for flu vaccination in this encounter. Or the last one. Or ever, apparently.',
+    'Consider sepsis. The system has considered sepsis on your behalf and would like you to also consider sepsis.',
+    'Documentation of pain reassessment is due. It was due while you were reading this.',
+    'A duplicate order may exist. Or may not. Please review all 340 active orders to be sure.',
+    'This patient is due for an annual wellness visit. This patient is inpatient. On a monitor. Consider it anyway.',
+    'Best practice advisory: the patient may be a fall risk. The patient fell. That is how they got here.',
+    'Consider ordering a consult. The system has considered it and would like you to consider ordering it.',
+    'Documentation of documentation is incomplete. Please document that you documented.',
+    'The patient\'s weight has changed by more than 5% since 2019.',
+    'This medication may interact with a medication the patient stopped taking in 2011.'
+  ];
+  function fire(){
+    if(!live() || codeActive || layer.classList.contains('show')) return;
+    layer.innerHTML='<div class="bpa" role="dialog" aria-modal="true" aria-labelledby="bpaHead"><div class="head" id="bpaHead">⚠ Clinical Decision Support</div>'+
+      '<div class="body">'+pick(bodies)+'</div>'+
+      '<div class="foot"><button id="bpaDefer" type="button">Defer</button><button id="bpaAcc" type="button" class="primary">Acknowledge</button></div></div>';
+    layer.classList.add('show'); snd.ding();
+    const hadFocus=document.activeElement;
+    document.getElementById('bpaAcc').focus();
+    function close(){
+      layer.classList.remove('show');
+      if(hadFocus && hadFocus.focus && document.contains(hadFocus)) hadFocus.focus();
+      else bigBtn.focus();
+    }
+    document.getElementById('bpaAcc').addEventListener('click',()=>{
+      close(); const b=bonus(1.2); floatText(floorBox.width/2, 100, '+'+b);
+    });
+    document.getElementById('bpaDefer').addEventListener('click',()=>{
+      close();
+      later(fire, ri(8000,15000));
+    });
+  }
+  document.addEventListener('keydown', e=>{
+    if(e.key!=='Escape' || !layer.classList.contains('show')) return;
+    const d=document.getElementById('bpaDefer'); if(d) d.click();
+  });
+  every(()=>{ if(Math.random()<.5) fire(); }, 24000);
+};
+
+/* --- overhead paging --- */
+ELEM.page=function(){
+  const pages=[
+    'Environmental Services to 4 West, Environmental Services to 4 West',
+    'Visitor at the front desk for Room 12',
+    'Attention all staff: the cafeteria will close early today',
+    'Code Brown, Room 12. Code Brown, Room 12.',
+    'Transport to 4 West with a wheelchair',
+    'Will the owner of a gray Subaru please move your vehicle',
+    'Code Brown, Room 12. Bring a friend.',
+    'Will the owner of the bariatric wheelchair please return it to the ED',
+    'Attention: the elevators are out of service. All of them. Please use the stairs. All of them.',
+    'Dr. Patel to any phone. Any phone at all.',
+    'Code Silver. No. Code Grey. Sorry. Never mind. Carry on.',
+    'Housekeeping to 4 West with the big mop. The big one.',
+    'Chaplain to 4 West. Not for a patient. For the staff.',
+    'Rapid response, cafeteria. Rapid response, cafeteria. Someone bring a chair.',
+    'The 1400 in-service on alarm fatigue is cancelled due to alarms.'
+  ];
+  every(()=>{
+    if(Math.random()>.6 || !live() || codeActive) return;
+    snd.page();
+    const b=document.createElement('div'); b.className='banner';
+    b.innerHTML='<span class="inner">📢 '+pick(pages)+'</span>';
+    floor.appendChild(b);
+    later(()=>b.remove(), 6000);
+  }, 13000);
+};
+
+/* --- telemetry: real moving sweep + Room 7 --- */
+ELEM.tele=function(){
+  /* tele does not add its own monitors any more: it lights up the rhythm side
+     of the patients already on the central station */
+  teleOn=true;
+  bank.classList.add('tele-on');   /* reveal the rhythm side, in line with the sats */
+  document.getElementById('bankState').textContent='SpO2 + Tele';
+  syncBank();
+
+  /* piecewise ECG shape: offset in px for phase 0..1 of one beat (negative = up) */
+  function ecgY(ph){
+    if(ph<0.10) return 0;
+    if(ph<0.18) return -5*Math.sin((ph-0.10)/0.08*Math.PI);           /* P */
+    if(ph<0.28) return 0;
+    if(ph<0.305) return 5*((ph-0.28)/0.025);                          /* Q */
+    if(ph<0.335) return 5 - 33*((ph-0.305)/0.03);                     /* R up */
+    if(ph<0.365) return -28 + 38*((ph-0.335)/0.03);                   /* R down to S */
+    if(ph<0.40) return 10*(1-(ph-0.365)/0.035);                       /* S recover */
+    if(ph<0.50) return 0;
+    if(ph<0.66) return -8*Math.sin((ph-0.50)/0.16*Math.PI);           /* T */
+    return 0;
+  }
+  const SCALE=0.5;   /* fits a 40px strip at the loudest gain plus wander */
+  bankRows.forEach(r=>{ r.hrEl.hidden=false; r.hrEl.textContent='♥ '+r.hr; });
+  every(()=>{
+    if(document.hidden) return;
+    bankRows.forEach(r=>{
+      r.hr=Math.max(58, Math.min(112, r.hr+ri(-3,3)));
+      if(Math.random()<0.12) r.art=performance.now()+ri(900,1800);   /* a flicker every so often */
+      r.hrEl.textContent = r.leadOff ? '♥ --' : '♥ '+r.hr;
+    });
+  }, 3000);
+
+  let x=0, last=performance.now(), rafId=null;
+  function frame(now){
+    if(S.over) return;
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    const speed=110; /* px per second */
+    /* every tile has the same width, so one pen position serves all four strips */
+    const W=(bankRows[0] && bankRows[0].cv.width) || 280;
+    let step=speed*dt;
+    while(step>0){
+      const px=Math.min(step,2);
+      const wrapPen = x+px>=W;
+      const nx = wrapPen ? W : x+px;
+      for(const r of bankRows){
+        const cx=r.cx, H=r.cv.height;
+        /* erase bar ahead of the pen, on this tile's own strip */
+        cx.fillStyle='#0b1411'; cx.fillRect((x+3)%W, 0, 22, H);
+        cx.strokeStyle=r.col; cx.lineWidth=1.5; cx.beginPath();
+        if(r.leadOff){   /* a disconnected lead reads flat, not dead: the flag on the strip says why */
+          cx.moveTo(x, r.mid); cx.lineTo(nx, r.mid); cx.stroke();
+          continue;
+        }
+        const prev=r.ph;
+        r.ph+=px/speed*(r.hr/60)*r.irr;
+        if(r.ph>=1){ r.ph-=1; if(r.afib) r.irr=rand(0.78,1.28); }   /* afib: every R-R is a new guess */
+        const w0=Math.sin(x/W*6.2832*r.wf+r.wp)*r.wa, w1=Math.sin(nx/W*6.2832*r.wf+r.wp)*r.wa;
+        const jit = r.art>now ? rand(-6,6) : 0;                        /* artifact: the patient moved */
+        cx.moveTo(x, r.mid+ecgY(prev)*SCALE*r.amp+w0);
+        cx.lineTo(nx, r.mid+ecgY(r.ph)*SCALE*r.amp+w1+jit); cx.stroke();
+      }
+      x = wrapPen ? 0 : nx;
+      step-=px;
+    }
+    rafId=requestAnimationFrame(frame);
+  }
+  rafId=requestAnimationFrame(frame);
+  ELEM._teleStop=()=>cancelAnimationFrame(rafId);
+  /* the sweep halts itself while S.over (the lunch break); endless mode restarts it */
+  ELEM._teleStart=()=>{ cancelAnimationFrame(rafId); last=performance.now(); rafId=requestAnimationFrame(frame); };
+
+  /* lead-off nags (tech-fixable). Named so QA can fire one on demand. */
+  function leadOff(){
+    if(Math.random()>.4 || !live() || codeActive) return;
+    /* the flag is tied to a real row: that strip flatlines and its HR reads -- until it is fixed */
+    const free=bankRows.filter(r=>!r.leadOff && r.room!==7); if(!free.length) return;
+    const row=pick(free); row.leadOff=true; row.hrEl.textContent='♥ --';
+    const f=document.createElement('button'); f.type='button';
+    f.className='hit teleflag mono';
+    f.textContent='LEAD OFF · RM '+row.room;
+    let issue=null;
+    function reconnect(){ row.leadOff=false; row.hrEl.textContent='♥ '+row.hr; }
+    function resolve(by){
+      if(!f.parentNode) return;
+      f.remove(); if(issue){ killIssue(issue); issue=null; } reconnect();
+      if(by==='tech'){ const b=bonus(.8); floatText(floorBox.width/2-80, 120, 'Tech fixed the RM '+row.room+' leads +'+b); }
+      else { const b=bonus(1); snd.good(); floatText(floorBox.width/2-80, 120, 'Leads back on. +'+b); }
+    }
+    f.addEventListener('click',()=>resolve('you'));
+    row.el.appendChild(f);   /* on the strip it belongs to */
+    issue=addIssue(f, resolve, true);
+    later(()=>{ if(f.parentNode){ f.remove(); if(issue) killIssue(issue); reconnect(); } }, 12000);
+  }
+  every(leadOff, 15000); ELEM._leadOff=leadOff;
+
+  /* Room 7: quiet on purpose. techs never catch this one. */
+  function room7(){
+    if(S.over){ later(room7, ri(30000,60000)); return; }  /* survive a break, keep the chain alive */
+    const r7=bankRows.find(r=>r.room===7);
+    if(!r7){ later(room7, ri(30000,60000)); return; }   /* no Room 7 on the bank yet: nothing to notice */
+    const f=document.createElement('button'); f.type='button';
+    f.className='hit teleflag quiet mono';
+    f.textContent='RM 7 · HR 128 ↑';
+    let caught=false;
+    f.addEventListener('click',()=>{
+      caught=true; f.remove(); S.stats.saves++;
+      const b=Math.max(200, Math.round(tpsX()*8)); addTasks(b);
+      floatText(floorBox.width/2-80, 140, 'You caught it early. Room 7 is okay. +'+b, true);
+      snd.good(); snd.good();
+      earn('room7');
+    });
+    r7.el.appendChild(f);   /* quietly, on its own strip */
+    later(()=>{
+      if(caught||S.over) return;
+      f.remove(); S.stats.missed++;
+      dropStreak();
+      const b=document.createElement('div'); b.className='bedbanner';
+      b.innerHTML='<span class="inner" style="animation:none;background:#8d1f2c">RAPID RESPONSE &middot; ROOM 7</span>';
+      floor.appendChild(b); snd.page();
+      later(()=>b.remove(), 5000);
+    }, 12000);
+    later(room7, ri(60000,120000));
+  }
+  later(room7, ri(45000,80000));
+};
+
+/* --- family (with cooldown; no more farming grandma) --- */
+ELEM.family=function(){
+  const qs=[
+    'When is the doctor coming by?',
+    'Can she have ice chips? She really wants ice chips.',
+    'The pump is beeping again. It\'s been beeping.',
+    'We read about a treatment on Facebook.',
+    'Is that number on the monitor bad? It looks bad.',
+    'Nobody has told us anything.',
+    'Are you the nurse? Are you OUR nurse?',
+    'She said she was cold an hour ago.',
+    'Her other daughter says the other hospital did it differently.',
+    'We would like to speak to whoever is in charge. Of everything.',
+    'Can you explain the bill? Not the medical part. The bill.',
+    'He wants to go home. He also wants a sandwich. In that order.',
+    'The TV only has one channel and it is the hospital channel.',
+    'I googled her medication and now I have questions. Fourteen questions.'
+  ];
+  const w=document.createElement('div');
+  w.className='widget family'; w.style.left='20px'; w.style.bottom='calc(var(--bank-h, 10px) + 12px)';
+  /* a talking head: SVG face (eyes blink, mouth flaps while a question types) + a bubble */
+  w.innerHTML=
+    '<svg class="head" viewBox="0 0 64 64" aria-hidden="true">'+
+      '<circle cx="32" cy="34" r="24" fill="#f1d3b4" stroke="#8a6a4e" stroke-width="1.5"/>'+
+      '<path d="M10 30 Q32 2 54 30" fill="#5a4030"/>'+
+      '<ellipse class="eye l" cx="24" cy="33" rx="2.6" ry="3.2" fill="#22302a"/>'+
+      '<ellipse class="eye r" cx="40" cy="33" rx="2.6" ry="3.2" fill="#22302a"/>'+
+      '<path d="M20 26 q4 -3 8 0" stroke="#5a4030" stroke-width="1.5" fill="none"/>'+
+      '<path d="M36 26 q4 -3 8 0" stroke="#5a4030" stroke-width="1.5" fill="none"/>'+
+      '<ellipse class="mouth" cx="32" cy="46" rx="6" ry="4" fill="#7a3040"/>'+
+    '</svg>'+
+    '<div><div class="who">Family member &middot; Room 5</div><div class="bubble"><span id="famQ"></span></div></div>'+
+    '<button id="famBtn" type="button">Answer the question</button>';
+  floor.appendChild(w);
+  const btn=document.getElementById('famBtn'), q=document.getElementById('famQ');
+  let typer=null, issue=null, burstLeft=0;
+  /* the question types itself out while the mouth runs; reduced motion just says it */
+  function say(text, done){
+    if(typer){ clearInterval(typer); typer=null; }
+    if(reduceMotion){ q.textContent=text; w.classList.remove('talking'); if(done) done(); return; }
+    q.innerHTML='<span class="caret"></span>'; w.classList.add('talking');
+    let i=0;
+    typer=every(()=>{
+      i++; q.innerHTML=text.slice(0,i)+(i<text.length?'<span class="caret"></span>':'');
+      if(i>=text.length){ clearInterval(typer); typer=null; w.classList.remove('talking'); if(done) done(); }
+    }, 34);
+  }
+  function arm(){ if(!issue) issue=addIssue(w, answer, true); }   /* a passing tech answers too */
+  function collapse(){ w.classList.add('quiet'); q.textContent=''; }
+  /* questions come in clumps: a burst of two to five close together, then a
+     lull. Half the time the next one starts a burst, half the time it waits. */
+  function scheduleNext(){
+    let delay;
+    if(burstLeft>0){ burstLeft--; delay=ri(1500,4500); }
+    else if(Math.random()<0.5){ burstLeft=ri(1,4); delay=ri(2000,6000); }
+    else { delay=ri(25000,75000); }
+    later(ask, delay);
+  }
+  function ask(){
+    if(S.over || !live()){ later(ask, 5000); return; }   /* not during a code, a report, or the break */
+    w.classList.remove('quiet');
+    btn.disabled=false; btn.textContent='Answer the question';
+    say(pick(qs));
+    arm();
+  }
+  function answer(by){
+    if(btn.disabled) return;
+    if(issue){ killIssue(issue); issue=null; }
+    const b=bonus(by==='tech'?1:1.5);
+    floatText(120, floorBox.height-190, (by==='tech'?'Tech answered. ':'')+'+'+b);
+    btn.disabled=true; btn.textContent='(they\'re still talking)';
+    /* the one-more-thing lands, then the card drops away to just the head */
+    say('…okay but one more thing.', ()=>later(()=>{ collapse(); scheduleNext(); }, 900));
+  }
+  btn.addEventListener('click',()=>answer('you'));
+  ask();
+};
+
+/* --- staffing texts --- */
+ELEM.staffing=function(){
+  const msgs=[
+    'We\'re short tonight 🙏 Can you stay til 2300?',
+    'Any chance you can come in at 0500 tomorrow?',
+    'Bonus pay approved for tonight only!! 👀',
+    'Just checking in. Still a no? 🥺',
+    'Mandatory overtime is not a thing here. Anyway, can you stay?',
+    'We found coverage! Just kidding. Can you stay?',
+    'Someone called out. It was not you. Yet.',
+    'Free pizza in the break room for anyone who picks up Saturday 🍕',
+    'Reminder: PTO requests for December were due in March.'
+  ];
+  every(()=>{
+    if(Math.random()>.5 || !live() || codeActive) return;
+    snd.buzz();
+    const t=document.createElement('button'); t.type='button';
+    t.className='hit toast';
+    t.style.right='20px'; t.style.bottom=(140+ri(0,80))+'px'; t.style.left='auto';
+    t.innerHTML='<div class="from">TEXT &middot; STAFFING OFFICE</div>'+pick(msgs)+
+      '<div style="margin-top:6px;font-size:11px;opacity:.8">(tap to decline)</div>';
+    let issue=null;
+    function decline(by){
+      if(issue){ killIssue(issue); issue=null; }
+      if(!t.parentNode) return;
+      t.remove();
+      if(by==='you') tire('buzz');
+      const b=bonus(1);
+      floatText(floorBox.width-200, floorBox.height-200, (by==='tech'?'Tech declined for you. ':'Declined. ')+'+'+b);
+    }
+    t.addEventListener('click',()=>decline('you'));
+    floor.appendChild(t);
+    issue=addIssue(t, decline, true);
+    later(()=>{ if(t.parentNode) t.remove(); if(issue){ killIssue(issue); issue=null; } }, 10000);
+  }, 18000);
+};
+
+/* --- Joint Commission --- */
+ELEM.tjc=function(){
+  const notes=[
+    'Surveyor noted: unlabeled cup at the nurses\' station.',
+    'Surveyor noted: hallway clutter (one WOW, unattended).',
+    'Surveyor is asking a new grad about the fire response plan.',
+    'Surveyor checked a med room. It was fine. Probably.',
+    'Surveyor is writing something down while looking at you.',
+    'Surveyor noted: a tech appears to be on their phone.',
+    'Surveyor asked where the crash cart is. You pointed. It was somewhere else.',
+    'Surveyor noted: a lidded coffee at the nurses\' station. Still a cup.',
+    'Surveyor is reading the whiteboard. The whiteboard is from Tuesday.',
+    'Surveyor asked a patient their nurse\'s name. The patient said "the tall one."',
+    'Surveyor noted: one badge worn upside down, under the reel, backwards.'
+  ];
+  const w=document.createElement('div');
+  w.className='widget surveyor'; w.style.right='16px'; w.style.bottom='calc(var(--bank-h, 10px) + 12px)';
+  w.innerHTML='<div class="who">🕴 Joint Commission</div><div>They are observing.</div><div class="note" id="tjcNote"></div>';
+  floor.appendChild(w);
+  every(()=>{ if(document.hidden) return; if(Math.random()<.6) document.getElementById('tjcNote').textContent=pick(notes); }, 11000);
+};
+
+/* --- shift huddle: the census board, but a window you can X out.
+   It pops back on its own timer. Dismissing it counts, like everything. --- */
+const huddleNotes=[
+  'Safety focus: hourly rounding. Yes, every hour.',
+  'Charge asks that everyone chart their restraints.',
+  'We are appropriately staffed. Per the grid.',
+  'Discharge before noon. It is 1147.',
+  'The glucometer is missing again. It is always missing.',
+  'Reminder: two midnights, so probably obs.',
+  'Fall-free streak ended at 3 days. It was a visitor. It still counts.',
+  'New policy: no policies without a policy. See the policy.',
+  'Press Ganey is up. Do not ask what it was before.',
+  'The ice machine is fixed. The ice machine is broken. Both.',
+  'Please stop writing your name on the WOW. It is not yours. It is not anyone\'s.',
+  'Dr. Patel rounds at 0900. Dr. Patel rounded at 0640.',
+  'The tele techs would like everyone to stop unplugging the tele techs.',
+  'We are trialing a new IV pump. It is the old IV pump.'
+];
+function popHuddle(){
+  if(S.over) return;
+  if(!live() || document.querySelector('.huddle')){ scheduleHuddle(20000); return; }
+  const w=document.createElement('div'); w.className='huddle';
+  w.innerHTML='<div class="hd"><span>SHIFT HUDDLE</span>'+
+      '<button class="hit hx" type="button" aria-label="Close huddle">&#10005;</button></div>'+
+    '<div class="bd">'+
+      '<div class="big">4W &middot; CENSUS '+ri(27,30)+'/30 &middot; ADMITS '+ri(0,4)+' &middot; DC '+ri(0,3)+'</div>'+
+      '<div>Fall-free days: <b>'+ri(0,12)+'</b></div>'+
+      '<div class="focus">'+pick(huddleNotes)+'</div>'+
+    '</div>';
+  floor.appendChild(w);
+  snd.ding();
+  let issue=null;
+  function dismiss(by){
+    if(issue){ killIssue(issue); issue=null; }
+    if(!w.parentNode) return;
+    w.remove();
+    const b=bonus(1);
+    floatText(floorBox.width/2-40, 92, (by==='tech'?'Tech closed the huddle. ':'Huddle noted. ')+'+'+b);
+    scheduleHuddle(ri(45000,80000));   /* it comes back */
+  }
+  w.querySelector('.hx').addEventListener('click', ()=>dismiss('you'));
+  issue=addIssue(w, dismiss, true);   /* a tech bouncing through it closes it */
+}
+function scheduleHuddle(delay){ later(popHuddle, delay); }
+/* the huddle board is a purchased upgrade now: it only starts popping once bought */
+ELEM.huddle=function(){ scheduleHuddle(ri(4000,9000)); };
+
+/* ================= hand-off report at shift change =================
+   At 1900 the night nurse wants report, and at 0700 the day nurse does. The
+   questions come straight off the central monitors and the pumps, so the
+   display stops being decoration: you have to READ it. The floor holds still
+   while you give it (live() is false); the monitors keep drifting. */
+let reportActive=false;
+function checkShiftChange(){
+  const mod=clockMin%1440;
+  if((mod===1140 || mod===420) && !reportActive && !codeActive && bankRows.length)
+    startReport(mod===1140 ? 'Night RN' : 'Day RN');
+}
+function satOf(r){ return parseInt(r.sv.textContent,10); }
+function buildReportQs(){
+  const qs=[];
+  bankRows.forEach(r=>{
+    qs.push({t:'Room '+r.room+' SpO2 right now?', kind:'num', u:'%', ok:v=>Math.abs(v-satOf(r))<=2});
+    if(teleOn) qs.push({t:'Room '+r.room+' heart rate?', kind:'num', u:'bpm', ok:v=>Math.abs(v-r.hr)<=4});
+  });
+  if(bankRows.length>=2) qs.push({t:'Which room has the lowest sat right now?', kind:'pick',
+    opts:bankRows.map(r=>'Room '+r.room),
+    ok:v=>{ const lo=Math.min.apply(null, bankRows.map(satOf)); return bankRows.some(r=>satOf(r)===lo && ('Room '+r.room)===v); }});
+  if(document.querySelector('.callboard')) qs.push({t:'How many call lights are on?', kind:'num', u:'',
+    ok:v=>v===document.querySelectorAll('.callboard .room.lit').length});
+  document.querySelectorAll('.pump').forEach(p=>{
+    qs.push({t:'What is hanging on '+p.querySelector('.lbl').textContent.replace('IV PUMP · ','')+'?', kind:'pick',
+      opts:PUMP_BAGS.map(b=>b.nm).concat(['Nothing']),
+      ok:v=>{ const s=p.querySelector('.status').textContent;
+        const cur = s==='NO BAG HUNG' ? 'Nothing' : p.querySelector('.bag').textContent.split(' · ')[0];
+        return v===cur; }});
+  });
+  for(let i=qs.length-1;i>0;i--){ const j=ri(0,i); const t=qs[i]; qs[i]=qs[j]; qs[j]=t; }
+  return qs.slice(0,4);
+}
+function NIGHT_IM(who){
+  return {from:who, msg:pick([
+      'Most of your report did not match the monitors. I rechecked every room myself. Sleep well.',
+      'Report was creative. I went with the monitors. Sleep well.',
+      'I have questions about your report. I will ask them at 0700. Sleep well.']),
+    opts:['Sorry. Long day.','The monitor was drifting','Noted']};
+}
+function startReport(who){
+  if(S.over || reportActive) return;
+  const qs=buildReportQs(); if(qs.length<2) return;
+  reportActive=true;
+  const when=clockStr(clockMin);
+  let i=0, score=0, total=0;
+  const w=document.createElement('div'); w.className='report';
+  w.setAttribute('role','dialog'); w.setAttribute('aria-label','Hand-off report');
+  floor.appendChild(w); snd.page();
+  function finish(){
+    reportActive=false; w.remove(); bigBtn.focus();
+    if(score<=1) later(()=>sendIM(NIGHT_IM(who)), 9000);
+  }
+  function summary(){
+    const line = score===qs.length ? 'Clean report. Go home.'
+      : score>=qs.length-1 ? 'Good enough. Go home.'
+      : score>=2 ? 'Night shift will figure it out.'
+      : 'They will be calling you at home.';
+    w.innerHTML='<div class="hd"><span>HAND-OFF REPORT &middot; '+when+'</span><span class="pg">done</span></div>'+
+      '<div class="bd"><div class="who">'+who+'</div><div class="sum">'+score+' of '+qs.length+'.</div>'+
+      '<div>'+line+(total?' +'+fmt(total)+' for the parts you knew.':'')+'</div>'+
+      '<div class="row" style="margin-top:10px"><button type="button" class="done">Done</button></div></div>';
+    w.querySelector('.done').addEventListener('click', finish);
+    w.querySelector('.done').focus();
+  }
+  function ask(){
+    if(i>=qs.length){ summary(); return; }
+    const q=qs[i];
+    w.innerHTML='<div class="hd"><span>HAND-OFF REPORT &middot; '+when+'</span><span class="pg">'+(i+1)+' of '+qs.length+'</span></div>'+
+      '<div class="bd"><div class="who">'+who+' asks</div><div class="q">'+q.t+'</div>'+
+      (q.kind==='num'
+        ? '<div class="row"><input type="number" inputmode="numeric" step="1" aria-label="Your answer'+(q.u?' in '+q.u:'')+'" placeholder="'+q.u+'"><button type="button" class="go">Report</button></div>'
+        : q.opts.map(o=>'<button type="button" class="opt">'+o+'</button>').join(''))+
+      '<div class="fb" aria-live="polite"></div></div>';
+    const fb=w.querySelector('.fb');
+    function answer(v){
+      if(fb.textContent) return;
+      if(q.ok(v)){
+        score++; const b=Math.max(50, Math.round(tpsX()*10)); addTasks(b); total+=b;
+        fb.textContent='Right. +'+fmt(b); fb.className='fb ok'; snd.good();
+      } else {
+        fb.textContent=pick(['That is not what the monitor says.','I will just look myself.','Close. Not close enough.','...I will check.',
+          'That is not what it says. Look at it.','I will check it myself. Again.','Sure. Sure. Sure.','Is that from today?']);
+        fb.className='fb no'; snd.buzz();
+      }
+      renderTop();
+      later(()=>{ i++; ask(); }, 1000);
+    }
+    if(q.kind==='num'){
+      const inp=w.querySelector('input'), go=w.querySelector('.go');
+      function submit(){ const v=parseInt(inp.value,10); if(!isFinite(v)){ inp.focus(); return; } answer(v); }
+      go.addEventListener('click', submit);
+      inp.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+      later(()=>inp.focus(), 50);
+    } else {
+      w.querySelectorAll('.opt').forEach(b=>b.addEventListener('click', ()=>answer(b.textContent)));
+      later(()=>{ const f=w.querySelector('.opt'); if(f) f.focus(); }, 50);
+    }
+  }
+  ask();
+}
+
+/* ================= med pass: scan band, scan med, confirm =================
+   A scheduled med comes due for one of your patients. Three buttons, one
+   right order, and the layout shuffles every time so you have to read them.
+   Out of order is a WRONG PATIENT hard stop: everything resets and your
+   streak goes with it. Nobody else can pass your meds. */
+const MEDS=['Metoprolol 25 mg PO','Insulin lispro 4 units SubQ','Enoxaparin 40 mg SubQ','Pantoprazole 40 mg IV',
+  'Acetaminophen 650 mg PO','Oxycodone 5 mg PO','Furosemide 40 mg IV','Ondansetron 4 mg IV',
+  'Amlodipine 10 mg PO','Potassium chloride 20 mEq PO','Heparin 5,000 units SubQ','Lisinopril 10 mg PO',
+  'Docusate 100 mg PO','Melatonin 3 mg PO HS','Vancomycin 1 g IV','Hydralazine 10 mg IV','Senna 8.6 mg PO','Atorvastatin 40 mg PO'];
+/* every so often the MAR serves something that is not, strictly, a medication */
+const FAKE_MEDS=['Placebomycin 500 mg PO · not a real drug','Caffeine 200 mg PO · this one is for you',
+  'Sodium chloride 0.9% · water, but expensive','Nervoprazole 40 mg PO · for the nurse',
+  'Tramadol 50 mg PO · it does something, allegedly','Melatonin 3 mg PO · at 0900, for some reason',
+  'Mystery tablet · found on the floor · DO NOT GIVE','Vitamin D 50,000 units · the big one',
+  'Bisoprofloxinol 25 mg PO · pharmacy has never heard of it','Hopium 10 mg PO · off formulary'];
+const MED_SEQ=['band','med','confirm'], MED_LBL={band:'Scan band', med:'Scan med', confirm:'Confirm'};
+function spawnMed(){
+  if(!bankRows.length || document.querySelector('.medcard')) return;
+  const row=pick(bankRows), med = Math.random()<0.15 ? pick(FAKE_MEDS) : pick(MEDS);
+  const w=document.createElement('div'); w.className='medcard';
+  w.setAttribute('role','group'); w.setAttribute('aria-label','Med due, room '+row.room);
+  const order=MED_SEQ.slice();
+  for(let i=order.length-1;i>0;i--){ const j=ri(0,i); const t=order[i]; order[i]=order[j]; order[j]=t; }
+  w.innerHTML='<div class="hd"><span>MAR &middot; DUE NOW</span><span class="tm">0:30</span></div>'+
+    '<div class="bd"><div class="who">Room '+row.room+'</div><div class="med">'+med+'</div>'+
+    '<div class="steps" aria-hidden="true"><i></i><i></i><i></i></div>'+
+    '<div class="acts">'+order.map(s=>'<button type="button" class="mb" data-step="'+s+'">'+MED_LBL[s]+'</button>').join('')+'</div>'+
+    '<div class="fb" aria-live="polite"></div></div>';
+  floor.appendChild(w); snd.ding();
+  const tm=w.querySelector('.tm'), fb=w.querySelector('.fb'),
+        pips=w.querySelectorAll('.steps i'), btns=[...w.querySelectorAll('.mb')];
+  let step=0, left=30, locked=false, done=false;
+  /* a tech crossing the card passes it for you (not while it is locked out) */
+  let issue=addIssue(w, (by)=>{ if(by==='tech' && !locked && !done) give('tech'); }, true);
+  function gone(){ done=true; w.remove(); if(issue){ killIssue(issue); issue=null; } }
+  function miss(){
+    if(done) return;
+    S.stats.missed++; dropStreak(); snd.buzz();
+    floatText(Math.max(10, floorBox.width/2-90), 70, 'Missed dose. Room '+row.room+'. The pharmacy noticed.', true);
+    gone();
+  }
+  function wrong(){
+    locked=true; w.classList.add('wrong'); fb.textContent='WRONG PATIENT';
+    btns.forEach(b=>{ b.disabled=true; }); snd.buzz(); dropStreak();
+    later(()=>{
+      if(done) return;
+      step=0; pips.forEach(p=>p.classList.remove('on'));
+      w.classList.remove('wrong'); fb.textContent='';
+      btns.forEach(b=>{ b.disabled=false; }); locked=false;
+    }, 2200);
+  }
+  function give(by){
+    S.stats.meds++; const b=bonus(by==='tech'?2:4); snd.chime();
+    floatText(Math.max(10, floorBox.width/2-60), 70, (by==='tech'?'Tech passed it. ':'Given. ')+'Room '+row.room+'. +'+b, true);
+    gone(); renderTop();
+  }
+  btns.forEach(b=>b.addEventListener('click', ()=>{
+    if(locked||done||S.over||codeActive) return;
+    if(b.dataset.step===MED_SEQ[step]){
+      pips[step].classList.add('on'); step++;
+      tone(1318,.07,'square',.08*vol('good'));   /* the scanner chirp, on the task-chime slider */
+      if(step===3) give('you');
+    } else wrong();
+  }));
+  later(()=>btns[0].focus(), 40);
+  /* the due clock only runs while the shift does */
+  const iv=every(()=>{
+    if(done){ clearInterval(iv); return; }
+    if(!live()) return;
+    left-=0.25;
+    const s=Math.max(0, Math.ceil(left));
+    tm.textContent='0:'+String(s).padStart(2,'0'); tm.classList.toggle('late', s<=10);
+    if(left<=0){ clearInterval(iv); miss(); }
+  }, 250);
+}
+ELEM.medpass=function(){
+  later(spawnMed, ri(3000,6000));
+  /* more patients, more meds due: 25% a check per monitored room, one card at a time */
+  every(()=>{
+    if(!live() || codeActive || !bankRows.length || document.querySelector('.medcard')) return;
+    if(Math.random() < Math.min(1, 0.25*bankRows.length)) spawnMed();
+  }, 20000);
+};
+
+/* --- ambient clutter: sticky notes (clickable, worth a task each) --- */
+const stickyTexts=[
+  'call pharm re: rm 5','K+ 2.9 !!','family mtg 1400','rm 11 NPO after MN',
+  'find the bladder scanner','ask charge about PTO','water pitcher rm 3',
+  'chart chart chart','pt ed b4 discharge','WHO TOOK MY PEN',
+  'rm 8 wants to walk (NO)','pt in 7 says he is fine (he is not)','pharm callback x4412',
+  'dc summary rm 5??','order set for the admit','ask nights about the smell',
+  'K+ recheck 1600','WHO TOOK MY PEN (2)','coffee. any.','turn q2 rm 4','badge is in the bathroom'
+];
+every(()=>{
+  const n=Object.keys(S.owned).length;
+  if(n<4 || !live() || codeActive) return;
+  if(document.querySelectorAll('.sticky').length>=12) return;
+  if(Math.random()>.6) return;
+  const st=document.createElement('button'); st.type='button';
+  st.className='hit sticky';
+  st.style.background=pick(['#fff6a8','#ffd7e0','#c9f2d6','#cfe8ff']);
+  st.style.left=ri(10, Math.max(40,floorBox.width-140))+'px';
+  st.style.top=ri(70, Math.max(120,floorBox.height-220))+'px';
+  st.style.transform='rotate('+ri(-7,7)+'deg)';
+  st.textContent=pick(stickyTexts);
+  let issue=null;
+  function resolve(by){
+    if(!st.parentNode) return;
+    st.remove(); if(issue){ killIssue(issue); issue=null; }
+    addTasks(1);
+    floatText(parseInt(st.style.left), parseInt(st.style.top), by==='tech'?'Tech grabbed it +1':'+1');
+  }
+  st.addEventListener('click',()=>resolve('you'));
+  floor.appendChild(st);
+  /* a passing tech tidies the desk too */
+  issue=addIssue(st, resolve, true);
+}, 16000);
+
+/* ================= the EHR dock: In Basket + Secure Chat =================
+   Both live IN the chart chrome (top right, where Epic keeps them) and ride
+   the --e* props, so chart skins recolor them. IMs must be OPENED and
+   ANSWERED: the chip blinks until you pick a reply. */
+const ehrDock=document.createElement('div');
+ehrDock.id='ehrDock';
+floor.appendChild(ehrDock);
+const chatWin=document.createElement('div');
+chatWin.id='chatWin';
+floor.appendChild(chatWin);
+
+const IMQ=[];
+let chatChip=null;
+const IMS=[
+ {from:'Charge RN', msg:'Can you take one more? Just until 1500. It is always just until 1500.',
+  opts:['I literally cannot','...fine']},
+ {from:'Pharmacy', msg:'The heparin order says titrate per protocol. Which protocol? We have four.',
+  opts:['The right one','Calling you']},
+ {from:'Dr. Patel', msg:'The chart says I was at bedside. I am in clinic. Why does the chart say that?',
+  opts:['Charting error, fixing it','You were here in spirit']},
+ {from:'Lab', msg:'Specimen hemolyzed. We need a redraw on bed 7.',
+  opts:['On it','It took three sticks to get THAT one']},
+ {from:'Case Management', msg:'Insurance says Room 5 discharges today. Is Room 5 aware? Are you?',
+  opts:['Clinically not ready','Nobody told the patient either']},
+ {from:'Dietary', msg:'Room 5 ordered a cheeseburger. Room 5 is NPO. Room 5 is eating it.',
+  opts:['Taking it away','It is a clear liquid if you squint']},
+ {from:'IT', msg:'The chart will be down for five minutes at 1400 for an upgrade. It is 1412. It is still down.',
+  opts:['Paper charting it is','Which upgrade?']},
+ {from:'Infection Prevention', msg:'Room 8 is contact plus. Retroactively. Please re-gown for the last four hours.',
+  opts:['Noted','How does retroactive work']},
+ {from:'Radiology', msg:'We took the wrong patient down for the CT. He enjoyed it. Sending the right one now.',
+  opts:['Please do','Did he at least get contrast']},
+ {from:'Unit Secretary', msg:'A family member is at the desk with a binder. She has tabs.',
+  opts:['Coming','Tell her I am in a code']},
+ {from:'Nurse Educator', msg:'Your annual competencies are due. The link is in the email. The email is in the other email.',
+  opts:['On my lunch','Which email']},
+ {from:'Dr. Patel', msg:'I put the discharge in the note. Paragraph four. You read paragraph four, right?',
+  opts:['Reading it now','There are four paragraphs?']}
+];
+function MGR_IM(){
+  return {from:'Nurse Manager',
+    msg:'Reviewed the code documentation. I have assigned you three modules on medication math. They are due Friday. They were due Friday last time too.',
+    opts:['Understood','It was a busy shift','Will do them on my lunch break']};
+}
+function paintChip(){
+  if(!chatChip){
+    chatChip=document.createElement('button');
+    chatChip.type='button';
+    chatChip.className='hit edock-chip';
+    ehrDock.appendChild(chatChip);
+    chatChip.addEventListener('click', ()=>{ if(IMQ.length) openChat(); });
+  }
+  /* chat is event-driven: the chip appears with traffic, leaves when cleared
+     (the In Basket chip is the always-on one) */
+  chatChip.style.display = IMQ.length ? '' : 'none';
+  chatChip.setAttribute('aria-label','Secure chat, '+IMQ.length+' unread');
+  chatChip.innerHTML='💬 Chat'+(IMQ.length?' <span class="ct">'+IMQ.length+'</span>':'');
+  chatChip.classList.toggle('blink', IMQ.length>0);
+}
+function sendIM(im){
+  if(S.over) return;
+  IMQ.push(im); paintChip(); snd.im();
+}
+function closeChat(){
+  chatWin.classList.remove('open');
+  if(chatChip) chatChip.focus();
+}
+function openChat(){
+  const im=IMQ[0]; if(!im) return;
+  chatWin.innerHTML='<div class="cw-head"><span>Secure Chat</span><button class="hit cw-x" type="button" aria-label="Close chat">&#10005;</button></div>'+
+    '<div class="cw-body"><div class="cw-from">'+im.from+'</div><div class="cw-msg">'+im.msg+'</div>'+
+    im.opts.map(o=>'<button class="hit cw-opt" type="button">'+o+'</button>').join('')+'</div>';
+  chatWin.classList.add('open');
+  chatWin.querySelector('.cw-x').addEventListener('click', closeChat);
+  chatWin.querySelectorAll('.cw-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      IMQ.shift(); tire('im');
+      const b=bonus(1.2);
+      floatText(Math.max(10, floorBox.width-280), Math.max(10, floorBox.height-190), 'Sent. +'+b);
+      snd.good();
+      paintChip();
+      if(IMQ.length) openChat(); else closeChat();
+    });
+  });
+  chatWin.querySelector('.cw-opt').focus();
+}
+/* Esc closes the chat window (one step back); the BPA handler owns Esc while
+   a BPA is up, and the code modal blocks pointer access to the chip anyway */
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Escape') return;
+  if(document.getElementById('bpaLayer').classList.contains('show')) return;
+  if(chatWin.classList.contains('open')) closeChat();
+});
+
+/* ================= achievements + chart themes (in the EHR tabs) =================
+   Each achievement unlocks a chart skin that recolors the EHR backdrop via
+   [data-chart]. Both open from tabs in the chart's own tab bar. */
+/* 35 achievements. Eight unlock a chart skin (theme/tnm/pv); the rest are
+   badges. Order reads as a rough ladder: first touch, then the button, the
+   alarms, the codes, the volume, the cart, the flavor. */
+const ACH=[
+ {id:'clockin',    nm:'On the clock',          how:'Clock in. Push the button once.',            ic:'🕖'},
+ {id:'firstupg',   nm:'Pick up more',          how:'Take on your first upgrade',                 ic:'🧰'},
+ {id:'rate',       nm:'By the numbers',        how:'Put your rate on the dashboard',             ic:'📈'},
+ {id:'clicks500',  nm:'Manual labor',          how:'Chart 500 things by hand',                   ic:'✍️'},
+ {id:'clicks5000', nm:'Charting is charting',  how:'Chart 5,000 things by hand',   theme:'mono',    tnm:'Paper Chart',  ic:'🖊️', pv:['#1a1712','#f5f2e9']},
+ {id:'alarms100',  nm:'Alarm veteran',         how:'Handle 100 interruptions in one shift', theme:'sunset',  tnm:'Sunset',       ic:'🎖️', pv:['#a35f2f','#faeedd']},
+ {id:'alarms500',  nm:'Background noise',      how:'Handle 500 interruptions in one shift',      ic:'🔊'},
+ {id:'alarms1000', nm:'It all blurs',          how:'Handle 1,000 interruptions in one shift',    ic:'📟'},
+ {id:'streak8',    nm:'In the zone',           how:'Chain 8 saves without a gap',   theme:'night',   tnm:'Night Shift',  ic:'🔥', pv:['#2b3440','#262e38']},
+ {id:'streak15',   nm:'Uninterruptible',       how:'Chain 15 saves without a gap',               ic:'⚡'},
+ {id:'streak25',   nm:'Do not talk to me',     how:'Chain 25 saves without a gap',               ic:'🚫'},
+ {id:'rosc',       nm:'ROSC',                  how:'Survive a Code Blue',   theme:'cobalt',   tnm:'Code Blue',    ic:'🫀', pv:['#1e3a5f','#dde6f2']},
+ {id:'firsttry',   nm:'Sharp at 0300',         how:'Run a code with no wrong dose',              ic:'🎯'},
+ {id:'codes5',     nm:'Code team',             how:'Run 5 codes in one shift',                   ic:'🚨'},
+ {id:'codes10',    nm:'The one they call',     how:'Run 10 codes in one shift',   theme:'crimson', tnm:'Code Red',     ic:'📣', pv:['#5a1420','#f3d9dc']},
+ {id:'patel',      nm:'Dr. Patel steps in',    how:'Miss the dose math three times',             ic:'💉'},
+ {id:'patel3',     nm:'A word about education', how:'Get Dr. Patel three separate times',        ic:'📎'},
+ {id:'room7',      nm:'You actually looked',   how:'Catch Room 7 before the rapid response', theme:'terminal', tnm:'Green Screen', ic:'👀', pv:['#0d1f12','#071409']},
+ {id:'tele4',      nm:'Four rhythms',          how:'Open the telemetry bank',                    ic:'💓'},
+ {id:'missed10',   nm:'Nobody caught it',      how:'Miss 10 things in one shift',                ic:'🕳️'},
+ {id:'deaf',       nm:'Down to nothing',       how:'Silence one alarm to the floor of hearing', theme:'ash', tnm:'White Noise', ic:'🔇', pv:['#3a3f43','#c9cdd0']},
+ {id:'tasks10k',   nm:'Ten thousand things',   how:'Reach 10,000 tasks',                         ic:'🔟'},
+ {id:'tasks100k',  nm:'Six figures of beeps',  how:'Reach 100,000 tasks',                        ic:'💯'},
+ {id:'lunch',      nm:'Clocked out',           how:'Buy the uninterrupted lunch break', theme:'golden',  tnm:'Golden Hour',  ic:'🍽️', pv:['#8a6d1d','#f8f2d8']},
+ {id:'tasks1m',    nm:'A million small things', how:'Reach 1,000,000 tasks',                     ic:'🏆'},
+ {id:'pumps',      nm:'Occlusion distal',      how:'Own the IV pump',                            ic:'💧'},
+ {id:'bedalarm',   nm:'He is walking again',   how:'Own the bed alarm',                          ic:'🛏️'},
+ {id:'techs4',     nm:'Fully staffed',         how:'Hire all four techs',                        ic:'🧑‍⚕️'},
+ {id:'idle',       nm:'On their phone',        how:'Watch a tech discover their phone',          ic:'📱'},
+ {id:'everything', nm:'Peak of your license',  how:'Own every part of the floor',                ic:'🏥'},
+ {id:'tjc',        nm:'Just observing',        how:'Get through a Joint Commission survey',      ic:'📋'},
+ {id:'family',     nm:'A quick question',      how:'Meet the family at the desk',                ic:'🧑‍🤝‍🧑'},
+ {id:'staffing',   nm:'Short tonight 🙏',      how:'Get the staffing office text',               ic:'📲'},
+ {id:'mute',       nm:'Merciful silence',      how:'Mute the entire floor',                      ic:'🤫'},
+ {id:'endless',    nm:'You stayed',            how:'Pick the shift back up after lunch',         ic:'♾️'}
+];
+function achCount(){ return ACH.reduce((n,a)=>n+(MEM.ach[a.id]?1:0),0); }
+
+/* Most achievements are milestones read straight off state, so one poller
+   earns them instead of scattering earn() calls. The event-precise ones
+   (rosc, room7, firsttry, lunch, endless) are earned inline at their moment. */
+const ACH_TEST={
+  clockin:  ()=>S.started,
+  firstupg: ()=>Object.keys(S.owned).length>=1,
+  rate:     ()=>!!S.owned.prodtrack,
+  clicks500:()=>S.stats.clicks>=500,
+  clicks5000:()=>S.stats.clicks>=5000,
+  alarms100:()=>S.stats.alarms>=100,
+  alarms500:()=>S.stats.alarms>=500,
+  alarms1000:()=>S.stats.alarms>=1000,
+  streak8:  ()=>S.stats.maxStreak>=8,
+  streak15: ()=>S.stats.maxStreak>=15,
+  streak25: ()=>S.stats.maxStreak>=25,
+  codes5:   ()=>S.stats.codes>=5,
+  codes10:  ()=>S.stats.codes>=10,
+  patel:    ()=>S.stats.flubs>=1,
+  patel3:   ()=>S.stats.flubs>=3,
+  tele4:    ()=>!!S.owned.tele,
+  missed10: ()=>S.stats.missed>=10,
+  deaf:     ()=>{ for(const k in wear){ if(wear[k]<=0.25) return true; } return false; },
+  tasks10k: ()=>S.tasks>=10000,
+  tasks100k:()=>S.tasks>=100000,
+  tasks1m:  ()=>S.tasks>=1000000,
+  pumps:    ()=>!!S.owned.pump,
+  bedalarm: ()=>!!S.owned.bed,
+  techs4:   ()=>(S.owned.tech||0)>=4,
+  idle:     ()=>idleTechs()>0,
+  everything:()=>UPG.filter(u=>u.tier<=2).every(u=>S.owned[u.id]),   /* the floor + the building; the system tier is endless territory */
+  tjc:      ()=>!!S.owned.tjc,
+  family:   ()=>!!S.owned.family,
+  staffing: ()=>!!S.owned.staffing,
+  mute:     ()=>S.muted
+};
+function checkAch(){
+  for(const a of ACH){ const t=ACH_TEST[a.id]; if(t && !MEM.ach[a.id] && t()) earn(a.id); }
+}
+
+/* TWO THEME AXES: the EHR TEMPLATE (data-ehr = which chart layout) and the
+   COLOR (data-chart = the palette). Both apply independently. */
+const EHR_TPL=[
+  {id:'generic', nm:'Generic EHR', ds:'A plain flowsheet. No brand, no storyboard.'},
+  {id:'heroic',  nm:'Heroic',      ds:'Storyboard on the side, tabs across the top. If you know, you know.'},
+  {id:'prophet', nm:'Prophet',     ds:'Menu on the left, banner up top. The other big one.'}
+];
+function applyChart(id){ if(id==='classic') delete shell.dataset.chart; else shell.dataset.chart=id; }
+/* the 3 control tabs live where each EHR keeps its menu: the top tab row for
+   Generic/Epic, the left Menu column for Cerner. They MOVE when the template does. */
+function positionCtrlTabs(id){
+  const ctrl=document.getElementById('ctrlTabs'); if(!ctrl) return;
+  /* on a phone Cerner's Menu has no room beside the console, so the tabs use the top row */
+  if(id==='prophet' && !window.matchMedia('(max-width:699px)').matches){
+    const slot=document.getElementById('ctrlMenuSlot');
+    if(slot){ slot.appendChild(ctrl); ctrl.classList.add('as-menu'); }
+  } else {
+    const tabs=document.querySelector('.ehrTabs');
+    if(tabs){ tabs.appendChild(ctrl); ctrl.classList.remove('as-menu'); }
+  }
+}
+function applyEhr(id){
+  if(!id || id==='generic') delete shell.dataset.ehr; else shell.dataset.ehr=id;
+  positionCtrlTabs(id);
+  positionBrain(id);
+}
+/* the one nurse brain sheet rides along into whichever EHR template is live */
+function positionBrain(id){
+  const brain=document.getElementById('brain'); if(!brain) return;
+  const main=document.querySelector('.ehrBody.ehr-tpl[data-tpl="'+(id||'generic')+'"] .ehrMain');
+  if(main && brain.parentNode!==main) main.appendChild(brain);
+}
+
+/* the panel: one overlay, three views (upgrades / chart / achievements) */
+const ehrPanel=document.getElementById('ehrPanel');
+const ehrpBody=document.getElementById('ehrpBody');
+const ehrpTitle=document.getElementById('ehrpTitle');
+const ehrpCount=document.getElementById('ehrpCount');
+const tabUpg=document.getElementById('tabUpg');
+const tabThemes=document.getElementById('tabThemes');
+const tabAch=document.getElementById('tabAch');
+const tabDash=document.getElementById('tabDash');
+let ehrpView=null, ehrpOpener=null;
+
+function renderUpg(){ ehrpBody.innerHTML=''; ehrpBody.appendChild(upgList); renderShop(); }
+
+function renderChart(){
+  ehrpBody.innerHTML='<div class="ehrp-sec">EHR</div><div id="tplList"></div>'+
+    '<div class="ehrp-sec">Color</div><div id="themeList"></div>';
+  const tplList=ehrpBody.querySelector('#tplList');
+  EHR_TPL.forEach(t=>{
+    const on=(MEM.ehr||'generic')===t.id;
+    const b=document.createElement('button'); b.type='button';
+    b.className='thm ehrtpl'+(on?' on':'');
+    b.innerHTML='<span class="sw tpl-'+t.id+'" aria-hidden="true"></span>'+
+      '<span class="tx"><span class="tn">'+t.nm+'</span><span class="td">'+t.ds+'</span></span>';
+    b.setAttribute('aria-pressed', String(on));
+    b.addEventListener('click', ()=>{ if(S.over) return; MEM.ehr=t.id; saveMem(); applyEhr(t.id); renderChart(); snd.good(); });
+    tplList.appendChild(b);
+  });
+  const rows=[{theme:'classic', tnm:'Classic', unlocked:true, pv:['#41608a','#eef1f5']}].concat(
+    ACH.filter(a=>a.theme).map(a=>({theme:a.theme, tnm:a.tnm, unlocked:!!MEM.ach[a.id], how:a.how, pv:a.pv})));
+  const list=ehrpBody.querySelector('#themeList');
+  rows.forEach(r=>{
+    const b=document.createElement('button'); b.type='button';
+    const on=(MEM.chart||'classic')===r.theme;
+    b.className='thm'+(r.unlocked?'':' locked')+(on?' on':'');
+    b.innerHTML='<span class="sw" style="background:linear-gradient(120deg,'+r.pv[0]+' 46%,'+r.pv[1]+' 46%)" aria-hidden="true"></span>'+
+      '<span class="tx"><span class="tn">'+r.tnm+(r.unlocked?'':' 🔒')+'</span>'+
+      (r.unlocked?'':'<span class="td">'+r.how+'</span>')+'</span>';
+    b.setAttribute('aria-pressed', String(on));
+    if(!r.unlocked) b.setAttribute('aria-disabled','true');
+    b.addEventListener('click', ()=>{
+      if(!r.unlocked || S.over) return;
+      MEM.chart=r.theme; saveMem();
+      applyChart(r.theme); renderChart(); snd.good();
+    });
+    list.appendChild(b);
+  });
+}
+function renderAch(){
+  ehrpBody.innerHTML='<div class="ach-grid">'+ACH.map(a=>{
+    const got=!!MEM.ach[a.id];
+    return '<div class="ach '+(got?'unlocked':'locked')+'">'+
+      '<span class="ic">'+(got?a.ic:'🔒')+'</span>'+
+      '<span class="tx"><span class="an">'+a.nm+'</span>'+
+      '<span class="ah">'+a.how+'</span>'+
+      (got?'<span class="aw">Unlocked'+(a.tnm?' · '+a.tnm+' skin':'')+'</span>':'')+'</span></div>';
+  }).join('')+'</div>';
+}
+/* the dashboard: management's numbers about you, rendered from live state and
+   refreshed every second while the tab is open */
+function renderDash(){
+  const st=S.stats, rate=Math.round(effTps()*60), idle=idleTechs();
+  const pumps=[...document.querySelectorAll('.pump .status')].map(e=>e.textContent);
+  const running=pumps.filter(t=>t==='INFUSING').length;
+  const ears=['spo2','pump','chime','vocera','ding','im','buzz','bed'];
+  const earNm={spo2:'Pulse ox',pump:'IV pump',chime:'Call lights',vocera:'Badge',ding:'Chart',im:'Secure chat',buzz:'Texts',bed:'Bed alarm'};
+  const notes=[
+    'Call light response time: 4:12. Target: 2:00. The target was set by someone who has never answered a call light.',
+    'Your alarm acknowledgement rate is above the unit mean. So is everyone else\'s. Nobody has asked how.',
+    'Productivity is up 8% over last shift. Break compliance is not being tracked. Draw your own conclusion.',
+    'Documentation timeliness: within policy. Documentation accuracy: not a column on this dashboard.',
+    'You have silenced more alarms than any nurse on the unit. This is presented without comment.',
+    'Hand hygiene compliance: 100%. Observed by the person you high-fived.',
+    'Your patients rate their care 4.8 out of 5. The 0.2 is Room 8. He wanted to walk.',
+    'Overtime this pay period: none. Late clock-outs: not a column.',
+    'Alarm volume on your unit is 11% quieter than last quarter. Nobody turned anything down.'
+  ];
+  const tile=(v,l)=>'<div class="dash-stat"><b>'+v+'</b><span>'+l+'</span></div>';
+  ehrpBody.innerHTML=
+    '<div class="ehrp-sec">This shift</div><div class="dash-grid">'+
+      tile(fmt(S.tasks),'tasks banked')+
+      tile(S.owned.prodtrack?fmt(rate):'?', S.owned.prodtrack?'tasks per minute':'tasks per minute (buy Productivity tracking)')+
+      tile(fmt(st.clicks),'charted by hand')+tile(fmt(st.alarms),'interruptions handled')+
+      tile(st.saves,'caught early')+tile(st.missed,'missed')+
+      tile(st.codes,'codes run')+tile(st.meds,'meds given')+
+      tile('×'+st.maxStreak,'best streak')+tile(clockStr(clockMin),'shift clock')+
+    '</div>'+
+    '<div class="ehrp-sec">Your ears</div>'+
+    ears.map(k=>{ const p=Math.round(worn(k)*100); const cls=p<=25?'gone':(p<60?'low':'');
+      return '<div class="dash-ear"><span>'+earNm[k]+'</span><div class="bar"><i class="'+cls+'" style="width:'+p+'%"></i></div><span class="pct">'+p+'%</span></div>'; }).join('')+
+    '<div class="ehrp-sec">The floor</div><div class="dash-grid">'+
+      tile(bankRows.length,'patients monitored')+
+      tile((techs.length-idle)+(idle?' + '+idle+' on phone':''),'techs working')+
+      tile(running+'/'+pumps.length,'pumps running')+tile('×'+(Math.round(S.mult*100)/100),'multiplier')+
+      tile('Shift '+((MEM.shifts||0)+1),'+'+Math.round((expMult()-1)*100)+'% experience')+tile(achCount()+'/'+ACH.length,'achievements')+
+    '</div>'+
+    '<div class="dash-note">'+notes[Math.floor(clockMin/90)%notes.length]+'</div>';
+}
+function openEhrPanel(view, opener){
+  ehrpView=view; ehrpOpener=opener||document.activeElement;
+  if(view==='upg'){ ehrpTitle.textContent='Pick up more'; ehrpCount.textContent=''; renderUpg(); }
+  else if(view==='chart'){ ehrpTitle.textContent='Chart Themes'; ehrpCount.textContent=''; renderChart(); }
+  else if(view==='dash'){ ehrpTitle.textContent='Unit dashboard'; ehrpCount.textContent='live'; renderDash(); }
+  else { ehrpTitle.textContent='Achievements'; ehrpCount.textContent=achCount()+'/'+ACH.length+' unlocked'; renderAch(); }
+  tabUpg.classList.toggle('on', view==='upg');
+  tabThemes.classList.toggle('on', view==='chart');
+  tabAch.classList.toggle('on', view==='ach');
+  tabDash.classList.toggle('on', view==='dash');
+  ehrPanel.classList.add('show');
+  const x=ehrPanel.querySelector('.ehrp-x'); if(x) x.focus();
+}
+function closeEhrPanel(){
+  ehrPanel.classList.remove('show');
+  [tabUpg,tabThemes,tabAch,tabDash].forEach(t=>t.classList.remove('on'));
+  if(ehrpOpener && ehrpOpener.focus && document.contains(ehrpOpener)) ehrpOpener.focus();
+  ehrpView=null;
+}
+function refreshPanel(){
+  if(!ehrPanel.classList.contains('show')) return;
+  if(ehrpView==='chart') renderChart();
+  else if(ehrpView==='upg') renderShop();
+  else if(ehrpView==='dash') renderDash();
+  else { ehrpCount.textContent=achCount()+'/'+ACH.length+' unlocked'; renderAch(); }
+}
+function toggleView(view, tab){ (ehrpView===view && ehrPanel.classList.contains('show')) ? closeEhrPanel() : openEhrPanel(view, tab); }
+tabUpg.addEventListener('click', ()=>toggleView('upg', tabUpg));
+tabThemes.addEventListener('click', ()=>toggleView('chart', tabThemes));
+tabAch.addEventListener('click', ()=>toggleView('ach', tabAch));
+tabDash.addEventListener('click', ()=>toggleView('dash', tabDash));
+every(()=>{ if(ehrpView==='dash' && ehrPanel.classList.contains('show')) renderDash(); }, 1000);
+ehrPanel.querySelectorAll('[data-ehrp-close]').forEach(el=>el.addEventListener('click', closeEhrPanel));
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && ehrPanel.classList.contains('show')) closeEhrPanel(); });
+
+/* affordable badge on the Upgrades tab, since the shop is no longer always up */
+let upgBadgeN=-1;
+function updateUpgBadge(){
+  const badge=document.getElementById('upgBadge'); if(!badge) return;
+  const n=UPG.reduce((a,u)=>a+((u.revealed && !u.el.classList.contains('owned') && S.tasks>=u.curCost)?1:0),0);
+  if(n===upgBadgeN) return;
+  upgBadgeN=n; badge.textContent=n; badge.hidden = n===0;
+}
+
+function earn(id){
+  if(MEM.ach[id]) return;
+  const a=ACH.find(x=>x.id===id); if(!a) return;
+  MEM.ach[id]=1; saveMem();
+  if(!S.over){
+    const msg = a.tnm ? '🏆 '+a.nm+'. New chart skin: '+a.tnm : '🏆 '+a.nm;
+    floatText(Math.max(10, floorBox.width/2-120), 100, msg, true);
+    snd.good(); snd.good();
+  }
+  refreshPanel();
+}
+
+/* --- lunch: the break, not the end ---
+   S.over freezes the floor for the break screen, but nothing is torn down:
+   every interval stays alive (no-op while over) so the shift can be picked
+   back up for an endless achievement run. The tele sweep halts itself on
+   S.over and is restarted on resume. */
+function resumeShift(){
+  const L=document.getElementById('lunch');
+  L.classList.remove('in');
+  later(()=>L.classList.remove('show'), 450);
+  S.over=false;
+  earn('endless');
+  audio();
+  if(master){ master.gain.cancelScheduledValues(AC.currentTime); master.gain.setValueAtTime(masterGain(), AC.currentTime); }
+  ELEM._teleStart && ELEM._teleStart();
+  startTechLoop();   /* the techs stopped with the break too */
+  floorBox=floor.getBoundingClientRect();
+  bigBtn.focus();
+}
+ELEM.lunch=function(){
+  const newSkin=!MEM.ach.lunch;
+  earn('lunch');
+  S.over=true;
+  MEM.shifts=(MEM.shifts||0)+1; saveMem();   /* a finished shift banks Experience */
+  snd.bedOff();
+  if(klaxonIv){ clearInterval(klaxonIv); klaxonIv=null; }
+
+  /* your earliest clock-out, on this device only */
+  const prevBest = MEM.bestOut;
+  const isRecord = !prevBest || clockMin<prevBest;
+  if(isRecord){ MEM.bestOut=clockMin; saveMem(); }
+
+  /* how worn did your ears get */
+  const worst=Object.values(wear).length ? Math.round(Math.min.apply(null,Object.values(wear))*100) : 100;
+
+  if(master) master.gain.linearRampToValueAtTime(0.0001, AC.currentTime+2);
+  const L=document.getElementById('lunch');
+  L.innerHTML='<div class="card">'+
+    '<h1>'+clockStr(clockMin)+'.</h1>'+
+    '<p>The break room is empty. The chair by the window is open.</p>'+
+    '<p>Someone else is watching your patients. Your badge is at the desk. The inbox will still be there. It is always still there.</p>'+
+    '<p>For thirty minutes, nothing is beeping at you.</p>'+
+    '<div class="stats mono">'+S.stats.clicks+' tasks clicked &middot; '+S.stats.alarms+' interruptions handled &middot; '+
+      S.stats.codes+' codes run &middot; '+S.stats.saves+' caught early &middot; '+S.stats.missed+' missed'+
+      (S.stats.flubs ? ' &middot; '+S.stats.flubs+' dose'+(S.stats.flubs>1?'s':'')+' Dr. Patel pushed for you' : '')+
+      (S.stats.meds ? ' &middot; '+S.stats.meds+' med'+(S.stats.meds>1?'s':'')+' given' : '')+
+      (S.stats.maxStreak>=3 ? ' &middot; best streak ×'+S.stats.maxStreak : '')+
+      (worst<100 ? '<br>most-silenced alarm, down to '+worst+'% volume by clock-out' : '')+
+      (prevBest && !isRecord ? '<br>your earliest clock-out is still '+clockStr(prevBest) : '')+
+      (isRecord && prevBest ? '<br>earliest clock-out yet' : '')+
+      (newSkin ? '<br>chart skin unlocked: Golden Hour (in the shop, next shift)' : '')+
+      '<br>shift '+MEM.shifts+' in the books. Tomorrow starts at +'+Math.round((expMult()-1)*100)+'% experience'+
+      (MEM.shifts>=EXP_CAP ? ', which is the ceiling' : '')+
+    '</div>'+
+    '<p style="font-size:13px;opacity:.8">You silenced hundreds of alarms today. How many did you actually hear?</p>'+
+    '<p style="font-size:12px;opacity:.65">Or stay on. The floor does not actually close, and the achievements are still out there.</p>'+
+    '<div class="lunch-actions">'+
+      '<button type="button" id="lunchStay">Pick the shift back up</button>'+
+      '<button type="button" id="lunchReload" class="ghost">Clock in tomorrow</button>'+
+    '</div>'+
+    '<a class="lunch-link" href="/learn/#fun">Back to Learn</a>'+
+  '</div>';
+  L.classList.add('show');
+  document.getElementById('lunchStay').addEventListener('click', resumeShift);
+  document.getElementById('lunchReload').addEventListener('click', ()=>location.reload());
+  requestAnimationFrame(()=>requestAnimationFrame(()=>L.classList.add('in')));
+};
+
+/* ================= header controls ================= */
+/* two chips: Sound is a plain mute toggle; Mixer opens the settings (a master
+   and a slider per alarm family). Levels persist on this device (MEM.vol). */
+const muteBtn=document.getElementById('muteBtn');
+const mixBtn=document.getElementById('mixBtn');
+const soundMenu=document.getElementById('soundMenu');
+function paintMute(){
+  muteBtn.innerHTML = S.muted ? '🔇 Muted' : '🔊 Sound';
+  muteBtn.setAttribute('aria-pressed', String(S.muted));
+  if(master) master.gain.value = masterGain();
+}
+function openSound(){
+  soundMenu.hidden=false; mixBtn.setAttribute('aria-expanded','true');
+  soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{ inp.value=Math.round(vol(inp.dataset.vol)*100); });
+  const x=soundMenu.querySelector('.sm-x'); if(x) x.focus();
+}
+function closeSound(){ if(soundMenu.hidden) return; soundMenu.hidden=true; mixBtn.setAttribute('aria-expanded','false'); mixBtn.focus(); }
+muteBtn.addEventListener('click', ()=>{ S.muted=!S.muted; audio(); paintMute(); });
+mixBtn.addEventListener('click', ()=>{ if(soundMenu.hidden) openSound(); else closeSound(); });
+soundMenu.querySelector('.sm-x').addEventListener('click', closeSound);
+soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{
+  inp.addEventListener('input', ()=>{
+    MEM.vol=MEM.vol||{}; MEM.vol[inp.dataset.vol]=inp.value/100; saveMem();
+    if(inp.dataset.vol==='master' && master) master.gain.value=masterGain();
+  });
+  /* on release, a taste of that alarm at the new level */
+  inp.addEventListener('change', ()=>{ const k=inp.dataset.vol; if(S.muted || k==='master' || !snd[k]) return; audio(); snd[k](); });
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !soundMenu.hidden) closeSound(); });
+document.addEventListener('click', e=>{
+  if(soundMenu.hidden || soundMenu.contains(e.target) || mixBtn.contains(e.target)) return;
+  closeSound();
+});
+paintMute();
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!S.over && S.tasks>500 && !confirm('Walk off the floor and start the shift over?')) return;
+  location.reload();
+});
+
+/* sub line changes as chaos grows */
+every(()=>{
+  const n=Object.keys(S.owned).length;
+  const sub=document.getElementById('subLine');
+  if(n===0) return;
+  const lines=[
+    'Still manageable. Mostly.',
+    'You can hear all of it. You are choosing not to.',
+    'Which beep was that? Doesn\'t matter. Keep clicking.',
+    'You\'ve stopped hearing the pump. That\'s the problem.',
+    'Everything is alarming. Nothing is alarming.',
+    'You have a system. The system is ignoring things.',
+    'The unit went quiet. That is the worst sound there is.',
+    'Somebody said your name. It was the pump.',
+    'You could buy a lunch break. If you ever get 500,000 tasks done.'
+  ];
+  sub.textContent = lines[Math.min(lines.length-1, Math.floor(n/2))];
+}, 15000);
+
+/* QA hatch, same pattern as ?ugdev on the hospital game: ?afdev=1 unlocks
+   every chart skin so themes can be tested without a full shift */
+const afdev=new URLSearchParams(location.search).get('afdev');
+if(afdev==='1' || afdev==='full'){
+  ACH.forEach(a=>{ MEM.ach[a.id]=1; }); saveMem();
+}
+/* ?afdev=full also clocks in and buys the whole floor (everything but the
+   lunch break), so the maxed-out unit can be seen in one load */
+if(afdev==='full'){
+  later(()=>{
+    if(!S.started) bigBtn.click();
+    S.tasks=2e7; S.earned=2e7;
+    UPG.forEach(u=>{ u.floated=true; });   /* no reveal cards for a bulk buy */
+    UPG.forEach(u=>{ if(u.id==='lunch') return; for(let k=0;k<(u.repeat||1);k++) u.buy(); });
+    document.querySelectorAll('.pump .pbtn').forEach(b=>b.click());
+    S.tasks=313983; renderTop();
+  }, 600);
+}
+
+/* boot: fall back to classic if the saved skin was never actually earned */
+if(MEM.chart!=='classic' && !ACH.some(a=>a.theme===MEM.chart && MEM.ach[a.id])) MEM.chart='classic';
+/* the console sits at 53% of the floor, but never above the tab row: measured
+   whenever it changes size (rows, pumps, readout lines) or the window does */
+const stage=document.querySelector('.stage');
+/* the phone console scrolls: everything inside it just moved, re-measure */
+stage.addEventListener('scroll', ()=>{ btnBox=null; issues.forEach(o=>{ o.rect=null; }); }, {passive:true});
+function placeStage(){
+  const H=floor.clientHeight, h=stage.offsetHeight;
+  stage.style.top=Math.round(Math.max(92, H*0.53 - h/2))+'px';
+  btnBox=null; issues.forEach(o=>{ o.rect=null; });   /* everything inside it just moved */
+}
+if(window.ResizeObserver) new ResizeObserver(placeStage).observe(stage);
+window.addEventListener('resize', ()=>{ placeStage(); positionCtrlTabs(MEM.ehr); });
+/* the media query settles after the resize event fires: re-seat the tabs when it flips */
+const phoneMQ=window.matchMedia('(max-width:699px)');
+if(phoneMQ.addEventListener) phoneMQ.addEventListener('change', ()=>positionCtrlTabs(MEM.ehr));
+/* belt and braces: a background tab throttles ResizeObserver, so watch the height too */
+let stageH=0, lastPhone=phoneMQ.matches;
+every(()=>{
+  const h=stage.offsetHeight; if(h!==stageH){ stageH=h; placeStage(); }
+  if(phoneMQ.matches!==lastPhone){ lastPhone=phoneMQ.matches; positionCtrlTabs(MEM.ehr); placeStage(); }
+}, 500);
+placeStage();
+applyChart(MEM.chart);
+applyEhr(MEM.ehr);
+renderTop(); renderShop();
+
+/* milestone achievements: one poller reads them off state a few times a second */
+every(()=>checkAch(), 400);
+
+/* small-screen notice: this floor is dense on a phone (see the neal.fun clicker),
+   so we say so up front. Once per session, one tap to dismiss. */
+(function(){
+  const note=document.getElementById('afBigScreen'), go=document.getElementById('afbsGo');
+  if(!note || !go) return;
+  let seen=false; try{ seen=sessionStorage.getItem('hu-af-bigscreen')==='1'; }catch(e){}
+  if(!seen && window.matchMedia('(max-width:699px)').matches) note.classList.add('show');
+  function dismiss(){ note.classList.remove('show'); try{ sessionStorage.setItem('hu-af-bigscreen','1'); }catch(e){} bigBtn.focus(); }
+  go.addEventListener('click', dismiss);
+  note.addEventListener('keydown', e=>{ if(e.key==='Escape') dismiss(); });
+})();
+
+/* test hook (same pattern as the sim games' window.__hs/__er): lets a
+   playtest or a harness drive the blocking flows without waiting on RNG */
+window.__af={ startCode, sendIM, MGR_IM, IMS, get IMQ(){return IMQ;}, S, earn,
+  techs, effTps, renderTop, bankRows, get teleOn(){return teleOn;}, popHuddle,
+  openEhrPanel, ACH, ACH_TEST, checkAch, resumeShift, wear, achCount, ELEM,
+  announceUpgrade, UPG, renderShop, expMult, get MEM(){return MEM;},
+  startReport, get reportActive(){return reportActive;}, spawnMed,
+  doseOptions, fmtDose, get codeQ(){return curCodeQ;}, get issues(){return issues;}, vol, openSound, get AC(){return AC;},
+  get clockMin(){return clockMin;}, set clockMin(v){clockMin=v;} };
+})();
+</script>
+{% endraw %}

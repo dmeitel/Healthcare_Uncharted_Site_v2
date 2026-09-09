@@ -15,8 +15,8 @@ var CLUSTERS = [
   { key: 'maps-systems', label: 'Maps & Systems' },
   { key: 'learn-play',   label: 'Learn & Play' }
 ];
-var TYPE_ORDER = ['tool', 'learn', 'talk', 'rounds', 'path'];
-var TYPE_LABEL = { tool: 'Tools', learn: 'Learn', talk: 'Talks', rounds: 'Rounds', path: 'Paths' };
+var TYPE_ORDER = ['tool', 'learn', 'talk', 'rounds', 'fun', 'path'];
+var TYPE_LABEL = { tool: 'Tools', learn: 'Learn', talk: 'Talks', rounds: 'Rounds', fun: 'Fun', path: 'Paths' };
 var DOORS = [
   { label: 'I work in healthcare', sub: 'Start with the AI reality check', type: 'path', url: '/learn/ai-in-healthcare/' },
   { label: 'I work with the data', sub: 'Try the Clinical SQL Mystery', type: 'path', url: '/tools/sql-mystery/' },

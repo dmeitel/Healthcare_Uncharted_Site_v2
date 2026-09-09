@@ -165,6 +165,15 @@ const THUMBS = {
       `<rect x="${240 + i * 135}" y="${380 - h}" width="90" height="${h}" rx="8" fill="${i === 0 ? GGREEN : 'none'}" opacity="${i === 0 ? 0.55 : 1}" stroke="${i === 0 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
      <circle cx="285" cy="220" r="34" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".7"/>
      <line x1="310" y1="245" x2="350" y2="285" stroke="${GGREEN}" stroke-width="3" opacity=".7"/>`),
+  // alarm fatigue: one rhythm worth reading, buried under a pile of amber alarms
+  'fun-alarm-fatigue': frame(
+    `<path d="M80 250 L300 250 L318 190 L336 305 L354 250 L560 250 L578 178 L596 315 L614 250 L830 250 L848 196 L866 300 L884 250 L1200 250" fill="none" stroke="${GREEN}" stroke-width="4"/>
+     ${[[150, 90, 150], [420, 60, 120], [700, 110, 170], [1010, 70, 130]].map(([x, y, w]) =>
+       `<rect x="${x}" y="${y}" width="${w}" height="46" rx="9" fill="${AMBER}" opacity=".28" stroke="${AMBER}" stroke-width="3"/>`).join('')}
+     ${[[240, 350], [530, 370], [900, 345], [1120, 375]].map(([x, y]) =>
+       `<circle cx="${x}" cy="${y}" r="9" fill="${AMBER}" opacity=".45"/>`).join('')}
+     <rect x="880" y="120" width="120" height="46" rx="9" fill="none" stroke="#DF5752" stroke-width="4"/>
+     <circle cx="940" cy="143" r="7" fill="#DF5752"/>`),
   // the goat tracker: the traffic sparkline
   'sm-goat-tracker': frame(
     `<line x1="140" y1="360" x2="1140" y2="360" stroke="${LINE}" stroke-width="3"/>
