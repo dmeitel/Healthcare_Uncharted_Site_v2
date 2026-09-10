@@ -382,6 +382,8 @@ date: 2026-09-10
     transition:transform .06s ease, box-shadow .06s ease; position:relative; overflow:hidden;
   }
   #bigBtn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--sbd,#1d2a24);}
+  /* resting: the button is saying something rather than asking for something */
+  #bigBtn.rest{font-weight:500;}
   /* bling layers on top of the scrub color; gold replaces it outright */
   .af[data-bling="chrome"] #bigBtn{border-color:#8d97a0; box-shadow:0 0 0 2px #dfe4e8, 0 4px 0 #6b747c;
     background-image:linear-gradient(180deg, rgba(255,255,255,.3), rgba(255,255,255,0) 45%, rgba(0,0,0,.06));}
@@ -960,6 +962,8 @@ date: 2026-09-10
   /* the float pool RN wears a different badge: she is the one who can take a
      pump or a dose off your hands, and you should be able to spot her */
   .af .tech.rn .tag{background:#173a5e; color:#dbe9f7; box-shadow:0 0 0 1px #4ECDC4;}
+  /* a bubble carrying the med sequence needs to wrap; the ordinary one does not */
+  .af .tech .bub.hint{white-space:normal; width:186px; text-align:left; line-height:1.35; padding:5px 9px;}
   .af .tech.idle .bub, .af .tech.talk .bub{display:block;}
   .af .tech.talk .bub{border-color:#2c6e4f; color:#1f4d3a;}
   .af .tech.idle .face{animation:afsway 1.6s ease-in-out infinite;}
@@ -1851,6 +1855,7 @@ every(()=>{ if(clockMode==='played') paintClock(); }, 1000);
 every(()=>{
   if(!live()) return;
   clockMin++; paintClock(); checkShiftChange();
+  if(clockMin%60===0 && btnTpl.indexOf('{t}')>=0) paintBtn();   /* the hour turned under a label that names it */
   /* an hour of the shift since a break (or the last reminder) and somebody says so */
   if(clockMin-Math.max(lastBreakMin,lastNagMin)>=60 && S.earned>=120) breakNag();
 }, 3000);
@@ -1923,16 +1928,55 @@ addEventListener('beforeunload', e=>{
 
 /* big button */
 const bigBtn=document.getElementById('bigBtn');
-const btnLabels=['Chart a vital','Pass meds','Turn a patient','Reassess pain','Scan a band','Chart an I&O','Round again','Educate on discharge',
+const btnLabels=['Chart a vital','Pass the {t} meds','Turn a patient','Reassess pain','Scan a band','Chart an I&O','Round again','Educate on discharge',
   'Find a pillow','Hunt for a WOW','Call pharmacy back','Answer the desk phone','Restart the pump','Reposition the probe','Empty a Foley','Sign a note','Label a specimen','Find the glucometer'];
 /* the first press is clocking in. The next twenty-five run in the order a
    shift actually starts. After that it is whatever the floor throws at you. */
 const SHIFT_START=['Clock in','Get report','Wash your hands','Round on your patients','Check the MAR','Assess Room 4',
-  'Chart the vitals','Check the pump','Answer a call light','Wash your hands again','Pass 0800 meds','Ambulate Room 8',
+  'Chart the vitals','Check the pump','Answer a call light','Wash your hands again','Pass the {t} meds','Ambulate Room 8',
   'Call the doctor','Document the call','Reposition Room 5','Hang the antibiotic','Check a blood sugar','Chart the assessment',
   'Talk to the family','Update the whiteboard','Call pharmacy','Empty a Foley','Restock the room','Wash your hands',
   'Sit down for a second','Stand back up'];
 let pressN=0;
+/* THE BUTTON NEVER NAMES A TIME THE CLOCK IS NOT SHOWING. A label can carry
+   {t}, which resolves to the hour on the shift clock, and the template is kept
+   so the hour turning over repaints it rather than leaving it stale. */
+let btnTpl='Clock in';
+function hourStr(){ return clockStr(Math.floor(clockMin/60)*60); }
+function paintBtn(){ bigBtn.textContent = btnTpl.split('{t}').join(hourStr()); }
+function setBtnLabel(s){ btnTpl=s; paintBtn(); }
+
+/* THE PAUSE. Stop pressing and the button stops asking you for things. It is
+   the only thing on this floor that notices you stopped. Press it again and
+   the work picks straight back up, which is also true to the job. */
+const REST_LINES=[
+  'Take a breath. It is allowed.',
+  'Nothing is on fire right now. Enjoy it.',
+  'You have not missed anything.',
+  'Look up for a second.',
+  'Drink some water.',
+  'You caught the last one. Somebody noticed.',
+  'Still standing. That counts for more than it sounds.',
+  'This is the quiet part. It does not last long.',
+  'Somebody goes home today because of you.',
+  'Sit down. Actually sit down.',
+  'You are doing this better than you think you are.',
+  'Whatever you were about to blame yourself for, do not.',
+  'The floor is fine. You are allowed a minute.',
+  'Nobody is waiting on you this second.'
+];
+const REST_AFTER=10000, REST_ROTATE=8000;
+let lastPress=0, nextRest=0, resting=false;
+function restLabel(){
+  resting=true; bigBtn.classList.add('rest');
+  setBtnLabel(pick(REST_LINES));
+}
+every(()=>{
+  if(!S.started || !live() || S.over) return;
+  const now=Date.now();
+  if(now-lastPress < REST_AFTER || now < nextRest) return;
+  restLabel(); nextRest = now + REST_ROTATE;
+}, 1000);
 /* one hand-charted task per press, worth more the more you carry */
 function clickPower(){ return 1 + Object.keys(S.owned).length + (S.owned.tech||0); }
 /* a press on anything that is not asking for one (a dark call light, a quiet
@@ -1940,13 +1984,15 @@ function clickPower(){ return 1 + Object.keys(S.owned).length + (S.owned.tech||0
    no credit, no float. A wasted press is just a wasted press. */
 bigBtn.addEventListener('click', ()=>{
   audio();
+  lastPress=Date.now(); nextRest=0;
+  if(resting){ resting=false; bigBtn.classList.remove('rest'); }
   if(!S.started){ S.started=true; playT0=Date.now(); floorBox=floor.getBoundingClientRect(); track('clock-in'); }
   if(!live()) return;   /* a code (or the break) freezes the count, clicks included */
   const power = clickPower();
   addTasks(power); S.stats.clicks++; credit('clicks', power);
   if(MEM.bling==='gold') S.stats.goldClicks=(S.stats.goldClicks||0)+1;
   if(S.stats.clicks>=100) offerTech();
-  pressN++; bigBtn.textContent = pressN<SHIFT_START.length ? SHIFT_START[pressN] : pick(btnLabels);
+  pressN++; setBtnLabel(pressN<SHIFT_START.length ? SHIFT_START[pressN] : pick(btnLabels));
   if(!btnBox){ const r=rectOf(bigBtn); btnBox={x:r.left-floorBox.left, y:r.top-floorBox.top, w:r.width}; }
   floatText(btnBox.x+rand(10,btnBox.w-30), btnBox.y-8, '+'+power);
   renderTop(); renderShop();
@@ -3202,6 +3248,14 @@ ELEM.inbasket=function(){
     '<div class="ib-list" role="listbox" aria-label="Messages"></div>'+
     '<div class="ib-bin" aria-hidden="true"><span class="can">&#128465;</span><span>Drag here to clear</span></div>';
   floor.appendChild(win);
+  /* somewhere else on the floor can drop a message in here: the med-pass
+     correction arrives as pharmacy mail like everything else does */
+  ELEM._ibPush=function(msg){
+    if(IB.length>=47) IB.pop();
+    IB.unshift(mk(msg)); paint();
+    chip.classList.add('blink'); later(()=>chip.classList.remove('blink'), 6000);
+    snd.ding();
+  };
   /* bulk delete lives here so it can reach the pile; the shop item wires the button */
   ELEM._ibClearAll=function(){
     const n=IB.length; if(!n) return 0;
@@ -4173,6 +4227,61 @@ function medSeq(){
   return MED_STEPS.slice();
 }
 function medOrdered(){ return (S.owned.marflow||0)>=3; }
+/* GETTING THE ORDER WRONG IS THE ONE MISTAKE THIS FLOOR WILL TEACH YOU OUT OF.
+   The correction arrives by a different route each time, because that is how
+   it arrives in real life: pharmacy mail, a text, or whoever happens to be
+   standing next to you. It stops mattering once the MAR upgrades put the steps
+   in order for you, which is the whole joke. */
+const MED_HINT_ROUTES=['ib','text','tech'];
+let medHintN=0;
+/* a raw separator, not an entity: this string lands in an aria-label and in a
+   float's textContent as well as in innerHTML, and an entity only decodes in one
+   of the three */
+function medOrderText(seq){ return seq.map(x=>MED_LBL[x]).join(' · '); }
+function medHintText(room, seq){
+  const t=document.createElement('button'); t.type='button';
+  t.className='hit toast phone';
+  t.style.right='20px'; t.style.bottom=(150+ri(0,60))+'px'; t.style.left='auto';
+  t.innerHTML='<div class="ph-bar" aria-hidden="true"><span>'+clockStr(clockMin).replace(/^(\d\d)(\d\d)$/,'$1:$2')+'</span><span>&#9602;&#9604;&#9606; &#128267;</span></div>'+
+    '<div class="from">MESSAGES · PHARMACY</div>'+
+    '<div class="ph-bub">Room '+room+' again. The order is '+medOrderText(seq)+'. Not a criticism.</div>'+
+    '<div class="ph-tap">tap to close</div>';
+  let issue=null;
+  function gone(){ if(issue){ killIssue(issue); issue=null; } if(t.parentNode) t.remove(); }
+  t.addEventListener('click', gone);
+  floor.appendChild(t); snd.buzz();
+  issue=addIssue(t, gone, true);
+  later(gone, 14000);
+}
+function medHintTech(seq){
+  const free=techs.filter(x=>!x.el.classList.contains('talk'));
+  const t=free.length ? pick(free) : techs[0];
+  if(!t) return false;
+  const bub=t.el.querySelector('.bub');
+  bub.classList.add('hint');
+  bub.innerHTML='&#128172; '+t.nm+': &ldquo;'+medOrderText(seq)+'. That is all it is.&rdquo;';
+  t.el.classList.add('talk');
+  later(()=>{
+    t.el.classList.remove('talk'); bub.classList.remove('hint');
+    if(!t.stopped) bub.textContent='';
+  }, 7000);
+  return true;
+}
+function medHint(room, seq){
+  for(let i=0;i<MED_HINT_ROUTES.length;i++){
+    const route=MED_HINT_ROUTES[(medHintN+i)%MED_HINT_ROUTES.length];
+    if(route==='ib' && ELEM._ibPush){
+      ELEM._ibPush({t:'Pharmacy · sequence reminder · Room '+room+' · '+medOrderText(seq),
+        o:['Reviewed, thank you','I know the order','I knew it thirty seconds ago']});
+      medHintN+=i+1; return;
+    }
+    if(route==='text'){ medHintText(room, seq); medHintN+=i+1; return; }
+    if(route==='tech' && techs.length && medHintTech(seq)){ medHintN+=i+1; return; }
+  }
+  /* nobody on this floor yet to tell you, so the card says it itself */
+  floatText(0,0,'The order is '+medOrderText(seq).split(' · ').join(', then ')+'.', true);
+  medHintN++;
+}
 function spawnMed(){
   if(!bankRows.length || document.querySelector('.medcard')) return;
   const row=pick(bankRows), med = Math.random()<0.15 ? pick(FAKE_MEDS) : pick(MEDS);
@@ -4202,6 +4311,8 @@ function spawnMed(){
   function wrong(){
     locked=true; w.classList.add('wrong'); fb.textContent='WRONG PATIENT';
     btns.forEach(b=>{ b.disabled=true; }); snd.buzz(); dropStreak();
+    S.stats.medWrong=(S.stats.medWrong||0)+1;
+    medHint(row.room, seq);   /* somebody tells you the order. A different somebody each time. */
     later(()=>{
       if(done) return;
       step=0; pips.forEach(p=>p.classList.remove('on'));
@@ -5376,7 +5487,11 @@ window.__af={ startCode, sendIM, MGR_IM, IMS, get IMQ(){return IMQ;}, S, earn,
   doseOptions, fmtDose, get codeQ(){return curCodeQ;}, get issues(){return issues;}, vol, openSound, get AC(){return AC;},
   endShift, BUSY_IM, track, get breakActive(){return breakActive;}, techNames, SCRUBS, BLING, applyBtnLook, renderChart,
   RHY, setRhythm, beatY, clickPower, get lastBreakMin(){return lastBreakMin;}, set lastBreakMin(v){lastBreakMin=v;},
-  get clockMin(){return clockMin;}, set clockMin(v){clockMin=v;} };
+  get clockMin(){return clockMin;}, set clockMin(v){clockMin=v;},
+  restLabel, paintBtn, setBtnLabel, REST_LINES, hourStr,
+  medHint, medSeq, medOrderText, get medHintN(){return medHintN;}, set medHintN(v){medHintN=v;},
+  get btnTpl(){return btnTpl;}, get resting(){return resting;},
+  set lastPress(v){lastPress=v;}, set nextRest(v){nextRest=v;} };
 })();
 </script>
 {% endraw %}
