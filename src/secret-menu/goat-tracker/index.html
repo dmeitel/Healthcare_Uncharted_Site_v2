@@ -163,6 +163,9 @@ eleventyExcludeFromCollections: true
       <div class="gt-panel"><div class="gt-panel-h"><span>Locations</span></div><div id="gtLocs"></div></div>
       <div class="gt-panel"><div class="gt-panel-h"><span>Browsers</span></div><div id="gtBrowsers"></div></div>
     </div>
+    <div class="gt-cols">
+      <div class="gt-panel hu-ticks"><div class="gt-panel-h"><span>Alarm Fatigue: page views and game events</span></div><div id="gtGame"></div></div>
+    </div>
 
     <div class="gt-foot">Days follow the site's timezone as configured in GoatCounter. The API allows 4 requests a second and this page paces itself under that. Data is fetched live on load, on refresh, and when the window changes.</div>
   </section>
@@ -271,6 +274,21 @@ function buildSeries(total){
   }).slice(-period);
 }
 
+// every path id GoatCounter knows under the game, pages and events alike
+// (the list paginates by id; a handful of pages covers this site many times over)
+function gamePaths(){
+  var ids = [];
+  function page(after){
+    return api('/paths?limit=200' + (after ? '&after=' + after : '')).then(function(p){
+      var list = p.paths || [];
+      list.forEach(function(x){ if (/alarm-fatigue/.test(x.path || '')) ids.push(x.id); });
+      if (p.more && list.length && ids.length < 60 && after !== list[list.length - 1].id) return page(list[list.length - 1].id);
+      return ids;
+    });
+  }
+  return page(0);
+}
+
 function load(){
   var seq = ++loadSeq, r = range(), qs = '?start=' + r.start + '&end=' + r.end;
   status('Fetching from GoatCounter…');
@@ -282,7 +300,15 @@ function load(){
     settle(api('/stats/hits' + qs + '&limit=12')),
     settle(api('/stats/toprefs' + qs + '&limit=12')),
     settle(api('/stats/locations' + qs + '&limit=8')),
-    settle(api('/stats/browsers' + qs + '&limit=8'))
+    settle(api('/stats/browsers' + qs + '&limit=8')),
+    // the game: its page plus the events it counts (clock-in, codes, clock-outs,
+    // the leaving buckets). The hits endpoint has no text filter (a `filter`
+    // param is a 400), so it is two steps: list every path, keep the game's
+    // ids, then ask for hits on just those ids.
+    settle(gamePaths().then(function(ids){
+      if (!ids.length) return { hits: [] };
+      return api('/stats/hits' + qs + '&limit=50' + ids.map(function(id){ return '&include_paths=' + id; }).join(''));
+    }))
   ]).then(function(res){
     if (seq !== loadSeq) return;
     var auth = null;
@@ -316,14 +342,15 @@ function load(){
       res[1].ok ? res[1].v : { hits: [] },
       res[2].ok ? res[2].v : { stats: [] },
       res[3].ok ? res[3].v : { stats: [] },
-      res[4].ok ? res[4].v : { stats: [] }, r);
+      res[4].ok ? res[4].v : { stats: [] },
+      res[5].ok ? res[5].v : { hits: [] }, r);
     status(fails.length
-      ? fails.length + ' of 5 panels did not load this pass (a privacy shield dropped those requests). Everything shown is live. Refresh fills the gaps.'
+      ? fails.length + ' of 6 panels did not load this pass (a privacy shield dropped those requests). Everything shown is live. Refresh fills the gaps.'
       : '');
   });
 }
 
-function render(total, hits, refs, locs, browsers, r){
+function render(total, hits, refs, locs, browsers, game, r){
   series = buildSeries(total);
   var sum = 0, peak = series[0] || { day: r.start, count: 0 };
   series.forEach(function(s){ sum += s.count; if (s.count > peak.count) peak = s; });
@@ -351,6 +378,15 @@ function render(total, hits, refs, locs, browsers, r){
   list('gtRefs', (refs.stats || []).map(function(s){ return { name: s.name || s.id || '(direct)', count: s.count }; }));
   list('gtLocs', (locs.stats || []).map(function(s){ return { name: s.name || s.id || 'Unknown', count: s.count }; }));
   list('gtBrowsers', (browsers.stats || []).map(function(s){ return { name: s.name || s.id || 'Unknown', count: s.count }; }));
+  // Alarm Fatigue: the page itself and its events, filtered again here in
+  // case the API ignored the filter. Event names read as the game emits them:
+  // clock-in, first-code, lunch, shift-end, overtime, played-<bucket>-min,
+  // tasks-<bucket>. Counts of players are the page's own visit count; time
+  // and volume are distributions across the buckets, never per-person.
+  list('gtGame', (game.hits || []).filter(function(h){ return /alarm-fatigue/.test(h.path || ''); }).map(function(h){
+    var name = String(h.path).replace(/^\/fun\/alarm-fatigue\/?/, '') || 'page views';
+    return { name: name, count: h.count, event: !!h.event, title: h.title };
+  }));
 }
 
 function list(id, items, linkPaths){
