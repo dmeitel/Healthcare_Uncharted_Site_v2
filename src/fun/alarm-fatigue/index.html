@@ -836,6 +836,25 @@ date: 2026-09-10
     color:#1f4d3a; background:#eef5f1; border:1px solid #cfe0d6; border-radius:6px;}
   .sm-quiet[hidden]{display:none;}
 
+  /* the phone menu. Same shell as the sound panel, a list instead of sliders. */
+  .gamemenu{
+    position:absolute; top:8px; right:12px; z-index:60; width:min(250px,86vw);
+    background:#fff; color:#22302a; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 10px 26px rgba(0,0,0,.28); font-family:var(--font); padding:0 0 6px;
+  }
+  .gamemenu[hidden]{display:none;}
+  .af .gm-item{
+    display:flex; align-items:center; gap:9px; width:100%; min-height:46px;
+    padding:8px 14px; background:none; border:0; border-radius:0; text-align:left;
+    font-family:var(--font); font-size:14px; color:#22302a; cursor:pointer;
+    text-decoration:none; box-shadow:none;
+  }
+  .af .gm-item:hover{background:#eef3f0;}
+  .af .gm-item + .gm-item{border-top:1px solid var(--line);}
+  .af .gm-item:focus-visible{outline:2px solid #1B5FA8; outline-offset:-2px;}
+  /* the extra control only exists where the bar cannot afford the originals */
+  #gmBtn{display:none;}
+
   /* the family member is a talking head: a small face beside a speech bubble.
      The mouth flaps and the head bobs while a question types itself out; the
      eyes blink between questions. Transform and opacity only. */
@@ -1194,7 +1213,27 @@ date: 2026-09-10
     .af .tool-bar-actions{gap:6px;}
     /* the shift clock is a button (tap it for time played), so it owes a thumb
        the same 44px the chips beside it already give */
-    .af .af-stat{min-height:44px;}
+    .af .af-stat{min-height:44px; padding:0 9px; font-size:12px;}
+    /* ONE ROW. Two rows cost 96px because both are pinned to the 44px touch
+       floor, so the only way to buy the height back is to stop wrapping. The
+       title steps down, and the fader, Restart and the site menu fold into a
+       single menu control. */
+    /* the bar's own 12px gap was the last thing pushing the actions onto a
+       second row, so it tightens with everything else */
+    .af .tool-bar{gap:8px;}
+    .af .tool-bar-title{font-size:12px;}
+    .af .chip-split .toggle-chip{padding-left:10px;}
+    /* the brand mark yields the lane. The menu now carries both Site menu and
+       Back to Learn, so the hex was the third way off this page and the widest
+       thing that was not a game control. */
+    .af .tb-brand{display:none;}
+    /* and the chip is sized for its LONGER state, because Silence becoming
+       Silenced mid-shift was bouncing the whole bar onto a second row */
+    .af .chip-split .toggle-chip{min-width:104px; justify-content:center;}
+    .af #resetBtn, .af #mixBtn, .af [data-nav-summon]{display:none;}
+    .af #gmBtn{display:flex;}
+    .af .chip-split .toggle-chip{border-radius:999px; padding-right:12px;}
+    .gamemenu{right:8px;}
     .af .chip-split .toggle-chip + .toggle-chip{min-width:44px; justify-content:center;}
     .af.hu-shell{height:calc(100vh - var(--nav-h)); height:calc(100dvh - var(--nav-h));
       overflow:hidden; min-height:0;}
@@ -1338,6 +1377,7 @@ date: 2026-09-10
     </span>
     <button class="toggle-chip" id="resetBtn" type="button">Restart</button>
     <a href="/learn/#fun" class="toggle-chip af-back">&#8592; Learn</a>
+    <button class="icon-btn" id="gmBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Menu" title="Menu"><i data-lucide="menu" aria-hidden="true"></i></button>
     <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i></button>
   </div>
 </header>
@@ -1481,6 +1521,16 @@ date: 2026-09-10
     <label class="sm-row"><span>Task chimes</span><input type="range" min="0" max="100" value="100" data-vol="good"></label>
     <p class="sm-quiet" hidden>Every alarm at zero. The floor is exactly as busy as it was.</p>
   </div>
+  <!-- one control on a phone in place of three: the fader, Restart and the
+       site menu all live in here below 700px -->
+  <div id="gameMenu" class="gamemenu" role="dialog" aria-label="Menu" hidden>
+    <div class="sm-hd"><span>MENU</span><button type="button" class="hit sm-x gm-x" aria-label="Close menu">&#10005;</button></div>
+    <button type="button" class="gm-item" id="gmSound">&#127898; Sound settings</button>
+    <button type="button" class="gm-item" id="gmRestart">&#8635; Restart shift</button>
+    <a class="gm-item" href="/learn/#fun">&#8592; Back to Learn</a>
+    <button type="button" class="gm-item" id="gmSite">&#9776; Site menu</button>
+  </div>
+
   <!-- the game console: vitals + EKGs sit ABOVE the button, centered -->
   <div class="stage">
     <div id="bank" aria-label="Central monitors">
@@ -5189,14 +5239,47 @@ soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !soundMenu.hidden) closeSound(); });
 document.addEventListener('click', e=>{
+  /* a click on the menu's Sound settings row opens this panel, and the same
+     click then bubbles to here: without the gameMenu guard it closed again in
+     the same gesture */
   if(soundMenu.hidden || soundMenu.contains(e.target) || mixBtn.contains(e.target)) return;
+  if(gameMenu && gameMenu.contains(e.target)) return;
   closeSound();
 });
 if(MEM.vol && MEM.vol.master!=null){ delete MEM.vol.master; saveMem(); }   /* an older build's master, now unreachable */
 paintMute();
-document.getElementById('resetBtn').addEventListener('click', ()=>{
+function restartShift(){
   if(!S.over && S.tasks>500 && !confirm('Walk off the floor and start the shift over?')) return;
   reloadNow();
+}
+document.getElementById('resetBtn').addEventListener('click', restartShift);
+
+/* the phone menu: the same open/close/Esc/outside-click contract the sound
+   panel already uses, so both popovers behave identically */
+const gmBtn=document.getElementById('gmBtn');
+const gameMenu=document.getElementById('gameMenu');
+function openGm(){
+  closeSound();
+  gameMenu.hidden=false; gmBtn.setAttribute('aria-expanded','true');
+  const f=gameMenu.querySelector('.gm-item'); if(f) f.focus();
+}
+function closeGm(){
+  if(gameMenu.hidden) return;
+  gameMenu.hidden=true; gmBtn.setAttribute('aria-expanded','false'); gmBtn.focus();
+}
+gmBtn.addEventListener('click', ()=>{ if(gameMenu.hidden) openGm(); else closeGm(); });
+gameMenu.querySelector('.gm-x').addEventListener('click', closeGm);
+document.getElementById('gmSound').addEventListener('click', ()=>{ closeGm(); openSound(); });
+document.getElementById('gmRestart').addEventListener('click', ()=>{ closeGm(); restartShift(); });
+/* the site nav is the shared merged-band control; the menu just presses it */
+document.getElementById('gmSite').addEventListener('click', ()=>{
+  closeGm();
+  const s=document.querySelector('[data-nav-summon]'); if(s) s.click();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !gameMenu.hidden) closeGm(); });
+document.addEventListener('click', e=>{
+  if(gameMenu.hidden || gameMenu.contains(e.target) || gmBtn.contains(e.target)) return;
+  closeGm();
 });
 
 /* sub line changes as chaos grows */
