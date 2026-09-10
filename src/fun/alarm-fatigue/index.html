@@ -45,7 +45,23 @@ date: 2026-09-10
   .af-stat{font-family:var(--mono); font-size:12px; color:var(--t2); white-space:nowrap;}
   /* the bar is static inside the shell and nothing scrolls beneath it, so the
      global backdrop blur is pure GPU cost here; solid surface instead */
-  .af .tool-bar{backdrop-filter:none; background:var(--surface);}
+  .af .tool-bar{backdrop-filter:none; background:var(--surface); padding-top:2px; padding-bottom:2px;}
+  /* THE BAND CARRIED EIGHT THINGS and wrapped the site menu onto a row of its
+     own. Three of them repeat something already on screen: the kicker repeats
+     the shelf the title sits on, the crumb repeats the nurse brain header, and
+     the Learn chip repeats the site menu. They step back as the window tightens
+     rather than pushing the menu off the end of the row. */
+  .af .tool-bar-kicker{display:none;}
+  @media (max-width:1200px){ .af .tool-bar-crumb{display:none;} }
+  @media (max-width:1000px){ .af .af-back{display:none;} }
+  /* one pill for sound: the label toggles the floor quiet, the fader opens the
+     mixer. Two chips for one subject was the widest thing up there. */
+  .af .chip-split{display:inline-flex; align-items:stretch;}
+  .af .chip-split .toggle-chip{border-radius:999px 0 0 999px; padding-right:10px;}
+  .af .chip-split .toggle-chip + .toggle-chip{
+    border-radius:0 999px 999px 0; border-left:1px solid var(--border);
+    padding-left:9px; padding-right:11px; margin-left:-1px;
+  }
 
   /* ---------- floor ---------- */
   #floor{position:relative; overflow:hidden; background:var(--wall); color:var(--ink);
@@ -333,6 +349,15 @@ date: 2026-09-10
   .br-row, .br-vs{display:flex; align-items:baseline; gap:8px; padding:4px 8px; border-bottom:1px solid var(--ecl);}
   .br-achs{margin-left:auto; font-size:9px; letter-spacing:.04em; white-space:nowrap;}
   .br-todo{padding:5px 8px; display:flex; gap:8px; align-items:baseline;}
+  /* the sheet fills in as the beds do. You start the shift with one patient and
+     three empty boxes; every pulse ox you put on somebody writes their box in. */
+  .br-pt.blank{position:relative; min-height:118px;}
+  .br-pt.blank > *{visibility:hidden;}
+  .br-pt.blank::after{
+    content:"bed empty"; position:absolute; inset:0; display:flex; align-items:center;
+    justify-content:center; font-family:"Comic Sans MS","Segoe Print",cursive;
+    font-size:12px; letter-spacing:.04em; color:var(--enotet); opacity:.42;
+  }
 
   /* ---------- the big button ---------- */
   /* the game console: monitor station stacked above the button, centered */
@@ -765,8 +790,11 @@ date: 2026-09-10
   .bank-tile .tile-cv{grid-area:cv; display:none; width:100%; height:40px; border-radius:4px; background:var(--mon-well);}
   #bank.tele-on .bank-tile .tile-cv{display:block;}
   /* eight patients (4 West + 4 East): four tiles across, a touch tighter */
-  #bank.wide .bank-grid{grid-template-columns:repeat(4,1fr); gap:5px; padding:5px;}
-  #bank.wide .bank-tile{padding:5px 6px; gap:4px;}
+  /* four across: the columns must be allowed to shrink past their content,
+     or the fourth monitor loses its CLEAR button to the station edge */
+  #bank.wide .bank-grid{grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; padding:5px;}
+  #bank.wide .bank-tile{padding:5px 6px; gap:4px; grid-template-columns:auto minmax(0,1fr) auto;}
+  #bank.wide .bank-tile .rhy, #bank.wide .bank-tile .hr{overflow:hidden; text-overflow:ellipsis; max-width:100%;}
   #bank.wide .bank-tile .clr{padding:0 6px; min-height:40px; font-size:10px;}
   #bank.wide .bank-tile .sat-box{min-width:50px; padding:2px 6px;}
   /* tele flags sit ON that patient's strip (the tile is position:relative) */
@@ -803,6 +831,10 @@ date: 2026-09-10
   .sm-row{display:grid; grid-template-columns:1fr 130px; align-items:center; gap:10px; padding:0 12px; min-height:40px; font-size:13px;}
   .sm-row input[type=range]{width:100%; min-height:44px; accent-color:#1B5FA8; cursor:pointer;}
   .sm-row input:focus-visible, .sm-mute:focus-visible, .sm-x:focus-visible{outline:2px solid #1B5FA8; outline-offset:2px;}
+  .sm-note{margin:9px 12px 2px; font-size:11.5px; line-height:1.5; color:#55655c;}
+  .sm-quiet{margin:10px 12px 2px; padding:8px 10px; font-size:11.5px; line-height:1.5;
+    color:#1f4d3a; background:#eef5f1; border:1px solid #cfe0d6; border-radius:6px;}
+  .sm-quiet[hidden]{display:none;}
 
   /* the family member is a talking head: a small face beside a speech bubble.
      The mouth flaps and the head bobs while a question types itself out; the
@@ -906,6 +938,9 @@ date: 2026-09-10
     font-size:11px; padding:2px 8px; white-space:nowrap; display:none;
     box-shadow:0 3px 8px rgba(0,0,0,.15); color:var(--ink);
   }
+  /* the float pool RN wears a different badge: she is the one who can take a
+     pump or a dose off your hands, and you should be able to spot her */
+  .af .tech.rn .tag{background:#173a5e; color:#dbe9f7; box-shadow:0 0 0 1px #4ECDC4;}
   .af .tech.idle .bub, .af .tech.talk .bub{display:block;}
   .af .tech.talk .bub{border-color:#2c6e4f; color:#1f4d3a;}
   .af .tech.idle .face{animation:afsway 1.6s ease-in-out infinite;}
@@ -1154,6 +1189,13 @@ date: 2026-09-10
        and the summon menu carry both), so the bar wraps to two rows max */
     .af .tool-bar-kicker{display:none;}
     .af .af-back{display:none;}
+    /* the fader half of the sound pill is an icon: it still owes a thumb 44px
+       in BOTH directions, and the row gets its width back from the gap */
+    .af .tool-bar-actions{gap:6px;}
+    /* the shift clock is a button (tap it for time played), so it owes a thumb
+       the same 44px the chips beside it already give */
+    .af .af-stat{min-height:44px;}
+    .af .chip-split .toggle-chip + .toggle-chip{min-width:44px; justify-content:center;}
     .af.hu-shell{height:calc(100vh - var(--nav-h)); height:calc(100dvh - var(--nav-h));
       overflow:hidden; min-height:0;}
     .af .shell-main{display:flex; flex-direction:column;}
@@ -1163,7 +1205,7 @@ date: 2026-09-10
     /* the whole floor on a phone outgrows the screen (eight tiles, three pumps),
        so the console scrolls inside the floor and the big button rides its
        bottom edge: the monitors slide under it, the button stays one thumb away */
-    .stage{max-height:calc(100% - 98px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none;}
+    .stage{max-height:calc(100% - 98px); overflow:auto; overscroll-behavior:contain; scrollbar-width:none;}
     .stage::-webkit-scrollbar{display:none;}
     .stage > *{flex:0 0 auto;}   /* nothing squeezes to fit: the console scrolls instead */
     .clicker{position:sticky; bottom:0; z-index:3; width:100%; padding:6px 0 2px;
@@ -1172,7 +1214,13 @@ date: 2026-09-10
        top row here and the console keeps the full width */
     .af[data-ehr="prophet"] .stage{left:50%; width:96vw;}
     .af[data-ehr="prophet"] .ehrTabs{display:flex;}
-    #bigBtn{padding:20px 28px; font-size:20px;}
+    /* the button scales to the lane it is given: still a fat thumb target,
+       no longer half the console. The readout comes down with it. */
+    #bigBtn{padding:14px 16px; font-size:clamp(15px, 4.3vw, 19px); min-height:64px;}
+    .clicker .count{font-size:28px;}
+    .clicker .count .u{font-size:12px;}
+    .clicker .sub{font-size:12.5px; margin-top:6px;}
+    .readout{padding:8px 12px 10px;}
     .ehrNav{display:none;} .ehrBanner span{display:none;}
     .pc-menu{flex-basis:112px; width:112px;}
     .sb-rail{flex-basis:118px; width:118px;}
@@ -1181,17 +1229,35 @@ date: 2026-09-10
     .ehr-tab{min-height:34px;}
     .ach-grid{grid-template-columns:1fr;}
     .af .huddle .hx{min-width:44px; min-height:44px;}
-    /* phone: the vertical wall strip would cross the centered button, so the
-       call board folds back to a compact top-right block */
-    .af .callboard{top:52px; right:8px; transform:none; flex-direction:row;
-      flex-wrap:wrap; align-items:flex-start; width:auto; max-width:150px;}
-    .reveal-tray{max-width:92vw;}
-    .edock-chip{min-height:44px;}
+    /* phone: the call board keeps the right wall, two rooms across, and the
+       console gets a lane beside it instead of underneath it */
+    .af .callboard{top:50%; right:6px; transform:translateY(-50%);
+      flex-direction:row; flex-wrap:wrap; justify-content:center; align-items:flex-start;
+      width:106px; gap:4px; padding:5px;}
+    .af .callboard .ttl{width:100%; font-size:8px;}
+    /* the console yields that lane the moment the lights are on the wall */
+    .af.has-call .stage,
+    .af.has-call[data-ehr="prophet"] .stage{left:6px; transform:none; width:calc(100% - 124px);}
+    /* two monitor tiles still fit the narrower lane: the numbers tighten up,
+       the columns are allowed to shrink past their content, and the rhythm name
+       truncates rather than shouldering a monitor off the edge of the station */
+    .bank-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .bank-tile{padding:5px 6px; gap:4px; grid-template-columns:auto minmax(0,1fr) auto;}
+    .bank-tile .sat-box{min-width:44px; padding:2px 5px;}
+    .bank-tile .clr{padding:0 6px; font-size:9px; letter-spacing:.08em;}
+    .bank-tile .rhy, .bank-tile .hr{overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+    /* and if the lane is still too narrow to hold them, the console pans
+       sideways rather than clipping a monitor off the edge */
+    #bank{min-width:228px;}
+    .reveal-tray{max-width:100%;}   /* the tray lives in the console lane, not the viewport */
+    /* .af .edock-chip, matching the base rule: a one-class selector lost to it
+       and left the In Basket and Chat chips at 32px on a phone */
+    .af .edock-chip{min-height:44px;}
     .cw-x{min-width:44px; min-height:44px;}
     .cw-opt{min-height:44px;}
     #ibWin{left:8px; right:8px; width:auto; top:48px;}
-    .bank-tile .sat-box .sv{font-size:18px;}
-    #bank.wide .bank-grid{grid-template-columns:1fr 1fr;}
+    .bank-tile .sat-box .sv{font-size:17px;}
+    #bank.wide .bank-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     #bank.wide .bank-tile .clr{min-height:44px;}
     .af .ib-o{min-height:44px;}
     .af .tjc-pop .tp-x{min-height:44px;}
@@ -1208,6 +1274,31 @@ date: 2026-09-10
     .af .report{right:8px; left:8px; top:auto; bottom:8px; width:auto; max-height:46vh; overflow:auto;}
     .af .medcard{left:8px; right:8px; top:auto; bottom:8px; width:auto;}
     .br-grid{grid-template-columns:1fr;} .brain{font-size:9.5px;}
+  }
+
+  /* between a phone and a laptop, the console and the call wall are close
+     enough to touch. The console gives up the width rather than sitting under
+     the lights, which is the same trade a phone makes. */
+  @media (min-width:700px) and (max-width:900px){
+    .af.has-call .stage{width:min(640px, calc(100vw - 260px));}
+    .af.has-call[data-ehr="prophet"] .stage{left:calc(50% + 36px); width:min(640px, calc(100vw - 340px));}
+  }
+
+  /* a short window (a phone turned sideways, a laptop with the drawer open)
+     cannot hold eight call lights in one column, so they wrap to two, and the
+     console scrolls inside the floor the same way it does on a narrow one */
+  @media (max-height:620px){
+    .af .callboard{flex-direction:row; flex-wrap:wrap; justify-content:center;
+      align-items:flex-start; width:106px; gap:4px; padding:5px;}
+    .af .callboard .ttl{width:100%; font-size:8px;}
+    .stage{max-height:calc(100% - 64px); overflow:auto; overscroll-behavior:contain; scrollbar-width:none;}
+    .stage::-webkit-scrollbar{display:none;}
+    .stage > *{flex:0 0 auto;}
+    .clicker{position:sticky; bottom:0; z-index:3; width:100%; padding:6px 0 2px;
+      background:var(--ecell); box-shadow:0 -10px 14px -10px rgba(0,0,0,.35);}
+    #bigBtn{padding:12px 18px; font-size:17px; min-height:56px;}
+    .clicker .count{font-size:26px;}
+    .clicker .sub{font-size:12.5px; margin-top:5px;}
   }
 
   /* ---------- reduced motion: state keeps its color, loses its strobe ---------- */
@@ -1241,9 +1332,11 @@ date: 2026-09-10
   <span class="tool-bar-spacer"></span>
   <div class="tool-bar-actions">
     <button class="hit af-stat mono" id="clockV" type="button" title="Shift clock. Tap for time played." aria-pressed="false">0600</button>
-    <button class="toggle-chip" id="muteBtn" type="button" aria-pressed="false">&#128266; Sound</button>
-    <button class="toggle-chip" id="mixBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Sound settings" title="Sound settings">&#127898; Mixer</button>
-    <button class="toggle-chip" id="resetBtn" type="button">Restart shift</button>
+    <span class="chip-split">
+      <button class="toggle-chip" id="muteBtn" type="button" aria-pressed="false">&#128266; Sound</button>
+      <button class="toggle-chip" id="mixBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Sound settings" title="Sound settings">&#127898;</button>
+    </span>
+    <button class="toggle-chip" id="resetBtn" type="button">Restart</button>
     <a href="/learn/#fun" class="toggle-chip af-back">&#8592; Learn</a>
     <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i></button>
   </div>
@@ -1280,7 +1373,7 @@ date: 2026-09-10
               <div class="br-vs"><b>VS</b><i>T 98.4 &middot; HR 76 &middot; R 16 &middot; BP 128/76 &middot; O&#8322; 97%</i></div>
               <div class="br-2"><div><b>Labs</b><i>K 3.9 &middot; Hgb 11.2</i></div><div><b>Meds</b><i>0900 metoprolol &middot; 1200 furosemide</i></div></div>
             </section>
-            <section class="br-pt">
+            <section class="br-pt blank">
               <div class="br-id"><span><b>Rm</b> <i>5</i></span><span><b>Name</b> <i>Alvarez, M</i></span><span><b>Age</b> <i>71 F</i></span><span><b>Allergies</b> <i>PCN</i></span><span><b>Code</b> <i>DNR/DNI</i></span></div>
               <div class="br-2"><div><b>Situation/Dx</b><i>CHF exac, diuresing. Family at bedside. Questions.</i></div><div><b>Medical Hx</b><i>CHF, CKD3, DM2</i></div></div>
               <ul class="br-ck"><li class="on">Safety</li><li>Activity/Transfer</li><li class="on">Diet/Nutrition</li><li class="on">IV</li><li>DVT</li><li>Suction/O&#8322;</li><li>Neuro &#10003;s</li><li class="on">I+O</li><li>Shift Report</li></ul>
@@ -1288,7 +1381,7 @@ date: 2026-09-10
               <div class="br-vs"><b>VS</b><i>T 97.9 &middot; HR 88 &middot; R 20 &middot; BP 142/84 &middot; O&#8322; 94%</i></div>
               <div class="br-2"><div><b>Labs</b><i>BNP 890 &middot; Cr 1.6 &middot; K 3.4</i></div><div><b>Meds</b><i>0800 insulin &middot; 1000 furosemide IV</i></div></div>
             </section>
-            <section class="br-pt">
+            <section class="br-pt blank">
               <div class="br-id"><span><b>Rm</b> <i>7</i></span><span><b>Name</b> <i>Nguyen, T</i></span><span><b>Age</b> <i>64 M</i></span><span><b>Allergies</b> <i>sulfa</i></span><span><b>Code</b> <i>FULL</i></span></div>
               <div class="br-2"><div><b>Situation/Dx</b><i>POD1 lap chole. Pain 7. Says he is fine.</i></div><div><b>Medical Hx</b><i>none</i></div></div>
               <ul class="br-ck"><li>Safety</li><li class="on">Activity/Transfer</li><li class="on">Diet/Nutrition</li><li>IV</li><li class="on">DVT</li><li>Suction/O&#8322;</li><li>Neuro &#10003;s</li><li>I+O</li><li>Shift Report</li></ul>
@@ -1296,7 +1389,7 @@ date: 2026-09-10
               <div class="br-vs"><b>VS</b><i>T 99.1 &middot; HR 92 &middot; R 22 &middot; BP 109/62 &middot; O&#8322; 91%</i></div>
               <div class="br-2"><div><b>Labs</b><i>Hgb 9.8 (was 11)</i></div><div><b>Meds</b><i>q4 oxycodone &middot; cefazolin</i></div></div>
             </section>
-            <section class="br-pt">
+            <section class="br-pt blank">
               <div class="br-id"><span><b>Rm</b> <i>8</i></span><span><b>Name</b> <i>Henderson, R</i></span><span><b>Age</b> <i>82 M</i></span><span><b>Allergies</b> <i>NKDA</i></span><span><b>Code</b> <i>FULL</i></span></div>
               <div class="br-2"><div><b>Situation/Dx</b><i>Fall at home, r/o hip fx. WANTS TO WALK.</i></div><div><b>Medical Hx</b><i>dementia, HTN, afib</i></div></div>
               <ul class="br-ck"><li class="on">Safety</li><li class="on">Activity/Transfer</li><li>Diet/Nutrition</li><li>IV</li><li>DVT</li><li>Suction/O&#8322;</li><li class="on">Neuro &#10003;s</li><li>I+O</li><li>Shift Report</li></ul>
@@ -1322,6 +1415,7 @@ date: 2026-09-10
         <div class="sb-chip">Isolation: none</div>
         <div class="sb-sec">Care Team</div>
         <div class="sb-line">Patel, R &middot; Attending</div>
+        <div class="sb-line">McBronchi, A &middot; Pulmonology</div>
         <div class="sb-line">You &middot; RN, primary</div>
         <div class="sb-sec">Latest</div>
         <div class="sb-line">HR 92 &middot; BP 109/62</div>
@@ -1370,7 +1464,7 @@ date: 2026-09-10
   <!-- sound settings: a mixer that drops from the Sound chip in the bar -->
   <div id="soundMenu" class="soundmenu" role="dialog" aria-label="Sound settings" hidden>
     <div class="sm-hd"><span>SOUND</span><button type="button" class="hit sm-x" aria-label="Close sound settings">&#10005;</button></div>
-    <label class="sm-row"><span>Master</span><input type="range" min="0" max="100" value="100" data-vol="master"></label>
+    <p class="sm-note">Silence lasts until you buy the next thing. There is no master. Every alarm is its own conversation, and these levels are the only ones that stay where you put them.</p>
     <div class="sm-sec">Alarms</div>
     <label class="sm-row"><span>Pulse ox tones</span><input type="range" min="0" max="100" value="100" data-vol="spo2"></label>
     <label class="sm-row"><span>IV pumps</span><input type="range" min="0" max="100" value="100" data-vol="pump"></label>
@@ -1385,6 +1479,7 @@ date: 2026-09-10
     <label class="sm-row"><span>Texts and buzzes</span><input type="range" min="0" max="100" value="100" data-vol="buzz"></label>
     <div class="sm-sec">Feedback</div>
     <label class="sm-row"><span>Task chimes</span><input type="range" min="0" max="100" value="100" data-vol="good"></label>
+    <p class="sm-quiet" hidden>Every alarm at zero. The floor is exactly as busy as it was.</p>
   </div>
   <!-- the game console: vitals + EKGs sit ABOVE the button, centered -->
   <div class="stage">
@@ -1420,7 +1515,7 @@ date: 2026-09-10
 <div id="afBigScreen" role="dialog" aria-modal="true" aria-labelledby="afbsH">
   <div class="afbs-card">
     <h2 id="afbsH">Best on a bigger screen</h2>
-    <p>Alarm Fatigue crowds a phone the way a real floor crowds a hallway. It plays here, but a laptop gives every monitor room to breathe.</p>
+    <p>Alarm Fatigue crowds a phone the way a real floor crowds a hallway. It plays here. Turn the phone sideways and the monitors get room to breathe, and you can swipe the console left and right if a tile runs off the edge.</p>
     <button id="afbsGo" type="button">Clock in anyway</button>
   </div>
 </div>
@@ -1510,10 +1605,16 @@ document.addEventListener('visibilitychange', ()=>{
   else if(!S.muted && !S.over && AC.state==='suspended') AC.resume();
 });
 
-/* issues registry: things a bouncing tech can fix on contact */
+/* issues registry: things a bouncing helper can fix on contact.
+   SCOPE MATTERS HERE. A tech clears a sat, answers a light, puts leads back on,
+   fields the family and the surveyor. A tech does NOT push a med, run a pump or
+   work a code: those carry lic:true and only a licensed helper (the float pool
+   RN, once you buy her) picks them up. Everything else is yours. */
 const issues=[];
-function addIssue(el, resolve, techable){
-  const o={el, resolve, techable:!!techable, dead:false, rect:null};
+function byHelp(by){ return by==='tech' || by==='rn'; }
+function whoIs(by){ return by==='rn' ? 'Float RN' : 'Tech'; }
+function addIssue(el, resolve, techable, lic){
+  const o={el, resolve, techable:!!techable, lic:!!lic, dead:false, rect:null};
   issues.push(o); return o;
 }
 function killIssue(o){
@@ -1529,7 +1630,10 @@ every(()=>{ for(let i=issues.length-1;i>=0;i--) if(issues[i].dead) issues.splice
    Running a code resets your ears. Nothing announces any of this. */
 /* the mixer: a level per alarm family plus a master, saved on this device */
 function vol(k){ const v=MEM.vol && MEM.vol[k]; return (v==null) ? 1 : v; }
-function masterGain(){ return S.muted ? 0 : 0.5*vol('master'); }
+/* SILENCE is not an off switch: it is the button on the monitor that buys you a
+   minute. masterGain reads it, and buying anything at all clears it again. The
+   only levels that hold are the ones in the mixer, one alarm at a time. */
+function masterGain(){ return S.muted ? 0 : 0.5; }
 
 const wear={};
 function worn(k){ return wear[k]||1; }
@@ -1866,6 +1970,8 @@ const UPG=[
   ds:'They are down a nurse. You are now also their nurse. Same badge, twice the hallway, and four more rooms to put on the monitors.'},
  {id:'spo2e', nm:'A pulse ox on 4 East', cost:400000, tps:40, repeat:4, esc:1.5, tier:3, needs:'east',
   ds:'Rooms 21, 22, 23 and 25. Yours now. The monitors do not know which hallway they are in.'},
+ {id:'floatrn', nm:'A float pool RN', cost:900000, tps:400, tier:3, needs:'medpass',
+  ds:'A second license on the hallway. She can pass a dose and run a pump, which is more than a tech is allowed to do. She is yours until someone else needs her more.'},
  {id:'housesup', nm:'House supervisor pager', cost:4000000, tps:1500, tier:3,
   ds:'Every bed in the building is your problem now. It goes off in the parking lot.'}
 ];
@@ -1910,6 +2016,7 @@ UPG.forEach(u=>{
       d.classList.add('owned');
     }
     ELEM[u.id] && ELEM[u.id]();
+    breakSilence(u);   /* Silence was never an off switch, and this is how you learn */
     /* the pick-up card under the button follows the purchase, wherever it was made */
     if(u.card){ if(d.classList.contains('owned')) u.card._dismiss(); else u.card._refresh(); }
     renderTop(); renderShop();
@@ -2088,6 +2195,15 @@ function rhyOpts(r){
   for(let i=o.length-1;i>0;i--){ const j=ri(0,i); const t=o[i]; o[i]=o[j]; o[j]=t; }
   return o;
 }
+/* the brain sheet fills in as the beds do. You start the shift with one patient
+   and a page of empty boxes; putting a pulse ox on a room writes that room in. */
+function revealBrainRoom(room){
+  const p=[...document.querySelectorAll('#brain .br-pt')].find(s=>{
+    const i=s.querySelector('.br-id i');
+    return i && i.textContent.trim()===String(room);
+  });
+  if(p) p.classList.remove('blank');
+}
 function addBankRow(room){
   const el=document.createElement('div');
   el.className='bank-tile';
@@ -2107,6 +2223,7 @@ function addBankRow(room){
     art:0, leadOff:false };
   assignRhythm(row);
   bankRows.push(row);
+  revealBrainRoom(room);                 /* the sheet gets a patient written into it */
   issues.forEach(o=>{ o.rect=null; });   /* the console re-centres on a new row: re-measure */
   if(bankRows.length>4){   /* the second hallway: the station goes four wide */
     bank.classList.add('wide');
@@ -2137,7 +2254,7 @@ ELEM.east=function(){
   const grid=document.querySelector('#brain .br-grid'); if(!grid || grid.dataset.east) return;
   grid.dataset.east='1';
   const pt=(rm,nm,age,alg,code,dx,hx,ck,tests,achs,vs,labs,meds)=>
-    '<section class="br-pt"><div class="br-id"><span><b>Rm</b> <i>'+rm+'</i></span><span><b>Name</b> <i>'+nm+'</i></span>'+
+    '<section class="br-pt blank"><div class="br-id"><span><b>Rm</b> <i>'+rm+'</i></span><span><b>Name</b> <i>'+nm+'</i></span>'+
     '<span><b>Age</b> <i>'+age+'</i></span><span><b>Allergies</b> <i>'+alg+'</i></span><span><b>Code</b> <i>'+code+'</i></span></div>'+
     '<div class="br-2"><div><b>Situation/Dx</b><i>'+dx+'</i></div><div><b>Medical Hx</b><i>'+hx+'</i></div></div>'+
     '<ul class="br-ck">'+['Safety','Activity/Transfer','Diet/Nutrition','IV','DVT','Suction/O₂','Neuro ✓s','I+O','Shift Report']
@@ -2175,9 +2292,9 @@ function spawnSat(room, slot){
       const b=bonus(2);
       floatText(30, floorBox.height-bankHeight()-24, 'RM '+room+' probe repositioned +'+b);
       snd.good();
-    } else if(by==='tech'){
+    } else if(byHelp(by)){
       const b=bonus(1.5);
-      floatText(30, floorBox.height-bankHeight()-24, 'Tech fixed the RM '+room+' probe +'+b);
+      floatText(30, floorBox.height-bankHeight()-24, whoIs(by)+' fixed the RM '+room+' probe +'+b);
     }
   }
 
@@ -2334,6 +2451,9 @@ function startCode(onResolved, room){
   const Q = rapid ? makeO2Q() : makeDoseQ(); curCodeQ=Q;
   const OPTS = rapid ? o2Options(Q) : doseOptions(Q.a);
   const ans = rapid ? Q.a : fmtDose(Q.a)+' '+Q.u;
+  /* who steps in if you stall on the oxygen: usually Respiratory, sometimes the
+     pulmonologist, who was already down here and would like it noted */
+  const O2TAKER = pick(['Respiratory','Respiratory','Dr. McBronchi']);
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
   layer.innerHTML=
     '<div class="codebox" role="alertdialog" aria-modal="true" aria-labelledby="codeHead">'+
@@ -2365,7 +2485,7 @@ function startCode(onResolved, room){
     if(!codeActive){ clearInterval(tiv); return; }
     if(document.hidden) return;
     left-=0.1; tl.style.transform='scaleX('+Math.max(0,left/CODE_SECS)+')';
-    if(left<=0){ clearInterval(tiv); takeover(rapid ? 'Thirty seconds. Respiratory takes the mask. '+ans+'. They do not look at you.' : 'Thirty seconds. Dr. Patel takes the syringe. '+ans+'. She does not look at you.'); }
+    if(left<=0){ clearInterval(tiv); takeover(rapid ? 'Thirty seconds. '+O2TAKER+' takes the mask. '+ans+'. They do not look at you.' : 'Thirty seconds. Dr. Patel takes the syringe. '+ans+'. She does not look at you.'); }
   }, 100);
   /* the room stops waiting for you: three strikes or the clock, same ending */
   function takeover(msg){
@@ -2407,7 +2527,7 @@ function startCode(onResolved, room){
       btn.classList.add('wrong'); btn.disabled=true;   /* that one is struck out, no second look */
       if(fails>=3){
         /* three strikes: the room stops waiting for you (the fourth button never gets a free win) */
-        takeover(rapid ? 'Respiratory takes the mask. '+ans+'. They do not look at you.' : 'Dr. Patel takes the syringe. '+ans+'. She does not look at you.');
+        takeover(rapid ? O2TAKER+' takes the mask. '+ans+'. They do not look at you.' : 'Dr. Patel takes the syringe. '+ans+'. She does not look at you.');
       } else {
         document.getElementById('codeHint').textContent = rapid
           ? pick(['Sat is still 84. He is looking at you.',
@@ -2453,8 +2573,8 @@ function amaEvent(force){
     const pt=[...document.querySelectorAll('#brain .br-pt')].find(p=>{ const i=p.querySelector('.br-id i'); return i && i.textContent.trim()===String(row.room); });
     if(pt){ const els=pt.querySelectorAll('.br-id i'); if(els[1]) els[1].textContent=nm; }
     S.stats.admits=(S.stats.admits||0)+1;
-    const b=bonus(by==='tech' ? 1.5 : 2.5);
-    floatText(0,0,(by==='tech' ? 'Tech settled the admit. ' : 'NEW ADMIT from the ED. ')+'Room '+row.room+', '+nm+'. Same bed, new binder. +'+b, true);
+    const b=bonus(byHelp(by) ? 1.5 : 2.5);
+    floatText(0,0,(byHelp(by) ? whoIs(by)+' settled the admit. ' : 'NEW ADMIT from the ED. ')+'Room '+row.room+', '+nm+'. Same bed, new binder. +'+b, true);
     snd.good();
   }
   f.addEventListener('click', ()=>admit('you'));
@@ -2466,6 +2586,7 @@ ELEM._ama=()=>amaEvent(true);
 
 /* --- call lights --- */
 ELEM.call=function(){
+  shell.classList.add('has-call');   /* the console gives up the right lane on phones */
   const w=document.createElement('div');
   w.className='widget callboard';   /* positioned as a right-wall strip in CSS */
   w.innerHTML='<div class="ttl">CALL LIGHTS</div>';
@@ -2488,9 +2609,9 @@ ELEM.call=function(){
       if(!r.classList.contains('lit')) return;
       r.classList.remove('lit');
       if(r._issue){ killIssue(r._issue); r._issue=null; }
-      if(by==='tech'){
+      if(byHelp(by)){
         const b=bonus(1);
-        floatText(floorBox.width-200, 120, 'Tech got room '+n+' +'+b);
+        floatText(floorBox.width-200, 120, whoIs(by)+' got room '+n+' +'+b);
       } else {
         tire('chime');
         const b=bonus(1.5);
@@ -2519,7 +2640,7 @@ ELEM.call=function(){
   }, 5000);
 };
 
-/* --- IV pump (techs cannot touch it, on purpose) ---
+/* --- IV pump (out of a tech's scope, on purpose) ---
    A job, not a producer. You hang a bag and start it; a bar creeps across at
    the bag's own pace; the line can occlude mid-run and the bar stops until you
    clear it. Nothing pays until the bag is DONE. Longer bags pay more per
@@ -2570,7 +2691,7 @@ ELEM.pump=function(){
   function callBiomed(by){
     paged=true; if(beeper){ clearInterval(beeper); beeper=null; }
     st.textContent='BIOMED PAGED · WAITING'; setBtn('WAITING','Biomed paged, waiting', true);
-    pf(by==='tech' ? 'Tech paged Biomed.' : 'Biomed paged. They said ten minutes.');
+    pf(byHelp(by) ? whoIs(by)+' paged Biomed.' : 'Biomed paged. They said ten minutes.');
     later(()=>{
       if(S.over) return;
       fault=false; paged=false; w.classList.remove('warn');
@@ -2618,7 +2739,7 @@ ELEM.pump=function(){
     st.textContent='INFUSING'; setBtn('RUNNING','Pump running', true);
     if(by==='you') tire('pump');
     S.stats.alarms++;   /* handled, but it pays nothing: the bag pays when it is done */
-    pf(by==='tech' ? 'Tech cleared the pump. Still running.' : 'Cleared. Still running.');
+    pf(byHelp(by) ? whoIs(by)+' cleared the pump. Still running.' : 'Cleared. Still running.');
   }
   function complete(){
     running=false; w.classList.add('done');
@@ -2635,29 +2756,31 @@ ELEM.pump=function(){
       if(paged) return;
       callBiomed(by); return;
     }
-    if(w.classList.contains('done')){ reset(); if(by==='tech') pf('Tech took the empty bag down.'); return; }
+    if(w.classList.contains('done')){ reset(); if(byHelp(by)) pf(whoIs(by)+' took the empty bag down.'); return; }
     if(cleaning) return;                                   /* the wipe is drying, nothing to press */
     if(dirty){
       cleaning=true; cleanMs=0; cleanDur=ri(4000,15000);   /* a random dwell time */
       st.textContent='CLEANING · DWELL TIME'; bagEl.textContent='The wipe says wait. So you wait.';
       setBtn('WIPING','Pump being wiped down', true);
-      if(by==='tech') pf('Tech is wiping the pump down.');
+      if(byHelp(by)) pf(whoIs(by)+' is wiping the pump down.');
       return;
     }
     if(!running){
       running=true; elapsed=0; st.textContent='INFUSING';
       setBtn('RUNNING','Pump running', true); snd.good();
-      if(by==='tech') pf('Tech hung the '+bag.nm+'.');
+      if(byHelp(by)) pf(whoIs(by)+' hung the '+bag.nm+'.');
       return;
     }
     if(occluded) clearOcc(by);
   }
   btn.addEventListener('click', ()=>act('you'));
-  /* a tech crossing the pump presses whatever it is waiting on: hang, clear, next bag */
+  /* a running pump is out of a tech's scope. The float pool RN, if you hired
+     her, presses whatever it is waiting on: hang, clear, next bag. Otherwise
+     the pump waits for you, and it is very patient about saying so. */
   let issue=null;
   every(()=>{
     const waiting = !S.over && ((!running && !cleaning) || occluded || (fault && !paged));
-    if(waiting && !issue) issue=addIssue(w, ()=>act('tech'), true);
+    if(waiting && !issue) issue=addIssue(w, ()=>act('rn'), true, true);
     else if(!waiting && issue){ killIssue(issue); issue=null; }
   }, 300);
   /* auto-mode: the pump presses its own button a beat after it needs to, and
@@ -2696,6 +2819,8 @@ ELEM.vocera=function(){
     ['Lab','Critical K of 2.9 on bed 7. Read back please.'],
     ['Dr. Patel','Why was I paged? I wasn\'t paged? Okay.'],
     ['Radiology','We\'re ready for your patient. The one on the bedpan.'],
+    ['Dr. McBronchi','Wean the two liters on Room 4. If he desats, put it back. That is the entire plan.'],
+    ['Dr. McBronchi','I read the chest film. It is a chest. There is a film. Consult appreciated.'],
     ['CNA','Room 9 is asking for you. Specifically you.'],
     ['Dietary','Room 5 ordered a cheeseburger. Room 5 is NPO. Room 5 is eating it.'],
     ['IT','The chart will be down five minutes at 1400. It is 1412.'],
@@ -2719,7 +2844,7 @@ ELEM.vocera=function(){
       if(issue){ killIssue(issue); issue=null; }
       if(!t.parentNode) return;
       t.remove();
-      if(by==='tech'){ const b=bonus(1); floatText(60,300,'Tech took the call +'+b); }
+      if(byHelp(by)){ const b=bonus(1); floatText(60,300,whoIs(by)+' took the call +'+b); }
       else { tire('vocera'); const b=bonus(1.5); floatText(60,300,'+'+b); snd.good(); }
     }
     t.addEventListener('click',()=>answer('you'));
@@ -2745,9 +2870,9 @@ ELEM.bed=function(){
       if(!b.parentNode) return;
       snd.bedOff(); b.remove();
       if(issue){ killIssue(issue); issue=null; }
-      if(by==='tech'){
+      if(byHelp(by)){
         const bn=bonus(2);
-        floatText(floorBox.width/2, 80, 'Tech caught him mid-pivot +'+bn);
+        floatText(floorBox.width/2, 80, whoIs(by)+' caught him mid-pivot +'+bn);
       } else {
         tire('bed');
         const bn=bonus(3);
@@ -2795,28 +2920,38 @@ const TECH_VX=[1.92,2.88], TECH_VY=[1.56,2.52];
 /* back to work: by their own clock, a tap, a coworker, or a code */
 function wakeTech(t){
   t.stopped=false; t.resumeAt=0; t.el.classList.remove('idle');
-  t.el.setAttribute('aria-label','Tech '+t.nm);
+  t.el.setAttribute('aria-label',t.role+' '+t.nm);
   t.dx=pick([-1,1])*rand(TECH_VX[0],TECH_VX[1]); t.dy=pick([-1,1])*rand(TECH_VY[0],TECH_VY[1]);
 }
 const idleLines=['📱 checking their phone','☕ getting coffee','💬 mid-story at the desk','📱 “one sec”',
   '🍩 someone brought donuts','📱 “it is my kid’s school”','🚻 “back in a sec”','📱 “what is the Wi-Fi again”'];
 const chatLines=['💬 “did you see the email?”','💬 “anyway, so then she said”','💬 “five minutes, I swear”','💬 “who has 7 tonight?”','☕ “I have not sat down”',
   '💬 “did you hear about 5 North?”','💬 “I am not covering Saturday”','☕ “is this decaf? it is decaf.”','💬 “the surveyor asked me about fire”'];
-ELEM.tech=function(){ spawnTech(); };
-function spawnTech(){
+ELEM.tech=function(){ spawnTech(false); };
+/* the float pool RN: the only other license on this hallway. She walks the same
+   loop the techs do and picks up the two things they are not allowed to touch. */
+ELEM.floatrn=function(){ spawnTech(true); };
+let techCount=0;
+function spawnTech(rn){
   floorBox=floor.getBoundingClientRect();   /* cheap re-sync at a rare moment */
-  const idx=techs.length;
-  if(idx>=techNames.length) techNames.push(takeName(true).f);   /* off the shared shelf, first names only */
+  let nm;
+  if(rn) nm=takeName(true).f;
+  else {
+    const idx=techCount++;
+    if(idx>=techNames.length) techNames.push(takeName(true).f);   /* off the shared shelf, first names only */
+    nm=techNames[idx];
+  }
+  const role = rn ? 'Float RN' : 'Tech';
   const t={
     x:rand(80, Math.max(120,floorBox.width-160)),
     y:rand(90, Math.max(140,floorBox.height-220)),
     dx:pick([-1,1])*rand(TECH_VX[0],TECH_VX[1]), dy:pick([-1,1])*rand(TECH_VY[0],TECH_VY[1]),
-    stopped:false, nm:techNames[idx], bumpUntil:0, resumeAt:0
+    stopped:false, nm, rn:!!rn, role, bumpUntil:0, resumeAt:0
   };
   const el=document.createElement('button'); el.type='button';
-  el.className='hit tech';
-  el.setAttribute('aria-label','Tech '+t.nm);
-  el.innerHTML='<div class="bub"></div><div class="face">🧑‍⚕️</div><div class="tag">Tech '+t.nm+'</div>';
+  el.className='hit tech'+(rn?' rn':'');
+  el.setAttribute('aria-label',role+' '+t.nm);
+  el.innerHTML='<div class="bub"></div><div class="face">'+(rn?'👩‍⚕️':'🧑‍⚕️')+'</div><div class="tag">'+role+' '+t.nm+'</div>';
   /* techs move on transform, not left/top: the compositor carries them */
   el.style.left='0px'; el.style.top='0px';
   el.style.transform='translate('+t.x+'px,'+t.y+'px)';
@@ -2873,7 +3008,7 @@ function techFrame(now){
       t.stopped=true; t.resumeAt=now+ri(5000,15000);
       t.el.querySelector('.bub').textContent=pick(idleLines);
       t.el.classList.add('idle');
-      t.el.setAttribute('aria-label', 'Tech '+t.nm+', distracted, tap to refocus');
+      t.el.setAttribute('aria-label', t.role+' '+t.nm+', distracted, tap to refocus');
       return;
     }
     t.x+=t.dx*k; t.y+=t.dy*k;
@@ -2900,9 +3035,9 @@ function techFrame(now){
             const line=pick(chatLines);
             t.stopped=true; t.resumeAt=now+ri(5000,15000); u.resumeAt=now+ri(5000,15000);   /* the chat ends on its own too */
             t.el.classList.add('idle'); t.el.querySelector('.bub').textContent=line;
-            t.el.setAttribute('aria-label','Tech '+t.nm+', chatting, tap to refocus');
+            t.el.setAttribute('aria-label',t.role+' '+t.nm+', chatting, tap to refocus');
             u.el.querySelector('.bub').textContent=line;
-            u.el.setAttribute('aria-label','Tech '+u.nm+', chatting, tap to refocus');
+            u.el.setAttribute('aria-label',u.role+' '+u.nm+', chatting, tap to refocus');
           }
           break;
         }
@@ -2913,6 +3048,7 @@ function techFrame(now){
     const tl=floorBox.left+t.x, tt=floorBox.top+t.y, tr2=tl+64, tb=tt+60;
     for(const o of issues){
       if(!o.techable || o.dead) continue;
+      if(o.lic && !t.rn) continue;   /* out of a tech's scope: meds, pumps, codes */
       if(!o.el.isConnected){ o.dead=true; continue; }   /* left the DOM some other way: a ghost, not a target */
       if(!o.rect){
         const r=o.el.getBoundingClientRect();
@@ -2928,7 +3064,7 @@ function techFrame(now){
       }
       const ir=o.rect;
       if(tl<ir.right && tr2>ir.left && tt<ir.bottom && tb>ir.top){
-        o.resolve('tech');
+        o.resolve(t.rn ? 'rn' : 'tech');
         break;
       }
     }
@@ -3278,7 +3414,11 @@ ELEM.page=function(){
     'Dr. Grey. Any Dr. Grey. There are several.',
     'Rapid response, Room 12. The pigman. No. Sorry. Regular man. Regular rapid response.',
     'Dr. Glaucomflecken to the ED. Dr. Glaucomflecken will not be coming to the ED. He has said this before. He is Ophthalmology.',
-    'Would the patient in Room 12 who says he is a doctor please stop diagnosing Room 11. Room 11 is fine. Room 11 has always been fine.'
+    'Would the patient in Room 12 who says he is a doctor please stop diagnosing Room 11. Room 11 is fine. Room 11 has always been fine.',
+    'Dr. McBronchi to 4 West for the pulmonary consult. Dr. McBronchi says the lungs are not going anywhere.',
+    'Paging Dr. McBronchi. Dr. McBronchi is in the reading room holding a chest film up to the window. He says the window reads it better.',
+    'Dr. McBronchi to PFT lab. The patient blew a 48 percent and then blew a raspberry. Chart both.',
+    'Dr. McBronchi would like the floor to stop calling it a breathing treatment. It is a bronchodilator. He did four years for that word.'
   ];
   function fire(force){
     if(!force && (Math.random()>.6 || !live() || codeActive)) return;
@@ -3391,7 +3531,7 @@ ELEM.tele=function(){
     function resolve(by){
       if(!f.parentNode) return;
       f.remove(); if(issue){ killIssue(issue); issue=null; } reconnect();
-      if(by==='tech'){ const b=bonus(.8); floatText(floorBox.width/2-80, 120, 'Tech fixed the RM '+row.room+' leads +'+b); }
+      if(byHelp(by)){ const b=bonus(.8); floatText(floorBox.width/2-80, 120, whoIs(by)+' fixed the RM '+row.room+' leads +'+b); }
       else { const b=bonus(1); snd.good(); floatText(floorBox.width/2-80, 120, 'Leads back on. +'+b); }
     }
     f.addEventListener('click',()=>resolve('you'));
@@ -3538,8 +3678,8 @@ ELEM.family=function(){
   function answer(by){
     if(btn.disabled) return;
     if(issue){ killIssue(issue); issue=null; }
-    const b=bonus(by==='tech'?1:1.5);
-    floatText(120, floorBox.height-190, (by==='tech'?'Tech answered. ':'')+'+'+b);
+    const b=bonus(byHelp(by)?1:1.5);
+    floatText(120, floorBox.height-190, (byHelp(by)?whoIs(by)+' answered. ':'')+'+'+b);
     btn.disabled=true; btn.textContent='(they\'re still talking)';
     /* the one-more-thing lands, then the card drops away to just the head */
     say('…okay but one more thing.', ()=>later(()=>{ collapse(); scheduleNext(); }, 900));
@@ -3577,7 +3717,7 @@ function breakNag(){
     breakKind=kind; if(kind==='bathroom') S.stats.bathroom=(S.stats.bathroom||0)+1; gone(); u.buy();
   }));
   w.querySelector('.nx').addEventListener('click', gone);
-  issue=addIssue(w, (by)=>{ if(by==='tech') floatText(Math.max(10, floorBox.width/2-90), 120, 'A tech: "You good?" You say you are good.', true); gone(); }, true);
+  issue=addIssue(w, (by)=>{ if(byHelp(by)) floatText(Math.max(10, floorBox.width/2-90), 120, (by==='rn'?'The float RN':'A tech')+': "You good?" You say you are good.', true); gone(); }, true);
   later(gone, 25000);
 }
 ELEM._nag=breakNag;
@@ -3650,7 +3790,7 @@ ELEM.pizza=function(){
       }
       const b=bonus(1);
       const fx=Math.max(10, Math.min(floorBox.width-280, x-60)), fy=Math.max(60, y-26);
-      floatText(fx, fy, (by==='tech' ? 'A tech got there first. Of course. ' : pick(PIZZA_READS)+' ')+'+'+b, by!=='tech');
+      floatText(fx, fy, (byHelp(by) ? (by==='rn'?'The float RN got there first. Of course. ':'A tech got there first. Of course. ') : pick(PIZZA_READS)+' ')+'+'+b, !byHelp(by));
       if(by==='you') snd.buzz();
     }
     p.addEventListener('click', ()=>take('you'));
@@ -3714,7 +3854,7 @@ ELEM.staffing=function(){
       t.remove(); declines++;
       if(by==='you') tire('buzz');
       const b=bonus(1);
-      floatText(floorBox.width-200, floorBox.height-200, (by==='tech'?'Tech declined for you. ':'Declined. ')+'+'+b);
+      floatText(floorBox.width-200, floorBox.height-200, (byHelp(by)?whoIs(by)+' declined for you. ':'Declined. ')+'+'+b);
     }
     t.addEventListener('click',()=>decline('you'));
     floor.appendChild(t);
@@ -3836,7 +3976,7 @@ function popHuddle(){
     if(!w.parentNode) return;
     w.remove();
     const b=bonus(1);
-    floatText(floorBox.width/2-40, 92, (by==='tech'?'Tech closed the huddle. ':'Huddle noted. ')+'+'+b);
+    floatText(floorBox.width/2-40, 92, (byHelp(by)?whoIs(by)+' closed the huddle. ':'Huddle noted. ')+'+'+b);
     scheduleHuddle(ri(45000,80000));   /* it comes back */
   }
   w.querySelector('.hx').addEventListener('click', ()=>dismiss('you'));
@@ -3999,8 +4139,9 @@ function spawnMed(){
   const tm=w.querySelector('.tm'), fb=w.querySelector('.fb'),
         pips=w.querySelectorAll('.steps i'), btns=[...w.querySelectorAll('.mb')];
   let step=0, left=30, locked=false, done=false;
-  /* a tech crossing the card passes it for you (not while it is locked out) */
-  let issue=addIssue(w, (by)=>{ if(by==='tech' && !locked && !done) give('tech'); }, true);
+  /* a dose is not a tech's to give. The float pool RN can pass it for you if
+     you hired her, and not while the card is locked out. Otherwise it is yours. */
+  let issue=addIssue(w, (by)=>{ if(by==='rn' && !locked && !done) give('rn'); }, true, true);
   function gone(){ done=true; w.remove(); if(issue){ killIssue(issue); issue=null; } }
   function miss(){
     if(done) return;
@@ -4021,11 +4162,11 @@ function spawnMed(){
   function give(by){
     S.stats.meds++; snd.chime();
     /* a dose you give right pays once, big: half a minute of the whole floor.
-       A tech passing it gets the ordinary interruption credit. */
+       A helper passing it gets the ordinary interruption credit. */
     let b;
-    if(by==='tech') b=bonus(2);
+    if(byHelp(by)) b=bonus(2);
     else { b=Math.max(40, Math.round(effTps()*30)); addTasks(b); S.stats.alarms++; credit('alarms', b); }
-    floatText(Math.max(10, floorBox.width/2-60), 70, (by==='tech'?'Tech passed it. ':'Given right. ')+'Room '+row.room+'. +'+fmt(b), true);
+    floatText(Math.max(10, floorBox.width/2-60), 70, (byHelp(by)?whoIs(by)+' passed it. ':'Given right. ')+'Room '+row.room+'. +'+fmt(b), true);
     gone(); renderTop();
   }
   btns.forEach(b=>b.addEventListener('click', ()=>{
@@ -4082,7 +4223,7 @@ every(()=>{
     if(!st.parentNode) return;
     st.remove(); if(issue){ killIssue(issue); issue=null; }
     addTasks(1);
-    floatText(parseInt(st.style.left), parseInt(st.style.top), by==='tech'?'Tech grabbed it +1':'+1');
+    floatText(parseInt(st.style.left), parseInt(st.style.top), byHelp(by)?whoIs(by)+' grabbed it +1':'+1');
   }
   st.addEventListener('click',()=>resolve('you'));
   floor.appendChild(st);
@@ -4098,9 +4239,31 @@ const ehrDock=document.createElement('div');
 ehrDock.id='ehrDock';
 floor.appendChild(ehrDock);
 /* the chips grow and shrink with traffic; the banner clears exactly that much */
+let dockW=-1, bannerW=-1;
 function measureDock(){
   const w=ehrDock.getBoundingClientRect().width;
-  floor.style.setProperty('--dock-w', (w ? Math.ceil(w)+10 : 0)+'px');
+  const d = w ? Math.ceil(w)+10 : 0;
+  floor.style.setProperty('--dock-w', d+'px');
+  const b=document.querySelector('.ehr-tpl:not([hidden]) .ehrBanner, .ehrBanner');
+  const bw = b ? Math.round(b.getBoundingClientRect().width) : 0;
+  if(d!==dockW || bw!==bannerW){ dockW=d; bannerW=bw; trimBanner(d); }
+}
+/* the patient banner is decoration, but a field sliced in half by the In Basket
+   chip reads as a broken page. Whole fields drop off the right instead, so the
+   line always ends on something that finished saying itself. */
+function trimBanner(dock){
+  document.querySelectorAll('.ehrBanner').forEach(b=>{
+    const spans=[...b.querySelectorAll('span')];
+    if(!spans.length) return;
+    spans.forEach(sp=>{ sp.hidden=false; });
+    const box=b.getBoundingClientRect();
+    if(!box.width) return;
+    const edge=box.right - dock - 8;
+    for(let i=spans.length-1; i>=0; i--){
+      if(spans[i].getBoundingClientRect().right > edge) spans[i].hidden=true;
+      else break;
+    }
+  });
 }
 if(window.ResizeObserver) new ResizeObserver(measureDock).observe(ehrDock);
 every(measureDock, 1000);   /* belt and braces: a hidden tab throttles observers */
@@ -4115,6 +4278,16 @@ const IMS=[
   opts:['I literally cannot','...fine']},
  {from:'Pharmacy', msg:'The heparin order says titrate per protocol. Which protocol? We have four.',
   opts:['The right one','Calling you']},
+ {from:'Dr. McBronchi', msg:'CXR on 22 is unchanged. Unchanged is a finding. I have built a career on unchanged.',
+  opts:['Noted, thank you','Unchanged since when','you just described my shift']},
+ {from:'Dr. McBronchi', msg:'Room 4 tells me he quit smoking. His PFTs tell me he quit answering that question.',
+  opts:['I will re-educate','I asked him twice','he is in the stairwell right now']},
+ {from:'Dr. McBronchi', msg:'Wean the O2 as tolerated. He will tell you he does not tolerate it. He tolerates it.',
+  opts:['Weaning now','He turned it back up','he has a wrench']},
+ {from:'Dr. McBronchi', msg:'Somebody ordered a PFT on the pneumonia in 22. Today. With the pneumonia in him. That is not a test, that is a dare.',
+  opts:['Cancelling it','Not my order','I would like to watch']},
+ {from:'Dr. McBronchi', msg:'The DLCO came back low. Everything about this gentleman is low except his CO2 and his confidence.',
+  opts:['Understood','Should we repeat it','so, a normal Tuesday']},
  {from:'Dr. Patel', msg:'The chart says I was at bedside. I am in clinic. Why does the chart say that?',
   opts:['Charting error, fixing it','You were here in spirit']},
  {from:'Lab', msg:'Specimen hemolyzed. We need a redraw on bed 7.',
@@ -4448,7 +4621,7 @@ const BLING=[
   {id:'rosegold', nm:'Rose gold',   ds:'The stethoscope matches now. The stethoscope was the point.', cost:1500000},
   {id:'platinum', nm:'Platinum',    ds:'Heavier than it looks. So is the shift.', cost:5000000},
   {id:'diamond',  nm:'Diamond cut', ds:'Sparkles under the fluorescents. Nothing else under them does.', cost:15000000},
-  {id:'gold',     nm:'SOLID GOLD',  ds:'The button is gold now. The floor is the same floor.', cost:45000000}
+  {id:'gold',     nm:'SOLID GOLD',  ds:'The button is gold now. The floor is the same floor.', cost:50000000}
 ];
 MEM.scrub=MEM.scrub||'white'; MEM.bling=MEM.bling||'none';
 MEM.scrubOwned=MEM.scrubOwned||{white:1}; MEM.blingOwned=MEM.blingOwned||{none:1};
@@ -4642,7 +4815,7 @@ function renderDash(){
     '<div class="ehrp-sec">The floor</div><div class="dash-grid">'+
       tile(bankRows.length,'patients monitored')+
       tile(S.eap ? '5 months' : 'none', S.eap ? 'until EAP ('+S.eap+')' : 'EAP appointment')+
-      tile((techs.length-idle)+(idle?' + '+idle+' on phone':''),'techs working')+
+      tile((techs.length-idle)+(idle?' + '+idle+' on phone':''),'helpers on the floor')+
       tile(running+'/'+pumps.length,'pumps running')+tile('×'+(Math.round(S.mult*100)/100),'multiplier')+
       tile('Shift '+((MEM.shifts||0)+1),'+'+Math.round((expMult()-1)*100)+'% experience')+tile(achCount()+'/'+ACH.length,'achievements')+
     '</div>'+
@@ -4962,19 +5135,44 @@ ELEM.brk=function(){
 };
 
 /* ================= header controls ================= */
-/* two chips: Sound is a plain mute toggle; Mixer opens the settings (a master
-   and a slider per alarm family). Levels persist on this device (MEM.vol). */
+/* one split pill: SILENCE quiets the floor the way the button on a monitor does,
+   which is to say until the next thing arrives; the fader half opens the mixer,
+   where a level per alarm family is the only setting that holds. Levels persist
+   on this device (MEM.vol). */
 const muteBtn=document.getElementById('muteBtn');
 const mixBtn=document.getElementById('mixBtn');
 const soundMenu=document.getElementById('soundMenu');
 function paintMute(){
-  muteBtn.innerHTML = S.muted ? '🔇 Muted' : '🔊 Sound';
+  muteBtn.innerHTML = S.muted ? '🔕 Silenced' : '🔔 Silence';
+  muteBtn.setAttribute('aria-label', S.muted ? 'Silenced. The next thing you buy clears it.' : 'Silence the alarms');
+  muteBtn.title = S.muted ? 'Silenced. The next thing you buy clears it.' : 'Silence the alarms. It does not last.';
   muteBtn.setAttribute('aria-pressed', String(S.muted));
   if(master) master.gain.value = masterGain();
+}
+/* anything you put on this floor arrives with the volume already up */
+const SILENCE_LINES=[
+  'powered on and introduced itself. Silence cleared.',
+  'was not asked about the silence. Cleared.',
+  'has an opinion about silence. Cleared.',
+  'arrived with its volume already up. Silence cleared.',
+  'does not know you pressed Silence. Cleared.',
+  'came with a tone nobody chose. Silence cleared.'
+];
+function breakSilence(u){
+  if(!S.muted) return;
+  S.muted=false; audio(); paintMute();
+  floatText(0,0, u.nm+' '+pick(SILENCE_LINES), true);
+}
+/* every slider at zero is the only real quiet, and it deserves to be noticed */
+function paintQuiet(){
+  const q=soundMenu.querySelector('.sm-quiet'); if(!q) return;
+  const ins=[...soundMenu.querySelectorAll('input[data-vol]')];
+  q.hidden = !ins.length || ins.some(i=>Number(i.value)>0);
 }
 function openSound(){
   soundMenu.hidden=false; mixBtn.setAttribute('aria-expanded','true');
   soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{ inp.value=Math.round(vol(inp.dataset.vol)*100); });
+  paintQuiet();
   const x=soundMenu.querySelector('.sm-x'); if(x) x.focus();
 }
 function closeSound(){ if(soundMenu.hidden) return; soundMenu.hidden=true; mixBtn.setAttribute('aria-expanded','false'); mixBtn.focus(); }
@@ -4984,16 +5182,17 @@ soundMenu.querySelector('.sm-x').addEventListener('click', closeSound);
 soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{
   inp.addEventListener('input', ()=>{
     MEM.vol=MEM.vol||{}; MEM.vol[inp.dataset.vol]=inp.value/100; saveMem();
-    if(inp.dataset.vol==='master' && master) master.gain.value=masterGain();
+    paintQuiet();
   });
   /* on release, a taste of that alarm at the new level */
-  inp.addEventListener('change', ()=>{ const k=inp.dataset.vol; if(S.muted || k==='master' || !snd[k]) return; audio(); snd[k](); });
+  inp.addEventListener('change', ()=>{ const k=inp.dataset.vol; if(S.muted || !snd[k]) return; audio(); snd[k](); });
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !soundMenu.hidden) closeSound(); });
 document.addEventListener('click', e=>{
   if(soundMenu.hidden || soundMenu.contains(e.target) || mixBtn.contains(e.target)) return;
   closeSound();
 });
+if(MEM.vol && MEM.vol.master!=null){ delete MEM.vol.master; saveMem(); }   /* an older build's master, now unreachable */
 paintMute();
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(!S.over && S.tasks>500 && !confirm('Walk off the floor and start the shift over?')) return;
@@ -5047,7 +5246,10 @@ const stage=document.querySelector('.stage');
 stage.addEventListener('scroll', ()=>{ btnBox=null; issues.forEach(o=>{ o.rect=null; }); }, {passive:true});
 function placeStage(){
   const H=floor.clientHeight, h=stage.offsetHeight;
-  stage.style.top=Math.round(Math.max(92, H*0.53 - h/2))+'px';
+  /* the console clears the tab row, but a short floor (a phone turned sideways)
+     has no 92px to spare: it clears the tabs and nothing more */
+  const minTop = H<420 ? 56 : 92;
+  stage.style.top=Math.round(Math.max(minTop, H*0.53 - h/2))+'px';
   btnBox=null; issues.forEach(o=>{ o.rect=null; });   /* everything inside it just moved */
 }
 if(window.ResizeObserver) new ResizeObserver(placeStage).observe(stage);

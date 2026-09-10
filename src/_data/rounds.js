@@ -20,6 +20,25 @@ const rounds = {
   entries: [
 
     {
+      slug:            'task-list-only-grows',
+      title:           'The Bedside Task List Only Grows',
+      posted:          '2026-09-10',
+      summary:         'I built a jokey little simulation of clinical task load and alarm fatigue. Not one of its thirty-two upgrades removes work, and neither does the floor.',
+      tags:            ['alarm-fatigue', 'nurse-workload', 'health-ai', 'clinical-informatics', 'alert-fatigue'],
+      fourPs:          ['provider-p2a', 'patient', 'policy'],
+      readMinutes:     12,
+      featured:        true,
+      status:          'published',
+      map_node:        'rounds-task-list-only-grows',
+      map_connections: ['provider-p2a', 'provider-cdss', 'patient-pt-safety'],
+      atlasLinks: [
+        { label: 'Nursing Workforce', zone: 'provider', to: 'provider/nursing' },
+        { label: 'CDSS & AI Tools',   zone: 'provider', to: 'provider/cdss' },
+        { label: 'Patient Safety',    zone: 'patient',  to: 'patient/pt-safety' }
+      ]
+    },
+
+    {
       slug:            'problem-and-product',
       title:           'How Healthcare Gets Sold Its Problems',
       posted:          '2026-08-10',
