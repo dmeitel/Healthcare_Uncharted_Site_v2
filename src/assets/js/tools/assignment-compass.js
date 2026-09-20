@@ -420,7 +420,7 @@ function spot(t, b, cls) {
 function renderAssumptions(s, proj) {
   var grid = $('acAssumeGrid');
   if (!grid.dataset.built) {
-    var html = '<div class="ac-assume-row" style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)"><span>Category</span><span style="text-align:right">Index default</span><span style="text-align:right">Ratio</span></div>';
+    var html = '<div class="ac-assume-row" style="font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--t3)"><span>Category</span><span style="text-align:right">Index default</span><span style="text-align:right">Ratio</span></div>';
     CATS.forEach(function (c) {
       html += '<div class="ac-assume-row"><label for="acR_' + c[0] + '">' + c[1] + '</label>' +
         '<span class="def" id="acD_' + c[0] + '"></span>' +

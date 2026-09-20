@@ -1330,8 +1330,8 @@ function openUnit(id) {
   // Staffing
   html += `<div class="hm-dp-section">
     <div class="hm-dp-section-label">Staffing</div>
-    <div class="hm-dp-row"><span class="hm-dp-row-label">Who's there</span><span class="hm-dp-row-val" style="font-size:11px;text-align:right;max-width:260px">${u.staffing}</span></div>
-    ${u.ratios && u.ratios !== 'N/A' ? `<div class="hm-dp-row"><span class="hm-dp-row-label">Ratios</span><span class="hm-dp-row-val" style="font-size:11px;text-align:right;max-width:260px">${u.ratios}</span></div>` : ''}
+    <div class="hm-dp-row"><span class="hm-dp-row-label">Who's there</span><span class="hm-dp-row-val" style="font-size:var(--t-label);text-align:right;max-width:260px">${u.staffing}</span></div>
+    ${u.ratios && u.ratios !== 'N/A' ? `<div class="hm-dp-row"><span class="hm-dp-row-label">Ratios</span><span class="hm-dp-row-val" style="font-size:var(--t-label);text-align:right;max-width:260px">${u.ratios}</span></div>` : ''}
   </div>`;
 
   // Patient flow
@@ -1411,7 +1411,7 @@ function openFloorSystems(floorLabel, infraKeys) {
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${cfg.color};flex-shrink:0"></span>
         ${cfg.title}
       </span>
-      <span class="hm-dp-row-val" style="font-family:var(--mono);font-size:10px;color:${cfg.color}">${cfg.label} →</span>
+      <span class="hm-dp-row-val" style="font-family:var(--mono);font-size:var(--t-micro);color:${cfg.color}">${cfg.label} →</span>
     </button>`;
   });
   html += '</div>';
@@ -1483,28 +1483,28 @@ function openHospitalInfo() {
       <div class="hm-dp-section-label">Hospital Types</div>
 
       <div style="padding:10px 0;border-bottom:1px solid var(--border2)">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-clinical);letter-spacing:.05em;margin-bottom:4px">ACADEMIC MEDICAL CENTER (AMC)</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">Affiliated with a medical school. Runs residency and fellowship programs. Conducts clinical research. Handles the most complex cases in a region. Higher cost per case, higher CMI, longer average LOS. This is UMC.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-clinical);letter-spacing:.05em;margin-bottom:4px">ACADEMIC MEDICAL CENTER (AMC)</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Affiliated with a medical school. Runs residency and fellowship programs. Conducts clinical research. Handles the most complex cases in a region. Higher cost per case, higher CMI, longer average LOS. This is UMC.</div>
       </div>
 
       <div style="padding:10px 0;border-bottom:1px solid var(--border2)">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-support);letter-spacing:.05em;margin-bottom:4px">COMMUNITY HOSPITAL</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">The most common hospital type in the U.S. Serves a defined local population. Offers general med/surg, OB, and ED services. May or may not have specialty surgical programs. Reimbursed primarily on DRGs. Where most Americans receive inpatient care.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-support);letter-spacing:.05em;margin-bottom:4px">COMMUNITY HOSPITAL</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">The most common hospital type in the U.S. Serves a defined local population. Offers general med/surg, OB, and ED services. May or may not have specialty surgical programs. Reimbursed primarily on DRGs. Where most Americans receive inpatient care.</div>
       </div>
 
       <div style="padding:10px 0;border-bottom:1px solid var(--border2)">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-rehab);letter-spacing:.05em;margin-bottom:4px">CRITICAL ACCESS HOSPITAL (CAH)</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">Rural hospitals with ≤25 inpatient beds, located 35+ miles from the nearest hospital (15+ in mountainous terrain). Receive cost-based Medicare reimbursement instead of DRGs: a financial lifeline for rural access. Required to provide 24/7 emergency services. About 1,300 exist in the U.S.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-rehab);letter-spacing:.05em;margin-bottom:4px">CRITICAL ACCESS HOSPITAL (CAH)</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Rural hospitals with ≤25 inpatient beds, located 35+ miles from the nearest hospital (15+ in mountainous terrain). Receive cost-based Medicare reimbursement instead of DRGs: a financial lifeline for rural access. Required to provide 24/7 emergency services. About 1,300 exist in the U.S.</div>
       </div>
 
       <div style="padding:10px 0;border-bottom:1px solid var(--border2)">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-procedural);letter-spacing:.05em;margin-bottom:4px">SPECIALTY HOSPITAL</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">Single-service-line focus: cardiac, orthopedic, cancer, children's, psychiatric, rehabilitation. Can optimize workflows and costs for a specific case mix. Physician-owned specialty hospitals drew scrutiny for cherry-picking high-margin cases away from full-service competitors.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-procedural);letter-spacing:.05em;margin-bottom:4px">SPECIALTY HOSPITAL</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Single-service-line focus: cardiac, orthopedic, cancer, children's, psychiatric, rehabilitation. Can optimize workflows and costs for a specific case mix. Physician-owned specialty hospitals drew scrutiny for cherry-picking high-margin cases away from full-service competitors.</div>
       </div>
 
       <div style="padding:10px 0">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-maternal);letter-spacing:.05em;margin-bottom:4px">FEDERALLY QUALIFIED HEALTH CENTER (FQHC)</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">Community health centers in medically underserved areas. Sliding-scale fees based on income. Required to provide comprehensive primary care regardless of ability to pay. Federally funded under Section 330 of the Public Health Service Act. Not technically a hospital, but often the primary care backstop for uninsured and Medicaid patients who would otherwise use the ED.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-maternal);letter-spacing:.05em;margin-bottom:4px">FEDERALLY QUALIFIED HEALTH CENTER (FQHC)</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Community health centers in medically underserved areas. Sliding-scale fees based on income. Required to provide comprehensive primary care regardless of ability to pay. Federally funded under Section 330 of the Public Health Service Act. Not technically a hospital, but often the primary care backstop for uninsured and Medicaid patients who would otherwise use the ED.</div>
       </div>
     </div>
 
@@ -1515,32 +1515,32 @@ function openHospitalInfo() {
       <div class="hm-dp-metric" style="align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">
         <div class="hm-dp-metric-dot" style="background:var(--cat-critical);margin-top:3px;flex-shrink:0"></div>
         <div>
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-critical);letter-spacing:.05em;margin-bottom:3px">LEVEL I · Comprehensive</div>
-          <div style="font-size:11px;color:var(--t2);line-height:1.6">24/7 in-house trauma surgeon, physically in the building at all hours. Full surgical subspecialties available. Research program required. Minimum 1,200 major trauma admissions/year OR 240 major trauma patients requiring surgery. Residency program. This is UMC.</div>
+          <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-critical);letter-spacing:.05em;margin-bottom:3px">LEVEL I · Comprehensive</div>
+          <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">24/7 in-house trauma surgeon, physically in the building at all hours. Full surgical subspecialties available. Research program required. Minimum 1,200 major trauma admissions/year OR 240 major trauma patients requiring surgery. Residency program. This is UMC.</div>
         </div>
       </div>
 
       <div class="hm-dp-metric" style="align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">
         <div class="hm-dp-metric-dot" style="background:var(--cat-procedural);margin-top:3px;flex-shrink:0"></div>
         <div>
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-procedural);letter-spacing:.05em;margin-bottom:3px">LEVEL II · Comprehensive (no research requirement)</div>
-          <div style="font-size:11px;color:var(--t2);line-height:1.6">Full definitive trauma care. 24/7 trauma surgeon coverage but may be on-call rather than in-house. No mandatory research program or volume threshold. Often the main trauma center for mid-size metros without an academic center.</div>
+          <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-procedural);letter-spacing:.05em;margin-bottom:3px">LEVEL II · Comprehensive (no research requirement)</div>
+          <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Full definitive trauma care. 24/7 trauma surgeon coverage but may be on-call rather than in-house. No mandatory research program or volume threshold. Often the main trauma center for mid-size metros without an academic center.</div>
         </div>
       </div>
 
       <div class="hm-dp-metric" style="align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">
         <div class="hm-dp-metric-dot" style="background:var(--cat-clinical);margin-top:3px;flex-shrink:0"></div>
         <div>
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-clinical);letter-spacing:.05em;margin-bottom:3px">LEVEL III · Stabilize and Transfer</div>
-          <div style="font-size:11px;color:var(--t2);line-height:1.6">Initial assessment, resuscitation, emergency surgery, and ICU capability, but most complex cases transfer to Level I or II. Common in rural and suburban areas. 24-hour ED physician coverage required. Must have written transfer agreements with higher-level centers.</div>
+          <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-clinical);letter-spacing:.05em;margin-bottom:3px">LEVEL III · Stabilize and Transfer</div>
+          <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Initial assessment, resuscitation, emergency surgery, and ICU capability, but most complex cases transfer to Level I or II. Common in rural and suburban areas. 24-hour ED physician coverage required. Must have written transfer agreements with higher-level centers.</div>
         </div>
       </div>
 
       <div class="hm-dp-metric" style="align-items:flex-start;gap:10px;padding:8px 0">
         <div class="hm-dp-metric-dot" style="background:var(--cat-support);margin-top:3px;flex-shrink:0"></div>
         <div>
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-support);letter-spacing:.05em;margin-bottom:3px">LEVEL IV · Basic Stabilization</div>
-          <div style="font-size:11px;color:var(--t2);line-height:1.6">Found in rural and remote areas where higher-level care isn't accessible. ATLS capabilities. Stabilizes and transfers. No required volume threshold. May not have 24-hour physician coverage: mid-levels acceptable.</div>
+          <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-support);letter-spacing:.05em;margin-bottom:3px">LEVEL IV · Basic Stabilization</div>
+          <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Found in rural and remote areas where higher-level care isn't accessible. ATLS capabilities. Stabilizes and transfers. No required volume threshold. May not have 24-hour physician coverage: mid-levels acceptable.</div>
         </div>
       </div>
     </div>
@@ -1549,18 +1549,18 @@ function openHospitalInfo() {
       <div class="hm-dp-section-label">Stroke &amp; Cardiac Designations</div>
 
       <div style="padding:8px 0;border-bottom:1px solid var(--border2)">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-critical);letter-spacing:.05em;margin-bottom:4px">COMPREHENSIVE STROKE CENTER (CSC)</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">Full endovascular capability including mechanical thrombectomy for large vessel occlusion. Neurosurgery in-house. 24/7 interventional team. Handles the most complex stroke cases and regional transfers. Certified by Joint Commission or DNV.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-critical);letter-spacing:.05em;margin-bottom:4px">COMPREHENSIVE STROKE CENTER (CSC)</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Full endovascular capability including mechanical thrombectomy for large vessel occlusion. Neurosurgery in-house. 24/7 interventional team. Handles the most complex stroke cases and regional transfers. Certified by Joint Commission or DNV.</div>
       </div>
 
       <div style="padding:8px 0;border-bottom:1px solid var(--border2)">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-procedural);letter-spacing:.05em;margin-bottom:4px">PRIMARY STROKE CENTER (PSC)</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">Can administer IV tPA for ischemic stroke. Stroke team available 24/7 via telemedicine or in person. CT with CTA capability. Most community hospitals with a serious stroke program hold this designation.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-procedural);letter-spacing:.05em;margin-bottom:4px">PRIMARY STROKE CENTER (PSC)</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Can administer IV tPA for ischemic stroke. Stroke team available 24/7 via telemedicine or in person. CT with CTA capability. Most community hospitals with a serious stroke program hold this designation.</div>
       </div>
 
       <div style="padding:8px 0">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cat-clinical);letter-spacing:.05em;margin-bottom:4px">STEMI RECEIVING CENTER</div>
-        <div style="font-size:11px;color:var(--t2);line-height:1.6">Primary PCI available 24/7. Cath lab activation to balloon time target: ≤90 minutes from first medical contact. EMS protocols route STEMI patients directly here, bypassing closer non-PCI hospitals. Door-to-balloon time is publicly reported.</div>
+        <div style="font-family:var(--mono);font-size:var(--t-micro);font-weight:700;color:var(--cat-clinical);letter-spacing:.05em;margin-bottom:4px">STEMI RECEIVING CENTER</div>
+        <div style="font-size:var(--t-label);color:var(--t2);line-height:1.6">Primary PCI available 24/7. Cath lab activation to balloon time target: ≤90 minutes from first medical contact. EMS protocols route STEMI patients directly here, bypassing closer non-PCI hospitals. Door-to-balloon time is publicly reported.</div>
       </div>
     </div>
 
@@ -1611,7 +1611,7 @@ function openGround(id) {
     <span class="hm-dp-cat-badge" style="color:${catColor};border-color:${catColor};background:color-mix(in srgb,${catColor} 10%,transparent)">${cfg.cat}</span>
   `;
   let html = `<div class="hm-dp-section"><div class="hm-dp-section-label">Overview</div><div class="hm-dp-overview">${cfg.overview}</div></div>`;
-  if (cfg.staffing) html += `<div class="hm-dp-section"><div class="hm-dp-section-label">Staffing</div><div class="hm-dp-row"><span class="hm-dp-row-label">Who's there</span><span class="hm-dp-row-val" style="font-size:11px;text-align:right;max-width:260px">${cfg.staffing}</span></div></div>`;
+  if (cfg.staffing) html += `<div class="hm-dp-section"><div class="hm-dp-section-label">Staffing</div><div class="hm-dp-row"><span class="hm-dp-row-label">Who's there</span><span class="hm-dp-row-val" style="font-size:var(--t-label);text-align:right;max-width:260px">${cfg.staffing}</span></div></div>`;
   if (cfg.flow_in) html += `<div class="hm-dp-section"><div class="hm-dp-section-label">Flow</div><div class="hm-flow-grid"><div class="hm-flow-col"><div class="hm-flow-label">In</div>${cfg.flow_in.map(f=>`<div class="hm-flow-item">${f}</div>`).join('')}</div><div class="hm-flow-arrow">→</div><div class="hm-flow-col"><div class="hm-flow-label">Out</div>${cfg.flow_out.map(f=>`<div class="hm-flow-item">${f}</div>`).join('')}</div></div></div>`;
   if (cfg.revenue) html += `<div class="hm-dp-section"><div class="hm-dp-section-label">Revenue Model</div><div class="hm-dp-overview"><p>${cfg.revenue}</p></div></div>`;
   if (cfg.metrics) html += `<div class="hm-dp-section"><div class="hm-dp-section-label">Key Metrics</div>${cfg.metrics.map(m=>`<div class="hm-dp-metric"><div class="hm-dp-metric-dot" style="background:${catColor}"></div>${m}</div>`).join('')}</div>`;

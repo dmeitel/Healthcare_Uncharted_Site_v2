@@ -256,14 +256,16 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 - **Title** (800, 20px, line-height 1.15): card titles. Drawer-card and pin-card NAMES inside tools run the cartographic variant: 14px, uppercase, tracking 0.09em.
 - **Body** (400, 13 to 16px, line-height 1.65 to 1.75): prose. The 300 weight is retired on dark; thin-on-dark reads generated. Max measure ~65ch (620 to 680px containers).
 - **Label** (500 to 700, 11px, uppercase, tracking 0.08 to 0.16em, always Plex Mono): eyebrows, source lines, stat captions, meta, table headers.
-- **Working sizes inside tool canvases** still run 8.5 to 12.5px (fact rows, chip text, drawer meta). The sub-11px steps are LEGACY, kept only until the tool-canvas migration to the floor; site chrome, hubs, and editorial surfaces already obey it.
+- **Working sizes inside tool canvases** ran 8.5 to 12.5px (fact rows, chip text, drawer meta). That carve-out is CLOSED as of 2026-09-20. It was written in 2026-08-09 as "LEGACY, kept only until the tool-canvas migration to the floor"; the migration never happened, and a year later the measurement found 4,044 sub-13px elements on a phone across 324 rules, down to 2.5px. An exemption with no date is a permanent one. Tool canvases now hold `--t-micro`, and the only standing exemption is the pinch-zoom scene, defined under "The Two Surfaces".
 
 ### Named Rules
 **The Data Speaks Mono Rule.** If a string is a value, a unit, a source, a date, or a coordinate, it is set in IBM Plex Mono. If it is a sentence, it is DM Sans. No exceptions; this is how readers learn what is checkable.
 
 **The CAPS Rule.** Emphasis is CAPS or a heavier weight, never italics and never bold-inside-prose. UI strings follow the same voice kernel as editorial: no em dashes, middots (·) join fragments.
 
-**The Legibility Floor Rule (adopted 2026-08-09).** Functional text, anything a reader must read to use the page (labels, tags, kickers, meta, source lines, nav items), never sets below 11px. Tracked-caps mono labels are NOT exempt; a third of the audience is on phones, and decorative smallness was the old habit. The cap-85 through label-105 scale steps survive only inside tool canvases until their migration pass.
+**The Legibility Floor Rule (adopted 2026-08-09, given two values 2026-09-20).** Functional text, anything a reader must read to use the page (labels, tags, kickers, meta, source lines, nav items), never sets below `--t-label`: 13px on a phone, 11px on a desktop. Nothing sets below `--t-micro` on either. Tracked-caps mono labels are NOT exempt; a third of the audience is on phones, and decorative smallness was the old habit.
+
+The 2026-08-09 version of this rule was correct and was ignored for a year, because it named a number with no token behind it and no gate in front of it. A floor written in prose is a preference. Set the size from the token, and `npm run phone` fails the page when it drops below.
 
 **The Caption Rule.** Fact-row labels and data captions are mono captions: 11px, uppercase, tracked 0.12em or wider, FOG BLUE (`--t2`). Faded Ink captions failed David's QA on open dark ground once the tile boxes dissolved (2026-08-06); Faded Ink is reserved for source lines, meta, and section labels that should recede. Names at drawer-card scale go tracked caps (14px / 0.09em); page H1s and editorial card titles stay mixed-case Outfit 800. Values keep `font-variant-numeric: tabular-nums` wherever figures align vertically.
 
@@ -348,6 +350,100 @@ Tactile and confident: controls respond to touch like they enjoy it, one state a
 ### Lens Pills (signature)
 - The 4Ps and Atlas-zone vocabulary: pill-shaped mono tags tinted per lens (patient teal, provider blue, payer amber, policy purple, and kin) at 12% alpha fills with .34-alpha borders. Lenses render as pills and section headers, never as page chrome.
 
+## The Two Surfaces
+
+Adopted 2026-09-20, on David's reading of the phone build: "it appears we are trying to
+squeeze the regular website onto a phone screen."
+
+He was right, and it was measurable. A pass over 20 pages at 360 and at 1280 found that
+92 to 100 percent of text rendered at the IDENTICAL pixel size on both. Controls told the
+opposite story: only 20 to 40 percent matched, because tap targets had been patched to the
+44px floor one at a time across a year of mobile passes. So the site had been made to
+FUNCTION on a phone and had never once been DESIGNED for one.
+
+The cause was structural, not negligent. The system carried nine spacing tokens, a full
+color ladder and font-family role tokens, and zero size tokens; all 723 font sizes were
+literals. There was no single place where a phone type decision could be made, so nobody
+made one, and every mobile pass reached for the only lever that existed, which was the
+individual target.
+
+A phone and a desktop are two surfaces. They are not one layout at two widths.
+
+| | phone | desktop |
+|---|---|---|
+| read at | about 14 inches, in motion, one hand, often outdoors | about 24 inches, seated, still |
+| pointer | a thumb, about 10mm, and it covers what it touches | a cursor, one pixel, never covers anything |
+| field | one column, one thing at a time | several columns, comparison at a glance |
+| chrome | shared with the browser's own bars, which we do not control | negligible |
+
+The consequences are all measurable, which is the point. Each is checked by
+`npm run phone`:
+
+1. **Type scales UP, never down.** Any role's phone value is greater than or equal to its
+   desktop value. A size that is right at 24 inches is not right at 14.
+2. **The floor is a floor.** Functional text, anything a reader must read to use the page,
+   never renders below `--t-label` (13px) on a phone. Nothing renders below `--t-micro`
+   (12px) at all. Below that it is not small, it is absent.
+3. **A phone gets ONE top bar.** The site nav or a page toolbar, never both stacked, plus
+   at most one bottom bar, and 20 percent of the viewport in total. The browser's own bars
+   take roughly another quarter on top, and a design that ignores that is designing for a
+   screen the reader does not have.
+
+   The number was 15 percent for about an hour on 2026-09-20, set before the measurement was
+   honest. Corrected once the gate stopped counting a parked nav (the merged band leaves it
+   fixed at `top:-65` under a translate, costing the reader nothing) and started measuring
+   sticky bars scrolled rather than at rest. 15 is arithmetically unreachable here: it allows
+   111px, the nav alone is 64, and one touch-floor control row is 44 plus padding, so any page
+   with the nav AND a bar of its own fails no matter how it is built. The laws page is the
+   proof, at nav 64 plus a 64px tab strip with nothing else on screen.
+
+   Two bars is the squeeze in its purest form: the desktop nav kept, the phone nav added under
+   it. The mechanism for yielding already exists and already shipped, the merged band, which is
+   why every converted tool page passes this and every unconverted page does not.
+4. **Targets keep 44px** and gain 8px of clear space from their neighbours, because a
+   thumb that lands between two targets picks the wrong one.
+5. **The primary action sits in the bottom third** on a phone. The top of the screen
+   belongs to the browser and to the reach limit of a thumb.
+6. **A canvas that scales its text with its geometry is a desktop canvas.** SVG and canvas
+   text counter-scales to hold its floor, or the scene reflows for the narrow width.
+7. **Density is a decision, not a consequence.** A table on a desktop is a stack of cards
+   on a phone. Reflowing a dense grid into a narrow one produces neither.
+
+### The type scale
+
+The one place a size is decided. Defined in `hu-global.css` `:root`, overridden in the
+`max-width:699px` block directly beneath it.
+
+| token | role | desktop | phone |
+|---|---|---|---|
+| `--t-body` | prose, the thing a reader reads | 15px | 15px |
+| `--t-ui` | buttons, fields, chips, secondary UI | 13px | 13px |
+| `--t-label` | eyebrows, meta, source lines, table headers | 11px | **13px** |
+| `--t-micro` | tabular data inside a tool canvas | 11px | **12px** |
+
+Page heroes are not in the table; they already run viewport clamps, documented under
+Typography, and a clamp is a phone decision by construction.
+
+The phone body and UI steps are deliberately unmoved in this first pass. David's call,
+2026-09-20: ship the floor, which is a defect fix, and judge the larger reading scale
+(body 17px, UI 15px) from a side-by-side on his own phone before it reflows every page.
+That preview is the open item, not a settled value.
+
+### The pinch-zoom exemption
+
+A surface the reader can magnify is exempt from the type floor for its SCENE, because
+magnification IS the interaction there. The Atlas hex grid and the hospital blueprint
+units carry this exemption by David's ruling (2026-08-23, restated 2026-09-20).
+
+The exemption stops at the scene. A panel that reports state, an order card, a tab strip,
+a status line, a button label: those hold the floor whatever the terrain does. A reader
+should never have to zoom to find out what the tool is telling them. The device assembly
+wall screen at 2.5px failed this, and failed it inside a surface whose port glyphs were
+already counter-scaled to hold 20px, which is the clearest single example of patching a
+piece instead of designing a layout.
+
+---
+
 ## The Rules, By Tier
 
 Every rule below is unchanged in wording. What is new is the SORT, because these were
@@ -364,6 +460,9 @@ Breaking these hurts a reader. They are not taste and they are never suspended, 
 or no phase. A redesign that breaks one is a regression wearing better colors.
 
 - **Do** keep the 44px touch floor, the 699px phone line, and the 250ms phone motion cap on every interactive surface.
+- **Do** hold the phone type floor: functional text never below `--t-label` (13px), nothing below `--t-micro` (12px). Set sizes from the tokens, never from a literal. See "The Two Surfaces".
+- **Do** give a phone ONE top bar: the site nav or a page toolbar, never both, plus at most one bottom bar, inside 20 percent of the viewport. The browser takes another quarter we do not control.
+- **Don't** let a canvas scale its UI text with its geometry. Terrain may scale on a pinch-zoom surface; the panels, tabs and status lines that report state never do.
 - **Do** flip accent text to its deep step on light surfaces (The Deep-Step Rule).
 - **Do** check every reskinned surface in BOTH themes; a rule that vanishes on light is a regression, not a style.
 - **Don't** stack transient surfaces; one sheet, drawer, or overlay at a time on phones.
@@ -371,7 +470,8 @@ or no phase. A redesign that breaks one is a regression wearing better colors.
 
 Also physics, and living in .claude/rules/css.md rather than here: animate transform and
 opacity only, respect prefers-reduced-motion, 100dvh never bare 100vh, env(safe-area-inset-bottom)
-on anything fixed to the viewport bottom, 11px functional text floor.
+on anything fixed to the viewport bottom, and the type floor above (13px functional on a
+phone, 11px on a desktop), which the phone gate now fails on rather than trusting.
 
 ---
 

@@ -814,7 +814,7 @@ function renderPanel(){
       smd.m.forEach(([v,l])=>{
         const src=l.match(/(\(.*?\))$/);
         const lbl=src?l.slice(0,l.lastIndexOf(src[0])).trim():l;
-        const srcTxt=src?`<span style="display:block;font-size:9px;opacity:0.5;margin-top:2px">${src[0]}</span>`:'';
+        const srcTxt=src?`<span style="display:block;font-size:var(--t-micro);opacity:0.5;margin-top:2px">${src[0]}</span>`:'';
         yah+=`<div class="mi" style="--sc:${lc}75"><div class="mv" style="color:${lc}">${v}</div><div class="ml">${lbl}${srcTxt}</div></div>`;
       });
       yah+=`</div></div>`;
@@ -872,7 +872,7 @@ function renderPanel(){
     det.m.forEach(([v,l])=>{
       const src=l.match(/(\(.*?\))$/);
       const lbl=src?l.slice(0,l.lastIndexOf(src[0])).trim():l;
-      const srcTxt=src?`<span style="display:block;font-size:9px;opacity:0.5;margin-top:2px">${src[0]}</span>`:'';
+      const srcTxt=src?`<span style="display:block;font-size:var(--t-micro);opacity:0.5;margin-top:2px">${src[0]}</span>`:'';
       yah+=`<div class="mi" style="--sc:${lc}75"><div class="mv" style="color:${lc}">${v}</div><div class="ml">${lbl}${srcTxt}</div></div>`;
     });
     yah+=`</div></div>`;

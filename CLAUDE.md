@@ -151,6 +151,10 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
 - Before a page ships: `npm run verify` green, and `npm run phone -- <path>` clean at 360 and 699.
   Give an outside session docs/HU-HANDOFF-BRIEF.md before it builds anything for this site;
   start a new page from docs/HU-PAGE-RECIPES.md.
+- The current week of work lives in SPRINT.md at the repo root, under the quarter plan at
+  docs/HU-DEV-PLAN-2026-Q4.md. Read it after DECISIONS.md. Take the next open task; when David
+  re-aims the week, rewrite the sprint and move displaced work back to its month in the plan.
+  Nothing is dropped without a line in the sprint's CHANGES saying so.
 
 ---
 

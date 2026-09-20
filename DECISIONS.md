@@ -35,6 +35,10 @@ Ranked. The top three are the live ones; the rest wait their turn by rule 3.
 
 | # | The question | Why it matters | Claude recommends | Open since |
 |---|---|---|---|---|
+| A | **Diagram reflow: pattern proven, one page done, twelve to go.** | The approach is settled and there is a worked example to copy: a chart gets a SECOND drawing authored near 320 units wide, swapped at 699 by `.hu-chart-tall` / `.hu-chart-wide` in hu-global.css. Both figures on the burnout Rounds post are done and the page is clean at 360, 699 and 1024: zero under the floor, zero collisions, desktop untouched. What is left is the same job on the other twelve pages, roughly 18 drawings, mostly the `lpv` family on laws-and-paradoxes and `gx` on process engineering. | Keep going the same way, one page at a time, but it is real hand work: each drawing needs its coordinates rewritten and its labels checked by eye, because the gate cannot tell you a chart is ugly, only that it is legible. Roughly a page per sitting. If you would rather spend the time elsewhere, the honest middle is to do the three or four charts that carry an argument and leave the decorative ones wide. | 2026-09-20 |
+| B | **The merged band QA is now blocking six pages.** Play the eight converted tool pages on your phone and say yes or no. | It was already on this list as item 5, but it has stopped being a tidy-up and become a blocker: six surfaces stack two top bars and fail the chrome rule, and the merged band is the shipped mechanism that fixes all six. Nothing moves on them until you look. `/fun/alarm-fatigue/` also crossed the line today, 19 to 24 percent, because the comfort scale made its clicker bar taller. | Play them, then I convert the six. The eight are atlas, cost of living, career tree, hospital map, system layers, SQL mystery, skill demo, vendor directory. | 2026-09-20 |
+| P | **The three-month plan.** Read docs/HU-DEV-PLAN-2026-Q4.md and mark it up: approve, cut, or reorder. | It is the working plan for 2026-09-21 to 12-20 (games, content, platform), built from the live traffic (one Reddit post = about 1,500 views in a week; the games are the front door), the games audit, the backend state and the multiplayer market. Nothing in it is built. Two questions inside it are its gates: which game is the second consumer of the table kit (recommended: Device Assembly two walls), and whether the hospital game leaves the secret menu in month 3 (recommended: yes, gated on game night #1; your 2026-09-02 ruling was no, and the numbers since are why it is being asked again). | Approve month 1 as written and mark up months 2 and 3 as they arrive. "You pick" on the two inner questions means Device Assembly second and the front door in month 3. | 2026-09-20 |
+| S | **The multiplayer backend is gone from DNS.** Restore the Supabase project, or make a new one? | The host in the hospital game and in the CSP (`swntgsmpcqyuapkkyaqj.supabase.co`) returned NXDOMAIN from two resolvers on 2026-09-20, so The Table cannot connect for anyone. Free projects pause after a week idle, which the design doc predicted on 2026-09-07; the keep-alive ping named there was never built. Whether it is paused or deleted is only visible in your dashboard. | Open the dashboard on the main account. Restore if it offers to; otherwise a new free project. Either way Claude makes the two-line change (the `SUPA` constant, the `connect-src` entry), adds a GitHub Actions cron ping every three days, and a test that fails when the two files name different hosts. | 2026-09-20 |
 | 0 | **Citations are cut off on phones in Rounds posts.** Reopen the parked reading surface to fix it, or leave it? | `span.cite` is `white-space: nowrap` and renders 452px wide in a 360px viewport. `body { overflow-x: hidden }` clips it, so the page does not scroll sideways and your phone gate reports CLEAN, but the reader just loses the end of the citation. Found on the Steward post; likely every Rounds post with a multi-source citation. | Let it wrap at phone widths. It is a one-line CSS change and it does not touch any of the round 1 or round 2 reading work. But the surface is parked by your ruling, so it needs your word first. | 2026-09-19 |
 | 0a | **The 4Ps pills are 28px tall, the touch floor is 44.** Raise them, or accept it? | 52 of them on the Learn hub, 15 on Rounds, and they appear on cards across both. They are real links into the Atlas, and 28px is a hard Tier 1 floor violation, not a rounding error. | Accept for now, revisit with the reading surface. Raising to 44 nearly doubles their height on every card, and expanding the hit area invisibly makes adjacent wrapped rows overlap, which trades a small-target problem for a mis-tap problem. This is a density decision, not a cleanup. | 2026-09-19 |
 | 0b | **The cost of living tool clips its scope badge by 45px**, so "Housing: Zillow county rents · rest: sta…" just stops. | It is the line that tells the reader where the numbers come from, and it is cut mid-word at 360. | Queue it. That tool is in an open design phase with round 2 already awaiting your read, so a separate edit would collide with work you have not looked at. Fold it into your round 2 pass. | 2026-09-19 |
@@ -85,6 +89,64 @@ No decision needed. Listed so you can veto any of them.
 
 ## LOG
 
+- **2026-09-20** THE THREE-MONTH PLAN. David asked for a full analysis and a development plan
+  (multiplayer games, content growth, infrastructure). Written to docs/HU-DEV-PLAN-2026-Q4.md as a
+  DRAFT for his markup (question P). What the analysis measured: July 179 views, August 162,
+  September 1 to 20 1,600, of which about 1,500 came in the week after one Reddit post about
+  Alarm Fatigue (peak 532 on Sep 12); 56% of the trailing 90 days is reddit.com; the best single
+  Learn page had 7 views and the best Rounds post 6; the game held 48% of its measured sessions
+  past two minutes. The Supabase host the hospital game's Table points at NO LONGER RESOLVES
+  (question S). Four of the five games have the engine shape multiplayer needs; Alarm Fatigue
+  does not and has no tests. No CI, no scaffold, and the RSS feed carries 12 of 44 pages. The
+  multiplayer market was researched (plan section 6): stay on Supabase this quarter, Cloudflare
+  Durable Objects is the escape hatch, Hathora is dead and InstantDB is sunsetting. Nothing was
+  built. A second session was editing this file the same day (rows A and B); its rows were left
+  as found.
+- **2026-09-20** THE COMFORT SCALE, THE GATE, AND ONE BAD HOUR. Shipped after David read the
+  preview on his phone: seven type tokens, every phone step its desktop value plus 2, and
+  about 1,900 font-size literals migrated onto them. Zero literals left in the 12 to 16px
+  band. Zero overflow and zero clipping across 53 pages, which was the risk worth checking.
+  `npm run phone` now also fails on SVG LABEL COLLISION, because the fix for small diagram
+  text is bigger diagram text and the two pull against each other; a pinch-zoom scene is
+  exempt. It found one real defect, a value label and a reference annotation overlapping 60%
+  on the burnout post at EVERY size, desktop included. Fixed. Both figures on that post were
+  redrawn as phone charts, which is the pattern for the remaining eighteen.
+  THE BAD HOUR, recorded because the shape of it matters more than the bug: editing a CSS
+  comment left a closer with no opener, the parser swallowed the whole
+  `@media (max-width:699px)` token block as part of an invalid selector, and the comfort
+  scale applied to NOTHING. It hid because the gate reads its floor from `--t-micro`, so the
+  token falling back to its desktop 11px quietly lowered the gate to 11 and every page
+  reported clean at a size the standard forbids. I reported it shipped and verified. It was
+  not. Caught only by querying the token directly when a diagram measured 11.4px against a
+  12px token. `tests/type-scale.test.js` now pins comment balance and the floors as literal
+  numbers, proven by reintroducing the bug. A gate that reads its threshold from the thing it
+  checks has to be told what that threshold may not be.
+
+- **2026-09-20** THE TWO SURFACES. David: "it appears we are trying to squeeze the regular
+  website onto a phone screen." Measured, and he was right. Across 20 pages at 360 and 1280,
+  92 to 100 percent of text rendered at the IDENTICAL pixel size on both; controls matched
+  only 20 to 40 percent, because tap targets had been patched to 44px one at a time over a
+  year. The site had been made to FUNCTION on a phone and never once DESIGNED for one.
+  The cause was structural: nine spacing tokens, a full color ladder, and ZERO size tokens.
+  All 723 font sizes were literals, so there was nowhere a phone type decision could be made
+  and none ever was. DESIGN.md's own 11px floor, adopted 2026-08-09, had been quietly
+  violated 4,044 times, down to 2.5px, because it named a number with no token behind it and
+  no gate in front of it. Fixed in four parts: the standard (DESIGN.md "The Two Surfaces",
+  Tier 1, the Legibility Floor Rule, .claude/rules/css.md); the tokens (--t-body, --t-ui,
+  --t-label, --t-micro, each with a desktop and a phone value); the gate (`npm run phone`
+  now FAILS on text under the floor and on chrome over 15 percent, reading the floors from
+  the tokens so the two cannot drift); and the start of the migration (hu-global.css, the
+  vendor directory, the sources ledger). 163 tests pass. Still open: 2,033 sub-floor elements
+  across 279 rules, and the two questions at the top of this file.
+- **2026-09-20** PUSHED TO PROD AND VERIFIED LIVE. Checked against
+  `healthcareuncharted.com`, not the local build, because this push changed the CSP, swapped
+  where icons come from and bumped nine cache stamps, and any of those failing takes the icons
+  off every page. The served CSP no longer lists unpkg. `hu-icons.js`, `hu-global.css`,
+  `hu-kit.js` and `feed.xml` all resolve. Fourteen pages loaded headless at 360: every
+  `data-lucide` placeholder replaced, zero console errors, zero CSP violations, no overflow,
+  the support link present on all of them. Both maps boot at zoom 2.01 on a 360 phone and show
+  the lower 48 coast to coast, which is the fix that had the race condition, so it was worth
+  confirming on real hardware rather than trusting the unit test.
 - **2026-09-20** FULL SITE SWEPT AND CORRECTED, on your instruction, secret menu excluded.
   All 44 public pages at 360 and 699: **zero console errors, zero horizontal overflow, zero
   clipped content.** Seven real layout defects fixed, the worst being the laws-and-paradoxes

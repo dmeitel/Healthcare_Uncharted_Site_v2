@@ -2621,7 +2621,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
       ? '<div class="st-goal">&rarr; ' + targets.map(n => esc(tileDisplayName(n, 'career'))).join(' &middot; ') + '</div>'
       : '<div class="st-goal nogoal">No goal pinned yet</div>';
     const figs = [];
-    if (total) figs.push('<div class="st-fig"><div class="v' + (done === total ? ' hi' : '') + '">' + done + '<span style="font-size:13px;font-weight:600;color:var(--t2)"> of ' + total + '</span></div><div class="k">requirements done</div></div>');
+    if (total) figs.push('<div class="st-fig"><div class="v' + (done === total ? ' hi' : '') + '">' + done + '<span style="font-size:var(--t-ui);font-weight:600;color:var(--t2)"> of ' + total + '</span></div><div class="k">requirements done</div></div>');
     if (bill.years) figs.push('<div class="st-fig"><div class="v">~' + (bill.years % 1 ? bill.years.toFixed(1) : bill.years) + '</div><div class="k">years to go</div></div>');
     if (bill.exams) figs.push('<div class="st-fig"><div class="v">' + bill.exams + '</div><div class="k">board exam' + (bill.exams !== 1 ? 's' : '') + '</div></div>');
     if (bill.fees) figs.push('<div class="st-fig"><div class="v">~$' + bill.fees.toLocaleString('en-US') + '</div><div class="k">exam fees</div></div>');
@@ -3087,11 +3087,11 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     const r=15, cx=20, cy=17;
     return '<svg width="40" height="36" viewBox="0 0 40 36">'+
       '<path d="'+hexPath(cx,cy,r)+'" style="fill:'+fill+';stroke:'+stroke+';stroke-width:2'+(dashed?';stroke-dasharray:4 3':'')+'"/>'+
-      (glyph ? '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" style="font-size:14px;font-weight:800;fill:'+(glyphCol||'#EAF6F4')+'">'+glyph+'</text>' : '')+'</svg>';
+      (glyph ? '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" style="font-size:var(--t-sub);font-weight:800;fill:'+(glyphCol||'#EAF6F4')+'">'+glyph+'</text>' : '')+'</svg>';
   }
   function legendBadge(glyph, cls){
     return '<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" class="lg-badge '+cls+'"/>'+
-      '<text x="13" y="17.5" text-anchor="middle" class="'+cls+'" style="font-size:12px;font-weight:800">'+glyph+'</text></svg>';
+      '<text x="13" y="17.5" text-anchor="middle" class="'+cls+'" style="font-size:var(--t-fine);font-weight:800">'+glyph+'</text></svg>';
   }
   function legendForkBadge(){
     return '<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" class="lg-badge lg-b-purp"/>'+
