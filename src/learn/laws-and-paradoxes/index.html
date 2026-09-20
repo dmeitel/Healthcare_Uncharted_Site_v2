@@ -336,13 +336,22 @@ editorial_reason: "Editorial palette + DM Serif Display: a tabbed field guide of
   .lp-panel.active{ display:block; animation:lpFade .35s ease; }
   @keyframes lpFade{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
   @media (max-width:900px){
-    .lp-layout{ flex-direction:column; gap:0; padding:0; }
-    .lp-tabs{ position:sticky; top:var(--nav-h); width:auto; margin-top:0;
+    /* align-items:stretch is load-bearing. The desktop rule sets flex-start so the
+       sticky sidebar does not stretch full height, but once this is a COLUMN
+       container flex-start sizes children to their CONTENT width. Both children
+       then blew past the viewport: the tab strip to 1305px at 360 (its ten nowrap
+       tabs) and the panel to 716px at 699. The page scrolled sideways instead of
+       the tab strip scrolling. Stretching is what makes overflow-x:auto work. */
+    .lp-layout{ flex-direction:column; gap:0; padding:0; align-items:stretch; }
+    /* width comes from .lp-layout's align-items:stretch above; min-width:0 keeps
+       the ten nowrap tabs from forcing it open again. */
+    .lp-tabs{ position:sticky; top:var(--nav-h); width:auto; min-width:0; margin-top:0;
               flex-direction:row; overflow-x:auto; scrollbar-width:none;
+              -webkit-overflow-scrolling:touch;
               border-left:none; border-right:none; }
     .lp-tabs::-webkit-scrollbar{ display:none; }
-    .lp-tab{ flex-shrink:0; width:auto; white-space:nowrap;
-             border-left:none; border-bottom:2px solid transparent; }
+    .lp-tab{ flex-shrink:0; width:auto; white-space:nowrap; min-height:44px;
+             border-left:none; border-bottom:2px solid transparent; }   /* 13px pad on 11px mono lands at 42 */
     .lp-tab:last-child{ border-bottom:2px solid transparent; }
     .lp-tab.active{ border-left-color:transparent; border-bottom-color:var(--jp-accent); }
   }
@@ -406,6 +415,12 @@ editorial_reason: "Editorial palette + DM Serif Display: a tabbed field guide of
   .lpv-edge{ stroke:var(--jp-line); stroke-width:1.6; fill:none; }
   .lpv-edge.brk{ stroke:var(--jp-amber); stroke-width:1.8; stroke-dasharray:4 4; }
   .lpv-edge.mir{ stroke:var(--jp-accent); stroke-width:1.4; stroke-dasharray:2 5; opacity:.6; }
+
+  /* touch floor, full-site sweep 2026-09-20: the Jevons loop replay button, 32px.
+     Touch devices only; desktop density untouched. */
+  @media (hover:none){
+  #jpLoopPlay{min-height:44px}
+  }
 </style>
 
 <article class="jp">

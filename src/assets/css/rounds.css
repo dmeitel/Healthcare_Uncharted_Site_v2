@@ -85,6 +85,14 @@
   font-size: 14px;
   white-space: nowrap;
 }
+/* The nowrap keeps a single short citation from breaking mid-name, but a
+   multi-source one ("Cerullo et al., 2024 & Goldhaber et al., 2026") renders
+   452px in a 360px viewport. body's overflow-x:hidden then CUT IT OFF rather
+   than scrolling, so the reader silently lost the end of the line on five
+   Rounds posts. Below the phone line it wraps; desktop keeps the nowrap. */
+@media (max-width: 699px) {
+  .rounds-post .cite { white-space: normal; }
+}
 
 .rounds-post ol {
   padding-left: 0;
@@ -269,6 +277,11 @@
   gap: 16px;
 }
 @media (max-width: 640px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+/* At 360 two columns leave ~152px a card, and a 32px display figure like
+   2.7%→"1 in 10" needs about 200. Grid tracks default to min-width:auto, so it
+   pushed the page wide and the card was cut off rather than shrinking. One
+   column below 480, and min-width:0 so nothing else can force a track open. */
+@media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } }
 .stat-card {
   border-top: 2px solid var(--border2);
   padding: 8px 2px 0;
@@ -276,6 +289,7 @@
   flex-direction: column;
   justify-content: space-between;
   min-height: 140px;
+  min-width: 0;
 }
 .stat-num {
   font-family: var(--display);
@@ -469,6 +483,9 @@
   transition: background .15s, border-color .15s, color .15s;
   align-self: flex-start;
 }
+/* 9px padding on 11px mono lands at 34. It is the download button under the
+   share cards, so it wants a real target on a phone. */
+@media (hover:none) { .share-dl { min-height: 44px; } }
 .share-dl:hover { background: rgba(78, 205, 196, 0.1); border-color: rgba(78, 205, 196, 0.4); color: var(--t1); }
 
 /* Inline share card · placed in-article where its point is made */

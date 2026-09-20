@@ -101,7 +101,15 @@ function inspect({ phone, deviceWidth }) {
       // INLINE EXCEPTION. WCAG 2.5.8 exempts a link sitting inside a sentence,
       // because enlarging it would break the line. The source-policy citations
       // in the footer are all of these.
-      if (el.tagName === 'A' && el.closest('p, li, blockquote, figcaption, .cp-text, .jp-p')) continue;
+      // Citation and source lines: the link sits inside a line of non-target
+      // text and is sized by it, which is WCAG 2.5.8's inline exception. The
+      // full-site sweep found 124 of these across 17 pages and every one was a
+      // DOI, a source name or a map credit, not a control. .maplibregl-* is the
+      // basemap's own attribution and not ours to size.
+      const INLINE = 'p, li, blockquote, figcaption, .cp-text, .jp-p, .jp-source, .jp-sources,'
+        + ' .src-body, .tool-attribution, .ref-item, .ds-src-name, .rate-context-source,'
+        + ' .stats-source, .source-note, .ehr-src, .jp-counter-body, em, .maplibregl-ctrl-attrib-inner';
+      if (el.tagName === 'A' && el.closest(INLINE)) continue;
       small.push([sel(el), Math.round(r.width) + 'x' + Math.round(r.height), (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 30)]);
     }
   }
@@ -130,15 +138,39 @@ function inspect({ phone, deviceWidth }) {
       const cs = getComputedStyle(el);
       if (cs.position === 'fixed' || cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
       let swipeable = false;
-      for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
-        const ox = getComputedStyle(p).overflowX;
-        if (ox === 'auto' || ox === 'scroll') { swipeable = true; break; }
+      // starts at el, not its parent: the pan/zoom scene carries the transform itself
+      for (let p = el; p && p !== document.documentElement; p = p.parentElement) {
+        const pcs = getComputedStyle(p);
+        if (p !== el && (pcs.overflowX === 'auto' || pcs.overflowX === 'scroll')) { swipeable = true; break; }
+        // PINCH-ZOOM CANVAS. The hospital blueprint and the Atlas hex grid are
+        // pan/zoom surfaces: a JS transform moves a deliberately oversized scene
+        // inside an overflow-hidden frame, and the user pinches to reach the
+        // rest. That is David's ruled phone answer, not clipping. A scene under
+        // a real scale or a large translate is being driven, so leave it alone.
+        // Without this the hospital map reported 27 defects and had none.
+        const m = pcs.transform;
+        if (m && m !== 'none') {
+          const n = m.match(/matrix\(([^)]+)\)/);
+          if (n) {
+            const v = n[1].split(',').map(Number);
+            if (Math.abs(v[0] - 1) > 0.01 || Math.abs(v[3] - 1) > 0.01 || Math.abs(v[4]) > 20) { swipeable = true; break; }
+          }
+        }
       }
       if (!swipeable) hits.push(el);
     }
     for (const el of hits) {
       if (hits.some((o) => o !== el && el.contains(o))) continue;   // a wrapper of another hit
       const r = el.getBoundingClientRect();
+      // COVERED BY AN OVERLAY. /atlas/craft/ gates phones with a full-screen
+      // "this is a desktop tool" card and leaves the canvas in the DOM behind it.
+      // The reader never sees or reaches that content, so its width is not a
+      // defect. Probe a point that is actually on screen: if something unrelated
+      // is painted on top there, this element is not what the reader is looking at.
+      const px = Math.min(r.left + r.width / 2, vw - 4);
+      const py = Math.min(Math.max(r.top + r.height / 2, 4), innerHeight - 4);
+      const top = document.elementFromPoint(Math.max(px, 4), py);
+      if (top && top !== el && !el.contains(top) && !top.contains(el)) continue;
       clipped.push([Math.round(r.right - vw), sel(el), (el.textContent || '').trim().slice(0, 40)]);
     }
     clipped.sort((a, b) => b[0] - a[0]);

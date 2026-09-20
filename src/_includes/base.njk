@@ -56,12 +56,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="preconnect" href="https://unpkg.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- DM Sans without the optical-size axis (opsz@9..40) and without weight 300.
+       Measured 2026-09-20: the axis costs 39% per file (23,100 vs 14,092 bytes,
+       same weight and subset) and buys a 0.13px rendering difference across 31
+       characters at 15px, because DM Sans's default instance already sits where
+       the browser would put it for 13-18px text. Headlines are Outfit, so they
+       never touched the axis. Weight 300 had zero uses anywhere in src/.
+       Italic stays: /learn/ prose uses <em>. Roughly 35 KB lighter per page. -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- versioned: /assets/css/* ships with stale-while-revalidate, so returning
        visitors get a CACHED copy after a deploy unless the URL changes. Bump
        the v= stamp whenever hu-global.css changes. -->
-  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260918">
+  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260920">
   <link rel="stylesheet" href="/brand/web/brand.css">
 
   <!-- Structured data: brand + author identity -->
@@ -318,7 +324,12 @@ if (themeToggle) themeToggle.addEventListener('click', () => {
 });
 </script>
 
-<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<!-- Icon subset, self-hosted. Was the full Lucide UMD from unpkg: 80 KB over the
+     wire and 355 KB to parse on EVERY page, for 96 of its ~1,500 icons, behind a
+     third-party round trip. scripts/build-icons.js regenerates this from the names
+     actually used in src/; bump v= when it changes. Same lucide.createIcons() API,
+     so the iceberg-map re-render calls still work. -->
+<script src="/assets/js/hu-icons.js?v=20260920"></script>
 <script>lucide.createIcons();</script>
 <script src="/assets/js/hu-search.js?v=20260908" defer></script>
 {% if section == 'learn' or section == 'rounds' %}<script src="/assets/js/reading.js?v=20260824" defer></script>{% endif %}
