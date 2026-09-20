@@ -141,6 +141,10 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
 - Mobile first. 360px is the floor; the phone breakpoint line is 699px.
 - Never edit the build output directory (_site/). It is generated.
 - David commits and pushes himself. Never commit, push, or branch unless he explicitly asks in the moment.
+- Every open question for David lives in DECISIONS.md at the repo root. Read it at the start
+  of a session, update it at the end. Ask three at a time maximum, each with a recommendation,
+  and name what a thing IS before naming the file it lives in. Nothing goes on the list unless
+  the answer changes what gets built.
 - Every external claim in new copy (a count, a star count, a product's existence, a price) is
   verified live before it ships, and data-driven content carries its check date. A hand-off
   arrived with a star count stale by a factor of three (2026-09-18).
@@ -310,7 +314,7 @@ If any of these appear in output, rewrite before delivering:
 - Site: Healthcare Uncharted (healthcareuncharted.com)
 - Stack: Eleventy (11ty) v3.1.5, Nunjucks templating, D3.js for data viz
 - Fonts: Outfit (display/headlines), DM Sans (body), IBM Plex Mono (mono/data)
-- Primary tool: Pop Health Multi-Lens Map at src/tools/multi-lens-map/index.njk (never call it "the 4Ps map"; 4Ps is a framework tag, not the tool name)
+- Primary tool: U.S. Population Health Map at src/tools/multi-lens-map/index.njk (renamed 2026-09-19 under the naming rule; the slug and the `multi-lens-map` id stay, and the old names live on as search keys in tools.js. Never call it "the 4Ps map"; 4Ps is a framework tag, not the tool name)
 - Data files: src/_data/stateData.json, metricsConfig.json, dataYears.json, rounds.js
 - Do NOT use passthrough copy on directories that contain processed Nunjucks templates
 - Layout chain: src/_includes/base.njk + src/_includes/components/. Global CSS: src/assets/css/hu-global.css. Kit: src/assets/js/hu-kit.js.

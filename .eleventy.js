@@ -111,6 +111,14 @@ module.exports = function(eleventyConfig) {
     return new Date(date).toISOString().split("T")[0];
   });
 
+  // RSS 2.0 requires RFC-822 dates ("Thu, 10 Sep 2026 00:00:00 GMT"), which is
+  // what toUTCString produces. Only feed.njk uses this; dateISO is date-only and
+  // a <pubDate> without a time is rejected by some readers and mail services.
+  eleventyConfig.addFilter("dateRFC822", function(date) {
+    if (!date) return "";
+    return new Date(date).toUTCString();
+  });
+
   return {
     dir: {
       input:    "src",

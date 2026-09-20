@@ -59,6 +59,15 @@ interface HUKitApi {
     step: () => void;
   }): HUKitBackGuard;
   innerPoint(geom: unknown): [number, number] | null;
+  /** Home camera for a U.S. map, fitted to the container. Desktop returns the
+   *  shipped frame (zoom 3.6 / minZoom 2.8); narrower viewports get a zoom that
+   *  actually holds the lower 48, with the floor always below the home view. */
+  conusView(el: HTMLElement | null): {
+    center: [number, number];
+    zoom: number;
+    minZoom: number;
+  };
+  readonly CONUS: { w: number; s: number; e: number; n: number };
   pop(opts?: {
     anchorEl?: HTMLElement;
     triggerSel?: string;

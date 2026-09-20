@@ -4,6 +4,10 @@
 // 1024 CSS px, and reports what the site's own rules care about:
 //   console errors and page errors, verbatim
 //   horizontal overflow, with the widest offenders named by selector
+//   CLIPPED content: anything past the right edge that body's overflow-x:hidden
+//     quietly cuts off instead of scrolling (a warning, not a failure). Added
+//     2026-09-19 after a Rounds citation at 452px in a 360px viewport passed CLEAN,
+//     because a clipped page does not scroll and the overflow check saw nothing.
 //   interactive targets under 44 CSS px at the phone widths (a warning, not a failure)
 //   stylesheet rules that say 100vh without a 100dvh line beside them
 // Screenshots land in tmp/phone/<slug>-<width>.png. Exit code 1 on any console error or
@@ -54,14 +58,21 @@ function serveSite() {
 }
 
 /* runs in the page */
-function inspect(phone) {
+function inspect({ phone, deviceWidth }) {
   const sel = (el) => {
     let s = el.tagName.toLowerCase();
     if (el.id) s += '#' + el.id;
     else if (el.classList.length) s += '.' + [...el.classList].slice(0, 3).join('.');
     return s;
   };
-  const vw = window.innerWidth;
+  // NOT window.innerWidth. With isMobile:true Chromium honours the page's meta
+  // viewport, and when content is wider than the device the LAYOUT viewport grows
+  // to fit it: innerWidth silently becomes the content width. Comparing
+  // scrollWidth against that compares a number to itself, so the overflow check
+  // could never fail. Measured 2026-09-19 on a Rounds post: the context was set to
+  // 360 and innerWidth reported 499, exactly the width of the overflowing content.
+  // The device width we asked for is the only honest ruler here.
+  const vw = deviceWidth || window.innerWidth;
   const overflow = document.documentElement.scrollWidth > vw + 1;
   const culprits = [];
   if (overflow) {
@@ -79,8 +90,58 @@ function inspect(phone) {
       if (r.right < 0 || r.bottom < 0) continue;            // parked offscreen until focused (the skip link)
       const cs = getComputedStyle(el);
       if (cs.visibility === 'hidden' || cs.display === 'none') continue;
-      if (r.height < 44 || r.width < 44) small.push([sel(el), Math.round(r.width) + 'x' + Math.round(r.height), (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 30)]);
+      if (r.height >= 44 && r.width >= 44) continue;
+      // STRETCHED LINK. `::after { position:absolute; inset:0 }` makes the whole
+      // card the tap target while the <a>'s own box is just its text. The Learn
+      // hub's card links measure 198x22 and are actually card-sized. Reporting
+      // them buried the real misses: 16 of 89 warnings on /learn/ were this.
+      const af = getComputedStyle(el, '::after');
+      if (af && af.content !== 'none' && af.position === 'absolute'
+          && af.top === '0px' && af.right === '0px' && af.bottom === '0px' && af.left === '0px') continue;
+      // INLINE EXCEPTION. WCAG 2.5.8 exempts a link sitting inside a sentence,
+      // because enlarging it would break the line. The source-policy citations
+      // in the footer are all of these.
+      if (el.tagName === 'A' && el.closest('p, li, blockquote, figcaption, .cp-text, .jp-p')) continue;
+      small.push([sel(el), Math.round(r.width) + 'x' + Math.round(r.height), (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 30)]);
     }
+  }
+  // CLIPPED CONTENT. The overflow check above only catches a page that SCROLLS
+  // sideways. `body { overflow-x: hidden }` turns that into content silently cut
+  // off at the screen edge instead, which the reader loses and the check cannot
+  // see. Found 2026-09-19: a Rounds citation is white-space:nowrap and renders
+  // 452px wide in a 360px viewport, and the page reported CLEAN.
+  // An element inside a real horizontal scroller is not clipped, it is swipeable,
+  // so walk up and skip those. Report the innermost offender, not its wrappers.
+  const clipped = [];
+  if (phone) {
+    const hits = [];
+    for (const el of document.querySelectorAll('body *')) {
+      // Inside an <svg>, geometry is the drawing's own coordinate space and is
+      // clipped by the svg box, so a hex tile 5000px "past the edge" is a pan
+      // target, not a defect. The Atlas alone reported 1,857 of these. Check the
+      // root <svg> itself, never its children.
+      if (el.ownerSVGElement) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height || r.right <= vw + 1) continue;
+      // ENTIRELY past the edge is a parked panel (a closed drawer translated out,
+      // the Atlas help card), not clipped content. Clipping means the element
+      // STARTS on screen and gets cut: left inside, right outside.
+      if (r.left >= vw) continue;
+      const cs = getComputedStyle(el);
+      if (cs.position === 'fixed' || cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
+      let swipeable = false;
+      for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+        const ox = getComputedStyle(p).overflowX;
+        if (ox === 'auto' || ox === 'scroll') { swipeable = true; break; }
+      }
+      if (!swipeable) hits.push(el);
+    }
+    for (const el of hits) {
+      if (hits.some((o) => o !== el && el.contains(o))) continue;   // a wrapper of another hit
+      const r = el.getBoundingClientRect();
+      clipped.push([Math.round(r.right - vw), sel(el), (el.textContent || '').trim().slice(0, 40)]);
+    }
+    clipped.sort((a, b) => b[0] - a[0]);
   }
   const vh = [];
   for (const sheet of document.styleSheets) {
@@ -88,7 +149,7 @@ function inspect(phone) {
     const walk = (list) => { for (const r of list) { if (r.cssRules) walk(r.cssRules); else if (r.cssText && /\b100vh\b/.test(r.cssText) && !/100dvh/.test(r.cssText)) vh.push(r.selectorText || r.cssText.slice(0, 60)); } };
     walk(rules);
   }
-  return { overflow, scrollWidth: document.documentElement.scrollWidth, vw, culprits: culprits.slice(0, 6), small: small.slice(0, 12), smallCount: small.length, vh: [...new Set(vh)].slice(0, 8) };
+  return { overflow, scrollWidth: document.documentElement.scrollWidth, vw, culprits: culprits.slice(0, 6), small: small.slice(0, 12), smallCount: small.length, clipped: clipped.slice(0, 8), clippedCount: clipped.length, vh: [...new Set(vh)].slice(0, 8) };
 }
 
 (async () => {
@@ -105,20 +166,38 @@ function inspect(phone) {
       const ctx = await browser.newContext({ viewport: { width: w, height: phone ? 800 : 900 }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone });
       const page = await ctx.newPage();
       const errors = [];
+      // This harness serves the static _site. Netlify FUNCTIONS are deployed
+      // separately and simply do not exist here, so a 404 on one is a limit of
+      // the gate, not a defect. /tools/assignment-compass/ calls the GSA per diem
+      // proxy on load and was failing the build for it. Counted and reported, but
+      // never failed on.
+      const serverless = [];
       page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
       page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+      page.on('response', (res) => {
+        if (res.status() >= 400 && /\/\.netlify\/functions\//.test(res.url())) {
+          serverless.push(res.status() + ' ' + res.url().replace(origin, ''));
+        }
+      });
       try {
         await page.goto(origin + p, { waitUntil: 'networkidle', timeout: 30000 });
       } catch (e) { errors.push('navigation: ' + e.message.split('\n')[0]); }
       await page.waitForTimeout(600);
-      const r = await page.evaluate(inspect, phone).catch((e) => ({ overflow: false, culprits: [], small: [], smallCount: 0, vh: [], evalError: e.message }));
+      const r = await page.evaluate(inspect, { phone, deviceWidth: w }).catch((e) => ({ overflow: false, culprits: [], small: [], smallCount: 0, clipped: [], clippedCount: 0, vh: [], evalError: e.message }));
       const shot = path.join(OUT, slug + '-' + w + '.png');
       await page.screenshot({ path: shot }).catch(() => {});
-      const bad = errors.length || r.overflow;
+      // A generic "Failed to load resource" console line is the echo of a 4xx we
+      // already classified. Discount one per serverless 404 so the gate does not
+      // fail on something it cannot serve.
+      const resourceEchoes = errors.filter((e) => /Failed to load resource/i.test(e));
+      const realErrors = errors.length - Math.min(resourceEchoes.length, serverless.length);
+      const bad = realErrors > 0 || r.overflow;
       if (bad) failed = true;
-      console.log(`  ${String(w).padStart(4)}px  ${bad ? 'FAIL' : 'ok  '}  console errors: ${errors.length}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      console.log(`  ${String(w).padStart(4)}px  ${bad ? 'FAIL' : 'ok  '}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${phone ? r.clippedCount : 'n/a'}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
       for (const e of errors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
       for (const [px, s] of r.culprits) console.log('         overflows by ' + px + 'px: ' + s);
+      for (const [px, s, txt] of (r.clipped || [])) console.log('         CLIPPED ' + px + 'px past the edge: ' + s + (txt ? ' "' + txt + '"' : ''));
       for (const [s, size, txt] of r.small.slice(0, 6)) console.log('         small: ' + s + ' ' + size + (txt ? ' "' + txt + '"' : ''));
       for (const s of r.vh) console.log('         100vh without dvh: ' + s);
       if (r.evalError) console.log('         inspect failed: ' + r.evalError);

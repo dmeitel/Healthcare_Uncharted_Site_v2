@@ -32,7 +32,7 @@ Jevons "Efficiency did not bend the curve. It steepened it.", Roemer "The bed do
 not wait politely...", the T&K pull, Conway's "photograph the organization" pull,
 Amara's "disappointment phase" pull, Hype's "It is not an obituary.", Bullwhip's
 pull and Jensen's pull are all gone. Same precedent as
-[[learn-textbook-strip-pass]]: a keeper ledger protects against churn, not against
+[[learn-textbook-strip]]: a keeper ledger protects against churn, not against
 a register change he signed off on.
 
 **Deliberately LEFT STANDING (do not "fix" next pass):**

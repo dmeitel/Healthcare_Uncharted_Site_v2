@@ -7,7 +7,7 @@
 //
 // Two inputs get merged:
 //   1. PROGRAMMATIC — every unique sourceUrl in metricsConfig.json (the
-//      Multi-Lens Map metric definitions), deduped by normalized URL, carrying
+//      Population Health Map metric definitions), deduped by normalized URL, carrying
 //      the lenses that use it and the latest retrievedDate.
 //   2. CURATED — everything else: the old Learn appendix entries, Rounds post
 //      citations, tool attribution sources, home page stats sources, and the
@@ -66,7 +66,7 @@ function canonicalKey(url) {
 const USE = {
   siteWide:  { label: 'Site-wide', site: true },
   home:      { label: 'Home', href: '/' },
-  mlm:       { label: 'Pop Health Multi-Lens Map', href: '/tools/multi-lens-map/' },
+  mlm:       { label: 'U.S. Population Health Map', href: '/tools/multi-lens-map/' },
   fourPs:    { label: '4Ps Framework', href: '/learn/4ps-framework/' },
   oxygen:    { label: 'Oxygen Payment Cuts', href: '/learn/oxygen-payment-cuts/' },
   arma:      { label: 'ArMA 2026 Talk', href: '/learn/talks/arma-2026/' },

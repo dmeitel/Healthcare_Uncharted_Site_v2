@@ -1,5 +1,5 @@
 /**
- * Pop Health Multi-Lens Map.
+ * U.S. Population Health Map.
  *
  * Lifted out of an inline <script> on 2026-08-22 (docs/HU-BUILD-HARDENING-2026-08-22.md).
  * Loaded as type="module": deferred, scoped, cacheable, and visible to `npm run check`.
@@ -53,7 +53,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   const item = () => CFG[lens].items[mIdx];
   const sVal = abbr => { const l = SD[lens]; const m = l && l[String(mIdx)]; const v = m ? m[abbr] : null; return v == null ? null : +v; };
 
-  // ── the year machinery, ported VERBATIM from the production Multi-Lens:
+  // ── the year machinery, ported VERBATIM from the production Population Health Map:
   //    history is ESTIMATED by per-metric drift rates from the one real data
   //    year (COVID dip modeled for life expectancy) and labeled "est." ──
   // the timeline ENDS at each metric's real data year (David's catch: the
@@ -125,9 +125,27 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   const styleFor = () => document.documentElement.getAttribute('data-theme') === 'light'
     ? 'https://tiles.openfreemap.org/styles/positron'
     : 'https://tiles.openfreemap.org/styles/fiord';
+  // ── HOME VIEW. Computed from the real container, never hardcoded. This map
+  //    shipped with center [-96.5,39.3] zoom 3.6 minZoom 2.8, tuned on a wide
+  //    desktop: at 360px that boot view showed 36% of the width of the lower 48
+  //    and the 2.8 floor still only reached 63%, so a phone user could not see
+  //    the country at any zoom. Desktop lands on the same frame as before. ──
+  const homeNow = () => HUKit.conusView(document.getElementById('lvMap'));
+  const HOME = homeNow();
   const map = new maplibregl.Map({ container:'lvMap', style:styleFor(),
-    center:[-96.5,39.3], zoom:3.6, minZoom:2.8, maxZoom:12, renderWorldCopies:false,
+    center:HOME.center, zoom:HOME.zoom, minZoom:HOME.minZoom, maxZoom:12, renderWorldCopies:false,
     attributionControl:false });
+  // Reset re-measures, so a rotated phone gets its own fit rather than the boot one.
+  function flyHome(dur){
+    const h = homeNow();
+    map.setMinZoom(h.minZoom);
+    map.flyTo({ center:h.center, zoom:h.zoom, duration:dcap(dur == null ? 900 : dur) });
+  }
+  let homeRz;
+  window.addEventListener('resize', () => {
+    clearTimeout(homeRz);
+    homeRz = setTimeout(() => { map.setMinZoom(homeNow().minZoom); }, 200);
+  });
   map.addControl(new maplibregl.AttributionControl({ compact:true }), 'bottom-left');
   map.touchZoomRotate.disableRotation(); map.dragRotate.disable();
 
@@ -671,7 +689,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       lens = 'patient'; mIdx = 0; yearIdx = YRS().length - 1;
       ovLens = null; ovIdx = null; PINS.length = 0;
       metricFace(); yearFace(); paintStates();
-      map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+      flyHome(900);
     }
     urlCtl.mark(scopeKey());
   });
@@ -1049,7 +1067,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     lastCam = null;   // home view: detent changes have no scope to refit
     paintSel(); paintCounties(); syncInsets();
     sheetEl.classList.remove('open');
-    map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+    flyHome(900);
     syncURL();
   }
   $('lvScope').addEventListener('click', () => {

@@ -19,6 +19,9 @@
    HUKit.urlState(opts) -> the serializer convention in one place: scope
                            changes push, tweaks replace, restores never
                            write back.
+   HUKit.conusView(el)  -> { center, zoom, minZoom } fitting the lower 48 to
+                           that container. Replaces the hardcoded desktop
+                           camera both U.S. maps shipped with.
    HUKit.pop(opts)      -> selector-popover controller: open/close,
                            anchor + right-edge clamp, outside-click,
                            arrow/Home/End walk, focus return. The kit
@@ -450,5 +453,59 @@
     return [bx, y];
   }
 
-  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, PHONE_MQ: PHONE_MQ };
+  /* HUKit.conusView(el) -> { center, zoom, minZoom }
+     The home view for a U.S. map, computed from the container instead of
+     hardcoded. Both full-map tools shipped with center [-96.5,39.3] zoom 3.6
+     minZoom 2.8, tuned on a wide desktop. Measured at 360 CSS px that boot
+     view shows 36% of the width of the lower 48, and the 2.8 floor still
+     only reaches 63%, so the whole country was unreachable on a phone at
+     any zoom. Web Mercator, 512px tiles, same projection MapLibre uses. */
+  var CONUS = { w: -124.8, s: 24.4, e: -66.9, n: 49.4 };
+  // The shipped home centre, kept exactly. The bug was the zoom and the floor,
+  // not the centre, so this does not move and desktop framing is untouched.
+  var HOME_CENTER = [-96.5, 39.3];
+  var DESKTOP_ZOOM = 3.6;   // the shipped desktop camera, now a ceiling
+  function mercY(lat) {
+    var s = Math.sin(lat * Math.PI / 180);
+    return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+  }
+  /**
+   * @param {HTMLElement|null} el
+   * @returns {{ center: [number, number], zoom: number, minZoom: number }}
+   */
+  function conusView(el) {
+    // The container is the truth, but both maps construct the map BEFORE layout has
+    // run, so clientWidth/clientHeight are 0 on the first call. Falling back to a
+    // fixed stub there produced a far-out boot camera (zoom 1.6) that then snapped
+    // once the real reset ran. Fall back to the window instead, which is already
+    // correct at that moment. 64px is the site header, the only chrome above the map.
+    var vw = (typeof window !== 'undefined' && window.innerWidth) || 0;
+    var vh = (typeof window !== 'undefined' && window.innerHeight) || 0;
+    var w = Math.max((el && el.clientWidth) || vw || 360, 300);
+    var h = Math.max((el && el.clientHeight) || (vh ? vh - 64 : 0) || 640, 240);
+    // Chrome sits on the south edge of both maps (metric bar, attribution strip).
+    // Pad harder on phones so the fit clears it instead of hiding the Gulf coast.
+    var padX = w < 700 ? 10 : 28;
+    var padY = w < 700 ? 74 : 40;
+    // Span is measured from the FIXED centre outward, so the farther edge is the
+    // one that has to fit. Centring on the bbox midpoint instead would clip the
+    // east coast, because -96.5 sits west of the true midpoint of the lower 48.
+    var halfX = Math.max(HOME_CENTER[0] - CONUS.w, CONUS.e - HOME_CENTER[0]) / 360;
+    var halfY = Math.max(mercY(HOME_CENTER[1]) - mercY(CONUS.n), mercY(CONUS.s) - mercY(HOME_CENTER[1]));
+    var zoom = Math.min(
+      Math.log2(Math.max(w - padX * 2, 80) / (halfX * 2 * 512)),
+      Math.log2(Math.max(h - padY * 2, 80) / (halfY * 2 * 512))
+    );
+    // Never zoom in past the shipped desktop frame: wide screens are unchanged,
+    // only viewports too narrow to hold the country get a smaller number.
+    zoom = Math.max(1.6, Math.min(zoom, DESKTOP_ZOOM));
+    return {
+      center: [HOME_CENTER[0], HOME_CENTER[1]],
+      zoom: +zoom.toFixed(2),
+      // The floor must never sit above the home view. That inversion IS the bug.
+      minZoom: +Math.min(2.8, zoom - 0.4).toFixed(2)
+    };
+  }
+
+  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, conusView: conusView, CONUS: CONUS, PHONE_MQ: PHONE_MQ };
 })();

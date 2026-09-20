@@ -28,6 +28,23 @@ module.exports = {
     url:   '/atlas/'
   },
 
+  // ── SUPPORT ─────────────────────────────────────────────────────────────────
+  // A plain outbound link, deliberately NOT an embedded widget. The CSP in
+  // netlify.toml allows no third-party script, no iframe, no remote image and
+  // no cross-origin form post, so every donation embed is blocked by four
+  // separate directives. Loosening all four for a tip jar is not a trade worth
+  // making, and a link costs nothing: no script, no cookie, no tracker.
+  //
+  // Paste the Ko-fi URL below and the link appears in the footer, on About,
+  // under Rounds posts, and in the tool attribution strip. Leave `url` EMPTY and
+  // nothing renders anywhere, so this ships safely before the page exists.
+  support: {
+    url:   'https://ko-fi.com/healthcareuncharted',   // verified live 2026-09-19
+    label: 'Support the work',
+    short: 'Support',              // the tool strip and other tight spots
+    blurb: 'The maps run on data that has to be re-pulled every time the source updates. That, plus hosting, is what keeping them current actually costs. If something here saved you an afternoon, you can help cover it.'
+  },
+
   // ── SOURCE POLICY ───────────────────────────────────────────────────────────
   // Referenced in base.njk footer
 

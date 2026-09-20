@@ -5,10 +5,11 @@ module.exports = [
   {
     id:          'multi-lens-map',
     cluster:     'maps-systems',
-    keys:        ['population health', 'state data', 'county data', 'life expectancy', 'uninsured', 'medicaid', 'public health map'],
+    keys:        ['population health', 'population health map', 'state data', 'county data', 'life expectancy', 'uninsured', 'medicaid', 'public health map', 'health data by state', 'state health data',
+                  'multi-lens map', 'multi lens map', 'multilens map', 'multi-lens', 'pop health multi-lens map', 'us pop health multi-lens map', '4ps map', 'american 4ps map'],
     status:      'live',
     featured:    true,
-    title:       'U.S. Pop Health Multi-Lens Map',
+    title:       'U.S. Population Health Map',
     desc:        'U.S. state and county healthcare data: 62 metrics across seven lens groups, from patient outcomes to payer mix to policy. One map, every angle.',
     url:         '/tools/multi-lens-map/',
     type:        'interactive',
@@ -17,7 +18,7 @@ module.exports = [
     bandClass:   'tc-band-blue',
     mark:        'MAP',
     markClass:   'mark-blue',
-    tags:        ['State Map', '6 Lenses', 'Interactive'],
+    tags:        ['State Map', '7 Lenses', 'Interactive'],
     motif:       'compass-rose',
     ps:          ['p1', 'p2a', 'p2b', 'p3', 'p4'],
     labNode:     'american-4ps-map'

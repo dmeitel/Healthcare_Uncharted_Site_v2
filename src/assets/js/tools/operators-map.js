@@ -90,11 +90,29 @@
   }
   const iconExpr = ['match', ['get','t'], ...Object.keys(ICONS).flatMap(t => [t, 'ic-' + t]), 'ic-ltac'];
 
+  // ── HOME VIEW. Computed from the real container, never hardcoded. Twin of the
+  //    Population Health Map, and it shipped with the twin's bug: center
+  //    [-96.5,39.3] zoom 3.6 minZoom 2.8 is a desktop camera, and at 360px it
+  //    showed 36% of the width of the lower 48 with the floor capping at 63%,
+  //    so the country was unreachable on a phone. Desktop is unchanged. ──
+  const homeNow = () => HUKit.conusView(document.getElementById('gvMap'));
+  const HOME = homeNow();
   const map = new maplibregl.Map({
     container:'gvMap', style: styleFor(),
-    center:[-96.5,39.3], zoom:3.6, minZoom:2.8, maxZoom:15,
+    center:HOME.center, zoom:HOME.zoom, minZoom:HOME.minZoom, maxZoom:15,
     renderWorldCopies:false,
     attributionControl:false
+  });
+  // Reset re-measures, so a rotated phone gets its own fit rather than the boot one.
+  function flyHome(dur){
+    const h = homeNow();
+    map.setMinZoom(h.minZoom);
+    map.flyTo({ center:h.center, zoom:h.zoom, duration:dcap(dur == null ? 900 : dur) });
+  }
+  let homeRz;
+  window.addEventListener('resize', () => {
+    clearTimeout(homeRz);
+    homeRz = setTimeout(() => { map.setMinZoom(homeNow().minZoom); }, 200);
   });
   // OSM/OpenFreeMap credit bottom-LEFT; the HU attribution strip owns bottom-right
   map.addControl(new maplibregl.AttributionControl({ compact:true }), 'bottom-left');
@@ -300,7 +318,7 @@
   }
 
   // ── county choropleth: shade the selected state's counties by a joined metric ──
-  // (the Pop Health Multi-Lens county grain, previewed on this stack)
+  // (the Population Health Map county grain, previewed on this stack)
   const CMETRICS = {
     uninsured: { label:'Uninsured',        get:f => cdVal('payer','0',f),     dir:-1 },
     diabetes:  { label:'Diabetes',         get:f => cdVal('patient','1',f),   dir:-1 },
@@ -784,7 +802,7 @@
     refreshSource();     // pharmacy mode empties at US zoom — shards are per state
     updateCount();
     lastCam = null;   // home view: detent changes have no scope to refit
-    map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+    flyHome(900);
     announce('Back to the United States view.');
     syncURL();
   }
@@ -896,7 +914,7 @@
     refreshSource(); updateCount(); renderList();
     closeSheet();
     if (selState){ openStateCard(); fitState(); }
-    else { lastCam = null; map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) }); }
+    else { lastCam = null; flyHome(900); }
     updateScopeChip();
     syncURL();
   }
@@ -942,7 +960,7 @@
         }
       } else {
         lastCam = null;
-        map.flyTo({ center:[-96.5,39.3], zoom:3.6, duration:dcap(900) });
+        flyHome(900);
         updateCount(); renderList(); syncInsets();
       }
       const sys = p.get('sys');

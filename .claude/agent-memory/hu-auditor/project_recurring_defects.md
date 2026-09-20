@@ -1,22 +1,105 @@
 ---
 name: recurring-defect-classes
-description: Defect classes that repeat across HU tool pages, with the files where they cluster (first logged 2026-08-16, multi-lens audit)
+description: The one checklist of defect classes that repeat across HU pages, merged from four separate 2026-08-16 audits (atlas, hospital-map, operators-map, multi-lens-map), with the files each class clusters in
 metadata:
   type: project
 ---
 
-Recurring defect classes observed in the 2026-08-16 multi-lens-map audit. Check these first on any tool-page audit.
+Grep these before writing any findings table. Merged 2026-09-19 from four files that each
+claimed to be this list (operators-map, atlas, hospital-map and multi-lens audits, all
+2026-08-16). Two of them even shared this same `name:`, so agents were reading whichever one
+loaded and missing the rest.
 
-**Why:** the map tools share copy-pasted machinery (multi-lens borrows operators-map patterns verbatim, e.g. `gv-sr-meta`), so a defect in one is almost always in the other.
+**Why:** these are structural habits in shared scaffolding, not one-off typos. The map tools
+copy each other's machinery verbatim, so a defect in one is almost always in its sibling.
 
-**How to apply:** grep the sibling tool before calling anything page-local.
+**How to apply:** grep the sibling tool before calling anything page-local. Check
+[[blessed-do-not-reflag]] before reporting anything here.
 
-- KEYBOARD-DEAD SWITCHES: `<span role="switch" tabindex="0">` wired with click-only handlers, no Enter/Space keydown, and the Map-labels pair has no accessible name. Cluster: src/tools/multi-lens-map/index.njk (lvMoreSw, lvLabState, lvLabCity), src/tools/operators-map/index.html:1346-47 (gvLabState/gvLabCity).
-- NO H1 ON TOOL PAGES: full-map tools have zero h1 and drawer sections jump straight to h5 (multi-lens: 6×h5, 0×h1 in _site; operators-map also 0×h1). base.njk provides no heading.
-- PHONE BOTTOM BAR vs FULL-MAP TOOLS: base.njk line 216 keys the hu-bbar on `navPage == 'tools'`, so every TOOL page (not just the hub) gets the fixed z-150 bar, overlapping bottom-anchored tool controls (z-110). All 8 files in src/tools/ set navPage: tools.
-- NESTED PSEUDO-BUTTONS: action spans (`ovbtn`/`pinbtn`) inside a real `<button>`, routed by e.target — pointer-only, and they pollute the option's accessible name.
-- STATIC aria-label OVERRIDING A LIVE READOUT: lvMetricBtn's label hides the current metric/position/year from SR users.
-- SUB-11px FUNCTIONAL MONO TEXT: 9-10.5px captions/legends across both map tools despite the 11px floor in .claude/rules/css.md.
-- NO NOSCRIPT anywhere in src/ — every tool renders inert chrome with JS off.
-- EM DASHES leak in two ways: visible UI strings (multi-lens Display-tab pin copy) and dataset defn strings (metricsConfig economics/0); also '—' as empty-value glyph (multi-lens only, 11 spots).
-- LIGHT-THEME TEAL HOVER: `:hover { color/border: var(--teal) }` without the `[data-theme="light"] … --teal-dk` override the same file applies to resting states (#4ECDC4 on white = 1.9:1).
+## Keyboard and semantics
+
+1. **Click-only divs and spans as controls.** `role="switch" tabindex="0"` spans with
+   delegated click handlers and no Enter/Space keydown. Also generated rows with inline
+   `onclick`, marquee signs, infra badges, ground zones. Clusters: operators-map
+   gvLabState/gvLabCity (~L1346), multi-lens lvMoreSw/lvLabState/lvLabCity, atlas .find-row
+   /.conn-row/.hud-drow/.fd-chip/.abc-item, hospital-map secondary chrome. Grep `onclick=`
+   and `addEventListener('click'` on non-button elements every audit.
+2. **Nested interactives inside buttons.** Action spans routed by `e.target` inside a real
+   button: gvPillClr (in gvPill, L282), `.gv-only` inside `.hu-chip`, ovbtn/pinbtn in
+   multi-lens. Pointer-only, and they pollute the parent's accessible name.
+3. **Accessible names that lie or go missing.** Static `aria-label` hiding a live readout
+   (lvMetricBtn hides metric/position/year). `title` updated on state change while
+   `aria-label` is not (gvDraw when it becomes "clear"). The in-file precedent that does it
+   right is updateScopeChip.
+4. **No h1 on full-map tool pages**, drawer sections jumping straight to h5 (multi-lens
+   6x h5 / 0x h1, operators-map 0x h1). base.njk supplies no heading.
+5. **Closed kit sheets stay in the tab order.** `.shell-sheet:not(.open)` is transform
+   off-screen only (hu-global.css ~L822) and `hu-kit.js` sheet() sets no inert or
+   visibility. Every tool using HUKit.sheet inherits invisible tabbable content.
+6. **Hand-rolled close buttons** instead of the `.icon-btn` primitive (hu-global.css:577):
+   atlas #hud-close, #help-close, #conn-panel-close.
+7. **No noscript anywhere in src/.** Every tool renders inert chrome with JS off.
+
+## Contrast and theme
+
+8. **Sub-11px low-alpha text fails in both themes.** Scene-painted tools use
+   rgba(140,180,215,.35-.6) and rgba(78,205,196,.3-.5) at 7 to 10.5px, landing 1.9 to 3.4:1.
+   The 11px functional floor is in `.claude/rules/css.md`. Caveat: 9.5-10px mono CAPTIONS are
+   the QP3 Caption Rule precedent sitewide, so only flag sub-11px text that is INTERACTIVE
+   (`.gv-only` at 8.5px and clickable counts).
+9. **Light-theme gaps on JS-set SVG attributes.** Presentation attributes need explicit
+   `[data-theme='light']` overrides. Atlas `.exp-sub` (fill #E2EEF4, 1.19:1 on light) missed
+   while `.az-lbl` got it (line 357); frontier hexes missed while moat tiles got it.
+10. **Light-theme teal hover.** `:hover { color/border: var(--teal) }` without the
+    `--teal-dk` override the same file applies to resting states. #4ECDC4 on white is 1.9:1.
+
+## Phone layout
+
+11. **The phone bottom bar overlaps tool chrome.** base.njk (~L216) keys the hu-bbar on
+    `navPage == 'tools'`, so every tool DETAIL page gets the fixed z-150, ~56px bar, not just
+    the hub. All 8 files in src/tools/ set `navPage: tools`. Anything fixed or absolute at
+    bottom under 56px with z below 150 hides behind it; body padding-bottom only saves static
+    flow. Landed with the V3 phase 3 base.njk edit, so confirm intent with David before
+    calling it a regression twice.
+12. **Absolute overlays keyed to the 52px toolbar height** break when the phone toolbar wraps
+    (atlas #atlas-find at top:64px under a ~106px wrapped toolbar).
+13. **Missing prefers-reduced-motion** where siblings have it (vendor-directory:126,
+    career-tree:166, hospital-map:896). Atlas routeFlow is infinite. Note that HUKit.dcap
+    returning 0 plus gated CSS handles this centrally on the tools that adopted the kit.
+
+## State and navigation
+
+14. **First-interaction replaceState.** The `'§init'` sentinel pattern makes the first scope
+    selection replace instead of push, reproducing the Atlas back-exits-site bug. Check every
+    tool's serializer.
+15. **V1 leftovers after a tool promotion.** operators-map v2 kept the pilot's aria-label
+    ("Hospital map demo") and dropped v1 URL params other pages still link
+    (`?metric=cah` from /learn/healthcare-gap/). After any v1-to-v2 swap, grep the whole src
+    tree for links INTO the tool and diff param handling.
+16. **Help panels drift behind UI retrofits.** Atlas help still described a reset glyph that
+    changed, a removed HUD grip bar, a "bottom of the screen" HUD and "diamond markers".
+    Whenever a retrofit lands, diff the help copy against the new chrome.
+17. **Duplicate ids in hand-authored arrays** collide in id-to-object maps and in
+    `querySelector('[data-unit-id]')` highlights.
+
+## Copy and data
+
+18. **Em dashes leak through three doors:** visible UI strings, dataset definition strings
+    (`desc:'...'`, metricsConfig economics/0), and frontmatter descriptions that feed og and
+    twitter meta. Atlas had 21. Prose pages got voice passes; the JS data blobs did not. Also
+    `—` used as an empty-value glyph (multi-lens, 11 spots).
+19. **Mechanical em-dash scrubs leave two artifact shapes:** a mid-dot " · " stranded inside a
+    sentence, and colon-pair parentheticals ("X: interjection: is ..."). Both read as typos.
+    Check any page that had a scrub pass.
+20. **Negation-contrast density in data far exceeds the hu-voice budget of one.** Site grep
+    `, not |not just|rather than` hit 287 on 2026-08-16. Worst: career-tree (54),
+    laws-and-paradoxes (28), hospital-map (17).
+21. **Triads and the "list. verdict." card rhythm** across descs (71 runs of three sentences
+    within five words of each other across ~188 atlas descs), with repeated devices
+    ("alert fatigue" x4, "chronically underfunded" x2).
+22. **Stale dated facts in descs.** Olive AI (defunct 2023) still listed, a 2024 premium
+    figure, a "changing in 2025" OMB line.
+23. **Meta descriptions on tools run long** (operators-map 275 chars) and mirror the
+    `src/_data/tools.js` desc nearly verbatim.
+24. **Duplicated tiles and facts** between a zone node and an expansion sub (Quality
+    Measurement x2, PBM x2, one MA line verbatim x2). Search shows the twins.

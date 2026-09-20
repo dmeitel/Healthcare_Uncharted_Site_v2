@@ -55,10 +55,10 @@ const CARDS = [
   },
   {
     out: 'og-multi-lens-map.jpg',
-    kicker: 'Interactive · Six lenses',
-    title: 'U.S. Pop Health Multi-Lens Map',
-    lines: ['Every state through Patient, Clinical, Operations, Payer,', 'Policy and Economics lenses. 40+ metrics, county grain.'],
-    tags: ['50 states compared', '40+ metrics', 'Real county boundaries'],
+    kicker: 'Interactive · Seven lenses',
+    title: 'U.S. Population Health Map',
+    lines: ['Every state through Patient, Clinical, Operations, Payer,', 'Policy, Economics and baseline lenses. 62 metrics, county grain.'],
+    tags: ['50 states compared', '62 metrics', 'Real county boundaries'],
   },
   {
     out: 'og-career-tree.jpg',
