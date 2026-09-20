@@ -24,3 +24,9 @@ paths:
   different breakpoint.
 - Anything position:fixed to the viewport bottom carries
   env(safe-area-inset-bottom) padding.
+- A page-scoped link rule (`.page a { color }`, specificity 0,1,1) outranks every kit
+  control class (`.btn-primary-v2`, `.toggle-chip`, `.tb-brand`, 0,1,0) and paints the link
+  color over their ink: a teal label on a teal fill (2026-09-18). Scope link color to prose
+  containers, or exclude the kit classes with :not().
+- tests/contrast.test.js holds the token pairs DESIGN.md measures; a new fill-and-ink pair
+  gets a row there before it ships.

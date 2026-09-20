@@ -12,6 +12,9 @@ const vm = require('node:vm');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = path.join(ROOT, '_site');
+// No build, no signal: `npm test` alone used to skip this whole file silently when _site was
+// missing (2026-09-18). Build on demand instead; `npm run verify` builds first anyway.
+if (!fs.existsSync(SITE)) require('node:child_process').execSync('npx @11ty/eleventy', { stdio: 'inherit', cwd: ROOT });
 const built = fs.existsSync(SITE);
 
 const walk = d => fs.readdirSync(d, { withFileTypes: true })
@@ -170,10 +173,17 @@ test('site build', { skip: built ? false : 'run the build first' }, async t => {
   });
 
   await t.test('no banned vocabulary in rendered copy', () => {
-    const banned = ['delve', 'straightforward', 'navigating the complexities', 'at the intersection of'];
+    // The kernel's NO LIST and the hu-voice banned vocabulary, minus five words shipped copy
+    // uses in their plain sense (vital signs, vendor landscape, comprehensive, navigate a map,
+    // leverage) and that a substring check cannot tell apart. Extended 2026-09-18 after a
+    // full-site scan showed every word here at zero hits.
+    const banned = ['delve', 'straightforward', 'navigating the complexities', 'at the intersection of',
+      'genuinely', "in today's landscape", 'robust', 'seamless', 'testament', 'tapestry', 'crucial', 'pivotal',
+      "it's worth noting", 'in conclusion', 'furthermore', 'moreover', 'unlock', 'empower', 'at the end of the day',
+      'transformative', "here's the thing", "let's be clear", 'make no mistake', "let's explore"];
     const hits = [];
     for (const p of pages) {
-      const text = read(p).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/g, ' ').toLowerCase();
+      const text = read(p).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/g, ' ').replace(/&#39;|&rsquo;|’/g, "'").toLowerCase();   // curly apostrophes count
       for (const b of banned) if (text.includes(b)) hits.push(rel(p) + ':' + b);
     }
     assert.deepEqual(hits, []);

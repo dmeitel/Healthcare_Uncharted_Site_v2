@@ -74,8 +74,13 @@ test('the OB Desert charter forbids closing maternity', () => {
 });
 
 test('the Chart Room records what a device has met', () => {
-  const { ug } = loadGame();
+  const { ug, evalIn } = loadGame();
+  // The boot can roll its own events, and the counts below assume it rolled none: a random
+  // Unit Closure during playToLevel2 made this fail about one run in ten (2026-09-18).
+  // Pin the dice for the boot, then hand them back.
+  evalIn('this.__r = Math.random; Math.random = () => 0.99');
   playToLevel2(ug);
+  evalIn('Math.random = this.__r');
   const flu0 = ug.codex.ev['Flu Surge'] || 0;          // the play-through itself may have rolled one
   ug.codexSeen({ name: 'Flu Surge' });
   ug.codexSeen({ name: 'Boss: Flu Surge' });

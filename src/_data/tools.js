@@ -167,6 +167,31 @@ module.exports = [
     motif:       'compass-rose',
     ps:          ['p1', 'p2a', 'p2b'],
     labNode:     'healthcare-career-tree'
+  },
+
+  {
+    id:          'ai-skills',
+    cluster:     'learn-play',
+    keys:        ['ai skills', 'agent skills', 'skill.md', 'skills', 'claude code', 'cursor', 'codex', 'ai agents', 'prompts', 'epic build documentation', 'workflow analysis', 'skill demo', 'agentskills', 'superpowers', 'field guide'],
+    status:      'live',
+    featured:    false,
+    title:       'AI Agent Skills, Explained',
+    desc:        'What a SKILL.md file is, the six repos worth tracking, five starter skills written for clinical informatics, and a demo that runs the same task with and without one. No developer background required.',
+    url:         '/tools/ai-skills/',
+    type:        'reference',
+    badge:       'Reference',
+    badgeClass:  'badge-reference',
+    bandClass:   'tc-band-purple',
+    mark:        'SK',
+    markClass:   'mark-purple',
+    tags:        ['AI', 'Agent Skills', 'Field Guide'],
+    motif:       'network',
+    ps:          ['p2a'],
+    atlasLinks:  [
+      { label: 'Clinical Informatics', zone: 'provider', to: 'provider/informatics' },
+      { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' }
+    ],
+    labNode:     'ai-in-healthcare'
   }
 
 ];

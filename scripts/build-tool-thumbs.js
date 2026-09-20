@@ -125,6 +125,21 @@ const THUMBS = {
       `<rect x="${360 + i * 14}" y="${90 + i * 58}" width="${560 - i * 28}" height="44" rx="8" fill="${i === 0 ? TEAL : '#132238'}" opacity="${i === 0 ? 0.5 : 1}" stroke="${i === 0 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
      <line x1="420" y1="368" x2="860" y2="368" stroke="${AMBER}" stroke-width="4" opacity=".7"/>`),
 
+  // the field guide: a skill folder open on its SKILL.md, the three loading levels
+  // beside it with the first two lit (metadata, then the body; resources stay dark)
+  'ai-skills': frame(
+    `<path d="M300 90 h150 l30 30 h250 a14 14 0 0 1 14 14 v230 a14 14 0 0 1 -14 14 h-430 a14 14 0 0 1 -14 -14 v-260 a14 14 0 0 1 14 -14 z" fill="#132238" stroke="${LINE}" stroke-width="3"/>
+     <rect x="330" y="160" width="330" height="190" rx="8" fill="${BG}" stroke="${TEAL}" stroke-width="3"/>
+     <rect x="352" y="186" width="120" height="12" rx="6" fill="${TEAL}"/>
+     <rect x="352" y="216" width="260" height="10" rx="5" fill="${INK}" opacity=".55"/>
+     <rect x="352" y="240" width="220" height="10" rx="5" fill="${INK}" opacity=".45"/>
+     <rect x="352" y="264" width="250" height="10" rx="5" fill="${INK}" opacity=".35"/>
+     <rect x="352" y="288" width="180" height="10" rx="5" fill="${INK}" opacity=".3"/>
+     ${[0, 1, 2].map(i =>
+       `<rect x="800" y="${110 + i * 100}" width="260" height="64" rx="10" fill="${i < 2 ? TEAL : 'none'}" opacity="${i === 0 ? 0.55 : i === 1 ? 0.3 : 1}" stroke="${i < 2 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
+     <path d="M660 300 C730 300 730 142 800 142" fill="none" stroke="${TEAL}" stroke-width="3"/>
+     <path d="M660 300 C730 300 730 242 800 242" fill="none" stroke="${TEAL}" stroke-width="3" opacity=".6"/>`),
+
   // ── SECRET MENU (sm-*) · guest-green identity, same overwrite contract ──
   // the roguelite: hospital wings stacked, one lit, the quarter goal meter below
   'sm-uncharted-general': frame(
@@ -175,6 +190,42 @@ const THUMBS = {
      <rect x="880" y="120" width="120" height="46" rx="9" fill="none" stroke="#DF5752" stroke-width="4"/>
      <circle cx="940" cy="143" r="7" fill="#DF5752"/>`),
   // the goat tracker: the traffic sparkline
+  // the assembly tray: a grid, a flowmeter on the wall, a humidifier under it, a
+  // tubing run to the patient, and the three connector states along the way
+  'sm-device-assembly': frame(
+    `${Array.from({length: 11}, (_, i) => `<line x1="${180 + i * 92}" y1="60" x2="${180 + i * 92}" y2="380" stroke="${LINE}" stroke-width="2"/>`).join('')}
+     ${Array.from({length: 5}, (_, i) => `<line x1="180" y1="${60 + i * 80}" x2="1100" y2="${60 + i * 80}" stroke="${LINE}" stroke-width="2"/>`).join('')}
+     <rect x="180" y="60" width="92" height="320" fill="${AMBER}" opacity=".12"/>
+     <circle cx="226" cy="180" r="18" fill="${GDEEP}" stroke="${GGREEN}" stroke-width="3"/>
+     <rect x="290" y="110" width="56" height="140" rx="8" fill="${INK}" opacity=".9"/>
+     <rect x="310" y="126" width="16" height="80" rx="4" fill="${BG}"/>
+     <rect x="290" y="262" width="56" height="100" rx="12" fill="${TEAL}" opacity=".55"/>
+     <rect x="290" y="262" width="56" height="100" rx="12" fill="none" stroke="${TEAL}" stroke-width="3"/>
+     <path d="M346 300 H900" stroke="${GGREEN}" stroke-width="10" stroke-linecap="round"/>
+     <rect x="920" y="200" width="180" height="180" rx="14" fill="${BLUE}" opacity=".35"/>
+     <rect x="920" y="200" width="180" height="180" rx="14" fill="none" stroke="${BLUE}" stroke-width="3"/>
+     <circle cx="318" cy="256" r="12" fill="${GGREEN}"/>
+     <circle cx="620" cy="140" r="12" fill="${AMBER}"/>
+     <circle cx="760" cy="140" r="12" fill="#DF5752"/>
+     <path d="M560 140 H600 M640 140 H700 M780 140 H820" stroke="${INK}" stroke-width="4" stroke-linecap="round" opacity=".6"/>`),
+  // er charge: the board is a grid of beds with a queue at the door and six cards in the hand, one lit
+  'sm-er-charge': frame(
+    `${Array.from({ length: 12 }, (_, i) => {
+      const x = 340 + (i % 6) * 110, y = 70 + Math.floor(i / 6) * 100, hot = i === 2 || i === 9;
+      return `<rect x="${x}" y="${y}" width="86" height="72" rx="8" fill="${hot ? GGREEN : '#132238'}" opacity="${hot ? 0.45 : 1}" stroke="${hot ? GGREEN : LINE}" stroke-width="3"/>`;
+    }).join('')}
+     ${[0, 1, 2, 3, 4].map(i => `<circle cx="${140}" cy="${90 + i * 46}" r="14" fill="none" stroke="${i < 2 ? AMBER : LINE}" stroke-width="3"/>`).join('')}
+     <line x1="220" y1="60" x2="220" y2="290" stroke="${LINE}" stroke-width="3" stroke-dasharray="8 8"/>
+     ${[0, 1, 2, 3, 4, 5].map(i => `<rect x="${360 + i * 96}" y="316" width="78" height="96" rx="8" fill="${i === 1 ? GGREEN : 'none'}" opacity="${i === 1 ? 0.5 : 1}" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3" transform="rotate(${(i - 2.5) * 3} ${399 + i * 96} 364)"/>`).join('')}`),
+  // uncharted regional: three facility cards across a region, one workforce pool feeding all three
+  'sm-health-system': frame(
+    `<path d="M120 300 C260 240 360 320 520 260 S820 200 1160 250" fill="none" stroke="${LINE}" stroke-width="3"/>
+     ${[[230, 120, 150], [560, 90, 200], [900, 140, 170]].map(([x, y, w], i) =>
+       `<rect x="${x}" y="${y}" width="${w}" height="110" rx="10" fill="${i === 1 ? GGREEN : '#132238'}" opacity="${i === 1 ? 0.4 : 1}" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3"/>
+        <rect x="${x + 18}" y="${y + 22}" width="${w - 36}" height="12" rx="6" fill="${INK}" opacity=".5"/>
+        <rect x="${x + 18}" y="${y + 48}" width="${(w - 36) * 0.6}" height="12" rx="6" fill="${INK}" opacity=".35"/>`).join('')}
+     <circle cx="640" cy="370" r="34" fill="none" stroke="${GGREEN}" stroke-width="3"/>
+     ${[[305, 230], [660, 200], [985, 250]].map(([x, y]) => `<path d="M640 336 C640 300 ${x} 300 ${x} ${y}" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".7"/>`).join('')}`),
   'sm-goat-tracker': frame(
     `<line x1="140" y1="360" x2="1140" y2="360" stroke="${LINE}" stroke-width="3"/>
      <line x1="140" y1="360" x2="140" y2="80" stroke="${LINE}" stroke-width="3"/>

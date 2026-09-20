@@ -11,10 +11,12 @@
    selectNode dedups by url, so a tile whose built-in links already point at a
    module will not double-list it.
 
-   Order is load-bearing for display: rounds, then modules, then talks. */
+   Order is load-bearing for display: rounds, then modules, then talks, then tools
+   (a tools.js entry opts in by carrying atlasLinks; the AI skills field guide was the first). */
 
 const rounds = require('./rounds.js');
 const learn  = require('./learn.js');
+const tools  = require('./tools.js');
 
 module.exports = () => {
   /** @type {Record<string, Array<{label:string,url:string,icon:string}>>} */
@@ -39,6 +41,13 @@ module.exports = () => {
     if (!t.atlasLinks) continue;
     for (const lnk of t.atlasLinks) {
       push(lnk.to, { label: t.title, url: t.url, icon: '🎤' });
+    }
+  }
+
+  for (const t of tools || []) {
+    if (t.status !== 'live' || !t.atlasLinks) continue;
+    for (const lnk of t.atlasLinks) {
+      push(lnk.to, { label: t.title, url: t.url, icon: '🧭' });
     }
   }
 

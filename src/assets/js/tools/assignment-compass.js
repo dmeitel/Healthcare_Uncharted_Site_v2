@@ -855,7 +855,7 @@ Promise.all([
   wire();
   /* the fine-tune fold ships open (no-JS safe); on phones it starts closed so the
      answer sits one summary row below the question band */
-  var fold = document.getElementById('acMoreFold');
+  var fold = /** @type {HTMLDetailsElement|null} */ (document.getElementById('acMoreFold'));
   if (fold && window.innerWidth > 0 && window.matchMedia && window.matchMedia('(max-width:699px)').matches) fold.open = false;
   if (!restoreUrl()) applyPreset(0); else { fmtAllMoney(); compute(); }
 }).catch(function () {

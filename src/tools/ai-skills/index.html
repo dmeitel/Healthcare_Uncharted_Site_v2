@@ -1,0 +1,157 @@
+---
+layout: base.njk
+title: "The AI Skills Ecosystem, Explained for Healthcare People"
+description: "What agent skills are, the six repos worth tracking, five starter skills built for clinical informatics, and an interactive demo. No developer background required."
+navPage: tools
+section: tool
+category: informatics
+tags: [ai, agent-skills, claude-code, epic, workflow, reference]
+framework_4p: [provider]
+featured: false
+date: 2026-09-18
+status: published
+read_time: "8 min"
+no_footer: true
+og_image: /assets/images/tool-thumbs/ai-skills.png
+---
+{% from "components/page-hero.njk" import pageHero %}
+<!-- AI SKILLS FIELD GUIDE · a Reference-type tool page (the vendor directory is the
+     sibling). The six-repo list renders from _data/skillsEcosystem.json; adding or
+     removing a repo is an edit to the JSON only. The two built skills and the repo
+     link ride the same file, so the GitHub URL lives in ONE place. -->
+<style>
+  .aisk{ --aisk-accent:var(--teal); color:var(--t2); }
+  [data-theme="light"] .aisk{ --aisk-accent:var(--teal-ink); }
+  /* the hero's v2 buttons keep their own ink: `.aisk a` outspecifies `.btn-primary-v2`
+     and painted teal text on the teal fill until the buttons were excluded */
+  .aisk a:not(.btn-primary-v2):not(.btn-ghost-v2){ color:var(--aisk-accent); }
+  .aisk :focus-visible{ outline:2px solid var(--aisk-accent); outline-offset:2px; }
+  .aisk-vh{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+  .aisk-body{ max-width:1100px; margin:0 auto; padding:0 clamp(20px,5vw,80px) 56px; }
+  .aisk-sec{ margin:44px 0 0; scroll-margin-top:calc(var(--nav-h) + 20px); }
+  .aisk-sec:first-child{ margin-top:4px; }
+  .aisk-h2{ font-family:var(--display); font-size:clamp(22px,2.6vw,30px); font-weight:700; letter-spacing:-.015em;
+            line-height:1.15; color:var(--t1); margin:0 0 14px; }
+  .aisk-p{ font-size:16px; line-height:1.72; color:var(--t2); max-width:70ch; margin:0 0 16px; }
+  .aisk-p strong{ color:var(--t1); font-weight:600; }
+  .aisk-p code{ font-family:var(--mono); font-size:.9em; color:var(--t1); }
+  .aisk-cta{ margin:4px 0 0; }
+  .aisk-meta{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--t3); margin:0 0 16px; }
+
+  /* the six: one record card per repo, the vendor directory's card grammar */
+  .aisk-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+  .aisk-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 20px 16px;
+              display:flex; flex-direction:column; gap:10px; transition:transform .2s, border-color .2s; }
+  .aisk-card:hover{ transform:translateY(-4px); border-color:var(--aisk-accent); }
+  .aisk-card-name{ font-family:var(--display); font-size:18px; font-weight:700; letter-spacing:-.01em; line-height:1.25; margin:0; }
+  .aisk-card-name a{ color:var(--t1); border-bottom:none; display:inline-flex; align-items:center; gap:6px; padding:4px 0; }
+  .aisk-card-name a:hover{ color:var(--aisk-accent); }
+  .aisk-card-name svg{ width:14px; height:14px; stroke-width:2; color:var(--aisk-accent); flex:none; }
+  .aisk-card-name i[data-lucide]{ width:14px; height:14px; }
+  .aisk-dl{ margin:0; display:grid; gap:6px; }
+  .aisk-dl dt{ font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--aisk-accent); margin-top:4px; }
+  .aisk-dl dd{ margin:0; font-size:14px; line-height:1.6; color:var(--t2); }
+  .aisk-also{ font-family:var(--mono); font-size:11px; color:var(--t3); margin:2px 0 0; }
+  @media (hover:none){ .aisk-card-name a, .aisk-also a{ min-height:44px; display:inline-flex; align-items:center; } }
+
+  /* the two we built: accent-edge cards, radius zeroed on the ruled edge */
+  .aisk-skills{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; margin:6px 0 18px; }
+  .aisk-skill{ border:1px solid var(--border); border-left:3px solid var(--aisk-accent); border-radius:0 12px 12px 0;
+               background:var(--surface); padding:16px 18px; }
+  .aisk-skill b{ display:block; font-family:var(--mono); font-size:13px; font-weight:600; color:var(--t1); letter-spacing:.02em; }
+  .aisk-skill p{ font-size:14px; line-height:1.6; color:var(--t2); margin:8px 0 0; }
+
+  /* the warning is a margin note (DESIGN.md, The Margin Note Rule): rule, no box */
+  .aisk-note{ border-left:3px solid var(--amber); padding:4px 0 4px 14px; max-width:70ch; }
+  .aisk-note .aisk-p{ margin-bottom:12px; }
+  .aisk-note .aisk-p:last-child{ margin-bottom:0; }
+
+  /* the Atlas row: the card grammar's lens pills (.card-fps / .fp), rendered from the
+     tools.js entry so the page and the Atlas back-listing share one source */
+  .aisk-atlas{ margin:4px 0 0; align-items:center; }
+  .aisk-atlas-k{ font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); margin-right:4px; }
+  @media (hover:none){ .aisk-atlas .fp{ min-height:44px; display:inline-flex; align-items:center; } }
+
+  @media (max-width:699px){ .aisk-grid, .aisk-skills{ grid-template-columns:1fr; } }
+  @media (prefers-reduced-motion:reduce){ .aisk-card{ transition:none; } .aisk-card:hover{ transform:none; } }
+</style>
+
+<div class="aisk">
+{{ pageHero("Tools · Field guide", title, description, [
+  { url: "/tools/skill-demo/", label: "Open the skill demo", primary: true },
+  { url: skillsEcosystem.quickstartUrl, label: "Write your own" }
+]) }}
+
+<article class="aisk-body">
+
+  <section class="aisk-sec" aria-label="What a skill is">
+    <p class="aisk-p">Every AI tool you touch at work forgets everything between sessions. You explain your documentation format on Monday, and by Wednesday it's a stranger again. Skills fix that.</p>
+    <p class="aisk-p">A skill is a folder with one markdown file in it, always named <code>SKILL.md</code>. The file holds instructions, and agents like Claude Code, Cursor, and Codex load it on their own when a task matches. Think of it as a protocol binder for the agent. You don't re-teach the ventilator weaning criteria to every therapist on every shift; the protocol is written once and everyone works from it. A skill is the same move, and it lives in git like any other artifact, so it has a history and an owner.</p>
+    <p class="aisk-p">The developer world moved on this fast. One directory alone indexes more than nine thousand skills, and GitHub search turns up far more than that. Almost all of it is noise, and nearly none of it is written for people who work in a health system. So here's the map.</p>
+    {%- for t in tools %}{% if t.id == 'ai-skills' and t.atlasLinks %}
+    <div class="card-fps aisk-atlas">
+      <span class="aisk-atlas-k">On the Atlas</span>
+      {%- for lnk in t.atlasLinks %}
+      <a class="fp fp-{{ lnk.zone }}" href="/atlas/#{{ lnk.to }}">{{ lnk.label }}</a>
+      {%- endfor %}
+    </div>
+    {% endif %}{% endfor %}
+  </section>
+
+  <section class="aisk-sec" id="try">
+    <h2 class="aisk-h2">Try it first</h2>
+    <p class="aisk-p">The demo runs the same task twice, once without a skill and once with one, and shows you what the agent loads and when. Two minutes, nothing to install.</p>
+    <p class="aisk-cta"><a class="btn-primary-v2" href="/tools/skill-demo/">Open the skill demo &rarr;</a></p>
+  </section>
+
+  <section class="aisk-sec" id="six">
+    <h2 class="aisk-h2">The six worth tracking</h2>
+    <p class="aisk-meta">Links and counts checked {{ skillsEcosystem.updated }}</p>
+    <div class="aisk-grid">
+    {%- for entry in skillsEcosystem.entries %}
+      <article class="aisk-card">
+        <div><span class="tag">{{ entry.category }}</span></div>
+        <h3 class="aisk-card-name"><a href="{{ entry.url }}" target="_blank" rel="noopener">{{ entry.name }}<i data-lucide="arrow-up-right" aria-hidden="true"></i><span class="aisk-vh"> (opens in a new tab)</span></a></h3>
+        <dl class="aisk-dl">
+          <dt>What it is</dt><dd>{{ entry.whatItIs }}</dd>
+          <dt>Why you care</dt><dd>{{ entry.whyYouCare }}</dd>
+          <dt>Steal this</dt><dd>{{ entry.stealThis }}</dd>
+        </dl>
+        {%- if entry.also %}
+        <p class="aisk-also">Also: <a href="{{ entry.also.url }}" target="_blank" rel="noopener">{{ entry.also.name }}</a></p>
+        {%- endif %}
+      </article>
+    {%- endfor %}
+    </div>
+  </section>
+
+  <section class="aisk-sec" id="ours">
+    <h2 class="aisk-h2">Five skills I wrote for my own team</h2>
+    <p class="aisk-p">The gap in all of the above: not one of those collections has a skill for documenting an Epic build change, routing an informatics request, or reviewing a BPA before it fires. The knowledge exists. It sits in the heads of informaticists and gets re-explained in every ticket and every handoff. So I started writing it down.</p>
+    <div class="aisk-skills">
+    {%- for s in skillsEcosystem.built %}
+      <div class="aisk-skill">
+        <b>{{ s.name }}</b>
+        <p>{{ s.blurb }}</p>
+      </div>
+    {%- endfor %}
+    </div>
+    <p class="aisk-p">All five follow the <a href="{{ skillsEcosystem.specUrl }}" target="_blank" rel="noopener">Agent Skills spec</a>. They're my team's working tools, so they stay here as descriptions rather than downloads. The point of listing them is that the gap is fillable by anyone who does the work. The spec's quickstart and the template folder in Anthropic's repo are enough to write your first one in an afternoon, and the description line is the place to start, because that one sentence is the whole trigger.</p>
+    <p class="aisk-cta"><a class="btn-primary-v2" href="{{ skillsEcosystem.quickstartUrl }}" target="_blank" rel="noopener">Write your own &rarr;</a></p>
+  </section>
+
+  <section class="aisk-sec" id="before">
+    <h2 class="aisk-h2">Read this before you install anything</h2>
+    <div class="aisk-note">
+      <p class="aisk-p">Skills can execute code in your agent's environment. A community skill is a supply chain, and you are the last link in it.</p>
+      <p class="aisk-p">Fine for your home lab. NOT fine for a workstation inside a health system unless you or your security team have read every line first. If you wouldn't run a random script from a forum on a machine that touches PHI, don't install a random skill on one either. Write your own where you can, and audit what you borrow line by line. The hobby laptop and the work laptop are different machines for a reason.</p>
+    </div>
+  </section>
+
+</article>
+
+{% set ta_source = 'Agent Skills spec · agentskills.io' %}
+{% set ta_source_href = skillsEcosystem.specUrl %}
+{% include "components/tool-attribution.njk" %}
+</div>

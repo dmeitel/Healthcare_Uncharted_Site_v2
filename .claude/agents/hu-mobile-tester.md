@@ -17,6 +17,11 @@ stop rather than testing a stale build. Known gotcha: the long-running dev
 server caches _data files; if content looks stale, report it and suggest a
 one-off `npx @11ty/eleventy` build.
 
+Start with the harness: `npm run phone -- /path/ /other/` (scripts/phone-check.js). It serves
+_site itself, loads each page at 360, 699 and 1024, and prints console errors, overflow
+culprits, sub-44px targets and 100vh rules, with screenshots under tmp/phone/. Use the
+Playwright MCP only for what the script cannot do: pan, pinch, drag, and walking a sheet back.
+
 Viewports every run: 360x800 Android baseline, 390x844 iPhone 15 class,
 430x932 Pro Max class. Portrait first. Landscape only for map and tool pages,
 where it changes the answer.

@@ -38,9 +38,9 @@ function stubEl(id) {
   };
 }
 
-function loadGame() { return loadPageSandbox(PAGE, '__ug', 'ug'); }
+function loadGame() { return loadPageSandbox(PAGE, '__ug'); }
 /** Same harness, pointed at the health-system game (hook window.__hs). */
-function loadSystem() { const s = loadPageSandbox(SYS_PAGE, '__hs', 'hs'); return { hs: s.ug, ids: s.ids, evalIn: s.evalIn }; }
+function loadSystem() { const s = loadPageSandbox(SYS_PAGE, '__hs'); return { hs: s.ug, ids: s.ids, evalIn: s.evalIn }; }
 
 function loadPageSandbox(pageFile, hookName) {
   const html = fs.readFileSync(pageFile, 'utf8');
