@@ -71,9 +71,9 @@ test('the safety gamble: printed risk, and incidents that roll exactly those odd
   ed.staff = { rn: 2, shared: 1 };
   ug.run.physicians.em = 1;
   const cash = ug.run.cash;
-  evalIn('this.__r = Math.random; Math.random = () => 0');
+  ug.pinDice(() => 0);
   ug.applyIncidents(null);
-  evalIn('Math.random = this.__r');
+  ug.pinDice(null);
   assert.ok(ug.run.stats.incidents >= 1, 'the hot unit had its incident');
   assert.ok(ug.run.cash < cash, 'incidents bill cash');
   assert.ok(ug.run.lastIncidents && ug.run.lastIncidents.length >= 1, 'the incident is on the record');

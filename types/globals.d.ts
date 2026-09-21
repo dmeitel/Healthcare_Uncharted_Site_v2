@@ -43,6 +43,11 @@ interface HUKitApi {
   phone(): boolean;
   /** duration capped to 250ms on phones, 0 under prefers-reduced-motion */
   dcap(ms: number): number;
+  /** explain-on-demand: anything with data-def answers a hover, a tap and a keyboard */
+  peek(opts?: {
+    root?: HTMLElement | string;
+    sel?: string;
+  }): { close(): void; destroy(): void };
   sheet(el: HTMLElement, opts?: {
     onDismiss?: () => void;
     onDetent?: (detent: string) => void;

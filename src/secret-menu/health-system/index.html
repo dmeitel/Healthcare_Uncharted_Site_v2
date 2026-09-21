@@ -177,6 +177,7 @@ eleventyExcludeFromCollections: true
   <div class="hs-overlay" id="hs-overlay" hidden></div>
 </div>
 
+<script src="/assets/js/hu-save.js?v=20260920"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -674,8 +675,6 @@ eleventyExcludeFromCollections: true
 
   // ── SAVE STRINGS: same codec as the hospital game, its own HUS1 prefix. The state is pure
   // data by construction (no catalog references), so it packs whole.
-  const b64FromBytes=b=>{let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s);};
-  const bytesFromB64=str=>{const s=atob(str);const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b;};
   function packSave(){ return {v:1, settings:Object.assign({},settings), sys:JSON.parse(JSON.stringify(Object.assign({},sys,{goal:sys.goal?{kind:sys.goal.kind,target:sys.goal.target}:null})))}; }
   function applySave(data){
     if (!data||data.v!==1||!data.sys||typeof data.sys.level!=='number') throw new Error('bad save');
@@ -686,21 +685,10 @@ eleventyExcludeFromCollections: true
     sys.activeEvent=makeSysEvent(); sys.goal=makeSysGoal();
     return sys;
   }
-  async function encodeSave(obj){
-    const json=JSON.stringify(obj);
-    if (typeof CompressionStream!=='undefined'&&typeof Response!=='undefined'){
-      const st=new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
-      return 'HUS1.'+b64FromBytes(new Uint8Array(await new Response(st).arrayBuffer()));
-    }
-    return 'HUS1R.'+btoa(unescape(encodeURIComponent(json)));
-  }
-  async function decodeSave(str){
-    str=String(str||'').trim().replace(/\s+/g,'');
-    if (str.indexOf('HUS1R.')===0) return JSON.parse(decodeURIComponent(escape(atob(str.slice(6)))));
-    if (str.indexOf('HUS1.')!==0) throw new Error('not a save');
-    const st=new Blob([bytesFromB64(str.slice(5))]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-    return JSON.parse(await new Response(st).text());
-  }
+  // The codec lives in the shared kit (hu-save.js), same as the hospital game, own prefix.
+  const saveCodec = () => window.HUSave.codec('HUS1.');
+  async function encodeSave(obj){ return saveCodec().encode(obj); }
+  async function decodeSave(str){ return saveCodec().decode(str); }
   async function openSaveModal(){
     if (!sys||sys.over||overlayOpen) return;
     const code=await encodeSave(packSave());

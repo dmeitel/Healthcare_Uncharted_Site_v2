@@ -8,5 +8,6 @@ Read the first two on every audit. The rest are page records, read the one you a
 - [Hospital Map audit 2026-08-16](project_hospital-map-audit-2026-08-16.md) — page record
 - [Request Routing (M03) audit 2026-08-24](project_request-routing-audit.md) — voice-budget blowouts on new pages, dark-theme accent small-text math, the Learn card/desc divergence seam, the branching-quiz stale-state bug class
 - [Vendor Directory audit](audit_vendor_directory.md) — page record
+- [Alarm Fatigue (Article 11) audit 2026-09-20](project_alarm-fatigue-audit.md) — the concurrent-edit trap, what was clean, four new Learn-module classes (25 to 28)
 
 Cleaned 2026-09-19: four files each claiming to be the recurring-defect list were merged into one, and a duplicate scope-rules file was merged into the blessed list. Nine files down to six, all indexed.

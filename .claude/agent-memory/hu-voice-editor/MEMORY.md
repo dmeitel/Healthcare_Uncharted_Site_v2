@@ -10,6 +10,7 @@ earlier index lines claiming "uncommitted" or "ledger pending QA" were stale.
 
 **Page records, read the one you are touching**
 
+- [Alarm Fatigue A11, 2026-09-20](alarm_fatigue_a11_voice_pass.md) — six edits under the textbook bar; keepers listed; Part 3 "hospitals reported" fact flag; David's accept list pending
 - [Laws page strip, 2026-08-27](laws_page_textbook_strip.md) — all nine remaining panels (~70 edits); goodhart is David's calibration; the pull-quote policy; kills the per-tab keepers
 - [Learn policy pages, 2026-08-17](learn_policy_voice_pass.md) — payer, hitech, respiratory timeline, oxygen (~110 edits). Two of the four are GUEST pieces under rules-only treatment.
 - [Learn long-forms, 2026-08-17](learn_voice_pass.md) — four long-form pages (~80 edits); the per-tab budget ruling on the laws page

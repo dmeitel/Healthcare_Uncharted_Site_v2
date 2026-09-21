@@ -74,6 +74,30 @@ If a session cannot tell whether a surface is in a phase, it is not.
 
 ### OPEN PHASES
 
+**Reading load on all three games · OPEN 2026-09-20.** Surfaces: src/fun/alarm-fatigue/,
+src/secret-menu/device-assembly/, src/secret-menu/uncharted-general/. David, after playing both
+multiplayer games: "both games seem to have the functionality but the screens feel crowded with
+text and extra information, i think we need to simplify the views to a basic level but then have
+the information be hoverable to understand more to find more detail. Think web games, it needs to
+feel easy to pick up and play without having to read 5 paragraphs to get into it." The RN game is
+named too: "we still need to improve that one too before we push for publicity."
+
+What that means in practice, and what is already built:
+- The screen carries the short label. The paragraph goes behind `HUKit.peek`, the kit's one
+  explain-on-demand card: any element with `data-def` answers a hover, a tap and keyboard focus.
+  Tests in tests/hu-kit.peek.test.js; the look is `.hu-peek` and `.hu-i` in hu-global.css, lifted
+  from the hospital game's old desktop-only tooltip so nothing new entered the palette.
+- "Hoverable" is a mouse word and a phone has no hover, so on touch it is a tap. That was Claude's
+  call. A peek on a control opens from the little "i" badge inside it, never from the control, so
+  tapping Start still starts. The badge is 18px of ink and a 44px target.
+- Measure before cutting: the scratchpad density pass counts the words actually on screen at first
+  paint. The numbers that opened this phase were 364 on the assembly wall at desktop, 216 on the
+  hospital start menu, 155 on the RN floor at 360.
+- Tier 1 and Tier 2 still bind. Nothing here may cost the touch floor, the type floor or contrast.
+
+The phase closes when David says the games feel like web games. Then the peek grammar is written
+into DESIGN.md Tier 3.
+
 Current state only. The history of every round (what shipped, when, on which ruling, what was
 reverted) lives in docs/HU-DESIGN-PHASE-LOG.md. Append there when a round ships; keep this block
 to what a session needs before it touches the surface.
@@ -145,6 +169,11 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
   of a session, update it at the end. Ask three at a time maximum, each with a recommendation,
   and name what a thing IS before naming the file it lives in. Nothing goes on the list unless
   the answer changes what gets built.
+- Questions to David are about what he wants, never how to build it. Anything that needs a
+  technical term to ask is Claude's call: decide, state it in one plain sentence, and let him veto
+  by looking at the result. A question about look or feel arrives with a screenshot of each option
+  at phone and desktop width. Every task ends with something he can see; he never runs a command
+  to test. (2026-09-20: he cannot answer engineering questions and should not have to.) His reply "not my question" means Claude decides and says what it decided.
 - Every external claim in new copy (a count, a star count, a product's existence, a price) is
   verified live before it ships, and data-driven content carries its check date. A hand-off
   arrived with a star count stale by a factor of three (2026-09-18).

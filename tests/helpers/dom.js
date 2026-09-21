@@ -16,6 +16,16 @@ const KIT = path.join(__dirname, '..', '..', 'src', 'assets', 'js', 'hu-kit.js')
 /** @param {string} sel @param {any} el */
 function matches(el, sel) {
   if (!el) return false;
+  // a comma list matches if ANY part does, which is what HUKit.peek asks of its
+  // "is this already a control" selector
+  if (sel.indexOf(',') > -1) return sel.split(',').some(part => matches(el, part.trim()));
+  // tag plus attribute, e.g. a[href]
+  const ta = sel.match(/^([a-zA-Z]+)\[([^\]=]+)(?:="([^"]*)")?\]$/);
+  if (ta) {
+    if (el.tagName !== ta[1].toUpperCase()) return false;
+    const v = el.getAttribute(ta[2]);
+    return ta[3] === undefined ? v !== null : v === ta[3];
+  }
   if (sel.startsWith('.')) return el.classList.contains(sel.slice(1));
   if (sel.startsWith('#')) return el.id === sel.slice(1);
   if (sel.startsWith('[')) {
@@ -72,6 +82,10 @@ function el(tag = 'div', attrs = {}) {
       return out;
     },
     closest(sel) { let n = this; while (n) { if (matches(n, sel)) return n; n = n.parent; } return null; },
+    matches(sel) { return matches(this, sel); },
+    contains(other) { let n = other; while (n) { if (n === this) return true; n = n.parent; } return false; },
+    innerHTML: '',
+    textContent: '',
     append(child) { child.parent = this; child.ownerDoc = this.ownerDoc; this.children.push(child); return child; },
     insertBefore(child) { return this.append(child); },
     appendChild(child) { return this.append(child); },
@@ -104,13 +118,16 @@ function loadKit() {
     createElement(tag) { const e = el(tag); e.ownerDoc = doc; return e; },
     contains() { return true; }
   };
+  doc.body = el('body');
+  doc.body.ownerDoc = doc;
   const rafQueue = [];
   const ctx = {
     document: doc,
     window: {
       matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
       addEventListener() {},
-      innerHeight: 800
+      innerHeight: 800,
+      innerWidth: 1280
     },
     history: { pushState() {}, replaceState() {}, back() {} },
     location: { pathname: '/', search: '', hash: '' },

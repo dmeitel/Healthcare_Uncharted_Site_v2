@@ -78,9 +78,9 @@ test('the Chart Room records what a device has met', () => {
   // The boot can roll its own events, and the counts below assume it rolled none: a random
   // Unit Closure during playToLevel2 made this fail about one run in ten (2026-09-18).
   // Pin the dice for the boot, then hand them back.
-  evalIn('this.__r = Math.random; Math.random = () => 0.99');
+  ug.pinDice(() => 0.99);
   playToLevel2(ug);
-  evalIn('Math.random = this.__r');
+  ug.pinDice(null);
   const flu0 = ug.codex.ev['Flu Surge'] || 0;          // the play-through itself may have rolled one
   ug.codexSeen({ name: 'Flu Surge' });
   ug.codexSeen({ name: 'Boss: Flu Surge' });

@@ -23,6 +23,17 @@ Four rules, written to fix four specific failures.
 4. **Plain names, not file paths.** A question says what a thing is before it says where it
    lives. "The cost of living tool" comes before the filename, never instead of it.
 
+5. **Questions are about what you want, never about how to build it.** If a question needs a
+   technical term to ask, it is not your question: Claude decides, says what it decided in one
+   plain sentence, and you veto by looking at the result. When a question is about how something
+   looks or feels, it arrives with a picture of each option at phone and desktop width, or a
+   way to try it, before you are asked to choose. (2026-09-20, your words: "the agent will ask
+   me questions that I cannot understand or answer... I cannot make the tiny decisions.") Your reply "not my question", on anything, means Claude decides and says what it decided.
+
+6. **Small change, then look.** Every task ends with something you can see: a screenshot at
+   phone and desktop width in the chat, or a page to open on your phone. You never run a
+   command to test. If you cannot see it, it is not done.
+
 A fifth rule for Claude: no question goes on this list unless the answer changes what gets
 built. Taste checks are not decisions. If Claude can pick a reasonable default and be wrong
 cheaply, Claude picks and says so.
@@ -35,22 +46,12 @@ Ranked. The top three are the live ones; the rest wait their turn by rule 3.
 
 | # | The question | Why it matters | Claude recommends | Open since |
 |---|---|---|---|---|
-| A | **Diagram reflow: pattern proven, one page done, twelve to go.** | The approach is settled and there is a worked example to copy: a chart gets a SECOND drawing authored near 320 units wide, swapped at 699 by `.hu-chart-tall` / `.hu-chart-wide` in hu-global.css. Both figures on the burnout Rounds post are done and the page is clean at 360, 699 and 1024: zero under the floor, zero collisions, desktop untouched. What is left is the same job on the other twelve pages, roughly 18 drawings, mostly the `lpv` family on laws-and-paradoxes and `gx` on process engineering. | Keep going the same way, one page at a time, but it is real hand work: each drawing needs its coordinates rewritten and its labels checked by eye, because the gate cannot tell you a chart is ugly, only that it is legible. Roughly a page per sitting. If you would rather spend the time elsewhere, the honest middle is to do the three or four charts that carry an argument and leave the decorative ones wide. | 2026-09-20 |
-| B | **The merged band QA is now blocking six pages.** Play the eight converted tool pages on your phone and say yes or no. | It was already on this list as item 5, but it has stopped being a tidy-up and become a blocker: six surfaces stack two top bars and fail the chrome rule, and the merged band is the shipped mechanism that fixes all six. Nothing moves on them until you look. `/fun/alarm-fatigue/` also crossed the line today, 19 to 24 percent, because the comfort scale made its clicker bar taller. | Play them, then I convert the six. The eight are atlas, cost of living, career tree, hospital map, system layers, SQL mystery, skill demo, vendor directory. | 2026-09-20 |
+| B | **The eight tool pages, one read.** Play them on your phone and say yes or no. | The automated sweep came back clean on all eight at 360 and 699, so the merged nav and toolbar phase is ready to close. The eight are atlas, cost of living, career tree, hospital map, system layers, SQL mystery, skill demo, vendor directory. What used to ride on this was "six other surfaces stack two top bars"; a full sweep of all 42 public pages on 2026-09-20 says that is no longer the shape of it. Four pages fail the chrome rule, and only one of them stacks bars: SQL Mystery (three bars, 37%), the Sources appendix (26%), the hospital map (24%) and the respiratory timeline (22%). Those four are being fixed on their own merits, so nothing is stuck behind this any more. | Close the phase on the automated read. The band is the same shared mechanism on every page and eyeballing eight would tell you what one already did. Play them whenever you feel like it; nothing waits on it. | 2026-08-30 |
 | P | **The three-month plan.** Read docs/HU-DEV-PLAN-2026-Q4.md and mark it up: approve, cut, or reorder. | It is the working plan for 2026-09-21 to 12-20 (games, content, platform), built from the live traffic (one Reddit post = about 1,500 views in a week; the games are the front door), the games audit, the backend state and the multiplayer market. Nothing in it is built. Two questions inside it are its gates: which game is the second consumer of the table kit (recommended: Device Assembly two walls), and whether the hospital game leaves the secret menu in month 3 (recommended: yes, gated on game night #1; your 2026-09-02 ruling was no, and the numbers since are why it is being asked again). | Approve month 1 as written and mark up months 2 and 3 as they arrive. "You pick" on the two inner questions means Device Assembly second and the front door in month 3. | 2026-09-20 |
-| S | **The multiplayer backend is gone from DNS.** Restore the Supabase project, or make a new one? | The host in the hospital game and in the CSP (`swntgsmpcqyuapkkyaqj.supabase.co`) returned NXDOMAIN from two resolvers on 2026-09-20, so The Table cannot connect for anyone. Free projects pause after a week idle, which the design doc predicted on 2026-09-07; the keep-alive ping named there was never built. Whether it is paused or deleted is only visible in your dashboard. | Open the dashboard on the main account. Restore if it offers to; otherwise a new free project. Either way Claude makes the two-line change (the `SUPA` constant, the `connect-src` entry), adds a GitHub Actions cron ping every three days, and a test that fails when the two files name different hosts. | 2026-09-20 |
-| 0 | **Citations are cut off on phones in Rounds posts.** Reopen the parked reading surface to fix it, or leave it? | `span.cite` is `white-space: nowrap` and renders 452px wide in a 360px viewport. `body { overflow-x: hidden }` clips it, so the page does not scroll sideways and your phone gate reports CLEAN, but the reader just loses the end of the citation. Found on the Steward post; likely every Rounds post with a multi-source citation. | Let it wrap at phone widths. It is a one-line CSS change and it does not touch any of the round 1 or round 2 reading work. But the surface is parked by your ruling, so it needs your word first. | 2026-09-19 |
-| 0a | **The 4Ps pills are 28px tall, the touch floor is 44.** Raise them, or accept it? | 52 of them on the Learn hub, 15 on Rounds, and they appear on cards across both. They are real links into the Atlas, and 28px is a hard Tier 1 floor violation, not a rounding error. | Accept for now, revisit with the reading surface. Raising to 44 nearly doubles their height on every card, and expanding the hit area invisibly makes adjacent wrapped rows overlap, which trades a small-target problem for a mis-tap problem. This is a density decision, not a cleanup. | 2026-09-19 |
-| 0b | **The cost of living tool clips its scope badge by 45px**, so "Housing: Zillow county rents · rest: sta…" just stops. | It is the line that tells the reader where the numbers come from, and it is cut mid-word at 360. | Queue it. That tool is in an open design phase with round 2 already awaiting your read, so a separate edit would collide with work you have not looked at. Fold it into your round 2 pass. | 2026-09-19 |
-| 1 | **The Device Assembly game.** Play it once on your phone and say alpha or not alpha. | You called alpha on 2026-09-19 without playing the shipped build on a real phone at the 360 px floor. Fifteen polish rounds went in on screenshots. | Play it once. If it holds, Claude drafts the launch post for your edit. Nothing else on that surface until you do. | 2026-09-19 |
+| 1 | **The Device Assembly game.** Play it once on your phone and say alpha or not alpha. | You called alpha on 2026-09-19 without playing the shipped build on a real phone at the 360 px floor. Fifteen polish rounds went in on screenshots. Context added 2026-09-20: the phone gate's new type-floor check flags the board's painted labels (LIGHT, DATA, HR, SpO2, SHARPS, CALL, GLOVES, HINT) at 2.5 to 7 px; the new Two walls screens on that page measured clean. Whether those labels need to read on a phone is part of this same call. | Play it once. If it holds, Claude drafts the launch post for your edit. Nothing else on that surface until you do. | 2026-09-19 |
 | 2 | **The cost of living tool, phone layout.** Round 2 folded the question band up top and the detail behind it. Yes or redo? | It is the second-most-used tool and the phone version is the one strangers hit first. Round 2 has been built and unread for three weeks. | Look at it on your phone for sixty seconds. If the first screen answers the question without scrolling, it ships. | 2026-08-30 |
-| 3 | **The Pop Health Multi-Lens Map name.** Rename it to what it is, or keep it? | Your own naming rule from 2026-08-30 says tools get named what people would search for. Every other tool got renamed under it. This one was skipped because you named it yourself. | Rename it. Something with "population health" in the title, old name kept as a search key so it still comes up. But it is your name, so it is your call. | 2026-08-30 |
 | 4 | **The hidden Roles/Populations toggle on the career tree.** Delete it or bring it back? | It is set to display:none and unreachable at every screen width, but its twenty nodes still ship in the data on every page load. Dead weight either way. | Delete the toggle and the twenty orphan nodes. If you meant to keep the feature, say so and Claude wires it back instead. | 2026-08-17 |
-| 5 | **The merged nav and toolbar band.** Automated pass is done and clean. Do you still want to eyeball it, or close the phase? | Swept 2026-09-20 with the repaired gate at 360 and 699 across all eight: atlas, cost of living, career tree, hospital map, system layers, SQL mystery, skill demo, vendor directory. Zero console errors, zero overflow, zero clipping except the one known scope badge. Three touch-floor misses found and fixed while in there. | Close the phase and write the merged band into DESIGN.md Tier 3. The automated read is clean and the band is the same shared mechanism on every page, so eyeballing eight pages would tell you what one already did. Open it again if a page ever feels wrong. | 2026-08-30 |
 | 6 | **Rounds 04, "The Problem and the Product".** Voice pass. | Written and sitting. Rounds is the one section in full voice, and Claude should not be the last reader on a first-person piece. | Read it once and mark what does not sound like you. Claude fixes from your marks rather than guessing. | 2026-08-10 |
-| 7 | **The HITECH article contradicts itself on one number.** The hero says nine percent of hospitals had a basic EHR; the body says 7.6 percent. | Both are sourced (the ONC trend series versus the Jha NEJM 2009 survey) but the page swaps between them without telling the reader. It is a published factual inconsistency. | Keep 9% in the hero, and add four words to the body line naming the survey it comes from. Two sources measuring different things is a fine answer; silently using both is not. | 2026-08-27 |
-| 8 | **The Field Notes signup promises something the site cannot do.** The footer says "When something ships, you hear about it." Soften the copy, or build sending later? | The form collects correctly as of 2026-09-20, but nothing can send TO those addresses, and you stopped the newsletter work the same night. Every person who signs up is told they will hear from you. | Soften the copy now, one line, no new machinery. Something that promises a list and not a schedule. Revisit sending only if the list grows enough to be worth $33 a month, which is what automatic send-on-publish costs at every provider checked. | 2026-09-20 |
-| 9 | **The RSS feed built on 2026-09-20 is uncommitted.** Keep it or revert it? | Built as the input for a newsletter you then stopped. It stands alone as a reader feature, but it was not something you asked for on its own. Three files, verified green, nothing pushed. | Keep it. Zero maintenance, no cost, some readers use feeds directly, and it is the input if sending ever comes back. One move to revert if you would rather have a clean tree. | 2026-09-20 |
 | 10 | **Three Netlify projects build from this repo on every push.** Delete the extras? | `healthcare-uncharted` serves the domain. `healthcareuncharted` and a private project on your other Google account build the same commits and serve nobody. You are spending three builds per push to publish one site. | Delete the two that serve nobody, after confirming neither holds a domain or a setting you want. Not urgent, invisible to visitors, purely your build minutes. | 2026-09-20 |
 
 ---
@@ -89,6 +90,63 @@ No decision needed. Listed so you can veto any of them.
 
 ## LOG
 
+- **2026-09-21** QUESTION A DONE, not decided. The question offered a middle path, "do the three or
+  four charts that carry an argument and leave the decorative ones wide." All nineteen were done
+  instead, because the work turned out to be less about hand-drawing and more about finding the
+  three shapes underneath: a PICTURE takes a second drawing; a CONTROL with room in its boxes keeps
+  its drawing and takes bigger type; a CONTROL that cannot keep its shape takes a second drawing
+  plus a one-line script change so both copies still respond. Once those were named the rest was
+  repetition. Ten pages, and every public page on the site now passes the phone gate at 360.
+  Two floors were added to the gate on the way, for line contrast and for label contrast, weight
+  and tracking, so none of it can quietly come back.
+
+- **2026-09-20** TWO MORE ALREADY-ANSWERED QUESTIONS CLOSED, same failure as the four before them.
+  - **0a, the 4Ps pills under the touch floor.** hu-global.css already carries
+    `@media (hover:none){ a.fp{ min-height:44px } }`, and it works: all 54 pills on the Learn hub
+    measure exactly 44 on a touch viewport and the gate reports zero sub-44 targets there and on
+    Rounds. The recommendation on the list said "accept for now"; somebody had already fixed it.
+  - **0b, the cost of living scope badge cut off by 45px.** It reads in full at 360 now
+    ("Housing: Zillow county rents · rest: state index", 292px inside a 294px box), and the gate
+    reports zero clipping on that tool. Nothing was waiting on the round 2 read after all.
+  A sweep of all 42 public pages replaced question B's stale claim with a measurement, and turned up
+  the real backlog: 14 pages fail the phone gate at 360, four on chrome and ten on chart labels
+  under the type floor. The ten are question A, and the per-page counts are now in SPRINT.md.
+
+- **2026-09-20** QUESTIONS B AND 5 WERE THE SAME QUESTION, merged into B: both asked David to play
+  the same eight tool pages, one to unblock six other surfaces and one to close the merged band's
+  design phase. Its "open since" keeps 5's date, 2026-08-30, because that is when he was first asked.
+- **2026-09-20** QUESTION 8 CLOSED, TAKEN UNDER RULE 5 (the row itself was left on the list by mistake for one session and removed once spotted). The footer promised "When something ships, you hear
+  about it" to every person who signed up, and nothing can send to those addresses. The other option
+  in the question, building sending, is off the table by his own call, so only one answer was live
+  and it did not need him. The line now reads "Leave an address and you go on the list", which is
+  what actually happens. His veto is reading it.
+
+- **2026-09-20** FOUR QUESTIONS CLOSED BECAUSE THEY WERE ALREADY ANSWERED. Read back against the
+  repo, not against the list. This is the failure the list exists to prevent, so it is worth naming:
+  a question that stays after the work lands costs David the same attention as a real one, and he
+  cannot tell which is which by looking.
+  - **0, citations cut off on phones in Rounds.** Fixed and committed in `5452a02`: rounds.css
+    keeps the nowrap on desktop and lets `.rounds-post .cite` wrap below 699. The comment above
+    the rule records the 452px measurement that found it. Open 1 day.
+  - **3, the map's name.** Renamed 2026-09-19 to U.S. Population Health Map, exactly the
+    recommendation: the slug and the id stay, and the old names live on as search keys in
+    tools.js so it still comes up. Open 21 days.
+  - **7, the HITECH article's two EHR numbers.** Also exactly the recommendation, and already
+    live: the hero keeps nine percent, and the body now names both surveys and says they drew
+    different samples and agreed. Open 24 days.
+  - **9, keep the RSS feed or revert it.** David answered it himself by committing `src/feed.njk`
+    in `f7b37d7`. Open 0 days.
+
+- **2026-09-20** QUESTION S RESOLVED, and Sprint 1 with it. The backend was PAUSED, not gone: a
+  paused free project has no DNS at all, which is what made it look deleted. David restored it
+  from the dashboard (same address, no repoint). Built and proven the same day: a keep-alive
+  ping and the verify gate on GitHub, a test that the game and the CSP name the same host, a
+  two-browser round trip through the live relay, host resume and guest rejoin after a reload
+  (the audit showed a host reload used to kill the table), a join queue in the transport, the
+  lobby through the phone gate, and David hosting from his phone with the laptop as guest.
+  Verify green at 176. His push and the friend test ride into Sprint 2 as step 0. Sprint 2
+  takes the plan question 2 by its recommendation under rule 5 (Device Assembly is the second
+  game on the table kit); he can veto by looking.
 - **2026-09-20** THE THREE-MONTH PLAN. David asked for a full analysis and a development plan
   (multiplayer games, content growth, infrastructure). Written to docs/HU-DEV-PLAN-2026-Q4.md as a
   DRAFT for his markup (question P). What the analysis measured: July 179 views, August 162,

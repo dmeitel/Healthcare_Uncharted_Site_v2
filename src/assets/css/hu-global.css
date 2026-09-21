@@ -31,6 +31,41 @@
   --t4: #2a4060;
   --border:  #1a2d48;
   --border2: #24405e;
+  /* DIAGRAM STROKES (2026-09-20, David: "lines need to be clearly visable on all diagrams... with
+     so much of the same color we need to make sure we make things clear and pop").
+     A card edge and a connector are not the same thing. An edge is decoration and is allowed to
+     whisper, which is what --border and --border2 are for. A connector in a diagram CARRIES the
+     argument: it is the difference between two boxes sitting near each other and one causing the
+     other. Measured across all ten diagram pages, every connector on the site drew between 1.3
+     and 1.9 to 1, which is below the 3:1 that WCAG asks of a meaningful graphic and below what a
+     phone in daylight can show at all. These two clear it with room:
+       --dgm-line  structure. Box edges, axes, rules.          3.9:1 on --dark
+       --dgm-flow  movement. Arrows, the path, the direction.  9.8:1, and it is the accent, so the
+                   flow reads as one colour and the furniture reads as another. */
+  --dgm-line: #51739F;
+  --dgm-flow: #4ECDC4;
+  /* And the same split for TEXT. A 4px decorative dot and a section label inside a diagram both
+     reached for --t4, and a label a reader has to read cannot be a dot. Measured, those labels
+     drew at 1.8:1. This is the muted voice inside a figure: quieter than the title, and still
+     comfortably readable rather than barely legal. 8.8:1 on the page, 8.3:1 on a figure's own
+     surface, against the 4.5:1 that is only the minimum. (David, 2026-09-20: the grey text "does
+     not look clear enough or pop enough".) */
+  --dgm-ink: #9BB3CE;
+  /* AND THE OTHER TWO THIRDS OF READABILITY. Contrast is only one of the three things that decide
+     whether small light-on-dark type reads, and on 2026-09-21 it was the only one being managed.
+     Measured across the diagrams: everything that read WELL was weight 600, and everything that
+     read weakly was the same thing every time, mono at weight 400 with wide tracking. Three
+     reasons that is the worst possible setting, and they stack:
+       · light on dark optically THINS (the bright glyph bleeds into the dark field, the reverse
+         of dark on light, which is why the same font looks heavier on a white page),
+       · a monospace face is already thin because it spends its width on the fixed advance,
+       · letter-spacing pulls the letters apart until the word stops having a shape.
+     So a diagram label is not just a colour, it is a colour AND a weight AND a tracking limit:
+       --dgm-weight       500 for any label inside a figure
+       --dgm-weight-label 600 for MONO at or under 13px, which is most section labels
+       tracking capped near .10em; past that the word reads as separate letters. */
+  --dgm-weight: 500;
+  --dgm-weight-label: 600;
   --font:    'DM Sans', 'Trebuchet MS', system-ui, sans-serif;
   --display: 'Outfit', 'Trebuchet MS', sans-serif;
   --mono:    'IBM Plex Mono', 'Courier New', monospace;
@@ -48,6 +83,9 @@
   --t4:      #9FB0C4;
   --border:  #CBD5E0;
   --border2: #A0AEC0;
+  --dgm-line: #647C99;   /* 4.1:1 on the light page background */
+  --dgm-flow: #0F7F78;   /* 4.6:1; the light-mode accent, same job as the teal above */
+  --dgm-ink:  #3A4F6B;   /* 7.9:1 on the light page background */
 }
 
 /* Accent-as-text on light surfaces: brand teal/amber fail contrast on white.
@@ -302,6 +340,17 @@ footer {
     --t-micro: 12px;
   }
 }
+
+/* THE DIAGRAM TYPE FLOOR (2026-09-21) · see the --dgm-* tokens above.
+   Small light-on-dark type needs three things and the site was managing one of them. This is the
+   second: a weight floor for any label inside a drawing. It is written once here rather than on
+   every chart because the gate found the same fault on a dozen pages at once, always the same
+   shape: 12px monospace at weight 400 on a navy field.
+   The :not([font-weight]) guard is load-bearing. A CSS rule beats an SVG PRESENTATION ATTRIBUTE,
+   so a bare `svg text { font-weight }` would quietly flatten every font-weight="700" title in the
+   rounds charts. This touches only text that never stated a weight, which is exactly the text
+   that was defaulting to 400. An inline style or a class rule still wins, as it should. */
+svg text:not([font-weight]) { font-weight: var(--dgm-weight, 500); }
 
 /* PHONE CHART SWAP (2026-09-20) · DESIGN.md "The Two Surfaces", consequence 6.
    A chart authored for a wide column cannot be made readable on a phone by
@@ -1391,4 +1440,43 @@ nav.nav-yield:focus-within { transform: none; }
   .footer-top { grid-template-columns:1fr; gap:28px; }
   .footer-bottom { flex-direction:column; align-items:flex-start; }
   .content-policy { grid-template-columns:1fr; }
+}
+
+
+/* ── PEEK · explain on demand (HUKit.peek) ─────────────────────────────────
+   David's ruling 2026-09-20 on the three games: "simplify the views to a basic
+   level but then have the information be hoverable to understand more... it
+   needs to feel easy to pick up and play without having to read 5 paragraphs
+   to get into it." The screen keeps the short label; the sentence lives here
+   and opens on hover, on a tap, or on keyboard focus. Lifted from the hospital
+   game's .ug-deftip so nothing new enters the palette. */
+.hu-peek {
+  position:fixed; z-index:300; max-width:min(300px, calc(100vw - 24px));
+  background:var(--raised); border:1px solid var(--border2); border-radius:10px;
+  padding:11px 13px; font-family:var(--font); font-size:var(--t-label); color:var(--t2);
+  line-height:1.55; box-shadow:0 12px 32px rgba(0,0,0,.45); pointer-events:none;
+}
+.hu-peek[hidden] { display:none; }
+.hu-peek b { display:block; margin-bottom:4px; color:var(--t1); font-size:var(--t-fine); font-weight:600; }
+.hu-peek p { margin:6px 0 0; }
+
+/* the badge that makes a peek visible and, on a touch screen, tappable. It sits
+   inside its control, so the control keeps its own tap. */
+.hu-i {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:18px; height:18px; margin-left:6px; padding:0; flex:0 0 auto;
+  border:1px solid var(--border2); border-radius:50%; background:none;
+  color:var(--t3); font-family:var(--mono); font-size:var(--t-micro); font-weight:700;
+  font-style:italic; line-height:1; cursor:help; vertical-align:middle;
+}
+.hu-i:hover, .hu-i:focus-visible { border-color:var(--teal); color:var(--teal); }
+[data-theme="light"] .hu-i:hover, [data-theme="light"] .hu-i:focus-visible { border-color:var(--teal-ink); color:var(--teal-ink); }
+[data-def] { cursor:help; }
+[data-def]:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+
+@media (max-width:699px) {
+  /* a thumb needs the whole badge, not a 18px dot: the tap area grows, the dot does not */
+  .hu-i { position:relative; }
+  .hu-i::after { content:""; position:absolute; top:50%; left:50%; width:44px; height:44px; transform:translate(-50%,-50%); }
+  .hu-peek { font-size:var(--t-fine); }
 }

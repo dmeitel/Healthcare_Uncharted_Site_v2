@@ -34,11 +34,10 @@ test('a Q3 quarter in play carries the season in its active event', () => {
 test('a brewing threat lands at its printed odds, flagged as foretold', () => {
   const { ug, evalIn } = loadGame();
   playToLevel2(ug);
-  evalIn('this.__origRandom = Math.random');
 
   ug.run.level = 5;                                  // Y2 Q1: no season, not a boss
   ug.run.brewing = { id: 'strike' };
-  evalIn('Math.random = () => 0');                   // roll under p: the threat lands
+  ug.pinDice(() => 0);                               // roll under p: the threat lands
   ug.startLevel(false);
   assert.strictEqual(ug.run.activeEvent.name, 'Nurses Strike');
   assert.strictEqual(ug.run.activeEvent.foretold, true);
@@ -46,12 +45,12 @@ test('a brewing threat lands at its printed odds, flagged as foretold', () => {
 
   ug.run.level = 5;
   ug.run.brewing = { id: 'strike' };
-  evalIn('Math.random = () => 0.99');                // roll over p: the threat passes, and no cold event fires either
+  ug.pinDice(() => 0.99);                            // roll over p: the threat passes, and no cold event fires either
   ug.startLevel(false);
   assert.strictEqual(ug.run.activeEvent, null);
   assert.strictEqual(ug.run.brewing, null, 'a passed threat does not linger');
 
-  evalIn('Math.random = this.__origRandom');
+  ug.pinDice(null);
 });
 
 test('brew entries reference real pool events, and pool picks are mutation-safe', () => {

@@ -57,9 +57,6 @@ eleventyExcludeFromCollections: true
 
 /* ---------- stage ---------- */
 .da-stage{display:flex; flex-direction:column; overflow:hidden; background:var(--dark);}
-.da-coach{display:flex; align-items:center; gap:12px; min-height:46px; padding:8px 16px; background:var(--surface);
-  border-bottom:1px solid var(--border); font-size:var(--t-ui); color:var(--t1); line-height:1.4; flex-shrink:0;}
-.da-coach .stp{font-family:var(--mono); font-size:var(--t-micro); letter-spacing:.12em; text-transform:uppercase; color:var(--teal); flex:none; min-width:52px;}
 .da-boardwrap{flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:12px;}
 #board{display:block; touch-action:none; border-radius:10px; box-shadow:0 14px 40px rgba(0,0,0,.35); background:#14304f; outline:none; -webkit-user-select:none; user-select:none;}
 /* nothing on the wall is text you can select or an image you can drag: a press is always the game's press */
@@ -74,14 +71,10 @@ eleventyExcludeFromCollections: true
   font-family:var(--display); font-weight:700; font-size:var(--t-body); cursor:pointer;}
 .da-submit:hover{filter:brightness(1.06);}
 .da-submit:focus-visible{outline:2px solid var(--t1); outline-offset:2px;}
-.da-status{font-family:var(--mono); font-size:var(--t-label); color:var(--t3); line-height:1.5; flex:1 1 240px; min-width:0;
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;}
 /* ROUND 6 fix (David: "the whole screen shakes when you hover"): a read that wrapped grew the bar, the wrap shrank,
    and the wall refit under the pointer. The line keeps a two-line height wherever a pointer can hover, and a
    longer read is clipped at two lines; the bar never changes size, so the wall never moves. */
-@media (hover:hover){ .da-status{min-height:calc(2 * 1.5em);} }
-.da-status b{color:var(--t2); font-weight:600;}
-.da-status.read{color:var(--t2);}   /* the line is reading a port or a joint under the pointer */
+@media (hover:hover){  }
 .da-ghostbtn{min-height:44px; padding:0 14px; border-radius:10px; border:1px solid var(--border2); background:transparent; color:var(--t2); font:inherit; font-weight:600; cursor:pointer;}
 .da-ghostbtn:hover{border-color:var(--teal); color:var(--t1);}
 .da-ghostbtn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
@@ -326,10 +319,9 @@ eleventyExcludeFromCollections: true
   .da .shell-main{display:flex; flex-direction:column;}
   .da .shell-dock--left{order:2; width:100%; border:none; border-top:1px solid var(--border); overflow:visible; flex-shrink:0;}
   .da-stage{order:1; height:auto; overflow:visible; flex:0 0 auto;}
-  .da-coach{min-height:40px; font-size:var(--t-fine); padding:6px 12px;}
-  .da-boardwrap{padding:8px; flex:0 0 auto;}
+    .da-boardwrap{padding:8px; flex:0 0 auto;}
   .da .tool-bar{gap:8px;} .da .tool-bar-title{font-size:var(--t-sub);}
-  .da #menuBtn, .da #restartBtn{display:none;} .da .da-ico{display:inline-flex;}
+  .da #menuBtn{display:none;} .da .da-ico{display:inline-flex;}
   .da-cart-h{padding:8px 12px 0;}
   /* two-row rail: every part reachable in a swipe or two, no page scroll to fetch a part */
   #cartList{display:grid; grid-auto-flow:column; grid-template-rows:auto auto; overflow-x:auto; gap:6px; padding:6px 10px 10px; scrollbar-width:none; overflow-y:hidden;}
@@ -340,8 +332,7 @@ eleventyExcludeFromCollections: true
   .da-item .tx{width:100%;} .da-item .nm{font-size:var(--t-label);} .da-item .sub{display:none;}
   .da-item .n{margin:0; font-size:var(--t-micro); padding:1px 7px;}
   .da-submitbar{padding:8px 12px; gap:8px;}
-  .da-status{font-size:var(--t-micro);}
-  .da-verbs .icon-btn{width:44px; height:44px;}
+    .da-verbs .icon-btn{width:44px; height:44px;}
   .da-time{font-size:var(--t-ui); min-width:62px; padding:3px 8px;}
 }
 @media (prefers-reduced-motion:reduce){
@@ -355,6 +346,16 @@ eleventyExcludeFromCollections: true
   .da-submit:active, .da-ghostbtn:active, .da-go:active, .da-lv:active, .da-item:active, .da-trash:active, .da-verbs .icon-btn:active, .da-pbtn:active{transform:none;}
   .da .shell-dock--right{transition:none;} .da-shake{animation:none;}
 }
+/* TWO WALLS: the table fold and the ghost of the other builder's wall */
+.da-code{font-family:var(--mono);font-size:34px;font-weight:700;letter-spacing:.35em;text-align:center;color:var(--teal);padding:10px 0 4px}
+.da-table .da-in{width:100%;min-height:44px;margin-top:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--raised);color:var(--t1);font-family:var(--font);font-size:var(--t-ui)}
+.da-table .btns{display:flex;gap:8px;margin-top:8px}
+.da-table .btns button{flex:1;min-height:44px}
+.da-joinrow{display:flex;gap:8px;margin-top:8px;align-items:stretch}
+.da-joinrow[hidden]{display:none}
+.da-joinrow .da-in{margin-top:0;text-transform:uppercase;letter-spacing:.2em}
+.da-joinrow button{min-height:44px}
+.da-resume{border-color:var(--teal);color:var(--teal)}
 </style>
 
 <div class="da hu-shell" id="da">
@@ -371,10 +372,8 @@ eleventyExcludeFromCollections: true
   <div class="tool-bar-actions">
     <span class="da-time" id="clock" hidden aria-live="off">01:30</span>
     <button class="toggle-chip" id="menuBtn" type="button">Levels</button>
-    <button class="toggle-chip" id="restartBtn" type="button">Restart</button>
     <a href="/secret-menu/" class="toggle-chip da-back">&#8592; Secret Menu</a>
     <button class="icon-btn da-ico" id="menuBtnI" type="button" aria-label="Levels" title="Levels"><i data-lucide="list" aria-hidden="true"></i></button>
-    <button class="icon-btn da-ico" id="restartBtnI" type="button" aria-label="Restart" title="Restart"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button>
     <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i></button>
   </div>
 </header>
@@ -387,7 +386,6 @@ eleventyExcludeFromCollections: true
   </aside>
 
   <div class="shell-canvas da-stage" id="stage">
-    <div class="da-coach" id="coach" aria-live="polite"><span class="stp" id="coachStep"></span><span id="coachText"></span></div>
     <div class="da-boardwrap" id="boardWrap">
       <svg id="board" xmlns="http://www.w3.org/2000/svg" role="application" tabindex="0" aria-label="Assembly tray. Arrow keys move the cursor, Enter places or selects, R rotates, Delete removes, Escape steps back."></svg>
       <!-- CONNECTOR GLYPHS · one symbol per standard, drawn in a 24-unit box pointing up (the mating direction).
@@ -421,17 +419,16 @@ eleventyExcludeFromCollections: true
         <button class="icon-btn" id="vInfo" type="button" aria-label="Spec sheet" title="Spec sheet"><i data-lucide="info" aria-hidden="true"></i></button>
         <button class="icon-btn" id="vSet" type="button" aria-label="Set it (FiO2, depth)" title="Set it"><i data-lucide="sliders-horizontal" aria-hidden="true"></i></button>
         <button class="icon-btn" id="vDel" type="button" aria-label="Back to cart (Delete)" title="Back to cart (Delete)"><i data-lucide="x" aria-hidden="true"></i></button>
+        <button class="icon-btn" id="vUndo" type="button" aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)" disabled><i data-lucide="undo-2" aria-hidden="true"></i></button>
       </div>
       <div class="da-toasts" id="toasts" aria-live="polite"></div>
       <button class="da-trash" id="trash" type="button" aria-label="Put the selected part back on the cart" title="Drop a part here, or on the cart, to put it back"><i data-lucide="trash-2" aria-hidden="true"></i></button>
     </div>
     <div class="da-submitbar">
-      <button class="da-ghostbtn da-test" id="testBtn" type="button">Test system</button>
+      <button class="da-submit" id="submitBtn" type="button">Complete</button>
+      <button class="da-ghostbtn" id="resetBtn" type="button">Reset</button>
       <button class="da-ghostbtn" id="showBtn" type="button" hidden>Show me</button>
-      <button class="da-submit" id="submitBtn" type="button">Submit assembly</button>
-      <button class="da-ghostbtn" id="undoBtn" type="button" disabled>Undo</button>
       <button class="da-ghostbtn" id="cancelBtn" type="button" hidden>Cancel (Esc)</button>
-      <div class="da-status" id="status"></div>
     </div>
   </div>
 
@@ -445,6 +442,8 @@ eleventyExcludeFromCollections: true
 </div>
 
 <script src="/assets/js/hu-kit.js?v=20260920"></script>
+<script src="/assets/js/vendor/supabase-2.115.0.min.js"></script>
+<script src="/assets/js/hu-table.js?v=20260920"></script>
 
 
 
@@ -757,7 +756,7 @@ const LEVELS = [
    req:{iface:['cannula'], flow:2, humid:false},
    par:{comp:1, cells:8, conn:1, len:7, adapters:0, bends:0, time:60}, timer:null, scored:false,
    steps:[
-     {text:'Drag the nasal cannula out of the cart and put it down anywhere on the wall. The patient only matters when you submit.', done:F=>!!F.iface},
+     {text:'Drag the nasal cannula out of the cart and put it down anywhere on the wall. The patient only matters when you press Complete.', done:F=>!!F.iface},
      {text:'The cannula came with 7 ft of tubing. The ring beside it is where that tubing starts. Click the ring, then click the barb on the oxygen source, or press on the ring and pull to the barb.', done:F=>F.ifaceLinked},
      {text:'Green means it seats. Now put the cannula on the patient: the free square in the middle of the face, under the nose. The tubing follows it and leaves over the ear.', done:F=>F.ifaceLinked&&F.onBed},
      {text:'Test the system to watch the gas go, then submit.', done:()=>false}]},
@@ -773,7 +772,7 @@ const LEVELS = [
      {text:'The flowmeter outlet on the bottom is a DISS thread. The cannula tubing ends in a soft connector. Try them together if you want to see what amber looks like.', done:F=>F.tried||F.adapterOn||F.ifaceLinked},
      {text:'Two adapters on the cart. Tap either one to read its spec sheet: one has a DISS nut on top and a barb underneath, and that is the one that turns a thread into something tubing can push onto.', done:F=>F.adapterOn||F.ifaceLinked},
      {text:'Now the tubing has a barb to go to. From the nose it runs up the column beside the face; one bend at the top is as short as this wall allows.', done:F=>F.ifaceLinked},
-     {text:'Cannula on the nose, then test and submit.', done:F=>F.ifaceLinked&&F.onBed},
+     {text:'Cannula on the nose, then press Complete.', done:F=>F.ifaceLinked&&F.onBed},
      {text:'Ready. Test the system, then submit.', done:()=>false}]},
 
   {id:'t3', kind:'tutorial', kicker:'Tutorial 3 of 5', title:'Assemble', crumb:'Tutorial 3 · Assemble',
@@ -891,7 +890,7 @@ const LEVELS = [
      {text:'A flowmeter on an oxygen outlet and a tree on its outlet, the same start as the first tutorial.', done:F=>F.barbOut},
      {text:'Two cannulas on the cart. Read both spec sheets: only one has a sampling line and a scoop. That one goes on the nose.', done:F=>F.capnoIface&&F.onBed},
      {text:'The green line is oxygen: to the barb on the tree. The clear line is the sample: to the small port on the underside of the monitor, top right. It is 13 ft; the shortest path is one bend.', done:F=>F.ifaceLinked&&F.capnoOn},
-     {text:'Watch the monitor: a third trace appears when the line is in. Test and submit.', done:()=>false}]},
+     {text:'Watch the monitor: a third trace appears when the line is in. Then press Complete.', done:()=>false}]},
 
   /* FIND THE FAULT (alpha backlog item 1): the wall arrives built with one thing wrong. Tap the part that is
      wrong: fix it with what is on the wall and submit. The builds run through the engine from the cart; the faults are the ones
@@ -1299,6 +1298,133 @@ function score(S, ev, elapsed){
    anyway and flagged short. Whether the result works is submit's problem.
    ===================================================================== */
 let S=null;
+/* ═══ TWO WALLS (Sprint 2, 2026-09-20) ═══
+   The same wall, raced over the internet on the shared table kit (hu-table.js). A host and a guest
+   build the same order on their own walls, each sees the other's wall as a ghost, and the first
+   working build wins. Each builder's wall stays LOCAL, so a drag costs no round trip; what travels
+   is a snapshot of the wall after every change, and a submit, which the host judges with the real
+   engine. The host's own tab remembers the table across a reload (resume); a guest's tab remembers
+   the code and the name (rejoin). Both are the kit's. */
+const SUPA = { url:'https://swntgsmpcqyuapkkyaqj.supabase.co', anonKey:'sb_publishable_XMnCUWKng3-7JhqP2FJehQ_a42gkCwQ' };
+const RACE_SEATS=[{id:'b', label:'Wall B', desc:'The second builder.'}];
+const RACE_VERBS={wall:'b', submit:'b', start:'host'};
+const NAME_KEY='hu-da-name';
+let race={level:null, winner:null, at:null, started:0};   /* what the table is racing; travels in every envelope */
+let otherWall=null;      /* the other builder's wall, a snapshot string, drawn as a ghost */
+let uiSeq=0, shownWinner=false, syncT=null, raceClaimed=false;
+const raceName=()=>{ try{ return (localStorage.getItem(NAME_KEY)||'').trim()||'Builder'; }catch(e){ return 'Builder'; } };
+const setRaceName=n=>{ try{ localStorage.setItem(NAME_KEY, String(n||'').trim().slice(0,18)); }catch(e){} };
+const RACE = window.HUTable.create({
+  channelPrefix:'da-table-', memoKey:'da_table', backend:SUPA, seats:RACE_SEATS, verbSeat:RACE_VERBS,
+  name: raceName,
+  envelope: ()=>({ save:{ race:Object.assign({}, race), a:(S&&race.level)?snapshot(S):null, b:otherWall }, ui:{kind:race.winner?'end':(race.level?'play':'lobby'), seq:uiSeq} }),
+  onState: env=>raceState(env),
+  onResume: env=>raceResume(env),
+  onRoster: ()=>renderTableFold(),
+  lobby: note=>raceLobby(note),
+  dispatch: (act, data, who)=>raceDispatch(act, data, who),
+  hint: msg=>toast('info','Table', msg),
+});
+const NET=RACE.NET;
+function raceReset(){ race={level:null, winner:null, at:null, started:0}; otherWall=null; shownWinner=false; raceClaimed=false; }
+/* the host picked a wall: everyone races it from a clean start */
+function raceStart(id){
+  if(NET.mode!=='host' || !levelById(id)) return false;
+  race={level:id, winner:null, at:null, started:Date.now()}; otherWall=null; shownWinner=false; uiSeq++;
+  RACE.broadcast(); return true;
+}
+/* the host applies what a guest sent: their latest wall, or a submit to judge with the real engine */
+function raceDispatch(act, data, who){
+  if(act==='wall'){ if(typeof data.snap==='string'){ otherWall=data.snap; if(!TEST && S) renderBoard(); } return; }
+  if(act==='submit'){
+    if(race.winner || !race.level || typeof data.snap!=='string') return;
+    const Lv=levelById(race.level); if(!Lv) return;
+    let ok=false; try{ const st=newState(Lv); restore(st, data.snap); ok=functionTest(st).ok; }catch(e){ ok=false; }
+    if(ok){ race.winner=who||'Guest'; race.at=Date.now(); otherWall=data.snap; uiSeq++; showRaceResult(); }
+  }
+}
+/* a guest received the host's envelope */
+function raceState(env){
+  const sv=env.save||{}, ui=env.ui||{kind:'none', seq:0};
+  NET.lastUiSeq=ui.seq;   /* the kit's knock loop stops once a state has arrived */
+  const nr=Object.assign({level:null, winner:null, at:null, started:0}, sv.race||{});
+  const newLevel = !!nr.level && (nr.level!==race.level || !S || S.level.id!==nr.level);
+  race=nr; otherWall=sv.a||null;
+  if(newLevel){
+    shownWinner=false;
+    if(TEST){ S=newState(levelById(nr.level)); } else startLevel(nr.level, {quiet:true});
+    if(sv.b && S && S.moves===0 && !(S.history&&S.history.length)) restore(S, sv.b);   /* after a reload: our wall as the host last saw it */
+    if(!TEST) render();
+  } else if(!nr.level){ raceLobby(); }
+  else if(!TEST){ renderBoard(); }
+  if(nr.winner && !shownWinner) showRaceResult();
+}
+/* the host's own tab came back after a reload */
+function raceResume(env){
+  const sv=(env&&env.save)||{}; raceReset();
+  race=Object.assign({level:null, winner:null, at:null, started:0}, sv.race||{}); otherWall=sv.b||null;
+  if(race.level){ if(TEST){ S=newState(levelById(race.level)); } else startLevel(race.level, {quiet:true}); if(sv.a && S) restore(S, sv.a); if(!TEST) render(); }
+  renderTableFold();
+}
+/* every change to my wall goes to the other side, at most one message per 150 ms */
+function netSync(){
+  if(!NET.mode || !S || !race.level || syncT) return;
+  syncT=setTimeout(()=>{ syncT=null; if(!NET.mode || !S || !race.level) return; if(NET.mode==='host') RACE.broadcast(); else RACE.act('wall', {snap:snapshot(S)}); }, TEST?0:150);
+}
+/* a working build, submitted: the host judges its own; a guest's goes to the host */
+function raceSubmit(t){
+  if(!NET.mode || !race.level || !t || !t.ok) return;
+  if(NET.mode==='guest'){ RACE.act('submit', {snap:snapshot(S)}); return; }
+  if(!race.winner){ race.winner=NET.name; race.at=Date.now(); uiSeq++; RACE.broadcast(); showRaceResult(); }
+}
+function showRaceResult(){
+  if(shownWinner || !race.winner) return; shownWinner=true;
+  if(TEST) return;
+  const mine = race.winner===NET.name;
+  overlay('<div class="da-k teal">Two walls</div><h2>'+(mine?'You finished <span>first</span>.':esc(race.winner)+' finished <span>first</span>.')+'</h2><p>'+(mine?'The other wall is still going. Yours works.':'Your wall can still be finished; the race is theirs.')+'</p><div class="btns"><button type="button" class="da-go" id="raceBackBtn">Back to the wall</button></div>');
+  $('raceBackBtn').addEventListener('click', closeOverlay);
+}
+function raceLobby(note){
+  if(NET.mode==='guest' && !NET.seat && !raceClaimed){ raceClaimed=true; RACE.claim('b'); }   /* one guest, one chair: claimed on the way in */
+  if(TEST) return;
+  if(race.level && !note){ closeOverlay(); return; }
+  overlay('<div class="da-k teal">Two walls</div><h2>Table <span>'+esc(NET.room)+'</span></h2><p>'+(note||'Waiting for the host to pick a wall. When they do, it opens here and the race is on.')+'</p><p class="da-small">At the table: '+esc(NET.roster.join(' · ')||'…')+'</p><div class="btns"><button type="button" class="da-ghostbtn" id="raceLeaveBtn">Leave the table</button></div>');
+  $('raceLeaveBtn').addEventListener('click', raceLeave);
+}
+function raceLeave(){ RACE.leave(); raceReset(); if(!TEST){ closeOverlay(); if(S) render(); renderTableFold(); } }
+function renderTableFold(){ if(TEST) return; if(infoMode==='level') renderInfo('level'); }
+function tableFoldHTML(){
+  const off=RACE.offers(); let body='';
+  if(NET.mode==='host'){
+    body='<div class="da-code">'+esc(NET.room)+'</div><p class="da-small">Internet table: a friend opens this page anywhere, taps Join a table, and types this code.</p>'+
+      '<p class="da-small">At the table: <b>'+esc(NET.roster.join(' · '))+'</b>'+(NET.seats.b?' · Wall B: <b>'+esc(NET.seats.b)+'</b>':' · waiting for a second builder')+'</p>'+
+      '<p class="da-small">'+(race.level?'Racing <b>'+esc((levelById(race.level)||{}).title||race.level)+'</b>. Pick another wall to race that one instead.':'Pick a wall in the list below to start the race.')+'</p>'+
+      '<div class="btns"><button type="button" class="da-ghostbtn" id="daLeave">Close the table</button></div>';
+  } else if(NET.mode==='guest'){
+    body='<p class="da-small">Table <b>'+esc(NET.room)+'</b> · you are '+esc(NET.name)+', building Wall B. The host picks the wall; the ghost on your board is theirs.</p>'+
+      '<div class="btns"><button type="button" class="da-ghostbtn" id="daLeave">Leave the table</button></div>';
+  } else {
+    const nm=raceName();
+    body='<p class="da-small">Race the same wall against a friend over the internet. One of you hosts and picks the wall; the other joins with a four-letter code. First working build wins, and you see each other\'s walls as ghosts.</p>'+
+      '<input class="da-in" id="daName" maxlength="18" placeholder="Your name at the table" value="'+esc(nm==='Builder'?'':nm)+'" aria-label="Your name at the table">'+
+      '<div class="btns"><button type="button" class="da-ghostbtn" id="daHost">Host a table</button><button type="button" class="da-ghostbtn" id="daJoin">Join a table</button></div>'+
+      '<div class="da-joinrow" id="daJoinRow" hidden><input class="da-in" id="daCode" maxlength="4" placeholder="CODE" aria-label="Table code" autocapitalize="characters"><button type="button" class="da-ghostbtn" id="daJoinGo">Join</button></div>'+
+      (off.host?'<div class="btns"><button type="button" class="da-ghostbtn da-resume" id="daResume">Resume table '+esc(off.host.room)+'</button></div>':'')+
+      (off.guest?'<div class="btns"><button type="button" class="da-ghostbtn da-resume" id="daRejoin">Rejoin table '+esc(off.guest.room)+' as '+esc(off.guest.name)+'</button></div>':'');
+  }
+  return '<details class="da-fold da-table"'+(NET.mode?' open':'')+'><summary>Two walls'+(NET.mode?' · Table '+esc(NET.room):'')+'</summary>'+body+'</details>';
+}
+function wireTableFold(el){
+  const q=id=>el.querySelector('#'+id);
+  const name=q('daName'); if(name) name.addEventListener('input', ()=>setRaceName(name.value));
+  const host=q('daHost'); if(host) host.addEventListener('click', ()=>{ if(name) setRaceName(name.value); if(RACE.host()){ track('table-host'); if(S && S.level) raceStart(S.level.id); renderTableFold(); } });
+  const join=q('daJoin'); if(join) join.addEventListener('click', ()=>{ const r=q('daJoinRow'); if(r){ r.hidden=!r.hidden; const c=q('daCode'); if(!r.hidden && c) c.focus(); } });
+  const go=q('daJoinGo'); if(go) go.addEventListener('click', ()=>{ if(name) setRaceName(name.value); const c=q('daCode'); if(!RACE.join(c&&c.value, raceName())) toast('bad','No','Enter the 4-letter table code.'); else { track('table-join'); renderTableFold(); } });
+  const code=q('daCode'); if(code) code.addEventListener('keydown', e=>{ if(e.key==='Enter' && go) go.click(); });
+  const leave=q('daLeave'); if(leave) leave.addEventListener('click', raceLeave);
+  const res=q('daResume'); if(res) res.addEventListener('click', ()=>{ RACE.resume(); renderTableFold(); });
+  const rej=q('daRejoin'); if(rej) rej.addEventListener('click', ()=>{ RACE.rejoin(); renderTableFold(); });
+}
 function newState(level, roomName){
   const room=roomOf(level, roomName); setRoom(room);   /* the room first: the build and the fixed pieces both read it */
   const st={level, room, items:[], tubes:[], cart:{}, uidN:1, sel:null, hand:null, link:null, material:null, t0:0, elapsed:0, moves:0, tried:false, finished:false, timedOut:false, cursor:[room.dx+4,5], preview:null, history:[], flow:null, sat:level.timer?96:97, functional:false, satAtFunctional:null, lamp:false, cartQuery:''};
@@ -1799,7 +1925,7 @@ function screenSVG(){
       out+=TL(lx, by, 10, String(a.head).toUpperCase(), col, MONO);
       const fb=fitBlock(a.body, sw-30, sh-92, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+8+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); });
       sc.alerts.slice(1,3).forEach((e,i)=>{ out+=TL(lx, sy+sh-24+i*12, 9, 'earlier: '+e.head, '#6b7a88', MONO); }); } }
-  else if(page==='test'){ if(!lastTest){ out+=TL(lx, by, 10, 'NOT TESTED YET', '#6b7a88', MONO); const fb=fitBlock('Test system lights up what is hooked to an outlet. Submit is what scores it.', sw-28, sh-62, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); }); }
+  else if(page==='test'){ if(!lastTest){ out+=TL(lx, by, 10, 'NOT TESTED YET', '#6b7a88', MONO); const fb=fitBlock('Press Complete and the gas lights up whatever is hooked to an outlet.', sw-28, sh-62, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); }); }
     else { const t=lastTest; out+=TL(lx, by, 10, t.ok?'SYSTEM FUNCTIONAL':'NOT FUNCTIONAL', t.ok?GRN:RED, MONO);
       const live=t.rows.filter(r=>r.ok!==null), fail=live.find(r=>!r.ok);
       const rows=live.slice(0,5), rf=Math.max(11, Math.min(16, (sh-(fail?96:70))/(rows.length*1.3)));
@@ -1810,7 +1936,7 @@ function screenSVG(){
     out+=TL(lx, by+12, 24, head);
     out+=TL(lx, by+46, 18, rq.flow+' L/min'+(rq.fio2?' · '+rq.fio2+'% FiO2':'')+(rq.cpap?' · '+rq.cpap+' cm H2O':'')+(rq.capno?' · continuous EtCO2':''));
     out+=TL(lx, by+76, 16, 'by '+rq.iface.map(r=>ROLE_NAME[r]).join(' or '), INK, 'font-weight="600"');
-    out+='<path d="M'+lx+' '+(sy+sh-26)+' h'+(sw-28)+'" stroke="#c5d0da" stroke-width="1.5"/>'+TL(lx, sy+sh-10, 9, 'Test, then submit', '#6b7a88', MONO);
+    out+='<path d="M'+lx+' '+(sy+sh-26)+' h'+(sw-28)+'" stroke="#c5d0da" stroke-width="1.5"/>'+TL(lx, sy+sh-10, 9, statusPlain || 'Nothing on the wall yet', '#6b7a88', MONO);
   }
   return out;
 }
@@ -1899,6 +2025,11 @@ function renderBoard(){
     out+=`<path class="tube gap" d="${gd}"/><path class="tube hit" data-tube="${tb.uid}" d="${gd}"/>`;
     const m=gap[Math.floor(gap.length/2)]; out+=`<text class="shortlbl" x="${m[0]}" y="${m[1]-14}">${tb.short} ft short</text>`;
   }
+  /* TWO WALLS: the other builder's wall, under mine, as a ghost */
+  if(otherWall && NET.mode){ try{ const g=JSON.parse(otherWall); let gh='';
+    for(const tb of g.tubes){ if(!tb.to || !tb.path || !tb.path.length) continue; const st=TUBE_STYLE[tb.def&&tb.def.kind]||TUBE_STYLE.o2; const pts=tb.path.map(cellXY); gh+=`<path d="M${pts.map(p=>p[0]+' '+p[1]).join(' L')}" fill="none" stroke="${st.col}" stroke-width="${st.w}" stroke-linecap="round" stroke-linejoin="round"/>`; }
+    for(const it of g.items){ if(it.fixed) continue; const def=DB[it.def]; if(!def) continue; gh+=`<g transform="translate(${it.x*U},${it.y*U})">${bodySVG(def, it.r, it)}</g>`; }
+    out+=`<g id="ghostWall" opacity=".28" pointer-events="none">${gh}</g>`; }catch(e){} }
   /* items: fixtures first so devices draw over the rail */
   const ordered=[...S.items].sort((a,b)=>(a.fixed?0:1)-(b.fixed?0:1));
   for(const it of ordered){
@@ -2000,11 +2131,11 @@ function renderCoach(){
   /* ROUND 11: the step is on the wall screen too; a new step turns the screen to it for a few seconds */
   if(S.coachStep!==undefined && S.coachStep!==i && S.screen) screenShow('hint', 5000);
   S.coachStep=i; S.coachText=text;
-  $('coachStep').textContent = L.kind==='timed' ? 'Timed' : 'Hint '+(i+1)+'/'+L.steps.length;
-  $('coachText').textContent=text;
+  /* the step is not printed above the wall any more; the bedside screen's HINT page is the one
+     place it lives, and a new step turns the screen to it. (David 2026-09-20.) */
   return F;
 }
-let statusHTML='';   /* the counts, kept so a hover read can hand the line back */
+let statusHTML='', statusPlain='';   /* the counts, drawn on the bedside screen's order page */
 function renderStatus(F){
   const ev=F.ev, ok=ev.links.filter(l=>l.s==='ok'&&l.kind!=='lead'&&!(l.a.item&&l.b.item&&l.a.item.fixed&&l.b.item.fixed)).length, warn=ev.links.filter(l=>l.s==='warn').length, bad=ev.links.filter(l=>l.s==='bad'&&!l.short).length, short=ev.links.filter(l=>l.short).length;
   const parts=S.items.filter(i=>!i.fixed).length + S.tubes.filter(t=>!t.lead).length;
@@ -2013,16 +2144,20 @@ function renderStatus(F){
   if(unrouted) s+=' · <b>'+unrouted+'</b> tubing not joined';
   if(short) s+=' · <b>'+short+'</b> too short';
   if(warn) s+=' · <b>'+warn+'</b> need an adapter'; if(bad) s+=' · <b>'+bad+'</b> incompatible';
-  statusHTML=s; $('status').innerHTML=s; $('status').classList.remove('read');
+  statusHTML=s;                                    /* the bedside screen's ORDER page reads this */
+  statusPlain=s.replace(/<[^>]+>/g, '');
   $('cancelBtn').hidden=!(S.hand||S.link);
 }
 function render(){
   if(TEST) return;
   S.capno=capnoOn(S);
-  renderBoard(); renderCart(); const F=renderCoach(); renderStatus(F); positionVerbs();
+  renderCart(); const F=renderCoach(); renderStatus(F); renderBoard(); positionVerbs();
   S.functional=F.ev.ok;
-  $('undoBtn').disabled=!S.history.length;
+  /* the dock is permanent, so undo earns its width only once there is something to undo. Same
+     conditional-width pattern the Set-it verb already uses. */
+  const uB=$('vUndo'); uB.hidden=!S.history.length; uB.disabled=!S.history.length;
   if(S.link) renderInfo('route'); else if(infoMode==='route' || (!S.sel && infoMode!=='item' && infoMode!=='test')) renderInfo('level');
+  netSync();
 }
 /* the timed clock starts on the first move, not when the wall opens */
 function armClock(){ if(S.level.timer && !S.t0 && !S.finished){ S.t0=Date.now(); if(timerH) clearInterval(timerH); timerH=setInterval(tickClock, 250); } }
@@ -2030,7 +2165,7 @@ let lastTest=null, flowT1=null, flowT2=null, flowT3=null;
 /* the test in three phases: the gas is drawn on from the outlet toward the patient, run by run in
    traversal order; then it marches; then it fades out. Reduced motion shows the static dashes. */
 function runTest(){
-  const t=functionTest(S); lastTest=t; if(S.screen){ S.screen.page='test'; S.screen.testAt=S.history.length; clearTimeout(screenH); }
+  const t=functionTest(S); lastTest=t; raceSubmit(t); if(S.screen){ S.screen.page='test'; S.screen.testAt=S.history.length; clearTimeout(screenH); }
   const vis=t.ev.visited; S.flow=new Set([...vis.keys()]);
   const depth=new Map();
   for(const uid of vis.keys()){ let n=0, c=uid; while(c && vis.get(c) && vis.get(c).parent && n<200){ c=vis.get(c).parent; n++; } depth.set(uid, n); }
@@ -2049,9 +2184,6 @@ function runTest(){
   flowT2=setTimeout(()=>{ if(S && S.flow) board.classList.add('flowout'); }, total+3600);
   flowT3=setTimeout(()=>{ if(S){ S.flow=null; S.flowPhase=null; board.classList.remove('flowout'); renderBoard(); } }, total+4050);
   renderInfo('test');
-  if(window.innerWidth<1000 && sheetApi) sheetApi.open('dt-half');
-  const first=t.rows.find(r=>r.ok===false);
-  toast(t.ok?'ok':'bad', t.ok?'System functional':'Not functional', t.ok?'Gas gets from the outlet to the patient. Submit for the score.':(first?first.k+': '+first.t:''));
 }
 /* ---------- cart ---------- */
 let cartSig='';   /* ROUND 7: the cart rebuilds only when something on it changed; a click on the wall used to rebuild it and throw its scroll away */
@@ -2095,23 +2227,24 @@ function renderInfo(mode, def, uid){
   infoMode=mode; if(def) infoDef=def; if(uid!==undefined) infoUid=uid;
   const el=$('info'); const L=S.level;
   if(mode==='level'){
-    el.innerHTML='<div class="da-k teal">'+esc(L.kicker)+'</div><h3>'+esc(L.title)+'</h3><div class="mf">'+esc(L.brief)+'</div>'+
-      '<details class="da-fold"'+(L.kind==='tutorial'||L.kind==='fault'?' open':'')+'><summary>About this wall</summary><p class="da-small">'+esc(L.scenario)+'</p>'+
+    el.innerHTML='<div class="da-k teal">'+esc(L.kicker)+'</div><h3>'+esc(L.title)+'</h3><div class="mf">'+esc(L.brief)+'</div>'+tableFoldHTML()+
+      '<details class="da-fold"><summary>About this wall</summary><p class="da-small">'+esc(L.scenario)+'</p>'+
       (L.scored?'<p class="da-small">Par for this wall: '+L.par.comp+' parts from the cart, '+L.par.len+' ft of tubing, '+(L.par.adapters?L.par.adapters+' adapter.':'no adapters.')+' The score is the distance from par, plus the clock.</p>':'')+
       (L.kind==='timed'?'<p class="da-small">The clock starts on your first move. The time line is how low the sat got before the system worked. Restart is always one tap away.</p>':'')+'</details>'+
       '<details class="da-fold da-walls"><summary>Walls</summary>'+wallGroups().map(g=>'<div class="da-k" style="margin:10px 0 4px">'+esc(g.name)+' <span class="da-small">'+g.done+' of '+g.walls.length+' done</span></div><div class="da-levels">'+g.walls.map(w=>'<button type="button" class="da-lv" data-level="'+w.L.id+'"'+(w.un?'':' disabled')+'><span class="t">'+esc(w.L.kicker+' · '+w.L.title)+'</span><span class="b">'+(w.done?'done':w.best?'best '+w.best:w.un?'open':'locked')+'</span></button>').join('')+'</div>').join('')+'</details>'+
-      '<details class="da-fold"'+(L.kind==='tutorial'?' open':'')+'><summary>How the wall works</summary><div class="da-legend"><div><span class="pd m"></span>Drag a part out of the cart onto the wall. Parts snap together when their ports face each other.</div><div><span class="pd"></span>Tubing runs between two ports: click one, then click the other, or press on one and pull to the other. Press on a joined port and pull to move that run; double-click a run to pull it off. Pick a tubing on the cart first to choose which; otherwise the shortest that fits is used.</div><div><span class="pd ok m"></span>Green: the two seat.</div><div><span class="pd warn m"></span>Amber: an adapter exists that bridges them.</div><div><span class="pd bad m"></span>Red: nothing bridges them, or the tubing is too short for the run. It stays on the wall so you can see why.</div><div><span class="pd"></span>Hollow is female (a socket, a nut, a tubing end). Solid is male.</div></div>'+
+      '<details class="da-fold"><summary>How the wall works</summary><div class="da-legend"><div><span class="pd m"></span>Drag a part out of the cart onto the wall. Parts snap together when their ports face each other.</div><div><span class="pd"></span>Tubing runs between two ports: click one, then click the other, or press on one and pull to the other. Press on a joined port and pull to move that run; double-click a run to pull it off. Pick a tubing on the cart first to choose which; otherwise the shortest that fits is used.</div><div><span class="pd ok m"></span>Green: the two seat.</div><div><span class="pd warn m"></span>Amber: an adapter exists that bridges them.</div><div><span class="pd bad m"></span>Red: nothing bridges them, or the tubing is too short for the run. It stays on the wall so you can see why.</div><div><span class="pd"></span>Hollow is female (a socket, a nut, a tubing end). Solid is male.</div></div>'+
       '</details><details class="da-fold"><summary>Connectors</summary><div class="da-legend da-glegend">'+[['iso22','22 mm cone and socket (ISO 5356-1), the breathing circuit'],['iso15','15 mm cone and socket (ISO 5356-1)'],['barb','Oxygen tubing barb, small bore, and the tubing end that pushes on'],['suct-barb','Suction tubing barb, large bore'],['diss-1240','DISS thread and nut (CGA V-5), colored by its gas'],['qc-o2','Ohmeda quick-connect, the Ohio diamond, keyed and colored by gas'],['qc-chem-o2','Chemetron quick-connect, keyed by its pin'],['nema','NEMA 5-15 plug and receptacle'],['luer','Luer lock (ISO 80369-7), the sampling line']].map(([s,t])=>'<div><span class="gl">'+glyphHTML(s,'m',20)+glyphHTML(s,'f',20)+'</span><span>'+t+'</span></div>').join('')+'</div>'+
       '<div class="da-keys">Solid is male, hollow is female. Green carries oxygen, yellow medical air, white vacuum, the NFPA 99 colors on the rail. Gray carries no gas.</div>'+
       '</details><details class="da-fold"><summary>Turning parts and keys</summary><div class="da-keys"><b>Right-click</b> or <b>R</b> turns the part you are holding, dragging, or have selected. <b>Double-click</b> a part on the wall to turn it. The arrow button beside a selected part does the same.</div>'+
       '<div class="da-keys"><b>Arrows</b> move the cursor · <b>Enter</b> place or select · <b>Delete</b> back to cart · <b>F</b> flips the part you hold or have selected · <b>Ctrl+Z</b> undo · <b>Esc</b> one step back. Select a part to start tubing from its ports by keyboard.</div>'+
-      '</details><details class="da-fold"><summary>What this is</summary>'+PITCH+FOOTNOTE+'</details><div class="da-src">Tap any part, on the cart or the wall, for its spec sheet. Every fact on a sheet is labeled verified, inferred or gameplay. Submit judges the build; nothing stops you building it first.</div>';
+      '</details><details class="da-fold"><summary>What this is</summary>'+PITCH+FOOTNOTE+'</details><div class="da-src">Tap any part, on the cart or the wall, for its spec sheet. Every fact on a sheet is labeled verified, inferred or gameplay. Complete judges the build, and nothing stops you building it first.</div>';
     el.querySelectorAll('.da-lv[data-level]').forEach(b=>b.addEventListener('click', ()=>{ if(window.innerWidth<1000 && sheetApi) sheetApi.close(); startLevel(b.dataset.level); }));
+    wireTableFold(el);
     return;
   }
   if(mode==='test'){
     const t=lastTest; if(!t){ renderInfo('level'); return; }
-    let out='<div class="da-k teal">Test system</div><div class="da-verdict'+(t.ok?'':' no')+'">'+(t.ok?'SYSTEM FUNCTIONAL':'NOT FUNCTIONAL')+'</div><div class="da-check">';
+    let out='<div class="da-k teal">System check</div><div class="da-verdict'+(t.ok?'':' no')+'">'+(t.ok?'SYSTEM FUNCTIONAL':'NOT FUNCTIONAL')+'</div><div class="da-check">';
     const row=r=>'<div><span>'+esc(r.k)+'<small>'+esc(r.t)+'</small></span><span class="'+(r.ok===null?'na':r.ok?'ok':'no')+'">'+(r.ok===null?'n/a':r.ok?'&#10003;':'&#10007;')+'</span></div>';
     const live=t.rows.filter(r=>r.ok!==null), na=t.rows.filter(r=>r.ok===null);
     for(const r of live) out+=row(r);
@@ -2119,7 +2252,7 @@ function renderInfo(mode, def, uid){
     /* ROUND 6: the lines that are not on this order fold; the read is the lines that are */
     if(na.length) out+='<details class="da-fold"><summary>Not on this order <span class="da-small">'+na.length+'</span></summary><div class="da-check">'+na.map(row).join('')+'</div></details>';
     out+=(t.ok?'<button type="button" class="da-go" id="testSubmit" style="width:100%">Submit assembly</button>':'<div class="da-note">Fix the first red line and test again. Nothing is lost by testing.</div>');
-    out+='<div class="da-src">The test lights up everything hooked to an outlet. Submit is what scores it.</div>';
+    out+='<div class="da-src">Complete lights up everything hooked to an outlet, then scores the build.</div>';
     el.innerHTML=out; const b=$('testSubmit'); if(b) b.addEventListener('click', ()=>submit(false)); return;
   }
   if(mode==='route'){
@@ -2663,10 +2796,8 @@ function wireGlobal(){
   $('vInfo').addEventListener('click', ()=>{ const it=S.items.find(i=>i.uid===S.sel); const tb=S.tubes.find(t=>t.uid===S.sel); if(it) openInfo(it.def,it.uid); else if(tb) openInfo(tb.lead?S.items.find(i=>i.uid===tb.lead).def:tb.def,null); });
   $('cancelBtn').addEventListener('click', ()=>{ S.link=null; S.hand=null; S.preview=null; render(); });
   $('submitBtn').addEventListener('click', ()=>submit(false));
-  $('testBtn').addEventListener('click', runTest);
-  $('undoBtn').addEventListener('click', undoStep);
-  $('restartBtn').addEventListener('click', ()=>startLevel(S.level.id, true));
-  $('restartBtnI').addEventListener('click', ()=>startLevel(S.level.id, true));
+  $('resetBtn').addEventListener('click', ()=>startLevel(S.level.id));
+  $('vUndo').addEventListener('click', undoStep);
   $('menuBtn').addEventListener('click', showLevels);
   $('menuBtnI').addEventListener('click', showLevels);
   $('infoClose').addEventListener('click', ()=>{ if(sheetApi) sheetApi.close(); });
@@ -2686,6 +2817,32 @@ try{ const p=JSON.parse(localStorage.getItem(PKEY)||'null'); if(p&&p.done) progr
 /* the tester hatch: ?unlock=1 opens every level for this visit without touching saved progress (alpha, 2026-09-18) */
 const UNLOCK_ALL = typeof location!=='undefined' && /[?&]unlock=1/.test(location.search);
 function saveProgress(){ try{ localStorage.setItem(PKEY, JSON.stringify(progress)); }catch(e){} }
+
+/* ---- GoatCounter events: counts only, no identity, and nothing from a QA load
+   (?dadev, ?unlock=1, or a test hook, which is what the check scripts set, so a
+   scripted host never lands in the numbers). What gets counted: the first wall
+   opened, the first tutorial finished, the first failed submit, whether anybody
+   ever hosts or joins a table, and on the way out two buckets (real minutes,
+   walls finished) so the drop-off can be read as a distribution. count.js
+   already ignores localhost. ---- */
+const DA_T0=Date.now();
+function daIsQuiet(){
+  try{ return /[?&](dadev|unlock)=/.test(location.search) || !!(window.__UG_TEST || window.__DA_HOOK); }catch(e){ return false; }
+}
+function track(name){
+  try{
+    if(daIsQuiet()) return;   /* asked every time: the hatches are readable from the url, nothing to keep in sync */
+    if(window.goatcounter && window.goatcounter.count)
+      window.goatcounter.count({path:'/secret-menu/device-assembly/'+name, title:'Device Assembly \u00b7 '+name, event:true});
+  }catch(e){}
+}
+function daMinBucket(now){ const m=((now||Date.now())-DA_T0)/60000;   /* now is passed only by the tests */ return m<2?'0-2':m<5?'2-5':m<15?'5-15':m<30?'15-30':'30plus'; }
+function daWallBucket(done){ const n=Object.keys(done||progress.done).length; return n===0?'0':n===1?'1':n<4?'2-3':n<7?'4-6':'7plus'; }
+let daLeft=false, daMissed=false;
+if(typeof addEventListener==='function') addEventListener('pagehide', ()=>{
+  if(!everStarted || daLeft) return; daLeft=true;
+  track('played-'+daMinBucket()+'-min'); track('walls-'+daWallBucket());
+});
 const unlocked = i => UNLOCK_ALL || i===0 || LEVELS[i].kind==='sandbox' || (LEVELS[i].kind==='fault' && !!progress.done.l1) || !!progress.done[LEVELS[i-1].id];
 let timerH=null;
 function fmt(sec){ sec=Math.max(0,Math.ceil(sec)); return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0'); }
@@ -2730,7 +2887,7 @@ function closeOverlay(){ const o=$('overlay'); o.classList.remove('in'); o.hidde
 /* ROUND 15 (David: "integrate this first pop-up menu into the game... we do not have a start screen menu for the
    RN task game"): no title card. The game opens on the wall you left, or the first tutorial. The walls are a
    page on the bedside screen (WALLS, from the Levels button) and a fold of real buttons in the level panel. */
-const PITCH='<p>Clinicals start in two weeks and the part you are afraid of is the setup: the flowmeter nobody turned back on after the neb, the humidifier that never got plugged in, the tubing on the air outlet. This is the wall behind the bed, with real equipment and real connector standards, and a preceptor who only speaks up when you submit. Make the mistakes here, where they cost nothing, and read why each one failed in the words a therapist would use. Nurses and EMS: the 2 L cannula and the 15 L non-rebreather are in here too.</p>';
+const PITCH='<p>Clinicals start in two weeks and the part you are afraid of is the setup: the flowmeter nobody turned back on after the neb, the humidifier that never got plugged in, the tubing on the air outlet. This is the wall behind the bed, with real equipment and real connector standards, and a preceptor who only speaks up when you press Complete. Make the mistakes here, where they cost nothing, and read why each one failed in the words a therapist would use. Nurses and EMS: the 2 L cannula and the 15 L non-rebreather are in here too.</p>';
 const FOOTNOTE='<p class="da-small">Every part is a real category with real connector standards, and every spec sheet labels its facts verified, inferred or gameplay. It is the floor\\\'s way of doing it, which is not always the exam\\\'s wording. The walls map to Section II of the NBRC TMC content outline, Assemble / Troubleshoot Devices: gas delivery interfaces, metering devices, humidifiers. Nothing here is clinical guidance. Progress stays on this device.</p>';
 function wallGroups(){
   const groups=[['Tutorial', L=>L.kind==='tutorial'], ['Levels', L=>L.kind==='level'||L.kind==='timed'], ['Find the fault', L=>L.kind==='fault'], ['Sandbox', L=>L.kind==='sandbox']];
@@ -2749,12 +2906,16 @@ function showLevels(){
   infoMode='level'; renderInfo('level'); const d=$('info').querySelector('details.da-walls'); if(d) d.open=true;
   if(window.innerWidth<1000 && sheetApi) sheetApi.open('dt-full'); if(d) d.scrollIntoView({block:'start'});
 }
-function startLevel(id){
+function startLevel(id, opts){
+  const quiet = !!(opts && opts.quiet);
+  if(NET.mode==='guest' && !quiet){ toast('info','Table','The host picks the wall.'); return; }
   const L=levelById(id); S=newState(L); multi=new Set(); movingSet=new Set(); marq=null;
+  if(NET.mode==='host' && !quiet) raceStart(id);
   if(timerH){ clearInterval(timerH); timerH=null; }
   $('crumb').textContent=L.crumb; $('cartFind').value='';
   $('clock').hidden=!L.timer; $('clock').classList.toggle('sat', !!L.timer); if(L.timer){ $('clock').textContent='SpO2 96%'; $('clock').classList.remove('low'); }
   infoMode='level'; render(); fitBoard();
+  if(!everStarted) track('first-wall');
   everStarted=true; S.shown=false; $('showBtn').hidden = L.kind!=='fault'; progress.last=id; saveProgress();   /* the game resumes here on the next visit */
   const go=()=>{ closeOverlay(); S.t0 = L.timer ? 0 : Date.now(); $('board').focus({preventScroll:true}); };
   /* ROUND 13 (David: "a place for those pop-ups... so they don't pop up every time"): no brief card. The wall
@@ -2812,9 +2973,14 @@ async function shareWall(kicker, title, name){
 
 function submit(timedOut){
   if(!S||S.finished) return;
+  /* Complete is the only judging button now, so it runs what "Test system" used to run first: the
+     gas lights up the path, the bedside screen keeps the read on its TEST page, and raceSubmit is
+     how a guest enters a two-wall race. raceSubmit had exactly one caller and it was that button. */
+  runTest();
   const ev=evaluate(S), L=S.level; S.elapsed=S.t0 ? (Date.now()-S.t0)/1000 : 0;
   const idx=LEVELS.indexOf(L), next=LEVELS[idx+1];
   if(!ev.ok){
+    if(!daMissed){ daMissed=true; track('first-miss'); }
     if(timedOut){ S.finished=true; if(timerH){ clearInterval(timerH); timerH=null; } }
     overlay('<div class="da-k teal">'+esc(L.kicker)+'</div><h2>'+(timedOut?'Desaturated.':esc(ev.title))+'</h2>'+(timedOut?'<p>The patient dropped to 80% before oxygen reached them. The system was '+ev.kind+'.</p>':'')+
       ev.lines.map(l=>'<div class="da-fail'+(l.h==='Interface mismatch'||l.h==='Not on the patient'?' warn':'')+'"><b>'+esc(l.h)+'</b>'+esc(l.t)+'</div>').join('')+
@@ -2825,7 +2991,9 @@ function submit(timedOut){
     return;
   }
   S.finished=true; if(timerH){ clearInterval(timerH); timerH=null; }
+  const daFirstTime=!progress.done[L.id];
   progress.done[L.id]=true;
+  if(daFirstTime && L.id==='t1') track('done-t1');   /* the tutorial everyone sees: the drop-off that matters */
   let body='', shareTitle='Connection established';
   if(L.scored){
     const sc=score(S, ev, S.elapsed); shareTitle='Assembly score '+sc.assembly;
@@ -2862,10 +3030,12 @@ function init(){
   requestAnimationFrame(monitorLoop);
   startLevel(resumeTarget().id);   /* ROUND 15: straight onto the wall */
 }
-if(TEST){
-  window.__da={faultMatches, flip, flipSide, ROOMS, roomOf, roomFixed, DEFAULT_ROOM, DB, STD, LEVELS, GRID, compat, rotCell, rotSide, portsOf, cellsOf, computeLinks, route, bendsOf, evaluate, score, functionTest, newState, place, moveItem, rotate, removeThing, connectPorts, tubeOn, reflow, facts, canPlace, onPatientLinks, atNose, portTaken, remember, undo, snapshot, restore, autoOrient, okJointsAt, powered, setFio2, setCpap, generatorOf, capnoOn, facingPort, jumpable, hangTube, findPort, GAUGE, GLYPH, GAS_OF, glyphOf, clusterOf, moveGroup, moveGroupCheck,
-    get S(){ return S; }, set S(v){ S=v; }, start(id, room){ S=newState(levelById(id), room); return S; }};
-} else if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+const daHook=()=>({track, daIsQuiet, daMinBucket, daWallBucket, faultMatches, flip, flipSide, ROOMS, roomOf, roomFixed, DEFAULT_ROOM, DB, STD, LEVELS, GRID, compat, rotCell, rotSide, portsOf, cellsOf, computeLinks, route, bendsOf, evaluate, score, functionTest, newState, place, moveItem, rotate, removeThing, connectPorts, tubeOn, reflow, facts, canPlace, onPatientLinks, atNose, portTaken, remember, undo, snapshot, restore, autoOrient, okJointsAt, powered, setFio2, setCpap, generatorOf, capnoOn, facingPort, jumpable, hangTube, findPort, GAUGE, GLYPH, GAS_OF, glyphOf, clusterOf, moveGroup, moveGroupCheck,
+    get S(){ return S; }, set S(v){ S=v; }, start(id, room){ S=newState(levelById(id), room); return S; },
+    T:RACE, get NET(){ return NET; }, race:()=>race, otherWall:()=>otherWall, raceStart, raceDispatch, raceState, raceSubmit, netSync, raceLeave, setRaceName, raceName, setChannelFactory:fn=>RACE.setChannelFactory(fn),
+});
+if(TEST || (typeof window!=='undefined' && window.__DA_HOOK)) window.__da=daHook();
+if(!TEST){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init(); }
 })();
 </script>
 {% endraw %}

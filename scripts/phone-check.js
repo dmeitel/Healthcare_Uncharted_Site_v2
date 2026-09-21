@@ -300,6 +300,11 @@ function inspect({ phone, deviceWidth }) {
       if (!r.width || !r.height) continue;
       const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
       if (seen < 8) continue;                                        // parked or below the fold
+      // A slide-in panel is parked by translating it off the SIDE, not by hiding it, so its own
+      // sticky header still reports a normal vertical box while sitting entirely off screen.
+      // The SQL tool has two of them and this check counted both as stacked top bars (2026-09-20).
+      const across = Math.min(r.right, vw) - Math.max(r.left, 0);
+      if (across < vw * 0.5) continue;                               // parked off to one side
       if (r.width < vw * 0.6 || seen > innerHeight * 0.4) continue;   // a bar, not a panel
       if (found.some((o) => o.contains(el) || el.contains(o))) continue;
       found.push(el);
@@ -314,6 +319,120 @@ function inspect({ phone, deviceWidth }) {
   }
   const chromePct = phone && innerHeight ? Math.round((chromeH / innerHeight) * 100) : 0;
 
+  // STROKE FLOOR. A diagram's connectors are not decoration: the line between two boxes IS the
+  // claim that one leads to the other, and WCAG asks 3:1 of any graphic that carries meaning. A
+  // card's edge is different and is allowed to whisper, so this looks only inside an <svg> that is
+  // big enough to be a figure. A stroke painted in the surface colour is a HALO, drawn to punch a
+  // dot out of the line beneath it, and is meant to vanish; it is not counted.
+  const faint = [];
+  if (phone) {
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const lum = (p) => 0.2126 * lin(p[0]) + 0.7152 * lin(p[1]) + 0.0722 * lin(p[2]);
+    const parse = (c) => { const m = String(c).match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(',').map(Number); return p.length > 3 && p[3] === 0 ? null : p; };
+    const behind = (el) => { let n = el; while (n && n !== document.documentElement) { const p = parse(getComputedStyle(n).backgroundColor); if (p && (p.length < 4 || p[3] > 0.5)) return p; n = n.parentElement; } return [13, 17, 23]; };
+    const ratio = (a, b) => { const A = lum(a), B = lum(b); return (Math.max(A, B) + 0.05) / (Math.min(A, B) + 0.05); };
+    const seen = new Set();
+    for (const svg of document.querySelectorAll('svg')) {
+      const box = svg.getBoundingClientRect();
+      if (box.width < 120 || box.height < 90) continue;          // an icon, not a figure
+      const bg = behind(svg);
+      for (const el of svg.querySelectorAll('line,path,polyline,rect,polygon,circle,ellipse')) {
+        const cs = getComputedStyle(el);
+        if (cs.stroke === 'none' || parseFloat(cs.strokeWidth) === 0) continue;
+        if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+        const r = el.getBoundingClientRect();
+        if (!r.width && !r.height) continue;
+        const c = parse(cs.stroke); if (!c) continue;
+        const k = ratio(c, bg);
+        if (k >= 3 || k < 1.25) continue;                        // fine, or a halo
+        const key = cs.stroke + '|' + cs.strokeWidth + '|' + (svg.getAttribute('class') || svg.getAttribute('viewBox') || '');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        faint.push(`${(svg.getAttribute('class') || svg.getAttribute('viewBox') || 'svg').slice(0, 28)}: ${cs.stroke} at ${Math.round(k * 10) / 10}:1`);
+      }
+    }
+  }
+
+  // INK FLOOR. Text inside a figure, measured against whatever is actually behind it: the page,
+  // or the shape it sits on. A pill filled white with dark text is correct and must not be read as
+  // a 1:1 failure, which is why this walks the svg for a filled shape whose box contains the text
+  // before falling back to the page. WCAG's thresholds: 4.5:1, or 3:1 once the text is large.
+  const dim = [];
+  if (phone) {
+    const lin2 = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const lum2 = (p) => 0.2126 * lin2(p[0]) + 0.7152 * lin2(p[1]) + 0.0722 * lin2(p[2]);
+    const parse2 = (c) => { const m = String(c).match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(',').map(Number); return p.length > 3 && p[3] < 0.5 ? null : p; };
+    const pageBg = (el) => { let n = el; while (n && n !== document.documentElement) { const p = parse2(getComputedStyle(n).backgroundColor); if (p) return p; n = n.parentElement; } return [13, 17, 23]; };
+    const ratio2 = (a, b) => { const A = lum2(a), B = lum2(b); return (Math.max(A, B) + 0.05) / (Math.min(A, B) + 0.05); };
+    const seen2 = new Set();
+    // A scene the reader can magnify is exempt for its terrain, exactly as it is for the type
+    // floor: pinch and zoom IS the phone answer there, David's ruling on the Atlas.
+    for (const svg of document.querySelectorAll('svg')) {
+      const box = svg.getBoundingClientRect();
+      if (box.width < 120 || box.height < 90) continue;
+      const page = pageBg(svg);
+      // every filled shape in the drawing, so a label can be measured against the one it sits on
+      const shapes = [];
+      for (const sh of svg.querySelectorAll('rect,circle,ellipse,polygon,path')) {
+        const cs = getComputedStyle(sh);
+        const p = parse2(cs.fill);
+        if (!p || cs.fill === 'none') continue;
+        if (parseFloat(cs.fillOpacity) < 0.75) continue;      // a tint lets the page through
+        shapes.push({ r: sh.getBoundingClientRect(), p });
+      }
+      for (const t of svg.querySelectorAll('text')) {
+        const cs = getComputedStyle(t);
+        if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+        const txt = (t.textContent || '').trim(); if (!txt) continue;
+        // Walk from the TEXT, not the <svg>: the Atlas carries its pan and zoom on a <g> INSIDE
+        // the drawing, so a check that starts at the svg never sees it. The type floor learned
+        // this the same way and its note is above; reusing zoomScene keeps the two in step.
+        if (zoomScene(t)) continue;
+        const c = parse2(cs.fill); if (!c) continue;
+        const r = t.getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        let bg = page;
+        for (const sh of shapes) {
+          if (sh.r.left <= r.left + 1 && sh.r.right >= r.right - 1 && sh.r.top <= r.top + 1 && sh.r.bottom >= r.bottom - 1) bg = sh.p;
+        }
+        const m = t.getScreenCTM ? t.getScreenCTM() : null;
+        const px = parseFloat(cs.fontSize) * (m ? Math.abs(m.a) : 1);
+        const bold = parseInt(cs.fontWeight, 10) >= 700;
+        const need = (px >= 24 || (bold && px >= 18.66)) ? 3 : 4.5;
+        const k = ratio2(c, bg);
+        // Contrast is one of THREE things that decide whether small light-on-dark type reads, and
+        // it was the only one being measured. The other two are weight and tracking: a bright
+        // glyph bleeds into a dark field and reads thinner than the same font on a white page, a
+        // monospace face is thin to begin with, and letter-spacing pulls a word apart until it
+        // stops having a shape. So small text inside a figure also owes a weight.
+        const light = lum2(c) > lum2(bg);
+        // Tracking is measured against the AUTHORED size, not the rendered one. Both letter-spacing
+        // and font-size are in user units inside a viewBox and scale together, so dividing the
+        // spacing by the rendered pixels invents tracking that is not there on a shrunk drawing.
+        const track = (parseFloat(cs.letterSpacing) || 0) / (parseFloat(cs.fontSize) || 1);
+        const weight = parseInt(cs.fontWeight, 10) || 400;
+        if (k >= need && light && px <= 16 && weight < 500) {
+          const key2 = 'w|' + cs.fontWeight + '|' + (svg.getAttribute('class') || '');
+          if (!seen2.has(key2)) { seen2.add(key2); dim.push((svg.getAttribute('class') || 'svg').slice(0, 24) + ': ' + Math.round(px) + 'px at weight ' + weight + ' on a dark field, needs 500 ("' + txt.slice(0, 20) + '")'); }
+          continue;
+        }
+        // Tracking: the site's own editorial label style sits at .133em and reads fine once it has the
+        // weight above, so the limit is set just past it. Beyond .14em a small word stops having a
+        // shape and reads as separate letters, which is what the section labels were doing.
+        if (k >= need && light && px <= 16 && track > 0.14) {
+          const key3 = 't|' + cs.letterSpacing + '|' + (svg.getAttribute('class') || '');
+          if (!seen2.has(key3)) { seen2.add(key3); dim.push((svg.getAttribute('class') || 'svg').slice(0, 24) + ': tracking ' + (Math.round(track * 100) / 100) + 'em at ' + Math.round(px) + 'px, past the .14em limit ("' + txt.slice(0, 20) + '")'); }
+          continue;
+        }
+        if (k >= need) continue;
+        const key = cs.fill + '|' + (svg.getAttribute('class') || svg.getAttribute('viewBox') || '');
+        if (seen2.has(key)) continue;
+        seen2.add(key);
+        dim.push(`${(svg.getAttribute('class') || svg.getAttribute('viewBox') || 'svg').slice(0, 24)}: ${cs.fill} at ${Math.round(k * 10) / 10}:1, needs ${need} ("${txt.slice(0, 22)}")`);
+      }
+    }
+  }
+
   const vh = [];
   for (const sheet of document.styleSheets) {
     let rules; try { rules = sheet.cssRules; } catch { continue; }
@@ -321,7 +440,8 @@ function inspect({ phone, deviceWidth }) {
     walk(rules);
   }
   return { overflow, scrollWidth: document.documentElement.scrollWidth, vw, culprits: culprits.slice(0, 6), small: small.slice(0, 12), smallCount: small.length, clipped: clipped.slice(0, 8), clippedCount: clipped.length, vh: [...new Set(vh)].slice(0, 8),
-    tiny: tiny.slice(0, 8), tinyCount: tiny.length, softCount, chromeBars, chromeH, chromePct, topBars, collide: collide.slice(0, 6), collideCount: collide.length, vhPx: innerHeight };
+    tiny: tiny.slice(0, 8), tinyCount: tiny.length, softCount, chromeBars, chromeH, chromePct, topBars, collide: collide.slice(0, 6), collideCount: collide.length, vhPx: innerHeight,
+    faint: faint.slice(0, 8), faintCount: faint.length, dim: dim.slice(0, 8), dimCount: dim.length };
 }
 
 (async () => {
@@ -368,9 +488,9 @@ function inspect({ phone, deviceWidth }) {
       // band between the absolute and the functional floor, only reports: it is
       // the migration backlog, not a defect.
       const overBudget = phone && (r.chromePct > 20 || r.topBars > 1);
-      const bad = realErrors > 0 || r.overflow || (phone && r.tinyCount > 0) || (phone && r.collideCount > 0) || overBudget;
+      const bad = realErrors > 0 || r.overflow || (phone && r.tinyCount > 0) || (phone && r.collideCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget;
       if (bad) failed = true;
-      console.log(`  ${String(w).padStart(4)}px  ${bad ? 'FAIL' : 'ok  '}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${phone ? r.clippedCount : 'n/a'}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${phone ? r.collideCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      console.log(`  ${String(w).padStart(4)}px  ${bad ? 'FAIL' : 'ok  '}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${phone ? r.clippedCount : 'n/a'}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${phone ? r.collideCount : 'n/a'}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
       for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
       for (const e of errors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
       for (const [px, s] of r.culprits) console.log('         overflows by ' + px + 'px: ' + s);
@@ -379,6 +499,8 @@ function inspect({ phone, deviceWidth }) {
       for (const [px, s, txt] of (r.tiny || [])) console.log('         UNDER THE TYPE FLOOR at ' + px + 'px: ' + s + (txt ? ' "' + txt + '"' : ''));
       for (const [pct, a, b] of (r.collide || [])) console.log('         LABELS COLLIDE, ' + pct + '% overlap: "' + a + '"  x  "' + b + '"');
       if (phone && r.softCount) console.log('         (backlog, not a fail) ' + r.softCount + ' element(s) between the absolute and the functional floor');
+      for (const t of (r.dim || [])) console.log('         LABEL UNDER THE INK FLOOR, ' + t);
+      for (const t of (r.faint || [])) console.log('         LINE UNDER THE STROKE FLOOR, ' + t + ' (a connector carries meaning; 3:1 is the floor)');
       if (overBudget) console.log('         CHROME OVER BUDGET: ' + r.chromeH + 'px of ' + r.vhPx + ' is ' + r.chromePct + '%'
         + (r.topBars > 1 ? ', and ' + r.topBars + ' TOP BARS are stacked (a phone gets one)' : ', ceiling is 20%')
         + '  [' + r.chromeBars.join(' ') + ']');

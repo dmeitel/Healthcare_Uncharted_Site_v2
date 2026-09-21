@@ -22,6 +22,10 @@
    HUKit.conusView(el)  -> { center, zoom, minZoom } fitting the lower 48 to
                            that container. Replaces the hardcoded desktop
                            camera both U.S. maps shipped with.
+   HUKit.peek(opts)     -> explain-on-demand. Anything carrying data-def
+                           gets one card: a mouse hovers it, a thumb taps
+                           it, a keyboard tabs to it. Lets a game show a
+                           short label and keep the paragraph behind it.
    HUKit.pop(opts)      -> selector-popover controller: open/close,
                            anchor + right-edge clamp, outside-click,
                            arrow/Home/End walk, focus return. The kit
@@ -36,6 +40,143 @@
 
   function phone() { return PHONE_MQ.matches; }
   function dcap(ms) { return REDUCED_MQ.matches ? 0 : (PHONE_MQ.matches ? Math.min(ms, 250) : ms); }
+
+  /* ── Peek: explain on demand ──────────────────────────────────
+     A game screen should be playable without reading it. So the screen
+     carries the short label and the sentence hides behind it, reachable
+     three ways: hover, tap, or keyboard focus.
+
+       HUKit.peek({ root, sel }) -> { close, destroy }
+
+     root  where to listen. Element or selector, default document.body.
+           Delegated, so markup rendered later still works.
+     sel   the trigger selector, default '[data-def]'. The attribute holds
+           a small piece of HTML, usually "<b>Name</b>the sentence", which
+           is the shape the hospital game's own tooltip already used.
+
+     A trigger that is itself a control keeps working: on a touch screen the
+     card opens from the little "i" badge inside it, never from the control,
+     so tapping Start still starts. A trigger that is NOT a control is made
+     focusable so a keyboard can reach the same sentence. One card exists per
+     page and every peek shares it. */
+  var peekCard = null, peekOn = null, peekFrom = '', peekWired = false;
+  var INTERACTIVE = 'a[href],button,input,select,textarea,summary,[role="button"],[tabindex]';
+
+  function peekEl() {
+    if (peekCard) return peekCard;
+    peekCard = document.createElement('div');
+    peekCard.className = 'hu-peek';
+    peekCard.id = 'hu-peek';
+    peekCard.setAttribute('role', 'tooltip');
+    peekCard.hidden = true;
+    document.body.appendChild(peekCard);
+    return peekCard;
+  }
+
+  function peekHide() {
+    if (!peekOn) return;
+    peekOn.removeAttribute('aria-describedby');
+    peekOn = null; peekFrom = '';
+    if (peekCard) peekCard.hidden = true;
+  }
+
+  function peekShow(t, how) {
+    peekFrom = how || 'hover';
+    var def = t.getAttribute('data-def');
+    if (!def) return;
+    var card = peekEl();
+    card.innerHTML = def;
+    card.hidden = false;
+    peekOn = t;
+    t.setAttribute('aria-describedby', 'hu-peek');
+    // below the trigger, flipped above when there is no room, clamped to the viewport
+    var r = t.getBoundingClientRect(), c = card.getBoundingClientRect();
+    var pad = 8, gap = 6;
+    var x = Math.min(r.left, window.innerWidth - c.width - pad);
+    var y = r.bottom + gap;
+    if (y + c.height > window.innerHeight - pad) {
+      var above = r.top - gap - c.height;
+      y = above >= pad ? above : Math.max(pad, window.innerHeight - c.height - pad);
+    }
+    card.style.left = Math.max(pad, x) + 'px';
+    card.style.top = Math.max(pad, y) + 'px';
+  }
+
+  function peek(opts) {
+    opts = opts || {};
+    var sel = opts.sel || '[data-def]';
+    var root = opts.root || document.body;
+    if (typeof root === 'string') root = document.querySelector(root);
+    if (!root) return { close: function () {}, destroy: function () {} };
+
+    function trigger(e) {
+      var t = /** @type {Element} */ (e.target);
+      t = t && t.closest ? t.closest(sel) : null;
+      return t && root.contains(t) ? t : null;
+    }
+    // a control keeps its own tap; the badge inside it is what opens the card
+    function tapOpens(t, target) {
+      if (!t.matches(INTERACTIVE)) return true;
+      var el = /** @type {Element} */ (target);
+      return !!(el && el.closest && el.closest('.hu-i'));
+    }
+
+    var on = {
+      over: function (e) {
+        if (e.pointerType === 'touch') return;          // a touch "hover" is the tap, handled below
+        var t = trigger(e);
+        if (t) peekShow(t, 'hover'); else if (peekOn) peekHide();
+      },
+      out: function (e) { if (trigger(e)) peekHide(); },
+      click: function (e) {
+        var t = trigger(e);
+        if (!t) { peekHide(); return; }
+        if (!tapOpens(t, e.target)) return;             // let the control do its job
+        // On a touch screen focusin lands BEFORE click, so the card is already open by the time
+        // the tap completes; toggling here would shut it on the way in. A tap only closes what a
+        // previous TAP opened.
+        if (peekOn === t && peekFrom === 'click') peekHide(); else peekShow(t, 'click');
+      },
+      focus: function (e) { var t = trigger(e); if (t) peekShow(t, 'focus'); },
+      blur: function () { peekHide(); },
+      key: function (e) { if (e.key === 'Escape' && peekOn) { var t = peekOn; peekHide(); if (t.focus) t.focus(); } },
+    };
+    root.addEventListener('pointerover', on.over);
+    root.addEventListener('pointerout', on.out);
+    root.addEventListener('click', on.click);
+    root.addEventListener('focusin', on.focus);
+    root.addEventListener('focusout', on.blur);
+
+    if (!peekWired) {
+      peekWired = true;
+      document.addEventListener('keydown', on.key);
+      window.addEventListener('scroll', peekHide, { passive: true });
+      window.addEventListener('resize', peekHide);
+      document.addEventListener('click', function (e) {
+        if (!peekOn) return;
+        var el = /** @type {Element} */ (e.target);
+        var t = el && el.closest ? el.closest('[data-def],.hu-peek') : null;
+        if (!t) peekHide();
+      }, true);
+    }
+
+    // Deliberately no tabindex handed out here. A page can carry dozens of data-def labels and
+    // turning each into a tab stop buries the real controls. Where the sentence MATTERS to a
+    // keyboard, the page puts a real <button class="hu-i"> on it, which is focusable already and
+    // is also what a thumb taps. Everything else is hover and tap, which is strictly more than
+    // the hover-only tooltip this replaces.
+    return {
+      close: peekHide,
+      destroy: function () {
+        peekHide();
+        root.removeEventListener('pointerover', on.over);
+        root.removeEventListener('pointerout', on.out);
+        root.removeEventListener('click', on.click);
+        root.removeEventListener('focusin', on.focus);
+        root.removeEventListener('focusout', on.blur);
+      },
+    };
+  }
 
   /* ── Detent sheet ─────────────────────────────────────────────
      opts:
@@ -507,5 +648,5 @@
     };
   }
 
-  window.HUKit = { phone: phone, dcap: dcap, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, conusView: conusView, CONUS: CONUS, PHONE_MQ: PHONE_MQ };
+  window.HUKit = { phone: phone, dcap: dcap, peek: peek, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, conusView: conusView, CONUS: CONUS, PHONE_MQ: PHONE_MQ };
 })();

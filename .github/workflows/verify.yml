@@ -1,0 +1,57 @@
+# Two jobs, one file.
+#
+# verify: runs the same gate a session runs by hand (build, types, tests) on every push, so a
+# red X in David's inbox is the first time anyone hears a push broke the site, instead of the
+# next session finding it.
+#
+# keep-awake: the multiplayer backend is a free Supabase project, and free projects pause after
+# a week without a request. It paused on 2026-09-13 and nobody noticed until 2026-09-20. Every
+# three days this job makes one request to it. The host and the publishable key are read from
+# the game page itself, so there is nothing to configure in GitHub and nothing secret involved
+# (the publishable key ships inside the page by design).
+
+name: verify
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 */3 * *'
+
+jobs:
+  verify:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+
+  keep-awake:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: One request to the multiplayer backend
+        run: |
+          PAGE=src/secret-menu/uncharted-general/index.html
+          URL=$(grep -o "const SUPA = { url:'[^']*'" "$PAGE" | sed "s/.*url:'//; s/'$//")
+          KEY=$(grep -o "anonKey:'[^']*'" "$PAGE" | head -1 | sed "s/anonKey:'//; s/'$//")
+          echo "pinging $URL"
+          # A table read, not the API root: the root wants a secret key (401 even when healthy),
+          # while a read of a table that does not exist reaches the database and comes back 404
+          # with a PostgREST body. A paused project has no DNS at all (curl reports 000) and one
+          # still starting answers 521 from Cloudflare, so 200 and 404 are the only "awake" codes.
+          code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' -H "apikey: $KEY" "$URL/rest/v1/keepalive?select=id")
+          echo "backend answered $code"
+          case "$code" in
+            200|404) exit 0 ;;
+            *) echo "the backend did not answer like a running project; it may have paused"; exit 1 ;;
+          esac

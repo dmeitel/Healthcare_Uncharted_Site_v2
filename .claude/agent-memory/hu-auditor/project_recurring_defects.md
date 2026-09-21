@@ -103,3 +103,27 @@ copy each other's machinery verbatim, so a defect in one is almost always in its
     `src/_data/tools.js` desc nearly verbatim.
 24. **Duplicated tiles and facts** between a zone node and an expansion sub (Quality
     Measurement x2, PBM x2, one MA line verbatim x2). Search shows the twins.
+
+## New Learn-module classes (added 2026-09-20 from the Article 11 audit, see [[alarm-fatigue-audit]])
+
+25. **A new Learn module drops the hero furniture its siblings carry.** request-routing:434-438,
+    the-payer:196-198 and process-engineering:471-473 all put a `.card-fps` Atlas strip in the
+    hero, plus a byline and a hero bottom hairline (`.rr-hero{border-bottom}`); the alarm-fatigue
+    hero has none of the three, so the Atlas deep links exist only on the index card. Diff any
+    new module's hero against RR before calling its Atlas links "present".
+26. **Sources cited in-page as plain text while references.js holds the URL.** The page's
+    `.afe-src` lines link only the DOI; the TJC, Perspectives and ECRI URLs sit in
+    src/_data/references.js (CURATED top) and never reach the reader. The-payer (`.jp-source`,
+    line 367+) links every source and ends with a pointer to /learn/sources/. The footer
+    Source Policy promises "Each factual claim is linked to its source".
+27. **Blue-fill hover to the literal `#2478d4`.** That is `--blue-hi`; white text on it is
+    4.45:1 and hu-global.css:22 says so in its own comment and names `--blue-deep` as the
+    hover token. Grep `hover{[^}]*#2478d4` on every new page. RR and skill-demo already use
+    `--blue-deep`.
+28. **`display:block; overflow-x:auto` on a `<table>` at 699** instead of the wrapper div the
+    two sibling modules use (request-routing:216 `.rr-tblwrap`, process-engineering:358
+    `.pe-tblwrap`). Same visible result, drops table semantics in some engines.
+
+Also: Learn prose type is now on three different steps across modules (15px --t-body,
+16px --t-lede, 17px literal). The 08-23 audit ruled 17px/1.78 the precedent; the 09-20
+token comment calls --t-body "prose". Unresolved, flag it as drift and let David rule.

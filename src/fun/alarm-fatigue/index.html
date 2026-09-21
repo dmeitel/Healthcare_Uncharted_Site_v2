@@ -1160,6 +1160,7 @@ date: 2026-09-10
     justify-content:center; text-align:center; color:#324a56;
     background:linear-gradient(180deg,#dfeef2 0%, #cfe4de 60%, #c3dccf 100%);
     opacity:0; transition:opacity 3s ease; font-family:var(--font);
+    overflow-y:auto; -webkit-overflow-scrolling:touch;   /* a tall card scrolls; margin:auto on .lcard keeps a short one centered */
   }
   #lunch.show{display:flex;}
   #lunch.in{opacity:1;}
@@ -1173,7 +1174,7 @@ date: 2026-09-10
   /* clocked out: the parking lot at sunset, mountains, the sun going */
   #lunch.out{background:linear-gradient(180deg,#1b2a4a 0%,#5c3a6b 26%,#d9673f 52%,#f6b26b 72%,#f3c98a 78%);
     transition-duration:2.2s; color:#fff;}
-  #lunch.out .sunset{position:absolute; inset:0; overflow:hidden;}
+  #lunch.out .sunset{position:fixed; inset:0; overflow:hidden;}   /* fixed, so it fills the screen while the card scrolls over it */
   #lunch.out .sun{position:absolute; left:50%; top:56%; width:150px; height:150px; margin-left:-75px;
     border-radius:50%; background:radial-gradient(circle,#fff6d0 0%,#ffcf6a 45%,rgba(255,180,80,0) 72%);}
   #lunch.out .mtn{position:absolute; bottom:18%; width:64%; height:40%; background:#1d2233;
@@ -1188,7 +1189,7 @@ date: 2026-09-10
   #lunch.out .lunch-link, #lunch.out .lunch-more{color:#fff;}
   #lunch.out .lunch-info{background:rgba(0,0,0,.35); border-color:rgba(255,255,255,.4); color:#fff; text-shadow:none;}
   #lunch.out .lunch-info a{color:#ffd98a;}
-  #lunch .lcard{max-width:460px; padding:20px;}
+  #lunch .lcard{max-width:460px; padding:20px; margin:auto;}
   #lunch h1{font-family:var(--display); font-weight:600; font-size:28px; margin:0 0 14px;}
   #lunch p{font-size:var(--t-body); line-height:1.7; margin:8px 0;}
   #lunch .stats{margin:18px 0; font-size:var(--t-sub); color:#48605c;}
@@ -1258,12 +1259,17 @@ date: 2026-09-10
     .af[data-ehr="prophet"] .stage{left:50%; width:96vw;}
     .af[data-ehr="prophet"] .ehrTabs{display:flex;}
     /* the button scales to the lane it is given: still a fat thumb target,
-       no longer half the console. The readout comes down with it. */
-    #bigBtn{padding:14px 16px; font-size:clamp(15px, 4.3vw, 19px); min-height:64px;}
-    .clicker .count{font-size:28px;}
+       no longer half the console. The readout comes down with it.
+       The dock is fixed furniture, so its height is a budget: 20% of the screen,
+       DESIGN.md Tier 1. It also has to be a CONSTANT height, because the line at
+       the bottom rotates every 15 seconds and the longer ones wrap at 360; without
+       the reserved second line the dock grew and shrank under the thumb and took
+       the console with it. */
+    #bigBtn{padding:12px 16px; font-size:clamp(15px, 4.3vw, 19px); min-height:54px;}
+    .clicker .count{font-size:26px;}
     .clicker .count .u{font-size:var(--t-fine);}
-    .clicker .sub{font-size:var(--t-fine); margin-top:6px;}
-    .readout{padding:8px 12px 10px;}
+    .clicker .sub{font-size:var(--t-fine); margin-top:3px; min-height:2.8em;}
+    .readout{margin-top:4px; padding:5px 12px 6px;}
     .ehrNav{display:none;} .ehrBanner span{display:none;}
     .pc-menu{flex-basis:112px; width:112px;}
     .sb-rail{flex-basis:118px; width:118px;}
@@ -1574,9 +1580,9 @@ date: 2026-09-10
 
 <div id="afBigScreen" role="dialog" aria-modal="true" aria-labelledby="afbsH">
   <div class="afbs-card">
-    <h2 id="afbsH">Best on a bigger screen</h2>
-    <p>Alarm Fatigue crowds a phone the way a real floor crowds a hallway. It plays here. Turn the phone sideways and the monitors get room to breathe, and you can swipe the console left and right if a tile runs off the edge.</p>
-    <button id="afbsGo" type="button">Clock in anyway</button>
+    <h2 id="afbsH">Turn your phone sideways</h2>
+    <p>More room for the monitors. Swipe the console if a tile runs off the edge.</p>
+    <button id="afbsGo" type="button">Clock in</button>
   </div>
 </div>
 
@@ -5083,6 +5089,43 @@ function resumeShift(){
 }
 /* two ways off the floor: the lunch you finally bought (early, and your
    clock-out time is a record) or 1800, when the shift simply ends */
+/* ---- SHARE CARD: the shift as a 1080 square. Title and numbers only, the way the site's cards
+   work: no verdict line under the figures. Drawn on demand, downloaded as a JPEG, nothing sent. ---- */
+async function shiftCard(kind, download){
+  const W=1080, PAD=72, CW=W-PAD*2, INK='#0d1117', WHITE='#f6f9fc', TEAL='#4ECDC4', MUTE='#9fb3c8', LINE='#22314a';
+  try{ if(document.fonts && document.fonts.load){ await Promise.all([document.fonts.load('800 150px "Outfit"'), document.fonts.load('600 24px "IBM Plex Mono"'), document.fonts.load('400 34px "DM Sans"'), document.fonts.load('700 27px "Outfit"')]); } }catch(e){}
+  const c=document.createElement('canvas'); c.width=W; c.height=W; const g=c.getContext('2d');
+  g.fillStyle=INK; g.fillRect(0,0,W,W); g.fillStyle=TEAL; g.fillRect(0,0,W,8);
+  const logo=new Image(); await new Promise(res=>{ logo.onload=res; logo.onerror=res; logo.src='/brand/hu-logo-inline-dark.png'; });
+  if(logo.naturalWidth) g.drawImage(logo, W-PAD-96, 60, 96, 96);
+  g.fillStyle=TEAL; g.font='600 24px "IBM Plex Mono", monospace'; g.textBaseline='alphabetic';
+  g.fillText('ALARM FATIGUE  ·  SHIFT '+(MEM.shifts||1), PAD, 150);
+  g.fillStyle=WHITE; g.font='800 150px "Outfit", sans-serif'; g.fillText(clockStr(clockMin)+'.', PAD, 330);
+  g.fillStyle=TEAL; g.font='800 54px "Outfit", sans-serif';
+  g.fillText(kind==='lunch' ? 'Made it to lunch.' : kind==='out' ? 'Clocked out.' : 'Night shift is here.', PAD, 410);
+  g.fillStyle=TEAL; g.fillRect(PAD, 440, 120, 6);
+  const st=S.stats||{};
+  const rows=[
+    [fmt(st.clicks||0), 'tasks by hand'],
+    [fmt(st.alarms||0), 'interruptions handled'],
+    [fmt(st.codes||0), (st.codes===1?'code run':'codes run')],
+    [fmt(st.saves||0)+' / '+fmt(st.missed||0), 'caught early / missed'],
+    [fmt(st.breaks||0), 'breaks bought, 0 taken'],
+    [achCount()+' of '+ACH.length, 'achievements'],
+  ];
+  let y=530;
+  for(const [n,label] of rows){
+    g.fillStyle=WHITE; g.font='700 44px "Outfit", sans-serif'; g.textAlign='left'; g.fillText(n, PAD, y);
+    g.fillStyle=MUTE; g.font='400 30px "DM Sans", sans-serif'; g.fillText(label, PAD+300, y);
+    y+=66;
+  }
+  g.fillStyle=LINE; g.fillRect(PAD, 958, CW, 1);
+  g.fillStyle=WHITE; g.font='700 27px "Outfit", sans-serif'; g.textAlign='left'; g.fillText('Healthcare Uncharted', PAD, 1010);
+  g.fillStyle=MUTE; g.font='400 22px "IBM Plex Mono", monospace'; g.textAlign='right'; g.fillText('healthcareuncharted.com/fun/alarm-fatigue', W-PAD, 1010);
+  const blob=await new Promise(res=>c.toBlob(res, 'image/jpeg', 0.92));
+  if(download && blob){ const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download='alarm-fatigue-shift-'+(MEM.shifts||1)+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u), 1500); }
+  return blob;
+}
 function endShift(kind){
   const early = kind==='lunch';
   const newSkin = early && !MEM.ach.lunch;
@@ -5140,6 +5183,7 @@ function endShift(kind){
     '<div class="lunch-actions">'+
       '<button type="button" id="lunchStay">'+(early ? 'Pick the shift back up' : 'Stay for overtime')+'</button>'+
       '<button type="button" id="lunchReload" class="ghost">Clock in tomorrow</button>'+
+      '<button type="button" id="lunchShare" class="ghost" data-kind="'+(early?'lunch':'end')+'">Share card</button>'+
     '</div>'+
     '<a class="lunch-link" href="/learn/#fun">Back to Learn</a>'+
   '</div>';
@@ -5154,9 +5198,10 @@ const LUNCH_INFO='<p><b>About this game.</b> Alarm Fatigue is a clicker where ev
   'The shape of it comes from Neal Agarwal\'s <a href="https://neal.fun/stimulation-clicker/" target="_blank" rel="noopener">Stimulation Clicker</a>, '+
   'and from the idle games before it: Cookie Clicker, Universal Paperclips, A Dark Room, Candy Box.</p>'+
   '<p>The alarm fatigue is real. Bedside monitors fire hundreds of alarms per patient per day, most of them not actionable, and clinicians learn to tune them out. '+
-  'The Joint Commission has listed it as a patient safety goal since 2014. Nothing here is a patient. All of it is a shift.</p>'+
+  'The Joint Commission has listed it as a patient safety goal since 2014. The numbers, with their sources, are in <a href="/learn/alarm-fatigue/">the companion article</a>. Nothing here is a patient. All of it is a shift.</p>'+
   '<p>Built for <a href="/learn/#fun">Healthcare Uncharted</a>. No accounts, no tracking of you, and the badges live only on this device.</p>';
 function wireMoreInfo(L){
+  const sh=L.querySelector('#lunchShare'); if(sh) sh.addEventListener('click', ()=>{ sh.disabled=true; shiftCard(sh.dataset.kind, true).finally(()=>{ sh.disabled=false; }); });
   const m=L.querySelector('#lunchMore'), i=L.querySelector('#lunchInfo'); if(!m||!i) return;
   m.addEventListener('click', ()=>{ const open=i.hidden; i.hidden=!open; m.setAttribute('aria-expanded', String(open)); m.textContent = open ? 'Less info' : 'More info'; });
 }
@@ -5181,7 +5226,7 @@ function clockOut(){
       '<br>shift '+MEM.shifts+' in the books. Tomorrow starts at +'+Math.round((expMult()-1)*100)+'% experience</div>'+
     '<button type="button" class="hit lunch-more" id="lunchMore" aria-expanded="false">More info</button>'+
     '<div class="lunch-info" id="lunchInfo" hidden>'+LUNCH_INFO+'</div>'+
-    '<div class="lunch-actions"><button type="button" id="lunchReload" class="ghost">Clock in tomorrow</button></div>'+
+    '<div class="lunch-actions"><button type="button" id="lunchReload" class="ghost">Clock in tomorrow</button><button type="button" id="lunchShare" class="ghost" data-kind="out">Share card</button></div>'+
     '<a class="lunch-link" href="/learn/#fun">Back to Learn</a>'+
     '</div>';
   L.classList.add('show','out');
@@ -5485,7 +5530,7 @@ every(()=>checkAch(), 400);
 
 /* test hook (same pattern as the sim games' window.__hs/__er): lets a
    playtest or a harness drive the blocking flows without waiting on RNG */
-window.__af={ startCode, sendIM, MGR_IM, IMS, get IMQ(){return IMQ;}, S, earn,
+window.__af={ shiftCard, startCode, sendIM, MGR_IM, IMS, get IMQ(){return IMQ;}, S, earn,
   techs, effTps, renderTop, bankRows, get teleOn(){return teleOn;}, popHuddle,
   openEhrPanel, ACH, ACH_TEST, checkAch, resumeShift, wear, achCount, ELEM,
   announceUpgrade, UPG, renderShop, expMult, get MEM(){return MEM;},

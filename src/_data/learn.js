@@ -120,6 +120,23 @@ const learn = {
     },
 
     {
+      id:       'alarm-fatigue',
+      num:      '11',
+      category: 'Clinical Safety',
+      ps:       'P2 / P4',
+      title:    'Alarm Fatigue: What the Evidence Says',
+      desc:     'The numbers behind the Alarm Fatigue game: how many alarms a monitored bed produces, how many mean anything, what happened when nobody answered, and what The Joint Commission required hospitals to do about it.',
+      url:      '/learn/alarm-fatigue/',
+      tags:     ['Alarm Fatigue', 'Patient Safety', 'Joint Commission'],
+      status:   'live',
+      featured: true,
+      atlasLinks: [
+        { label: 'Nursing Workforce',    zone: 'provider', to: 'provider/nursing' },
+        { label: 'Clinical Informatics', zone: 'provider', to: 'provider/informatics' }
+      ]
+    },
+
+    {
       id:       'oxygen-payment-cuts',
       num:      'G01',
       category: 'Guest — Chrysalis Ashton',
@@ -424,7 +441,8 @@ learn.readingOrder = [
   '/learn/healthcare-data-sources/',
   '/learn/request-routing/',
   '/learn/oxygen-payment-cuts/',
-  '/learn/home-respiratory-timeline/'
+  '/learn/home-respiratory-timeline/',
+  '/learn/alarm-fatigue/'
 ];
 learn.nextByUrl = {};
 learn.readingOrder.forEach((u, i) => {

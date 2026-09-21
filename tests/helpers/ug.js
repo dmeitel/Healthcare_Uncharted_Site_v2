@@ -15,6 +15,8 @@ const vm = require('vm');
 
 const PAGE = path.join(__dirname, '..', '..', 'src', 'secret-menu', 'uncharted-general', 'index.html');
 const SYS_PAGE = path.join(__dirname, '..', '..', 'src', 'secret-menu', 'health-system', 'index.html');
+const KIT_DIR = path.join(__dirname, '..', '..', 'src', 'assets', 'js');
+const KITS = ['hu-save.js', 'hu-rng.js', 'hu-table.js'];   // in load order
 
 function stubEl(id) {
   return {
@@ -63,6 +65,8 @@ function loadPageSandbox(pageFile, hookName) {
     setTimeout, clearTimeout,
   };
   vm.createContext(ctx);
+  // the shared game kits load first, the way the page's <script src> tags do; they hang off window
+  for (const kit of KITS) new vm.Script(fs.readFileSync(path.join(KIT_DIR, kit), 'utf8'), { filename: kit }).runInContext(ctx);
   new vm.Script(src, { filename: path.basename(pageFile) + '.js' }).runInContext(ctx);
   assert.ok(ctx.window[hookName], 'test hook ' + hookName + ' must be exported');
   return {

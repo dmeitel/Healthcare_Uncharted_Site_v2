@@ -29,6 +29,8 @@ function load() {
     Date,
   };
   vm.createContext(ctx);
+  // the shared table kit loads first, the way the page's <script src> tag does; it hangs off window
+  new vm.Script(fs.readFileSync(path.join(__dirname, '..', 'src', 'assets', 'js', 'hu-table.js'), 'utf8'), { filename: 'hu-table.js' }).runInContext(ctx);
   new vm.Script(src, { filename: 'device-assembly.js' }).runInContext(ctx);
   assert.ok(ctx.window.__da, 'engine hook exported');
   return ctx.window.__da;

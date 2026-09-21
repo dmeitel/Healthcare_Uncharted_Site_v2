@@ -86,6 +86,7 @@ const USE = {
   lead10:    { label: 'Leading the AI Transition (Article 10)', href: '/learn/leading-the-ai-transition/' },
   product:   { label: 'Problem & the Product', href: '/rounds/problem-and-product/' },
   lawsFg:    { label: 'Laws & Paradoxes (FG01)', href: '/learn/laws-and-paradoxes/' },
+  alarm11:   { label: 'Alarm Fatigue: What the Evidence Says (Article 11)', href: '/learn/alarm-fatigue/' },
 };
 
 const LENS_LABELS = {
@@ -176,6 +177,23 @@ function extractMetricSources() {
 // ── CURATED: everything harvested from page HTML ─────────────────────────────
 
 const CURATED = [
+  // ── Article 11 · Alarm Fatigue: What the Evidence Says (all checked 2026-09-20) ──
+  { name: 'The Joint Commission · Sentinel Event Alert 50: Medical Device Alarm Safety in Hospitals', tag: '2013', org: 'standards',
+    url: 'https://www.jointcommission.org/en-us/knowledge-library/newsletters/sentinel-event-alert/issue-50', linkText: 'jointcommission.org',
+    desc: '98 alarm-related events reported 2009 to 2012, 80 of them deaths; several hundred alarm signals per patient per day, 85 to 99 percent needing no clinical intervention.',
+    usedBy: [USE.alarm11], retrieved: '2026-09' },
+  { name: 'Drew et al. · Alarm Fatigue with Physiologic Monitor Devices', tag: '2014', org: 'research',
+    url: 'https://doi.org/10.1371/journal.pone.0110274', linkText: 'PLoS ONE · DOI',
+    desc: '2,558,760 alarms from 461 ICU patients in 31 days, 187 audible per bed per day; 88.8 percent of annotated arrhythmia alarms were false.',
+    usedBy: [USE.alarm11], retrieved: '2026-09' },
+  { name: 'The Joint Commission · Perspectives, July 2013: the 2014 NPSG on Clinical Alarm Safety', tag: '2013', org: 'standards',
+    url: 'https://essentialhospitals.org/wp-content/uploads/2015/11/JCP0713_Announce_New_NSPG.pdf', linkText: 'Joint Commission Perspectives 33(7), copy at essentialhospitals.org',
+    desc: 'NPSG.06.01.01 announced: four elements of performance, phased in from January 2014 and January 2016.',
+    usedBy: [USE.alarm11], retrieved: '2026-09' },
+  { name: 'ECRI Institute · Top 10 Health Technology Hazards for 2015', tag: '2015', org: 'clinical',
+    url: 'https://www.ecri.org/Resources/Whitepapers_and_reports/Top_Ten_Technology_Hazards_2015.pdf', linkText: 'ecri.org',
+    desc: 'Alarm hazards, described as inadequate alarm configuration policies and practices, the number one hazard for 2015.',
+    usedBy: [USE.alarm11], retrieved: '2026-09' },
 
   // — Government & Regulatory —
   { name: 'Office of the National Coordinator for Health IT', tag: 'ONC', org: 'government',
