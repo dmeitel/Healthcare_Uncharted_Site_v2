@@ -69,8 +69,8 @@ test('the phone block is REACHABLE and raises every role', () => {
   // Find the media query as the CSS parser would: it must start a rule, not sit
   // inside a comment or behind a dangling one.
   const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  const mq = stripped.match(/@media\s*\(max-width:\s*699px\)\s*\{\s*:root\s*\{([^}]*)\}/);
-  assert.ok(mq, 'no reachable "@media (max-width:699px){ :root{ ... } }" block: '
+  const mq = stripped.match(/@media\s*\(max-width:\s*699px\)\s*,\s*\(max-height:\s*500px\)\s*\{\s*:root\s*\{([^}]*)\}/);
+  assert.ok(mq, 'no reachable "@media (max-width:699px), (max-height:500px){ :root{ ... } }" block: '
     + 'the phone type scale is not applying to any page');
 
   const phone = tokens(mq[1]);
@@ -86,12 +86,24 @@ test('the phone block is REACHABLE and raises every role', () => {
 
 test('the phone floors hold the numbers the standard names', () => {
   const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  const mq = stripped.match(/@media\s*\(max-width:\s*699px\)\s*\{\s*:root\s*\{([^}]*)\}/);
+  const mq = stripped.match(/@media\s*\(max-width:\s*699px\)\s*,\s*\(max-height:\s*500px\)\s*\{\s*:root\s*\{([^}]*)\}/);
   const phone = tokens(mq[1]);
   // These are the two numbers scripts/phone-check.js reads as its floors. If the
   // stylesheet ever hands it something lower, the gate quietly stops enforcing.
   assert.equal(phone.micro, 12, 'the absolute phone floor must be 12px');
   assert.equal(phone.label, 13, 'the functional phone floor must be 13px');
+});
+
+test('the phone token block tests the SHORTER side, not the width', () => {
+  // 2026-09-21. A width-only 699 query serves the desktop layout to a phone held
+  // sideways (about 740px wide), which is what broke 22 of 54 pages in landscape.
+  // The comfort scale is the worst place for it to regress: a landscape phone would
+  // silently drop back to the desktop type sizes.
+  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const widthOnly = [...stripped.matchAll(/@media\s*\(max-width:\s*699px\)(?!\s*,\s*\(max-height)/g)];
+  assert.deepEqual(widthOnly.map((m) => m[0]), [],
+    'a width-only 699px query is back in hu-global.css; the phone query is '
+    + '"(max-width:699px), (max-height:500px)", both halves, always');
 });
 
 test('no stylesheet reintroduces a sub-floor font-size literal', () => {

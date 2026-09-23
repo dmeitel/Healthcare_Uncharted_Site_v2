@@ -9,7 +9,7 @@
 (function () {
   var bar = document.getElementById('read-progress');
   var nav = document.querySelector('nav[aria-label="Primary"]');
-  var phone = window.matchMedia('(max-width: 699px)');
+  var phone = window.matchMedia('(max-width:699px), (max-height:500px)');
   var lastY = window.scrollY, ticking = false, hidden = false;
 
   function pctNow() {

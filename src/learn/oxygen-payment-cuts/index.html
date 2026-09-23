@@ -23,13 +23,14 @@ date: 2026-04-27
     --red: #E8433A;
     --red-dim: rgba(232,67,58,0.15);
     --red-glow: rgba(232,67,58,0.4);
+    --cut-ink: #F39D99;   /* the −% label on the cut segment: --red reads 2.4 to 3.3:1 on that red wash; same hue, lighter */
     --amber: #F5A623;
     --amber-dim: rgba(245,166,35,0.12);
     --oxy-teal: #2AB8B8;
     --teal-dim: rgba(42,184,184,0.12);
     --cream: #F0ECE3;
     --cream-soft: rgba(240,236,227,0.8);
-    --dim: #7A7A85;
+    --dim: #8A8A95;   /* was #7A7A85: 3.9:1 on --surface2, 4.3:1 on the panel */
     --dimmer: #3A3A42;
 
     /* HU brand tokens · work across both color schemes */
@@ -57,7 +58,8 @@ date: 2026-04-27
       --red: #B33024;
       --red-dim: rgba(179,48,36,0.10);
       --red-glow: rgba(179,48,36,0.18);
-      --amber: #B8761A;
+      --cut-ink: #7D2219;   /* same job on light: --red reads 3.0 to 3.8:1 on the wash */
+      --amber: #945F15;   /* was #B8761A, 3.5:1 as text; same hue, deeper */
       --amber-dim: rgba(184,118,26,0.12);
       --oxy-teal: #117575;
       --teal-dim: rgba(17,117,117,0.12);
@@ -367,7 +369,7 @@ date: 2026-04-27
     text-align: center;
     padding: 32px;
     gap: 14px;
-    color: var(--dimmer);
+    color: var(--dim);
     font-family: 'DM Mono', monospace;
     font-size:var(--t-micro);
     letter-spacing: 2px;
@@ -454,7 +456,8 @@ date: 2026-04-27
   .panel-sources {
     font-family: 'DM Mono', monospace;
     font-size:var(--t-micro);
-    color: var(--dimmer);
+    /* --dim is 4.26:1 on the dark panel surface; one step lighter, same grey. Light theme keeps --dim. */
+    color: #82828C;
     letter-spacing: 0.5px;
     line-height: 1.6;
     padding-top: 14px;
@@ -529,7 +532,6 @@ date: 2026-04-27
     font-family: 'DM Mono', monospace;
     font-size:var(--t-micro);
     color: var(--amber);
-    opacity: 0.5;
     margin-top: 10px;
     letter-spacing: 0.3px;
     line-height: 1.6;
@@ -547,7 +549,7 @@ date: 2026-04-27
     margin: 24px 60px 60px;
     font-family: 'DM Mono', monospace;
     font-size:var(--t-micro);
-    color: var(--dimmer);
+    color: var(--dim);
     letter-spacing: 0.5px;
     line-height: 1.7;
     border-top: 1px solid var(--oxy-border);
@@ -668,12 +670,22 @@ date: 2026-04-27
     pointer-events: none;
   }
   html[data-theme="light"] .v-grid-line { background: rgba(14,14,15,0.06); }
+  html[data-theme="light"] .panel-sources { color: var(--dim); }
+  /* The deeper light amber takes the page ink on its fill, and the amber notes drop their
+     fade: at .7 to .8 opacity they composite under 4.5:1 on this ground. The sources line
+     lost its .5 fade in both themes (3.1:1 even on dark). A source link dimmed to .8 on
+     hover reads 3.5:1 here, so in light the hover solidifies the underline instead. */
+  html[data-theme="light"] .infl-btn.active { color: var(--bg); }
+  html[data-theme="light"] .infl-note,
+  html[data-theme="light"] .rate-context-label,
+  html[data-theme="light"] .rate-context-text { opacity: 1; }
+  html[data-theme="light"] .rate-context-source a:hover { opacity: 1; border-bottom-style: solid; }
 
   /* click hint */
   .click-hint {
     font-family: 'DM Mono', monospace;
     font-size:var(--t-micro);
-    color: var(--dimmer);
+    color: var(--dim);
     letter-spacing: 2px;
     text-transform: uppercase;
     margin: 0 60px 20px;
@@ -724,6 +736,8 @@ date: 2026-04-27
     padding: 5px 12px; border-radius: 20px;
     margin-top: 18px;
   }
+  /* --hu-accent is 4.49:1 on the pill's own wash over the header's red tint */
+  html[data-theme="light"] .hu-guest-pill { color: var(--teal-ink); }
 
   .hu-bio {
     background: var(--hu-surface);
@@ -1117,7 +1131,7 @@ function renderChart() {
       cutLabel.style.cssText = `
         font-family:'DM Mono',monospace;
         font-size:var(--t-micro);
-        color:var(--red);
+        color:var(--cut-ink);
         letter-spacing:1px;
         white-space:nowrap;
         padding:0 6px;

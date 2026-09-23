@@ -762,7 +762,7 @@ function renderLayers(){
     h+=`<span class="ln" style="background:${layer.c}16;color:${layer.c}cc;border-color:${layer.c}30">L${layer.n}</span>`;
     h+=`</div>`;
     h+=`<div class="lt" style="color:${layer.c}ee">${layer.t.toUpperCase()}</div>`;
-    h+=`<div class="lsu">${layer.st}</div></div><div class="lnd" data-lc="${layer.c}">`;
+    h+=`<div class="lsu">${layer.st}</div></div><div class="lnd" data-lc="${layer.c}" style="--lc:${layer.c}">`;
     layer.nd.forEach((nd,ni)=>{
       const id=nd[0],lbl=nd[1],isSel=id===sel,isPath=ps.has(id);
       const cls=`nc${isPath?' ip':''}${isSel?' sl':''}`;
@@ -776,7 +776,7 @@ function renderLayers(){
       h+=`<button type="button" class="${cls}" id="nc-${id}" style="${bs}${cs}"${isSel?' aria-current="true"':''} data-node="${id}">${icon}<span>${lbl.replace(/\n/g,'<br>')}</span>${smTag}</button>`;
     });
     h+=`</div></div>`;
-    if(hasA&&SM[sel]&&!isDimmed){const sm=SM[sel];const sc=sm.c;h+=`<div class="sml" style="background:linear-gradient(135deg,${sc}12 0%,${sc}08 100%);border-top:2px solid ${sc}88;border-bottom:2px solid ${sc}44;box-shadow:0 0 0 1px ${sc}18 inset,0 4px 32px ${sc}1a,0 -2px 20px ${sc}10"><div class="sml-inner"><div class="sml-lbl" style="color:${sc};border-right-color:${sc}60">&#x21B3; ${sm.lbl}</div><span style="width:16px;flex-shrink:0;display:inline-block"></span>`;sm.nd.forEach((nd,ni)=>{if(ni>0)h+=`<svg width="40" height="20" style="flex-shrink:0;align-self:center" viewBox="0 0 40 20"><line x1="2" y1="10" x2="33" y2="10" stroke="${sc}" stroke-width="1.5" stroke-opacity="0.5"/><circle cx="36" cy="10" r="3" fill="${sc}" fill-opacity="0.8"/></svg>`;const isSub=subSel===nd[0];h+=`<button type="button" class="nc ip${isSub?' sl':''}" id="nc-${nd[0]}" style="border-color:${sc}${isSub?'':'35'}"${isSub?' aria-current="true"':''} data-subnode="${nd[0]}">${nd[1].replace(/\n/g,'<br>')}</button>`;});h+=`</div></div>`;}
+    if(hasA&&SM[sel]&&!isDimmed){const sm=SM[sel];const sc=sm.c;h+=`<div class="sml" style="background:linear-gradient(135deg,${sc}12 0%,${sc}08 100%);border-top:2px solid ${sc}88;border-bottom:2px solid ${sc}44;box-shadow:0 0 0 1px ${sc}18 inset,0 4px 32px ${sc}1a,0 -2px 20px ${sc}10"><div class="sml-inner"><div class="sml-lbl" style="--lc:${sc};border-right-color:${sc}60">&#x21B3; ${sm.lbl}</div><span style="width:16px;flex-shrink:0;display:inline-block"></span>`;sm.nd.forEach((nd,ni)=>{if(ni>0)h+=`<svg width="40" height="20" style="flex-shrink:0;align-self:center" viewBox="0 0 40 20"><line x1="2" y1="10" x2="33" y2="10" stroke="${sc}" stroke-width="1.5" stroke-opacity="0.5"/><circle cx="36" cy="10" r="3" fill="${sc}" fill-opacity="0.8"/></svg>`;const isSub=subSel===nd[0];h+=`<button type="button" class="nc ip${isSub?' sl':''}" id="nc-${nd[0]}" style="border-color:${sc}${isSub?'':'35'}"${isSub?' aria-current="true"':''} data-subnode="${nd[0]}">${nd[1].replace(/\n/g,'<br>')}</button>`;});h+=`</div></div>`;}
     } // end isHidden check
   });
   /* Both panels rebuild wholesale, which drops keyboard focus to <body>. Re-seat
@@ -801,7 +801,7 @@ function renderPanel(){
     let yah=`<div class="rp-top">`;
     yah+=`<div class="rp-icon" style="background:${lc}18;border-color:${lc}45;color:${lc}">${NI[smd.parent]||'<i data-lucide="layers" width="20" height="20" aria-hidden="true"></i>'}</div>`;
     yah+=`<div class="rp-meta"><div class="rnt">${smd.t}</div>`;
-    yah+=`<div class="rly" style="color:${lc}88">Sub-process · ${par.t||smd.parent}</div></div></div>`;
+    yah+=`<div class="rly" style="color:${lc}f0">Sub-process · ${par.t||smd.parent}</div></div></div>`;
     if(smd.w){
       yah+=`<div class="rs"><div class="rh">What Happens Here</div>`;
       smd.w.forEach(b=>yah+=`<div class="rbl" style="padding-left:10px;border-left:2px solid ${lc}28;margin-bottom:6px">${b}</div>`);
@@ -814,7 +814,7 @@ function renderPanel(){
       smd.m.forEach(([v,l])=>{
         const src=l.match(/(\(.*?\))$/);
         const lbl=src?l.slice(0,l.lastIndexOf(src[0])).trim():l;
-        const srcTxt=src?`<span style="display:block;font-size:var(--t-micro);opacity:0.5;margin-top:2px">${src[0]}</span>`:'';
+        const srcTxt=src?`<span style="display:block;font-size:var(--t-micro);opacity:0.72;margin-top:2px">${src[0]}</span>`:'';
         yah+=`<div class="mi" style="--sc:${lc}75"><div class="mv" style="color:${lc}">${v}</div><div class="ml">${lbl}${srcTxt}</div></div>`;
       });
       yah+=`</div></div>`;
@@ -854,7 +854,7 @@ function renderPanel(){
   let yah=`<div class="rp-top">`;
   yah+=`<div class="rp-icon" style="background:${lc}1e;border-color:${lc}50;color:${lc}">${icon}</div>`;
   yah+=`<div class="rp-meta"><div class="rnt">${title}</div>`;
-  if(layerLabel)yah+=`<div class="rly" style="color:${lc}90">${layerLabel}</div>`;
+  if(layerLabel)yah+=`<div class="rly" style="color:${lc}f0">${layerLabel}</div>`;
   yah+=`</div></div>`;
 
   // What happens here bullets
@@ -872,7 +872,7 @@ function renderPanel(){
     det.m.forEach(([v,l])=>{
       const src=l.match(/(\(.*?\))$/);
       const lbl=src?l.slice(0,l.lastIndexOf(src[0])).trim():l;
-      const srcTxt=src?`<span style="display:block;font-size:var(--t-micro);opacity:0.5;margin-top:2px">${src[0]}</span>`:'';
+      const srcTxt=src?`<span style="display:block;font-size:var(--t-micro);opacity:0.72;margin-top:2px">${src[0]}</span>`:'';
       yah+=`<div class="mi" style="--sc:${lc}75"><div class="mv" style="color:${lc}">${v}</div><div class="ml">${lbl}${srcTxt}</div></div>`;
     });
     yah+=`</div></div>`;
@@ -1093,7 +1093,7 @@ function renderLeftPanel(){
     const tag=nodeId?'button':'div';
     pf+=`<${tag} class="pti${isCur?' ptic':''}${nodeId?' ptil':''}${hasNext?' ptib':''}"${nodeId?` type="button" data-node="${nodeId}"`:''}>`;
     pf+=`<span class="ptid" style="${isCur?`background:${lc};border-color:${lc}`:''}"></span>`;
-    pf+=`<span class="ptilab" style="${isCur?`color:${lc};font-weight:600`:''}">${item}</span>`;
+    pf+=`<span class="ptilab" style="${isCur?`--lc:${lc};color:${lc};font-weight:600`:''}">${item}</span>`;
     pf+=`</${tag}>`;
   });
   pf+=`<div class="ptl-more">&#x2026; continue to deeper layers</div>`;

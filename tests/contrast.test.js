@@ -61,6 +61,7 @@ const PAIRS = [
   ['dark',  '#FFFFFF',    '--blue',      4.5, '.btn-primary, .nav-pill'],
   ['dark',  '#FFFFFF',    '--blue-deep', 4.5, 'primary hover'],
   ['dark',  '#062024',    '--teal',      4.5, 'the Ink State Rule: chips, icon-btn, v2 button'],
+  ['dark',  '#062024',    '--green',     4.5, 'sql-mystery Run button: the same ink on the green fill (white was 3.48)'],
   ['light', '--t1',       '--dark',      4.5, 'headings on the light ground'],
   ['light', '--t2',       '--dark',      4.5, 'body text on the light ground'],
   ['light', '--t2',       '--surface',   4.5, 'body text on white cards'],
@@ -72,17 +73,26 @@ const PAIRS = [
   ['light', '--green-dk', '--dark',      4.5, 'DESIGN.md: 5.74'],
   ['light', '--red-dk',   '--dark',      4.5, 'DESIGN.md: 5.81'],
   ['light', '--amber-dk', '--surface',   4.5, 'amber as text on white'],
+  ['light', '--amber-dk', '--dark',      4.5, 'amber as small text on the light page ground (5.09 since 2026-09-23)'],
+  ['light', '--amber-dk', '--raised',    4.5, 'amber as text on the raised surface (4.64)'],
   ['light', '--teal-dk',  '--surface',   3.0, 'icons, borders, large text ONLY (3.46 on white)'],
   ['light', '#FFFFFF',    '--blue',      4.5, '.btn-primary on light'],
   ['light', '#062024',    '--teal',      4.5, 'the teal-fill ink on light'],
+  ['light', '#062024',    '--green',     4.5, 'sql-mystery Run button on light'],
+  // Rounds figures in light theme (rounds.css color map, 2026-09-23)
+  ['light', '#062024',    '--teal-dk',   4.5, 'ink inside the teal bar'],
+  ['light', '--dgm-ink',  '--raised',   4.5, 'figure labels on raised boxes'],
+  ['light', '--t2',       '--raised',   4.5, 'figure body text on raised boxes'],
+  ['light', '--t1',       '--raised',   4.5, 'figure headings on raised boxes'],
+  ['light', '--dgm-ink',  '--surface',  4.5, 'figure labels on the figure ground'],
+  ['light', '--blue',     '--surface',  4.5, 'blue figure text'],
+  ['light', '--red-dk',   '--surface',  4.5, 'red figure text'],
 ];
 
 /* Measured but not gated: pairs the ladder allows only at large sizes, listed so the number
-   is visible in the run. --amber-dk on the light PAGE ground sits under 4.5 (about 4.4). */
+   is visible in the run. */
 /** @type {Array<[string, string, string, string]>} */
-const WATCH = [
-  ['light', '--amber-dk', '--dark', 'amber as small text on the light page ground'],
-];
+const WATCH = [];
 
 test('the token ladder clears its documented contrast floors in both themes', () => {
   assert.ok(Object.keys(DARK).length > 20, 'the :root token block parsed');

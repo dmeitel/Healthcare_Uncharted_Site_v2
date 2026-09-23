@@ -9,7 +9,7 @@
 What the analysis found:
 
 1. **The games bring strangers.** One Reddit post about Alarm Fatigue on 2026-09-10 produced about 1,500 views in seven days, eight times the site's previous MONTHLY traffic. Individual Rounds and Learn pages get single digits each over 90 days.
-2. **The multiplayer that shipped 2026-09-07 cannot connect today.** The Supabase host named in the hospital game and in the CSP no longer resolves (checked from the local resolver and from Cloudflare's public one). Paused or deleted, the dashboard will say which; either way no browser reaches it.
+2. **RESOLVED 2026-09-20, the same day this plan was written; the finding below is kept only so nobody re-diagnoses it.** The project was PAUSED, not deleted, and a paused free project has no DNS at all, which is exactly what a deleted one looks like. David restored it from the dashboard: same address, no repoint. Verified again 2026-09-21, the REST endpoint answers. A keep-alive ping now runs. Original finding: the Supabase host named in the hospital game and in the CSP no longer resolved (checked from the local resolver and from Cloudflare's public one). Paused or deleted, the dashboard will say which; either way no browser reaches it.
 3. **Four of the five games are built the way multiplayer needs** (a state object, a verb table or pure operations, save strings). The most-played one, Alarm Fatigue, is not, and it has no tests.
 4. **The plumbing runs only on a laptop.** No CI, no scaffold for a new post, the RSS feed carries 12 of 44 pages, and 60 files sit uncommitted.
 5. **The table kit lives inside one game.** The design doc's own rule says the second multiplayer game extracts it. This quarter builds the second one.
@@ -104,9 +104,9 @@ Duplicated across the games, each written again by hand: settings save, toast or
 ### 1.4 Platform
 
 - Static Eleventy on Netlify. CSP enforced. `'unsafe-inline'` stays because every game is an inline script. `connect-src` allows exactly one backend host.
-- Supabase project `swntgsmpcqyuapkkyaqj`: NXDOMAIN from two resolvers on 2026-09-20. Free projects pause after a week idle; the design doc predicted this on 2026-09-07 and named a keep-alive ping as the fix. The ping was never built.
+- Supabase project `swntgsmpcqyuapkkyaqj`: RESTORED and answering (401 from the keyless REST endpoint, which is the correct answer, re-verified 2026-09-21). It returned NXDOMAIN from two resolvers earlier on 2026-09-20 because it was PAUSED, and a paused free project has no DNS. Free projects pause after a week idle; the design doc predicted this on 2026-09-07 and named a keep-alive ping as the fix. The ping was never built.
 - One Netlify function (the GSA per diem proxy). Netlify Forms collecting. Four Netlify projects build every push and one serves the domain.
-- Gates: `npm run verify` (build, tsc, 145 tests) and `npm run phone` (Playwright at 360 and 699, floors read from the type tokens). They run only when a session runs them.
+- Gates: `npm run verify` (build, tsc, 221 tests as of 2026-09-21) and `npm run phone` (Playwright across eight viewports, whole-page, floors read from the type tokens). They run only when a session runs them.
 - 60 files uncommitted (the two-surfaces migration and the phone sweep). A second session is working the diagram reflow today; this plan does not touch those files.
 - Design phases: Device Assembly parked at alpha, cost of living round 2 unread, merged band awaiting close, reading surface parked.
 

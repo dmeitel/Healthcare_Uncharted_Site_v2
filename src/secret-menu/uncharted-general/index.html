@@ -9,28 +9,49 @@ eleventyExcludeFromCollections: true
 {% raw %}
 <style>
 #ug{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; }
+/* Light skin (2026-09-23, David: "every page needs to be able to do both"). The dark look is
+   untouched: every accent reads var(--lt-x, <the dark hex it always drew>), and --lt-x exists only
+   in the light theme, so dark falls through to its own hex. Light turns the panels white and each
+   accent to its deep text step, 4.5:1 or better on white and on the raised slate. The green
+   filled buttons keep their fill and their dark ink in both themes. */
+[data-theme="light"] #ug{ --surface:#FFFFFF; --raised:#EEF2F7; --border:#CBD5E0; --border2:#A0AEC0; --t3:#4A5568; --amber:#7A5700;
+  --lt-green:#1B6B4C; --lt-green-hi:#12553B; --lt-red:#A8352F; --lt-crit:#C22F2F; --lt-amber:#7A5700; --lt-orange:#9E4A12;
+  --lt-lime:#437516; --lt-yellow:#6B6000; --lt-blue:#1B5FA8; --lt-blueline:rgba(27,95,168,.35); --lt-teal:#0D7268;
+  --lt-purple:#5530C0; --lt-slate:#4A5568; --lt-line:var(--border); --lt-line2:var(--border2);
+  --lt-track:rgba(13,32,54,.1); --lt-hair:rgba(13,32,54,.08); --lt-grid:rgba(13,32,54,.1); --lt-zero:rgba(13,32,54,.3);
+  --lt-tint:rgba(13,32,54,.03); --lt-input:var(--raised); --lt-inputline:#647C99; --lt-tip:#FFFFFF; --lt-tipink:var(--t1);
+  --lt-hoverbg:#E2E8F0; --lt-dot:rgba(13,32,54,.5); --lt-dot-hi:rgba(13,32,54,.7);
+  --lt-cardshade:0 1px 6px rgba(13,32,54,.08); --lt-lift:0 8px 22px rgba(13,32,54,.14); --lt-dimop:1; }
+/* The chart room's face-down rows drop the fade for plain secondary ink in light; the green
+   "no victory yet" could not hold 4.5:1 through any fade on white. */
+[data-theme="light"] #ug .cr-row.dim span,[data-theme="light"] #ug .cr-row.dim b{color:var(--t3)}
+[data-theme="light"] #ug .ug-panel,[data-theme="light"] #ug .ug-kpi,[data-theme="light"] #ug .ug-chartwrap{box-shadow:0 2px 10px rgba(13,32,54,.07)}
+[data-theme="light"] #ug .ug-board{background:linear-gradient(180deg,#EEF2F7,#E2E8F0)}
+[data-theme="light"] #ug .ug-report{background:var(--raised)}
+[data-theme="light"] #ug .ug-deftip{box-shadow:0 12px 32px rgba(13,32,54,.18)}
+[data-theme="light"] #ug .ug-start-foot{box-shadow:0 -14px 24px -8px rgba(13,32,54,.14)}
 #ug .ug-panel,#ug .ug-kpi,#ug .ug-chartwrap{box-shadow:0 3px 14px rgba(0,0,0,.45)}
 .ug-wrap{max-width:1280px;margin:0 auto;padding:28px 24px 80px;font-family:var(--font)}
 .ug-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none;margin-bottom:6px}
-.ug-back:hover{color:#4ecb8d}
+.ug-back:hover{color:var(--lt-green,#4ecb8d)}
 .ug-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
 .ug-titles h1{font-family:var(--display);font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1.04}
-.ug-titles h1 em{font-style:normal;color:#4ecb8d}
+.ug-titles h1 em{font-style:normal;color:var(--lt-green,#4ecb8d)}
 .ug-titles p{font-size:var(--t-ui);color:var(--t3);margin-top:6px;font-family:var(--mono)}
 
 .ug-kpis{display:flex;gap:10px;flex-wrap:wrap}
 .ug-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;min-width:108px}
 .ug-kpi .k-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
 .ug-kpi .k-val{font-family:var(--display);font-size:20px;font-weight:700;line-height:1}
-.ug-kpi.good .k-val{color:#4ecb8d}.ug-kpi.warn .k-val{color:var(--amber)}.ug-kpi.bad .k-val{color:#ff7a7a}
-.ug-meter{height:4px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:7px;overflow:hidden}
+.ug-kpi.good .k-val{color:var(--lt-green,#4ecb8d)}.ug-kpi.warn .k-val{color:var(--amber)}.ug-kpi.bad .k-val{color:var(--lt-red,#ff7a7a)}
+.ug-meter{height:4px;border-radius:3px;background:var(--lt-track,rgba(255,255,255,.08));margin-top:7px;overflow:hidden}
 .ug-meter span{display:block;height:100%;border-radius:3px}
 
 /* Mission = two cards side by side: the hard Objective (left), the narrative Briefing (right) */
 #ug-mission{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:14px;margin-bottom:18px;align-items:stretch}
 @media(max-width:760px){#ug-mission{grid-template-columns:1fr}}
 .ug-obj{background:linear-gradient(135deg,rgba(45,155,111,.16),rgba(78,205,196,.05));border:1px solid var(--border);border-left:3px solid #2D9B6F;border-radius:0 12px 12px 0;padding:16px 20px;display:flex;flex-direction:column}
-.ug-obj .m-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:#4ecb8d;margin-bottom:8px}
+.ug-obj .m-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--lt-green,#4ecb8d);margin-bottom:8px}
 .ug-obj .m-goal{font-size:17px;font-weight:600;color:var(--t1);line-height:1.4}
 .ug-obj-foot{margin-top:auto;padding-top:14px;display:flex;flex-direction:column;gap:7px}
 .m-opt{font-size:var(--t-fine);color:var(--t2);line-height:1.5}
@@ -41,29 +62,29 @@ eleventyExcludeFromCollections: true
 .ug-brief .ug-event{margin-top:0}
 .brief-empty{font-size:var(--t-fine);color:var(--t3);line-height:1.6}
 .ug-tut{border-top:1px dashed var(--border);padding-top:11px}
-.ug-tut-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:transparent;border:none;padding:0;cursor:pointer;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.04em;color:#4ecb8d;font-weight:600;text-align:left}
-.ug-tut-toggle:hover{color:#7fe0c2}
+.ug-tut-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:transparent;border:none;padding:0;cursor:pointer;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.04em;color:var(--lt-green,#4ecb8d);font-weight:600;text-align:left}
+.ug-tut-toggle:hover{color:var(--lt-green-hi,#7fe0c2)}
 .ug-tut-toggle .tt-caret{font-size:var(--t-micro);flex-shrink:0}
 .ug-tut-body{font-size:var(--t-fine);color:var(--t2);line-height:1.6;margin-top:10px}
 .ug-event{margin-top:12px;padding:12px 16px;background:rgba(223,87,82,.1);border:1px solid rgba(223,87,82,.3);border-radius:10px;display:flex;gap:12px;align-items:flex-start}
-.ug-event .e-tag{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ff9090;background:rgba(223,87,82,.15);border:1px solid rgba(223,87,82,.35);border-radius:6px;padding:4px 8px;white-space:nowrap;flex-shrink:0}
-.ug-event .e-body strong{color:#ffb3b3;font-size:var(--t-ui)}
+.ug-event .e-tag{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--lt-red,#ff9090);background:rgba(223,87,82,.15);border:1px solid rgba(223,87,82,.35);border-radius:6px;padding:4px 8px;white-space:nowrap;flex-shrink:0}
+.ug-event .e-body strong{color:var(--lt-red,#ffb3b3);font-size:var(--t-ui)}
 .ug-event .e-body p{font-size:var(--t-fine);color:var(--t2);margin-top:3px;line-height:1.5}
 .ug-event.calm{background:rgba(78,205,196,.07);border-color:rgba(78,205,196,.25)}
-.ug-event.calm .e-tag{color:var(--teal);background:rgba(78,205,196,.1);border-color:rgba(78,205,196,.3)}
-.ug-event.calm .e-body strong{color:var(--teal)}
-.e-chosen{margin-top:8px;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.06em;color:#4ecb8d;text-transform:uppercase}
+.ug-event.calm .e-tag{color:var(--lt-teal,var(--teal));background:rgba(78,205,196,.1);border-color:rgba(78,205,196,.3)}
+.ug-event.calm .e-body strong{color:var(--lt-teal,var(--teal))}
+.e-chosen{margin-top:8px;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.06em;color:var(--lt-green,#4ecb8d);text-transform:uppercase}
 /* Decision (choice) event overlay */
-.ug-modal-choice h2{color:#E8A838}
-.ug-choice-tag{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#E8A838;margin-bottom:8px}
+.ug-modal-choice h2{color:var(--lt-amber,#E8A838)}
+.ug-choice-tag{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lt-amber,#E8A838);margin-bottom:8px}
 .ug-choices{display:flex;flex-direction:column;gap:11px;margin-top:6px}
 .ug-choice{text-align:left;background:var(--raised);border:1px solid var(--border);border-radius:11px;padding:14px 16px;cursor:pointer;font-family:var(--font);transition:all .14s}
-.ug-choice:hover:not(:disabled){border-color:#4ecb8d;transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.38)}
+.ug-choice:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);transform:translateY(-2px);box-shadow:var(--lt-lift,0 8px 22px rgba(0,0,0,.38))}
 .ug-choice:disabled{opacity:.45;cursor:not-allowed}
 .ug-choice .ch-label{font-weight:700;font-size:var(--t-sub);color:var(--t1);margin-bottom:4px}
-.ug-choice .ch-cant{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#ff7a7a;margin-left:6px}
+.ug-choice .ch-cant{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--lt-red,#ff7a7a);margin-left:6px}
 .ug-choice .ch-desc{font-size:var(--t-fine);color:var(--t2);line-height:1.5;margin-bottom:9px}
-.ug-choice .ch-eff{font-family:var(--mono);font-size:var(--t-micro);color:#4ecb8d;letter-spacing:.02em;line-height:1.5}
+.ug-choice .ch-eff{font-family:var(--mono);font-size:var(--t-micro);color:var(--lt-green,#4ecb8d);letter-spacing:.02em;line-height:1.5}
 
 .ug-main{display:grid;grid-template-columns:320px 1fr;grid-template-areas:"side map" "side chart";gap:18px;align-items:start}
 .ug-map-area{grid-area:map;min-width:0}
@@ -73,110 +94,110 @@ eleventyExcludeFromCollections: true
 .ug-mapwrap{position:relative}
 /* HTML hospital board: floors of interactive unit cards */
 .ug-board{background:linear-gradient(180deg,#0e1b2e,#0a1320);border:1px solid var(--border);border-radius:14px;padding:14px 16px 18px}
-.ug-board-sign{text-align:center;font-family:var(--mono);font-size:var(--t-fine);letter-spacing:.18em;color:#8fabcc;font-weight:600;padding:4px 0 12px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.ug-board-sign{text-align:center;font-family:var(--mono);font-size:var(--t-fine);letter-spacing:.18em;color:var(--lt-slate,#8fabcc);font-weight:600;padding:4px 0 12px;border-bottom:1px solid var(--border);margin-bottom:14px}
 /* Executive suite, the CEO's hexagon tile at the top of the board */
 .ug-ceo-suite{display:flex;align-items:center;gap:16px;padding:6px 4px 16px;margin-bottom:14px;border-bottom:1px solid var(--border)}
 .ceo-hex{width:96px;flex-shrink:0;cursor:help}
 .ceo-hex svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(0 3px 12px rgba(123,77,255,.28))}
-.ceo-hex-bg{fill:rgba(123,77,255,.18);stroke:#b06bff;stroke-width:2;transition:filter .12s}
+.ceo-hex-bg{fill:rgba(123,77,255,.18);stroke:var(--lt-purple,#b06bff);stroke-width:2;transition:filter .12s}
 .ceo-hex:hover .ceo-hex-bg{filter:brightness(1.3)}
-.ceo-hex-code{fill:#dcc6ff;font-family:var(--display);font-weight:800;font-size:30px}
-.ceo-hex-lbl{fill:#9a7dd0;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.22em}
+.ceo-hex-code{fill:var(--lt-purple,#dcc6ff);font-family:var(--display);font-weight:800;font-size:30px}
+.ceo-hex-lbl{fill:var(--lt-purple,#9a7dd0);font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.22em}
 .ceo-suite-info{min-width:0}
-.cs-office{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.16em;text-transform:uppercase;color:#9a7dd0;margin-bottom:4px}
+.cs-office{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.16em;text-transform:uppercase;color:var(--lt-purple,#9a7dd0);margin-bottom:4px}
 .cs-name{font-family:var(--display);font-weight:800;font-size:18px;color:var(--t1);line-height:1.1}
-.cs-trait{font-family:var(--display);font-weight:700;font-size:var(--t-ui);color:#c6a8ff;margin:2px 0 9px}
+.cs-trait{font-family:var(--display);font-weight:700;font-size:var(--t-ui);color:var(--lt-purple,#c6a8ff);margin:2px 0 9px}
 .ceo-ups{display:flex;flex-wrap:wrap;gap:6px}
-.ceo-up{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.03em;padding:3px 8px;border-radius:7px;background:rgba(123,77,255,.14);border:1px solid rgba(176,107,255,.4);color:#c6a8ff;cursor:help}
-.ceo-up:hover{background:rgba(123,77,255,.26);border-color:#b06bff}
+.ceo-up{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.03em;padding:3px 8px;border-radius:7px;background:rgba(123,77,255,.14);border:1px solid rgba(176,107,255,.4);color:var(--lt-purple,#c6a8ff);cursor:help}
+.ceo-up:hover{background:rgba(123,77,255,.26);border-color:var(--lt-purple,#b06bff)}
 .ceo-up-empty{font-size:var(--t-label);color:var(--t3);font-style:italic;line-height:1.5}
 /* Fire / appoint controls on the CEO suite, and the vacant-seat state after a firing */
 .ceo-act{margin-top:11px;padding:8px 12px;border-radius:8px;font-family:var(--font);font-size:var(--t-label);font-weight:600;cursor:pointer;transition:all .12s;border:1px solid;align-self:flex-start}
-.ceo-act.fire{border-color:rgba(223,87,82,.5);background:rgba(223,87,82,.1);color:#ff9090}
-.ceo-act.fire:hover{border-color:#df5752;background:rgba(223,87,82,.2);color:#ffb3b3}
-.ceo-act.hire{border-color:#4ecb8d;background:rgba(78,205,196,.1);color:#4ecb8d}
-.ceo-act.hire:hover{background:rgba(78,205,196,.2);border-color:#7fe0c2}
+.ceo-act.fire{border-color:rgba(223,87,82,.5);background:rgba(223,87,82,.1);color:var(--lt-red,#ff9090)}
+.ceo-act.fire:hover{border-color:var(--lt-red,#df5752);background:rgba(223,87,82,.2);color:var(--lt-red,#ffb3b3)}
+.ceo-act.hire{border-color:var(--lt-green,#4ecb8d);background:rgba(78,205,196,.1);color:var(--lt-green,#4ecb8d)}
+.ceo-act.hire:hover{background:rgba(78,205,196,.2);border-color:var(--lt-green-hi,#7fe0c2)}
 .ug-ceo-suite .ceo-suite-info{display:flex;flex-direction:column}
 .ceo-hex.vacant svg{filter:drop-shadow(0 3px 12px rgba(232,168,56,.25))}
-.ceo-hex.vacant .ceo-hex-bg{fill:rgba(232,168,56,.12);stroke:#E8A838;stroke-width:2;stroke-dasharray:5 4}
-.ceo-hex.vacant .ceo-hex-code{fill:#E8A838}
-.ceo-hex.vacant .ceo-hex-lbl{fill:#caa85f;letter-spacing:.12em}
-.ug-ceo-suite.vacant .cs-trait{color:#E8A838}
-.cs-trait.urgent{color:#ff7a7a}
+.ceo-hex.vacant .ceo-hex-bg{fill:rgba(232,168,56,.12);stroke:var(--lt-amber,#E8A838);stroke-width:2;stroke-dasharray:5 4}
+.ceo-hex.vacant .ceo-hex-code{fill:var(--lt-amber,#E8A838)}
+.ceo-hex.vacant .ceo-hex-lbl{fill:var(--lt-amber,#caa85f);letter-spacing:.12em}
+.ug-ceo-suite.vacant .cs-trait{color:var(--lt-amber,#E8A838)}
+.cs-trait.urgent{color:var(--lt-red,#ff7a7a)}
 .ug-floor{margin-bottom:16px}
 .ug-floor:last-child{margin-bottom:0}
-.ug-floor-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:#7e9bbd;font-weight:600;margin-bottom:8px}
+.ug-floor-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--lt-slate,#7e9bbd);font-weight:600;margin-bottom:8px}
 .ug-floor-cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.ug-card{background:#17273f;border:1px solid var(--border);border-top:3px solid var(--c,#33527a);border-radius:10px;padding:12px 13px;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.ug-card{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--c,#33527a);border-radius:10px;padding:12px 13px;box-shadow:var(--lt-cardshade,0 2px 10px rgba(0,0,0,.35))}
 .uc-head{display:flex;align-items:center;gap:7px;margin-bottom:5px}
 .uc-icon{display:inline-flex;align-items:center}
 .uc-ico{display:inline-flex;width:20px;height:20px;flex-shrink:0}
 .uc-ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .uc-md{font-family:var(--mono);font-size:var(--t-micro);color:var(--t3);margin:2px 0 8px;cursor:help}
 .uc-md b{color:var(--t2)}
-.uc-md.short{color:#E8A838}.uc-md.short b{color:#E8A838}
-.uc-md .need{color:#ff9a5a;font-weight:600;text-transform:uppercase;font-size:var(--t-micro);letter-spacing:.06em}
+.uc-md.short{color:var(--lt-amber,#E8A838)}.uc-md.short b{color:var(--lt-amber,#E8A838)}
+.uc-md .need{color:var(--lt-orange,#ff9a5a);font-weight:600;text-transform:uppercase;font-size:var(--t-micro);letter-spacing:.06em}
 .ug-medrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:9px 0}
 .ug-medrow .mr-info{min-width:0;display:flex;flex-direction:column;gap:1px}
 .ug-medrow .mr-name{font-size:var(--t-fine);color:var(--t1);font-weight:600}
 .ug-medrow .mr-cover{font-family:var(--mono);font-size:var(--t-micro);color:var(--t3);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ug-medrow.short .mr-name{color:#E8A838}
-.ug-medrow .need{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#ff9a5a;border:1px solid rgba(232,168,56,.4);border-radius:5px;padding:1px 4px;margin-left:4px}
+.ug-medrow.short .mr-name{color:var(--lt-amber,#E8A838)}
+.ug-medrow .need{font-family:var(--mono);font-size:var(--t-micro);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lt-orange,#ff9a5a);border:1px solid rgba(232,168,56,.4);border-radius:5px;padding:1px 4px;margin-left:4px}
 .ug-enh .uc-ico{width:26px;height:26px}
 .uc-name{font-weight:600;font-size:var(--t-ui);color:var(--t1)}
 .uc-status{font-family:var(--mono);font-size:var(--t-micro);font-weight:600;letter-spacing:.03em;margin-bottom:8px}
 .uc-stat{font-family:var(--mono);font-size:var(--t-fine);color:var(--t2);margin-bottom:5px}
 .uc-stat b{color:var(--t1);font-size:var(--t-sub)}
-.uc-load{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:10px}
+.uc-load{height:5px;border-radius:3px;background:var(--lt-track,rgba(255,255,255,.08));overflow:hidden;margin-bottom:10px}
 .uc-load span{display:block;height:100%;border-radius:3px}
 .uc-staffrow{display:flex;align-items:center;justify-content:space-between;margin:5px 0}
 .uc-staffrow .l{font-size:var(--t-fine);color:var(--t2)}
 .uc-step{display:flex;align-items:center;gap:5px}
 .uc-step button{width:25px;height:25px;border-radius:6px;border:1px solid var(--border);background:var(--raised);color:var(--t1);font-size:var(--t-body);line-height:1;cursor:pointer;transition:all .12s}
-.uc-step button:hover:not(:disabled){border-color:#4ecb8d;color:#4ecb8d}
+.uc-step button:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
 .uc-step button:disabled{opacity:.3;cursor:not-allowed}
 .uc-step .n{font-family:var(--mono);font-weight:600;min-width:18px;text-align:center;font-size:var(--t-fine);color:var(--t1)}
 .uc-burn-wrap{margin:9px 0 2px;cursor:help}
 .uc-burn-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.03em;color:var(--t3);margin-bottom:3px;text-transform:uppercase}
 .uc-burn-head b{font-size:var(--t-micro);letter-spacing:.02em}
-.uc-burn{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+.uc-burn{height:5px;border-radius:3px;background:var(--lt-track,rgba(255,255,255,.08));overflow:hidden}
 .uc-burn span{display:block;height:100%;border-radius:3px;transition:width .3s ease}
 .uc-burn-wrap.crit .uc-burn{box-shadow:0 0 0 1px rgba(255,90,106,.5)}
-.uc-quit{font-family:var(--mono);font-size:var(--t-micro);color:#ff7a7a;margin-top:4px;letter-spacing:.02em}
+.uc-quit{font-family:var(--mono);font-size:var(--t-micro);color:var(--lt-red,#ff7a7a);margin-top:4px;letter-spacing:.02em}
 .ug-card-burn{animation:ugBurnPulse 2.4s ease-in-out infinite}
 @keyframes ugBurnPulse{0%,100%{box-shadow:0 0 0 1px rgba(255,90,106,.18)}50%{box-shadow:0 0 9px 1px rgba(255,90,106,.32)}}
 .uc-actions{display:flex;gap:6px;margin-top:11px}
 .uc-actions button{flex:1;min-height:44px;padding:7px 4px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:var(--t-micro);line-height:1.3;cursor:pointer;font-family:var(--font)}
-.uc-actions button:hover:not(:disabled){border-color:#4ecb8d;color:#4ecb8d}
+.uc-actions button:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
 .uc-actions button:disabled{opacity:.4;cursor:not-allowed}
 .ug-card-empty{border:1px dashed var(--border2);background:transparent;color:var(--t3);min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:var(--font);font-size:var(--t-fine);text-align:center}
-.ug-card-empty:hover{border-color:#4ecb8d;color:#4ecb8d}
+.ug-card-empty:hover{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
 .ug-card-empty .uc-plus{font-size:22px}
 /* the phone build row: active units keep their cards, the empty slots fold
    into one ＋ Build row per tier (the build menu carries the unit list) */
 .ug-buildrow{display:none}
-@media (max-width:699px){
+@media (max-width:699px), (max-height:500px){
   .ug-card-empty{display:none}
   .ug-buildrow{border:1px dashed var(--border2);background:transparent;color:var(--t3);cursor:pointer;font-family:var(--font);font-size:var(--t-fine);display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:8px 14px;text-align:center}
-  .ug-buildrow:hover{border-color:#4ecb8d;color:#4ecb8d}
+  .ug-buildrow:hover{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
   .ug-buildrow .uc-plus{font-size:18px}
-  .ug-buildrow .ub-n{font-family:var(--mono);font-size:var(--t-label);color:var(--t4)}
+  .ug-buildrow .ub-n{font-family:var(--mono);font-size:var(--t-label);color:var(--t3)}
 }
 .ug-svg{width:100%;height:auto;display:block;background:linear-gradient(180deg,#0e1b2e,#0a1320);border:1px solid var(--border);border-radius:14px}
 .rm-roof{fill:#1b2a42;stroke:var(--border);stroke-width:1.5}
 .rm-frame{fill:none;stroke:var(--border);stroke-width:1.5}
 .rm-floor{stroke:rgba(255,255,255,.05)}
-.rm-sign{fill:#8fabcc;font-family:var(--mono);font-size:var(--t-fine);letter-spacing:.18em;font-weight:600}
-.rm-floorlbl{fill:#7e9bbd;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.rm-sign{fill:var(--lt-slate,#8fabcc);font-family:var(--mono);font-size:var(--t-fine);letter-spacing:.18em;font-weight:600}
+.rm-floorlbl{fill:var(--lt-slate,#7e9bbd);font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;font-weight:600}
 .ug-empty{cursor:pointer}
 .ug-empty .es-rect{fill:rgba(255,255,255,.014);stroke:rgba(143,171,204,.22);stroke-width:1.5;stroke-dasharray:6 6;transition:stroke .12s}
-.ug-empty:hover .es-rect{stroke:#4ecb8d}
+.ug-empty:hover .es-rect{stroke:var(--lt-green,#4ecb8d)}
 .es-lbl{fill:rgba(143,171,204,.5);font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em}
-.ug-empty:hover .es-lbl{fill:#4ecb8d}
+.ug-empty:hover .es-lbl{fill:var(--lt-green,#4ecb8d)}
 .ug-room{cursor:pointer}
 .ug-room .rm-bg{fill:#17273f;stroke:var(--border);stroke-width:1.5;transition:stroke .12s}
-.ug-room:hover .rm-bg{stroke:#4ecb8d}
-.ug-room.sel .rm-bg{stroke:#4ecb8d;stroke-width:2.5}
+.ug-room:hover .rm-bg{stroke:var(--lt-green,#4ecb8d)}
+.ug-room.sel .rm-bg{stroke:var(--lt-green,#4ecb8d);stroke-width:2.5}
 .ug-room.ug-build .rm-bg{fill:#1a2740;stroke:#4a6f9e;stroke-dasharray:6 5}
 .rm-icon{font-size:17px}
 .rm-name{fill:var(--t1);font-size:var(--t-fine);font-weight:600;font-family:var(--font)}
@@ -184,7 +205,7 @@ eleventyExcludeFromCollections: true
 .rm-ftelbl{fill:var(--t3);font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.15em}
 .rm-break{fill:var(--t2);font-family:var(--mono);font-size:var(--t-micro)}
 .rm-stat{fill:var(--t3);font-family:var(--mono);font-size:var(--t-micro)}
-.rm-buildlbl{fill:#8fabcc;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.1em}
+.rm-buildlbl{fill:var(--lt-slate,#8fabcc);font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.1em}
 .ug-tip{position:absolute;z-index:30;pointer-events:none;background:#0d1a2c;border:1px solid #33527a;border-radius:9px;padding:10px 12px;width:176px;display:flex;flex-direction:column;gap:3px;box-shadow:0 8px 24px rgba(0,0,0,.55)}
 .ug-tip b{font-size:var(--t-fine);color:#fff;margin-bottom:2px}
 .ug-tip span{font-family:var(--mono);font-size:var(--t-micro);color:var(--t2)}
@@ -192,14 +213,14 @@ eleventyExcludeFromCollections: true
 .ug-chartwrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
 .ug-chartwrap h3{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
 .ug-chartsvg{width:100%;height:auto;display:block}
-.ug-grid-line{stroke:rgba(255,255,255,.06)}
+.ug-grid-line{stroke:var(--lt-grid,rgba(255,255,255,.06))}
 .ug-axis-lbl{fill:var(--t3);font-family:var(--mono);font-size:var(--t-micro)}
 .ug-axis-cap{fill:var(--t3);font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.06em;text-transform:uppercase}
 .ug-line-lbl{font-family:var(--mono);font-size:var(--t-fine);font-weight:700}
 /* the viewBox halves on a phone screen, so the in-chart labels counter-scale
    (same exemption as the axis micro-type) */
-@media (max-width:699px){ .ug-line-lbl{font-size:19px} }
-.ug-zero{stroke:rgba(255,255,255,.2);stroke-dasharray:3 3}
+@media (max-width:699px), (max-height:500px){ .ug-line-lbl{font-size:19px} }
+.ug-zero{stroke:var(--lt-zero,rgba(255,255,255,.2));stroke-dasharray:3 3}
 
 .ug-side{grid-area:side;display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}
 .ug-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
@@ -215,11 +236,11 @@ eleventyExcludeFromCollections: true
 .ug-staffhdr{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin:14px 0 6px}
 .ug-stepper{display:flex;align-items:center;gap:7px}
 .ug-stepper button{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--raised);color:var(--t1);font-size:var(--t-lede);line-height:1;cursor:pointer;transition:all .12s}
-.ug-stepper button:hover{border-color:#4ecb8d;color:#4ecb8d}
+.ug-stepper button:hover{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
 .ug-stepper button:disabled{opacity:.3;cursor:not-allowed}
 .ug-stepper .s-num{font-family:var(--mono);font-weight:600;min-width:22px;text-align:center;color:var(--t1)}
 .ug-expand{width:100%;margin-top:12px;padding:9px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:var(--t-fine);cursor:pointer;font-family:var(--font);transition:all .15s}
-.ug-expand:hover:not(:disabled){border-color:#4ecb8d;color:#4ecb8d}
+.ug-expand:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
 .ug-expand:disabled{opacity:.4;cursor:not-allowed}
 .ug-build-note{font-size:var(--t-ui);color:var(--amber);line-height:1.6;font-family:var(--mono)}
 
@@ -232,10 +253,10 @@ eleventyExcludeFromCollections: true
 .ug-proj .pj-row{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-ui);margin-bottom:9px}
 .ug-proj .pj-row span{color:var(--t2)}
 .ug-proj .pj-row b{font-family:var(--mono);font-weight:600;color:var(--t1)}
-.ug-proj .pj-net b.pos{color:#4ecb8d}.ug-proj .pj-net b.neg{color:#ff7a7a}
+.ug-proj .pj-net b.pos{color:var(--lt-green,#4ecb8d)}.ug-proj .pj-net b.neg{color:var(--lt-red,#ff7a7a)}
 .ug-proj .pj-payer{margin-bottom:6px}
-.ug-proj .pj-payer b.pos{color:#4ecb8d}.ug-proj .pj-payer b.neg{color:#ff9a5a}
-.ug-payerbar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:0 0 11px;background:rgba(255,255,255,.06);cursor:help}
+.ug-proj .pj-payer b.pos{color:var(--lt-green,#4ecb8d)}.ug-proj .pj-payer b.neg{color:var(--lt-orange,#ff9a5a)}
+.ug-payerbar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:0 0 11px;background:var(--lt-track,rgba(255,255,255,.06));cursor:help}
 .ug-payerbar span{display:block;height:100%}
 .ug-proj .pj-div{height:1px;background:var(--border);margin:12px 0}
 
@@ -246,10 +267,10 @@ eleventyExcludeFromCollections: true
 #ug-runhint[hidden]{display:none}
 
 .ug-save{width:100%;min-height:44px;padding:11px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:var(--t-fine);font-family:var(--font);cursor:pointer;transition:all .15s}
-.ug-save:hover{border-color:#4ecb8d;color:#4ecb8d}
-.ug-savebox{width:100%;font-family:var(--mono);font-size:var(--t-micro);line-height:1.6;color:var(--t2);background:#0d1a2c;border:1px solid var(--border);border-radius:9px;padding:11px 12px;resize:none;word-break:break-all;margin-top:14px}
+.ug-save:hover{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
+.ug-savebox{width:100%;font-family:var(--mono);font-size:var(--t-micro);line-height:1.6;color:var(--t2);background:var(--lt-input,#0d1a2c);border:1px solid var(--lt-inputline,var(--border));border-radius:9px;padding:11px 12px;resize:none;word-break:break-all;margin-top:14px}
 .ug-savebox.in{margin-top:0}
-.ug-savebox:focus{outline:none;border-color:#4ecb8d}
+.ug-savebox:focus{outline:none;border-color:var(--lt-green,#4ecb8d)}
 .ug-load-row{display:flex;gap:9px;align-items:stretch;margin-top:10px}
 .ug-load-row[hidden]{display:none}   /* the join row is folded until Join a table is tapped; display:flex used to win over hidden */
 .ug-load-row .ug-savebox{flex:1}
@@ -258,35 +279,35 @@ eleventyExcludeFromCollections: true
 #ug-loaderr{color:var(--amber)}
 
 .ug-fc{margin-top:12px;border:1px solid var(--border);border-radius:10px;padding:11px 13px;background:rgba(106,173,255,.05)}
-.ug-fc .fc-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:#6aadff;margin-bottom:7px}
+.ug-fc .fc-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--lt-blue,#6aadff);margin-bottom:7px}
 .fc-row{display:flex;gap:8px;font-size:var(--t-label);line-height:1.55;color:var(--t2);margin-bottom:6px;align-items:baseline}
 .fc-row:last-child{margin-bottom:0}
 .fc-row b{color:var(--amber)}
 .fc-tag{flex:none;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid var(--border2);border-radius:5px;padding:2px 6px}
 .fc-d.calm{color:var(--t3)}
 
-.uc-path{font-family:var(--mono);font-size:var(--t-micro);color:#6aadff;margin:5px 0 0;cursor:help}
+.uc-path{font-family:var(--mono);font-size:var(--t-micro);color:var(--lt-blue,#6aadff);margin:5px 0 0;cursor:help}
 .uc-safety{font-family:var(--mono);font-size:var(--t-micro);color:var(--amber);margin:6px 0 0;cursor:help}
-.uc-safety.hot{color:#ff5a6a}
-.uc-actions .uc-close{flex:0 0 auto;padding:7px 8px;border-color:rgba(223,87,82,.5);color:#df8f8c}
-.uc-actions .uc-close:hover:not(:disabled){border-color:#df5752;color:#df5752}
+.uc-safety.hot{color:var(--lt-crit,#ff5a6a)}
+.uc-actions .uc-close{flex:0 0 auto;padding:7px 8px;border-color:rgba(223,87,82,.5);color:var(--lt-red,#df8f8c)}
+.uc-actions .uc-close:hover:not(:disabled){border-color:var(--lt-red,#df5752);color:var(--lt-red,#df5752)}
 .ug-prog{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;margin-top:8px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--t2);font-size:var(--t-fine);font-family:var(--font);cursor:pointer;transition:all .15s;text-align:left}
-.ug-prog:hover{border-color:#4ecb8d}
-.ug-prog.on{border-color:#4ecb8d;background:rgba(78,203,141,.08)}
+.ug-prog:hover{border-color:var(--lt-green,#4ecb8d)}
+.ug-prog.on{border-color:var(--lt-green,#4ecb8d);background:rgba(78,203,141,.08)}
 .ug-prog .pg-name{font-weight:600;color:var(--t1)}
 .ug-prog .pg-state{font-family:var(--mono);font-size:var(--t-micro);color:var(--t3);flex:none}
-.ug-prog.on .pg-state{color:#4ecb8d}
+.ug-prog.on .pg-state{color:var(--lt-green,#4ecb8d)}
 .m-opt.warn{color:var(--amber)}
-.m-opt.anch{color:#6aadff}
+.m-opt.anch{color:var(--lt-blue,#6aadff)}
 .ug-seg button.lock{opacity:.45;cursor:not-allowed}
 .ug-klass-lines{color:var(--t3);font-size:var(--t-label);line-height:1.6}
-.ug-unlock{margin-top:12px;padding:10px 14px;border:1px solid #4ecb8d;border-radius:9px;background:rgba(78,203,141,.08);color:#4ecb8d;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.06em}
+.ug-unlock{margin-top:12px;padding:10px 14px;border:1px solid var(--lt-green,#4ecb8d);border-radius:9px;background:rgba(78,203,141,.08);color:var(--lt-green,#4ecb8d);font-family:var(--mono);font-size:var(--t-label);letter-spacing:.06em}
 
-.ug-tablebar{border:1px solid #6aadff55;border-radius:9px;padding:9px 12px;font-family:var(--mono);font-size:var(--t-micro);line-height:1.7;color:#6aadff;background:rgba(106,173,255,.06)}
+.ug-tablebar{border:1px solid var(--lt-blueline,#6aadff55);border-radius:9px;padding:9px 12px;font-family:var(--mono);font-size:var(--t-micro);line-height:1.7;color:var(--lt-blue,#6aadff);background:rgba(106,173,255,.06)}
 .ug-tablebar b{letter-spacing:.08em}
 .ug-tablebar span{display:block;color:var(--t3)}
-.ug-roomcode{font-family:var(--mono);font-size:34px;font-weight:700;letter-spacing:.35em;text-align:center;color:#4ecb8d;padding:10px 0 4px}
-.ug-resume{border-color:#4ecb8d;color:#4ecb8d;font-weight:600}
+.ug-roomcode{font-family:var(--mono);font-size:34px;font-weight:700;letter-spacing:.35em;text-align:center;color:var(--lt-green,#4ecb8d);padding:10px 0 4px}
+.ug-resume{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d);font-weight:600}
 /* offers: the GM's card on the table, and the console the host plays it from */
 .ug-offer .of-terms{font-family:var(--mono);font-size:var(--t-label);color:var(--t2);margin-top:6px;line-height:1.5}
 .ug-offer .of-who{font-size:var(--t-label);color:var(--t3);margin-top:6px}
@@ -302,11 +323,11 @@ eleventyExcludeFromCollections: true
 .ug-seatgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
 @media (max-width:560px){.ug-seatgrid{grid-template-columns:1fr}}
 .ug-seat{display:flex;flex-direction:column;gap:4px;text-align:left;min-height:44px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--raised);color:var(--t2);cursor:pointer;font-family:var(--font);transition:all .12s}
-.ug-seat:hover:not(:disabled){border-color:#4ecb8d}
+.ug-seat:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d)}
 .ug-seat:disabled{opacity:.5;cursor:not-allowed}
-.ug-seat.mine{border-color:#4ecb8d;background:rgba(78,203,141,.08)}
+.ug-seat.mine{border-color:var(--lt-green,#4ecb8d);background:rgba(78,203,141,.08)}
 .ug-seat .st-lbl{font-weight:700;color:var(--t1);font-size:var(--t-ui)}
-.ug-seat .st-holder{font-family:var(--mono);font-size:var(--t-micro);color:#4ecb8d}
+.ug-seat .st-holder{font-family:var(--mono);font-size:var(--t-micro);color:var(--lt-green,#4ecb8d)}
 .ug-seat .st-desc{font-size:var(--t-label);color:var(--t3);line-height:1.5}
 
 .uc-renew{border-color:rgba(232,168,56,.55);color:var(--amber);font-family:var(--mono);font-size:var(--t-micro)}
@@ -314,9 +335,9 @@ eleventyExcludeFromCollections: true
 .cr-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:16px;text-align:left}
 @media (max-width:560px){.cr-grid{grid-template-columns:1fr}}
 .cr-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
-.cr-row{display:flex;justify-content:space-between;gap:10px;font-size:var(--t-fine);color:var(--t2);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.cr-row b{font-family:var(--mono);font-size:var(--t-micro);color:#4ecb8d}
-.cr-row.dim{opacity:.45}
+.cr-row{display:flex;justify-content:space-between;gap:10px;font-size:var(--t-fine);color:var(--t2);padding:4px 0;border-bottom:1px solid var(--lt-hair,rgba(255,255,255,.05))}
+.cr-row b{font-family:var(--mono);font-size:var(--t-micro);color:var(--lt-green,#4ecb8d)}
+.cr-row.dim{opacity:var(--lt-dimop,.75)}
 .cr-row.dim span{letter-spacing:.2em}
 
 .ug-report{margin-top:16px;border:1px solid var(--border2);border-radius:12px;padding:14px 16px;background:rgba(13,26,44,.6);text-align:left}
@@ -333,104 +354,104 @@ eleventyExcludeFromCollections: true
 .ug-flash{animation:ugflash .9s ease 2}
 @keyframes ugflash{0%,100%{box-shadow:0 0 0 0 rgba(232,168,56,0)}50%{box-shadow:0 0 0 3px rgba(232,168,56,.55)}}
 
-.ug-deftip{position:fixed;z-index:300;max-width:262px;background:#0d1a2c;border:1px solid #4a6f9e;border-radius:9px;padding:11px 13px;font-size:var(--t-label);color:var(--t2);line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.6);pointer-events:none}
+.ug-deftip{position:fixed;z-index:300;max-width:262px;background:var(--lt-tip,#0d1a2c);border:1px solid var(--lt-line2,#4a6f9e);border-radius:9px;padding:11px 13px;font-size:var(--t-label);color:var(--t2);line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.6);pointer-events:none}
 .ug-deftip[hidden]{display:none}
-.ug-deftip b{color:#fff;display:block;margin-bottom:4px;font-family:var(--font);font-size:var(--t-fine)}
+.ug-deftip b{color:var(--lt-tipink,#fff);display:block;margin-bottom:4px;font-family:var(--font);font-size:var(--t-fine)}
 
 .ug-overlay{position:fixed;inset:0;z-index:200;background:rgba(2,8,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px}
 .ug-overlay[hidden]{display:none}
 .ug-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:760px;width:100%;max-height:88vh;overflow-y:auto;padding:30px}
 .ug-modal h2{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
-.ug-modal h2.win{color:#4ecb8d}.ug-modal h2.lose{color:#ff7a7a}
+.ug-modal h2.win{color:var(--lt-green,#4ecb8d)}.ug-modal h2.lose{color:var(--lt-red,#ff7a7a)}
 .ug-modal .mo-sub{font-size:var(--t-sub);color:var(--t2);line-height:1.6;margin-bottom:20px}
 .ug-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
 .ug-result{background:var(--raised);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
 .ug-result .r-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
 .ug-result .r-val{font-family:var(--display);font-size:18px;font-weight:700}
-.ug-result .r-val.pos{color:#4ecb8d}.ug-result .r-val.neg{color:#ff7a7a}
+.ug-result .r-val.pos{color:var(--lt-green,#4ecb8d)}.ug-result .r-val.neg{color:var(--lt-red,#ff7a7a)}
 .ug-optline{margin:0 0 18px;font-size:var(--t-ui);font-family:var(--mono)}
-.ug-optline.hit{color:#4ecb8d}.ug-optline.miss{color:var(--t3)}
-.ug-draft-lbl{font-family:var(--mono);font-size:var(--t-label);letter-spacing:.14em;text-transform:uppercase;color:#4ecb8d;margin-bottom:14px}
+.ug-optline.hit{color:var(--lt-green,#4ecb8d)}.ug-optline.miss{color:var(--t3)}
+.ug-draft-lbl{font-family:var(--mono);font-size:var(--t-label);letter-spacing:.14em;text-transform:uppercase;color:var(--lt-green,#4ecb8d);margin-bottom:14px}
 .ug-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media(max-width:640px){.ug-cards{grid-template-columns:1fr}}
 .ug-enh{text-align:left;background:var(--raised);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .15s;font-family:var(--font)}
-.ug-enh:hover:not(:disabled){border-color:#4ecb8d;transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.ug-enh:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);transform:translateY(-3px);box-shadow:var(--lt-lift,0 10px 26px rgba(0,0,0,.4))}
 .ug-enh .en-icon{font-size:22px;margin-bottom:10px}
 .ug-enh .en-name{font-weight:700;font-size:var(--t-sub);color:var(--t1);margin-bottom:6px}
 .ug-enh .en-desc{font-size:var(--t-fine);color:var(--t2);line-height:1.5}
-.ug-restart{margin-top:8px;padding:14px 28px;border:none;border-radius:11px;font-family:var(--display);font-weight:700;font-size:var(--t-sub);color:#fff;background:linear-gradient(135deg,#7b4dff,#b06bff);cursor:pointer}
+.ug-restart{margin-top:8px;padding:14px 28px;border:none;border-radius:11px;font-family:var(--display);font-weight:700;font-size:var(--t-sub);color:#fff;background:linear-gradient(135deg,#6A45D8,#7b4dff);cursor:pointer}
 .ug-restart:hover{filter:brightness(1.1)}
 .ug-how{background:rgba(78,205,196,.07);border:1px solid rgba(78,205,196,.28);border-radius:10px;padding:13px 16px;margin:0 0 16px}
-.ug-how .how-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:#4ECDC4;margin-bottom:6px}
+.ug-how .how-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--lt-teal,#4ECDC4);margin-bottom:6px}
 .ug-how .how-b{font-size:var(--t-ui);color:var(--t2);line-height:1.6}
-.ug-how .how-b b{color:#4ecb8d;font-weight:600}
-.ug-cause{background:rgba(223,87,82,.08);border:1px solid rgba(223,87,82,.3);border-left:3px solid #df5752;border-radius:0 10px 10px 0;padding:13px 16px;margin:0 0 16px}
-.ug-cause .cause-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:#ff9090;margin-bottom:6px}
+.ug-how .how-b b{color:var(--lt-green,#4ecb8d);font-weight:600}
+.ug-cause{background:rgba(223,87,82,.08);border:1px solid rgba(223,87,82,.3);border-left:3px solid var(--lt-red,#df5752);border-radius:0 10px 10px 0;padding:13px 16px;margin:0 0 16px}
+.ug-cause .cause-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--lt-red,#ff9090);margin-bottom:6px}
 .ug-cause .cause-b{font-size:var(--t-ui);color:var(--t2);line-height:1.65}
 .ug-cause .cause-b b{color:var(--t1);font-weight:600}
-.ug-cause .cause-b b.neg{color:#ff7a7a}
-.ug-cause .cause-b b.pos{color:#4ecb8d}
+.ug-cause .cause-b b.neg{color:var(--lt-red,#ff7a7a)}
+.ug-cause .cause-b b.pos{color:var(--lt-green,#4ecb8d)}
 .ug-runlog{margin-top:18px;font-family:var(--mono);font-size:var(--t-label);color:var(--t3);line-height:1.7}
 .ug-runlog b{color:var(--t2)}
 .ug-tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.ug-tag-list .et{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:7px;background:rgba(45,155,111,.12);border:1px solid rgba(45,155,111,.3);color:#4ecb8d;cursor:help}
-.ug-tag-list .et:hover{background:rgba(45,155,111,.22);border-color:#4ecb8d}
-.ug-tag-list .et.ceo{background:rgba(123,77,255,.16);border-color:rgba(176,107,255,.45);color:#c6a8ff}
-.ug-tag-list .et.ceo:hover{background:rgba(123,77,255,.28);border-color:#b06bff}
+.ug-tag-list .et{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:7px;background:rgba(45,155,111,.12);border:1px solid rgba(45,155,111,.3);color:var(--lt-green,#4ecb8d);cursor:help}
+.ug-tag-list .et:hover{background:rgba(45,155,111,.22);border-color:var(--lt-green,#4ecb8d)}
+.ug-tag-list .et.ceo{background:rgba(123,77,255,.16);border-color:rgba(176,107,255,.45);color:var(--lt-purple,#c6a8ff)}
+.ug-tag-list .et.ceo:hover{background:rgba(123,77,255,.28);border-color:var(--lt-purple,#b06bff)}
 /* CEO selection cards */
 .ug-cards-ceo{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.ug-enh.ug-ceo{display:flex;flex-direction:column;border-color:#4a6f9e}
-.ug-enh.ug-ceo:hover:not(:disabled){border-color:#b06bff;box-shadow:0 10px 26px rgba(123,77,255,.28)}
-.ug-ceo .ceo-cred{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:#8fabcc;margin-bottom:6px}
+.ug-enh.ug-ceo{display:flex;flex-direction:column;border-color:var(--lt-line2,#4a6f9e)}
+.ug-enh.ug-ceo:hover:not(:disabled){border-color:var(--lt-purple,#b06bff);box-shadow:0 10px 26px rgba(123,77,255,.28)}
+.ug-ceo .ceo-cred{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--lt-slate,#8fabcc);margin-bottom:6px}
 .ug-ceo .en-name{margin-bottom:2px}
-.ug-ceo .ceo-trait{font-family:var(--display);font-weight:700;font-size:var(--t-ui);color:#c6a8ff;margin-bottom:8px}
+.ug-ceo .ceo-trait{font-family:var(--display);font-weight:700;font-size:var(--t-ui);color:var(--lt-purple,#c6a8ff);margin-bottom:8px}
 .ug-ceo .en-desc{margin-bottom:12px}
 .ug-ceo .ceo-effects{margin-top:auto;display:flex;flex-direction:column;gap:4px;border-top:1px dashed var(--border);padding-top:10px}
-.ug-ceo .ce-perk{font-family:var(--mono);font-size:var(--t-micro);color:#4ecb8d;line-height:1.4}
-.ug-ceo .ce-cost{font-family:var(--mono);font-size:var(--t-micro);color:#ff9a5a;line-height:1.4}
+.ug-ceo .ce-perk{font-family:var(--mono);font-size:var(--t-micro);color:var(--lt-green,#4ecb8d);line-height:1.4}
+.ug-ceo .ce-cost{font-family:var(--mono);font-size:var(--t-micro);color:var(--lt-orange,#ff9a5a);line-height:1.4}
 /* No-CEO option: teal instead of purple, reads as the lean/owner-operated path */
-.ug-enh.ug-ceo-none{border-color:#33527a}
-.ug-enh.ug-ceo-none:hover:not(:disabled){border-color:#4ecb8d;box-shadow:0 10px 26px rgba(78,205,196,.22)}
-.ug-ceo-none .ceo-cred{color:#7e9bbd}
-.ug-ceo-none .ceo-trait{color:#4ECDC4}
+.ug-enh.ug-ceo-none{border-color:var(--lt-line,#33527a)}
+.ug-enh.ug-ceo-none:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);box-shadow:0 10px 26px rgba(78,205,196,.22)}
+.ug-ceo-none .ceo-cred{color:var(--lt-slate,#7e9bbd)}
+.ug-ceo-none .ceo-trait{color:var(--lt-teal,#4ECDC4)}
 .ceo-hex.none svg{filter:drop-shadow(0 3px 12px rgba(78,205,196,.28))}
-.ceo-hex.none .ceo-hex-bg{fill:rgba(78,205,196,.14);stroke:#4ECDC4}
-.ceo-hex.none .ceo-hex-code{fill:#bfeee9}
-.ceo-hex.none .ceo-hex-lbl{fill:#7fcfc7;letter-spacing:.12em}
+.ceo-hex.none .ceo-hex-bg{fill:rgba(78,205,196,.14);stroke:var(--lt-teal,#4ECDC4)}
+.ceo-hex.none .ceo-hex-code{fill:var(--lt-teal,#bfeee9)}
+.ceo-hex.none .ceo-hex-lbl{fill:var(--lt-teal,#7fcfc7);letter-spacing:.12em}
 /* ── Start menu / settings ── */
 .ug-modal-start h2{font-size:30px}
 .ug-modal-start .mo-sub{margin-bottom:24px}
 .ug-set{margin-bottom:20px}
 .ug-set-lbl{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:9px}
-.ug-set-lbl b{font-family:var(--mono);font-size:var(--t-ui);letter-spacing:0;text-transform:none;color:#4ecb8d}
+.ug-set-lbl b{font-family:var(--mono);font-size:var(--t-ui);letter-spacing:0;text-transform:none;color:var(--lt-green,#4ecb8d)}
 .ug-seg{display:flex;gap:8px}
 .ug-seg button{flex:1;padding:11px 6px;border-radius:9px;border:1px solid var(--border);background:var(--raised);color:var(--t2);font-family:var(--font);font-weight:600;font-size:var(--t-ui);cursor:pointer;transition:all .12s}
-.ug-seg button:hover{border-color:#4ecb8d;color:#4ecb8d}
-.ug-seg button.on{border-color:#4ecb8d;color:#04140b;background:linear-gradient(135deg,#4ecb8d,#2D9B6F)}
+.ug-seg button:hover{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
+.ug-seg button.on{border-color:var(--lt-green,#4ecb8d);color:#04140b;background:linear-gradient(135deg,#4ecb8d,#2D9B6F)}
 .ug-seg.small button{padding:8px 4px;font-size:var(--t-fine)}
 /* Phone (2026-09-20, measured at 360): the ownership and hospital rows ran 8 to 10 px past the
    modal and made the whole start menu scroll sideways, and the table buttons sat at 38 px. Rows
    wrap only when they must; every control on this menu meets the 44 px touch floor. */
-@media (max-width:699px){
+@media (max-width:699px), (max-height:500px){
   .ug-seg{flex-wrap:wrap}
   .ug-seg button{flex:1 1 auto;min-height:44px;min-width:44px}
   .ug-expand,.ug-tut-toggle{min-height:44px}
 }
 .ug-set-blurb{font-size:var(--t-fine);color:var(--t3);line-height:1.5;margin-top:9px;min-height:18px}
-.ug-size-summary{margin-top:12px;font-size:var(--t-fine);color:var(--t2);line-height:1.6;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:10px 13px}
-.ug-size-summary b{color:#4ecb8d}
+.ug-size-summary{margin-top:12px;font-size:var(--t-fine);color:var(--t2);line-height:1.6;background:var(--lt-tint,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:9px;padding:10px 13px}
+.ug-size-summary b{color:var(--lt-green,#4ecb8d)}
 .ug-size-summary .ss-stats{font-family:var(--mono);font-size:var(--t-label);color:var(--t3);margin-top:4px;letter-spacing:.03em}
 .ug-set input[type=range]{width:100%;accent-color:#2D9B6F;margin-top:2px}
 .ug-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 22px}
 @media(max-width:560px){.ug-set-grid{grid-template-columns:1fr}}
-.ug-start-sep{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.16em;text-transform:uppercase;color:#4ecb8d;margin:26px 0 6px;padding-top:20px;border-top:1px solid var(--border)}
+.ug-start-sep{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.16em;text-transform:uppercase;color:var(--lt-green,#4ecb8d);margin:26px 0 6px;padding-top:20px;border-top:1px solid var(--border)}
 .ug-start-foot{position:sticky;bottom:0;z-index:6;margin:22px -30px -30px;padding:20px 30px 30px;background:var(--surface);box-shadow:0 -14px 24px -8px rgba(13,17,23,.96)}
-@media (max-width:699px){.ug-start-foot{padding:12px 30px 14px}}   /* 106px plus the 64px nav was 21% of a phone screen, the budget is 20%; must follow the base rule to win */
+@media (max-width:699px), (max-height:500px){.ug-start-foot{padding:12px 30px 14px}}   /* 106px plus the 64px nav was 21% of a phone screen, the budget is 20%; must follow the base rule to win */
 .ug-start-go{width:100%;padding:16px;border:none;border-radius:11px;font-family:var(--display);font-weight:700;font-size:var(--t-lede);letter-spacing:.02em;color:#04140b;background:linear-gradient(135deg,#4ecb8d,#2D9B6F);cursor:pointer;transition:all .15s;box-shadow:0 6px 18px rgba(45,155,111,.3)}
 .ug-start-go:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(45,155,111,.45)}
 .ug-start-go:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;filter:saturate(.35);color:#0b2b1d}
-.ug-enh.ug-ceo.sel{border-color:#4ecb8d;box-shadow:0 0 0 1px #4ecb8d,0 10px 26px rgba(78,205,196,.25)}
-.ug-enh.ug-ceo-none.sel{border-color:#4ECDC4;box-shadow:0 0 0 1px #4ECDC4,0 10px 26px rgba(78,205,196,.28)}
+.ug-enh.ug-ceo.sel{border-color:var(--lt-green,#4ecb8d);box-shadow:0 0 0 1px var(--lt-green,#4ecb8d),0 10px 26px rgba(78,205,196,.25)}
+.ug-enh.ug-ceo-none.sel{border-color:var(--lt-teal,#4ECDC4);box-shadow:0 0 0 1px var(--lt-teal,#4ECDC4),0 10px 26px rgba(78,205,196,.28)}
 /* CEO carousel, one card centered at a time, arrows + dots */
 .ceo-carousel{margin-top:8px}
 .ceo-stage{position:relative}
@@ -443,28 +464,28 @@ eleventyExcludeFromCollections: true
 .ceo-slide .ug-ceo .en-desc{font-size:var(--t-label);line-height:1.45;margin-bottom:9px}
 .ceo-slide .ug-ceo .ceo-effects{padding-top:9px;gap:3px}
 .ceo-arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:11px;border:1px solid var(--border2);background:var(--raised);color:var(--t2);font-size:var(--t-body);line-height:1;cursor:pointer;z-index:2;transition:all .12s}
-@media (max-width:699px){.ceo-arrow{width:44px;height:44px}}   /* touch floor; must follow the base rule to win */
-.ceo-arrow:hover:not(:disabled){border-color:#4ecb8d;color:#4ecb8d;background:#1a2740}
+@media (max-width:699px), (max-height:500px){.ceo-arrow{width:44px;height:44px}}   /* touch floor; must follow the base rule to win */
+.ceo-arrow:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d);background:var(--lt-hoverbg,#1a2740)}
 .ceo-arrow:disabled{opacity:.3;cursor:not-allowed}
 .ceo-arrow.prev{left:0}.ceo-arrow.next{right:0}
 /* margin-bottom clears the sticky Start footer: at the modal's resting scroll
    the stuck footer still overlapped the row's last pixels, so the dots sat
    half-buried and every tap landed on the footer (found by hit-test, 2026-08-24) */
 .ceo-dots{display:flex;justify-content:center;align-items:center;gap:36px;margin-top:16px;margin-bottom:48px}
-.ceo-dot{width:8px;height:8px;padding:0;border:none;border-radius:50%;background:rgba(255,255,255,.18);cursor:pointer;transition:all .18s;position:relative}
+.ceo-dot{width:8px;height:8px;padding:0;border:none;border-radius:50%;background:var(--lt-dot,rgba(255,255,255,.18));cursor:pointer;transition:all .18s;position:relative}
 /* the drawn dot stays 8px; a centred invisible pad carries the 44px touch
    target (the bp-card-x precedent: audits measuring the box still see 8x8,
    the tappable area is real). The 36px row gap keeps neighbouring pads from
    overlapping, so a tap lands on the dot it aimed at. */
 .ceo-dot::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px}
-.ceo-dot:hover{background:rgba(255,255,255,.42)}
-.ceo-dot.on{background:#4ecb8d;width:22px;border-radius:5px}
+.ceo-dot:hover{background:var(--lt-dot-hi,rgba(255,255,255,.42))}
+.ceo-dot.on{background:var(--lt-green,#4ecb8d);width:22px;border-radius:5px}
 @media(max-width:560px){.ceo-viewport{margin:0 40px}.ceo-slide .ug-enh{max-width:none}}
 .ug-end-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .ug-end-actions .ug-restart{margin-top:0}
 .ug-peek-btn{padding:14px 22px;border:1px solid var(--border2);border-radius:11px;font-family:var(--display);font-weight:700;font-size:var(--t-sub);color:var(--t2);background:transparent;cursor:pointer;transition:all .15s}
-.ug-peek-btn:hover{border-color:#4ecb8d;color:#4ecb8d}
-.ug-reopen{position:fixed;right:20px;bottom:20px;z-index:120;padding:13px 20px;border:none;border-radius:12px;font-family:var(--display);font-weight:700;font-size:var(--t-sub);color:#fff;background:linear-gradient(135deg,#df5752,#b03b37);cursor:pointer;box-shadow:0 8px 24px rgba(223,87,82,.45)}
+.ug-peek-btn:hover{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
+.ug-reopen{position:fixed;right:20px;bottom:20px;z-index:120;padding:13px 20px;border:none;border-radius:12px;font-family:var(--display);font-weight:700;font-size:var(--t-sub);color:#fff;background:linear-gradient(135deg,#C22F2F,#A8352F);cursor:pointer;box-shadow:0 8px 24px rgba(223,87,82,.45)}
 .ug-reopen:hover{filter:brightness(1.1)}
 .ug-reopen[hidden]{display:none}
 .ug-reopen.win{background:linear-gradient(135deg,#4ecb8d,#2D9B6F);color:#04140b;box-shadow:0 8px 24px rgba(45,155,111,.45)}
@@ -897,14 +918,16 @@ eleventyExcludeFromCollections: true
   const equipFactor = d => { const a = equipAgeOf(d); return a >= CFG.equipCrit ? CFG.equipCritCap : a >= CFG.equipWarn ? CFG.equipWarnCap : 1; };
   const renewCost   = d => Math.round(((UNITS.find(u=>u.id===d.id)||{}).capex || 200) * CFG.equipRenewFrac);
   const burnLabel    = b => b>=CFG.burnQuitFloor ? 'Critical' : b>=45 ? 'High' : b>=22 ? 'Rising' : 'Healthy';
-  const burnColor    = b => b>=CFG.burnQuitFloor ? '#ff5a6a' : b>=45 ? '#E8A838' : b>=22 ? '#d7c95a' : '#4ecb8d';
+  // Accents ride the light-theme steps when the page is light (the --lt-x tokens in the style block);
+  // var() in an inline style re-resolves when the theme flips, so nothing has to repaint.
+  const burnColor    = b => b>=CFG.burnQuitFloor ? 'var(--lt-crit,#ff5a6a)' : b>=45 ? 'var(--lt-amber,#E8A838)' : b>=22 ? 'var(--lt-yellow,#d7c95a)' : 'var(--lt-green,#4ecb8d)';
   // A real button, so the sentence is reachable by tab as well as by hover and by thumb. `extra`
   // is for a panel that knows something the shared definition does not.
   const info       = (key, extra) => `<button type="button" class="hu-i" data-def="${defAttr((DEFS[key]||'') + (extra ? '<p>'+extra+'</p>' : ''))}" aria-label="What this means">i</button>`;
   const capFactor  = a => a>=1 ? 1 : (0.4 + 0.6*a);   // cutting overhead throttles capacity
   // ── Icons + per-tier color ─────────────────────────────────────────────
-  const TIER_COLOR = {critical:'#ff7a7a', surgical:'#6aadff', general:'#4ECDC4', outpatient:'#4ecb8d'};
-  const tierColor  = t => TIER_COLOR[t] || '#8fabcc';
+  const TIER_COLOR = {critical:'var(--lt-red,#ff7a7a)', surgical:'var(--lt-blue,#6aadff)', general:'var(--lt-teal,#4ECDC4)', outpatient:'var(--lt-green,#4ecb8d)'};
+  const tierColor  = t => TIER_COLOR[t] || 'var(--lt-slate,#8fabcc)';
   const ico        = (slug,color)=> `<span class="uc-ico" style="color:${color||'currentColor'}"><svg viewBox="0 0 24 24">${ICONS[slug]||ICONS.def}</svg></span>`;
   // ── Physicians: hospital-wide pools spread across the units they cover ──
   // Each specialty's headcount is split among its operational units in proportion to unit demand.
@@ -934,10 +957,10 @@ eleventyExcludeFromCollections: true
   //    best; safety-net lines (ED, med/surg, behavioral, dialysis) skew Medicare/Medicaid/self-pay. The blend
   //    is recentered on a balanced reference so a typical mix ≈ 1.0, composition moves it roughly ±7%.
   const PAYERS = [
-    {key:'comm', label:'Commercial', reimb:1.14, color:'#4ecb8d'},
-    {key:'mc',   label:'Medicare',   reimb:0.97, color:'#6aadff'},
-    {key:'md',   label:'Medicaid',   reimb:0.78, color:'#E8A838'},
-    {key:'self', label:'Self-pay',   reimb:0.40, color:'#ff7a7a'},
+    {key:'comm', label:'Commercial', reimb:1.14, color:'var(--lt-green,#4ecb8d)'},
+    {key:'mc',   label:'Medicare',   reimb:0.97, color:'var(--lt-blue,#6aadff)'},
+    {key:'md',   label:'Medicaid',   reimb:0.78, color:'var(--lt-amber,#E8A838)'},
+    {key:'self', label:'Self-pay',   reimb:0.40, color:'var(--lt-red,#ff7a7a)'},
   ];
   const payerOf = k => PAYERS.find(p=>p.key===k);
   const reimbOf = k => (payerOf(k)||{reimb:1}).reimb;
@@ -1078,7 +1101,7 @@ eleventyExcludeFromCollections: true
     SPECIALTIES.forEach(sp=>{ const h=s.physicians[sp.key]||0; tot+=h*s.pay.phys; w+=h; });
     return w>0 ? tot/w : 1;
   }
-  const limitColor = l => l==='demand' ? '#4ECDC4' : l==='staff' ? '#E8A838' : l==='capacity' ? '#ff7a7a' : '#8fabcc';
+  const limitColor = l => l==='demand' ? 'var(--lt-teal,#4ECDC4)' : l==='staff' ? 'var(--lt-amber,#E8A838)' : l==='capacity' ? 'var(--lt-red,#ff7a7a)' : 'var(--lt-slate,#8fabcc)';
   const limitText  = l => l==='demand' ? 'Meeting demand' : l==='staff' ? 'Staff-limited' : l==='capacity' ? 'Capacity-limited' : 'Under construction';
 
   // ── STAFF BURNOUT: end-of-quarter accrual + turnover ───────────────────
@@ -1687,10 +1710,10 @@ eleventyExcludeFromCollections: true
     overlayOpen = true;
     const c = run.ceo;
     $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 class="lose">Fire ${c.name}?</h2>
-      <div class="mo-sub">Morale is on the floor and the staff blame the corner office. Cutting the chief loose rallies them: an immediate <b style="color:#4ecb8d">+${CFG.fireMoraleBoost} morale</b>. But you lose the <b>${c.trait}</b> trait, eat a <b style="color:#ff7a7a">${CFG.fireRepHit}-point reputation</b> hit for the turmoil, and the board gives you <b>${CFG.ceoGraceQuarters} quarters</b> to name a replacement. Run a full year leaderless and they won't let you continue.</div>
+      <div class="mo-sub">Morale is on the floor and the staff blame the corner office. Cutting the chief loose rallies them: an immediate <b style="color:var(--lt-green,#4ecb8d)">+${CFG.fireMoraleBoost} morale</b>. But you lose the <b>${c.trait}</b> trait, eat a <b style="color:var(--lt-red,#ff7a7a)">${CFG.fireRepHit}-point reputation</b> hit for the turmoil, and the board gives you <b>${CFG.ceoGraceQuarters} quarters</b> to name a replacement. Run a full year leaderless and they won't let you continue.</div>
       <div class="ug-end-actions">
         <button class="ug-peek-btn" data-act="cancel">Keep them on</button>
-        <button class="ug-restart" data-act="firego" style="background:linear-gradient(135deg,#df5752,#b03b37)">Fire the CEO &#9656;</button>
+        <button class="ug-restart" data-act="firego" style="background:linear-gradient(135deg,#C22F2F,#A8352F)">Fire the CEO &#9656;</button>
       </div></div>`;
     $('ug-overlay').hidden = false;
   }
@@ -1706,7 +1729,7 @@ eleventyExcludeFromCollections: true
   function openCeoReplace(){
     overlayOpen = true; ceoSlide = 0;
     const order = ceoOrder();
-    $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 style="color:#4ecb8d">Appoint a New CEO</h2>
+    $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">Appoint a New CEO</h2>
       <div class="mo-sub">The corner office is empty. Spin through the candidates and bring in a new chief (their trait takes effect immediately), or commit to running lean with no CEO at all and bank the pay.</div>
       ${ceoCarouselHtml('hireceo')}
       <div class="ug-start-foot"><button class="ug-start-go ceo-appoint-btn" data-act="appointgo">Appoint ${order[0].name} &#9656;</button></div></div>`;
@@ -1859,7 +1882,7 @@ eleventyExcludeFromCollections: true
       const why = run.goal.detail ? run.goal.detail(r, run) : '';
       const how = howToWin(run.goal, run.activeEvent);
       return endScreen({passed:false, title: boss?'BOSS QUARTER LOST':'GOAL MISSED', how,
-        sub:`<strong style="color:var(--t1)">Objective:</strong> ${run.goal.label}<br><span style="color:#ffb3b3">${why}</span>`});
+        sub:`<strong style="color:var(--t1)">Objective:</strong> ${run.goal.label}<br><span style="color:var(--lt-red,#ffb3b3)">${why}</span>`});
     }
     // Quarter cleared. Now the staff pay for how it was run: burnout accrues, and the burned-out walk.
     applyBurnout(ev);
@@ -1879,13 +1902,13 @@ eleventyExcludeFromCollections: true
       if (run.klass && run.klass.id==='academic'){
         const thin = run.departments.filter(d=>!d.construction).sort((a,b)=>(a.staff.rn+a.staff.shared)-(b.staff.rn+b.staff.shared)).slice(0,2);
         thin.forEach(d=>{ d.staff.rn += 1; });
-        if (thin.length) gradNote = ` The residency class graduates: <b style="color:#4ecb8d">+1 RN</b> to ${thin.map(d=>d.name).join(' and ')}.`;
+        if (thin.length) gradNote = ` The residency class graduates: <b style="color:var(--lt-green,#4ecb8d)">+1 RN</b> to ${thin.map(d=>d.name).join(' and ')}.`;
       }
       if (settings.years>0 && yr>=settings.years){
         return endScreen({passed:true, victory:true, title:`RUN COMPLETE`,
-          sub:`You ran the network clean through <b style="color:#4ecb8d">${settings.years} full year${settings.years>1?'s':''}</b> and beat the final boss quarter. Year-end surplus of <b style="color:#4ecb8d">${money(bonus)}</b> banked. That is the run. The building is still standing, and so are you.`});
+          sub:`You ran the network clean through <b style="color:var(--lt-green,#4ecb8d)">${settings.years} full year${settings.years>1?'s':''}</b> and beat the final boss quarter. Year-end surplus of <b style="color:var(--lt-green,#4ecb8d)">${money(bonus)}</b> banked. That is the run. The building is still standing, and so are you.`});
       }
-      return endScreen({passed:true, reward:'large', title:`YEAR ${yr} CLEARED`, sub:`Boss quarter beaten. Year-end surplus of <b style="color:#4ecb8d">${money(bonus)}</b> banked.${gradNote} Choose a major upgrade.`}); }
+      return endScreen({passed:true, reward:'large', title:`YEAR ${yr} CLEARED`, sub:`Boss quarter beaten. Year-end surplus of <b style="color:var(--lt-green,#4ecb8d)">${money(bonus)}</b> banked.${gradNote} Choose a major upgrade.`}); }
     if (q===2) return endScreen({passed:true, reward:'small', title:'QUARTER CLEARED', sub:'A solid quarter. Bank a small upgrade and keep climbing.'});
     return endScreen({passed:true, reward:'none', title:'QUARTER CLEARED', sub: q===1?'Eased into the year. The pressure builds from here.':'Survived the squeeze. The boss quarter is next.'});
   }
@@ -1949,10 +1972,10 @@ eleventyExcludeFromCollections: true
     overlayOpen = true;
     const {sev, repHit, leak} = closeQuote(d);
     $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 class="lose">Close ${d.name}?</h2>
-      <div class="mo-sub">This is permanent for the run. Severance for the floor staff runs <b>${money(sev)}</b>, the community answer is a <b style="color:#ff7a7a">${repHit}-point reputation</b> hit and <b style="color:#ff7a7a">${CFG.closeMoraleHit} morale</b>${run.klass && run.klass.id==='district' ? ' (a district closure is a public fight, the hit is doubled)' : ''}, and about <b>${num(leak)}</b> of its patients still show up, at the ED. The overhead goes away. So does the service.</div>
+      <div class="mo-sub">This is permanent for the run. Severance for the floor staff runs <b>${money(sev)}</b>, the community answer is a <b style="color:var(--lt-red,#ff7a7a)">${repHit}-point reputation</b> hit and <b style="color:var(--lt-red,#ff7a7a)">${CFG.closeMoraleHit} morale</b>${run.klass && run.klass.id==='district' ? ' (a district closure is a public fight, the hit is doubled)' : ''}, and about <b>${num(leak)}</b> of its patients still show up, at the ED. The overhead goes away. So does the service.</div>
       <div class="ug-end-actions">
         <button class="ug-peek-btn" data-act="cancel">Keep it open</button>
-        <button class="ug-restart" data-act="closego" data-id="${d.id}" style="background:linear-gradient(135deg,#df5752,#b03b37)">Close the unit &#9656;</button>
+        <button class="ug-restart" data-act="closego" data-id="${d.id}" style="background:linear-gradient(135deg,#C22F2F,#A8352F)">Close the unit &#9656;</button>
       </div></div>`;
     $('ug-overlay').hidden = false;
   }
@@ -2023,8 +2046,8 @@ eleventyExcludeFromCollections: true
     const items = [
       {lbl:'Year &middot; Qtr', val:'Y'+yearOf(run.level)+' Q'+qInYear(run.level), cls: isBoss(run.level)?'bad':''},
       {lbl:'Cash'+info('cash'), val:money(run.cash), cls:cashCls},
-      {lbl:'Reputation'+info('rep'), val:Math.round(run.reputation), cls:kpiClass(run.reputation,65,40), meter:run.reputation, color:'#6aadff'},
-      {lbl:'Morale'+info('morale'), val:Math.round(run.morale), cls:kpiClass(run.morale,60,35), meter:run.morale, color:'#4ECDC4'},
+      {lbl:'Reputation'+info('rep'), val:Math.round(run.reputation), cls:kpiClass(run.reputation,65,40), meter:run.reputation, color:'var(--lt-blue,#6aadff)'},
+      {lbl:'Morale'+info('morale'), val:Math.round(run.morale), cls:kpiClass(run.morale,60,35), meter:run.morale, color:'var(--lt-teal,#4ECDC4)'},
     ];
     $('ug-kpis').innerHTML = items.map(i=>`
       <div class="ug-kpi ${i.cls}">
@@ -2034,7 +2057,7 @@ eleventyExcludeFromCollections: true
   }
   function renderMission(){
     const yr=yearOf(run.level), q=qInYear(run.level), boss=q===4;
-    const lbl = `Year ${yr} &middot; Quarter ${q} of 4${boss?` &middot; <span style="color:#ff7a7a">BOSS QUARTER</span>`:''}${q===SEASON.q?` &middot; <span style="color:#E8A838">RESPIRATORY SEASON</span>`:''}`;
+    const lbl = `Year ${yr} &middot; Quarter ${q} of 4${boss?` &middot; <span style="color:var(--lt-red,#ff7a7a)">BOSS QUARTER</span>`:''}${q===SEASON.q?` &middot; <span style="color:var(--lt-amber,#E8A838)">RESPIRATORY SEASON</span>`:''}`;
     // ── Objective card: the hard ask, plus the two soft modifiers (optional bonus + continuity) ──
     const opt = run.optional ? `<div class="m-opt">&#9733; Optional: ${run.optional.label} &rarr; <b>${run.optional.rewardText}</b></div>` : '';
     const dt=distinctTiers(run);
@@ -2131,16 +2154,16 @@ eleventyExcludeFromCollections: true
   function buildCard(d){
     const prog=(d.construction.total-d.construction.left)/d.construction.total;
     const sp=specOf(d.spec);
-    return `<div class="ug-card ug-card-build" style="--c:#E8A838">
-      <div class="uc-head"><span class="uc-icon">${ico('build','#E8A838')}</span><span class="uc-name">${d.name}</span></div>
-      <div class="uc-status" style="color:#E8A838">Under construction</div>
+    return `<div class="ug-card ug-card-build" style="--c:var(--lt-amber,#E8A838)">
+      <div class="uc-head"><span class="uc-icon">${ico('build','var(--lt-amber,#E8A838)')}</span><span class="uc-name">${d.name}</span></div>
+      <div class="uc-status" style="color:var(--lt-amber,#E8A838)">Under construction</div>
       <div class="uc-stat">${d.construction.left} of ${d.construction.total} quarter${d.construction.total===1?'':'s'} left</div>
-      <div class="uc-load"><span style="width:${(prog*100).toFixed(0)}%;background:#E8A838"></span></div>
+      <div class="uc-load"><span style="width:${(prog*100).toFixed(0)}%;background:var(--lt-amber,#E8A838)"></span></div>
       <div class="ug-hint" style="margin-top:8px">Opens automatically when finished. Staff ${sp?sp.label:''} physicians in Medical Staff before it opens.</div>
     </div>`;
   }
   // The CEO's spot on the board: a hexagon tile in the executive suite, with its trait and any executive upgrades.
-  const CEO_CODE = {md:'MD', mba:'MBA', mha:'MHA', rn:'RN', pe:'PE', none:'&#8212;'};
+  const CEO_CODE = {md:'MD', mba:'MBA', mha:'MHA', rn:'RN', pe:'PE', none:'-'};
   function ceoHex(){
     const c=run.ceo, vacant=!!run.ceoVacant;
     if (!c && !vacant) return '';
@@ -2228,7 +2251,7 @@ eleventyExcludeFromCollections: true
     const Yc=v=> padT+ih*(1-(v-cmin)/(cmax-cmin));
     const Y1=v=> padT+ih*(1-v/100);
     const path=(vals,yf)=> vals.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${yf(v).toFixed(1)}`).join(' ');
-    const dot=(v,yf,c)=>`<circle cx="${X(n-1).toFixed(1)}" cy="${yf(v).toFixed(1)}" r="3.4" fill="${c}"/>`;
+    const dot=(v,yf,c)=>`<circle cx="${X(n-1).toFixed(1)}" cy="${yf(v).toFixed(1)}" r="3.4" style="fill:${c}"/>`;
     const grid=[0,50,100].map(v=>`<line class="ug-grid-line" x1="${padL}" y1="${Y1(v).toFixed(1)}" x2="${W-padR}" y2="${Y1(v).toFixed(1)}"/><text class="ug-axis-lbl" x="${W-padR+6}" y="${(Y1(v)+3).toFixed(1)}">${v}</text>`).join('');
     const zero=`<line class="ug-zero" x1="${padL}" y1="${Yc(0).toFixed(1)}" x2="${W-padR}" y2="${Yc(0).toFixed(1)}"/>`;
     const cashLbls=`<text class="ug-axis-lbl" x="${padL-7}" y="${(Yc(cmax)+3).toFixed(1)}" text-anchor="end">${money(cmax)}</text><text class="ug-axis-lbl" x="${padL-7}" y="${(Yc(cmin)+3).toFixed(1)}" text-anchor="end">${money(cmin)}</text>`;
@@ -2237,25 +2260,25 @@ eleventyExcludeFromCollections: true
     // end-of-line labels carry the old legend's whole job (name + current
     // value) in each line's own ink, nudged apart when the lines converge
     const ends=[
-      {t:'Cash '+money(last.cash), y:Yc(last.cash)-7, c:'#4ecb8d'},
-      {t:'Rep '+Math.round(last.rep), y:Y1(last.rep)-7, c:'#6aadff'},
-      {t:'Morale '+Math.round(last.morale), y:Y1(last.morale)-7, c:'#4ECDC4'}
+      {t:'Cash '+money(last.cash), y:Yc(last.cash)-7, c:'var(--lt-green,#4ecb8d)'},
+      {t:'Rep '+Math.round(last.rep), y:Y1(last.rep)-7, c:'var(--lt-blue,#6aadff)'},
+      {t:'Morale '+Math.round(last.morale), y:Y1(last.morale)-7, c:'var(--lt-teal,#4ECDC4)'}
     ].sort((a,b)=>a.y-b.y);
     ends.forEach((e,i)=>{ if(i && e.y-ends[i-1].y<13) e.y=ends[i-1].y+13;
       e.y=Math.max(padT+9, Math.min(H-padB-3, e.y)); });
-    const endLbls=ends.map(e=>`<text class="ug-line-lbl" x="${(X(n-1)-8).toFixed(1)}" y="${e.y.toFixed(1)}" text-anchor="end" fill="${e.c}">${e.t}</text>`).join('');
+    const endLbls=ends.map(e=>`<text class="ug-line-lbl" x="${(X(n-1)-8).toFixed(1)}" y="${e.y.toFixed(1)}" text-anchor="end" style="fill:${e.c}">${e.t}</text>`).join('');
     $('ug-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" class="ug-chartsvg">
       ${grid}${zero}${caps}${cashLbls}${xLbls}
-      <path d="${path(h.map(p=>p.morale),Y1)}" fill="none" stroke="#4ECDC4" stroke-width="1.6" stroke-opacity=".7"/>
-      <path d="${path(h.map(p=>p.rep),Y1)}" fill="none" stroke="#6aadff" stroke-width="1.6" stroke-opacity=".7"/>
-      <path d="${path(cv,Yc)}" fill="none" stroke="#4ecb8d" stroke-width="2.6"/>
-      ${dot(last.morale,Y1,'#4ECDC4')}${dot(last.rep,Y1,'#6aadff')}${dot(last.cash,Yc,'#4ecb8d')}
+      <path d="${path(h.map(p=>p.morale),Y1)}" fill="none" style="stroke:var(--lt-teal,#4ECDC4)" stroke-width="1.6" stroke-opacity=".7"/>
+      <path d="${path(h.map(p=>p.rep),Y1)}" fill="none" style="stroke:var(--lt-blue,#6aadff)" stroke-width="1.6" stroke-opacity=".7"/>
+      <path d="${path(cv,Yc)}" fill="none" style="stroke:var(--lt-green,#4ecb8d)" stroke-width="2.6"/>
+      ${dot(last.morale,Y1,'var(--lt-teal,#4ECDC4)')}${dot(last.rep,Y1,'var(--lt-blue,#6aadff)')}${dot(last.cash,Yc,'var(--lt-green,#4ecb8d)')}
       ${endLbls}
     </svg>`;
   }
 
   // ── RENDER: SIDE PANELS ───────────────────────────────────────────────
-  function payHint(){ const ap=avgPay(run); const m=((ap-1)*45 + moraleBonus(run) - 3); return `Average pay ${Math.round(ap*100)}%. Base morale drift this quarter (before overload): <b style="color:${m>=0?'#4ecb8d':'#ff7a7a'}">${m>=0?'+':''}${m.toFixed(0)}</b>. 110%+ blunts a union push.`; }
+  function payHint(){ const ap=avgPay(run); const m=((ap-1)*45 + moraleBonus(run) - 3); return `Average pay ${Math.round(ap*100)}%. Base morale drift this quarter (before overload): <b style="color:${m>=0?'var(--lt-green,#4ecb8d)':'var(--lt-red,#ff7a7a)'}">${m>=0?'+':''}${m.toFixed(0)}</b>. 110%+ blunts a union push.`; }
   const PAY_ROLES = [{key:'phys',label:'Physicians'}, {key:'rn',label:'RNs'}, {key:'shared',label:'Techs'}];
   function renderPay(){
     $('ug-pay').innerHTML = `<h3>Compensation by role${info('pay')}</h3>` + PAY_ROLES.map(t=>`
@@ -2273,7 +2296,7 @@ eleventyExcludeFromCollections: true
       const head = run.physicians[sp.key]||0;
       const units = run.departments.filter(d=>!d.construction && d.spec===sp.key);
       const constructing = run.departments.filter(d=>d.construction && d.spec===sp.key);
-      const cover = units.concat(constructing).map(d=>d.short).join(' · ') || '—';
+      const cover = units.concat(constructing).map(d=>d.short).join(' · ') || 'none';
       const short = units.some(d=>{ const p=deptProject(d,run,run.activeEvent,alloc); return p.limit==='staff' && p.partMd<=p.partRn && p.partMd<=p.partSh; });
       const hireC = Math.round(physHireCost(sp)*hireMult(run));
       return `<div class="ug-medrow${short?' short':''}">
@@ -2303,8 +2326,8 @@ eleventyExcludeFromCollections: true
       <div class="pj-row"><span>Patients treated</span><b>${num(r.throughput)}</b></div>
       <div class="pj-row"><span>Demand met</span><b>${pct(r.service)}</b></div>
       <div class="pj-row"><span>Peak floor burnout${info('burnout')}</span><b style="color:${burnColor(peakBurnout(run))}">${burnLabel(peakBurnout(run))}</b></div>
-      ${(w=>w>=0.005?`<div class="pj-row"><span>Incident odds, worst unit${info('safety')}</span><b style="color:${w>0.2?'#ff5a6a':'#E8A838'}">${Math.round(w*100)}%</b></div>`:'')(worstIncidentOdds(run, run.activeEvent))}
-      ${run.lastTurnover?`<div class="pj-row" style="margin-top:-4px"><span style="color:#ff7a7a">&#8627; staff lost last quarter</span><b style="color:#ff7a7a">${run.lastTurnover.total}</b></div>`:''}
+      ${(w=>w>=0.005?`<div class="pj-row"><span>Incident odds, worst unit${info('safety')}</span><b style="color:${w>0.2?'var(--lt-crit,#ff5a6a)':'var(--lt-amber,#E8A838)'}">${Math.round(w*100)}%</b></div>`:'')(worstIncidentOdds(run, run.activeEvent))}
+      ${run.lastTurnover?`<div class="pj-row" style="margin-top:-4px"><span style="color:var(--lt-red,#ff7a7a)">&#8627; staff lost last quarter</span><b style="color:var(--lt-red,#ff7a7a)">${run.lastTurnover.total}</b></div>`:''}
       <div class="pj-div"></div>
       <div class="pj-row"><span>Revenue</span><b>${money(r.revenue)}</b></div>
       ${payerRow}
@@ -2313,20 +2336,20 @@ eleventyExcludeFromCollections: true
       ${r.eventCost?`<div class="pj-row"><span>Event cost</span><b>-${money(r.eventCost)}</b></div>`:''}
       ${r.interest?`<div class="pj-row"><span>Loan interest</span><b>-${money(r.interest)}</b></div>`:''}
       ${r.programSpend?`<div class="pj-row"><span>Community programs${info('programs')}</span><b>-${money(r.programSpend)}</b></div>`:''}
-      ${r.bonus?`<div class="pj-row"><span>Standing income${info('income')}</span><b style="color:#4ecb8d">+${money(r.bonus)}</b></div>`:''}
+      ${r.bonus?`<div class="pj-row"><span>Standing income${info('income')}</span><b style="color:var(--lt-green,#4ecb8d)">+${money(r.bonus)}</b></div>`:''}
       <div class="pj-div"></div>
       <div class="pj-row pj-net"><span>Net this quarter${info('net')}</span><b class="${r.net>=0?'pos':'neg'}">${r.net>=0?'+':''}${money(r.net)}</b></div>
       <div class="pj-row"><span>Cash after</span><b>${money(run.cash + r.net)}</b></div>`;
   }
   /* the line under the slider reads the slider, nothing else; what the lever IS lives on the
      Operations badge now (David 2026-09-20: simplify the view, keep the detail one tap away) */
-  function austHint(){ const a=run.austerity; const loss=a>=1?0:Math.round((1-capFactor(a))*100); return loss?`<b style="color:#ff7a7a">-${loss}% capacity</b> at this setting.`:'Full capacity. Deferred maintenance has a price.'; }
+  function austHint(){ const a=run.austerity; const loss=a>=1?0:Math.round((1-capFactor(a))*100); return loss?`<b style="color:var(--lt-red,#ff7a7a)">-${loss}% capacity</b> at this setting.`:'Full capacity. Deferred maintenance has a price.'; }
   function updateAust(){ const v=$('austval'); if(v) v.textContent=Math.round(run.austerity*100)+'%'; const hb=$('austhint'); if(hb) hb.innerHTML=austHint(); }
   function renderOps(){
     const tc = run.travelers||0;
     $('ug-ops').innerHTML=`<h3>Operations${info('overhead', 'Dial it down and you keep cash now but throttle how many patients the building can take.')}</h3>
       <div class="pr-head" style="display:flex;justify-content:space-between;font-size:var(--t-fine);margin-bottom:5px"><span>Overhead spend</span><b id="austval">${Math.round(run.austerity*100)}%</b></div>
-      <input type="range" min="0.70" max="1.00" step="0.05" value="${run.austerity}" data-act="aust" style="width:100%;accent-color:#E8A838">
+      <input type="range" min="0.70" max="1.00" step="0.05" value="${run.austerity}" data-act="aust" style="width:100%;accent-color:var(--lt-amber,#E8A838)">
       <div class="ug-hint" id="austhint">${austHint()}</div>
       <div class="ug-staffhdr" style="margin-top:16px">Traveler contract${info('travelers')}</div>
       <div class="ug-staffrow" style="margin-bottom:4px"><span class="sr-lbl">Packs this quarter</span>
@@ -2344,7 +2367,7 @@ eleventyExcludeFromCollections: true
     const interest=Math.round(run.debt*CFG.loanRate);
     $('ug-finance').innerHTML=`<h3>Financing${info('loan')}</h3>
       <div class="ug-rowline"><span>Outstanding debt</span><b style="color:${run.debt>0?'var(--amber)':'var(--t1)'}">${money(run.debt)}</b></div>
-      <div class="ug-rowline"><span>Interest / quarter (${Math.round(CFG.loanRate*100)}%)</span><b style="color:${interest?'#ff7a7a':'var(--t1)'}">${interest?'-'+money(interest):'$0'}</b></div>
+      <div class="ug-rowline"><span>Interest / quarter (${Math.round(CFG.loanRate*100)}%)</span><b style="color:${interest?'var(--lt-red,#ff7a7a)':'var(--t1)'}">${interest?'-'+money(interest):'$0'}</b></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="ug-expand" data-act="borrow" style="margin:0" ${run.debt+CFG.loanChunk>CFG.loanCap?'disabled':''}>Borrow ${money(CFG.loanChunk)}</button>
         <button class="ug-expand" data-act="repay" style="margin:0" ${(run.debt<=0||run.cash<=0)?'disabled':''}>Repay ${money(CFG.loanChunk)}</button>
@@ -2364,13 +2387,13 @@ eleventyExcludeFromCollections: true
     if (k.id==='profit'){
       const left = 2 - (run.investorDraws||0);
       return `<div class="ug-staffhdr" style="margin-top:14px">${k.short} &middot; Investors${badge('Investor capital', 'Cash on demand, twice a run. The covenant is the price: a quarter in the red logs a strike, and the third one ends the run.')}</div>
-        <div class="ug-rowline"><span>Covenant strikes</span><b style="color:${run.covStrikes?'#ff7a7a':'var(--t1)'}">${run.covStrikes||0} of 3</b></div>
+        <div class="ug-rowline"><span>Covenant strikes</span><b style="color:${run.covStrikes?'var(--lt-red,#ff7a7a)':'var(--t1)'}">${run.covStrikes||0} of 3</b></div>
         <button class="ug-expand" data-act="invdraw" style="margin-top:6px" ${left<=0?'disabled':''}>${left>0?`Draw investor capital &middot; +$400k (${left} left)`:'Investor capital exhausted'}</button>
 `;
     }
     if (k.id==='district'){
       return `<div class="ug-staffhdr" style="margin-top:14px">${k.short} &middot; Tax levy${badge('The tax levy', 'The taxpayers keep the lights on, rain or shine. In exchange: public wages (95% pay floor) and closures are a public fight.')}</div>
-        <div class="ug-rowline"><span>Levy income</span><b style="color:#4ecb8d">+${money(k.bonus)}/qtr</b></div>`;
+        <div class="ug-rowline"><span>Levy income</span><b style="color:var(--lt-green,#4ecb8d)">+${money(k.bonus)}/qtr</b></div>`;
     }
     return `<div class="ug-staffhdr" style="margin-top:14px">${k.short} &middot; Residency${badge('The residency', 'Hiring runs light and safety runs safer. Every cleared boss quarter graduates an RN into each of your two thinnest units. Teaching overhead costs 8% on everything.')}</div>`;
   }
@@ -2402,7 +2425,7 @@ eleventyExcludeFromCollections: true
     workforce: [[75,'A'],[65,'B'],[55,'C'],[45,'D']],      // average morale
   };
   const GRADE_ORDER = ['A','B','C','D','F'];
-  const GRADE_COLOR = {A:'#4ecb8d', B:'#8fd06c', C:'#E8A838', D:'#ff9a5a', F:'#ff5a6a'};
+  const GRADE_COLOR = {A:'var(--lt-green,#4ecb8d)', B:'var(--lt-lime,#8fd06c)', C:'var(--lt-amber,#E8A838)', D:'var(--lt-orange,#ff9a5a)', F:'var(--lt-crit,#ff5a6a)'};
   const gradeFloor = (bands, v) => { for (const [floor,g] of bands) if (v >= floor) return g; return 'F'; };
   const gradeStep  = (g, n) => GRADE_ORDER[clamp(GRADE_ORDER.indexOf(g)+n, 0, GRADE_ORDER.length-1)];   // +1 worse, -1 better
   function reportData(){
@@ -2468,7 +2491,7 @@ eleventyExcludeFromCollections: true
       : `<div class="cr-row dim"><span>???</span><b></b></div>`).join('');
     const scenRows = SCENARIOS.map(s=> `<div class="cr-row${codex.scen[s.id]?'':' dim'}"><span>${s.name}</span><b>${codex.scen[s.id]?'&#10003; finished':''}</b></div>`).join('');
     const winRows = CLASSES.map(c=> `<div class="cr-row${codex.wins[c.id]?'':' dim'}"><span>${c.name}</span><b>${codex.wins[c.id]?'best overall '+codex.wins[c.id]:'no victory yet'}</b></div>`).join('');
-    $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 style="color:#4ecb8d">The Chart Room</h2>
+    $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">The Chart Room</h2>
       <div class="mo-sub">Everything this device has met across every run. The rest of the deck stays face-down until you meet it.</div>
       <div class="cr-grid">
         <div class="cr-col"><div class="cr-h">The crisis deck &middot; ${evSeen} of ${allEvents.length}</div>${evRows}</div>
@@ -2606,7 +2629,7 @@ eleventyExcludeFromCollections: true
     const prevLoad = ov.querySelector ? ov.querySelector('#ug-loadstr') : null;  // and a pasted save string
     const loadVal = prevLoad ? prevLoad.value : '';
     ov.innerHTML = `<div class="ug-modal ug-modal-start">
-      <h2 style="color:#4ecb8d">Uncharted General</h2>
+      <h2 style="color:var(--lt-green,#4ecb8d)">Uncharted General</h2>
       <div class="mo-sub">Set the table and start. All of it can change between runs.</div>
       <div class="ug-set">
         <div class="ug-set-lbl">Difficulty <b>${diffOf().name}${badge(diffOf().name, diffOf().blurb)}</b></div>
@@ -2692,7 +2715,7 @@ eleventyExcludeFromCollections: true
         <div class="en-desc">${money(u.capex)} capex &middot; builds in ${left} quarter${left===1?'':'s'}<br>Capacity ${num(u.capacity)} &middot; ${money(u.rev)}/patient<br>Opens with ${u.staff.rn} RN / ${u.staff.shared} Tech<br>Needs ${sp?sp.label:''} physicians</div>
       </button>`; }).join('') : `<div class="ug-hint">Nothing left to build on this floor.</div>`;
     const ov=$('ug-overlay');
-    ov.innerHTML=`<div class="ug-modal"><h2 style="color:#4ecb8d">Build a New Unit${tierName?` &middot; ${tierName}`:''}</h2><div class="mo-sub">Capex is paid now; the unit comes online after construction finishes, then you staff and run it. Operating across more care tiers strengthens reputation (continuity of care).</div><div class="ug-cards">${cards}</div><button class="ug-restart" data-act="cancel" style="background:linear-gradient(135deg,#33527a,#4a6f9e);margin-top:18px">Cancel</button></div>`;
+    ov.innerHTML=`<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">Build a New Unit${tierName?` &middot; ${tierName}`:''}</h2><div class="mo-sub">Capex is paid now; the unit comes online after construction finishes, then you staff and run it. Operating across more care tiers strengthens reputation (continuity of care).</div><div class="ug-cards">${cards}</div><button class="ug-restart" data-act="cancel" style="background:linear-gradient(135deg,#33527a,#4a6f9e);margin-top:18px">Cancel</button></div>`;
     ov.hidden=false;
   }
   function closeOverlay(){ overlayOpen=false; const ov=$('ug-overlay'); ov.hidden=true; ov.innerHTML=''; setNetOverlay('none'); }
@@ -2789,7 +2812,7 @@ eleventyExcludeFromCollections: true
         <span class="st-lbl">${s.label}</span><span class="st-holder">${holder ? (mine?'You':holder) : 'Open'}</span><span class="st-desc">${s.desc}</span></button>`;
     }).join('');
     const ov=$('ug-overlay'); if (!ov) return;
-    ov.innerHTML = `<div class="ug-modal"><h2 style="color:#4ecb8d">Table ${NET.room}</h2>
+    ov.innerHTML = `<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">Table ${NET.room}</h2>
       <div class="mo-sub">${note || 'The host sets the table and runs the quarters. Claim a seat: your seat&rsquo;s controls are yours alone, everything else is somebody&rsquo;s job to argue for.'}</div>
       <div class="ug-seatgrid">${seatsHtml}
         <button class="ug-seat${!NET.seat?' mine':''}" data-act="seatpick" data-seat="none"><span class="st-lbl">Observer</span><span class="st-holder">${!NET.seat?'You':''}</span><span class="st-desc">Watch the table, hold no verbs.</span></button></div>
@@ -2901,7 +2924,7 @@ eleventyExcludeFromCollections: true
     catch(e){ flashHint('Could not build a save string in this browser.'); return; }
     overlayOpen = true;
     const ov = $('ug-overlay');
-    ov.innerHTML = `<div class="ug-modal"><h2 style="color:#4ecb8d">Save This Run</h2>
+    ov.innerHTML = `<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">Save This Run</h2>
       <div class="mo-sub">This string is your whole run: Year ${yearOf(run.level)}, Quarter ${qInYear(run.level)}, the cash, the staff, the works. Copy it and keep it anywhere. A note on your phone works. Paste it into <b>Restore a saved run</b> on the start screen to pick up right here.</div>
       <textarea class="ug-savebox" id="ug-savestr" data-act="selsave" rows="5" readonly>${code}</textarea>
       <div class="ug-end-actions">

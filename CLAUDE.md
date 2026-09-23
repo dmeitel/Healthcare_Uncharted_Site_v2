@@ -162,7 +162,10 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
 - No em dashes anywhere, including titles and meta descriptions.
 - Semantic HTML before ARIA.
 - Every interactive element keyboard reachable with visible focus.
-- Mobile first. 360px is the floor; the phone breakpoint line is 699px.
+- Mobile first. 360px is the floor. A PHONE IS THE SHORTER SIDE OF THE SCREEN, not the width:
+  `@media (max-width:699px), (max-height:500px)` in CSS, `Math.min(w,h) <= 699` in the harness.
+  A width-only 699 query serves the desktop layout to a phone held sideways, which is what broke
+  22 of 54 pages in landscape on 2026-09-21. Method: docs/HU-VIEWPORT-METHOD-2026-09-21.md.
 - Never edit the build output directory (_site/). It is generated.
 - David commits and pushes himself. Never commit, push, or branch unless he explicitly asks in the moment.
 - Every open question for David lives in DECISIONS.md at the repo root. Read it at the start
@@ -177,7 +180,10 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
 - Every external claim in new copy (a count, a star count, a product's existence, a price) is
   verified live before it ships, and data-driven content carries its check date. A hand-off
   arrived with a star count stale by a factor of three (2026-09-18).
-- Before a page ships: `npm run verify` green, and `npm run phone -- <path>` clean at 360 and 699.
+- Before a page ships: `npm run verify` green, and `npm run phone -- <path>` clean. The gate runs
+  nine viewports by default (360x740, 430x932, 699x900, 700x900, 768x1024, 1024x768, 1280x900,
+  1920x1080, 740x360) and reads the whole page down, not just the top. Do not narrow it to 360 and 699:
+  both are portrait phones, and the faults of 2026-09-21 were at 740x360 and in the 700 to 860 band.
   Give an outside session docs/HU-HANDOFF-BRIEF.md before it builds anything for this site;
   start a new page from docs/HU-PAGE-RECIPES.md.
 - The current week of work lives in SPRINT.md at the repo root, under the quarter plan at

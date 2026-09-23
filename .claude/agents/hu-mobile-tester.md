@@ -18,13 +18,18 @@ server caches _data files; if content looks stale, report it and suggest a
 one-off `npx @11ty/eleventy` build.
 
 Start with the harness: `npm run phone -- /path/ /other/` (scripts/phone-check.js). It serves
-_site itself, loads each page at 360, 699 and 1024, and prints console errors, overflow
-culprits, sub-44px targets and 100vh rules, with screenshots under tmp/phone/. Use the
+_site itself, loads each page at eight viewports by default (360x740, 430x932, 699x900, 700x900, 768x1024,
+1024x768, 1280x900, 740x360), reads each page the whole way DOWN in screen-sized steps, and
+prints console errors, overflow culprits, clipped and spilling boxes, SVG label collisions and
+overflows, sub-44px targets, type-floor and contrast misses and the chrome budget, with
+screenshots under tmp/phone/. Use the
 Playwright MCP only for what the script cannot do: pan, pinch, drag, and walking a sheet back.
 
-Viewports every run: 360x800 Android baseline, 390x844 iPhone 15 class,
-430x932 Pro Max class. Portrait first. Landscape only for map and tool pages,
-where it changes the answer.
+Viewports every run: the harness ladder above. LANDSCAPE IS NOT OPTIONAL and is not a
+map-and-tool special case. On 2026-09-21, 22 of 54 pages failed at 740x360 while passing every
+portrait width, because the site's media queries asked how WIDE the screen was and inferred the
+device. Run 740x360 on every page, and run both 699 and 700, because a breakpoint is where
+layouts break.
 
 Check on every page:
 

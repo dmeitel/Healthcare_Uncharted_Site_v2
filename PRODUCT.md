@@ -36,14 +36,14 @@ A practitioner's insider perspective, not an analyst's overview and not a corpor
 
 - Nine-plus interactive tools; the two production MapLibre maps (Hospital Operations, Pop Health Multi-Lens) are the flagships. docs/HU-UI-GRAMMAR.md governs interactive surface design (budget rules: 44px touch floor, 250ms phone motion cap, one transient surface, lazy data discipline).
 - Deploy weight is watched; large datasets shard or lazy-load. First-paint fetch budget ~300KB on tools.
-- Site-wide theming: dark default plus light, toggled, with a future site-wide colorblind theme decided but not built.
-- Terminology that is settled: the multi-lens tool is the "Pop Health Multi-Lens Map," never "the 4Ps map" (the 4Ps is a framework tag, rendered as pills, never a backbone).
+- Site-wide theming: dark default plus light, toggled. TWO themes, not three. This line used to name "a future site-wide colorblind theme decided but not built"; no other file recorded that decision, and David dropped it on 2026-09-21. Colorblind access is met inside the two themes we have: every accent carries a deep step and tests/contrast.test.js gates them.
+- Terminology that is settled: the multi-lens tool is the "U.S. Population Health Map" (renamed 2026-09-19 under the naming rule: tools are named what they are, in the words someone would search for). Never "the 4Ps map" (the 4Ps is a framework tag, rendered as pills, never a backbone), and no longer "Pop Health Multi-Lens Map", which this line asserted as settled until 2026-09-21. The slug and the `multi-lens-map` id stay; the old names live on as search keys in tools.js.
 - UNDECIDED (explicitly, David 2026-07-30): monetization, paywall, sponsorship, and independence stances. No hard lines committed yet; do not assert any of them in copy or design, and do not fabricate a stance.
 
 ## Brand Commitments
 
 - The HU Voice Kernel in CLAUDE.md is binding for all delivered content: practitioner voice, no em dashes ever, CAPS for emphasis, no AI tells, no corporate smoothness. It governs UI strings as well as prose.
-- Identity: David Eitel, RRT, MHA, MSRT. Senior Clinical Informatics Analyst at Intermountain Health, adjunct faculty at UVU, founder of Healthcare Uncharted.
+- Identity: David Eitel, RRT, MHA, MSRT. Clinical Informatics Team Manager at Intermountain Health (Digital Technology Services), adjunct faculty at UVU, founder of Healthcare Uncharted.
 - Palette anchors: HU Blue #1B5FA8, HU Teal #4ECDC4, Clinical White #F6F9FC, Dark #0d1117. Fonts: Outfit (display), DM Sans (body), IBM Plex Mono (data/mono). Tokens live in src/assets/css/hu-global.css; logo assets in src/brand/.
 - Sourcing standard: cite reliable .gov and reputable health organizations (KFF-tier); foundational references for concepts, then applied to healthcare. references.js is the single sourcing ledger.
 

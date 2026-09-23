@@ -31,7 +31,7 @@ All classes live in `src/assets/css/hu-global.css` (HU TOOL SHELL section). Tool
 1. **Canvas is touch-locked.** Direct `svg`/`canvas` children of `.shell-canvas` get `touch-action:none` automatically. Pan/zoom via d3.zoom or pointer events; the page must never fight a finger.
 2. **Hover must have a tap twin.** Any data revealed on `:hover` (tooltips, isolates) needs a tap/click path that shows the same data. Test with `@media (hover:none)`.
 3. **Detail panels on phone are sheets.** Add `shell-dock--sheet` to a dock that should slide up over the canvas instead of stacking (toggle `.open` in JS). Standalone `.shell-sheet` works at any size for tutorials/detail views.
-4. **Authoring canvases gate, they don't reflow.** A drag-drop editor that can't work at 375px renders a `.shell-gate` (auto-appears < 900px) with a one-line explanation and a link somewhere useful.
+4. **Authoring canvases gate, they don't reflow.** A drag-drop editor that can't work at the 360px floor renders a `.shell-gate` (auto-appears < 900px) with a one-line explanation and a link somewhere useful.
 5. **Attribution lives in `.shell-foot`** (preferred) or floats via `.tool-attribution--fixed`. Every tool carries it: the site footer is suppressed on tools.
 6. **Chips are `.toggle-chip`.** Active = teal fill + #062024 text. No new pill inventions.
 7. **Z-scale:** nav 200, tool-bar 150, shell-gate 180, attribution 120, docks 50, sheet 300, modal 400. Don't freelance z-indexes above 400.
@@ -130,6 +130,6 @@ The Operators Map (`src/tools/operators-map/index.html`) is the reference implem
 - [ ] Wrap the app in `.hu-shell`; regions per the shape above
 - [ ] `.tool-bar` with kicker "Tool" + `.tool-bar-title` wordmark (`<span>` = teal word)
 - [ ] Filters as `.toggle-chip` in `.shell-deck-row`s
-- [ ] Phone pass at 375px: nothing overflows, everything reachable, tap twins exist
+- [ ] `npm run phone -- <path>` clean across its eight default viewports (the floor is 360, not 375): nothing overflows, nothing spills its box, everything reachable, tap twins exist
 - [ ] Attribution strip present
 - [ ] Fonts via `var(--font)/var(--display)/var(--mono)`; colors via global tokens or scoped names

@@ -19,8 +19,13 @@ paths:
   three components away.
 - Every interactive component has hover, focus, active, and disabled states
   in both themes.
-- Floors: 44px touch targets on phones, the phone line is 699px. Never
-  hand-roll a different breakpoint.
+- Floors: 44px touch targets on phones. A PHONE IS THE SHORTER SIDE:
+  `@media (max-width:699px), (max-height:500px)`. Never hand-roll a different
+  number, and never write the width-only half on its own. 2026-09-21: a
+  width-only 699 query is why a phone in landscape (740px wide) was served the
+  desktop nav, the desktop charts and the desktop tool shell. Roughly 52 of the
+  61 phone queries in src/ are still the old width-only form; they are a
+  migration backlog, not a pattern to copy.
 - Type comes from the scale, never from a literal: --t-body, --t-ui,
   --t-label, --t-micro. Each carries a desktop value in :root and a phone
   value in the 699px block under it, and a phone value is never smaller than

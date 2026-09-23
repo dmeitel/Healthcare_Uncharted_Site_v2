@@ -29,12 +29,37 @@ eleventyExcludeFromCollections: true
   --hu-dark:#0d1117;--hu-surface:#131c2e;--hu-raised:#1a2540;--hu-light:#F6F9FC;
   --hu-blue:#1B5FA8;--hu-blue-mid:#2d4a8a;--hu-teal:#4ECDC4;--hu-teal-dark:#1B9A90;
   --hu-green:#2D9B6F;--hu-red:#DF5752;--hu-amber:#E8A838;
-  --hu-text-1:#FFFFFF;--hu-text-2:#c8d8e8;--hu-text-3:#5a7898;
-  --hu-text-dark:#0d1117;--hu-text-muted:#6B8299;
+  --hu-text-1:#FFFFFF;--hu-text-2:#c8d8e8;--hu-text-3:#7E9CBF;
+  --hu-text-dark:#0d1117;--hu-text-muted:#7E9CBF;
   --hu-border:#1e2d47;--hu-border-2:#2a4060;
+  --hu-blue-soft:#5b86c9;--hu-ink-blue:#6aadff;--hu-ink-green:#4ecb8d;--hu-seg-ink:#062024;--hu-nav-bg:rgba(13,17,23,0.92);
+  --hu-mesh-blue:rgba(27,95,168,.22);--hu-mesh-green:rgba(45,155,111,.12);--hu-mesh-teal:rgba(78,205,196,.06);
   --font:'DM Sans','Trebuchet MS',system-ui,sans-serif;
   --mono:'IBM Plex Mono','Courier New',monospace;
   --display:'Outfit',var(--font);
+}
+/* DARK CONTRAST, 2026-09-23. --hu-text-3 was #5a7898, 3.3:1 on the cards; it is now the
+   site's --t3 slate (5.3:1). The revenue bar's white labels measured 1.9:1 on teal and 2.1:1
+   on amber, so the bar takes the site's teal-fill ink #062024 and the grants fill lightens to
+   the same slate so that ink holds. The blue and green card labels read in the on-dark text
+   steps the rest of the site uses (#6aadff, #4ecb8d); the fills and rules keep their colours. */
+/* LIGHT THEME, 2026-09-23 (David: "every page needs to be able to do both"). This page is
+   standalone and does not load hu-global.css, so it cannot borrow the site tokens by name;
+   these are the same values as the [data-theme="light"] block there, and every accent used
+   as text takes its deep step (DESIGN.md, the Deep-Step Rule). The script at the end of
+   <head> reads the site's saved theme, the same way base.njk does.
+   Two departures from the site block, both measured: the cards sit on this page's own
+   clinical white (--hu-light) instead of #E2E8F0, because the amber phase label on that
+   grey measured 4.0:1, and 4.45:1 even one step deeper; and the mesh runs at a quarter of
+   its dark strength, because at full strength it pulled the teal section tags under 4.5:1. */
+html[data-theme="light"]{
+  color-scheme:light;
+  --hu-dark:#EEF2F7;--hu-surface:#FFFFFF;--hu-raised:var(--hu-light);
+  --hu-text-1:#001117;--hu-text-2:#2D3748;--hu-text-3:#4A5568;--hu-text-muted:#4A5568;
+  --hu-border:#CBD5E0;--hu-border-2:#A0AEC0;
+  --hu-teal:#0D7268;--hu-green:#1B6B4C;--hu-red:#A8352F;--hu-amber:#8A6205;--hu-blue-soft:#1B5FA8;--hu-ink-blue:#1B5FA8;--hu-ink-green:#1B6B4C;--hu-seg-ink:#FFFFFF;
+  --hu-nav-bg:rgba(238,242,247,.92);
+  --hu-mesh-blue:rgba(27,95,168,.05);--hu-mesh-green:rgba(45,155,111,.05);--hu-mesh-teal:rgba(78,205,196,.04);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -42,9 +67,9 @@ body{font-family:var(--font);background:var(--hu-dark);color:var(--hu-text-1);li
 /* atmospheric background mesh */
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
-    radial-gradient(900px 600px at 80% -5%, rgba(27,95,168,.22), transparent 60%),
-    radial-gradient(800px 700px at 0% 100%, rgba(45,155,111,.12), transparent 55%),
-    radial-gradient(700px 500px at 50% 40%, rgba(78,205,196,.06), transparent 60%);}
+    radial-gradient(900px 600px at 80% -5%, var(--hu-mesh-blue), transparent 60%),
+    radial-gradient(800px 700px at 0% 100%, var(--hu-mesh-green), transparent 55%),
+    radial-gradient(700px 500px at 50% 40%, var(--hu-mesh-teal), transparent 60%);}
 a{color:var(--hu-teal);text-decoration:none}
 a:hover{color:var(--hu-text-1)}
 /* survey ticks, local copy of the site utility (standalone page, no hu-global.css) */
@@ -54,7 +79,7 @@ a:hover{color:var(--hu-text-1)}
 .hu-ticks::after{bottom:5px;right:5px;border-bottom:1px solid var(--hu-border-2);border-right:1px solid var(--hu-border-2)}
 
 /* NAV */
-nav{position:sticky;top:0;z-index:100;background:rgba(13,17,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--hu-border);padding:0 40px;height:56px;display:flex;align-items:center;justify-content:space-between}
+nav{position:sticky;top:0;z-index:100;background:var(--hu-nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--hu-border);padding:0 40px;height:56px;display:flex;align-items:center;justify-content:space-between}
 .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-logo-img{width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0}
 .nav-title{font-family:var(--display);font-weight:700;font-size:var(--t-body);color:var(--hu-text-1);letter-spacing:-.01em}
@@ -107,10 +132,10 @@ section{padding:64px 0}
 .pillar:nth-child(3){border-left-color:var(--hu-green)}
 .pillar:hover{border-color:var(--hu-border-2)}
 .pillar:hover{border-left-color:var(--hu-teal)}
-.pillar-num{font-family:var(--display);font-size:40px;font-weight:700;color:var(--hu-text-3);line-height:1;opacity:.6}
+.pillar-num{font-family:var(--display);font-size:40px;font-weight:700;color:var(--hu-text-3);line-height:1;opacity:.75}
 .pillar-kicker{font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--hu-teal);margin-bottom:8px}
-.pillar:nth-child(2) .pillar-kicker{color:#5b86c9}
-.pillar:nth-child(3) .pillar-kicker{color:var(--hu-green)}
+.pillar:nth-child(2) .pillar-kicker{color:var(--hu-ink-blue)}
+.pillar:nth-child(3) .pillar-kicker{color:var(--hu-ink-green)}
 .pillar-title{font-size:20px;font-weight:600;color:var(--hu-text-1);margin-bottom:10px}
 .pillar-body{font-size:var(--t-body);color:var(--hu-text-2);line-height:1.8}
 
@@ -136,7 +161,7 @@ section{padding:64px 0}
 .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
 .stat-card{background:none;border:none;border-radius:0;border-top:2px solid var(--hu-border-2);padding:8px 2px 0}
 .stat-num{font-family:var(--display);font-size:32px;font-weight:700;color:var(--hu-teal);line-height:1;font-variant-numeric:tabular-nums}
-.stat-num.blue{color:#5b86c9}
+.stat-num.blue{color:var(--hu-blue-soft)}
 .stat-num.amber{color:var(--hu-amber)}
 .stat-label{font-size:var(--t-fine);color:var(--hu-text-2);margin-top:8px;line-height:1.5}
 .stat-src{font-size:var(--t-micro);color:var(--hu-text-3);margin-top:8px;font-family:var(--mono)}
@@ -184,12 +209,12 @@ section{padding:64px 0}
 .cta-text strong{color:var(--hu-text-1);font-weight:600}
 .phase-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .phase{background:var(--hu-raised);border:1px solid var(--hu-border);border-top:3px solid var(--hu-teal);border-radius:10px;padding:20px 22px}
-.phase:nth-child(2){border-top-color:#5b86c9}
+.phase:nth-child(2){border-top-color:var(--hu-blue-soft)}
 .phase:nth-child(3){border-top-color:var(--hu-green)}
 .phase:nth-child(4){border-top-color:var(--hu-amber)}
 .phase-yr{font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--hu-teal);margin-bottom:8px}
-.phase:nth-child(2) .phase-yr{color:#5b86c9}
-.phase:nth-child(3) .phase-yr{color:var(--hu-green)}
+.phase:nth-child(2) .phase-yr{color:var(--hu-ink-blue)}
+.phase:nth-child(3) .phase-yr{color:var(--hu-ink-green)}
 .phase:nth-child(4) .phase-yr{color:var(--hu-amber)}
 .phase-title{font-size:var(--t-body);font-weight:600;color:var(--hu-text-1);margin-bottom:8px}
 .phase-body{font-size:var(--t-ui);color:var(--hu-text-2);line-height:1.7}
@@ -202,7 +227,7 @@ section{padding:64px 0}
 .arc-label{font-size:var(--t-fine);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--hu-text-3);margin:8px 0 14px}
 .arc-label.two{margin-top:44px}
 .revstack-bar{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--hu-border);height:62px}
-.rs-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:var(--t-label);color:#fff;font-weight:500;padding:0 8px;text-align:center;border-right:1px solid rgba(13,17,23,.4);letter-spacing:.02em;line-height:1.2}
+.rs-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:var(--t-label);color:var(--hu-seg-ink);font-weight:500;padding:0 8px;text-align:center;border-right:1px solid rgba(13,17,23,.4);letter-spacing:.02em;line-height:1.2}
 .rs-seg:last-child{border-right:none}
 .revstack-cap{font-size:var(--t-fine);color:var(--hu-text-3);margin-top:11px;line-height:1.6}
 .revstack-legend{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
@@ -234,6 +259,17 @@ footer{background:var(--hu-surface);border-top:1px solid var(--hu-border);paddin
 .reveal.d1{animation-delay:.06s}.reveal.d2{animation-delay:.14s}.reveal.d3{animation-delay:.22s}.reveal.d4{animation-delay:.3s}
 @keyframes rise{to{opacity:1;transform:translateY(0)}}
 
+/* At 360 the brand, the tag and the full "Back to the Secret Menu" needed 73px in a
+   56px bar, so the second line sat under the nav on top of the hero. The tag is
+   decoration, so it goes first. 2026-09-21, from David's phone pass. */
+@media(max-width:699px), (max-height:500px){
+  .nav-tag{display:none}
+  .nav-right{gap:8px}
+  /* The wordmark and the link both wrapped to two lines inside a 56px bar, so the header
+     read as broken. The hexagon still says whose site this is and still goes home; the
+     words are what the bar cannot afford at 360. 2026-09-21, David's header review. */
+  .nav-title{display:none}
+}
 @media(max-width:860px){
   .hero{grid-template-columns:1fr;gap:32px}
   .snapshot{position:static}
@@ -246,6 +282,14 @@ footer{background:var(--hu-surface);border-top:1px solid var(--hu-border);paddin
   .footer-note{text-align:left}
 }
 </style>
+<script>
+  /* the site's saved theme (base.njk sets the same attribute on every other page) */
+  (function(){
+    var t = 'dark';
+    try { t = localStorage.getItem('hu-theme') === 'light' ? 'light' : 'dark'; } catch (e) {}
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 </head>
 <body>
 
@@ -633,10 +677,10 @@ footer{background:var(--hu-surface);border-top:1px solid var(--hu-border);paddin
 
     <div class="revstack-bar">
       <div class="rs-seg" style="flex:5;background:var(--hu-teal)">Camping</div>
-      <div class="rs-seg" style="flex:3;background:#5b86c9">Day trips</div>
+      <div class="rs-seg" style="flex:3;background:var(--hu-blue-soft)">Day trips</div>
       <div class="rs-seg" style="flex:2;background:var(--hu-green)">Events</div>
       <div class="rs-seg" style="flex:2;background:var(--hu-amber)">Cabins &amp; RV</div>
-      <div class="rs-seg" style="flex:2;background:#6B8299">Grants</div>
+      <div class="rs-seg" style="flex:2;background:var(--hu-text-muted)">Grants</div>
     </div>
     <p class="revstack-cap">Illustrative of the revenue mix, not a forecast. Segment widths show the idea of a diversified base, not projected dollars.</p>
 
@@ -649,7 +693,7 @@ footer{background:var(--hu-surface);border-top:1px solid var(--hu-border);paddin
         </div>
       </div>
       <div class="rs-item">
-        <span class="rs-dot" style="background:#5b86c9"></span>
+        <span class="rs-dot" style="background:var(--hu-blue-soft)"></span>
         <div>
           <div class="rs-name">Care-center day trips<span>// contracted</span></div>
           <div class="rs-desc">Regional care centers, assisted living, and veterans' groups, booked midweek and off-season. Repeatable B2B revenue underneath the seasonal swing.</div>
@@ -670,7 +714,7 @@ footer{background:var(--hu-surface);border-top:1px solid var(--hu-border);paddin
         </div>
       </div>
       <div class="rs-item">
-        <span class="rs-dot" style="background:#6B8299"></span>
+        <span class="rs-dot" style="background:var(--hu-text-muted)"></span>
         <div>
           <div class="rs-name">Donations &amp; grants<span>// mission fuel</span></div>
           <div class="rs-desc">Philanthropy aimed straight at the people the programs serve. Because camping carries the overhead, every dollar here stretches further.</div>

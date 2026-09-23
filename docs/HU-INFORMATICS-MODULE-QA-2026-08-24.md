@@ -41,6 +41,14 @@ holding a phone can do.
 
 ## YOUR CALLS · open decisions, none blocking commit
 
+> **SUPERSEDED 2026-09-21. This page shipped; none of these are waiting on David.** The SVG label
+> sizes were fixed for every chart on the site (DECISIONS question A, 2026-09-21); this page's
+> smallest type is now 15px. The body-type and slug items closed when the page deployed. The
+> reading-chrome question belongs to the Learn and Rounds surface, which David parked 2026-08-24.
+> One thing is genuinely unresolved and is NOT a question: `#574A9E` still lives locally here as
+> `--nw-t` and was never promoted to hu-global. That only matters when a second page needs purple
+> text, so it promotes itself then. Claude's call, per CLAUDE.md rule 5.
+
 - **--purple-dk token.** The page carries #574A9E locally for light-theme purple text.
   Bless it and it should be promoted to hu-global next to --red-dk and friends.
 - **SVG label size on phones.** ~8px effective at 360 for the mono annotations.

@@ -8,7 +8,7 @@ Before any of them ships: `npm run verify` green, `npm run phone -- <path>` clea
 
 ## 1 · A reading page under /tools (a Reference-type tool)
 
-Shipped example: `src/tools/ai-skills/index.html`. Sibling: `src/tools/vendor-directory/index.html`. Full nav, no merged band, footer suppressed, tool attribution at the foot.
+Shipped example: `src/tools/vendor-directory/index.html`. (This used to name `src/tools/ai-skills/index.html` first; that page was DELETED 2026-09-21 on David's call, DECISIONS question 13.) Full nav, no merged band, footer suppressed, tool attribution at the foot.
 
 ```
 ---
@@ -42,7 +42,7 @@ og_image: /assets/images/tool-thumbs/<id>.png
   .xyz-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 20px 16px; transition:transform .2s, border-color .2s; }
   .xyz-card:hover{ transform:translateY(-4px); border-color:var(--xyz-accent); }
   .xyz-note{ border-left:3px solid var(--amber); padding:4px 0 4px 14px; max-width:70ch; }   /* the Margin Note Rule: rule, no box */
-  @media (max-width:699px){ .xyz-grid{ grid-template-columns:1fr; } }
+  @media (max-width:699px), (max-height:500px){ .xyz-grid{ grid-template-columns:1fr; } }
   @media (prefers-reduced-motion:reduce){ .xyz-card{ transition:none; } .xyz-card:hover{ transform:none; } }
 </style>
 
@@ -76,7 +76,7 @@ Register it: one entry in `src/_data/tools.js` (id, cluster, keys for search, ti
 
 ## 2 · A merged-band tool page (an interactive instrument)
 
-Shipped example: `src/tools/skill-demo/index.html` (small) and `src/tools/sql-mystery/index.html` (large). The toolbar IS the nav on these pages: `nav_merged: true` parks the real nav offscreen and the `[data-nav-summon]` control brings it down.
+Shipped example: `src/tools/sql-mystery/index.html`. (This used to name `src/tools/skill-demo/index.html` as the small one; that page was DELETED 2026-09-21, DECISIONS question 13.) The toolbar IS the nav on these pages: `nav_merged: true` parks the real nav offscreen and the `[data-nav-summon]` control brings it down.
 
 ```
 ---
@@ -104,7 +104,7 @@ og_image: /assets/images/tool-thumbs/<id>.png
   .xyz-panel{ background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
   .xyz-panel .pop-head{ background:var(--raised); }
   .xyz-vh{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  @media (max-width:699px){ /* stack, never a second breakpoint */ }
+  @media (max-width:699px), (max-height:500px){ /* stack. BOTH halves: a phone on its side is 740px wide */ }
   @media (prefers-reduced-motion:reduce){ /* every transition off */ }
 </style>
 
@@ -159,6 +159,29 @@ Rules that bite: `{% raw %}` around the script if it contains anything that look
 ---
 
 ## 3 · A Learn module
+
+> **REWRITTEN 2026-09-22. Do NOT copy the CSS block below into a new page.**
+>
+> That instruction is what made every reading page on this site a private fork, and forks drift.
+> Measured across the pages that each declared their own shell: five different h1 sizes on 14
+> pages, eight different hero paddings on 13, eight different eyebrow letter-spacings, four
+> different paragraph line-heights. The template below taught the MINORITY value for both
+> headings, so a page built correctly from this file came out looking unlike most of the site.
+>
+> **A reading page now uses the `.hu-read` shell in hu-global.css and writes almost no CSS.**
+> The classes: `hu-read` on the wrapper, then `hu-read-hero-inner`, `hu-read-eyebrow`,
+> `hu-read-h1`, `hu-read-standfirst`, `hu-read-body`, `hu-read-section`, `hu-read-kicker`,
+> `hu-read-h2`, `hu-read-h3`, `hu-read-p`, `hu-read-note`, `hu-read-grid`, `hu-read-card`,
+> `hu-read-links`, `hu-read-link`. A `<p>` inside `.hu-read` is already styled.
+>
+> Worked example: `src/secret-menu/patient-journeys/index.html`, 19 lines of page CSS, and the
+> 19 are genuinely unique to it. Bespoke things (a diagram, a figure, a board) STAY page-scoped
+> under their own prefix. That is not drift, that is the page. Only the shell is shared, because
+> only the shell should be identical everywhere.
+>
+> The block below is kept as a record of the old pattern and to show what the shell replaced.
+
+
 
 Shipped example: `src/learn/request-routing/index.html` (editorial), `src/learn/ai-in-healthcare/index.html`. Textbook register: the writing disappears, headings label, no personality added.
 

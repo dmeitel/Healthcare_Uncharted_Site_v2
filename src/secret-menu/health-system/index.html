@@ -9,6 +9,17 @@ eleventyExcludeFromCollections: true
 {% raw %}
 <style>
 #hs{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; --acc:#6aadff; }
+/* Light skin (2026-09-23, David: "every page needs to be able to do both"). The dark look is
+   untouched: every accent reads var(--lt-x, <the dark hex it always drew>), and --lt-x exists only
+   in the light theme, so dark falls through to its own hex. Light turns the panels white and each
+   accent to its deep text step, 4.5:1 or better on white and on the raised slate. */
+[data-theme="light"] #hs{ --surface:#FFFFFF; --raised:#EEF2F7; --border:#CBD5E0; --border2:#A0AEC0; --t3:#4A5568; --acc:#1B5FA8;
+  --amber:#7A5700; --lt-green:#1B6B4C; --lt-red:#A8352F; --lt-crit:#C22F2F; --lt-amber:#7A5700; --lt-orange:#9E4A12;
+  --lt-lime:#437516; --lt-blue:#1B5FA8; --lt-track:rgba(13,32,54,.1); --lt-hair:rgba(13,32,54,.08);
+  --lt-input:var(--raised); --lt-inputline:#647C99; --lt-tip:#FFFFFF; --lt-tipline:var(--border2); --lt-tipink:var(--t1); }
+[data-theme="light"] #hs .hs-panel,[data-theme="light"] #hs .hs-kpi{box-shadow:0 2px 10px rgba(13,32,54,.07)}
+[data-theme="light"] #hs .hs-deftip{box-shadow:0 12px 32px rgba(13,32,54,.18)}
+[data-theme="light"] #hs .hs-report{background:var(--raised)}
 #hs .hs-panel,#hs .hs-kpi{box-shadow:0 3px 14px rgba(0,0,0,.45)}
 .hs-wrap{max-width:1280px;margin:0 auto;padding:28px 24px 80px;font-family:var(--font)}
 .hs-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none;margin-bottom:6px}
@@ -21,7 +32,7 @@ eleventyExcludeFromCollections: true
 .hs-kpi{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:10px 16px;min-width:104px}
 .hs-kpi .k-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
 .hs-kpi .k-val{font-family:var(--display);font-weight:800;font-size:20px;margin-top:2px}
-.hs-kpi.good .k-val{color:#4ecb8d}.hs-kpi.warn .k-val{color:var(--amber)}.hs-kpi.bad .k-val{color:#ff7a7a}
+.hs-kpi.good .k-val{color:var(--lt-green,#4ecb8d)}.hs-kpi.warn .k-val{color:var(--amber)}.hs-kpi.bad .k-val{color:var(--lt-red,#ff7a7a)}
 .hs-mission{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:14px;margin-bottom:16px}
 @media (max-width:760px){.hs-mission{grid-template-columns:1fr}}
 .hs-obj{background:linear-gradient(135deg,rgba(106,173,255,.14),rgba(106,173,255,.05));border:1px solid rgba(106,173,255,.4);border-left:3px solid var(--acc);border-radius:12px;padding:16px 18px}
@@ -43,7 +54,9 @@ eleventyExcludeFromCollections: true
 .hs-fc .fc-tag{flex:none;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid var(--border2);border-radius:5px;padding:2px 6px}
 .hs-fc .calm{color:var(--t3)}
 .hs-main{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start}
-@media (max-width:900px){.hs-main{grid-template-columns:1fr}}
+/* min-width:0 lets the single column actually shrink. Without it a grid item keeps its
+   min-content width and the sidebar sat 18px outside the page at 360. */
+@media (max-width:900px){.hs-main{grid-template-columns:1fr}.hs-main>*{min-width:0}}
 .hs-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}
 @media (max-width:900px){.hs-side{position:static}}
 .hs-run{width:100%;padding:16px;border:none;border-radius:11px;font-family:var(--display);font-weight:700;font-size:var(--t-body);letter-spacing:.02em;color:#04101f;background:linear-gradient(135deg,#6aadff,#3d7fd6);cursor:pointer;transition:all .15s;box-shadow:0 6px 18px rgba(61,127,214,.3)}
@@ -56,7 +69,7 @@ eleventyExcludeFromCollections: true
 .hs-panel h3{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
 .hs-row{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-fine);color:var(--t2);margin-bottom:7px;gap:8px}
 .hs-row b{font-family:var(--mono);color:var(--t1)}
-.hs-row b.pos{color:#4ecb8d}.hs-row b.neg{color:#ff7a7a}
+.hs-row b.pos{color:var(--lt-green,#4ecb8d)}.hs-row b.neg{color:var(--lt-red,#ff7a7a)}
 .hs-div{height:1px;background:var(--border);margin:11px 0}
 .hs-hint{font-size:var(--t-label);color:var(--t3);margin-top:10px;line-height:1.5}
 .hs-svc{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;margin-top:8px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--t2);font-size:var(--t-fine);font-family:var(--font);cursor:pointer;text-align:left}
@@ -70,9 +83,10 @@ eleventyExcludeFromCollections: true
 .hs-zone{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 15px}
 .hs-zone .z-n{font-family:var(--display);font-weight:700;font-size:var(--t-sub)}
 .hs-zone .z-s{font-family:var(--mono);font-size:var(--t-micro);color:var(--t3);margin-top:4px;line-height:1.7}
-.hs-zone .z-trust{display:flex;height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden}
+.hs-zone .z-trust{display:flex;height:5px;border-radius:3px;background:var(--lt-track,rgba(255,255,255,.07));margin-top:8px;overflow:hidden}
 .hs-zone .z-trust span{display:block;height:100%}
-.hs-facs{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+/* min() so the 330px track floor cannot exceed the column it sits in. */
+.hs-facs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:14px}
 .hs-fac{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
 .hs-fac .f-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px}
 .hs-fac .f-n{font-family:var(--display);font-weight:800;font-size:var(--t-lede)}
@@ -87,9 +101,9 @@ eleventyExcludeFromCollections: true
 .hs-step .s-num{font-family:var(--mono);font-weight:600;min-width:24px;text-align:center}
 .hs-strain{margin:6px 0 10px}
 .hs-strain .st-h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
-.hs-strain .st-bar{display:flex;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.hs-strain .st-bar{display:flex;height:5px;border-radius:3px;background:var(--lt-track,rgba(255,255,255,.07));overflow:hidden}
 .hs-strain .st-bar span{display:block;height:100%}
-.hs-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.05)}
+.hs-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-top:1px solid var(--lt-hair,rgba(255,255,255,.05))}
 .hs-line .l-n{font-size:var(--t-fine);color:var(--t1)}
 .hs-line .l-pips{font-family:var(--mono);font-size:var(--t-micro);color:var(--acc);letter-spacing:2px}
 .hs-line .l-s{font-family:var(--mono);font-size:var(--t-micro);color:var(--t3)}
@@ -97,20 +111,20 @@ eleventyExcludeFromCollections: true
 .hs-line .l-acts button{min-height:32px;padding:4px 9px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:var(--t-micro);cursor:pointer;font-family:var(--mono)}
 .hs-line .l-acts button:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
 .hs-line .l-acts button:disabled{opacity:.35;cursor:not-allowed}
-.hs-line .l-acts .x:hover:not(:disabled){border-color:#df5752;color:#df5752}
+.hs-line .l-acts .x:hover:not(:disabled){border-color:var(--lt-red,#df5752);color:var(--lt-red,#df5752)}
 .hs-addline{width:100%;min-height:40px;margin-top:9px;padding:8px;border-radius:8px;border:1px dashed var(--border2);background:transparent;color:var(--t3);font-size:var(--t-label);cursor:pointer;font-family:var(--mono)}
 .hs-addline:hover{border-color:var(--acc);color:var(--acc)}
 .hs-overlay{position:fixed;inset:0;z-index:200;background:rgba(2,8,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px}
 .hs-overlay[hidden]{display:none}
 .hs-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:720px;width:100%;max-height:88vh;overflow-y:auto;padding:30px}
 .hs-modal h2{font-family:var(--display);font-weight:800;font-size:24px;margin-bottom:8px}
-.hs-modal h2.win{color:var(--acc)}.hs-modal h2.lose{color:#ff7a7a}
+.hs-modal h2.win{color:var(--acc)}.hs-modal h2.lose{color:var(--lt-red,#ff7a7a)}
 .hs-modal .mo-sub{font-size:var(--t-ui);color:var(--t2);line-height:1.65;margin-bottom:14px}
 .hs-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:14px 0}
 .hs-result{background:var(--raised);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
 .hs-result .r-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
 .hs-result .r-val{font-family:var(--display);font-weight:800;font-size:17px;margin-top:3px}
-.hs-result .r-val.pos{color:#4ecb8d}.hs-result .r-val.neg{color:#ff7a7a}
+.hs-result .r-val.pos{color:var(--lt-green,#4ecb8d)}.hs-result .r-val.neg{color:var(--lt-red,#ff7a7a)}
 .hs-choice{display:block;width:100%;text-align:left;margin-top:10px;padding:13px 15px;border-radius:10px;border:1px solid var(--border2);background:var(--raised);color:var(--t2);cursor:pointer;font-family:var(--font)}
 .hs-choice:hover:not(:disabled){border-color:var(--acc)}
 .hs-choice .ch-l{font-weight:700;color:var(--t1);font-size:var(--t-ui)}
@@ -125,7 +139,7 @@ eleventyExcludeFromCollections: true
 .hs-set{margin-top:16px}
 .hs-set .set-l{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
 .hs-set .set-b{font-size:var(--t-label);color:var(--t3);margin-top:8px;line-height:1.55}
-.hs-savebox{width:100%;font-family:var(--mono);font-size:var(--t-micro);line-height:1.6;color:var(--t2);background:#0d1a2c;border:1px solid var(--border);border-radius:9px;padding:11px 12px;resize:none;word-break:break-all}
+.hs-savebox{width:100%;font-family:var(--mono);font-size:var(--t-micro);line-height:1.6;color:var(--t2);background:var(--lt-input,#0d1a2c);border:1px solid var(--lt-inputline,var(--border));border-radius:9px;padding:11px 12px;resize:none;word-break:break-all}
 .hs-savebox:focus{outline:none;border-color:var(--acc)}
 .hs-load-row{display:flex;gap:9px;align-items:stretch;margin-top:10px}
 .hs-load-row .hs-savebox{flex:1}
@@ -142,11 +156,11 @@ eleventyExcludeFromCollections: true
 .hs-rg .rg-sub{font-family:var(--mono);font-size:var(--t-micro);color:var(--t3)}
 .hs-report .rp-foot{margin-top:11px;font-size:var(--t-micro);color:var(--t3);font-family:var(--mono)}
 .hs-cause{margin-top:14px;border:1px solid rgba(223,87,82,.45);border-left:3px solid #df5752;border-radius:10px;padding:12px 14px;background:rgba(223,87,82,.06);text-align:left}
-.hs-cause .c-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:#ff9a97;margin-bottom:6px}
+.hs-cause .c-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--lt-red,#ff9a97);margin-bottom:6px}
 .hs-cause .c-b{font-size:var(--t-fine);color:var(--t2);line-height:1.6}
-.hs-deftip{position:fixed;z-index:300;max-width:262px;background:#0d1a2c;border:1px solid #4a6f9e;border-radius:9px;padding:11px 13px;font-size:var(--t-label);color:var(--t2);line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.6);pointer-events:none}
+.hs-deftip{position:fixed;z-index:300;max-width:262px;background:var(--lt-tip,#0d1a2c);border:1px solid var(--lt-tipline,#4a6f9e);border-radius:9px;padding:11px 13px;font-size:var(--t-label);color:var(--t2);line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.6);pointer-events:none}
 .hs-deftip[hidden]{display:none}
-.hs-deftip b{color:#fff;display:block;margin-bottom:4px;font-size:var(--t-fine)}
+.hs-deftip b{color:var(--lt-tipink,#fff);display:block;margin-bottom:4px;font-size:var(--t-fine)}
 .hs-info{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--border2);color:var(--t3);font-size:var(--t-micro);font-family:var(--mono);font-style:italic;margin-left:5px;cursor:help;vertical-align:middle;font-weight:700}
 </style>
 
@@ -421,11 +435,11 @@ eleventyExcludeFromCollections: true
     const revolt = ZONES.find(z=>sys.zones[z.id].trust<=0);
     if (revolt) return endScreen({passed:false, title:'COMMUNITY REVOLT', sub:`${revolt.name} is done with you. County commissioners, op-eds, a competing bond measure. The board dissolves the system rather than fight it.`,
       how:cause('What sank you', `Trust in ${revolt.name} hit zero. Every quarter a zone is served under ${Math.round(CFG.trustPivot*100)}% of its demand, its trust bleeds; closures and scandals cut deeper. Access IS the product.`)});
-    if (!sys.goal.test(r)) return endScreen({passed:false, title:'BOARD LOST CONFIDENCE', sub:`<strong>The objective:</strong> ${sys.goal.label}<br><span style="color:#ffb3b3">The system delivered ${sys.goal.kind==='net'?money(r.net):sys.goal.kind==='lean'?money(r.salary+r.fixed+r.sharedCost)+' spend':pct(sys.goal.kind==='rural'?r.zoneAccess.rural:r.access)}.</span>`,
+    if (!sys.goal.test(r)) return endScreen({passed:false, title:'BOARD LOST CONFIDENCE', sub:`<strong>The objective:</strong> ${sys.goal.label}<br><span style="color:var(--lt-red,#ffb3b3)">The system delivered ${sys.goal.kind==='net'?money(r.net):sys.goal.kind==='lean'?money(r.salary+r.fixed+r.sharedCost)+' spend':pct(sys.goal.kind==='rural'?r.zoneAccess.rural:r.access)}.</span>`,
       how:cause('How it was winnable', `The bar was sized off this exact configuration when the quarter opened. Staffing pulled from the shared pool, a line added where the demand already lives, or a transfer of load toward empty capacity all moved the number. The projection panel was the answer sheet.`)});
     const yr=yearOf(sys.level), q=qInYear(sys.level);
     if (q===4){
-      if (settings.years>0 && yr>=settings.years) return endScreen({passed:true, victory:true, title:'TERM COMPLETE', sub:`You ran the region for <b style="color:#6aadff">${settings.years} full year${settings.years>1?'s':''}</b>. Three facilities, one system, still standing.`});
+      if (settings.years>0 && yr>=settings.years) return endScreen({passed:true, victory:true, title:'TERM COMPLETE', sub:`You ran the region for <b style="color:var(--lt-blue,#6aadff)">${settings.years} full year${settings.years>1?'s':''}</b>. Three facilities, one system, still standing.`});
       return openNegotiation();
     }
     return endScreen({passed:true, title:'QUARTER CLEARED', sub: q===3?'Respiratory season survived. The boss review is next.':'The region holds. The pressure compounds from here.'});
@@ -450,10 +464,13 @@ eleventyExcludeFromCollections: true
     if (i===1) sys.rateComm += Math.random()<winP?0.06:0.02;
     else if (i===2){ if (Math.random()<winP*0.7) sys.rateComm+=0.12; else { sys.rateComm=Math.max(0.9,sys.rateComm-0.04); ZONES.forEach(z=>{sys.zones[z.id].trust=clamp(sys.zones[z.id].trust-2,0,100);}); } }
     closeOverlay();
-    endScreen({passed:true, title:`YEAR ${yearOf(sys.level)} CLEARED`, sub:`Commercial rate for next year: <b style="color:#6aadff">&times;${sys.rateComm.toFixed(2)}</b>. The region grows either way.`});
+    endScreen({passed:true, title:`YEAR ${yearOf(sys.level)} CLEARED`, sub:`Commercial rate for next year: <b style="color:var(--lt-blue,#6aadff)">&times;${sys.rateComm.toFixed(2)}</b>. The region grows either way.`});
   }
+  // Accents ride the light-theme steps when the page is light (the --lt-x tokens in the style block);
+  // var() in an inline style re-resolves when the theme flips, so nothing has to repaint.
+  const G_GREEN='var(--lt-green,#4ecb8d)', G_AMBER='var(--lt-amber,#E8A838)', G_CRIT='var(--lt-crit,#ff5a6a)', G_RED='var(--lt-red,#ff7a7a)';
   const cause=(h,b)=>`<div class="hs-cause"><div class="c-h">${h}</div><div class="c-b">${b}</div></div>`;
-  const GRADE_ORDER=['A','B','C','D','F'], GRADE_COLOR={A:'#4ecb8d',B:'#8fd06c',C:'#E8A838',D:'#ff9a5a',F:'#ff5a6a'};
+  const GRADE_ORDER=['A','B','C','D','F'], GRADE_COLOR={A:G_GREEN,B:'var(--lt-lime,#8fd06c)',C:G_AMBER,D:'var(--lt-orange,#ff9a5a)',F:G_CRIT};
   function reportData(){
     const bs=sys.stats, q=Math.max(1,bs.q);
     const avgNet=bs.net/q, access=bs.demand>0?bs.served/bs.demand*100:100;
@@ -547,7 +564,7 @@ eleventyExcludeFromCollections: true
   }
   function renderMission(){
     const yr=yearOf(sys.level), q=qInYear(sys.level), boss=q===4;
-    const lbl=`Year ${yr} &middot; Quarter ${q} of 4${boss?' &middot; <span style="color:#ff7a7a">BOARD REVIEW</span>':''}${q===3?' &middot; <span style="color:#E8A838">RESPIRATORY SEASON</span>':''}`;
+    const lbl=`Year ${yr} &middot; Quarter ${q} of 4${boss?' &middot; <span style="color:${G_RED}">BOARD REVIEW</span>':''}${q===3?' &middot; <span style="color:${G_AMBER}">RESPIRATORY SEASON</span>':''}`;
     const ev=sys.activeEvent;
     const evHtml = ev
       ? `<div class="hs-event"><div class="e-tag">${ev.tag}</div><div class="e-body"><strong>${ev.name}</strong><p>${ev.desc}</p></div></div>`
@@ -581,9 +598,9 @@ eleventyExcludeFromCollections: true
     const r=computeSystem(sys, sys.activeEvent);
     $('hs-zones').innerHTML=ZONES.map(z=>{
       const t=sys.zones[z.id].trust, a=r.zoneAccess[z.id];
-      const tc=t>=60?'#4ecb8d':t>=40?'#E8A838':'#ff5a6a';
+      const tc=t>=60?G_GREEN:t>=40?G_AMBER:G_CRIT;
       return `<div class="hs-zone"><div class="z-n">${z.name}</div>
-        <div class="z-s">${num(r.zoneDemand[z.id])} pts need care &middot; <b style="color:${a>=0.9?'#4ecb8d':a>=0.8?'#E8A838':'#ff7a7a'}">${pct(a)} get it</b><br>payer lean: ${Math.round(z.payer.comm*100)}% commercial &middot; growth ${z.growth>1?'+':''}${((z.growth-1)*100).toFixed(1)}%/qtr</div>
+        <div class="z-s">${num(r.zoneDemand[z.id])} pts need care &middot; <b style="color:${a>=0.9?G_GREEN:a>=0.8?G_AMBER:G_RED}">${pct(a)} get it</b><br>payer lean: ${Math.round(z.payer.comm*100)}% commercial &middot; growth ${z.growth>1?'+':''}${((z.growth-1)*100).toFixed(1)}%/qtr</div>
         <div class="z-trust" data-def="<b>Community trust &middot; ${Math.round(t)}/100</b>Zones remember how well they were served. Under ${Math.round(CFG.trustPivot*100)}% access, trust bleeds; closures and scandals cut deeper. A zone at zero ends the run."><span style="width:${t}%;background:${tc}"></span></div></div>`;
     }).join('');
   }
@@ -591,7 +608,7 @@ eleventyExcludeFromCollections: true
     const r=computeSystem(sys, sys.activeEvent);
     $('hs-facs').innerHTML=sys.facilities.map(f=>{
       const fr=r.facRes[f.id], sf=staffFactor(f), need=staffNeedOf(f);
-      const strain=f.strain||0, sc=strain>=CFG.strainQuit?'#ff5a6a':strain>=45?'#E8A838':'#4ecb8d';
+      const strain=f.strain||0, sc=strain>=CFG.strainQuit?G_CRIT:strain>=45?G_AMBER:G_GREEN;
       const rows=LINES.filter(l=>f.lines[l.id]).map(l=>{
         const lvl=f.lines[l.id], sv=fr.lineServed[l.id]||0;
         return `<div class="hs-line"><div><div class="l-n">${l.name} <span class="l-pips">${'&#9679;'.repeat(lvl)}${'&#9675;'.repeat(4-lvl)}</span></div>
@@ -604,8 +621,8 @@ eleventyExcludeFromCollections: true
       const addable=LINES.filter(l=>!f.lines[l.id]);
       const addRow=addable.length?`<button class="hs-addline" data-act="addmenu" data-f="${f.id}">&#65291; add a service line (${addable.length} available)</button>`:'';
       return `<div class="hs-fac"><div class="f-head"><span class="f-n">${f.name}</span><span class="f-z">${zoneOf(f.zone).name}</span></div>
-        <div class="f-net" style="color:${fr.net>=0?'#4ecb8d':'#ff7a7a'}">${fr.net>=0?'+':''}${money(fr.net)}/qtr &middot; ${num(fr.served)} pts</div>
-        <div class="hs-staff"><span class="s-l">Staff units <b style="font-family:var(--mono)">${f.staff}</b> <span style="color:${sf<0.95?'#E8A838':'var(--t3)'};font-size:var(--t-micro)">(covers ${Math.round(sf*100)}% of ${Math.round(need)} needed)</span></span>
+        <div class="f-net" style="color:${fr.net>=0?G_GREEN:G_RED}">${fr.net>=0?'+':''}${money(fr.net)}/qtr &middot; ${num(fr.served)} pts</div>
+        <div class="hs-staff"><span class="s-l">Staff units <b style="font-family:var(--mono)">${f.staff}</b> <span style="color:${sf<0.95?G_AMBER:'var(--t3)'};font-size:var(--t-micro)">(covers ${Math.round(sf*100)}% of ${Math.round(need)} needed)</span></span>
           <div class="hs-step"><button data-act="staff" data-f="${f.id}" data-d="-1" ${f.staff<=1?'disabled':''} aria-label="Release staff">&minus;</button><span class="s-num">${f.staff}</span><button data-act="staff" data-f="${f.id}" data-d="1" aria-label="Hire staff">+</button></div></div>
         <div class="hs-strain"><div class="st-h"><span>Strain</span><b style="color:${sc}">${Math.round(strain)}</b></div><div class="st-bar"><span style="width:${strain}%;background:${sc}"></span></div></div>
         ${rows}${addRow}</div>`;
@@ -615,7 +632,7 @@ eleventyExcludeFromCollections: true
     const r=computeSystem(sys, sys.activeEvent);
     $('hs-proj').innerHTML=`<h3>Projected Quarter</h3>
       <div class="hs-row"><span>Patients reached</span><b>${num(r.served)} / ${num(r.demand)}</b></div>
-      <div class="hs-row"><span>County access</span><b style="color:${r.zoneAccess.rural>=0.85?'#4ecb8d':'#E8A838'}">${pct(r.zoneAccess.rural)}</b></div>
+      <div class="hs-row"><span>County access</span><b style="color:${r.zoneAccess.rural>=0.85?G_GREEN:G_AMBER}">${pct(r.zoneAccess.rural)}</b></div>
       <div class="hs-div"></div>
       <div class="hs-row"><span>Revenue</span><b>${money(r.revenue)}</b></div>
       <div class="hs-row"><span>Salaries &times;${r.wageIdx.toFixed(2)}</span><b>-${money(r.salary)}</b></div>
@@ -652,9 +669,9 @@ eleventyExcludeFromCollections: true
     overlayOpen=true;
     const lvl=f.lines[lid], sev=Math.round(lvl*l.staffNeed*CFG.closeSevPer);
     $('hs-overlay').innerHTML=`<div class="hs-modal"><h2 class="lose">Close ${l.name} at ${f.name}?</h2>
-      <div class="mo-sub">Severance runs <b>${money(sev)}</b> and ${zoneOf(f.zone).name} answers with a <b style="color:#ff7a7a">${CFG.closeTrustHit}-point trust</b> hit. The fixed costs go away; the patients travel, or stop coming. The system margin will thank you before the community does.</div>
+      <div class="mo-sub">Severance runs <b>${money(sev)}</b> and ${zoneOf(f.zone).name} answers with a <b style="color:${G_RED}">${CFG.closeTrustHit}-point trust</b> hit. The fixed costs go away; the patients travel, or stop coming. The system margin will thank you before the community does.</div>
       <div class="hs-end-actions"><button class="hs-peek" data-act="cancel">Keep it open</button>
-      <button class="hs-restart" data-act="closego" data-f="${fid}" data-l="${lid}" style="background:linear-gradient(135deg,#df5752,#b03b37);color:#fff">Close the line &#9656;</button></div></div>`;
+      <button class="hs-restart" data-act="closego" data-f="${fid}" data-l="${lid}" style="background:linear-gradient(135deg,#C22F2F,#A8352F);color:#fff">Close the line &#9656;</button></div></div>`;
     $('hs-overlay').hidden=false;
   }
   function openStartMenu(){

@@ -6,7 +6,7 @@
    shared phone/motion budget, so every tool stops rolling its own.
    No dependencies. Everything hangs off window.HUKit.
 
-   HUKit.phone()        -> true at or under the 699px sheet breakpoint
+   HUKit.phone()        -> true when the SHORTER side is 699px or less (portrait or landscape)
    HUKit.dcap(ms)       -> ms capped to 250 on phones, 0 reduced-motion
    HUKit.sheet(el,opts) -> detent controller for a .shell-sheet /
                            .shell-dock--sheet (or any fixed bottom sheet
@@ -35,7 +35,13 @@
 (function () {
   'use strict';
 
-  var PHONE_MQ = window.matchMedia('(max-width: 699px)');
+  /* A PHONE IS THE SHORTER SIDE OF THE SCREEN, not the width. This was
+     `(max-width: 699px)` alone until 2026-09-21, which meant a phone held
+     sideways (about 740px wide) reported FALSE here, and every caller of
+     HUKit.phone() then behaved as if it were on a desktop: the back guard, the
+     250ms motion cap, sheet behaviour and the atlas prefetch gate. The CSS
+     carries the same pair. Change one, change both. */
+  var PHONE_MQ = window.matchMedia('(max-width:699px), (max-height:500px)');
   var REDUCED_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function phone() { return PHONE_MQ.matches; }

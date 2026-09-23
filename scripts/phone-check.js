@@ -37,7 +37,24 @@ const opt = (name, dflt) => { const i = argv.indexOf(name); return i > -1 ? argv
 // root and putting exactly one leading slash back.
 const paths = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--base' && argv[i - 1] !== '--widths')
   .map((a) => '/' + a.replace(/^[A-Za-z]:[\\/](?:.*?[\\/])?Git[\\/]/, '').replace(/^\/+/, ''));
-const widths = opt('--widths', '360,699,1024').split(',').map(Number);
+// A viewport is WIDTHxHEIGHT now, so a phone can be read on its side. A bare number keeps
+// its old meaning and its old default height. David, 2026-09-21: the review is "phone vert
+// and horizontal and web". Landscape matters because a game's controls move in it.
+// THE LADDER. David, 2026-09-21: "I want every page to be able to look good on phone, and
+// web/Tablet/Computer and when it has response size changes." Three spot sizes could not
+// answer that: a layout can be clean at 360 and at 1280 and fall apart at 470, and nothing
+// here had ever looked at a tablet at all. The two pairs either side of 699 are deliberate,
+// because that is where this site's rules flip and a breakpoint is where layouts break.
+/* 1920x1080 added 2026-09-22. David reviews at 2132px on his own monitor and the ladder
+   topped out at 1280, so roughly 850px of the width he actually looks at had never been
+   checked by anything. Most pages cap content at 1100px and centre it, which is why this
+   was probably safe, but "probably" is the thing the sweep exists to replace. */
+const viewports = opt('--widths', '360x740,430x932,699x900,700x900,768x1024,1024x768,1280x900,1920x1080,740x360').split(',').map((t) => {
+  const m = String(t).trim().match(/^(\d+)(?:x(\d+))?$/);
+  if (!m) return null;
+  const w = Number(m[1]);
+  return { w, h: m[2] ? Number(m[2]) : (w <= 699 ? 800 : 900) };
+}).filter(Boolean);
 const base = opt('--base', null);
 if (!paths.length) paths.push('/', '/tools/', '/learn/');
 
@@ -83,7 +100,13 @@ function inspect({ phone, deviceWidth }) {
     culprits.sort((a, b) => b[0] - a[0]);
   }
   const small = [];
-  if (phone) {
+  /* A layout fault is a fault at every size. This used to be phone-gated, so a tablet and a
+     desktop were never checked for it at all: the report printed n/a and the page "passed".
+     David, 2026-09-21: "I want every page to be able to look good on phone, and
+     web/Tablet/Computer and when it has response size changes."
+     Phone PHYSICS stay phone-only below: 44px touch targets, the type floor and the chrome
+     budget are about a thumb and a small screen, and mean nothing on a desktop. */
+  if (true) {                     /* every size */
     for (const el of document.querySelectorAll('a[href], button, input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])')) {
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) continue;
@@ -202,7 +225,13 @@ function inspect({ phone, deviceWidth }) {
   };
   const tiny = [];
   let softCount = 0;
-  if (phone) {
+  /* A layout fault is a fault at every size. This used to be phone-gated, so a tablet and a
+     desktop were never checked for it at all: the report printed n/a and the page "passed".
+     David, 2026-09-21: "I want every page to be able to look good on phone, and
+     web/Tablet/Computer and when it has response size changes."
+     Phone PHYSICS stay phone-only below: 44px touch targets, the type floor and the chrome
+     budget are about a thumb and a small screen, and mean nothing on a desktop. */
+  if (true) {                     /* every size */
     const tok = (n, d) => { const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(n)); return isFinite(v) && v > 0 ? v : d; };
     const ABS = tok('--t-micro', 12);    // nothing on a phone renders below this
     const FUNC = tok('--t-label', 13);   // functional text holds this
@@ -277,6 +306,7 @@ function inspect({ phone, deviceWidth }) {
   // A bar, not a dialog: it spans the width and is pinned to an edge.
   const chromeBars = [];
   let chromeH = 0, topBars = 0;
+  const bands = [], merged = [];
   if (phone) {
     // Measured with the page SCROLLED, not at rest, and counting only the part
     // actually on screen. Both matter, and the first version of this check got
@@ -313,10 +343,30 @@ function inspect({ phone, deviceWidth }) {
       // WHICH rule was broken, where a single percentage only said "too much".
       if (r.top < innerHeight * 0.3) topBars++;
       chromeBars.push(sel(el) + ':' + Math.round(seen));
-      chromeH += Math.round(seen);
+      // Collect the BAND each bar occupies rather than adding heights, and only when the
+      // bar is actually PINNED to an edge. Two failures this fixes, both found 2026-09-21:
+      //   · Sticky is not the same as stuck. The Sources appendix has .src-bar sticky, but
+      //     at the scroll this check uses it is still in normal flow at y=561 of a 740px
+      //     screen, in the middle of the page. It was counted as a top bar and put the page
+      //     over budget at 129px when the reader only ever loses 64.
+      //   · Heights were SUMMED, so two bars sharing a strip double-counted.
+      // A bar earns the name by touching an edge: pinned near the top, or anchored near the
+      // bottom the way the phone tab bar is. Anything floating mid-screen is content.
+      const atTop = r.top <= innerHeight * 0.25;
+      // Anchored TO the bottom, not merely low on the screen: .src-bar sits at 561-626 of
+      // a 740px screen, which a "bottom quarter" test wrongly called a bottom bar.
+      const atBottom = Math.min(r.bottom, innerHeight) >= innerHeight - 4;
+      if (!atTop && !atBottom) continue;
+      bands.push([Math.max(r.top, 0), Math.min(r.bottom, innerHeight)]);
     }
     window.scrollTo(0, y0);
   }
+  bands.sort((a, b) => a[0] - b[0]);
+  for (const [top, bot] of bands) {
+    if (!merged.length || top > merged[merged.length - 1][1]) merged.push([top, bot]);
+    else merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], bot);
+  }
+  chromeH = merged.reduce((sum, [top, bot]) => sum + Math.round(bot - top), 0);
   const chromePct = phone && innerHeight ? Math.round((chromeH / innerHeight) * 100) : 0;
 
   // STROKE FLOOR. A diagram's connectors are not decoration: the line between two boxes IS the
@@ -358,7 +408,13 @@ function inspect({ phone, deviceWidth }) {
   // a 1:1 failure, which is why this walks the svg for a filled shape whose box contains the text
   // before falling back to the page. WCAG's thresholds: 4.5:1, or 3:1 once the text is large.
   const dim = [];
-  if (phone) {
+  /* A layout fault is a fault at every size. This used to be phone-gated, so a tablet and a
+     desktop were never checked for it at all: the report printed n/a and the page "passed".
+     David, 2026-09-21: "I want every page to be able to look good on phone, and
+     web/Tablet/Computer and when it has response size changes."
+     Phone PHYSICS stay phone-only below: 44px touch targets, the type floor and the chrome
+     budget are about a thumb and a small screen, and mean nothing on a desktop. */
+  if (true) {                     /* every size */
     const lin2 = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
     const lum2 = (p) => 0.2126 * lin2(p[0]) + 0.7152 * lin2(p[1]) + 0.0722 * lin2(p[2]);
     const parse2 = (c) => { const m = String(c).match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(',').map(Number); return p.length > 3 && p[3] < 0.5 ? null : p; };
@@ -433,6 +489,97 @@ function inspect({ phone, deviceWidth }) {
     }
   }
 
+  // A LABEL WIDER THAN THE BOX IT LABELS. The collide check above compares text to TEXT,
+  // so a caption centred inside a rect and simply too wide for it was invisible: it hangs
+  // out both sides, over whatever is drawn behind. That is how "one shared shelf", 140px
+  // of caption inside a 72px shelf, shipped straight across the incoming arrows on David's
+  // phone (2026-09-21). HTML overflow rules do not apply to SVG text, so the spill check
+  // below cannot see it either.
+  // A label is matched to a rect when their horizontal centres agree within 3px and the
+  // text sits inside the box vertically, which is exactly what text-anchor:middle in a box
+  // produces. It fails when the text is wider than the box that holds it.
+  const burst = [];
+  if (phone) {
+    for (const svg of document.querySelectorAll('svg')) {
+      const boxes = [...svg.querySelectorAll('rect')]
+        .map((r) => ({ el: r, b: r.getBoundingClientRect() }))
+        .filter((o) => o.b.width > 8 && o.b.height > 8);
+      if (!boxes.length) continue;
+      for (const t of svg.querySelectorAll('text')) {
+        if (!(t.textContent || '').trim()) continue;
+        if (zoomScene(t)) continue;
+        const cs = getComputedStyle(t);
+        if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
+        const tb = t.getBoundingClientRect();
+        if (!tb.width || !tb.height) continue;
+        const tcx = (tb.left + tb.right) / 2, tcy = (tb.top + tb.bottom) / 2;
+        let host = null;
+        for (const o of boxes) {
+          const cx = (o.b.left + o.b.right) / 2;
+          if (Math.abs(cx - tcx) > 3) continue;
+          if (tcy < o.b.top - 1 || tcy > o.b.bottom + 1) continue;
+          if (!host || o.b.width < host.b.width) host = o;
+        }
+        if (host && tb.width > host.b.width + 4) {
+          burst.push([Math.round(tb.width - host.b.width), t.textContent.trim().slice(0, 26),
+            Math.round(tb.width), Math.round(host.b.width)]);
+        }
+      }
+    }
+    burst.sort((a, b) => b[0] - a[0]);
+  }
+
+  // SPILL. An element whose CONTENT is taller or wider than its own box while its own
+  // overflow is visible. The browser paints the excess OUTSIDE the box, over whatever sits
+  // below it, with no background behind it, and the document neither scrolls nor clips, so
+  // every other check on this page reads clean. That is exactly how the 4Ps section nav
+  // shipped: a 64px high box holding 231px of links, three of them floating over the
+  // article text on David's phone (2026-09-21). An ancestor that scrolls or clips CONTAINS
+  // the overflow, so a carousel track or a pannable diagram is not a spill. A few px is a
+  // descender on an italic, not a layout fault.
+  // HIDDEN BUT SHOWN. An element carrying the `hidden` attribute that still renders. The
+  // browser's own rule for [hidden] is display:none, and ANY author rule that sets display on
+  // that element outranks it, so the script can set hidden=true all day and nothing disappears.
+  // It has bitten this site twice: the hospital game's join row (a flex row showing before
+  // anyone asked to join), and the cost of living tool's "Example numbers, edit anything to
+  // make them yours" badge, which showed on every scenario including a visitor's own
+  // (2026-09-22). The code looks right in both cases, which is exactly why a person misses it.
+  // The fix is always the same one line: `.that-class[hidden] { display:none; }`.
+  const unhidden = [];
+  for (const el of document.querySelectorAll('[hidden]')) {
+    if (el.closest('template')) continue;
+    const hcs = getComputedStyle(el);
+    if (hcs.display === 'none') continue;
+    const hr = el.getBoundingClientRect();
+    if (hr.width < 1 && hr.height < 1) continue;        // an ancestor already hides it
+    unhidden.push([sel(el), hcs.display, (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40)]);
+  }
+
+  const spill = [];
+  for (const el of document.querySelectorAll('body *')) {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) continue;
+    const sy = cs.overflowY === 'visible' ? el.scrollHeight - el.clientHeight : 0;
+    const sx = cs.overflowX === 'visible' ? el.scrollWidth - el.clientWidth : 0;
+    if (sy <= 8 && sx <= 8) continue;
+    let out = null;
+    for (const k of el.children) {
+      const kr = k.getBoundingClientRect();
+      if (kr.bottom > r.bottom + 4 || kr.right > r.right + 4) { out = k; break; }
+    }
+    if (!out) continue;
+    let contained = false;
+    for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+      const acs = getComputedStyle(a);
+      if (acs.overflowX !== 'visible' || acs.overflowY !== 'visible') { contained = true; break; }
+    }
+    if (contained) continue;
+    spill.push([sel(el), Math.round(r.width) + 'x' + Math.round(r.height), el.scrollWidth + 'x' + el.scrollHeight,
+      sy > 8 ? sy : 0, sx > 8 ? sx : 0, sel(out), (out.textContent || '').trim().slice(0, 30)]);
+  }
+
   const vh = [];
   for (const sheet of document.styleSheets) {
     let rules; try { rules = sheet.cssRules; } catch { continue; }
@@ -441,7 +588,10 @@ function inspect({ phone, deviceWidth }) {
   }
   return { overflow, scrollWidth: document.documentElement.scrollWidth, vw, culprits: culprits.slice(0, 6), small: small.slice(0, 12), smallCount: small.length, clipped: clipped.slice(0, 8), clippedCount: clipped.length, vh: [...new Set(vh)].slice(0, 8),
     tiny: tiny.slice(0, 8), tinyCount: tiny.length, softCount, chromeBars, chromeH, chromePct, topBars, collide: collide.slice(0, 6), collideCount: collide.length, vhPx: innerHeight,
-    faint: faint.slice(0, 8), faintCount: faint.length, dim: dim.slice(0, 8), dimCount: dim.length };
+    faint: faint.slice(0, 8), faintCount: faint.length, dim: dim.slice(0, 8), dimCount: dim.length,
+    spill: spill.slice(0, 8), spillCount: spill.length,
+    unhidden: unhidden.slice(0, 8), unhiddenCount: unhidden.length,
+    burst: burst.slice(0, 8), burstCount: burst.length };
 }
 
 (async () => {
@@ -449,14 +599,78 @@ function inspect({ phone, deviceWidth }) {
   const local = base ? null : await serveSite();
   const origin = base || local.url;
   const browser = await chromium.launch();
+  // READ THE WHOLE PAGE, NOT THE TOP OF IT. David, 2026-09-21: "When we test a page for web
+  // stuff we need to scroll down the whole page not just part of it." Every check below used
+  // to run exactly once, at scroll position 0, so anything that only goes wrong further down
+  // (a card that collides once it is under the sticky header, a row revealed on scroll, a bar
+  // that changes height as the nav yields) was invisible to this gate by construction.
+  // The page is now walked in viewport-sized steps and the findings are merged.
+  //
+  // Counts merge as a MAX rather than a sum: the same offender seen at two scroll positions
+  // must not count twice, and for the only thing that matters here, whether the page passes,
+  // max is exact (if any position saw one, the page has one).
+  const LISTS = ['culprits', 'small', 'clipped', 'tiny', 'collide', 'faint', 'dim', 'spill', 'burst', 'unhidden'];
+  const mergeFindings = (a, b) => {
+    if (!a) return b;
+    const out = Object.assign({}, a);
+    out.overflow = a.overflow || b.overflow;
+    out.scrollWidth = Math.max(a.scrollWidth || 0, b.scrollWidth || 0);
+    out.chromeH = Math.max(a.chromeH || 0, b.chromeH || 0);
+    out.chromePct = Math.max(a.chromePct || 0, b.chromePct || 0);
+    out.topBars = Math.max(a.topBars || 0, b.topBars || 0);
+    out.softCount = Math.max(a.softCount || 0, b.softCount || 0);
+    for (const k of LISTS) {
+      const seen = new Set();
+      const rows = [];
+      for (const row of [...(a[k] || []), ...(b[k] || [])]) {
+        const key = JSON.stringify(row);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        rows.push(row);
+      }
+      out[k] = rows.slice(0, 12);
+      const c = k + 'Count';
+      out[c] = Math.max(a[c] || 0, b[c] || 0);
+    }
+    out.vh = [...new Set([...(a.vh || []), ...(b.vh || [])])].slice(0, 8);
+    return out;
+  };
+
+  const readWholePage = async (page, arg, fallback) => {
+    const geom = await page.evaluate(() => ({ vh: window.innerHeight, doc: document.documentElement.scrollHeight }))
+      .catch(() => ({ vh: 800, doc: 800 }));
+    const steps = Math.max(1, Math.min(12, Math.ceil(geom.doc / Math.max(1, geom.vh))));
+    let merged = null;
+    for (let i = 0; i < steps; i++) {
+      if (i) {
+        await page.evaluate((y) => window.scrollTo(0, y), i * geom.vh).catch(() => {});
+        await page.waitForTimeout(280);   // sticky transitions and any reveal-on-scroll settle
+      }
+      const r = await page.evaluate(inspect, arg).catch((e) => Object.assign({}, fallback, { evalError: e.message }));
+      merged = mergeFindings(merged, r);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {});
+    await page.waitForTimeout(150);
+    return { r: merged, steps };
+  };
+
   let failed = false;
   for (const p of paths) {
     const slug = p.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'home';
     console.log('\n== ' + p);
-    for (const w of widths) {
-      const phone = w <= 699;
-      const ctx = await browser.newContext({ viewport: { width: w, height: phone ? 800 : 900 }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone });
+    for (const { w, h } of viewports) {
+      // The SHORTER side decides. A phone on its side is 740x360: still a phone, still
+      // touch, still the phone floors, even though its width is over the 699 line.
+      const phone = Math.min(w, h) <= 699;
+      const label = w + 'x' + h;
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone });
       const page = await ctx.newPage();
+      // The goat tracker polls the LIVE GoatCounter API. Read nine times over, the real service
+      // answered 429 and the page timed out on two viewports, so the gate failed on someone
+      // else's rate limit. The harness now refuses those calls: the page is measured on its own
+      // layout, and the refusal is an off-origin failure the checks below already excuse.
+      // Closes the KNOWN REMAINING GAP noted further down. (2026-09-23)
+      await page.route(/goatcounter\.com\/api\//, (route) => route.abort());
       const errors = [];
       // This harness serves the static _site. Netlify FUNCTIONS are deployed
       // separately and simply do not exist here, so a 404 on one is a limit of
@@ -471,30 +685,60 @@ function inspect({ phone, deviceWidth }) {
           serverless.push(res.status() + ' ' + res.url().replace(origin, ''));
         }
       });
+      // A call to a THIRD-PARTY origin that the real site is allowed to make and this
+      // harness is not. The goat tracker reads the live GoatCounter API, which allows
+      // the production origin and blocks http://127.0.0.1:<port>, so the gate saw a CORS
+      // failure and called a working page broken. Same class as the serverless 404 above:
+      // counted and named, never failed on. Only off-origin requests qualify, so a
+      // genuinely broken same-origin asset still fails. (2026-09-21)
+      const offOrigin = [];
+      const noteOffOrigin = (url) => { if (url && !url.startsWith(origin) && !url.startsWith('data:')) offOrigin.push(url.split('?')[0]); };
+      // Both signals, because only one fires depending on how the call dies. A blocked
+      // cross-origin fetch surfaces as requestfailed in some runs and as a 4xx response in
+      // others: the goat tracker was excused upright and failed on its side for exactly that
+      // reason, on an identical page. (2026-09-21)
+      page.on('requestfailed', (req) => noteOffOrigin(req.url()));
+      page.on('response', (res) => { if (res.status() >= 400) noteOffOrigin(res.url()); });
       try {
         await page.goto(origin + p, { waitUntil: 'networkidle', timeout: 30000 });
       } catch (e) { errors.push('navigation: ' + e.message.split('\n')[0]); }
       await page.waitForTimeout(600);
-      const r = await page.evaluate(inspect, { phone, deviceWidth: w }).catch((e) => ({ overflow: false, culprits: [], small: [], smallCount: 0, clipped: [], clippedCount: 0, vh: [], tiny: [], tinyCount: 0, softCount: 0, chromeBars: [], chromeH: 0, chromePct: 0, topBars: 0, collide: [], collideCount: 0, evalError: e.message }));
-      const shot = path.join(OUT, slug + '-' + w + '.png');
+      const EMPTY = { overflow: false, unhidden: [], unhiddenCount: 0, culprits: [], small: [], smallCount: 0, clipped: [], clippedCount: 0, vh: [], tiny: [], tinyCount: 0, softCount: 0, chromeBars: [], chromeH: 0, chromePct: 0, topBars: 0, collide: [], collideCount: 0, spill: [], spillCount: 0, burst: [], burstCount: 0 };
+      const { r, steps } = await readWholePage(page, { phone, deviceWidth: w }, EMPTY);
+      const shot = path.join(OUT, slug + '-' + label + '.png');
       await page.screenshot({ path: shot }).catch(() => {});
       // A generic "Failed to load resource" console line is the echo of a 4xx we
       // already classified. Discount one per serverless 404 so the gate does not
       // fail on something it cannot serve.
-      const resourceEchoes = errors.filter((e) => /Failed to load resource/i.test(e));
-      const realErrors = errors.length - Math.min(resourceEchoes.length, serverless.length);
+      // Count what the page got WRONG, not what this harness could not reach. The arithmetic
+      // here used to subtract counts from counts, which drifted once a page retried a blocked
+      // call while being read the whole way down: the goat tracker polls its analytics API on
+      // every screen, so the error lines outgrew the excused ones and one leaked through as a
+      // real failure. Classify each line instead, so repeats cost nothing. (2026-09-21)
+      // CLOSED 2026-09-23, was a known gap from 2026-09-21: reading a page the whole way down
+      // re-triggered the goat tracker's live GoatCounter polling until the real service
+      // answered 429. The harness now refuses those calls where each page is opened.
+      const cantReach = serverless.length > 0 || offOrigin.length > 0;
+      const excusable = (e) =>
+        (cantReach && /Failed to load resource|ERR_FAILED|ERR_CONNECTION|net::/i.test(e)) ||
+        (offOrigin.length > 0 && /Access to fetch at|blocked by CORS|Cross-Origin/i.test(e));
+      const realErrors = errors.filter((e) => !excusable(e)).length;
       // The type floor and the chrome budget are Tier 1 physics (DESIGN.md, "The
       // Two Surfaces"), so they fail the gate rather than warning. softCount, the
       // band between the absolute and the functional floor, only reports: it is
       // the migration backlog, not a defect.
       const overBudget = phone && (r.chromePct > 20 || r.topBars > 1);
-      const bad = realErrors > 0 || r.overflow || (phone && r.tinyCount > 0) || (phone && r.collideCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget;
+      const bad = realErrors > 0 || r.overflow || r.collideCount > 0 || r.spillCount > 0 || r.unhiddenCount > 0 || r.burstCount > 0 || (phone && r.tinyCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget;
       if (bad) failed = true;
-      console.log(`  ${String(w).padStart(4)}px  ${bad ? 'FAIL' : 'ok  '}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${phone ? r.clippedCount : 'n/a'}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${phone ? r.collideCount : 'n/a'}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      console.log(`  ${label.padStart(8)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
       for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
+      for (const u of [...new Set(offOrigin)]) console.log('         (not a defect) third-party origin the harness may not call: ' + u);
       for (const e of errors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
       for (const [px, s] of r.culprits) console.log('         overflows by ' + px + 'px: ' + s);
       for (const [px, s, txt] of (r.clipped || [])) console.log('         CLIPPED ' + px + 'px past the edge: ' + s + (txt ? ' "' + txt + '"' : ''));
+      for (const [over, txt, tw, bw] of (r.burst || [])) console.log('         LABEL PAST ITS BOX by ' + over + 'px: "' + txt + '" is ' + tw + 'px in a ' + bw + 'px box');
+      for (const [who, disp, txt] of (r.unhidden || [])) console.log('         HIDDEN BUT SHOWN ' + who + ' renders as display:' + disp + (txt ? ' "' + txt + '"' : '') + '  (fix: that selector plus [hidden] { display:none })');
+      for (const [who, box, content, sy, sx, kid, txt] of (r.spill || [])) console.log('         SPILL ' + who + ' box ' + box + ' holds ' + content + (sy ? ', ' + sy + 'px below' : '') + (sx ? ', ' + sx + 'px right' : '') + ' -> ' + kid + (txt ? ' "' + txt + '"' : ''));
       for (const [s, size, txt] of r.small.slice(0, 6)) console.log('         small: ' + s + ' ' + size + (txt ? ' "' + txt + '"' : ''));
       for (const [px, s, txt] of (r.tiny || [])) console.log('         UNDER THE TYPE FLOOR at ' + px + 'px: ' + s + (txt ? ' "' + txt + '"' : ''));
       for (const [pct, a, b] of (r.collide || [])) console.log('         LABELS COLLIDE, ' + pct + '% overlap: "' + a + '"  x  "' + b + '"');

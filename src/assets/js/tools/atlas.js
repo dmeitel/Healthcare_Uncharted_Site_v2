@@ -2087,6 +2087,7 @@ ZONE_DEFS.forEach(zone => {
     .attr('font-size','18px').attr('font-weight','900')
     .attr('letter-spacing','0.05em')
     .attr('fill',zone.color).attr('fill-opacity',0.92)
+    .attr('style','--zc:'+zone.color)   // the light theme darkens the label from this (atlas/index.njk)
     .attr('filter','url(#txt-shadow)')
     .text(zone.displayLabel.toUpperCase());
 
@@ -2331,8 +2332,9 @@ function resetView() {
 function updateBC(zone,node) {
   const bc=document.getElementById('atlas-bc');
   let h='<button type="button" class="abc-item" id="bc-ov">Overview</button>';
-  if (zone) h+=`<span class="abc-sep">›</span><button type="button" class="abc-item${!node?' active':''}" id="bc-z" style="color:${zone.color}">${zone.label}</button>`;
-  if (node) h+=`<span class="abc-sep">›</span><span class="abc-item active" aria-current="location">${(node.label||'').replace('\n',' ')}</span>`;
+  // separators are decoration (aria-hidden, or each one is spoken); the zone hue rides --zc so the light theme can darken it
+  if (zone) h+=`<span class="abc-sep" aria-hidden="true">›</span><button type="button" class="abc-item${!node?' active':''}" id="bc-z" style="--zc:${zone.color}">${zone.label}</button>`;
+  if (node) h+=`<span class="abc-sep" aria-hidden="true">›</span><span class="abc-item active" aria-current="location">${(node.label||'').replace('\n',' ')}</span>`;
   if (!zone) h=h.replace('class="abc-item"','class="abc-item active"');
   bc.innerHTML=h;
   document.getElementById('bc-ov').addEventListener('click',resetView);
@@ -2721,7 +2723,7 @@ document.getElementById('conn-panel-close').addEventListener('click', () => {
 // The layers panel needs no per-viewport JS — the .selector-pop primitive
 // renders as a bottom sheet under 700px on its own.
 {
-  const mq = window.matchMedia('(max-width: 699px)');
+  const mq = window.matchMedia('(max-width:699px), (max-height:500px)');
   const strip = document.getElementById('atlas-desk-hint');
   if (strip) {
     let seen = false;
@@ -2854,7 +2856,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
     for(const rel in g){ const arr=g[rel];
       out+='<div class="fd-rel"><div class="fd-rv'+(incoming?' inc':'')+'">'+(incoming?'← ':'')+esc(rel.replace(/-/g,' '))+' <span class="fd-rn">'+arr.length+'</span></div><div class="fd-chips">';
       arr.slice(0,12).forEach(p=>{ const t=GBY.get(p[0]), col=t?(TC[t.type]||'#9AA7B2'):'#9AA7B2'; out+='<button type="button" class="fd-chip" data-uid="'+esc(p[0])+'"><span class="fd-cdot" style="background:'+col+'"></span>'+esc(t?t.label:p[0])+(p[1]!=null?'<span class="fd-cv">'+esc(p[1])+'</span>':'')+'</button>'; });
-      if(arr.length>12) out+='<span class="fd-chip" style="cursor:default;opacity:.55">+'+(arr.length-12)+' more</span>';
+      if(arr.length>12) out+='<span class="fd-chip fd-chip-more">+'+(arr.length-12)+' more</span>';
       out+='</div></div>';
     }
     return out;
@@ -2862,7 +2864,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
 
   function renderDetail(n){
     const col=TC[n.type]||'#9AA7B2';
-    let h='<div class="fd-top"><button class="fd-back" id="fd-back">‹ results</button><span class="fd-type" style="background:'+col+'22;color:'+col+'">'+(TN[n.type]||n.type)+'</span></div>';
+    let h='<div class="fd-top"><button class="fd-back" id="fd-back">‹ results</button><span class="fd-type" data-t="'+esc(n.type)+'" style="background:'+col+'22;--tc:'+col+'">'+(TN[n.type]||n.type)+'</span></div>';
     h+='<div class="fd-title">'+esc(n.label)+'</div><div class="fd-uid">'+esc(n.uid)+'</div>';
     const fk=Object.entries(n.facets||{}).filter(kv=>kv[0]!=='layer'&&kv[0]!=='stats');
     if(fk.length) h+='<div class="fd-facets">'+fk.map(kv=>'<span class="fk">'+esc(kv[0])+'</span><span class="fv">'+esc(kv[1])+'</span>').join('')+'</div>';

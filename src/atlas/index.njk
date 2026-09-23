@@ -51,8 +51,12 @@ button.abc-item, button.conn-row, button.hud-drow, button.find-row, button.fd-ch
 button.conn-row, button.hud-drow, button.find-row { display: flex; width: 100%; }
 button.abc-item:focus-visible, button.conn-row:focus-visible, button.hud-drow:focus-visible,
 button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+/* raw teal is 1.9:1 on the pale panels; teal-ink holds 3:1 on every light ground here, hover washes included */
+[data-theme='light'] button.abc-item:focus-visible, [data-theme='light'] button.conn-row:focus-visible, [data-theme='light'] button.hud-drow:focus-visible,
+[data-theme='light'] button.find-row:focus-visible, [data-theme='light'] button.fd-chip:focus-visible { outline-color: var(--teal-ink); }
 .abc-item:hover { color: #E2EEF4; }
 .abc-item.active { color: #9B8FE0; font-weight: 600; }
+#bc-z { color: var(--zc); }   /* the zone's own hue, set by atlas.js */
 .abc-sep { font-size:var(--t-ui); color: rgba(78,205,196,0.25); margin: 0 2px; flex-shrink: 0; }
 #atlas-controls { display: flex; gap: 5px; flex-shrink: 0; }
 .atlas-btn {
@@ -64,10 +68,6 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 }
 .atlas-btn:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.50); color: #4ECDC4; }
 .atlas-btn svg { width: 15px; height: 15px; stroke-width: 2; }   /* the Lucide set replaced the tuned-per-glyph + − ⊙ ? characters */
-.atlas-craft-link { display: flex; align-items: center; gap: 5px; font-family: var(--font); font-size:var(--t-fine); font-weight: 600; letter-spacing: 0.03em; color: #4ECDC4; background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.35); padding: 5px 12px; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background-color .12s, border-color .12s, color .12s; }
-.atlas-craft-link:hover { background: rgba(78,205,196,0.16); border-color: rgba(78,205,196,0.6); color: #7fead9; }
-[data-theme='light'] .atlas-craft-link { color: #1B5FA8; background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.30); }
-[data-theme='light'] .atlas-craft-link:hover { background: rgba(27,95,168,0.12); border-color: rgba(27,95,168,0.55); color: #1B5FA8; }
 #atlas-canvas { flex: 1; position: relative; overflow: hidden; }
 #atlas-svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
 #atlas-svg:active { cursor: grabbing; }
@@ -110,6 +110,14 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
    white popover); presentation attributes lose to any CSS rule, so this flips them */
 [data-theme='light'] .leg-row svg polyline,
 [data-theme='light'] .leg-row svg path { stroke: #4A5568; }
+/* Zone names are drawn in the bright zone hue under a black drop shadow, which reads on the
+   dark field and smudges to about 2:1 on the pale one. In light: the same hue darkened
+   halfway (the color-mix step the hospital and iceberg maps use), a white halo in place of
+   the shadow. */
+[data-theme='light'] .az-zone-label text {
+  fill: color-mix(in srgb, var(--zc, #4A5568) 50%, #000); fill-opacity: 1; filter: none;
+  stroke: rgba(255,255,255,0.9); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke;
+}
 /* legend key rows (zones/nodes) · non-interactive, aligned with .pop-opt padding */
 .leg-row { display: flex; align-items: center; gap: 9px; padding: 3px 10px; }
 .leg-line {
@@ -145,13 +153,13 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   display: inline-flex; align-items: center;
   font-family: var(--mono);
   font-size:var(--t-micro); letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--hz, #4ECDC4); border: 1px solid var(--hz, #4ECDC4);
+  color: color-mix(in srgb, var(--hz, #4ECDC4) 85%, #fff); border: 1px solid var(--hz, #4ECDC4);
   padding: 3px 10px; width: fit-content; opacity: 0.90;
 }
 .hud-ktype {
   font-family: var(--mono);
   font-size:var(--t-micro); letter-spacing: 0.12em; text-transform: uppercase;
-  color: rgba(140,180,215,0.48);
+  color: rgba(140,180,215,0.70);
 }
 #hud-title {
   font-family: var(--display); font-size:var(--t-sub); font-weight: 800;
@@ -173,15 +181,16 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .hud-drow[data-uid]:hover .hud-dlabel { color: #4ECDC4; }
 .hud-dlabel { color: #cfe0ea; flex: 1; line-height: 1.35; }
 .hud-dval { font-family: var(--mono); color: #fff; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.hud-dsub { font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.04em; color: rgba(140,180,200,0.6); text-transform: uppercase; }
+.hud-dsub { font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.04em; color: rgba(140,180,200,0.78); text-transform: uppercase; }
 [data-theme='light'] #hud-data { border-top-color: rgba(27,95,168,0.16); }
 [data-theme='light'] .hud-dlabel { color: #22405c; }
 [data-theme='light'] .hud-dval { color: #0d1117; }
 [data-theme='light'] .hud-dhdr { color: var(--teal-ink); }
 [data-theme='light'] .hud-dhdr::before { background: var(--teal-dk); box-shadow: none; }
-[data-theme='light'] .hud-dsub { color: rgba(40,70,100,0.65); }
-/* zone accent (--hz) arrives dark-tuned from JS · darken badge for contrast on white */
-[data-theme='light'] .hud-badge { filter: brightness(.72) saturate(1.3); }
+[data-theme='light'] .hud-dsub { color: rgba(40,70,100,0.84); }
+/* zone accent (--hz) arrives dark-tuned from JS. Dark lifts it 15% toward white (Policy violet was 3.9:1);
+   light takes it halfway to black. A brightness() filter never changed the computed color, so it is gone. */
+[data-theme='light'] .hud-badge { color: color-mix(in srgb, var(--hz, #4ECDC4) 50%, #000); border-color: color-mix(in srgb, var(--hz, #4ECDC4) 50%, #000); }
 #hud-links-col {
   padding: 2px 16px 16px; display: none; flex-direction: column; gap: 5px;
 }
@@ -189,7 +198,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .hud-lhdr {
   font-family: var(--mono);
   font-size:var(--t-micro); letter-spacing: 0.14em; text-transform: uppercase;
-  color: rgba(78,205,196,0.52); margin-bottom: 6px;
+  color: rgba(78,205,196,0.66); margin-bottom: 6px;
 }
 .hud-link {
   display: flex; align-items: center; gap: 9px; padding: 7px 11px;
@@ -254,7 +263,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .help-section-title {
   font-family: var(--mono); font-size:var(--t-micro);
   letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(78,205,196,0.55); margin-bottom: 10px;
+  color: rgba(78,205,196,0.66); margin-bottom: 10px;
   padding-bottom: 6px; border-bottom: 1px solid rgba(78,205,196,0.10);
 }
 .help-item {
@@ -281,7 +290,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 /* ── PHONE (≤699): the toolbar WRAPS (the controls row overflowed the right edge at every
    portrait width — first real-browser run), controls hit the 44px floor, and the
    "best on a desktop screen" hint retires (it was rendering UNDER the search bar) ── */
-@media (max-width: 699px){
+@media (max-width:699px), (max-height:500px){
   #atlas-tb { flex-wrap: wrap; row-gap: 6px; height: auto; min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
   /* the breadcrumb is both the where-am-I and the one-step-back path, and it was
      collapsing to a 30px window over a 400px trail ("Ove"), so the zone step was
@@ -308,14 +317,6 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
     background: color-mix(in srgb, var(--surface) 94%, transparent);
     border: 1px solid var(--border); border-radius: 14px; min-height: 52px; padding: 0 16px;
     backdrop-filter: blur(10px); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
-  /* right-anchored ABOVE the tool cluster, mirroring the info chip over Layers:
-     a fixed left beside the Layers pill collided with the cluster at 360px, and
-     the pill's width varies with the layer label so no left value is safe */
-  .atlas-craft-link { position: fixed; right: 10px; bottom: calc(66px + env(safe-area-inset-bottom)); z-index: 120;
-    min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
-    border: 1px solid var(--border); border-radius: 14px;
-    backdrop-filter: blur(10px); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
   #atlas-controls { position: fixed; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 120;
     margin-left: 0; display: flex; gap: 8px;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
@@ -327,8 +328,6 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   body:has(#atlas-hud.open) .tool-attribution--fixed,
   body:has(#atlas-help.open) .tool-attribution--fixed { display: none; }
   #atlas-tb .atlas-sep { display: none; }
-  .atlas-craft-link { font-size: 0; gap: 0; padding-left: 12px; padding-right: 12px; min-height: 44px; }
-  .atlas-craft-link::after { content: '↗'; font-size:var(--t-body); line-height: 1; }
   .atlas-btn { width: 44px; height: 44px; }
   #atlas-layers-btn { min-height: 44px; }
   #atlas-desk-hint { display: none !important; }
@@ -369,7 +368,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   #hud-close, #help-close, #conn-panel-close { width:44px; height:44px; }
   .cf-chip { padding:13px 14px; font-size:var(--t-label); }
 }
-@media (max-width: 699px) {
+@media (max-width:699px), (max-height:500px) {
   /* instrument chrome steps back on small screens */
   #atlas-stamp { display: none; }
   .atlas-logo { font-size:var(--t-fine); }
@@ -405,36 +404,37 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] #atlas-tb { background: rgba(255,255,255,0.97); border-bottom-color: rgba(27,95,168,0.15); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
 [data-theme='light'] .atlas-logo span { color: #1B5FA8; }
 [data-theme='light'] .atlas-sep { background: rgba(27,95,168,0.15); }
-[data-theme='light'] .abc-item { color: rgba(15,30,50,0.50); }
+[data-theme='light'] .abc-item { color: rgba(15,30,50,0.64); }
 [data-theme='light'] .abc-item:hover { color: #0d1117; }
 [data-theme='light'] .abc-item.active { color: #1B5FA8; }
+[data-theme='light'] #bc-z { color: color-mix(in srgb, var(--zc) 50%, #000); }   /* raw zone hues are 1.9-2.8:1 on white; halfway to black is 6.5+, same step as the zone labels */
 [data-theme='light'] .abc-sep { color: rgba(27,95,168,0.28); }
-[data-theme='light'] .atlas-btn { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.60); }
+[data-theme='light'] .atlas-btn { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.70); }   /* icons: .60 was 2.8:1, under the 3:1 floor */
 [data-theme='light'] .atlas-btn:hover { background: rgba(27,95,168,0.12); border-color: rgba(27,95,168,0.45); color: #1B5FA8; }
 [data-theme='light'] #atlas-hud { background: rgba(249,252,250,0.98); border-color: rgba(27,95,168,0.20); box-shadow: 0 14px 36px rgba(0,0,0,0.14); }
 [data-theme='light'] #hud-grip { background: rgba(27,95,168,0.025); border-bottom-color: rgba(27,95,168,0.10); }
 [data-theme='light'] #hud-grip::after { background: rgba(27,95,168,0.20); }
 [data-theme='light'] #hud-grip:hover::after { background: rgba(27,95,168,0.45); }
 [data-theme='light'] #hud-id { border-right-color: rgba(27,95,168,0.10); }
-[data-theme='light'] .hud-ktype { color: rgba(15,30,50,0.45); }
+[data-theme='light'] .hud-ktype { color: rgba(15,30,50,0.64); }
 [data-theme='light'] #hud-title { color: #0d1117; }
 [data-theme='light'] #hud-desc-col { border-right-color: rgba(27,95,168,0.10); }
 [data-theme='light'] #hud-desc { color: rgba(15,30,50,0.78); }
-[data-theme='light'] .hud-lhdr { color: rgba(27,95,168,0.58); }
+[data-theme='light'] .hud-lhdr { color: rgba(27,95,168,0.88); }
 [data-theme='light'] .hud-link { background: rgba(27,95,168,0.04); border-color: rgba(27,95,168,0.12); color: rgba(15,30,50,0.80); }
 [data-theme='light'] .hud-link:hover { background: rgba(27,95,168,0.10); border-color: rgba(27,95,168,0.32); color: #0d1117; }
-[data-theme='light'] #hud-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.55); }
+[data-theme='light'] #hud-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.72); }
 [data-theme='light'] #hud-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
 [data-theme='light'] #atlas-hint { background: rgba(255,255,255,0.90); border-color: rgba(27,95,168,0.12); color: rgba(15,30,50,0.48); }
 [data-theme='light'] #conn-tooltip { background: rgba(255,255,255,0.99); border-color: rgba(27,95,168,0.25); box-shadow: 0 4px 18px rgba(0,0,0,0.12); }
-[data-theme='light'] .ctt-label { color: rgba(27,95,168,0.82); }
+[data-theme='light'] .ctt-label { color: rgba(27,95,168,0.88); }
 [data-theme='light'] .ctt-desc { color: rgba(15,30,50,0.75); }
 [data-theme='light'] #atlas-help { background: rgba(249,252,250,0.99); border-left-color: rgba(27,95,168,0.18); box-shadow: -6px 0 32px rgba(0,0,0,0.10); }
 [data-theme='light'] #help-hdr { border-bottom-color: rgba(27,95,168,0.12); }
 [data-theme='light'] #help-hdr-title { color: #1B5FA8; }
-[data-theme='light'] #help-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.55); }
+[data-theme='light'] #help-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.72); }
 [data-theme='light'] #help-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
-[data-theme='light'] .help-section-title { color: rgba(27,95,168,0.58); border-bottom-color: rgba(27,95,168,0.10); }
+[data-theme='light'] .help-section-title { color: rgba(27,95,168,0.88); border-bottom-color: rgba(27,95,168,0.10); }
 [data-theme='light'] .help-icon { color: rgba(27,95,168,0.72); }
 [data-theme='light'] .help-text { color: rgba(15,30,50,0.78); }
 [data-theme='light'] .help-text strong { color: #0d1117; }
@@ -511,8 +511,11 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   background: rgba(78,205,196,0.06); border: 1px solid rgba(78,205,196,0.18);
   color: #cfe6e2; font-family: var(--font); font-size:var(--t-fine); outline: none;
 }
-#conn-search::placeholder { color: rgba(140,180,200,0.4); }
+#conn-search::placeholder { color: rgba(140,180,200,0.70); }
 #conn-search:focus { border-color: rgba(78,205,196,0.42); }
+/* the field sets outline:none and the light theme overrode its focus border, so light had no focus mark at all */
+#conn-search:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+[data-theme='light'] #conn-search:focus-visible { outline-color: var(--teal-ink); }
 #conn-filters {
   display: flex; flex-wrap: wrap; gap: 5px; padding: 0 14px 11px; flex-shrink: 0;
   border-bottom: 1px solid rgba(78,205,196,0.10);
@@ -522,7 +525,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   letter-spacing: 0.07em; text-transform: uppercase;
   padding: 4px 8px; cursor: pointer;
   background: rgba(78,205,196,0.05); border: 1px solid rgba(78,205,196,0.16);
-  color: rgba(140,180,200,0.62); transition: background-color .12s, border-color .12s, color .12s;
+  color: rgba(140,180,200,0.78); transition: background-color .12s, border-color .12s, color .12s;
 }
 .cf-chip.on { background: var(--teal); color: #062024; border-color: var(--teal); font-weight: 700; }
 #conn-list { flex: 1; overflow-y: auto; padding: 6px 0; }
@@ -530,17 +533,18 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 #conn-list::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.15); }
 #conn-empty {
   font-family: var(--font); font-size:var(--t-fine);
-  color: rgba(140,180,200,0.45); padding: 14px 16px; display: none;
+  color: rgba(140,180,200,0.70); padding: 14px 16px; display: none;
 }
 .conn-row {
   display: flex; gap: 9px; align-items: center;
   padding: 8px 14px; cursor: pointer; transition: background .1s;
 }
 /* catalog markers: rows here are picked (hover-preview + click-select a route) */
-.conn-row::before { content: '\25B8'; font-family: var(--mono); font-size:var(--t-micro); color: var(--t4); flex-shrink: 0; }
+/* the "/ ''" alt text keeps the marker out of each row button's spoken name; the first line is the fallback */
+.conn-row::before { content: '\25B8'; content: '\25B8' / ''; font-family: var(--mono); font-size:var(--t-micro); color: var(--t4); flex-shrink: 0; }
 .conn-row:hover { background: rgba(78,205,196,0.09); }
 .conn-row.active { box-shadow: inset 3px 0 0 #4ECDC4; }
-.conn-row.active::before { content: '\25C6'; color: #4ECDC4; }
+.conn-row.active::before { content: '\25C6'; content: '\25C6' / ''; color: #4ECDC4; }
 .conn-row.active .conn-row-label { color: #fff; font-weight: 600; }
 .conn-dot { width: 9px; height: 9px; flex-shrink: 0; border-radius: 2px; }
 .conn-row-text { min-width: 0; }
@@ -551,20 +555,20 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .conn-row-zones {
   font-family: var(--mono); font-size:var(--t-micro);
   letter-spacing: 0.05em; text-transform: uppercase;
-  color: rgba(140,180,200,0.5); margin-top: 2px;
+  color: rgba(140,180,200,0.70); margin-top: 2px;
 }
 [data-theme='light'] #atlas-conn { background: rgba(249,252,250,0.99); border-right-color: rgba(27,95,168,0.18); box-shadow: 6px 0 32px rgba(0,0,0,0.10); }
 [data-theme='light'] #conn-hdr { border-bottom-color: rgba(27,95,168,0.12); }
 [data-theme='light'] #conn-hdr-title { color: #1B5FA8; }
-[data-theme='light'] #conn-panel-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.55); }
+[data-theme='light'] #conn-panel-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.72); }
 [data-theme='light'] #conn-panel-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
 [data-theme='light'] #conn-search { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: #14283c; }
-[data-theme='light'] .cf-chip { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.16); color: rgba(40,70,100,0.7); }
+[data-theme='light'] .cf-chip { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.16); color: rgba(40,70,100,0.84); }
 [data-theme='light'] .cf-chip.on { background: #1B5FA8; color: #fff; border-color: #1B5FA8; }
 [data-theme='light'] .conn-row:hover { background: rgba(27,95,168,0.08); }
-[data-theme='light'] #conn-search::placeholder { color: rgba(40,70,100,0.45); }
-[data-theme='light'] #conn-empty { color: rgba(40,70,100,0.6); }
-[data-theme='light'] .conn-row-zones { color: rgba(40,70,100,0.6); }
+[data-theme='light'] #conn-search::placeholder { color: rgba(40,70,100,0.78); }
+[data-theme='light'] #conn-empty { color: rgba(40,70,100,0.80); }
+[data-theme='light'] .conn-row-zones { color: rgba(40,70,100,0.80); }
 
 /* ── Unified entity search (the whole dataset, attached to the atlas) ─── */
 #atlas-find { position: absolute; top: 64px; right: 16px; width: min(400px, calc(100% - 32px)); z-index: 30; font-family: var(--font); }
@@ -575,40 +579,43 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 /* 170px cleared the control chips that used to stack top-right; they moved to
    the bottom dock 2026-08-23 and the bar was left floating mid-canvas (David's
    device pass). Docked under the breadcrumb, full width: the Watch Duty read. */
-@media (max-width: 699px){ #atlas-find { top: 58px; left: 10px; right: 10px; width: auto; } }
+@media (max-width:699px), (max-height:500px){ #atlas-find { top: 58px; left: 10px; right: 10px; width: auto; } }
 #find-bar { display: flex; align-items: center; gap: 9px; background: rgba(8,14,20,0.92); border: 1px solid rgba(78,205,196,0.30); border-radius: 11px; padding: 9px 13px; backdrop-filter: blur(8px); box-shadow: 0 10px 34px rgba(0,0,0,0.45); }
 #find-bar svg { flex: none; opacity: .6; width: 16px; height: 16px; stroke-width: 2; color: #4ECDC4; }
 #find-input { flex: 1; background: none; border: none; outline: none; color: #dcefe9; font-size:var(--t-sub); font-family: inherit; }
-#find-input::placeholder { color: rgba(140,180,200,0.45); }
-#find-count { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.55); white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* the input drops its own outline, so the bar carries the focus mark (it had none in either theme) */
+#find-bar:focus-within { outline: 2px solid var(--teal); outline-offset: 2px; }
+[data-theme='light'] #find-bar:focus-within { outline-color: var(--teal-ink); }
+#find-input::placeholder { color: rgba(140,180,200,0.70); }
+#find-count { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.74); white-space: nowrap; font-variant-numeric: tabular-nums; }
 #find-results { margin-top: 7px; max-height: min(58vh, 540px); overflow-y: auto; background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.18); border-radius: 11px; display: none; }
 #find-results.open { display: block; }
 #find-results::-webkit-scrollbar { width: 4px; } #find-results::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.18); }
 .find-grp { padding: 3px 0; }
-.find-grp-h { display: flex; align-items: center; gap: 7px; padding: 8px 13px 4px; font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(140,180,200,0.6); }
-.find-grp-h .gn { opacity: .55; }
+.find-grp-h { display: flex; align-items: center; gap: 7px; padding: 8px 13px 4px; font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(140,180,200,0.78); }
+.find-grp-h .gn { opacity: .93; }   /* still the dimmest line in the panel; .55 put it at 1.7-1.9:1 */
 .find-row { display: flex; align-items: center; gap: 9px; padding: 6px 13px; cursor: pointer; transition: background .1s; text-decoration: none; }
 .find-row:hover { background: rgba(78,205,196,0.10); }
 .find-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 .find-lbl { flex: 1; min-width: 0; font-size:var(--t-ui); color: rgba(210,228,235,0.94); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .find-lbl mark { background: rgba(78,205,196,0.22); color: #7fead9; border-radius: 3px; padding: 0 1px; }
-.find-sub { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.5); white-space: nowrap; }
+.find-sub { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.74); white-space: nowrap; }
 .find-on { font-family: var(--mono); font-size:var(--t-micro); color: rgba(78,205,196,0.8); border: 1px solid rgba(78,205,196,0.32); border-radius: 4px; padding: 1px 5px; flex: none; }
-.find-more { padding: 5px 13px 9px; font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.45); }
+.find-more { padding: 5px 13px 9px; font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.70); }
 .az-node-cell.az-find-hit .hex-body { stroke-opacity: 1 !important; stroke-width: 3px !important; fill-opacity: 0.34 !important; filter: url(#n-glow); }
-[data-theme='light'] #find-bar { background: rgba(249,252,250,0.96); border-color: rgba(27,95,168,0.26); }
+[data-theme='light'] #find-bar { background: rgba(249,252,250,0.96); border-color: rgba(27,95,168,0.26); box-shadow: 0 10px 34px rgba(0,0,0,0.14); }   /* the dark .45 shadow greyed the top of the results and detail panels (2.8:1 headers); .14 matches #atlas-hud */
 [data-theme='light'] #find-bar svg { stroke: var(--teal-dk); }
 [data-theme='light'] #find-input { color: #14283c; }
-[data-theme='light'] #find-input::placeholder { color: rgba(40,70,100,0.45); }
-[data-theme='light'] #find-count { color: rgba(40,70,100,0.6); }
+[data-theme='light'] #find-input::placeholder { color: rgba(40,70,100,0.78); }
+[data-theme='light'] #find-count { color: rgba(40,70,100,0.80); }
 [data-theme='light'] #find-results { background: rgba(249,252,250,0.98); border-color: rgba(27,95,168,0.16); }
-[data-theme='light'] .find-grp-h { color: rgba(40,70,100,0.65); }
+[data-theme='light'] .find-grp-h { color: rgba(40,70,100,0.84); }
 [data-theme='light'] .find-row:hover { background: rgba(27,95,168,0.08); }
 [data-theme='light'] .find-lbl { color: #14283c; }
 [data-theme='light'] .find-lbl mark { background: rgba(27,154,144,0.18); color: #0d6b63; }
-[data-theme='light'] .find-sub { color: rgba(40,70,100,0.6); }
+[data-theme='light'] .find-sub { color: rgba(40,70,100,0.80); }
 [data-theme='light'] .find-on { color: var(--teal-ink); border-color: rgba(27,154,144,0.45); }
-[data-theme='light'] .find-more { color: rgba(40,70,100,0.55); }
+[data-theme='light'] .find-more { color: rgba(40,70,100,0.78); }
 /* search-result detail summary (the entity card, on the atlas) ·
    instrument inspector: tabular numerals + hairline section dividers */
 #find-detail { margin-top: 7px; max-height: min(62vh, 580px); overflow-y: auto; background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.18); border-radius: 11px; display: none; padding: 14px 15px; font-variant-numeric: tabular-nums; }
@@ -617,20 +624,24 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .fd-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
 .fd-back { background: none; border: none; color: rgba(140,180,200,0.7); font-family: var(--mono); font-size:var(--t-label); cursor: pointer; padding: 0; }
 .fd-back:hover { color: #4ECDC4; }
-.fd-type { font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.fd-type { font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; color: var(--tc); }
+.fd-type[data-t="metric"] { color: color-mix(in srgb, var(--tc) 50%, #fff); }   /* HU Blue on its own tint is 2.75:1 on the dark panel */
 .fd-title { font-family: var(--display); font-weight: 800; font-size: 17px; color: #e6f2f0; line-height: 1.2; margin-bottom: 2px; }
-.fd-uid { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.5); word-break: break-all; margin-bottom: 12px; }
+.fd-uid { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.70); word-break: break-all; margin-bottom: 12px; }
 .fd-facets { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size:var(--t-fine); margin-bottom: 4px; }
 .fd-facets .fk { color: var(--t2); font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.12em; text-transform: uppercase; }
 .fd-facets .fv { color: rgba(200,222,235,0.9); }
-.fd-sec { font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(140,180,200,0.55); margin: 13px 0 7px; border-top: 1px solid rgba(78,205,196,0.10); padding-top: 10px; }
+.fd-sec { font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(140,180,200,0.74); margin: 13px 0 7px; border-top: 1px solid rgba(78,205,196,0.10); padding-top: 10px; }
 .fd-rel { margin-bottom: 9px; }
 .fd-rv { font-family: var(--mono); font-size:var(--t-micro); color: #7fead9; margin-bottom: 5px; }
 .fd-rv.inc { color: #E8C36B; }
-.fd-rn { opacity: 0.55; }
+.fd-rn { opacity: 0.65; }
 .fd-chips { display: flex; flex-wrap: wrap; gap: 5px; }
 .fd-chip { display: inline-flex; align-items: center; gap: 6px; font-size:var(--t-label); padding: 3px 9px; border-radius: 7px; border: 1px solid rgba(78,205,196,0.14); background: rgba(78,205,196,0.05); color: rgba(200,222,235,0.9); cursor: pointer; transition: .1s; }
 .fd-chip:hover { border-color: rgba(78,205,196,0.4); color: #fff; }
+/* "+N more" is not a button, so it stays dimmer than the chips; was an inline .55 (4.1:1 dark, 2.9:1 light) */
+.fd-chip-more { cursor: default; opacity: .66; }
+[data-theme='light'] .fd-chip-more { opacity: .8; }
 .fd-cdot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
 .fd-cv { font-family: var(--mono); font-size:var(--t-micro); color: #7fead9; }
 .fd-link { display: inline-block; margin-top: 14px; font-size:var(--t-fine); color: #4ECDC4; text-decoration: none; border: 1px solid rgba(78,205,196,0.4); padding: 6px 11px; border-radius: 8px; }
@@ -639,14 +650,15 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] .fd-title { color: #14283c; }
 [data-theme='light'] .fd-facets .fv { color: #22405c; }
 [data-theme='light'] .fd-chip { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.16); color: #22405c; }
-[data-theme='light'] .fd-back { color: rgba(40,70,100,0.75); }
+[data-theme='light'] .fd-back { color: rgba(40,70,100,0.86); }
 [data-theme='light'] .fd-back:hover { color: #1B5FA8; }
-[data-theme='light'] .fd-type { filter: brightness(.72) saturate(1.3); }
-[data-theme='light'] .fd-uid { color: rgba(40,70,100,0.55); }
+[data-theme='light'] .fd-type { color: color-mix(in srgb, var(--tc) 50%, #000); }
+[data-theme='light'] .fd-uid { color: rgba(40,70,100,0.78); }
 [data-theme='light'] .fd-facets .fk { color: var(--t2); }
-[data-theme='light'] .fd-sec { color: rgba(40,70,100,0.6); border-top-color: rgba(27,95,168,0.12); }
+[data-theme='light'] .fd-sec { color: rgba(40,70,100,0.80); border-top-color: rgba(27,95,168,0.12); }
 [data-theme='light'] .fd-rv { color: var(--teal-ink); }
 [data-theme='light'] .fd-rv.inc { color: #946905; }
+[data-theme='light'] .fd-rn { opacity: 1; }   /* teal-ink and this amber pass on the panel only at full strength */
 [data-theme='light'] .fd-cv { color: var(--teal-ink); }
 [data-theme='light'] .fd-chip:hover { color: #0d1117; border-color: rgba(27,95,168,0.4); }
 [data-theme='light'] .fd-link { color: var(--teal-ink); border-color: rgba(27,154,144,0.45); }
@@ -680,7 +692,6 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
       <i data-lucide="layers" aria-hidden="true"></i><span class="sel-val">Layers</span><i data-lucide="chevron-down" class="sel-caret" aria-hidden="true"></i>
     </button>
     <div class="atlas-sep"></div>
-    <a class="atlas-craft-link" href="/atlas/craft/" title="Atlas Craft: search the atlas and wire your own relationship diagrams">Craft &#8599;</a>
     <div class="atlas-sep"></div>
     <div id="atlas-controls">
       <button class="atlas-btn" id="a-zi" aria-label="Zoom in"><i data-lucide="plus" aria-hidden="true"></i></button>
@@ -829,4 +840,4 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 {% include "components/tool-attribution.njk" %}
 
 <script type="application/json" id="atlas-content-links">{{ atlasContentLinks | dump | safe }}</script>
-<script type="module" src="/assets/js/tools/atlas.js?v=20260823"></script>
+<script type="module" src="/assets/js/tools/atlas.js?v=20260923b"></script>

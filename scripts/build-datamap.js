@@ -211,8 +211,6 @@ const NODES = [
     detail: '25 sectors, 158 vendors, HQ map, sourced market-share carousel.' },
   { id: 'tool-atlas', kind: 'tool', label: 'Atlas (search + HUD)', path: '/atlas/',
     detail: 'The hex atlas. Search rides the unified graph, lazy-fetched on first use.' },
-  { id: 'tool-atlas-craft', kind: 'tool', label: 'Atlas Craft', path: '/atlas/craft/',
-    detail: 'Relationship-explorer canvas. The entity graph is injected into the template at build.' },
   { id: 'tool-price-finder', kind: 'tool', label: 'Utah Price Finder', path: '/secret-menu/hospital-price-finder/',
     detail: 'Search any billable code across Utah hospitals; compares cash and list from the full CDM extract. Parked in the secret menu, isolated from the operators map, until the price project resumes.' },
   { id: 'tool-hospital-map', kind: 'tool', label: 'Hospital Map', path: '/tools/hospital-map/',
@@ -339,7 +337,6 @@ const EDGES = [
   { from: 'int-data-years', to: 'tool-multi-lens', mode: 'embedded' },
   { from: 'int-state-data', to: 'tool-learn-rounds', mode: 'embedded' },
   { from: 'int-references', to: 'tool-learn-rounds', mode: 'embedded' },
-  { from: 'int-entities', to: 'tool-atlas-craft', mode: 'embedded' },
 ];
 
 /* ────────────────────────────────────────────────────────────────────
@@ -422,7 +419,6 @@ const PLAIN = {
   'tool-career-tree':      'The career planner. Loads all four career files up front, then everything runs in the browser.',
   'tool-vendor-directory': 'The vendor browser: one data file, loaded on open.',
   'tool-atlas':            'The concept atlas. Browsing costs nothing; search taps the big graph, fetched lazily on first use.',
-  'tool-atlas-craft':      'The relationship-explorer canvas. Its entire dataset was baked into the page at build time.',
   'tool-price-finder':     'Type a service or billing code, see what every reporting Utah hospital charges for it, cheapest first. Each row jumps to that hospital on the operations map.',
   'tool-hospital-map':     'The older camera-zoom hospital map. Self-contained.',
   'tool-sql-mystery':      'The SQL teaching game. All data is synthetic, on purpose. Nothing fetched.',

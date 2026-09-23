@@ -67,7 +67,7 @@
   <!-- versioned: /assets/css/* ships with stale-while-revalidate, so returning
        visitors get a CACHED copy after a deploy unless the URL changes. Bump
        the v= stamp whenever hu-global.css changes. -->
-  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260920e">
+  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260923a">
   <link rel="stylesheet" href="/brand/web/brand.css">
 
   <!-- Structured data: brand + author identity -->
@@ -140,11 +140,24 @@
 <a class="skip-to-main" href="#main-content">Skip to main content</a>
 
 <nav aria-label="Primary">
+  {# A tool that sets `toolTitle` names itself in the nav. David's call 2026-09-22: every tool
+     should say what it is, because three of them (both U.S. maps and the vendor directory) said
+     nothing at all and a stranger arriving from a link had no idea where they were. The full
+     inline wordmark is 192px and leaves no room for a name on a 390px screen, so those pages
+     drop to the 24px mark, the same one the merged-band toolbars already use. #}
+  {% if toolTitle %}
+  <a class="nav-brand nav-brand-compact" href="/" aria-label="Healthcare Uncharted, home">
+    <img src="/brand/hu-mark-dark.svg" alt="" class="hu-logo-nav hu-logo-ondark">
+    <img src="/brand/hu-mark.svg" alt="" class="hu-logo-nav hu-logo-onlight">
+  </a>
+  <span class="nav-tool-title">{{ toolTitle | safe }}</span>
+  {% else %}
   <a class="nav-brand" href="/" aria-label="Healthcare Uncharted, home">
     {# the LINK carries the accessible name; child alts stay empty so nothing announces twice #}
     <img src="/brand/hu-logo-inline-dark.svg" alt="" class="hu-logo-nav hu-logo-ondark">
     <img src="/brand/hu-logo-inline.svg" alt="" class="hu-logo-nav hu-logo-onlight">
   </a>
+  {% endif %}
   <div class="nav-links" id="navLinks">
     <a class="nav-link {% if navPage == 'home' %}active{% endif %}" href="/">Home</a>
     <a class="nav-link {% if navPage == 'tools' %}active{% endif %}" href="/tools/">Tools</a>
@@ -163,7 +176,14 @@
 </main>
 {% if section == 'learn' or section == 'rounds' %}{% include "components/read-next.njk" %}{% endif %}
 
-{% if not no_footer %}<footer>
+{# FOOTER, two weights. David, 2026-09-21, after reading a learn module on his phone:
+   the Field Notes signup and the Source Policy "do not need to be at the bottom of
+   every learn module", and everything that is not home or About wants a "clean small"
+   footer. So home and About carry the full footer; every other page carries a lean one
+   that is the brand, the Explore links, Support and the copyright. Nothing was deleted,
+   it moved. #}
+{% set footerFull = page.url == '/' or page.url == '/about/' %}
+{% if not no_footer %}<footer class="{% if footerFull %}footer-full{% else %}footer-lean{% endif %}">
   <div class="footer-inner">
     <div class="footer-top">
       <div>
@@ -171,7 +191,7 @@
           <img src="/brand/hu-logo-dark.svg" alt="Healthcare Uncharted" class="hu-logo-footer hu-logo-ondark">
           <img src="/brand/hu-logo.svg" alt="Healthcare Uncharted" class="hu-logo-footer hu-logo-onlight">
         </div>
-        <div class="footer-tagline">A living resource for clinical informatics, healthcare data architecture, and the real story behind the systems that run modern medicine.<br><br>Built by David Eitel, RRT, MHA, MSRT, RRT-ACCS</div>
+        {% if footerFull %}<div class="footer-tagline">A living resource for clinical informatics, healthcare data architecture, and the real story behind the systems that run modern medicine.<br><br>Built by David Eitel, RRT, MHA, MSRT, RRT-ACCS</div>{% endif %}
       </div>
       <div>
         <div class="footer-col-title">Explore</div>
@@ -183,6 +203,7 @@
           <a class="footer-nav-link" href="/about/">About</a>
         </div>
       </div>
+      {% if footerFull %}
       <div>
         <div class="footer-col-title">Tools</div>
         <div class="footer-nav-list">
@@ -190,11 +211,13 @@
           <a class="footer-nav-link" href="/tools/iceberg-map/">System Layers</a>
           <a class="footer-nav-link" href="/tools/multi-lens-map/">U.S. Population Health Map</a>
           <a class="footer-nav-link" href="/tools/vendor-directory/">Vendor Directory</a>
-          <a class="footer-nav-link" href="/tools/assignment-compass/">Cost of Living Compare</a>
+          <a class="footer-nav-link" href="/tools/cost-of-living/">Cost of Living Comparison</a>
           <a class="footer-nav-link" href="/tools/sql-mystery/">Clinical SQL Mystery</a>
         </div>
       </div>
+      {% endif %}
     </div>
+    {% if footerFull %}
     <div class="footer-subscribe">
       <div class="footer-col-title">Field Notes</div>
       <p class="fs-sub">New tools and new data, silence in between. Leave an address and you go on the list.</p>
@@ -208,20 +231,23 @@
         </div>
       </form>
     </div>
+    {% endif %}
     {# Support block. Renders only when site.support.url is set, so the site is
        unchanged until David pastes his Ko-fi link into _data/site.js. Reuses the
        Field Notes grammar above (col title, sub line, button) so it adds no new
-       component. A plain outbound link: no widget, no script, no CSP change. #}
+       component. A plain outbound link: no widget, no script, no CSP change.
+       The blurb is three lines on a phone, so the lean footer keeps the button only. #}
     {% if site.support.url %}
     <div class="footer-support">
       <div class="footer-col-title">Support</div>
-      <p class="fs-sub">{{ site.support.blurb }}</p>
+      {% if footerFull %}<p class="fs-sub">{{ site.support.blurb }}</p>{% endif %}
       <a class="fs-btn fs-btn-link" href="{{ site.support.url }}" target="_blank" rel="noopener">{{ site.support.label }}</a>
     </div>
     {% endif %}
     <div class="footer-bottom">
       <div class="footer-copy">&copy; 2026 Healthcare Uncharted &middot; David Eitel &middot; Educational use &middot; not clinical advice</div>
     </div>
+    {% if footerFull %}
     <div class="content-policy">
       <span class="cp-marker">Source Policy</span>
       <div class="cp-text">
@@ -234,6 +260,7 @@
         Each factual claim is linked to its source. This site does not reproduce proprietary materials, internal vendor training content, or licensed documentation.
       </div>
     </div>
+    {% endif %}
   </div>
 </footer>{% endif %}
 

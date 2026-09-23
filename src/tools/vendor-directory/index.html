@@ -3,6 +3,7 @@ layout: base.njk
 title: Healthcare Vendor Directory
 description: "158 healthcare technology vendors, 25 sectors, one searchable directory. Ownership, market position, and an honest status call on every entry: proven, emerging, or cautionary."
 navPage: tools
+toolTitle: "Vendor <span>Directory</span>"
 section: tool
 category: interoperability
 tags: [vendors, healthcare-tech, market-map, interactive]
@@ -225,7 +226,8 @@ no_footer: true
 .hqt.l2, .hqt-sw.l2 { background:rgba(78,205,196,.22); }
 .hqt.l3, .hqt-sw.l3 { background:rgba(78,205,196,.38); }
 .hqt.l4, .hqt-sw.l4 { background:rgba(78,205,196,.60); }
-.hqt.l3 .n, .hqt.l4 .n { color:var(--t2); }
+.hqt.l2 .n, .hqt.l3 .n, .hqt.l4 .n { color:var(--t2); }
+.hqt.l4 .ab, .hqt.l4 .n { color:var(--t1); }   /* the 60% teal tile: --t2 read 2.86 on it in dark */
 .hqt.active { background:var(--teal); border-color:var(--teal); }
 .hqt.active .ab, .hqt.active .n { color:#062024; }
 .hq-intl { aspect-ratio:auto; padding:4px 8px; }
@@ -233,11 +235,47 @@ no_footer: true
 [data-theme="light"] .hqt.l2, [data-theme="light"] .hqt-sw.l2 { background:rgba(27,154,144,.20); }
 [data-theme="light"] .hqt.l3, [data-theme="light"] .hqt-sw.l3 { background:rgba(27,154,144,.34); }
 [data-theme="light"] .hqt.l4, [data-theme="light"] .hqt-sw.l4 { background:rgba(27,154,144,.52); }
-@media(max-width:700px){ .hq-legend { display:none; } }
+/* The container's aspect-ratio 514/373 scales its HEIGHT with its width, but the
+   cells inside are aspect-ratio:1 and stop shrinking at the 28px minmax floor. Below
+   about 520px the two disagree and the bottom rows of the cartogram sit outside the
+   box. Let the rows decide the height on phones. 2026-09-21, David's phone pass. */
+@media(max-width:700px){ .hq-legend { display:none; }
+  /* 11 columns at the 28px minmax floor plus gaps need 338px and the phone column is
+     328px, so the floor goes and the eleven columns split what is there. */
+  .hq-grid { aspect-ratio:auto; min-height:0; grid-template-columns:repeat(11,minmax(0,1fr)); gap:2px; } }
 
 /* ── Light mode: the sector/status accent palette was tuned as text on dark
    surfaces, darken it when the surfaces flip to white ── */
-[data-theme="light"] .vc-tag, [data-theme="light"] .vc-status { filter:brightness(0.5) saturate(1.5); }   /* interim: 0.68 left all 30 hues at 2.4-3.6:1; per-hue ink overrides are the real fix (audit A1) */
+/* Per-hue inks (audit A1), replacing the interim brightness filter, which never changed
+   the computed color. Brand hues take the hu-global deep steps; the local sector hues take
+   a darker step of the SAME hue. Each measured >= 4.5:1 on its own tint over the white card. */
+[data-theme="light"] .status-active, [data-theme="light"] .tag-ehr, [data-theme="light"] .tag-p4 { color:var(--green-dk); }
+[data-theme="light"] .status-emerging, [data-theme="light"] .tag-clinical, [data-theme="light"] .tag-p2a { color:var(--blue); }
+[data-theme="light"] .tag-rcm, [data-theme="light"] .tag-p3 { color:var(--amber-dk); }
+[data-theme="light"] .status-cautionary { color:#8A6205; } /* amber-dk is 4.42:1 on this denser tint */
+[data-theme="light"] .status-discontinued, [data-theme="light"] .tag-cautionary { color:var(--red-dk); }
+[data-theme="light"] .tag-scribing, [data-theme="light"] .tag-p1 { color:var(--teal-ink); }
+[data-theme="light"] .tag-radiology  { color:#6450D5; }
+[data-theme="light"] .tag-p2b        { color:#6754D6; }
+[data-theme="light"] .tag-rx         { color:#C5227B; }
+[data-theme="light"] .tag-device     { color:#0671A1; }
+[data-theme="light"] .tag-interop    { color:#B64B0C; }
+[data-theme="light"] .tag-labs       { color:#607320; }
+[data-theme="light"] .tag-imaging    { color:#7144F7; }
+[data-theme="light"] .tag-cardio     { color:#D20624; }
+[data-theme="light"] .tag-telehealth { color:#19786C; }
+[data-theme="light"] .tag-engage     { color:#8E6703; }
+[data-theme="light"] .tag-rpm        { color:#1A7A57; }
+[data-theme="light"] .tag-cyber      { color:#586A84; }
+[data-theme="light"] .tag-analytics  { color:#4555F5; }
+[data-theme="light"] .tag-behavioral { color:#B708D6; }
+[data-theme="light"] .tag-research   { color:#057887; }
+[data-theme="light"] .tag-orgs       { color:#856825; }
+[data-theme="light"] .tag-cloud      { color:#0474A9; }
+[data-theme="light"] .tag-payer      { color:#D10E78; }
+[data-theme="light"] .tag-supply     { color:#A85702; }
+[data-theme="light"] .tag-staffing   { color:#517B0A; }
+[data-theme="light"] .tag-retail     { color:#DA0707; }
 [data-theme="light"] .status-org { color:#475569; }
 /* .vd-cat.active needs no light flip: solid teal fill + #062024 ink passes on both themes */
 [data-theme="light"] .ehr-src a { color:var(--teal-ink); }

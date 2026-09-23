@@ -13,7 +13,7 @@
   --teal:    #4ECDC4;
   --teal-dk: #1B9A90;   /* teal on light surfaces: 3.46:1 on white, icons/borders/large text ONLY */
   --teal-ink: #0D7268;  /* the small-text teal step (David 2026-08-16): 5.9:1 on white; light-theme teal TEXT under WCAG-large sizes lives here */
-  --amber-dk:#946905;   /* amber as TEXT on light surfaces */
+  --amber-dk:#856004;   /* amber as TEXT on light surfaces. Was #946905, which read 4.36:1 on the page ground and 3.98 on raised (2026-09-23); this clears 4.5 on all three light grounds */
   /* Every semantic hue gets a deep step for light grounds. Teal and amber already had
      one; green and red never did, so pages were inventing their own darker green
      inline. Measured against the real page ground (#EEF2F7), not just white. */
@@ -71,9 +71,13 @@
   --mono:    'IBM Plex Mono', 'Courier New', monospace;
   --radius:  12px;
   --shadow:  0 8px 40px rgba(0,0,0,.5);
+  /* Tells the browser which theme is on, so scrollbars, form controls and the
+     overscroll ground follow the page instead of the OS setting. */
+  color-scheme: dark;
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   --dark:    #EEF2F7;
   --surface: #FFFFFF;
   --raised:  #E2E8F0;
@@ -106,10 +110,24 @@
 [data-theme="light"] .nav-theme-btn:hover { color:var(--teal-ink); border-color:var(--teal-ink); }
 
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+/* HIDDEN MEANS HIDDEN, site-wide. 2026-09-22. The browser's own [hidden] rule is display:none,
+   and ANY author rule that sets display on the same element outranks it, so a script could set
+   hidden=true and the element stayed on screen. The sweep's HIDDEN BUT SHOWN check found four:
+   the cost of living "Example numbers" badge on every scenario, an empty keyboard-focusable
+   pill button in the career tree's Next Steps header, the operators map's colour legend floating
+   over the map with no colours on, and an empty 16px continue-reading slot on the Learn and
+   Rounds hubs. All four were unintended, so this one rule fixes all four and every future one.
+   !important because an id rule like #continue-slot{display:block} outranks a bare attribute
+   selector. Most CSS resets ship exactly this line. */
+[hidden] { display:none !important; }
 html { scroll-behavior:smooth; }
 body { font-family:var(--font); background:var(--dark); color:var(--t1); line-height:1.65; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
 a { color:var(--brand-primary); text-decoration:none; border-bottom:1px solid transparent; transition:border-color .15s; }
 a:hover { border-bottom-color:var(--brand-primary); }
+/* Brand teal as link text is 1.7:1 on the light ground. :where() keeps this at the
+   weight of a bare `a`, so every kit control class still sets its own ink. */
+:where([data-theme="light"]) a { color:var(--teal-ink); }
+:where([data-theme="light"]) a:hover { border-bottom-color:var(--teal-ink); }
 
 /* Skip-to-main accessibility link */
 .skip-to-main { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
@@ -119,7 +137,14 @@ button { cursor:pointer; border:none; font-family:inherit; }
 /* ================================================================
    NAVIGATION
 ================================================================ */
-nav {
+/* SCOPED to the site header, 2026-09-21. As a bare `nav {}` this matched every
+   <nav> on the site and forced each one to height:var(--nav-bar-h) + sticky +
+   blur. On the 4Ps page that locked .section-nav to 64px while its four links
+   wrapped to 231px, spilling three of them outside the painted box and over the
+   article text (David's phone screenshots). The bottom bar was patched locally
+   for the same trap once already; this fixes it at the selector instead.
+   nav[aria-label="Primary"] is the selector reading.js already uses. */
+nav[aria-label="Primary"] {
   position:sticky; top:0; z-index:200;
   background:color-mix(in srgb, var(--dark) 96%, transparent);
   backdrop-filter:blur(16px);
@@ -138,6 +163,24 @@ nav {
   flex-shrink:0;
 }
 .nav-wordmark { font-family:var(--display); font-size:var(--t-body); font-weight:700; color:var(--t1); }
+
+/* A TOOL THAT NAMES ITSELF. David 2026-09-22: "should every tool name itself in its bar? Yes."
+   Three tools (both U.S. maps and the vendor directory) rendered no title anywhere, so a visitor
+   arriving from a link had nothing telling them what they were looking at. The full inline
+   wordmark is 192px of a 390px screen, which is why there was never room; a page with a title
+   drops to the 24px mark instead, the same one the merged-band toolbars use. */
+.nav-brand-compact { gap:0; }
+.nav-brand-compact img.hu-logo-nav { width:28px; height:28px; }
+.nav-tool-title {
+  font-family:var(--display); font-size:var(--t-body); font-weight:700; color:var(--t1);
+  margin-left:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
+}
+.nav-tool-title span { color:var(--teal); }
+[data-theme="light"] .nav-tool-title span { color:var(--teal-ink); }
+@media (max-width:699px), (max-height:500px) {
+  /* the hamburger and theme button still need their 44px, so the name yields first */
+  .nav-tool-title { font-size:var(--t-ui); margin-left:8px; }
+}
 .nav-wordmark span { color:var(--teal); }
 /* margin-left:auto keeps links + search + ham grouped right; the search
    button is a fourth flex child, so space-between alone would center the links */
@@ -201,6 +244,17 @@ footer {
 .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
 .footer-copy { font-size:var(--t-fine); color:var(--t3); }
 .content-policy { border-top:1px solid var(--border); margin-top:24px; padding-top:20px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start; }
+
+/* LEAN FOOTER, 2026-09-21. Every page that is not home or About. David, reading a
+   learn module on his phone: the Field Notes form and the Source Policy "do not need
+   to be at the bottom of every learn module", and those pages want a "clean small"
+   footer. base.njk drops those two blocks; this compresses what is left so a module
+   ends on its read-next card instead of a wall of chrome. Brand and Explore sit side
+   by side, and the Explore links run as a wrapping row instead of a five-row column. */
+.footer-lean { padding:clamp(22px,4vw,36px) clamp(20px,5vw,80px) 20px; }
+.footer-lean .footer-top { grid-template-columns:auto 1fr; gap:28px; padding-bottom:18px; margin-bottom:16px; }
+.footer-lean .footer-nav-list { flex-direction:row; flex-wrap:wrap; gap:10px 20px; }
+.footer-lean .footer-support { border-top:none; margin-top:0; padding-top:0; margin-bottom:16px; }
 .cp-marker { font-family:var(--mono); font-size:var(--t-label); font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); padding-top:1px; white-space:nowrap; }
 .cp-text { font-size:var(--t-label); color:var(--t3); line-height:1.7; }
 .cp-text a { color:var(--t3); border-bottom:1px dotted var(--t4); transition:color .15s; }
@@ -273,6 +327,13 @@ footer {
   --nav-h: 64px;
 
   /* Spacing scale · use instead of raw pixel values on new components */
+  /* A SHORT SCREEN CANNOT AFFORD A 64px BAR. The chrome budget is 15% of viewport
+     height; a phone on its side is about 360px tall, so the budget is 54px and the bar
+     alone was 64px, putting every landscape page over before anything else loaded
+     (David's rotate review, 2026-09-21). 48px keeps the 44px touch target with room
+     either side and lands at 13%. Everything downstream rides these two tokens, so the
+     sticky tops, shell heights and menu offsets all follow. */
+
   --space-1:  4px;    /* hairline, icon internal padding */
   --space-2:  8px;    /* tight gap, related items */
   --space-3:  12px;   /* form fields, badge internals */
@@ -302,6 +363,10 @@ footer {
      consolidating the scale is a separate, visible change that deserves its own
      decision rather than riding along with a phone fix. The .5 steps round to
      their neighbour, which is a sub-pixel move on 170 elements. */
+  --t-prose: 17px;   /* LONG-FORM prose. Added 2026-09-22: eleven Learn articles already set
+                        17px by hand because --t-body (15) is a UI size and reads small over
+                        2,000 words. The role existed on the page and not in the ladder,
+                        which is how eleven pages ended up each declaring it themselves. */
   --t-lede:  16px;   /* standfirst, card headings, the step above prose */
   --t-body:  15px;   /* prose, the thing a reader reads */
   --t-sub:   14px;   /* card copy, secondary prose, list descriptions */
@@ -329,9 +394,10 @@ footer {
    side on his own phone: every step is its desktop value plus 2. Not a new
    hierarchy, the same one held at a distance a hand holds a phone. The bottom
    two steps land on the floors and stop there, which is why they gain 2 and 1. */
-@media (max-width:699px){
+@media (max-width:699px), (max-height:500px){
   :root{
     --t-lede:  18px;
+    --t-prose: 18px;
     --t-body:  17px;
     --t-sub:   16px;
     --t-ui:    15px;
@@ -368,7 +434,12 @@ svg text:not([font-weight]) { font-weight: var(--dgm-weight, 500); }
    so the wide chart kept rendering under the phone one. Doubling reaches (0,2,0)
    without !important, which a page can still override deliberately. */
 .hu-chart-tall.hu-chart-tall{ display:none; }
-@media (max-width:699px){
+/* The swap follows the SHORTER side, like the nav. Keyed to width alone, a phone on
+   its side (740px wide) got the DESKTOP drawing, whose labels are sized for a 720-unit
+   canvas and landed at 4 to 7px. That is what every type-floor failure in landscape was
+   (24 elements on the process page alone). The phone twin is drawn at ~320 units, so at
+   740px wide it renders large and readable. 2026-09-21. */
+@media (max-width:699px), (max-height:500px){
   .hu-chart-wide.hu-chart-wide{ display:none; }
   .hu-chart-tall.hu-chart-tall{ display:block; }
 }
@@ -648,13 +719,17 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
 .fp.fp-techeco   { background: rgba(14, 165, 233, 0.14);  color: #38b6f0; border-color: rgba(14, 165, 233, 0.36); }
 .fp.fp-medsci    { background: rgba(255, 107, 107, 0.12); color: #FF6B6B; border-color: rgba(255, 107, 107, 0.34); }
 /* zone-pill text darkens on light surfaces; tinted backgrounds stay */
-[data-theme="light"] .fp.fp-patient   { color:#0F7A72; }
+/* Each ink measured against its own tint laid over the page ground, white and raised; the
+   first set (2026-08) read 3.97 to 4.35 there. Same hues, one step deeper (2026-09-23). */
+[data-theme="light"] .fp.fp-patient   { color:#0D6C65; }
 [data-theme="light"] .fp.fp-provider  { color:#1d5fae; }
-[data-theme="light"] .fp.fp-payer     { color:var(--amber-dk); }
-[data-theme="light"] .fp.fp-policy    { color:#6A45D8; }
-[data-theme="light"] .fp.fp-pubhealth { color:#23794e; }
-[data-theme="light"] .fp.fp-techeco   { color:#0e6f96; }
-[data-theme="light"] .fp.fp-medsci    { color:#C22F2F; }
+[data-theme="light"] .fp.fp-payer     { color:#7D5A04; }
+[data-theme="light"] .fp.fp-policy    { color:#613FC5; }
+[data-theme="light"] .fp.fp-pubhealth { color:#206E47; }
+[data-theme="light"] .fp.fp-techeco   { color:#0D6589; }
+[data-theme="light"] .fp.fp-medsci    { color:#B12B2B; }
+/* brightness(1.22) lifts the ink toward its tint on a light ground; darken instead. */
+[data-theme="light"] a.fp:hover { filter: brightness(0.9); }
 .card-arrow {
   display: flex;
   align-items: center;
@@ -692,6 +767,37 @@ a.fp:hover { filter: brightness(1.22); transform: translateY(-1px); }
    the canvas. The nav is never duplicated: summoning shows the one
    true nav, links, theme toggle, search and hamburger intact.
 ================================================================ */
+@media (max-height:500px) { :root { --nav-bar-h:48px; --nav-h:48px; } }
+
+/* ONE PINNED BAR ON A SHORT SCREEN. 2026-09-21, from David's landscape review.
+   A phone on its side is about 360px tall. The site nav shrinks to 48px there (above), but
+   several pages pin a SECOND bar under it: a section nav, a tab strip, a filter row, a tool
+   bar. Those did not shrink, so landscape chrome ran 92 to 166px, which is 26% to 46% of the
+   screen given up permanently, and every one of those pages failed the budget.
+   On a short screen the second bar stops being pinned and scrolls away with the page. The
+   NAV keeps its pin, so the way out is always there. Nothing changes upright or on desktop.
+   Tag-qualified because each page defines its own bar at (0,1,0) in an inline <style> that
+   loads after this file; the tag takes these to (0,1,1) so they win on merit, not on order. */
+@media (max-height:500px) {
+  nav.section-nav,
+  nav.lp-tabs,
+  nav.rr-topnav,
+  div.filter-bar,
+  div.hm-subbar,
+  header.tool-bar { position:static; }
+}
+
+/* THE SAME RULE, BOTH WAYS UP, for the three bars that break the budget upright too.
+   "A phone gets ONE top bar" is the site's own rule and these were the pages breaking it
+   in portrait as well: the Sources appendix pinned a filter bar under the nav for 129px
+   of a 740px screen, and the Vendor Directory stacked a search bar and a filter toolbar
+   that grows to 222px once you scroll, for 347px, which is 47% of the screen given up.
+   They scroll away on a phone now, either orientation. 2026-09-21. */
+@media (max-width:699px), (max-height:500px) {
+  div.src-bar,
+  div.vd-searchbar,
+  div.vd-toolbar { position:static; }
+}
 body.nav-merged { --nav-h: 0px; }
 body.nav-merged > nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 300;
@@ -744,7 +850,7 @@ body.nav-merged.nav-summoned > nav {
    The crumb retires first (the title already says which tool you are in), and wrap
    is the backstop: actions drop to a second row rather than off the screen.
    Same move the atlas toolbar made for the same reason. */
-@media (max-width:699px){
+@media (max-width:699px), (max-height:500px){
   .tool-bar { flex-wrap:wrap; row-gap:4px; height:auto; }
   .tool-bar-crumb { display:none; }
 }
@@ -899,7 +1005,7 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
 [data-theme="light"] .applied-chip .ac-x:focus-visible { outline-color:var(--teal-dk); }
 
 /* Phone: the popover becomes a bottom sheet in the thumb zone; sheets slide, 300ms */
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   .selector-pop {
     position:fixed; left:0 !important; right:0; top:auto !important; bottom:0;
     min-width:0; max-width:none; max-height:72dvh;
@@ -963,7 +1069,7 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
 .tool-attribution--fixed:not(.ta-open) { padding:2px; }
 .tool-attribution--fixed:not(.ta-open) > :not(.ta-toggle) { display:none; }
 .tool-attribution--fixed.ta-open { padding:6px 10px 6px 4px; max-width:min(94vw, 1100px); }
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   .tool-attribution--fixed.ta-open { left:10px; }
 }
 
@@ -971,7 +1077,7 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
    beside it on a phone (David 2026-08-23: "we do not need multiple search
    buttons within tools"). Keyed on each tool's search element, so site search
    stays on every page without an in-tool search, and everywhere on desktop. */
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   body:has(#atlas-find) .nav-search-btn,
   body:has(#hct-sel-search) .nav-search-btn,
   body:has(#gvSearchIn) .nav-search-btn,
@@ -1127,13 +1233,22 @@ nav.nav-yield:focus-within { transform: none; }
   .shell-dock { width:260px; }
 }
 
-/* Phone: unlock and stack */
-@media (max-width:699px) {
+/* Phone: unlock and stack. Short screens too, 2026-09-21: keyed to width alone, a phone
+   on its side kept the DESKTOP shell, so the side dock took 260px of a 740px screen and
+   squeezed the canvas to 392px. On the cost of living tool that rendered a 640-unit chart
+   at 0.61 scale and put its money labels on screen at 6.8px. */
+@media (max-width:699px), (max-height:500px) {
   .hu-shell { height:auto; min-height:calc(100dvh - var(--nav-h)); overflow:visible; overflow-x:clip; }
   .shell-main { display:block; }
   .shell-canvas { height:62vh; height:62dvh; }
-  .shell-deck-row { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
-  .shell-deck-row::-webkit-scrollbar { display:none; }
+  /* The label sat beside the chip rail and the ROW scrolled too, so at 360 the
+     label took 188px of the screen and left the rail a 160px keyhole onto 635px of
+     chips: a scroll inside a scroll, and the example chip read as cut off rather
+     than swipeable (David's phone pass, 2026-09-21). Stack them so the rail has the
+     full width and is the only thing that scrolls. */
+  .shell-deck-row { flex-wrap:wrap; overflow-x:visible; align-items:flex-start; gap:6px; }
+  .shell-deck-label { flex:0 0 100%; min-width:0; }
+  .shell-deck-row .hu-chiprail { flex:1 1 100%; min-width:0; }
   .shell-dock { width:100%; border-left:none; border-right:none; border-top:1px solid var(--border); overflow:visible; }
   .shell-dock--sheet {
     position:fixed; left:0; right:0; bottom:0; z-index:300;
@@ -1166,7 +1281,7 @@ nav.nav-yield:focus-within { transform: none; }
    delayed visibility lets the slide-out finish before the sheet actually hides */
 .shell-sheet:not(.open), .shell-dock--sheet:not(.open) { visibility:hidden; transition:transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s linear .28s; }
 .shell-sheet.open, .shell-dock--sheet.open { visibility:visible; }
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   .shell-dock--sheet { transition:transform .28s cubic-bezier(.2,.8,.2,1), max-height .2s ease, height .2s ease; }
 }
 /* a real grabber (injected by HUKit.sheet) replaces the static ::before line */
@@ -1284,7 +1399,7 @@ nav.nav-yield:focus-within { transform: none; }
 @media (prefers-reduced-motion: no-preference) {
   .hu-sr-panel { animation:hu-pop-in .2s ease-out; transform-origin:top center; }
 }
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   .hu-sr-panel { margin:0; width:100%; height:100dvh; max-height:none; border-radius:0; border:none; padding-bottom:env(safe-area-inset-bottom); }
   .hu-sr-cancel { display:block; }
   .hu-sr-kbd { display:none; }
@@ -1326,9 +1441,12 @@ nav.nav-yield:focus-within { transform: none; }
 .hc-card:hover { transform:translateY(-3px); border-color:var(--teal); }
 .hc-card:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
 [data-theme="light"] .hc-card { background:#FFFFFF; box-shadow:0 10px 28px rgba(13,32,54,.14); }
+/* The picture rides two custom properties set on the element: --thumb (the dark file) and
+   --thumb-l (its light twin, from the same vignette). Light theme takes --thumb-l and falls
+   back to --thumb when a card names no twin. Swaps live with the theme toggle, no reload. */
 .hc-thumb { height:88px; border-radius:8px; margin-bottom:11px; border:1px solid var(--border);
-  background-color:#12233a; background-size:cover; background-position:center; }
-[data-theme="light"] .hc-thumb { background-color:#E7EEF6; }
+  background-color:#12233a; background-image:var(--thumb, none); background-size:cover; background-position:center; }
+[data-theme="light"] .hc-thumb { background-color:#E7EEF6; background-image:var(--thumb-l, var(--thumb, none)); }
 .hc-title { font-family:var(--display); font-size:17px; font-weight:800; color:var(--t1); line-height:1.2; letter-spacing:-.01em; }
 .hc-desc { font-size:var(--t-ui); color:var(--t2); line-height:1.6; margin-top:5px; flex:1; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 .hc-meta { font-family:var(--mono); font-size:var(--t-label); letter-spacing:.08em; text-transform:uppercase; color:var(--t3); margin-top:10px; }
@@ -1339,16 +1457,17 @@ nav.nav-yield:focus-within { transform: none; }
    Search owns the center slot as a filled action (Ink State Rule).
    Z 150 (tool-bar tier): sheets (300) and search (400) ride over it.
 ================================================================ */
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   .icon-btn { width:44px; height:44px; }   /* 28px toolbar/close buttons breached the floor on the first real-browser run */
   .footer-nav-link { display:inline-flex; align-items:center; min-height:44px; }
 }
 .hu-noscript { display:block; margin:14px auto; max-width:640px; padding:12px 18px; border:1px solid var(--border2); border-radius:10px; background:var(--surface); color:var(--t1); font-size:var(--t-sub); line-height:1.6; text-align:center; }
 .hu-bbar { display:none; }
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   .hu-bbar {
     display:flex; position:fixed; left:0; right:0; bottom:0; z-index:150;
-    /* the bare `nav {}` top-bar rule matches this <nav> too — its uncontested top:0 +
+    /* Kept as a guard. The top-bar rule is now scoped to nav[aria-label="Primary"],
+       but as a bare `nav {}` it matched this <nav> too and its uncontested top:0 +
        height:64px pinned the bar to the TOP behind the site nav, leaving phones with NO
        navigation at all (first real-browser run caught it). Reset both. */
     top:auto; height:auto;
@@ -1369,10 +1488,30 @@ nav.nav-yield:focus-within { transform: none; }
   .hu-bbar .bb-search svg { background:var(--teal); color:#062024; width:34px; height:34px; padding:8px; border-radius:999px; }
   .hu-bbar .bb-item:focus-visible, .hu-bbar .bb-search:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; }
   /* the bar replaces the hamburger and nav search on pages that carry it,
-     and the page bottom clears the bar */
-  body:has(#huBottomBar) .nav-ham,
-  body:has(#huBottomBar) .nav-search-btn { display:none; }
-  body:has(#huBottomBar) { padding-bottom:calc(64px + env(safe-area-inset-bottom)); }
+     and the page bottom clears the bar.
+     TALL PHONES ONLY since 2026-09-21: on a short screen the bar is hidden (see
+     "ONE BAR ON A SHORT SCREEN" below) and the hamburger has to come back, or
+     that page has no navigation at all. */
+  @media (min-height:501px) {
+    body:has(#huBottomBar) .nav-ham,
+    body:has(#huBottomBar) .nav-search-btn { display:none; }
+    body:has(#huBottomBar) { padding-bottom:calc(64px + env(safe-area-inset-bottom)); }
+  }
+}
+
+/* ONE BAR ON A SHORT SCREEN, AND IT IS THE TOP ONE. 2026-09-21.
+   Converting the phone query to the shorter side did the right thing and immediately
+   surfaced what it had been hiding: a landscape phone now gets the PHONE chrome, which
+   is the 48px nav PLUS this 57px bottom bar. 105px of a 360px-tall screen is 29%,
+   against the 20% ceiling DESIGN.md sets as Tier 1 physics. Both cannot fit, so one goes.
+   The bottom bar goes, not the nav. The thumb-zone case for a bottom bar is a PORTRAIT
+   case: held sideways, thumbs are at the left and right edges, not along the bottom, and
+   the bar is eating the scarcest axis the screen has. The nav keeps the brand, the theme
+   toggle, search and the route to every page. 48px is 13%, inside budget.
+   Seven pages carried this: home, Learn, Rounds, Tools, the secret menu, its hub and the
+   career tree. */
+@media (max-height:500px) {
+  #huBottomBar { display:none; }
 }
 
 /* Long source URLs printed as their own link text cannot wrap: a URL has no spaces,
@@ -1387,7 +1526,7 @@ nav.nav-yield:focus-within { transform: none; }
    atlas became their third consumer. The browse-first phone answer for any canvas
    tool: deck grid (one deck per family/zone/track) → sectioned rows → the tool's own
    detail surface. Built and QA'd across four career-tree views first. */
-@media (max-width: 699px){
+@media (max-width:699px), (max-height:500px){
     .hpf-hd { font-family: var(--mono); font-size:var(--t-label); color: var(--t3); letter-spacing: .05em; padding: 6px 2px 12px; }
     .hpf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 379px){ .hpf-grid { grid-template-columns: 1fr; } }
@@ -1427,7 +1566,26 @@ nav.nav-yield:focus-within { transform: none; }
 /* Mobile nav: 699 is the kit-wide phone line (HUKit.PHONE_MQ); the old 640
    left a 60px band of squeezed desktop nav. Menu rows obey the 44px floor:
    the site menu is the most-tapped control phones have. */
-@media (max-width:699px) {
+/* A PHONE ON ITS SIDE IS STILL A PHONE. 2026-09-21, from David's rotate review.
+   This block used to test width alone, so a phone held sideways (740x360) measured
+   "desktop" and was served the full desktop menu: seven link targets built for a mouse,
+   in a window 360px tall. It is why the header controls CHANGED when he turned the
+   phone, and it cost 12 sub-44px touch targets on every page in landscape.
+   The height clause catches landscape phones (they run 360 to 430px tall) without
+   catching tablets or ordinary laptop windows, which are far taller than 500px. */
+/* THE 23px BAND ABOVE THE BREAKPOINT. Found 2026-09-21 by testing 700px, one pixel past the
+   phone line, which nothing had ever done. The desktop nav appears at 700 and its contents
+   need 723: brand, wordmark, five links, the Atlas pill, the theme toggle and search. So
+   between 700 and 722 every page on the site scrolled sideways by up to 23px.
+   The links give the room back. They are the only thing in the bar with padding to spare,
+   and it is only for this narrow band; by 860 they are back to full size. */
+@media (min-width:700px) and (max-width:860px) and (min-height:501px) {
+  .nav-link { padding-left:8px; padding-right:8px; }
+  .nav-links { gap:0; }
+  .nav-pill { padding-left:11px; padding-right:11px; margin-left:3px; }
+}
+
+@media (max-width:699px), (max-height:500px) {
   .nav-links { display:none; }
   .nav-links.open { display:flex; flex-direction:column; align-items:stretch; position:absolute; top:var(--nav-bar-h); left:0; right:0;
     background:color-mix(in srgb, var(--dark) 98%, transparent); border-bottom:1px solid var(--border); padding:6px 0 12px; }
@@ -1438,6 +1596,7 @@ nav.nav-yield:focus-within { transform: none; }
   /* with .nav-links hidden its auto margin vanishes; the search button takes over */
   .nav-search-btn { margin-left:auto; width:44px; height:44px; }
   .footer-top { grid-template-columns:1fr; gap:28px; }
+  .footer-lean .footer-top { grid-template-columns:1fr; gap:18px; }
   .footer-bottom { flex-direction:column; align-items:flex-start; }
   .content-policy { grid-template-columns:1fr; }
 }
@@ -1473,10 +1632,176 @@ nav.nav-yield:focus-within { transform: none; }
 [data-theme="light"] .hu-i:hover, [data-theme="light"] .hu-i:focus-visible { border-color:var(--teal-ink); color:var(--teal-ink); }
 [data-def] { cursor:help; }
 [data-def]:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+/* Brand teal as a focus ring is 1.9:1 on white. The chips, selectors and inputs above
+   already flip to --teal-dk in light; these kit rings never did. One list, same step. */
+[data-theme="light"] :is(.hu-chip, .hu-sw, .hu-fab, .hu-sr-chip, .hu-sr-row, .hv-search, .hc-card,
+  .hu-bbar .bb-item, .hu-bbar .bb-search, .hpf-deck, .hpf-role, .hpf-back, [data-def],
+  .hu-fold > summary):focus-visible { outline-color:var(--teal-dk); }
 
-@media (max-width:699px) {
+@media (max-width:699px), (max-height:500px) {
   /* a thumb needs the whole badge, not a 18px dot: the tap area grows, the dot does not */
   .hu-i { position:relative; }
   .hu-i::after { content:""; position:absolute; top:50%; left:50%; width:44px; height:44px; transform:translate(-50%,-50%); }
   .hu-peek { font-size:var(--t-fine); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE READING SHELL. Added 2026-09-22, from David's brief: "we keep making
+   content that works as a standalone within its own single time use... the end
+   goal is tools and pages and references that i use and others can use, and
+   they can jump right to it on phone, laptop, tablet or computer and have it
+   look good and feel easy to understand and follow."
+
+   WHY THIS EXISTS. Every reading page on this site declared its own hero, its
+   own eyebrow, its own headings and its own paragraph, because that is what
+   docs/HU-PAGE-RECIPES.md told each one to do: copy the block, rename the
+   prefix. Forks drift, and these did. Measured 2026-09-22 across the pages
+   that each declare their own:
+       h1           5 different sizes on 14 pages
+       h2           2 different sizes on 13 pages
+       hero padding 8 different values on 13 pages, no majority at all
+       eyebrow      8 different letter-spacings on 41 declarations
+       paragraph    4 different line-heights on 15 declarations
+   None of that is broken. All of it is why the site reads as almost-consistent
+   rather than consistent, which is the thing a reader feels and cannot name.
+
+   The numbers below are the MAJORITY values already on the site, not new taste,
+   so adopting the shell moves the fewest pages the least distance.
+
+   A page using this writes MARKUP and almost no CSS. Genuinely bespoke things
+   (a diagram, a board, a figure) stay page-scoped; that is not drift, that is
+   the page. Only the shell is shared, because only the shell should be identical.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hu-read { background:var(--dark); color:var(--t2); font-family:var(--font); line-height:1.78; }
+.hu-read a:not(.toggle-chip):not(.tb-brand):not(.hu-read-link):not(.fp) { color:var(--teal); }   /* .fp lens pills keep their own ink */
+[data-theme="light"] .hu-read a:not(.toggle-chip):not(.tb-brand):not(.hu-read-link):not(.fp) { color:var(--teal-ink); }
+
+.hu-read-hero-inner {
+  max-width:1100px; margin:0 auto;
+  padding:clamp(56px,7vw,80px) clamp(24px,4vw,36px) clamp(44px,5vw,64px);
+}
+/* The eyebrow is a COMPONENT, not a line of text: eleven pages had it as a flex row with a
+   dot and a separator between parts, each page with its own accent. Eleven copies, one job. */
+.hu-read-eyebrow {
+  font-family:var(--mono); font-size:var(--t-label); letter-spacing:.22em;
+  text-transform:uppercase; color:var(--teal); margin-bottom:20px;
+  display:flex; align-items:center; gap:10px; font-weight:500; flex-wrap:wrap;
+}
+.hu-read-eyebrow .dot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.hu-read-eyebrow .sep { width:4px; height:4px; border-radius:50%; background:var(--t4); flex-shrink:0; }
+[data-theme="light"] .hu-read-eyebrow { color:var(--teal-ink); }
+.hu-read-h1 {
+  font-family:var(--display); font-weight:700; font-size:clamp(44px,7vw,86px);
+  line-height:1.04; letter-spacing:-.02em; color:var(--t1); margin:0 0 18px;
+}
+.hu-read-standfirst { font-size:var(--t-lede); line-height:1.55; color:var(--t2); max-width:62ch; margin:0; }
+
+.hu-read-body { max-width:1100px; margin:0 auto; padding:0 clamp(24px,4vw,36px) 48px; }
+.hu-read-section { margin:clamp(40px,6vw,64px) 0 0; scroll-margin-top:calc(var(--nav-h) + 26px); }
+.hu-read-kicker {
+  font-family:var(--mono); font-size:var(--t-label); letter-spacing:.22em;
+  text-transform:uppercase; color:var(--teal); font-weight:600; margin-bottom:10px;
+}
+[data-theme="light"] .hu-read-kicker { color:var(--teal-ink); }
+.hu-read-h2 {
+  font-family:var(--display); font-size:clamp(28px,4vw,42px); font-weight:700;
+  letter-spacing:-.015em; line-height:1.12; color:var(--t1); margin:0 0 16px;
+}
+.hu-read-h3 {
+  font-family:var(--display); font-size:var(--t-lede); font-weight:700;
+  line-height:1.25; color:var(--t1); margin:0 0 7px;
+}
+.hu-read p, .hu-read-p { font-size:var(--t-prose); line-height:1.78; color:var(--t2); max-width:70ch; margin:0 0 18px; }
+.hu-read-note { border-left:3px solid var(--amber); padding:4px 0 4px 14px; max-width:74ch; margin:22px 0; }
+.hu-read-note p:last-child, .hu-read-note .hu-read-p:last-child { margin-bottom:0; }
+
+.hu-read-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(272px,1fr)); gap:14px; margin:0 0 8px; }
+.hu-read-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 16px 14px; }
+.hu-read-card .hu-read-p, .hu-read-card p { font-size:var(--t-sub); line-height:1.6; margin:0 0 11px; }
+
+.hu-read-links { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 0; }
+.hu-read-link {
+  display:inline-flex; align-items:center; min-height:44px; padding:0 16px;
+  border:1px solid var(--border); border-radius:10px; background:var(--raised);
+  color:var(--t1); font-size:var(--t-ui); font-weight:600; text-decoration:none;
+}
+.hu-read-link:hover { border-color:var(--teal); }
+
+/* A phone is the SHORTER side of the screen. Both halves, always. */
+@media (max-width:699px), (max-height:500px) {
+  .hu-read-grid { grid-template-columns:1fr; }
+  .hu-read-standfirst { max-width:none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE FOLD. One collapsible container for the whole site.
+
+   Added 2026-09-22 on David's brief: "lots of the squares should be colapsable
+   too we need a think of a standard for expandable and colapslable containers."
+
+   Every fold on this site was its own: .da-fold on the assembly game (7 uses),
+   .refs on Rounds (5), .ac-more and .ac-assume on the cost of living tool, .pd,
+   .gl, .gt-table-details. Seven spellings of one idea, which is the same disease
+   the reading shell had.
+
+   The shape is lifted from .da-fold because it was the most used and the most
+   complete, so adopting it moves the fewest surfaces the least distance.
+
+   IT IS A <details>/<summary>, ALWAYS. That is not a stylistic choice:
+     - it opens and closes with no JavaScript, so a fold can never become a trap
+     - the keyboard and screen reader behaviour is free and correct
+     - the browser removes closed content from the accessibility tree
+   A div with a click handler gets none of that and has to reimplement all of it.
+
+   THE HEADER IS A CONTROL, so it holds the 44px touch floor at every width, not
+   only on touch. A 30px summary is a real miss on a phone and the reason the
+   floor exists.
+
+       <details class="hu-fold">
+         <summary>Label<span class="hu-fold-note">optional right-side hint</span></summary>
+         ...
+       </details>
+
+   Variants: .hu-fold--panel puts it in a bordered card (a collapsible "square").
+             .hu-fold--drop makes it a full-width tray that drops from above.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hu-fold { border-top:1px solid var(--border); }
+.hu-fold > summary {
+  display:flex; align-items:center; gap:9px; min-height:44px; cursor:pointer;
+  list-style:none; padding:0 2px;
+  font-family:var(--mono); font-size:var(--t-label); font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--t2);
+}
+.hu-fold > summary::-webkit-details-marker { display:none; }
+/* the glyph says which way it will move, and it is the ONLY thing that animates */
+.hu-fold > summary::before {
+  content:'\25B8'; color:var(--teal); font-size:var(--t-fine); line-height:1;
+  transition:transform .16s ease;
+}
+[data-theme="light"] .hu-fold > summary::before { color:var(--teal-ink); }
+.hu-fold[open] > summary::before { transform:rotate(90deg); }
+.hu-fold > summary:hover { color:var(--t1); }
+.hu-fold > summary:focus-visible { outline:2px solid var(--teal); outline-offset:2px; border-radius:6px; }
+.hu-fold-note {
+  margin-left:auto; font-family:var(--font); font-size:var(--t-ui); font-weight:400;
+  letter-spacing:0; text-transform:none; color:var(--t3); text-align:right;
+}
+@media (prefers-reduced-motion:reduce) { .hu-fold > summary::before { transition:none; } }
+
+/* a collapsible CARD: the bordered square that folds shut */
+.hu-fold--panel {
+  border:1px solid var(--border); border-radius:12px; background:var(--surface);
+  overflow:hidden;
+}
+.hu-fold--panel > summary { padding:0 14px; }
+.hu-fold--panel[open] > summary { border-bottom:1px solid var(--border); }
+.hu-fold--panel > :not(summary) { padding:14px; }
+
+/* a TRAY that drops from above: full width, sitting under the thing it belongs to */
+.hu-fold--drop {
+  border-top:none; border-bottom:1px solid var(--border); background:var(--surface);
+}
+.hu-fold--drop > summary { padding:0 clamp(14px,3vw,28px); }
+.hu-fold--drop[open] > summary { border-bottom:1px solid var(--border); }

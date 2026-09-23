@@ -10,21 +10,48 @@ eleventyExcludeFromCollections: true
 {% raw %}
 <style>
 /* Scoped scene vars only (--dmap-*). Global tokens are never redefined here.
-   The canvas is pinned to #0a0f1a in BOTH themes: the five kind hues below
-   were CVD/contrast-validated against that exact surface, so the surface
-   travels with them. Everything drawn ON the canvas therefore uses --dmap-*
-   literals (theme tokens would flip dark in light mode and vanish). */
+   Every fill and stroke the script draws is a var(--dmap-*) reference, never a
+   hex, so the canvas follows the theme and a runtime flip repaints it with no
+   redraw. Dark: the five kind hues were CVD/contrast-validated against #0a0f1a,
+   and that surface travels with them. Light (2026-09-23, "every page needs to be
+   able to do both"): the light page ground, near-white boxes tinted 6% toward
+   each kind's deep step, and the deep steps on every box edge and lit chain
+   (4.3:1 or better on the ground). Each kind carries three vars: the edge hue,
+   the box fill and the legend swatch fill. The box is drawn at fill-opacity .18
+   (the dark look); light lifts it to 1 below, because the tint is the fill. */
 .obs-shell {
-  --dmap-canvas: #0a0f1a;            /* validated chart surface, both themes */
-  --dmap-t1: #e9eef6;                /* label ink on the pinned-dark canvas */
+  --dmap-canvas: #0a0f1a;            /* validated chart surface */
+  --dmap-t1: #e9eef6;                /* label ink on the dark canvas */
   --dmap-t2: #9db0c4;
-  --dmap-t3: #64788e;
+  --dmap-t3: #8194ab;   /* was #64788e, 4.2:1, under the 4.5:1 ink floor (2026-09-21) */
   --dmap-edge: rgba(158,178,200,.20);
-  --dmap-src:  #3f87e8;              /* sources        */
-  --dmap-scr:  #c2801a;              /* pipeline       */
-  --dmap-ds:   #1fa096;              /* datasets       */
-  --dmap-int:  #8f7fe0;              /* build-time     */
-  --dmap-tool: #2f9c6a;              /* tools          */
+  --dmap-sel: var(--teal);           /* selection + focus ring: UI state, never node identity */
+  --dmap-chain-op: .7;               /* connectors of a lit chain */
+  --dmap-tip-bg: rgba(13,20,33,.96);
+  --dmap-tip-line: rgba(158,178,200,.25);
+  --dmap-tip-shadow: 0 8px 24px rgba(0,0,0,.5);
+  --dmap-src:  #3f87e8; --dmap-src-box:  #3f87e8; --dmap-src-sw:  #3f87e82e;   /* sources    */
+  --dmap-scr:  #c2801a; --dmap-scr-box:  #c2801a; --dmap-scr-sw:  #c2801a2e;   /* pipeline   */
+  --dmap-ds:   #1fa096; --dmap-ds-box:   #1fa096; --dmap-ds-sw:   #1fa0962e;   /* datasets   */
+  --dmap-int:  #8f7fe0; --dmap-int-box:  #8f7fe0; --dmap-int-sw:  #8f7fe02e;   /* build-time */
+  --dmap-tool: #2f9c6a; --dmap-tool-box: #2f9c6a; --dmap-tool-sw: #2f9c6a2e;   /* tools      */
+}
+[data-theme="light"] .obs-shell {
+  --dmap-canvas: var(--dark);
+  --dmap-t1: var(--t1);              /* 16:1 or better on every box tint */
+  --dmap-t2: var(--t2);              /* 10:1 */
+  --dmap-t3: var(--dgm-ink);         /* column heads, 7.4:1 on the ground */
+  --dmap-edge: var(--dgm-line);      /* 3.8:1 on the ground */
+  --dmap-sel: var(--teal-dk);        /* the site's light focus step, 3.1:1 on the ground */
+  --dmap-chain-op: 1;                /* .7 left a lit chain under 3:1 on the light ground */
+  --dmap-tip-bg: var(--surface);
+  --dmap-tip-line: var(--border2);
+  --dmap-tip-shadow: 0 8px 24px rgba(13,32,54,.14);
+  --dmap-src:  var(--blue);     --dmap-src-box:  #F1F5FA; --dmap-src-sw:  #F1F5FA;   /* 5.75:1 */
+  --dmap-scr:  var(--amber-dk); --dmap-scr-box:  #F8F5F0; --dmap-scr-sw:  #F8F5F0;   /* 5.09:1 */
+  --dmap-ds:   #0F7F78;         --dmap-ds-box:   #F1F7F7; --dmap-ds-sw:   #F1F7F7;   /* 4.32:1, the --dgm-flow light step */
+  --dmap-int:  #6A45D8;         --dmap-int-box:  #F6F4FD; --dmap-int-sw:  #F6F4FD;   /* 5.41:1 */
+  --dmap-tool: var(--green-dk); --dmap-tool-box: #F1F6F4; --dmap-tool-sw: #F1F6F4;   /* 5.74:1 */
 }
 
 /* instrument header: ruler-tick bottom edge. top:0 is REQUIRED, not decoration:
@@ -43,21 +70,22 @@ eleventyExcludeFromCollections: true
 
 #obsSvg .obs-node { cursor: pointer; }
 #obsSvg .obs-node rect { transition: opacity .15s; }
+[data-theme="light"] #obsSvg .obs-node rect { fill-opacity: 1; }   /* outranks the .18 attribute */
 #obsSvg .obs-node:focus { outline: none; }
-#obsSvg .obs-node:focus-visible rect { stroke: var(--teal); stroke-width: 2.5; }
+#obsSvg .obs-node:focus-visible rect { stroke: var(--dmap-sel); stroke-width: 2.5; }
 #obsSvg .obs-label { fill: var(--dmap-t1); font-size:var(--t-micro); pointer-events: none; }
 #obsSvg .obs-sub   { fill: var(--dmap-t2); font-size:var(--t-micro);  pointer-events: none; }
 #obsSvg .obs-colhead {
   fill: var(--dmap-t3); font-size:var(--t-micro); font-weight: 600;
-  letter-spacing: .16em; text-transform: uppercase;
+  letter-spacing: .12em; text-transform: uppercase;   /* .16em was past the .14em tracking limit on a phone (2026-09-21) */
 }
 
-/* tooltip · floats over the canvas; dark literals to match the pinned surface */
+/* tooltip · floats over the canvas, so it takes the canvas vars */
 #obsTip {
   position: absolute; z-index: 60; pointer-events: none; display: none;
   max-width: 260px; padding: 9px 11px; border-radius: 8px;
-  background: rgba(13,20,33,.96); border: 1px solid rgba(158,178,200,.25);
-  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  background: var(--dmap-tip-bg); border: 1px solid var(--dmap-tip-line);
+  box-shadow: var(--dmap-tip-shadow);
   font-family: var(--mono); font-size:var(--t-label); line-height: 1.55; color: var(--dmap-t2);
 }
 #obsTip .tt-name { color: var(--dmap-t1); font-weight: 600; font-size:var(--t-fine); margin-bottom: 3px; }
@@ -149,7 +177,7 @@ eleventyExcludeFromCollections: true
 .obs-kind-plain { font-size:var(--t-label); line-height: 1.55; color: var(--t3); font-style: italic; margin: -8px 0 14px; }
 
 /* phone: the DAG can't reflow: fixed-width svg inside a scroll strip */
-@media (max-width: 699px) {
+@media (max-width:699px), (max-height:500px) {
   .obs-shell .shell-canvas { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   #obsSvg { min-width: 1080px; }
   .obs-stat { min-width: 104px; }
@@ -208,15 +236,18 @@ eleventyExcludeFromCollections: true
 (function () {
 'use strict';
 
-/* Validated categorical palette (CVD + contrast, against #0a0f1a).
+/* Categorical palette, one set per theme, held in the --dmap-* vars at the top
+   of the page. These are var() references, not colors, so the browser resolves
+   them per theme and a runtime theme flip needs no redraw. color = edge and
+   identity hue, box = node fill, sw = legend swatch fill.
    Identity is never color-alone: labels sit on every node and the
    chain-highlight interaction carries lineage beyond hue. */
 var KIND = {
-  source:       { color: '#3f87e8', label: 'Sources',    col: 0 },
-  script:       { color: '#c2801a', label: 'Pipeline',   col: 1 },
-  dataset:      { color: '#1fa096', label: 'Datasets',   col: 2 },
-  intermediate: { color: '#8f7fe0', label: 'Build-time', col: 3 },
-  tool:         { color: '#2f9c6a', label: 'Tools',      col: 4 }
+  source:       { color: 'var(--dmap-src)',  box: 'var(--dmap-src-box)',  sw: 'var(--dmap-src-sw)',  label: 'Sources',    col: 0 },
+  script:       { color: 'var(--dmap-scr)',  box: 'var(--dmap-scr-box)',  sw: 'var(--dmap-scr-sw)',  label: 'Pipeline',   col: 1 },
+  dataset:      { color: 'var(--dmap-ds)',   box: 'var(--dmap-ds-box)',   sw: 'var(--dmap-ds-sw)',   label: 'Datasets',   col: 2 },
+  intermediate: { color: 'var(--dmap-int)',  box: 'var(--dmap-int-box)',  sw: 'var(--dmap-int-sw)',  label: 'Build-time', col: 3 },
+  tool:         { color: 'var(--dmap-tool)', box: 'var(--dmap-tool-box)', sw: 'var(--dmap-tool-sw)', label: 'Tools',      col: 4 }
 };
 var COLS = ['Sources', 'Pipeline', 'Datasets', 'Build-time', 'Tools'];
 
@@ -272,7 +303,7 @@ fetch('/assets/data/derived/datamap.json')
     /* human sentence on the canvas, per the shell a11y rule; no live region
        exists on this page, so the visible message is the whole story */
     wrap.insertAdjacentHTML('beforeend',
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#9db0c4;font-family:var(--mono);font-size:var(--t-fine);line-height:1.7">Couldn’t load the data map. Check your connection and refresh.<br>(' + esc(err.message) + ')</div>');
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--dmap-t2);font-family:var(--mono);font-size:var(--t-fine);line-height:1.7">Couldn’t load the data map. Check your connection and refresh.<br>(' + esc(err.message) + ')</div>');
   });
 
 function init(data) {
@@ -402,8 +433,8 @@ function render() {
   nodeSel.append('rect')
     .attr('width', NODE_W).attr('height', function (n) { return n.h; })
     .attr('rx', 6).attr('ry', 6)
-    .attr('fill', function (n) { return KIND[n.kind].color; })
-    .attr('fill-opacity', 0.18)
+    .attr('fill', function (n) { return KIND[n.kind].box; })
+    .attr('fill-opacity', 0.18)                       /* light theme lifts this to 1 in CSS */
     .attr('stroke', function (n) { return KIND[n.kind].color; })
     .attr('stroke-width', 1.5);
 
@@ -452,12 +483,12 @@ function highlight(id) {
   var hue = KIND[byId[id].kind].color;
   edgeSel
     .attr('stroke', function (e) { return chain.edges[e._i] ? hue : 'var(--dmap-edge)'; })
-    .attr('stroke-opacity', function (e) { return chain.edges[e._i] ? 0.7 : 0.15; })
+    .attr('stroke-opacity', function (e) { return chain.edges[e._i] ? 'var(--dmap-chain-op)' : 0.15; })
     .attr('stroke-width', function (e) { return chain.edges[e._i] ? 1.6 : 1.2; });
   nodeSel.attr('opacity', function (n) { return chain.nodes[n.id] ? 1 : 0.25; });
   /* selection accent is brand teal, reserved for UI state, never node identity */
   nodeSel.select('rect')
-    .attr('stroke', function (n) { return n.id === id ? 'var(--teal)' : KIND[n.kind].color; })
+    .attr('stroke', function (n) { return n.id === id ? 'var(--dmap-sel)' : KIND[n.kind].color; })
     .attr('stroke-width', function (n) { return n.id === id ? 2.5 : 1.5; });
 }
 
@@ -568,8 +599,7 @@ function hideTip() { tip.style.display = 'none'; }
 /* ── legend + totals ── */
 function legend() {
   var h = Object.keys(KIND).map(function (k) {
-    var c = KIND[k].color;
-    return '<span class="sw"><i style="border-color:' + c + ';background:' + c + '2e"></i>' + KIND[k].label + '</span>';
+    return '<span class="sw"><i style="border-color:' + KIND[k].color + ';background:' + KIND[k].sw + '"></i>' + KIND[k].label + '</span>';
   }).join('');
   h += '<span class="sep"></span>';
   var line = function (dash, name) {

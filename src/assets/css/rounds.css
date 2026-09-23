@@ -90,7 +90,7 @@
    452px in a 360px viewport. body's overflow-x:hidden then CUT IT OFF rather
    than scrolling, so the reader silently lost the end of the line on five
    Rounds posts. Below the phone line it wraps; desktop keeps the nowrap. */
-@media (max-width: 699px) {
+@media (max-width:699px), (max-height:500px) {
   .rounds-post .cite { white-space: normal; }
 }
 
@@ -301,7 +301,7 @@
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
-.stat-card.financial .stat-num { color: var(--blue); }
+.stat-card.financial .stat-num { color: var(--blue-hi); }   /* --blue read 2.96 on the dark card */
 .stat-card.harm .stat-num { color: var(--red); }
 .stat-card.warning .stat-num { color: var(--amber); }
 .stat-label {
@@ -534,18 +534,59 @@
 /* amber as TEXT on light drops to its deep step (The Deep-Step Rule) */
 [data-theme="light"] .watchlist h4 { color: var(--amber-dk); }
 [data-theme="light"] .stat-card.warning .stat-num { color: var(--amber-dk); }
+[data-theme="light"] .stat-card.financial .stat-num { color: var(--blue); }
 /* keep reference-list links muted (they'd otherwise catch the a:not(.fp) rule) */
 [data-theme="light"] .refs .ref-item a { color: var(--t2); }
 [data-theme="light"] .refs .ref-item a:hover { color: var(--teal-ink); }
 
-/* In-article figure SVGs are drawn with a fixed dark palette (pinned light
-   text, dark boxes, slate labels). Pin the figure surface dark in light mode
-   so the artwork stays legible; caption gets a light-on-dark literal. */
-[data-theme="light"] .figure {
-  background: #131C2E;
-  border-top-color: #2D4366;
-  border-bottom-color: #2D4366;
-}
-[data-theme="light"] .figure::before,
-[data-theme="light"] .figure::after { border-color: #2D4366; }
-[data-theme="light"] .figure .figure-caption { color: #8FA8C8; }
+/* FIGURES IN LIGHT THEME (2026-09-23, David: "every page needs to be able to do
+   both"). The figure SVGs carry their dark palette as presentation attributes,
+   fill="#FFFFFF" and the rest, and any CSS rule beats a presentation attribute.
+   So the light rendering is a map from each dark value to its light token, keyed
+   on the attribute, and dark theme never reads a line of it. Until today the
+   figure was pinned dark instead, a navy slab on a white page.
+   Floors, measured on the figure's own white surface: text 4.5:1, marks and data
+   fills 3:1. A mark that already clears 3:1 on white keeps its hue: #1B5FA8,
+   #2E6FA6, #5A7898, #5A8FCC, #4E8FD6, #189A90, and #DF5752 as a fill or stroke.
+   The one ink on a fill, #062024 on the teal bar, holds 4.9:1 on --teal-dk. */
+
+/* The neutral ladder, rung for rung: white, #C8D8E8, #9BB3CE and #8FA8C8,
+   #7E9CBF onto --t1, --t2, --dgm-ink, --t3. #51739F IS dark --dgm-line. */
+[data-theme="light"] .figure [fill="#FFFFFF"]   { fill: var(--t1); }
+[data-theme="light"] .figure [stroke="#FFFFFF"] { stroke: var(--t1); }
+[data-theme="light"] .figure [fill="#C8D8E8"]   { fill: var(--t2); }
+[data-theme="light"] .figure [fill="#9BB3CE"],
+[data-theme="light"] .figure [fill="#8FA8C8"]   { fill: var(--dgm-ink); }
+[data-theme="light"] .figure [stroke="#8FA8C8"] { stroke: var(--dgm-ink); }
+[data-theme="light"] .figure [fill="#7E9CBF"]   { fill: var(--t3); }
+[data-theme="light"] .figure [stroke="#51739F"] { stroke: var(--dgm-line); }
+
+/* The boxes in the Steward flow: the card, and the raised card that marks the
+   company and the bankruptcy. */
+[data-theme="light"] .figure [fill="#131C2E"] { fill: var(--surface); }
+[data-theme="light"] .figure [fill="#1A2540"] { fill: var(--raised); }
+
+/* Accent as TEXT drops to its deep step (The Deep-Step Rule). */
+[data-theme="light"] .figure text[fill="#4ECDC4"],
+[data-theme="light"] .figure text[fill="#189A90"] { fill: var(--teal-ink); }
+[data-theme="light"] .figure text[fill="#5A8FCC"] { fill: var(--blue); }
+[data-theme="light"] .figure text[fill="#DF5752"] { fill: var(--red-dk); }
+
+/* Bright teal and amber are near 2:1 on white, as marks too. A teal fill takes
+   --teal-dk, the site's teal for graphics on light; a teal stroke is a thin line,
+   so it takes the deeper --teal-ink. Amber has one deep step and every use,
+   text, bar, box edge and arrowhead, takes it. */
+[data-theme="light"] .figure rect[fill="#4ECDC4"] { fill: var(--teal-dk); }
+[data-theme="light"] .figure [stroke="#4ECDC4"]   { stroke: var(--teal-ink); }
+[data-theme="light"] .figure [fill="#E8A838"],
+[data-theme="light"] .figure [fill="#E8AB38"]     { fill: var(--amber-dk); }
+[data-theme="light"] .figure [stroke="#E8AB38"]   { stroke: var(--amber-dk); }
+
+/* The burnout ramp (wound-and-workload, Figure 1) runs blue to bright teal, and
+   its last two steps fall under 3:1 on white. The end takes --teal-dk above; the
+   middle steps are the same ramp re-anchored on it, a quarter, a half and three
+   quarters of the way from #2E6FA6 to #1B9A90, so the five years still read as one
+   walk from blue to teal. They are not new hues and no other figure uses them. */
+[data-theme="light"] .figure rect[fill="#357FAA"] { fill: #297AA1; }
+[data-theme="light"] .figure rect[fill="#3E96AE"] { fill: #25859B; }
+[data-theme="light"] .figure rect[fill="#45B5BC"] { fill: #208F96; }

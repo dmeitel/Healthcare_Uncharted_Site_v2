@@ -44,15 +44,23 @@ cheaply, Claude picks and says so.
 
 Ranked. The top three are the live ones; the rest wait their turn by rule 3.
 
+**2026-09-21, second pass: David worked the list and four rows came off it.** 13 answered
+(delete), 11 answered (kill it), 1 answered (alpha stands, optimization continues on the open
+design phase), P answered (keep the plan). What is left is three he asked to have explained
+(B, 4, 12), one he asked a question back about (10), and one he said he can do (6). Content
+additions stay cancelled until the page over page review is done.
+
+**2026-09-23, 10 answered: delete both.** David: "Delete the project and Verdant Thing. Those are not needed." Checked read-only first: `healthcareuncharted` (a09e2c0f) and `verdant-treacle-8c70aa` (9fdd2a68) have no custom domain, no aliases, no forms and no submissions; healthcareuncharted.com is served by `healthcare-uncharted` (12eaf952), which is untouched. The deletion itself is permanent, so it stays in David's hands: app.netlify.com, signed in as eitelmdavid@gmail.com, open each project, Project configuration, Danger zone, Delete project. Delete ONLY those two. The one WITH the hyphen, `healthcare-uncharted`, is the live site.
+
+**2026-09-23, theme pass: no new questions.** Every call in it was a build call (which deeper
+shade, which fix for a label on the hospital map's painted sky) and Claude made it; the screenshots
+are the veto. Two defects it found run as their own tasks, not here.
+
 | # | The question | Why it matters | Claude recommends | Open since |
 |---|---|---|---|---|
-| B | **The eight tool pages, one read.** Play them on your phone and say yes or no. | The automated sweep came back clean on all eight at 360 and 699, so the merged nav and toolbar phase is ready to close. The eight are atlas, cost of living, career tree, hospital map, system layers, SQL mystery, skill demo, vendor directory. What used to ride on this was "six other surfaces stack two top bars"; a full sweep of all 42 public pages on 2026-09-20 says that is no longer the shape of it. Four pages fail the chrome rule, and only one of them stacks bars: SQL Mystery (three bars, 37%), the Sources appendix (26%), the hospital map (24%) and the respiratory timeline (22%). Those four are being fixed on their own merits, so nothing is stuck behind this any more. | Close the phase on the automated read. The band is the same shared mechanism on every page and eyeballing eight would tell you what one already did. Play them whenever you feel like it; nothing waits on it. | 2026-08-30 |
-| P | **The three-month plan.** Read docs/HU-DEV-PLAN-2026-Q4.md and mark it up: approve, cut, or reorder. | It is the working plan for 2026-09-21 to 12-20 (games, content, platform), built from the live traffic (one Reddit post = about 1,500 views in a week; the games are the front door), the games audit, the backend state and the multiplayer market. Nothing in it is built. Two questions inside it are its gates: which game is the second consumer of the table kit (recommended: Device Assembly two walls), and whether the hospital game leaves the secret menu in month 3 (recommended: yes, gated on game night #1; your 2026-09-02 ruling was no, and the numbers since are why it is being asked again). | Approve month 1 as written and mark up months 2 and 3 as they arrive. "You pick" on the two inner questions means Device Assembly second and the front door in month 3. | 2026-09-20 |
-| 1 | **The Device Assembly game.** Play it once on your phone and say alpha or not alpha. | You called alpha on 2026-09-19 without playing the shipped build on a real phone at the 360 px floor. Fifteen polish rounds went in on screenshots. Context added 2026-09-20: the phone gate's new type-floor check flags the board's painted labels (LIGHT, DATA, HR, SpO2, SHARPS, CALL, GLOVES, HINT) at 2.5 to 7 px; the new Two walls screens on that page measured clean. Whether those labels need to read on a phone is part of this same call. | Play it once. If it holds, Claude drafts the launch post for your edit. Nothing else on that surface until you do. | 2026-09-19 |
-| 2 | **The cost of living tool, phone layout.** Round 2 folded the question band up top and the detail behind it. Yes or redo? | It is the second-most-used tool and the phone version is the one strangers hit first. Round 2 has been built and unread for three weeks. | Look at it on your phone for sixty seconds. If the first screen answers the question without scrolling, it ships. | 2026-08-30 |
-| 4 | **The hidden Roles/Populations toggle on the career tree.** Delete it or bring it back? | It is set to display:none and unreachable at every screen width, but its twenty nodes still ship in the data on every page load. Dead weight either way. | Delete the toggle and the twenty orphan nodes. If you meant to keep the feature, say so and Claude wires it back instead. | 2026-08-17 |
-| 6 | **Rounds 04, "The Problem and the Product".** Voice pass. | Written and sitting. Rounds is the one section in full voice, and Claude should not be the last reader on a first-person piece. | Read it once and mark what does not sound like you. Claude fixes from your marks rather than guessing. | 2026-08-10 |
-| 10 | **Three Netlify projects build from this repo on every push.** Delete the extras? | `healthcare-uncharted` serves the domain. `healthcareuncharted` and a private project on your other Google account build the same commits and serve nobody. You are spending three builds per push to publish one site. | Delete the two that serve nobody, after confirming neither holds a domain or a setting you want. Not urgent, invisible to visitors, purely your build minutes. | 2026-09-20 |
+| T1 | **Should the cost of living tool become the standard for every tool?** That means closing its design phase and writing its ten rules into DESIGN.md: answer first, explanations behind an "i", one fold, views, plain words, a source and date on every number, links that restore, the chart rules, little chrome, the phone as the shorter side. | You asked to take its lessons to the other tools. Until the rules are written down, nothing holds a tool to them and each rebuild argues from scratch. The full list with every tool measured against it is docs/HU-TOOL-REVIEW-2026-09-23.md. | Yes. What is left on the tool (about 546 words to sort) becomes ordinary maintenance under the written rules. | 2026-09-23 |
+| T2 | **System Layers shows 113 numbers with no source.** Cut them, or have Claude hunt a source for each and cut what has none? | 301 "By the numbers" tiles; 188 name a source, 113 do not, and some read as invented ("8m 42s" average time, "98.2%" eligibility accuracy). The tool has no source line or date at all. | Cut them now. The 188 sourced tiles stay, and any that matter come back later with a source. | 2026-09-23 |
+| T3 | **Which tool gets the cost of living treatment next?** Naming it opens its design phase. | Every tool not named stays under the change budget, so defects get fixed but nothing is redesigned. | The Vendor Directory (70 screens tall on a phone, the list starts below the first screen), then the Career Tree. | 2026-09-23 |
 
 ---
 
@@ -89,6 +97,126 @@ No decision needed. Listed so you can veto any of them.
 ---
 
 ## LOG
+
+- **2026-09-22** QUESTION 2 OVERTAKEN BY A REBUILD, not answered. It asked David to read the
+  unread round 2 phone layout. He opened the tool instead and said: "its extreamly complex, hard
+  to follow easiliy, the visuals are all over the place." So round 3 happened, and round 2's
+  phone restructure went with it. The tool asked FOURTEEN questions before answering one; it now
+  asks three. 342 words and 14 inputs at desktop down to 229 and 5. Full record in
+  docs/HU-DESIGN-PHASE-LOG.md, round 3.
+  The cause is worth carrying: round 2 HAD built the right thing, but the fine-tune fold shipped
+  `open` and JS only closed it on phones, so desktop never received the redesign. A question
+  asking David to read a layout he had already been given, that had never actually reached his
+  screen.
+  Numbeo's API was priced at his suggestion and declined: $260/month, no free tier, and sixty
+  line items is the opposite of the compilation he asked for. The breakdown he admired already
+  existed in the tool, buried under 604 words.
+
+- **2026-09-21** 6 CLOSED, 10 PART DONE. **Rounds 04: "passes voice check for now."** Closed on
+  David's read, which is the only read that closes a voice question on a first-person piece.
+  **10, the Netlify projects:** the account was listed rather than assumed, and the picture was not
+  the one the question described. THREE projects on the reachable account: `healthcare-uncharted`
+  (12eaf952) holds healthcareuncharted.com and is production; `healthcareuncharted` (a09e2c0f)
+  builds the same repo and same branch on every push with no domain and no aliases, which is the
+  one to delete; `verdant-treacle-8c70aa` builds from NO repo and last published 2026-03-22, so it
+  is not a duplicate of this site and was deliberately left alone pending David saying what it was.
+  The fourth project is on his other Google account and is unreachable from here.
+  Claude ran the delete and the sandbox refused it as an irreversible deletion. Not worked around.
+
+- **2026-09-21** THREE MORE ANSWERED, AND 4 TURNED INTO A BUILD.
+  **12, the career tree counters: RELABELLED.** ROLES HELD, CREDS HELD, SKILLS HELD, GOALS. The
+  code confirmed the reading before the change: the three counters filter `nodeLayer === 'current'`
+  and Goals counts `future`, so the numbers were always right and only the labels were silent.
+  **B, the eight tool pages: CLOSED ON THE AUTOMATED READ**, his call. The merged band phase can
+  now be written into DESIGN.md Tier 3. It was eight pages; the skill demo was one of them and was
+  deleted the same hour, so it closes on seven.
+  **4, the hidden Populations switch: NOT deleted.** David: "I want to wire it back up to
+  something, maybe convert it to a learn article and link it to the atlas... who are the consumers
+  or players in healthcare... for now, make a learn artcle with that page and its build/info and
+  place it in the Secret Menu." Built: `/secret-menu/patient-journeys/`, "Patient Populations: The
+  Twenty States Healthcare Serves". Three journeys (acuity 8, maternal 6, newborn 6), banded by
+  tier, three Atlas deep links, and a closing section on where the content came from and how the
+  page is built. It READS the nodes out of career-tree.json through a new `src/_data/patientJourneys.js`
+  rather than copying them, so the article and the tool cannot drift; the data file counts the
+  twenty and refuses to build a set that has changed shape. Clean at all eight viewports, verify
+  green at 222. Still open on it and deliberately so: the writing has had no voice pass, the twenty
+  states are not checked against a source, and the career tree's switch is still hidden.
+
+- **2026-09-21** DAVID WORKED THE LIST. Four answered, two things deleted.
+  **13, the AI tools page: DELETE, done.** Gone: `/tools/ai-skills/`, `/tools/skill-demo/`,
+  `src/_data/skillsEcosystem.json`, the tools-hub card, the search row, the inbound card on the
+  AI-in-healthcare article, and the thumbnail entry. docs/HU-PAGE-RECIPES.md had been naming both
+  pages as the examples to copy a new page FROM, so it was repointed at the vendor directory and
+  the SQL mystery; docs/HU-AI-SKILLS-LAUNCH-2026-09-18.md is now marked as a record of something
+  removed. Verify green at 222.
+  **11, Atlas Craft: KILLED, done.** His words: "Atlas Craft is cancled idea, kill it." Gone:
+  `src/atlas/craft.njk` (519 KB, the whole graph was baked into the page), the launch link and its
+  styles on the Atlas, and its three entries in the data map. `scripts/build-entities.js` STAYS:
+  it also writes `search-graph.json`, which is the Atlas's own search, so it is not craft-only.
+  **1, Device Assembly: "is in alpha but it still needs major optimization."** Read as alpha
+  stands and the feel phase stays open rather than closing. Off the questions list, back onto the
+  design phase where it belongs.
+  **P, the three-month plan: "keep that."** Approved as written. Months 2 and 3 still get his
+  markup as they arrive, which is what the row always said.
+
+- **2026-09-21** A SWEEP OF EVERY DOCUMENT THAT STEERS FUTURE WORK, on David's question: "are there
+  documents out there that conflict with the new goals or build designs that we are setting as
+  standards?" There were, in two kinds.
+  RULES THAT DISAGREED. The shorter-side phone rule set this week was written into `docs/`, which
+  CLAUDE.md ranks BELOW its own file and below `.claude/rules/`. Five higher-ranked documents still
+  said the opposite, two of them in the words "never another breakpoint", so the next session
+  following the rules correctly would have rebuilt the bug. Realigned: CLAUDE.md, .claude/rules/css.md,
+  .claude/rules/games.md, DESIGN.md, docs/HU-PAGE-RECIPES.md, docs/HU-HANDOFF-BRIEF.md,
+  docs/HU-TOOL-SHELL.md, SPRINT.md, docs/HU-DEV-PLAN-2026-Q4.md, and the mobile-tester agent spec.
+  The handoff brief, which is what an OUTSIDE session is given, also still listed unpkg as an allowed
+  script source; it left the CSP on 2026-09-20, so a page built on that brief ships broken.
+  FACTS THAT HAD GONE STALE. The quarter plan's headline finding #2 was "the multiplayer cannot
+  connect"; it was restored the same day the plan was written, and the endpoint answers today.
+  PRODUCT.md asserted the retired tool name as settled terminology and carried a job title two roles
+  out of date. Worst of the set: docs/HU-AI-SKILLS-LAUNCH-2026-09-18.md describes, under "What
+  shipped into the repo", a passthrough and a zip that would publish David's PRIVATE skills. None of
+  it exists in the repo, which is correct, but the document says it shipped. It now opens with a
+  warning not to rebuild it.
+  One new question came out of it, 14, the colorblind theme, because PRODUCT.md recorded a design
+  decision that no other file had any trace of. David answered it the moment he saw it ("forget the
+  color blind theme"), so the row was withdrawn the same hour and the PRODUCT.md line is gone. Net
+  new questions from the sweep: zero.
+
+- **2026-09-21** THE AI TOOLS QUESTION IS NOW 13, NOT S. David: "what do you mean mine List s?"
+  Fair. S had already been used for the multiplayer backend question, closed 2026-09-20, so the
+  same letter pointed at two unrelated things and the reference was unreadable. Labels are not
+  reused from here on, closed or not: the next question takes the next unused number.
+
+- **2026-09-21** QUESTION H WITHDRAWN, and it should never have been asked. It claimed seven
+  competing header designs and asked David to pick one. He pushed back: "is this harder than it
+  needs to be for some reason? this feels like a dumb stumbling block." He was right. The
+  question was built by photographing sixteen page-tops and counting differences WITHOUT
+  reading why they exist. Reading the code instead: the hub pages drop the hamburger because
+  they carry the bottom tab bar; the two MapLibre maps are excluded from the toolbar rollout by
+  CLAUDE.md itself ("own chrome, twins rule"); the career tree hides its brand at 375px with a
+  comment saying the row is full and the menu rides the thumb zone; the cost of living tool
+  drops its kicker for a one-row toolbar on the atlas precedent; the games are full-screen
+  surfaces. Three patterns and a set of reasoned exceptions, not chaos.
+  Two things WERE broken and are fixed: the header changed when the phone rotated (a
+  width-only breakpoint, so a 740px-wide landscape phone was served the desktop menu), and
+  Camp Nauvoo's header wrapped to two lines inside a 56px bar.
+  The lesson for the next session: a screenshot shows you WHAT differs, never whether it was
+  meant to. Read the comment before you write the question.
+
+- **2026-09-21** THE PHONE PASS, from David's own device. He read the site on his phone and sent
+  twelve screenshots. The headline defect was real and had shipped: the 4Ps section nav was a 64px
+  box holding 231px of links, so three of the four floated over the article text with no background
+  behind them. Root cause was a bare `nav {}` rule in hu-global.css matching every <nav> on the site
+  and forcing each one to the header's height, sticky and blur. It is now scoped to
+  nav[aria-label="Primary"], the selector reading.js already used. The same trap had been patched
+  locally once before, on the phone bottom bar.
+  His instruction on the footer is done: the Field Notes signup and the Source Policy now appear on
+  home and About only, and every other page carries a lean footer. A learn module's footer went from
+  1756px to 385px.
+  A new check went into the phone gate, for content spilling outside its own box, because every
+  existing check read those pages CLEAN. It found six more pages with the same class of fault; all
+  six are fixed and all 54 pages pass it. Also fixed on the way: the SQL mystery hid the "Your
+  mission" line, the one sentence that says what to do, behind a 190px cap on a phone.
 
 - **2026-09-21** QUESTION A DONE, not decided. The question offered a middle path, "do the three or
   four charts that carry an argument and leave the decorative ones wide." All nineteen were done

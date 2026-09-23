@@ -189,3 +189,105 @@ On David's ask ("integrate this first pop-up menu into the game"): the title car
 ## 2026-09-19 · Device Assembly · alpha called, phase parked
 
 David: "any last clean up before I call this an alpha and work on something else." Clean-up shipped (dead code, stale comments, the CLAUDE.md block compacted, memory consolidated). The feel phase is PARKED at the alpha, not closed; closing means the wall grammar into DESIGN.md Tier 3.
+
+---
+
+## ROUND 3 · Cost of Living Comparison · 2026-09-22
+
+Opened by David: "its extreamly complex, hard to follow easiliy, the visuals are all over the
+place and it does not create the user experince we want." Run as the trial for the tool-layer QA
+work, so every change was measured before and after with `scripts/density.js`.
+
+WHAT THE MEASUREMENT SAID FIRST. The tool asked FOURTEEN questions before it answered one: two
+locations, two optional counties, rate, hours, profession, and seven monthly budget lines. 342
+words and 28 controls on the first screen at desktop. For scale, 364 words on the Device Assembly
+wall is what opened the games phase as "too crowded".
+
+THE CAUSE WAS ONE ATTRIBUTE. Round 2 had already built the three-question band correctly, but the
+fine-tune fold shipped `open` and JavaScript only closed it on phones. Desktop never got round 2.
+Closing it exposed a second trap: `.ac-more > summary` was `display:none` on desktop, so a closed
+fold had no handle and its controls became unreachable. The summary now shows at every width.
+
+WHAT SHIPPED, each on David's answer to a question asked with a recommendation:
+- **Three inputs before an answer** (from, to, rate). Counties, profession, filing status and the
+  seven cost lines moved behind the fold.
+- **The seven budget lines prefill from data.** Housing from real county rent (ZORI, then ACS);
+  the other six from that state's MERIC category index against a national baseline now cited to
+  the BLS Consumer Expenditure Survey 2024. Mississippi fills housing at $1,065 and groceries at
+  $447; Hawaii at $4,536 and $654. A line you type is yours and later location changes leave it.
+- **The example chip rail removed.** It sat between the visitor and the question.
+- **Plain language.** Twelve replacements: "Utah / mo left over" became "Utah, left over each
+  month", the ledger head "Δ/mo" became "Difference". `/hr` and `/night` kept, because that is
+  how travel contracts quote those numbers.
+- **The compare row**, on his read: "like google translate, side by side of the two locations
+  with an arrow from one to the other, and you can hit it to swap." The swap carries counties
+  with their states and pay with its place.
+- **Pay per place.** Each side owns its own pay field, so you fill whichever you know. This
+  DELETED the "Same pay / The offer pays differently" toggle, whose only job was to reveal a
+  control the engine already handled when empty.
+- **Hours per YEAR, not per week.** Weekly hours times 52 paid a traveler for every week of the
+  year; three 13-week contracts is 39. This corrected the arithmetic, not just the label.
+- **The peek grammar, finally used here.** `HUKit.peek` existed since the games phase and this
+  tool had zero badges against 604 words of prose. Three badges so far.
+
+NUMBERS: 342 words and 14 inputs to 229 and 5 at desktop. Verify green at 225, clean at all nine
+viewports throughout.
+
+TWO INSTRUMENT FAILURES WORTH KEEPING. `density.js` measured hidden inputs as visible, because
+content inside a closed `<details>` keeps its layout box (content-visibility skips paint, not
+layout), and nearly reported a working fix as a failure. And a `npm run verify` whose output was
+piped through grep swallowed a real TypeScript error; it was caught only by running verify plainly.
+
+STILL OPEN ON THIS SURFACE: about 546 words of prose, split into explanation that should be
+peeked, genuine warnings (tax home, flood risk) that are the tool's best content and should NOT
+be hidden without David ruling on each, and live status lines that are output rather than clutter.
+Numbeo's API was priced and declined: $260/month, no free tier, and its sixty-line granularity is
+the opposite of the compilation David asked for.
+
+## ROUND 3, continued · Cost of Living Comparison · 2026-09-22
+
+Written 2026-09-23 because the rest of round 3 shipped without a log entry, and the next tool
+rebuild copies from this record. Each item was David's read in the conversation.
+
+- **Trays drop from the top instead of a side panel.** David: "a menu that drops down from the
+  top." Three trays under the compare row: Narrow it down (the counties; statewide is the default
+  because David asked for "state wide and then you have the option" to go finer), Bonus and
+  stipend (its own tray, since he could not find it inside fine-tune), and Fine-tune. Each one
+  is the new site fold, `.hu-fold--drop` in hu-global.css.
+- **One fold for the site.** "we need a think of a standard for expandable and colapslable
+  containers." `.hu-fold` is a details/summary, lifted from the assembly game's fold. `--panel`
+  gives a collapsible card and `--drop` gives a tray. The result cards use `--panel`.
+- **Bonus and stipend.** A one-time bonus spreads over the contract (weeks divided by 4.345), and
+  the weekly stipend has a per-scenario Taxed/Untaxed toggle. A taxed stipend joins gross pay; an
+  untaxed one is added after tax. Both round-trip through the link (bn, wk, st).
+- **The answer comes first and in plain words.** "You'd keep $1,435 more a month in Utah", then
+  the two paychecks in one line. The hook came from David: "have a better starting phrase there
+  somthing that hooks the user."
+- **Blank start.** "can start with the page blank?" Until there are two places and a pay, only the
+  answer card shows (`.is-blank`). THE QA LESSON: every automated check then tested an empty
+  page, so blank-start tools are swept with a populated address as well.
+- **Summary, Chart, Detail.** "different views like basic and complex and graphed." Three toggle
+  chips switch `data-view`. Summary is built to be screenshotted, with the source line inside the
+  card.
+- **No image buttons.** "people will just screneshot it." Both Save buttons, the canvas and the
+  drawing code are gone.
+- **The chart grid.** "some of the scaling on the chart is messed up." The flex row added gaps and
+  padding on top of 100%. A grid takes them out of the bar's width instead, and measured
+  overshoot went to 0. Spent segments are hollow and the kept segment is solid, because the
+  palette's grays sat too close to the accents. The kept segment carries no label, since white on
+  teal measured 3.46:1.
+- **Money-moves colours.** The bars were red and green, and green sat under Utah's teal at a
+  normal-vision Delta E of 5.0. They are now amber (costs more there) and gray (costs less). Amber
+  is the tool's one colour for "worse for you".
+- **Links restore the real numbers.** A shared link used to restore the national baseline costs.
+  It now localizes costs first and lets the link override them.
+- **The footer flows.** "the bottom is locked into place i don't think we want to always be
+  showing." The shell no longer pins it.
+- **Provenance behind "i" badges.** "things like this should be hidden behind an i Hover." Four
+  badges so far.
+
+NUMBERS at first paint: blank, 88 words and 5 inputs on a phone and 96 words at desktop. With a
+populated link, 85 and 117.
+
+THE TEN RULES this round produced are written up in docs/HU-TOOL-REVIEW-2026-09-23.md section 1.
+They become DESIGN.md Tier 3 when David closes this phase (DECISIONS T1).

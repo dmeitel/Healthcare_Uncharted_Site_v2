@@ -9,6 +9,18 @@ eleventyExcludeFromCollections: true
 {% raw %}
 <style>
 #er{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; --acc:#E8A838; }
+/* Light skin (2026-09-23, David: "every page needs to be able to do both"). The dark look is
+   untouched: every accent reads var(--lt-x, <the dark hex it always drew>), and --lt-x exists only
+   in the light theme, so dark falls through to its own hex. Light turns the panels white and each
+   accent to its deep text step, 4.5:1 or better on white and on the raised slate. The drag ghost
+   lives on <body>, outside #er, so it carries the accents too. */
+[data-theme="light"] #er,[data-theme="light"] .er-ghost{ --lt-green:#1B6B4C; --lt-red:#A8352F; --lt-crit:#C22F2F;
+  --lt-amber:#7A5700; --lt-orange:#9E4A12; --lt-lime:#437516; --lt-blue:#1B5FA8;
+  --lt-track:rgba(13,32,54,.1); --lt-hair:rgba(13,32,54,.08); }
+[data-theme="light"] #er{ --surface:#FFFFFF; --raised:#EEF2F7; --border:#CBD5E0; --border2:#A0AEC0; --t3:#4A5568; --acc:#7A5700; }
+[data-theme="light"] #er .er-feed .fd{background:rgba(255,255,255,.97);box-shadow:0 6px 18px rgba(13,32,54,.14)}
+[data-theme="light"] #er .er-deftip{background:var(--surface);border-color:var(--border2);box-shadow:0 12px 32px rgba(13,32,54,.18)}
+[data-theme="light"] .er-ghost{box-shadow:0 10px 28px rgba(13,32,54,.2)}
 .er-wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px;font-family:var(--font)}
 .er-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none}
 .er-back:hover{color:var(--acc)}
@@ -23,19 +35,21 @@ eleventyExcludeFromCollections: true
 .er-pause{min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--t2);cursor:pointer;font-family:var(--font)}
 .er-pause:hover{border-color:var(--acc);color:var(--acc)}
 .er-board{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}
-@media (max-width:860px){.er-board{grid-template-columns:1fr}}
+/* min-width:0 lets the column shrink to the screen; without it the grid item kept the waiting
+   strip's full min-content width and a 390 phone scrolled sideways to about 1150px. */
+@media (max-width:860px){.er-board{grid-template-columns:1fr}.er-board>*{min-width:0}}
 .er-waitwrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px}
-.er-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;display:flex;justify-content:space-between}
+.er-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;display:flex;justify-content:space-between;gap:10px}
 .er-wait{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;min-height:86px}
 .er-pt{flex:0 0 150px;text-align:left;background:var(--raised);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:grab;font-family:var(--font);color:var(--t2);position:relative;transition:border-color .12s;touch-action:pan-x;-webkit-user-select:none;user-select:none}
 .er-pt:hover{border-color:var(--acc)}
 .er-pt.sel{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,168,56,.35)}
-.er-pt.crit{border-color:rgba(223,87,82,.8);animation:erpulse 1s ease infinite}
+.er-pt.crit{border-color:var(--lt-crit,rgba(223,87,82,.8));animation:erpulse 1s ease infinite}
 @keyframes erpulse{50%{box-shadow:0 0 0 4px rgba(223,87,82,.25)}}
 .er-pt .p-n{font-size:var(--t-fine);font-weight:700;color:var(--t1)}
 .er-pt .p-c{font-size:var(--t-label);color:var(--t2)}
 .er-pt .p-a{position:absolute;top:7px;right:8px;font-family:var(--mono);font-size:var(--t-micro);font-weight:700;border-radius:5px;padding:1px 5px}
-.er-pt .p-wait{display:flex;height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:7px;overflow:hidden}
+.er-pt .p-wait{display:flex;height:4px;border-radius:2px;background:var(--lt-track,rgba(255,255,255,.08));margin-top:7px;overflow:hidden}
 .er-pt .p-wait span{display:block;height:100%}
 .er-beds{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .er-bed{min-height:118px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:var(--t2);position:relative;transition:border-color .12s}
@@ -45,24 +59,24 @@ eleventyExcludeFromCollections: true
 .er-bed.target{border-color:var(--acc);animation:erpulse 1s ease infinite}
 .er-bed.over{border-color:var(--acc);background:rgba(232,168,56,.12);box-shadow:0 0 0 3px rgba(232,168,56,.4)}
 .er-ghost{position:fixed;z-index:400;pointer-events:none;background:var(--raised);border:1px solid var(--acc);border-radius:10px;padding:7px 11px;font-family:var(--font);font-size:var(--t-fine);color:var(--t1);box-shadow:0 10px 28px rgba(0,0,0,.5);transform:rotate(-2deg)}
-.er-bed.crit{border-color:rgba(223,87,82,.8)}
-.er-bed.board{border-color:rgba(106,173,255,.7)}
+.er-bed.crit{border-color:var(--lt-crit,rgba(223,87,82,.8))}
+.er-bed.board{border-color:var(--lt-blue,rgba(106,173,255,.7))}
 .er-bed .p-n{font-size:var(--t-fine);font-weight:700;color:var(--t1);margin-top:2px}
 .er-bed .p-c{font-size:var(--t-label);color:var(--t2)}
 .er-bed .p-a{position:absolute;top:8px;right:9px;font-family:var(--mono);font-size:var(--t-micro);font-weight:700;border-radius:5px;padding:1px 5px}
 .er-bed .b-step{font-family:var(--mono);font-size:var(--t-micro);margin-top:6px;color:var(--t2)}
 .er-bed .b-step.q{color:var(--acc)}
-.er-bed .b-bar{display:flex;height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}
-.er-bed .b-bar span{display:block;height:100%;background:#4ecb8d}
+.er-bed .b-bar{display:flex;height:5px;border-radius:3px;background:var(--lt-track,rgba(255,255,255,.08));margin-top:5px;overflow:hidden}
+.er-bed .b-bar span{display:block;height:100%;background:var(--lt-green,#4ecb8d)}
 .er-bed .b-next{font-family:var(--mono);font-size:var(--t-micro);color:var(--t3);margin-top:5px;letter-spacing:.03em}
 .er-side{display:flex;flex-direction:column;gap:12px;position:sticky;top:14px}
 @media (max-width:860px){.er-side{position:static}}
 .er-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
-.er-res{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:var(--t-fine);color:var(--t2)}
+.er-res{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--lt-hair,rgba(255,255,255,.05));font-size:var(--t-fine);color:var(--t2)}
 .er-res:last-child{border-bottom:none}
 .er-res .r-pips{font-family:var(--mono);font-size:var(--t-label);letter-spacing:1px}
 .er-res .r-q{font-family:var(--mono);font-size:var(--t-micro);min-width:60px;text-align:right;color:var(--t3)}
-.er-res .r-q.hot{color:#ff7a7a;font-weight:700}
+.er-res .r-q.hot{color:var(--lt-red,#ff7a7a);font-weight:700}
 .er-cards{display:flex;flex-direction:column;gap:7px}
 .er-card{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--raised);color:var(--t1);cursor:pointer;font-family:var(--font);font-size:var(--t-fine);text-align:left;transition:border-color .12s}
 .er-card:hover:not(:disabled){border-color:var(--acc)}
@@ -75,8 +89,8 @@ eleventyExcludeFromCollections: true
 .er-hint{min-height:20px;font-size:var(--t-fine);color:var(--acc);font-family:var(--mono);margin:8px 0 10px}
 .er-feed{position:fixed;right:16px;bottom:16px;z-index:150;display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:none}
 .er-feed .fd{font-family:var(--mono);font-size:var(--t-fine);padding:6px 11px;border-radius:8px;background:rgba(23,39,63,.95);border:1px solid var(--border2);color:var(--t1);box-shadow:0 6px 18px rgba(0,0,0,.4);animation:erfeed 3s ease forwards}
-.er-feed .fd b{color:#4ecb8d}
-.er-feed .fd.admit b{color:#6aadff}
+.er-feed .fd b{color:var(--lt-green,#4ecb8d)}
+.er-feed .fd.admit b{color:var(--lt-blue,#6aadff)}
 .er-feed .fd.crit{border-color:rgba(78,203,141,.6)}
 @keyframes erfeed{0%{opacity:0;transform:translateX(20px)}12%{opacity:1;transform:translateX(0)}80%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.er-feed .fd{animation:none}}
@@ -93,8 +107,8 @@ eleventyExcludeFromCollections: true
 .er-seg button.on{border-color:var(--acc);color:#1d1503;background:linear-gradient(135deg,#E8A838,#c98a1e)}
 .er-tally{font-family:var(--mono);font-size:var(--t-fine);line-height:2;color:var(--t2);margin:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 0}
 .er-tally b{float:right;color:var(--t1)}
-.er-tally .neg b{color:#ff7a7a}
-.er-tally .pos b{color:#4ecb8d}
+.er-tally .neg b{color:var(--lt-red,#ff7a7a)}
+.er-tally .pos b{color:var(--lt-green,#4ecb8d)}
 .er-pm{font-size:var(--t-fine);color:var(--t2);line-height:1.7}
 .er-pm b{color:var(--t1)}
 .er-pm .pm-h{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin:12px 0 4px}
@@ -151,7 +165,9 @@ eleventyExcludeFromCollections: true
     upstairsEvery: [45,75],                              // sim-min range between upstairs bed offers
     lwbsPenalty: 4, harmPenalty: 10,
   };
-  const ACUITY_COLOR = {1:'#ff5a6a',2:'#ff9a5a',3:'#E8A838',4:'#8fd06c',5:'#4ecb8d'};
+  // Accents ride the light-theme steps when the page is light (the --lt-x tokens in the style block);
+  // var() in an inline style re-resolves when the theme flips, so nothing has to repaint.
+  const ACUITY_COLOR = {1:'var(--lt-crit,#ff7a7a)',2:'var(--lt-orange,#ff9a5a)',3:'var(--lt-amber,#E8A838)',4:'var(--lt-lime,#8fd06c)',5:'var(--lt-green,#4ecb8d)'};
   // Six resources. CT is the designed villain: one scanner, everyone's answer.
   const RESOURCES = [
     {id:'rn',   name:'Nurses',    cap:4},
@@ -375,7 +391,7 @@ eleventyExcludeFromCollections: true
     G.over=true; if (timer){ clearInterval(timer); timer=null; }
     const d=report();
     const tal=(l,v,cls)=>`<div class="${cls||''}">${l}<b>${v>0&&cls==='pos'?'+':''}${v}</b></div>`;
-    $('er-overlay').innerHTML=`<div class="er-modal"><h2>SHIFT COMPLETE <span class="er-grade" style="color:${{A:'#4ecb8d',B:'#8fd06c',C:'#E8A838',D:'#ff9a5a',F:'#ff5a6a'}[d.grade]}">${d.grade}</span></h2>
+    $('er-overlay').innerHTML=`<div class="er-modal"><h2>SHIFT COMPLETE <span class="er-grade" style="color:${ACUITY_COLOR[{A:5,B:4,C:3,D:2,F:1}[d.grade]]}">${d.grade}</span></h2>
       <div class="mo-sub">Twelve hours on the board. Here is what the department did, and why.</div>
       <div class="er-tally">
         ${tal('Patients seen', d.seen, 'pos')}
@@ -423,7 +439,7 @@ eleventyExcludeFromCollections: true
       const w=clamp(p.patience/p.maxPatience,0,1);
       return `<button class="er-pt${sel&&sel.kind==='pt'&&sel.id===p.id?' sel':''}${p.crit?' crit':''}" data-act="pt" data-id="${p.id}">
         ${acuBadge(p)}<div class="p-n">${p.name}</div><div class="p-c">${typeOf(p.type).label}</div>
-        <div class="p-wait"><span style="width:${Math.round(w*100)}%;background:${w>0.5?'#4ecb8d':w>0.25?'#E8A838':'#ff5a6a'}"></span></div></button>`;
+        <div class="p-wait"><span style="width:${Math.round(w*100)}%;background:${w>0.5?ACUITY_COLOR[5]:w>0.25?ACUITY_COLOR[3]:ACUITY_COLOR[1]}"></span></div></button>`;
     }).join('') || '<div style="color:var(--t3);font-size:var(--t-fine);align-self:center">Empty. Enjoy it while it lasts.</div>';
     const placing = sel && sel.kind==='pt';
     $('er-beds').innerHTML = G.beds.map(b=>{
@@ -437,7 +453,7 @@ eleventyExcludeFromCollections: true
       const near = crisisNear(p);
       return `<button class="er-bed${p.crit?' crit':''}${p.boarding?' board':''}" data-act="bedpt" data-id="${p.id}">
         <span class="b-num">BED ${String(b.num).padStart(2,'0')}</span>${acuBadge(p)}
-        <div class="p-n">${p.name}</div><div class="p-c">${ty.label}${(p.fastUntil>G.t)?' &middot; FAST':''}${(p.codedUntil||0)>G.t?' &middot; RRT':''}${job&&job.batched?' <span style="color:#4ecb8d">&middot; batched</span>':''}${near?' <span style="color:#ff9a5a">&middot; slowed: crisis next door</span>':''}</div>
+        <div class="p-n">${p.name}</div><div class="p-c">${ty.label}${(p.fastUntil>G.t)?' &middot; FAST':''}${(p.codedUntil||0)>G.t?' &middot; RRT':''}${job&&job.batched?' <span style="color:var(--lt-green,#4ecb8d)">&middot; batched</span>':''}${near?' <span style="color:var(--lt-orange,#ff9a5a)">&middot; slowed: crisis next door</span>':''}</div>
         ${stepTxt}${job?`<div class="b-bar"><span style="width:${pctDone}%"></span></div>`:''}${next}</button>`;
     }).join('');
     $('er-res').innerHTML = RESOURCES.map(r=>{

@@ -6,6 +6,248 @@ now. Read it after DECISIONS.md at the start of every session.
 
 ---
 
+## START HERE · picking this back up
+
+**WHERE THIS LANDED, 2026-09-22.** David's frame (below) held: no new content until the
+foundation does. Two things got built under it.
+
+**1. THE QA SYSTEM, three tiers by WHO DECIDES.** `npm run qa` is the one command.
+   - TIER 1, machine decides: build, types, 225 tests, the nine-viewport sweep. Fails.
+   - TIER 2, machine measures, the number only goes down: shell drift (145), over-long meta
+     descriptions (30), duplicate titles (0), and per-tool first-screen density. Fails on a rise.
+   - TIER 3, David decides: look, feel, whether a stranger can use it. No script gets a vote.
+     `npm run review` and docs/HU-REVIEW-QA-2026-09-22.md are how it reaches him.
+   New instruments: `scripts/qa.js`, `scripts/density.js` (words, controls, inputs and chrome
+   above the fold), `scripts/tool-compare.js`, `scripts/meta-screen.js`, `scripts/review.js` (the
+   two-pane review screen, plus two mirrored browser tabs). 1920x1080 joined the viewport ladder
+   because David reviews at 2132 and nothing had ever checked above 1280; it found nothing, which
+   is the useful answer. The sweep also fails on HIDDEN BUT SHOWN (an element marked hidden that
+   a display rule keeps on screen); it found four site-wide, and one global rule in hu-global.css
+   cleared all four. Sweep a POPULATED url for any blank-start tool, or it tests an empty page.
+
+**2. THE COST OF LIVING TOOL, round 3**, run as the trial for tool-layer QA. It asked FOURTEEN
+   questions before answering one; it asks three. 342 words and 14 inputs at desktop down to 229
+   and 5. Full record in docs/HU-DESIGN-PHASE-LOG.md round 3. Highlights a session needs: pay now
+   sits with each place (which deleted the Same-pay toggle); hours are PER YEAR, which corrected
+   arithmetic that paid travelers for 52 weeks they do not work; the seven budget lines prefill
+   from county rent and state cost indexes; `HUKit.peek` is finally wired on a tool.
+
+**THE HONEST GAP, unchanged.** Nothing measures whether a page is UNDERSTOOD. Density measures
+weight. The proxies (inputs before a first answer, words on the first screen) are good targets and
+bad proof. The only instrument for comprehension is a person who has not seen it.
+
+**2026-09-23, THE TOOL REVIEW** (docs/HU-TOOL-REVIEW-2026-09-23.md): all eight tools measured
+against the ten rules the cost of living tool now sets. Only that tool uses the "i" badge or the
+site fold. Ten defects are Claude's to fix, and the gate missed four of them.
+
+**2026-09-23, THE PRE-PUSH CHECK** (David: "QA and check all information on site and we will do a
+commit and push"). The full `npm run qa`, plus four information checks that no gate runs:
+- Counts agree with their data everywhere they are printed: 5,366 hospitals, 158 vendors, 62
+  metrics in seven lens groups.
+- The search index (23,000+ page references), the sitemap and the feed name no missing page.
+- OUTBOUND LINKS: 455 checked, 17 looked dead. Eleven were fixed:
+  - Nine now point to the source's new address (AMA twice, ECRI, ACGME, CCHP, NRHA, NCSL, CAAHEP,
+    AHA).
+  - Two point to a web-archive copy marked "(archived copy)", because the original is gone: the
+    2015 FDA testosterone notice and the Lorna Breen foundation page.
+  - Six were left alone. They work in a browser or block robots: ACEND twice (a login
+    handshake), medicaid.gov twice, oig.hhs.gov and coalitionforhealthai.org.
+- Three deleted pages had no redirect and would have gone 404 on the push: the AI Skills page,
+  the skill demo and Atlas Craft. They now 301 to /tools/ and /atlas/ (netlify.toml).
+- The gate itself: the sweep outgrew the 30 minutes `npm run qa` allowed it and reported FAIL
+  after being killed mid-page with nothing found. The limit is now 60 minutes. The sweep should
+  get faster before it gets longer, by running pages in parallel. The goat tracker failed on
+  GoatCounter's rate limit (429), so the harness now refuses calls to its live API.
+- `scripts/build-datamap.js` was broken by the Atlas Craft removal (half an entry left behind).
+  It is repaired, and the Data Observatory's map was regenerated without the dead node.
+- RESULT: 49 of 50 pages clean at all nine viewports, and verify at 225/225. The one red page is
+  follow-up 10.
+
+### AFTER THE 2026-09-23 COMMIT AND PUSH, in order
+
+1. **Confirm the deploy (Claude, read-only).** Production built from the new commit. Spot-check
+   the live site:
+   - /tools/cost-of-living/ loads
+   - /tools/assignment-compass/ lands on it
+   - the three new redirects land on /tools/ and /atlas/
+   - a light and a dark page render
+2. **Netlify cleanup (David's hands).** Delete `healthcareuncharted` (a09e2c0f) and
+   `verdant-treacle-8c70aa`. The one WITH the hyphen is live. Until both are gone, every push
+   builds three times. Steps are in DECISIONS.md.
+3. **Tool review batch 1 (Claude, no input).** The ten defects in section 3 of the review, plus
+   three new sweep checks:
+   - FLOATING OVER A CONTROL
+   - CUT BY ITS CONTAINER
+   - a SLOW-DATA pass that holds data files back two seconds
+   The worst defects: the Career Tree's phone error when its data is slow, the Blueprint panel
+   covering the building, and the "Pati…" metric name.
+4. **DECISIONS T1 to T3 (David).**
+   - Make the ten rules the standard (DESIGN.md Tier 3).
+   - Cut System Layers' 113 unsourced numbers.
+   - Name the next tool. Recommended: Vendor Directory, then Career Tree.
+5. **A standing link check (Claude).** Turn the one-off outbound check into
+   `scripts/link-check.js`. Run it monthly, NOT in the gate, because outside sites fail for
+   reasons that are not ours. Open the six unverifiable links once in a real browser.
+6. **Theme-pass spin-offs.** Confirm the two tasks it sent out actually shipped: the Atlas phone
+   search bar covering the breadcrumb, and the home respiratory timeline's rail items that the
+   keyboard cannot reach.
+7. **Information freshness, one line each:**
+   - Career Tree pay is BLS wage year May 2024; check for a newer edition.
+   - The Vendor Directory needs a "status checked" date (its data was compiled 2026-08-10).
+   - The Operations map's source line says "current" where it should give a date.
+   - The Hospital Blueprint has no source line at all.
+8. **Cost of living, what is left.** The ~546 words (explanation behind an "i", warnings David
+   rules on one by one, live output that stays), and the From side's "Rate there" label.
+9. **The tool-chrome shell.** Five pages hand-roll a bar that two share, and a tool's name
+   renders at 14, 15 or 17px on a phone depending on the tool.
+10. **Device Assembly on a portrait phone (David's call).** 28 labels drawn on the game art (HR,
+    SpO2, SHARPS, GLOVES, and the wall screen's "HINT 1/4") render at 2.5 to 3.7px at 360 and 430,
+    so the sweep fails the page. Nothing in this batch caused it: the page's only changes were a
+    light-theme colour and the sideways-phone query, and neither applies to a portrait phone. David
+    waived the design floors on this surface ("go wild"), but the wall screen is text meant to be
+    read. It belongs with his pending phone play at 360. Either the game gets a phone layout, or
+    the art is marked as a magnifiable scene so the gate exempts it on his ruling.
+11. **Script type warnings.** `npm run check:scripts` (not part of the gate) reports about 113
+    type errors across 11 scripts, most in the backend checkers and phone-qa.js. None came from
+    this batch. Either make it green and add it to verify, or delete the command.
+
+---
+
+## THE FRAME, SET BY DAVID 2026-09-22
+
+**THE FRAME, SET BY DAVID 2026-09-22.** Read this before anything else in this file.
+
+His words: "we keep making content that works as a standalone within its own... single time use.
+the end goal for me is to have tools and pages and references that i use and others can use, and
+they can jump write to it on phone, laptop, tablet or computer and have it look good and feel
+easy to understand and follow. before we continue down more content generation i want to really
+focus on that... our 3 month plan can continue but the frame of what we have been doing the last
+few sessions has to help create a better foundation for us to work off of."
+
+So: **no new content until the foundation holds.** The quarter plan is not cancelled; every task
+in it now has to leave the site more consistent than it found it, or it waits.
+
+WHAT THE FOUNDATION PROBLEM ACTUALLY IS, measured 2026-09-22 rather than guessed. Every reading
+page declared its own hero, eyebrow, headings, paragraph, cards and callout, because
+docs/HU-PAGE-RECIPES.md told each one to copy a block and rename the prefix. Forks drift:
+
+| the same element | how many different values | across |
+|---|---|---|
+| h1 size | 5 | 14 pages |
+| hero padding | 8, no majority at all | 13 pages |
+| eyebrow letter-spacing | 8 | 41 declarations |
+| paragraph line-height | 4 | 15 declarations |
+| h2 size | 2 | 13 pages |
+
+Nothing there is broken, which is why no gate ever caught it. It is the difference between
+consistent and almost-consistent, and almost-consistent is the thing a reader feels and cannot
+name. The recipe also taught the MINORITY value for both headings, so a page built correctly
+from the instructions came out unlike most of the site.
+
+THE ANSWER, started 2026-09-22:
+1. **`.hu-read`, the shared reading shell, is in hu-global.css.** Its numbers are the majority
+   values already on the site, so adopting it moves the fewest pages the least distance.
+2. **Proof shipped:** /secret-menu/patient-journeys/ went from 56 lines of page CSS to 19, and
+   the 19 are genuinely unique to it. Clean at all eight viewports, verify green at 222.
+3. **The recipe is rewritten** to point at the shell instead of teaching the fork.
+4. **The gate exists: `tests/reading-shell.test.js`, a ratchet.** Built BEFORE the migration
+   rather than after, so the work has a definition of done instead of needing David's eyes to
+   confirm it. A page may lose shell declarations, never gain them; a new page starts at zero.
+   Proven to fail by putting drift back into a clean page. `scripts/shell-drift.js` prints the
+   table; `scripts/shell-convert.js` does one page and REFUSES anything that is not pure type.
+5. **First migration pass done 2026-09-22: 225 declarations down to 145, 12 of 31 pages clean.**
+   Verify green at 225 tests, every converted page clean at eight viewports.
+   Two things were found by doing it, not by looking:
+   - **`DM Serif Display` was never loaded.** Eleven Learn articles set their headings in it and
+     the site only ever requested DM Sans, IBM Plex Mono and Outfit, so those headings rendered
+     in whatever serif the DEVICE fell back to. Headings that change by device is the literal
+     form of David's complaint. CLAUDE.md names three fonts and the serif is not one, so it was
+     treated as drift and the headings moved to Outfit. Visible change on eleven pages.
+   - **Article prose is 17px and `--t-body` is 15px**, so a naive conversion would have shrunk
+     the text on the pages he reads most. The role was missing from the ladder rather than the
+     pages being wrong: `--t-prose` (17 desktop / 18 phone) now exists and the shell uses it.
+
+**WHAT IS LEFT, and why it stopped here.** The remaining 145 are `card`, `grid`, `hero`, `note`
+and `link`. Unlike type, those carry real page design: a hero gradient, a card hover border, a
+column count. `shell-convert.js` refuses them on purpose, because losing a page's look to a
+migration regex is a worse outcome than the drift. Merging them is a design call per page and
+David is reviewing page by page next. The other two shells (tool pages, games) have not been
+started; the realistic target is three shells that agree, not one that covers everything.
+
+Bespoke CSS is not the enemy and must not be "fixed": a diagram, a board, a figure stays
+page-scoped. Only the shell is shared, because only the shell should be identical.
+
+---
+
+## THE PHONE PASS, 2026-09-21
+
+David read the site on his own phone against a dev server on
+the house wifi and sent twelve screenshots. Uncommitted work sits in the tree; he commits it.
+What changed, and why it is worth knowing before touching any of it:
+
+- **The bare `nav {}` rule in hu-global.css is now scoped to `nav[aria-label="Primary"]`.** As a
+  bare element selector it matched all six <nav> elements on the site and forced each to the
+  header's height, sticky, z-index and blur. On the 4Ps page that locked the section nav to 64px
+  while its links wrapped to 231px, so three of the four painted over the article text. If a page
+  nav suddenly loses its background, this is why: give it its own, the way .rr-topnav now does.
+- **The footer has two weights.** Home and About get the full one; everything else gets
+  `.footer-lean`, which drops the Field Notes form, the Source Policy and the Tools column.
+  David's call, his words: they "do not need to be at the bottom of every learn module." A learn
+  module's footer went 1756px to 385px. Support stayed on every page because he did not ask for it
+  to move.
+- **The phone gate has a sixth floor: SPILL.** Content taller or wider than its own box while
+  overflow is visible, which paints outside the box over whatever is below. Every other check read
+  those pages CLEAN, which is how the 4Ps nav shipped. It found six more pages; all fixed.
+  An ancestor that clips or scrolls contains the overflow, so carousels and pannable diagrams
+  are not flagged.
+- **The SQL mystery was hiding the task.** `.case-desc` was capped at 190px inside a
+  viewport-locked shell while a case is about 334px, so "Your mission", the sentence that says
+  what to do, was never on screen at 360. The phone column scrolls with the page now.
+
+Written 2026-09-21 at David's ask, at the end of a long session. Everything below was green when
+it was written: 221 tests, both live multiplayer checks, the 19-step phone QA, and every public
+page passing `npm run phone` at 360. David commits and pushes this himself.
+
+**PUSHED AND VERIFIED LIVE, 2026-09-21.** Commit `3f41307`. The first CI run in this repo's
+history went green on push. The deploy landed on healthcareuncharted.com and everything was
+re-checked against the LIVE site, not localhost: both multiplayer relay checks (a hospital table
+through reloads on both sides, and a two-wall assembly race) and the full 19-step phone QA, all
+passing against the real domain. So the work is not just committed, it is serving.
+
+**What state things are in.**
+- The Table plays over the internet, in both games, through reloads on both sides.
+- The three shared kits exist (`hu-save`, `hu-rng`, `hu-table`) plus `HUKit.peek` for
+  explain-on-demand, and the engine contract is written at `.claude/rules/games.md`.
+- All three games have had the reading-load pass David asked for. The design phase on them is
+  OPEN and closes when he says they feel like web games (CLAUDE.md, OPEN PHASES).
+- Every chart on the site has a phone drawing. The phone gate now enforces three floors: type
+  size, line contrast, and label contrast plus weight and tracking.
+- `npm run qa:phone` runs David's mechanical QA himself, 19 steps with a screenshot each.
+- Publicity is PARKED by his call. The two launch posts are drafts and are NOT to be revised or
+  scheduled. Game night waits.
+
+**The first thing to do next session.** Read DECISIONS.md. Ten questions are open and nine of
+them need David's eyes or his accounts, not Claude's time. Do not start new building while that
+list sits; three separate sessions have now found questions on it that shipped work had already
+answered, so re-verify each against the repo before working it.
+
+**Deliberately held, both by David on 2026-09-21, not forgotten.**
+- **Article 06 on FHIR.** The only gap left in the Learn numbering. Pure writing, nothing blocks
+  it, and the pattern to copy is Article 11 at `/learn/alarm-fatigue/`.
+- **The quarterly data refresh.** Needs a Census API key Claude does not have, rewrites the
+  datasets behind both maps, and the plan schedules it for December. It wants a deliberate
+  sitting, not a spare half hour.
+
+**Also waiting on him, not on work.**
+- **The leaderboards** (plan month 3) wait on whether publicity comes back this quarter. They are
+  the "infrastructure for greater things" piece: a scores table, row-level security, and a
+  server-side plausibility check so a leaderboard cannot be pasted into.
+- **Alarm Fatigue** needs improving before anyone is pointed at it, in his words, but what
+  bothers him about it is still unknown. The answer decides whether that is a copy pass, a pacing
+  change, or something structural, so ask before building.
+
+---
+
 ## HOW THIS WORKS
 
 - **One sprint at a time, one goal in one sentence, and a definition of done David can see or
@@ -28,6 +270,153 @@ now. Read it after DECISIONS.md at the start of every session.
   ship. David commits, pushes and posts.
 
 Step statuses: NEXT · DOING · DONE · WAITING (say on what) · MOVED (say where).
+
+---
+
+## SPRINT 0 · THE PAGE OVER PAGE REVIEW  ·  everything else is stopped
+
+David, 2026-09-21, after reading the site on his own phone: "Cancel all content additions in
+our plan until we do a page over page review for phone vert and horizontal and web page look
+at feel." That is the whole week. Nothing below this line starts until this finishes.
+
+**Stopped by that instruction, not dropped.** Article 06 on FHIR, the quarterly data refresh,
+and every other content addition in docs/HU-DEV-PLAN-2026-Q4.md. They keep their place in the
+plan's months. Sprints 1 to 3 below are multiplayer and kit work, already shipped or already
+his to call, and they are not content additions, but nothing new starts on them either.
+
+**What the review is.** Every public page, three ways: phone portrait at 360, phone LANDSCAPE,
+and desktop. Each one read the whole way DOWN, not just at first paint. His words: "When we
+test a page for web stuff we need to scroll down the whole page not just part of it." That is
+a real gap in the harness as it stood: every check ran once, at the top, at one orientation.
+
+**The three things he named.**
+1. **Headers are inconsistent across the site.** His screenshots show at least four different
+   grammars: the full site header, a TOOL header with no search, a game header whose controls
+   CHANGE between portrait and landscape, and pages with no header at all.
+2. **The harness only read the top of a page.** Fixed before the review runs, not after.
+3. **The AI tools page.** "I dont know why there is a page for AI tools." It is on the
+   decisions list rather than deleted on a guess.
+
+**Done when** every page has been seen at all three sizes, the header grammar is one decision
+he has signed off, and the harness reads whole pages in both orientations.
+
+### The first full read, 2026-09-21
+
+All 54 pages, three viewports, each read the whole way down.
+
+| viewport | pages failing |
+|---|---|
+| 360x740, phone upright | 4 |
+| 740x360, phone on its side | **22** |
+| 1280x900, desktop | 1 (a harness artifact, the analytics API is cross-origin) |
+
+**Landscape is the whole story, and the 22 share one cause.** Every breakpoint on this site
+tests WIDTH. A phone on its side is 740px wide, which is over the 699px line, so the site
+decides it is a desktop and serves desktop things to a touch screen held in two hands:
+
+1. **The desktop menu.** Seven mouse-sized link targets. This is the same fact David saw as
+   "inconsistent headers": the header changes when the phone turns. FIXED, the nav block now
+   reads `(max-width:699px), (max-height:500px)`. Sub-44px targets on a landscape article
+   went 12 to 5, and desktop is untouched. The height clause catches landscape phones,
+   which run 360 to 430px tall, and not tablets or laptop windows.
+2. **The desktop chart.** The PHONE CHART SWAP is keyed to 699px too, so landscape gets the
+   wide drawing and its small type. That is what the type-floor failures on the Learn and
+   Rounds pages are. NOT fixed: which drawing a wide short window should get is a look
+   decision, and the phone twin is authored at 320 units for a narrow column.
+3. **The chrome budget cannot be met in landscape as written.** It is 20% of viewport height (css.md, DESIGN.md and the gate all say 20; this line said 15);
+   at 360px tall that is 54px, and the site nav alone is 64px. Every landscape page is over
+   before anything else loads. Either the bar shrinks when the screen is short or the budget
+   means something different sideways. NOT fixed, it is a decision.
+
+Points 2 and 3 wait on question H, because both are answered by the same call about what the
+header and the page owe a phone held sideways.
+
+### The fix pass, 2026-09-21, on David's "do a full sweep and fix these issues"
+
+Points 2 and 3 above were DONE rather than left waiting, because both turned out to be the
+same one-line decision the nav already took: the phone test follows the SHORTER side.
+
+- **The chart swap** now reads `(max-width:699px), (max-height:500px)`. Landscape was being
+  served the desktop drawing, whose labels are sized for a 720-unit canvas and landed at 4
+  to 7px. That was every type-floor failure in landscape.
+- **The nav bar is 48px when the screen is short** (`@media (max-height:500px)` on
+  `--nav-bar-h` and `--nav-h`, the two tokens everything downstream rides). 64px in a 360px
+  screen was 18%, over the budget before anything else loaded. 48px is 13% and still holds
+  the 44px touch target with room either side.
+- **A sixth floor, LABELS PAST THEIR BOX.** The collision check only ever compared text to
+  TEXT, so a caption centred in a rect and simply too wide for it was invisible: SVG has no
+  overflow rule to catch it either. Proven against the bug that prompted it before being
+  trusted: with the old markup restored the gate reports
+  `LABEL PAST ITS BOX by 68px: "one shared shelf" is 140px in a 72px box` and fails the page.
+  Site-wide it found exactly one more, ELIGIBILITY on the Change Healthcare page, 96px in an
+  85px node. Both fixed; the whole site now reads zero in both orientations.
+
+**Still David's, untouched on purpose.** What the header SAYS. Seven grammars are in use and
+picking one is a look decision, not an engineering one, so question H stands. What changed
+here is only the mechanism: the same controls now appear whichever way the phone is held.
+
+### The viewport ladder and the play check, 2026-09-21
+
+David: "why are you not testing and reviewing pages on this phone scale? I want every page
+to be able to look good on phone, and web/Tablet/Computer and when it has response size
+changes." The method is written up at docs/HU-VIEWPORT-METHOD-2026-09-21.md. What changed:
+
+- **Eight viewports, not three.** 360x740, 430x932, 699x900, 700x900, 768x1024, 1024x768,
+  1280x900, 740x360. The pair either side of 699 is deliberate: a breakpoint is where
+  layouts break, and nothing had ever been tested inside one.
+- **Layout checks run at EVERY size.** They were gated to phone, so tablet and desktop
+  printed n/a and passed without being checked at all. Phone PHYSICS (44px targets, type
+  floor, chrome budget) stay phone-only, because they are about a thumb and a small screen.
+- **scripts/play-check.js.** Everything else reads a page sitting still, which is why the
+  mid-shift overlaps David photographed were invisible: those panels do not exist until a
+  floor has been bought. It uses the game's own ?afdev=full hatch to stand up a maxed unit,
+  then reports anything opaque parked on a control or a readout.
+
+**What the ladder found on its first run, all above phone width, none of it seen before:**
+- The desktop nav needs 723px and appears at 700, so EVERY page scrolled sideways in the
+  23px band from 700 to 722. Fixed by tightening the links in that band only.
+- Atlas Craft's toolbar held 1426px of controls at 1280 and pushed Reset 146px off the edge.
+  It had a phone rule only. It scrolls at every width now.
+- The Laws and Paradoxes hero: the italic descender on "Paradoxes" hung 11px below its own
+  h1. Leading could not fix it (raising line-height grows the content too), so the glyph got
+  padding instead. /learn/jevons-paradox/ reported the same fault and turned out to be a
+  redirect stub pointing at that page.
+
+**Still open on the game:** play-check names two faults it has not fixed. The clicker covers
+the monitor tiles (84%) and event widgets land on the big button (75%). David called the
+game good after the tab and call-light fixes, so these wait for his word rather than a sixth
+unprompted pass at that layout.
+### Alarm Fatigue on a phone, 2026-09-21
+
+David played it and sent notes as he went. What landed:
+- The HU hex is back in the title bar, at his ask. It had been hidden to save room; the
+  shift clock yielded instead, because the console sub-line already reads the time.
+- The console no longer selects its own text. A tap that drifted a pixel was highlighting
+  the readout instead of pressing the button, which is what "can only be clicked every few
+  times" was.
+- The pumps ride above the monitor bank, his call.
+- The button is centred at 281px with a 40px lane either side, and shrinks 54px to 44px as
+  the console fills. 44 is the floor.
+- Call lights are ONE column on a phone held upright (60px, was 106px in two). The console
+  reserves 78px of right wall instead of 124px and keeps the difference.
+
+**What did NOT land, and the lesson.** Four passes went into lanes, a single scrolling
+surface and a fixed dock, all of them answering HOW to scroll. David: "i dont want any
+scrolling on the page, there is room for all the buttons in the mock up we had and i feel
+like we have got off course." He had asked at the very start whether everything could scale
+to fit and still be selectable, and the answer given was that scaling was the wrong lever.
+It was the right lever. All of that scrolling work is reverted; the floor is a fixed frame,
+the chart is a clipped backdrop, the console floats, nothing scrolls.
+
+**The real remaining task is FIT.** Measured at 360 on a busy shift: the console can use
+592px and wants 606px (pumps 110 + bank 150 + button and readout 146 + two shop cards 200).
+It misses by 14px, and the button's own shrink already returns 10 of those. A THIRD shop
+card is what actually breaks it, at 114px over. So this is tightening, not restructuring.
+
+**He also said something worth keeping:** "i think part of it is you take my responses to
+literally. You moved things around to accommodate my ask but made decisions about other
+items that dont make sense." That is what displaced the monitor bank: solving "button at the
+centre" as geometry and letting everything else fall where it landed.
 
 ---
 
@@ -503,6 +892,23 @@ elements under the type floor at 360 and 23 at 699, all of them the board's pain
 DECISIONS question 1, David's call, and nothing here touched it.
 
 ## CHANGES
+
+- 2026-09-23 · **Theme pass, inserted inside Sprint 0.** David: "the Dark and light themes on
+  the website need to be reviewed and updated... every page needs to be able to do both." Every
+  page now renders in both themes (the three hospital games, ARMA, Camp Nauvoo, the Rounds
+  figures, the Data Observatory and all card thumbnails got a real light theme; the Alarm Fatigue
+  EHR got a real dark one) and every text element measured clears 4.5:1 composited in both. The
+  whole-site scanner is tmp/theme-scan/scan.js. Nothing displaced; two defects found on the way
+  went out as their own tasks (the Atlas phone search bar covering the breadcrumb; the home
+  respiratory timeline's rail items not keyboard reachable).
+
+- 2026-09-21 · **Re-aimed to Sprint 0, the page over page review.** David's instruction after
+  reading the site on his phone: "Cancel all content additions in our plan until we do a page
+  over page review for phone vert and horizontal and web page look at feel." Article 06 and the
+  data refresh were already held by him on 09-21; this widens that to every content addition in
+  the quarter plan. Nothing is dropped, it all keeps its month. Three findings of his open the
+  sprint: headers are inconsistent site-wide, the phone harness only ever read the top of a page
+  at one orientation, and the AI tools page has no agreed reason to exist.
 
 - 2026-09-20 · Sprint 1 written from plan week 1, re-aimed on David's ask: "by the end of this
   week's sprint I would like to get the multiplayer function of one of my games up and running

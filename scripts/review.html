@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HU Review</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --line:#25303d; --line2:#33404f;
+    --ink:#E6EDF3; --ink2:#9FB3C8; --ink3:#6B7F94; --teal:#4ECDC4; --blue:#1B5FA8;
+    --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html,body { height:100%; margin:0; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--sans); display:flex; flex-direction:column; overflow:hidden; }
+
+  header {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:9px 14px; background:var(--panel); border-bottom:1px solid var(--line); flex:0 0 auto;
+  }
+  .brand { font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); font-weight:700; }
+  select, button, input {
+    background:#0f151d; color:var(--ink); border:1px solid var(--line2); border-radius:7px;
+    font-family:var(--sans); font-size:13px; padding:7px 10px; min-height:34px;
+  }
+  select { max-width:min(46vw,460px); }
+  button { cursor:pointer; }
+  button:hover { border-color:var(--teal); }
+  button.on { background:var(--teal); color:#062024; border-color:var(--teal); font-weight:700; }
+  .seg { display:flex; gap:0; }
+  .seg button { border-radius:0; border-right-width:0; }
+  .seg button:first-child { border-radius:7px 0 0 7px; }
+  .seg button:last-child { border-radius:0 7px 7px 0; border-right-width:1px; }
+  .spacer { flex:1 1 auto; }
+  .path { font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .count { font-family:var(--mono); font-size:12px; color:var(--ink3); }
+
+  main { flex:1 1 auto; display:flex; gap:12px; padding:12px; min-height:0; }
+  .pane { display:flex; flex-direction:column; min-width:0; min-height:0; }
+  .pane-h {
+    display:flex; align-items:center; gap:8px; padding:0 2px 7px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink3);
+  }
+  .pane-h b { color:var(--ink2); font-weight:600; letter-spacing:.06em; text-transform:none; font-family:var(--sans); font-size:12px; }
+  .frame-wrap { flex:1 1 auto; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--bg); min-height:0; }
+  iframe { width:100%; height:100%; border:0; display:block; background:#0d1117; }
+
+  #deskPane { flex:1 1 auto; min-width:420px; }
+  #phonePane { flex:0 0 auto; }
+  /* The phone box keeps its TRUE pixel size so the page inside really is at that viewport;
+     when the window is too short or too narrow the STAGE scales it down visually. Letting the
+     box itself shrink would mean reviewing a 390px layout in a 254px frame, which is exactly
+     the kind of lie this tool exists to avoid. */
+  .phone-stage { flex:1 1 auto; min-height:0; }
+  #phoneWrap { transform-origin:top left; }
+  #phoneWrap.w360 { width:360px; height:740px; }
+  #phoneWrap.w390 { width:390px; height:844px; }
+  #phoneWrap.w430 { width:430px; height:932px; }
+  #phoneWrap.land { width:740px; height:360px; }
+
+  .hint { padding:10px 14px; font-size:12px; color:var(--ink3); border-top:1px solid var(--line); background:var(--panel); flex:0 0 auto; }
+  kbd { font-family:var(--mono); font-size:11px; background:#0f151d; border:1px solid var(--line2); border-radius:4px; padding:1px 5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="brand">HU Review</span>
+
+  <select id="picker" aria-label="Page"></select>
+
+  <div class="seg">
+    <button id="prev" title="Previous page">&#8592;</button>
+    <button id="next" title="Next page">&#8594;</button>
+  </div>
+  <button id="reload" title="Reload both frames">Reload</button>
+
+  <div class="seg" id="sizes">
+    <button data-w="w360">360</button>
+    <button data-w="w390" class="on">390</button>
+    <button data-w="w430">430</button>
+    <button data-w="land">740&times;360</button>
+  </div>
+
+  <button id="theme">Light</button>
+  <button id="sync" class="on" title="Both frames follow each other: same page, and roughly the same place on it">Linked</button>
+
+  <span class="spacer"></span>
+  <span class="count" id="count"></span>
+  <span class="path" id="path"></span>
+</header>
+
+<main>
+  <section class="pane" id="deskPane">
+    <div class="pane-h">Desktop <b id="deskSize"></b></div>
+    <div class="frame-wrap"><iframe id="desk" title="Desktop view"></iframe></div>
+  </section>
+
+  <section class="pane" id="phonePane">
+    <div class="pane-h">Phone <b id="phoneSize">390 &times; 844</b> <span id="phoneScale"></span></div>
+    <div class="phone-stage" id="phoneStage">
+      <div class="frame-wrap w390" id="phoneWrap"><iframe id="phone" title="Phone view"></iframe></div>
+    </div>
+  </section>
+</main>
+
+<div class="hint">
+  With <b>Linked</b> on, either frame pulls the other to the same page and the same place on it. <kbd>&#8592;</kbd> <kbd>&#8594;</kbd> step through pages,
+  <kbd>r</kbd> reloads, <kbd>t</kbd> toggles theme. The phone frame is a real viewport at that width, not a scaled screenshot.
+</div>
+
+<script>
+(function () {
+  var desk = document.getElementById('desk');
+  var phone = document.getElementById('phone');
+  var picker = document.getElementById('picker');
+  var phoneWrap = document.getElementById('phoneWrap');
+  var pathOut = document.getElementById('path');
+  var countOut = document.getElementById('count');
+  var deskSize = document.getElementById('deskSize');
+  var phoneSize = document.getElementById('phoneSize');
+  var syncBtn = document.getElementById('sync');
+  var themeBtn = document.getElementById('theme');
+
+  var list = [];
+  var idx = 0;
+  var linked = true;
+  var theme = 'dark';
+
+  function go(p, pushPhone) {
+    if (desk.contentWindow.location.pathname !== p) desk.src = p;
+    if (pushPhone !== false) phone.src = p;
+    pathOut.textContent = p;
+    var i = list.indexOf(p);
+    if (i > -1) { idx = i; picker.selectedIndex = i; countOut.textContent = (i + 1) + ' / ' + list.length; }
+  }
+
+  function step(d) {
+    idx = (idx + d + list.length) % list.length;
+    go(list[idx]);
+  }
+
+  /* Same origin, so the theme the site stores per viewer can be set in both frames at once.
+     Without this the two panes can disagree about light/dark and the comparison is useless. */
+  function applyTheme(win) {
+    try {
+      win.document.documentElement.setAttribute('data-theme', theme);
+      win.localStorage.setItem('hu-theme', theme);
+    } catch (e) { /* frame not ready yet; the load handler runs this again */ }
+  }
+
+  /* SCROLL SYNC, proportional not absolute. The same page is far taller on a phone, so
+     matching pixel offsets would put the two panes in different sections. Matching the
+     FRACTION scrolled keeps them roughly on the same part of the document, which is what you
+     want when comparing. It is approximate by nature and that is fine. */
+  /* The follower must not push back. A single global time lock was not enough: the follower's
+     own scroll events bounced into the driver and dragged it backwards, so driving the desktop
+     to 50% settled both frames at 17%. Each frame now gets its OWN suppression window, set when
+     it is scrolled programmatically, and the follower jumps instantly rather than smooth-
+     scrolling, so it stops emitting events almost at once. */
+  var suppress = { desk: 0, phone: 0 };
+
+  function mirrorScroll(fromKey) {
+    if (!linked) return;
+    if (Date.now() < suppress[fromKey]) return;     /* this scroll WAS the mirror; do not echo */
+    var from = fromKey === 'desk' ? desk : phone;
+    var to = fromKey === 'desk' ? phone : desk;
+    var toKey = fromKey === 'desk' ? 'phone' : 'desk';
+    try {
+      var d = from.contentDocument.documentElement;
+      var td = to.contentDocument.documentElement;
+      var range = d.scrollHeight - d.clientHeight;
+      var trange = td.scrollHeight - td.clientHeight;
+      if (range <= 0 || trange <= 0) return;
+      suppress[toKey] = Date.now() + 200;
+      to.contentWindow.scrollTo({ top: (d.scrollTop / range) * trange, behavior: 'instant' });
+    } catch (e) { /* frame mid-navigation */ }
+  }
+
+  function wireScroll(frame, key) {
+    try {
+      /* Guard on the DOCUMENT, not the window. An iframe keeps the SAME contentWindow object
+         across same-origin navigations, but its scroll listener dies with the old document. An
+         earlier version keyed on contentWindow, so after the first page the guard said "already
+         wired", nothing was re-attached, and scroll sync silently stopped for the rest of the
+         session. David, 2026-09-22: "when i move pages it doesnt keep pace". A document is new
+         on every navigation, so this re-wires exactly once per page. */
+      var doc = frame.contentDocument;
+      if (!doc || doc.__huScrollWired) return;
+      doc.__huScrollWired = true;
+      frame.contentWindow.addEventListener('scroll', function () { mirrorScroll(key); }, { passive: true });
+    } catch (e) { /* frame not ready */ }
+  }
+
+  function onFrameLoad(frame, isDesk) {
+    try {
+      applyTheme(frame.contentWindow);
+      var p = frame.contentWindow.location.pathname;
+
+      pathOut.textContent = p;
+      var i = list.indexOf(p);
+      if (i > -1) { idx = i; picker.selectedIndex = i; countOut.textContent = (i + 1) + ' / ' + list.length; }
+
+      /* BOTH WAYS. This used to follow only desktop -> phone, so clicking a link in the phone
+         frame left the desktop behind and the two panes were quietly on different pages. */
+      if (linked) {
+        var other = isDesk ? phone : desk;
+        if (other.contentWindow.location.pathname !== p) other.src = p;
+      }
+
+      wireScroll(desk, 'desk');
+      wireScroll(phone, 'phone');
+    } catch (e) { /* cross-origin, which should not happen here */ }
+  }
+
+  desk.addEventListener('load', function () { onFrameLoad(desk, true); });
+  phone.addEventListener('load', function () { onFrameLoad(phone, false); });
+
+  picker.addEventListener('change', function () { go(picker.value); });
+  document.getElementById('prev').addEventListener('click', function () { step(-1); });
+  document.getElementById('next').addEventListener('click', function () { step(1); });
+  document.getElementById('reload').addEventListener('click', function () {
+    desk.contentWindow.location.reload(); phone.contentWindow.location.reload();
+  });
+
+  document.getElementById('sizes').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-w]');
+    if (!b) return;
+    [].forEach.call(this.querySelectorAll('button'), function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    phoneWrap.className = 'frame-wrap ' + b.dataset.w;
+    phoneWrap._scale = 1;
+    requestAnimationFrame(sizeReadout);
+  });
+
+  themeBtn.addEventListener('click', function () {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    themeBtn.textContent = theme === 'dark' ? 'Light' : 'Dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    applyTheme(desk.contentWindow); applyTheme(phone.contentWindow);
+    desk.contentWindow.location.reload(); phone.contentWindow.location.reload();
+  });
+
+  syncBtn.addEventListener('click', function () {
+    linked = !linked;
+    syncBtn.classList.toggle('on', linked);
+    syncBtn.textContent = linked ? 'Linked' : 'Unlinked';
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+    if (e.key === 'r') { desk.contentWindow.location.reload(); phone.contentWindow.location.reload(); }
+    if (e.key === 't') themeBtn.click();
+  });
+
+  var phoneStage = document.getElementById('phoneStage');
+  var phoneScale = document.getElementById('phoneScale');
+
+  function fitPhone() {
+    /* true size stays on the box; the stage decides how much of it we can show */
+    var w = phoneWrap.offsetWidth / (phoneWrap._scale || 1);
+    var h = phoneWrap.offsetHeight / (phoneWrap._scale || 1);
+    phoneWrap.style.transform = 'none';
+    w = phoneWrap.offsetWidth; h = phoneWrap.offsetHeight;
+    var availH = phoneStage.clientHeight;
+    var availW = Math.max(240, Math.min(w, window.innerWidth - 480));
+    var s = Math.min(1, availH / h, availW / w);
+    phoneWrap._scale = s;
+    phoneWrap.style.transform = s < 1 ? 'scale(' + s + ')' : 'none';
+    phonePane.style.width = Math.ceil(w * s) + 'px';
+    phoneStage.style.height = Math.ceil(h * s) + 'px';
+    phoneScale.textContent = s < 1 ? '(shown at ' + Math.round(s * 100) + '%)' : '';
+    phoneSize.textContent = w + ' × ' + h;
+  }
+
+  function sizeReadout() {
+    deskSize.textContent = desk.offsetWidth + ' × ' + desk.offsetHeight;
+    fitPhone();
+  }
+  var phonePane = document.getElementById('phonePane');
+  window.addEventListener('resize', sizeReadout);
+
+  fetch('/__review/pages.json').then(function (r) { return r.json(); }).then(function (p) {
+    list = p;
+    picker.innerHTML = list.map(function (x) {
+      return '<option value="' + x + '">' + x + '</option>';
+    }).join('');
+    var start = new URLSearchParams(location.search).get('p') || list[0];
+    go(start);
+    sizeReadout();
+  });
+})();
+</script>
+</body>
+</html>

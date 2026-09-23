@@ -27,7 +27,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
 
   // ── State ──────────────────────────────────────────────
   // phone break matches the selector-pop sheet contract in hu-global.css (699px)
-  const PHONE_MQ = window.matchMedia('(max-width: 699px)');
+  const PHONE_MQ = window.matchMedia('(max-width:699px), (max-height:500px)');
   const REDUCED_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
   const isPhone = () => PHONE_MQ.matches;
   // motion budget (HU-UI-GRAMMAR rule 5): every tween caps at 250ms on phones, 0 under reduced-motion
@@ -986,6 +986,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
         .attr('data-zx', d=>d.left - 6)
         .attr('data-zy', d => { const z = pwExt.get(d.pathway); return (z ? z[0] - ROWH/2 - 34 : pcTop) - 8; })
         .attr('fill', d=>(pcfg[d.pathway]||{}).color||(d.pathway==='__mine'?'#4ECDC4':'#ccc'))
+        .style('--zc', function(){ return this.getAttribute('fill'); })   // light theme inks it from the same hue in CSS
         .style('cursor','pointer').style('pointer-events','all')
         .on('click', (e,d) => { e.stopPropagation(); fitGroup(d.left, d.right, true); })
         .each(function(d){
@@ -2436,7 +2437,12 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     if (vit){
       const cur = k => build[k].filter(n => nodeLayer(n)==='current').length;
       const goals = TRACKS.reduce((s,c)=> s + build[c.key].filter(n => nodeLayer(n)==='future').length, 0);
-      const chips = [[cur('career'),'Roles'],[cur('education'),'Creds'],[cur('skill')+cur('spec')+cur('experience'),'Skills'],[goals,'Goals',true]];
+      /* "held", not bare nouns. David's screenshot 2026-09-21 showed "0 ROLES" sitting directly
+         above a card reading "Career Path, 1 role", which reads as the page contradicting itself.
+         Both numbers were right: these three count what you HOLD (nodeLayer === 'current') while
+         the section cards count everything including what you are aiming at, which is why GOALS
+         read 2. The labels just never said so. Goals keeps its bare noun; it already names itself. */
+      const chips = [[cur('career'),'Roles held'],[cur('education'),'Creds held'],[cur('skill')+cur('spec')+cur('experience'),'Skills held'],[goals,'Goals',true]];
       vit.innerHTML = chips.map(([n2,l,g]) => '<div class="bp-vital'+(g?' goal':'')+'"><div class="bp-vital-n">'+n2+'</div><div class="bp-vital-l">'+l+'</div></div>').join('');
     }
   }
@@ -4787,7 +4793,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     const zsel = gC.selectAll('text.atlas-zone-lbl').data(zoneGroups, d=>d.zone);
     zsel.exit().remove();
     zsel.enter().append('text').attr('class','atlas-zone-lbl').attr('text-anchor','middle')
-        .attr('x',atBoardW/2).attr('y',d=>d.top-24).attr('fill',d=>d.color).text(d=>d.label)
+        .attr('x',atBoardW/2).attr('y',d=>d.top-24).attr('fill',d=>d.color).style('--zc',d=>d.color).text(d=>d.label)
       .merge(zsel).transition().duration(dur)
         .attr('x',atBoardW/2).attr('y',d=>d.top-24);
 

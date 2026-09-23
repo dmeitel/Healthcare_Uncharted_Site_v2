@@ -7,7 +7,7 @@ colors:
   chart-blue: "#1B5FA8"
   chart-blue-bright: "#2478d4"
   beacon-amber: "#E8A838"
-  beacon-amber-deep: "#946905"
+  beacon-amber-deep: "#856004"
   landfall-green: "#2D9B6F"
   reef-red: "#DF5752"
   meridian-purple: "#7C6FCD"
@@ -49,6 +49,12 @@ colors:
   deep-step-pubhealth: "#23794e"
   deep-step-techeco: "#0e6f96"
   deep-step-medsci: "#C22F2F"
+  deep-step-patient-chip: "#0D6C65"
+  deep-step-payer-chip: "#7D5A04"
+  deep-step-policy-chip: "#613FC5"
+  deep-step-pubhealth-chip: "#206E47"
+  deep-step-techeco-chip: "#0D6589"
+  deep-step-medsci-chip: "#B12B2B"
 typography:
   display:
     fontFamily: "Outfit, Trebuchet MS, sans-serif"
@@ -206,7 +212,7 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 - **Chart Blue** (#1B5FA8): the action color. Primary buttons, the nav pill, subscribe. Hover brightens to **Chart Blue Bright** (#2478d4). Chart Blue acts; Signal Teal points.
 
 ### Secondary
-- **Beacon Amber** (#E8A838): warnings, draw modes, "lo" stat states, the lab notice. Text-on-light flips to **Beacon Amber Deep** (#946905).
+- **Beacon Amber** (#E8A838): warnings, draw modes, "lo" stat states, the lab notice. Text-on-light flips to **Beacon Amber Deep** (#856004; was #946905 until 2026-09-23, which missed 4.5:1 on the page ground).
 - **Landfall Green** (#2D9B6F): positive signals and guest accents. The Secret Menu runs a brighter guest step (#4ecb8d) as its section identity; that value is deliberate incumbent vocabulary, not drift.
 - **Reef Red** (#DF5752): negative signals and the medical-science lens.
 - **Meridian Purple** (#7C6FCD): the policy lens.
@@ -226,7 +232,7 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 ### Working Vocabulary (incumbent, documented 2026-08-06)
 - **Content-type badges** (one hue per content type, tints at 12 to 14% alpha): Tools ride Signal Teal, Learn #6aabff, Talks #5DBF87, Lab Beacon Amber, Reference #a99ee8, Rounds #7B92AB (`--type-*` tokens).
 - **Lens-pill brights**: policy #b59ff5, tech/economy #38b6f0, medical science #FF6B6B alongside the named accents. Their tint BASES (the rgba anchors behind the 12 to 16% fills) are #8B5CF6 (policy) and #0EA5E9 (tech/economy).
-- **Deep steps for light surfaces** (The Deep-Step Rule's per-lens dark values): teal #0F7A72 (#0D7268 on tinted chips), provider #1d5fae, policy #6A45D8, public health #23794e, tech #0e6f96, med-sci #C22F2F.
+- **Deep steps for light surfaces** (The Deep-Step Rule's per-lens dark values): teal #0F7A72 (#0D7268 on tinted chips), provider #1d5fae, policy #6A45D8, public health #23794e, tech #0e6f96, med-sci #C22F2F. On their own tinted chips (the .fp lens pills) each drops one more step, since the tint over the ground costs about half a contrast point: patient #0D6C65, provider #1d5fae, payer #7D5A04, policy #613FC5, public health #206E47, tech #0D6589, med-sci #B12B2B (2026-09-23, each at 4.65 or better on the tint over page ground, white and raised).
 - **Guest green** #4ecb8d: the Secret Menu's section identity, deep step #2D9B6F.
 - **Learn filter accents** (documented 2026-08-09): the leaders filter gold #F0CF6B (tint base #E8C547, deep step #8A6A15 on light) and the patient text step #aac8ff ride alongside the type badges; patient active fills use type-learn #6aabff, policy tints ride the lens-policy base. Interop tags run reef-red tints with the #ff9090 text step on dark.
 - **The Secret Beacon** rgba(21,128,61,x) (#15803d family): the home secret tile's pulse, the ONE sanctioned glow on the site, earned by the 8-tap secret. A scoped exception to The Ink State Rule, locked with the V3 comp.
@@ -273,7 +279,14 @@ The 2026-08-09 version of this rule was correct and was ignored for a year, beca
 
 Content lives in 1080 to 1100px centered containers with clamp() padding (20px floor to 80px at desktop). Sections breathe with clamp(56px, 8vh, 96px) vertical padding. Card collections use auto-fit grids (minmax 280 to 320px) that collapse to one column without media queries. The spacing scale runs 4/8/12/16/24/32/48/64/96 (`--space-1` through `--space-9`); card interiors sit at 24px, section breaks at 48 to 64px.
 
-The phone line is 699px everywhere (matching `HUKit.PHONE_MQ`); a secondary 1099px line governs when map drawers dock right versus rise as bottom sheets. The nav is a 64px sticky bar with backdrop blur that collapses to a 44px hamburger and 48px-tall menu rows under 699px.
+The phone line is 699px, measured on the SHORTER SIDE of the screen: the query is
+`@media (max-width:699px), (max-height:500px)`, and a width-only half is a defect, not a
+shorthand. A phone held sideways is about 740px wide and must still get the phone layout.
+KNOWN GAP, 2026-09-21: `HUKit.PHONE_MQ` is still `(max-width: 699px)` alone, so every
+JavaScript path that asks `HUKit.phone()` (the back guard, the 250ms motion cap, sheet
+behaviour, the atlas prefetch gate) still reads a landscape phone as a desktop. The CSS was
+converted on the nine surfaces that were failing; the detector and about 52 other queries were
+not. A secondary 1099px line governs when map drawers dock right versus rise as bottom sheets. The nav is a 64px sticky bar with backdrop blur that collapses to a 44px hamburger and 48px-tall menu rows under 699px.
 
 Interactive tools follow the full-map standard from docs/HU-UI-GRAMMAR.md: an edge-to-edge canvas, floating chrome in a bottom-center cluster, one detent sheet (peek 120px / half 52dvh / full 92dvh), and the budget rules: 44px touch floor, at most one transient surface, ~300KB first-paint fetch, GPS on tap only.
 
@@ -459,7 +472,7 @@ open phase, Tier 3 is suspended and Tier 1 and Tier 2 still bind.
 Breaking these hurts a reader. They are not taste and they are never suspended, phase
 or no phase. A redesign that breaks one is a regression wearing better colors.
 
-- **Do** keep the 44px touch floor, the 699px phone line, and the 250ms phone motion cap on every interactive surface.
+- **Do** keep the 44px touch floor, the 699px phone line measured on the shorter side (`max-width:699px, max-height:500px`, both halves), and the 250ms phone motion cap on every interactive surface.
 - **Do** hold the phone type floor: functional text never below `--t-label` (13px), nothing below `--t-micro` (12px). Set sizes from the tokens, never from a literal. See "The Two Surfaces".
 - **Do** give a phone ONE top bar: the site nav or a page toolbar, never both, plus at most one bottom bar, inside 20 percent of the viewport. The browser takes another quarter we do not control.
 - **Don't** let a canvas scale its UI text with its geometry. Terrain may scale on a pinch-zoom surface; the panels, tabs and status lines that report state never do.

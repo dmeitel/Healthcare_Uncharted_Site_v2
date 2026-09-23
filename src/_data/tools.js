@@ -136,7 +136,7 @@ module.exports = [
     featured:    true,
     title:       'Cost of Living Comparison',
     desc:        'Compare two locations before you take the job. Real state tax bracket math for all 50 states, projected monthly costs by category, GSA per diem for the assignment county, and the blind spots cost-of-living sites miss. Built for clinicians weighing job offers, relocations, and travel contracts.',
-    url:         '/tools/assignment-compass/',
+    url:         '/tools/cost-of-living/',
     type:        'interactive',
     badge:       'Interactive',
     badgeClass:  'badge-interactive',
@@ -170,29 +170,4 @@ module.exports = [
     labNode:     'healthcare-career-tree'
   },
 
-  {
-    id:          'ai-skills',
-    cluster:     'learn-play',
-    keys:        ['ai skills', 'agent skills', 'skill.md', 'skills', 'claude code', 'cursor', 'codex', 'ai agents', 'prompts', 'epic build documentation', 'workflow analysis', 'skill demo', 'agentskills', 'superpowers', 'field guide'],
-    status:      'live',
-    featured:    false,
-    title:       'AI Agent Skills, Explained',
-    desc:        'What a SKILL.md file is, the six repos worth tracking, five starter skills written for clinical informatics, and a demo that runs the same task with and without one. No developer background required.',
-    url:         '/tools/ai-skills/',
-    type:        'reference',
-    badge:       'Reference',
-    badgeClass:  'badge-reference',
-    bandClass:   'tc-band-purple',
-    mark:        'SK',
-    markClass:   'mark-purple',
-    tags:        ['AI', 'Agent Skills', 'Field Guide'],
-    motif:       'network',
-    ps:          ['p2a'],
-    atlasLinks:  [
-      { label: 'Clinical Informatics', zone: 'provider', to: 'provider/informatics' },
-      { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' }
-    ],
-    labNode:     'ai-in-healthcare'
-  }
-
-];
+  ];

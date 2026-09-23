@@ -1,6 +1,10 @@
 // Tool-card thumbnails · authored SVG vignettes rasterized to stable PNGs.
 // Same contract as the OG cards: David's real screenshots can overwrite any
 // of these files (same name, same place) and the site picks them up.
+// TWO THEMES (2026-09-23): every vignette is drawn twice from the same geometry,
+// <id>.png on the dark palette and <id>-light.png on the light one. .hc-thumb in
+// hu-global.css shows the light file under [data-theme="light"]. A screenshot that
+// replaces <id>.png should replace <id>-light.png too, or light theme keeps the vignette.
 // Run: node scripts/build-tool-thumbs.js   (sharp is already a devDep)
 const sharp = require('sharp');
 const fs = require('fs');
@@ -10,12 +14,29 @@ const OUT = path.join(__dirname, '..', 'src', 'assets', 'images', 'tool-thumbs')
 fs.mkdirSync(OUT, { recursive: true });
 
 const W = 1280, H = 440;                       // 2x of the 640x220 card slot
-const BG = '#0e1a2e', LINE = '#24405e', TEAL = '#4ECDC4', BLUE = '#2478d4',
-      AMBER = '#E8A838', GREEN = '#5DBF87', INK = '#b8cfe8',
-      GGREEN = '#4ecb8d', GDEEP = '#2D9B6F';   // secret-menu guest identity
-const frame = (inner) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
-  `<rect width="${W}" height="${H}" fill="${BG}"/>${inner}</svg>`;
+
+// The palette is the only thing that differs between the two files. DARK is the
+// original set, byte for byte. LIGHT sits on the light .hc-thumb ground (#E7EEF6) and
+// takes each accent at its deep step so a mark holds 3:1 there: teal is --dgm-flow,
+// amber is darkened along its own hue, green and red are the -dk tokens.
+const DARK = {
+  BG: '#0e1a2e', LINE: '#24405e', TEAL: '#4ECDC4', BLUE: '#2478d4',
+  AMBER: '#E8A838', GREEN: '#5DBF87', INK: '#b8cfe8',
+  GGREEN: '#4ecb8d', GDEEP: '#2D9B6F',          // secret-menu guest identity
+  PANEL: '#132238',                             // an unlit card or floor, one step off the ground
+  ROOT: '#0b2018', HUB: '#0d1117', TERM: '#0a1220',   // wells darker than the ground
+  PURPLE: '#b59ff5', CORAL: '#FF6B6B', SKY: '#38b6f0', RED: '#DF5752'
+};
+const LIGHT = {
+  BG: '#E7EEF6', LINE: '#94A3B8', TEAL: '#0F7F78', BLUE: '#1B5FA8',
+  AMBER: '#A87A0C', GREEN: '#1B6B4C', INK: '#2D3748',
+  GGREEN: '#23794E', GDEEP: '#1B6B4C',
+  PANEL: '#F6F9FC',
+  ROOT: '#DDEFE6', HUB: '#FFFFFF', TERM: '#FFFFFF',   // on light ground a well is a white sheet
+  PURPLE: '#7C6FCD', CORAL: '#DF5752', SKY: '#1F7FB5', RED: '#A8352F'
+};
+const THEMES = [{ suffix: '', P: DARK }, { suffix: '-light', P: LIGHT }];
+
 const hex = (cx, cy, r, fill, stroke, sw = 3, op = 1) => {
   let d = '';
   for (let i = 0; i < 6; i++) {
@@ -25,8 +46,18 @@ const hex = (cx, cy, r, fill, stroke, sw = 3, op = 1) => {
   return `<path d="${d}Z" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" opacity="${op}"/>`;
 };
 
-const THUMBS = {
+// Every vignette drawn on one palette. The geometry is written once, here; only the
+// colors change between the dark and the light file.
+const vignettes = ({ BG, LINE, TEAL, BLUE, AMBER, GREEN, INK, GGREEN, GDEEP,
+                     PANEL, ROOT, HUB, TERM, PURPLE, CORAL, SKY, RED }) => {
+const frame = (inner) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
+  `<rect width="${W}" height="${H}" fill="${BG}"/>${inner}</svg>`;
+return {
   // two columns, one verdict: the compare bars with the rose between them
+  /* keyed on the tool's ID, not its URL. The URL became /tools/cost-of-living/ on
+     2026-09-22; the id stays 'assignment-compass' so the generated PNG keeps matching
+     what src/tools/index.html asks for ({{ tool.id }}.png) and the Atlas labNode link. */
   'assignment-compass': frame(
     `<rect x="180" y="120" width="150" height="240" rx="10" fill="${BLUE}" opacity=".55"/>
      <rect x="180" y="120" width="150" height="240" rx="10" fill="none" stroke="${BLUE}" stroke-width="3"/>
@@ -44,7 +75,7 @@ const THUMBS = {
      <line x1="640" y1="250" x2="850" y2="150" stroke="${LINE}" stroke-width="4"/>
      <line x1="430" y1="150" x2="300" y2="80" stroke="${LINE}" stroke-width="3"/>
      <line x1="850" y1="150" x2="980" y2="80" stroke="${LINE}" stroke-width="3"/>
-     ${hex(640, 380, 56, '#0b2018', GREEN, 4)}
+     ${hex(640, 380, 56, ROOT, GREEN, 4)}
      ${hex(640, 250, 48, 'none', TEAL, 4)}
      ${hex(430, 150, 44, 'none', TEAL, 3, .85)}
      ${hex(850, 150, 44, 'none', BLUE, 3, .85)}
@@ -64,7 +95,7 @@ const THUMBS = {
   'hospital-map': frame(
     `<rect x="330" y="60" width="620" height="330" rx="8" fill="none" stroke="${LINE}" stroke-width="4"/>
      ${[0, 1, 2, 3].map(i =>
-       `<rect x="350" y="${78 + i * 80}" width="580" height="64" rx="6" fill="${i === 1 ? TEAL : '#132238'}" opacity="${i === 1 ? 0.5 : 1}" stroke="${i === 1 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
+       `<rect x="350" y="${78 + i * 80}" width="580" height="64" rx="6" fill="${i === 1 ? TEAL : PANEL}" opacity="${i === 1 ? 0.5 : 1}" stroke="${i === 1 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
      <rect x="600" y="20" width="80" height="40" fill="none" stroke="${BLUE}" stroke-width="3"/>
      <line x1="640" y1="20" x2="640" y2="0" stroke="${BLUE}" stroke-width="3"/>`),
   // above and below the waterline
@@ -81,12 +112,12 @@ const THUMBS = {
     Array.from({ length: 24 }, (_, i) => {
       const x = 180 + (i % 8) * 120, y = 80 + Math.floor(i / 8) * 110;
       const lit = [2, 9, 13, 20].indexOf(i) > -1;
-      const cols = { 2: TEAL, 9: AMBER, 13: BLUE, 20: '#b59ff5' };
+      const cols = { 2: TEAL, 9: AMBER, 13: BLUE, 20: PURPLE };
       return `<rect x="${x}" y="${y}" width="90" height="80" rx="8" fill="${lit ? cols[i] : 'none'}" opacity="${lit ? 0.45 : 1}" stroke="${lit ? cols[i] : LINE}" stroke-width="3"/>`;
     }).join('')),
   // the terminal, mid-query
   'sql-mystery': frame(
-    `<rect x="240" y="60" width="800" height="320" rx="12" fill="#0a1220" stroke="${LINE}" stroke-width="3"/>
+    `<rect x="240" y="60" width="800" height="320" rx="12" fill="${TERM}" stroke="${LINE}" stroke-width="3"/>
      <line x1="240" y1="120" x2="1040" y2="120" stroke="${LINE}" stroke-width="3"/>
      <circle cx="285" cy="90" r="9" fill="${AMBER}" opacity=".8"/><circle cx="320" cy="90" r="9" fill="${GREEN}" opacity=".8"/><circle cx="355" cy="90" r="9" fill="${LINE}"/>
      <rect x="290" y="160" width="170" height="16" rx="8" fill="${BLUE}" opacity=".9"/>
@@ -108,13 +139,13 @@ const THUMBS = {
   // the territory: zone hexes around the hub
   'atlas': frame(
     `${hex(640, 220, 70, 'none', TEAL, 4)}
-     ${hex(640, 220, 46, '#0d1117', BLUE, 3)}
-     ${hex(455, 115, 56, 'none', '#FF6B6B', 3, .75)}
+     ${hex(640, 220, 46, HUB, BLUE, 3)}
+     ${hex(455, 115, 56, 'none', CORAL, 3, .75)}
      ${hex(825, 115, 56, 'none', BLUE, 3, .75)}
      ${hex(455, 330, 56, 'none', GREEN, 3, .75)}
      ${hex(825, 330, 56, 'none', AMBER, 3, .75)}
-     ${hex(270, 220, 56, 'none', '#b59ff5', 3, .75)}
-     ${hex(1010, 220, 56, 'none', '#38b6f0', 3, .75)}
+     ${hex(270, 220, 56, 'none', PURPLE, 3, .75)}
+     ${hex(1010, 220, 56, 'none', SKY, 3, .75)}
      <line x1="565" y1="180" x2="510" y2="145" stroke="${LINE}" stroke-width="3"/>
      <line x1="715" y1="180" x2="770" y2="145" stroke="${LINE}" stroke-width="3"/>
      <line x1="565" y1="260" x2="510" y2="300" stroke="${LINE}" stroke-width="3"/>
@@ -122,29 +153,16 @@ const THUMBS = {
   // the stacked library
   'learn-library': frame(
     `${[0, 1, 2, 3].map(i =>
-      `<rect x="${360 + i * 14}" y="${90 + i * 58}" width="${560 - i * 28}" height="44" rx="8" fill="${i === 0 ? TEAL : '#132238'}" opacity="${i === 0 ? 0.5 : 1}" stroke="${i === 0 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
+      `<rect x="${360 + i * 14}" y="${90 + i * 58}" width="${560 - i * 28}" height="44" rx="8" fill="${i === 0 ? TEAL : PANEL}" opacity="${i === 0 ? 0.5 : 1}" stroke="${i === 0 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
      <line x1="420" y1="368" x2="860" y2="368" stroke="${AMBER}" stroke-width="4" opacity=".7"/>`),
 
   // the field guide: a skill folder open on its SKILL.md, the three loading levels
   // beside it with the first two lit (metadata, then the body; resources stay dark)
-  'ai-skills': frame(
-    `<path d="M300 90 h150 l30 30 h250 a14 14 0 0 1 14 14 v230 a14 14 0 0 1 -14 14 h-430 a14 14 0 0 1 -14 -14 v-260 a14 14 0 0 1 14 -14 z" fill="#132238" stroke="${LINE}" stroke-width="3"/>
-     <rect x="330" y="160" width="330" height="190" rx="8" fill="${BG}" stroke="${TEAL}" stroke-width="3"/>
-     <rect x="352" y="186" width="120" height="12" rx="6" fill="${TEAL}"/>
-     <rect x="352" y="216" width="260" height="10" rx="5" fill="${INK}" opacity=".55"/>
-     <rect x="352" y="240" width="220" height="10" rx="5" fill="${INK}" opacity=".45"/>
-     <rect x="352" y="264" width="250" height="10" rx="5" fill="${INK}" opacity=".35"/>
-     <rect x="352" y="288" width="180" height="10" rx="5" fill="${INK}" opacity=".3"/>
-     ${[0, 1, 2].map(i =>
-       `<rect x="800" y="${110 + i * 100}" width="260" height="64" rx="10" fill="${i < 2 ? TEAL : 'none'}" opacity="${i === 0 ? 0.55 : i === 1 ? 0.3 : 1}" stroke="${i < 2 ? TEAL : LINE}" stroke-width="3"/>`).join('')}
-     <path d="M660 300 C730 300 730 142 800 142" fill="none" stroke="${TEAL}" stroke-width="3"/>
-     <path d="M660 300 C730 300 730 242 800 242" fill="none" stroke="${TEAL}" stroke-width="3" opacity=".6"/>`),
-
   // ── SECRET MENU (sm-*) · guest-green identity, same overwrite contract ──
   // the roguelite: hospital wings stacked, one lit, the quarter goal meter below
   'sm-uncharted-general': frame(
     `${[0, 1, 2].map(i =>
-      `<rect x="${400 + i * 30}" y="${70 + i * 90}" width="${480 - i * 60}" height="70" rx="8" fill="${i === 1 ? GGREEN : '#132238'}" opacity="${i === 1 ? 0.45 : 1}" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
+      `<rect x="${400 + i * 30}" y="${70 + i * 90}" width="${480 - i * 60}" height="70" rx="8" fill="${i === 1 ? GGREEN : PANEL}" opacity="${i === 1 ? 0.45 : 1}" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3"/>`).join('')}
      <rect x="618" y="30" width="44" height="40" fill="none" stroke="${GGREEN}" stroke-width="3"/>
      <line x1="640" y1="30" x2="640" y2="10" stroke="${GGREEN}" stroke-width="3"/>
      <rect x="360" y="380" width="560" height="14" rx="7" fill="none" stroke="${LINE}" stroke-width="3"/>
@@ -187,8 +205,8 @@ const THUMBS = {
        `<rect x="${x}" y="${y}" width="${w}" height="46" rx="9" fill="${AMBER}" opacity=".28" stroke="${AMBER}" stroke-width="3"/>`).join('')}
      ${[[240, 350], [530, 370], [900, 345], [1120, 375]].map(([x, y]) =>
        `<circle cx="${x}" cy="${y}" r="9" fill="${AMBER}" opacity=".45"/>`).join('')}
-     <rect x="880" y="120" width="120" height="46" rx="9" fill="none" stroke="#DF5752" stroke-width="4"/>
-     <circle cx="940" cy="143" r="7" fill="#DF5752"/>`),
+     <rect x="880" y="120" width="120" height="46" rx="9" fill="none" stroke="${RED}" stroke-width="4"/>
+     <circle cx="940" cy="143" r="7" fill="${RED}"/>`),
   // the goat tracker: the traffic sparkline
   // the assembly tray: a grid, a flowmeter on the wall, a humidifier under it, a
   // tubing run to the patient, and the three connector states along the way
@@ -206,13 +224,13 @@ const THUMBS = {
      <rect x="920" y="200" width="180" height="180" rx="14" fill="none" stroke="${BLUE}" stroke-width="3"/>
      <circle cx="318" cy="256" r="12" fill="${GGREEN}"/>
      <circle cx="620" cy="140" r="12" fill="${AMBER}"/>
-     <circle cx="760" cy="140" r="12" fill="#DF5752"/>
+     <circle cx="760" cy="140" r="12" fill="${RED}"/>
      <path d="M560 140 H600 M640 140 H700 M780 140 H820" stroke="${INK}" stroke-width="4" stroke-linecap="round" opacity=".6"/>`),
   // er charge: the board is a grid of beds with a queue at the door and six cards in the hand, one lit
   'sm-er-charge': frame(
     `${Array.from({ length: 12 }, (_, i) => {
       const x = 340 + (i % 6) * 110, y = 70 + Math.floor(i / 6) * 100, hot = i === 2 || i === 9;
-      return `<rect x="${x}" y="${y}" width="86" height="72" rx="8" fill="${hot ? GGREEN : '#132238'}" opacity="${hot ? 0.45 : 1}" stroke="${hot ? GGREEN : LINE}" stroke-width="3"/>`;
+      return `<rect x="${x}" y="${y}" width="86" height="72" rx="8" fill="${hot ? GGREEN : PANEL}" opacity="${hot ? 0.45 : 1}" stroke="${hot ? GGREEN : LINE}" stroke-width="3"/>`;
     }).join('')}
      ${[0, 1, 2, 3, 4].map(i => `<circle cx="${140}" cy="${90 + i * 46}" r="14" fill="none" stroke="${i < 2 ? AMBER : LINE}" stroke-width="3"/>`).join('')}
      <line x1="220" y1="60" x2="220" y2="290" stroke="${LINE}" stroke-width="3" stroke-dasharray="8 8"/>
@@ -221,7 +239,7 @@ const THUMBS = {
   'sm-health-system': frame(
     `<path d="M120 300 C260 240 360 320 520 260 S820 200 1160 250" fill="none" stroke="${LINE}" stroke-width="3"/>
      ${[[230, 120, 150], [560, 90, 200], [900, 140, 170]].map(([x, y, w], i) =>
-       `<rect x="${x}" y="${y}" width="${w}" height="110" rx="10" fill="${i === 1 ? GGREEN : '#132238'}" opacity="${i === 1 ? 0.4 : 1}" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3"/>
+       `<rect x="${x}" y="${y}" width="${w}" height="110" rx="10" fill="${i === 1 ? GGREEN : PANEL}" opacity="${i === 1 ? 0.4 : 1}" stroke="${i === 1 ? GGREEN : LINE}" stroke-width="3"/>
         <rect x="${x + 18}" y="${y + 22}" width="${w - 36}" height="12" rx="6" fill="${INK}" opacity=".5"/>
         <rect x="${x + 18}" y="${y + 48}" width="${(w - 36) * 0.6}" height="12" rx="6" fill="${INK}" opacity=".35"/>`).join('')}
      <circle cx="640" cy="370" r="34" fill="none" stroke="${GGREEN}" stroke-width="3"/>
@@ -235,11 +253,16 @@ const THUMBS = {
        `<circle cx="${x}" cy="${y}" r="8" fill="${GGREEN}"/>`).join('')}
      <circle cx="1120" cy="120" r="18" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".5"/>`)
 };
+};
 
-(async () => {
-  for (const [id, svg] of Object.entries(THUMBS)) {
-    const out = path.join(OUT, id + '.png');
-    await sharp(Buffer.from(svg)).png({ quality: 90 }).toFile(out);
-    console.log('wrote', path.relative(process.cwd(), out));
+module.exports = { vignettes, DARK, LIGHT };
+
+if (require.main === module) (async () => {
+  for (const { suffix, P } of THEMES) {
+    for (const [id, svg] of Object.entries(vignettes(P))) {
+      const out = path.join(OUT, id + suffix + '.png');
+      await sharp(Buffer.from(svg)).png({ quality: 90 }).toFile(out);
+      console.log('wrote', path.relative(process.cwd(), out));
+    }
   }
 })();

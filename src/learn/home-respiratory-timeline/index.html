@@ -30,8 +30,8 @@ date: 2026-04-27
     --orange: #E67E22;
     /* Helper tokens for opacity-based hardcoded colors */
     --text-on-dark-soft: rgba(232,228,220,0.85);
-    --mist-soft: rgba(138,171,176,0.6);
-    --mist-fade: rgba(138,171,176,0.5);
+    --mist-soft: #72909A;   /* was rgba(138,171,176,0.6), 3.3:1 once blended; same hue, solid, 4.85:1 */
+    --mist-fade: #6C8990;   /* was rgba(138,171,176,0.5), 2.8:1 once blended; 4.9:1 */
     --neutral-tint: rgba(255,255,255,0.05);
     --navy-veil: rgba(11,31,58,0.8);
     --deep-veil: rgba(7,21,38,0.6);
@@ -39,7 +39,7 @@ date: 2026-04-27
     --cat-leg: #E74C3C;
     --cat-tech: #E8B86D;
     --cat-clin: #2ECC71;
-    --cat-prof: #9B59B6;
+    --cat-prof: #B07CC5;   /* was #9B59B6, 3.93:1 as badge text on --deep; same hue, lifted to 5.7:1 */
     --cat-pay: #F39C12;
 
     /* HU brand tokens · work across both color schemes */
@@ -61,26 +61,26 @@ date: 2026-04-27
       --navy: #DFE7F0;
       --deep: #F1ECDD;
       --hrt-teal: #117575;
-      --teal-light: #1A8C8C;
-      --gold: #8B6018;
-      --gold-light: #B07A1F;
+      --teal-light: #0B6158;   /* text teal: #1A8C8C read 3.4:1 on the cream ground and under 4.5 on its own 10% wash */
+      --gold: #865C17;   /* was #8B6018, 4.34:1 on the row-hover wash */
+      --gold-light: var(--gold);   /* #B07A1F read 3.15:1 as text; the palette's deeper gold, 5.0:1, 4.6 on the row-hover wash */
       --cream: #1A1F2E;
       --mist: #4A6B70;
       --text: #2A2E36;
-      --text-dim: #5A6B70;
+      --text-dim: var(--mist);   /* #5A6B70 read 4.46:1 on the header ground */
       --red: #A0271B;
       --green: #1E8E50;
       --purple: #6B358A;
       --orange: #B8551A;
       --text-on-dark-soft: rgba(31,31,34,0.82);
-      --mist-soft: rgba(74,107,112,0.7);
-      --mist-fade: rgba(74,107,112,0.55);
+      --mist-soft: var(--mist);   /* the translucent steps blended to 2.2 to 2.7:1; this ground has no room under --mist */
+      --mist-fade: var(--mist);
       --neutral-tint: rgba(14,14,15,0.04);
       --navy-veil: rgba(241,236,221,0.82);
       --deep-veil: rgba(241,236,221,0.6);
       --cat-leg: #A0271B;
       --cat-tech: #8B6018;
-      --cat-clin: #1E8E50;
+      --cat-clin: var(--green-dk);   /* #1E8E50 read 3.5:1 as badge text */
       --cat-prof: #6B358A;
       --cat-pay: #B8551A;
 
@@ -115,15 +115,7 @@ date: 2026-04-27
     position: relative;
     overflow: hidden;
   }
-  .header-eyebrow {
-    font-family: 'JetBrains Mono', monospace;
-    font-size:var(--t-label);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--teal-light);
-    margin-bottom: 14px;
-  }
-  header h1 {
+header h1 {
     font-family: 'Playfair Display', serif;
     font-size: clamp(28px, 4vw, 52px);
     font-weight: 900;
@@ -495,14 +487,7 @@ date: 2026-04-27
   }
 
   /* Event detail h3 · keeps teal in dark, deeper teal in light */
-  .event-h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    color: var(--teal-light);
-    margin: 20px 0 8px;
-  }
-
-  /* Site nav/footer are styled globally by hu-global.css */
+/* Site nav/footer are styled globally by hu-global.css */
 
   .hu-guest-pill {
     display: inline-flex; align-items: center; gap: 8px;
@@ -514,6 +499,8 @@ date: 2026-04-27
     padding: 5px 12px; border-radius: 20px;
     margin-top: 18px; position: relative; z-index: 1;
   }
+  /* --hu-accent is 4.0:1 on the pill's own wash over the header ground */
+  [data-theme="light"] .hu-guest-pill { color: var(--teal-light); }
 
   .hu-bio {
     background: var(--hu-surface);
@@ -571,7 +558,7 @@ date: 2026-04-27
 </style>
 
 <header>
-  <div class="header-eyebrow">Interactive Historical Reference</div>
+  <div class="hu-read-eyebrow">Interactive Historical Reference</div>
   <h1>History of<br><em>Home Respiratory Therapy</em></h1>
   <p class="header-sub">From "oxygen orderlies" in the 1940s to modern PAP therapy, home ventilation, and the fight for clinical recognition: a century of evolution in the home care setting.</p>
   <p class="header-credit">Based on Lewarski (2023) · Augmented with CMS, AARC, ATS, NIH, and peer-reviewed sources</p>
@@ -1005,18 +992,18 @@ const EVENTS = [
     cat: "profession",
     body: `<p>The <strong>Supplemental Oxygen Access Reform (SOAR) Act</strong> is the most significant piece of home respiratory care legislation introduced in a generation. It emerged from years of multi-organizational advocacy centered on the <strong>Four Pillars for Oxygen Reform</strong>, a policy framework developed by a coalition spanning patient advocacy groups, clinical professional societies, DME providers, and manufacturers.</p>
 
-    <h3 class="event-h3">The Four Pillars for Oxygen Reform</h3>
+    <h3 class="hu-read-h3">The Four Pillars for Oxygen Reform</h3>
     <p>The Four Pillars represent the unified policy framework that anchors the SOAR Act:</p>
     <p><strong>Pillar 1, remove oxygen from competitive bidding:</strong> Permanently remove all supplemental oxygen services and equipment from the Medicare competitive bidding program, which has driven chronic underfunding and market exit by suppliers.</p>
     <p><strong>Pillar 2, fix the liquid oxygen payment system:</strong> Establish a separate base payment rate for liquid oxygen with an add-on payment for higher-flow patients (≥6 L/min), addressing the market collapse that has left many states with zero LOX suppliers.</p>
     <p><strong>Pillar 3, create a respiratory therapist service add-on:</strong> Establish a new Medicare reimbursement add-on to pay for respiratory therapist services when providing supplemental oxygen to Medicare beneficiaries. It would be the first-ever statutory service element for home RT under the DME benefit. This directly addresses the decades-long bar on RT clinical billing in the home oxygen setting.</p>
     <p><strong>Pillar 4, establish an oxygen user's bill of rights and audit reform:</strong> Create standardized documentation requirements (an "oxygen template") to protect beneficiaries and reduce unwarranted claim denials, and mandate that Medicare audits focus on actual fraud and abuse rather than documentation technicalities.</p>
 
-    <h3 class="event-h3">Legislative History</h3>
+    <h3 class="hu-read-h3">Legislative History</h3>
     <p>The SOAR Act was first introduced in the <strong>118th Congress</strong> in February 2024: in the U.S. Senate (<strong>S. 3821</strong>) by Sens. Bill Cassidy, MD (R-LA), Mark Warner (D-VA), and Amy Klobuchar (D-MN); and in the House (<strong>H.R. 7829</strong>) by Reps. David Valadao (R-CA), Larry Bucshon, MD (R-IN), Adrian Smith (R-NE), and Julia Brownley (D-CA). The bill's Senate introduction came directly following the AARC's September 2023 Washington D.C. Fly-In, where PACT members held more than 200 congressional meetings advocating for oxygen reform. Despite broad bipartisan support, the legislation did not advance during the 118th Congress due to budget constraints.</p>
     <p>The SOAR Act was reintroduced in the <strong>119th Congress</strong> in April 2025: Senate (<strong>S. 1406</strong>) by Cassidy, Warner, and Klobuchar; House (<strong>H.R. 2902</strong>) by Reps. Valadao, Brownley, Smith, and Gabe Evans (R-CO). By September 2025, sixteen leading organizations had issued a joint public call for congressional co-sponsorship. By December 2025, twenty-seven organizations sent a letter urging Congress to include the SOAR Act in an end-of-year legislative package.</p>
 
-    <h3 class="event-h3">The Coalition</h3>
+    <h3 class="hu-read-h3">The Coalition</h3>
     <p>The SOAR Act reflects an unusually broad coalition spanning patient disease groups, clinical professional societies, accreditation bodies, DME provider networks, and industry manufacturers:</p>
     <p><strong>Clinical & Professional Societies:</strong> American Association for Respiratory Care (AARC) · American Thoracic Society (ATS) · American College of Chest Physicians (CHEST) · Commission on Accreditation for Respiratory Care (CoARC)</p>
     <p><strong>Patient Advocacy Organizations:</strong> American Lung Association · COPD Foundation · Pulmonary Fibrosis Foundation · Pulmonary Hypertension Association · Alpha-1 Foundation</p>

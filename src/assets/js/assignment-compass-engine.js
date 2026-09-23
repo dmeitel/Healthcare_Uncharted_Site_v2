@@ -185,8 +185,12 @@
     return (lo + hi) / 2;
   }
 
-  function hourlyToAnnual(hourly, hoursPerWeek) {
-    return hourly * hoursPerWeek * 52;
+  /* HOURS PER YEAR, not per week. Changed 2026-09-22 on David's call. Weekly hours times 52
+     assumes you work every week of the year, which is the one thing a traveler reliably does
+     NOT do: three 13-week contracts with gaps is 39 weeks, and the old math paid you for 52.
+     Asking for the annual figure lets someone say what they actually work. */
+  function hourlyToAnnual(hourly, hoursPerYear) {
+    return hourly * hoursPerYear;
   }
 
   return {

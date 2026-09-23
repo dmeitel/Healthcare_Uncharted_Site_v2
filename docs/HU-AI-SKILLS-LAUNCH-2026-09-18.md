@@ -2,6 +2,28 @@
 
 Three deliverables, three destinations. This is the record of what was built into the site, where it lives, what was changed from the hand-off notes, and what has to happen before it goes live.
 
+> **THE TWO PAGES THIS DOCUMENT DESCRIBES WERE DELETED 2026-09-21** on David's call
+> ("the AI tools page, delete"), DECISIONS question 13: `/tools/ai-skills/`, `/tools/skill-demo/`,
+> their hub card, their search rows, `src/_data/skillsEcosystem.json` and the thumbnail entry are
+> all gone. This file is now a record of something that was built and removed. Do not rebuild from it.
+>
+> **ALSO CORRECTED 2026-09-21. Parts of this document describe a distribution
+> pipeline that DOES NOT EXIST and MUST NOT be rebuilt from these notes.**
+>
+> Verified against the repo on 2026-09-21: there is no `skills/` folder, no
+> `scripts/build-skills-zip.js`, no `/downloads/skills/` passthrough, no `hu-skills.zip`, and no
+> `downloadUrl` or `filesUrl` in `skillsEcosystem.json`. `src/downloads/` holds David's own
+> conference PDFs and nothing else. The five skills are his PRIVATE tools, parked outside this
+> repo at `Documents/hu-skills`: no repo, no download, no license.
+>
+> The sections below that describe a passthrough, a zip built on every build, and files "readable
+> raw in the browser" came from an outside hand-off that assumed an open-source release David
+> never asked for. CLAUDE.md records that assumption as the mistake it was. Anything in here that
+> publishes, licenses or distributes his skills is an INPUT that was rejected, not a plan.
+>
+> Also note: the two pages this document describes, `/tools/ai-skills/` and `/tools/skill-demo/`,
+> are DECISIONS question 13 and may be deleted. Do not build on them.
+
 ## What shipped into the repo
 
 | Deliverable | Where | Notes |

@@ -45,7 +45,8 @@ kit needs from any game that joins it (docs/HU-GAME-DESIGN-2026-09-06.md section
 - A multiplayer game has a fake-bus test (two sandboxes, JSON-cloned messages, the guest's
   packed run byte-identical to the host's after every intent) and appears in
   `scripts/backend-check.js` so the real relay is checked before a deploy.
-- `npm run verify` green and `npm run phone -- <path>` clean at 360 and 699 before a game ships.
+- `npm run verify` green and `npm run phone -- <path>` clean across its eight default viewports
+  (portrait, landscape and both sides of the 699 line) before a game ships.
   The pane's screenshots can time out; Playwright shots into tmp/ are the reliable proof.
 
 ## What stays under the change budget
