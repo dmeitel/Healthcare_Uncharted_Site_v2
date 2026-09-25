@@ -31,6 +31,15 @@
                            arrow/Home/End walk, focus return. The kit
                            owns the POPOVER rung of the Esc walk only;
                            the page keeps its own next rung.
+
+   THE GAME MENUS (2026-09-23, docs/HU-GAME-MENUS-2026-09-23.md section 4).
+   Five games each built their own overlays; these are the one set.
+   HUKit.dialog(opts)   -> the modal card: X, Esc and the phone back gesture
+                           all close it, focus in and back out, stackable.
+   HUKit.gameMenu(opts) -> Resume, Help, Settings, Restart, Leave, Site menu.
+   HUKit.settings(opts) -> toggle rows that apply at once and are remembered.
+   HUKit.howTo(opts)    -> the how-to-play card, by itself on a first visit only.
+   HUKit.confirm(opts)  -> Promise<boolean>; the button names the act.
 ================================================================ */
 (function () {
   'use strict';
@@ -654,5 +663,555 @@
     };
   }
 
-  window.HUKit = { phone: phone, dcap: dcap, peek: peek, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, conusView: conusView, CONUS: CONUS, PHONE_MQ: PHONE_MQ };
+  /* ── Dialog: the modal card every game menu sits on ────────────
+     Five games each built their own overlay, so the close button, Esc, the
+     back gesture, help and settings differed in every one of them
+     (docs/HU-GAME-MENUS-2026-09-23.md, section 4). This is the one card.
+
+       HUKit.dialog(opts) -> { el, body, heading, x, open(), close(why), isOpen() }
+
+     title          the h2, which is also the dialog's accessible name
+     body           a node or a string, or a builder fn(bodyEl, api) that fills
+                    the body (and may return a node to append)
+     className      extra class on the <dialog>
+     role           'dialog' (default) or 'alertdialog', for a confirm
+     backdropClose  opt-in: a tap outside the card closes it
+     focus          the element to start on, or a function returning it.
+                    Default: the first control in the body, else the X.
+     onOpen()       after it opens
+     onClose(why)   after it closes. why is 'x', 'esc', 'back', 'backdrop', or
+                    whatever the caller passed to close().
+
+     A native <dialog> opened with showModal(), so focus stays inside and Esc
+     arrives as the 'cancel' event, both for free. The browser sends 'cancel'
+     to the TOP modal only, which is what lets a confirm over a menu close
+     alone. Focus goes back to whatever opened it.
+
+     THE BACK GESTURE. One HUKit.backGuard serves the whole stack, not one per
+     card: two guards would both hear the same popstate and the menu would shut
+     under its own confirm. The guard watches a detached element whose 'open'
+     class means "a card is up"; a back press closes the top card and re-arms
+     while any are left. A page with its own popstate handler builds its cards
+     first and starts that handler with
+       if (HUKit.dialog.consumed()) return;
+     Close a sheet before opening a card. The sheet's guard and this one would
+     share the press, and a phone shows one transient surface at a time anyway
+     (the cards underneath a stacked one step out of view there, in CSS).
+
+     Where showModal is missing (an old engine, the test stub) the card opens
+     with the open attribute instead, and Esc is caught on the document, still
+     top card only. */
+  var dlgStack = [], dlgSeq = 0, dlgGuard = null, dlgWatch = null, dlgKeysWired = false;
+  var CONTROL = 'button,a[href],input,select,textarea,[tabindex]';
+  var ICON_X = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var ICON_MENU = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
+
+  function uid() { return 'hu-dlg-' + (++dlgSeq); }
+  function make(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    if (tag === 'button') n.setAttribute('type', 'button');
+    return n;
+  }
+  function firstControl(root) {
+    var list = root.querySelectorAll(CONTROL);
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      if (!c.disabled && !c.hidden && c.getAttribute('tabindex') !== '-1') return c;
+    }
+    return null;
+  }
+  // Up, Down, Home and End walk a column of rows, the way the popover options already do
+  function rowWalk(root, sel) {
+    root.addEventListener('keydown', function (e) {
+      var k = e.key;
+      if (k !== 'ArrowDown' && k !== 'ArrowUp' && k !== 'Home' && k !== 'End') return;
+      var rows = [].slice.call(root.querySelectorAll(sel));
+      if (!rows.length) return;
+      var i = rows.indexOf(document.activeElement), next = null;
+      if (k === 'ArrowDown') next = rows[i + 1] || rows[0];
+      else if (k === 'ArrowUp') next = rows[i - 1] || rows[rows.length - 1];
+      else if (k === 'Home') next = rows[0];
+      else next = rows[rows.length - 1];
+      if (e.preventDefault) e.preventDefault();
+      next.focus();
+    });
+  }
+  function dlgSync() {
+    var n = dlgStack.length;
+    for (var i = 0; i < n; i++) {
+      if (i < n - 1) dlgStack[i].el.classList.add('hu-dlg--under');
+      else dlgStack[i].el.classList.remove('hu-dlg--under');
+    }
+    if (dlgWatch) { if (n) dlgWatch.classList.add('open'); else dlgWatch.classList.remove('open'); }
+    var root = document.documentElement;
+    if (root) { if (n) root.classList.add('hu-dlg-lock'); else root.classList.remove('hu-dlg-lock'); }
+  }
+  function dlgWire() {
+    if (dlgGuard) return;
+    dlgWatch = document.createElement('div');   // never attached: it only carries the class the guard watches
+    dlgGuard = backGuard({
+      watch: dlgWatch,
+      active: function () { return dlgStack.length > 0; },
+      step: function () { var top = dlgStack[dlgStack.length - 1]; if (top) top.close('back'); }
+    });
+    if (dlgKeysWired) return;
+    dlgKeysWired = true;
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var top = dlgStack[dlgStack.length - 1];
+      if (!top || top.native) return;             // a real modal hears Esc as 'cancel'
+      if (e.preventDefault) e.preventDefault();
+      top.close('esc');
+    });
+  }
+
+  function dialog(opts) {
+    opts = opts || {};
+    dlgWire();
+    var id = uid();
+    var d = /** @type {HTMLDialogElement} */ (document.createElement('dialog'));
+    d.className = 'hu-dlg' + (opts.className ? ' ' + opts.className : '');
+    d.setAttribute('aria-labelledby', id + '-t');
+    if (opts.role === 'alertdialog') d.setAttribute('role', 'alertdialog');
+    var native = typeof d.showModal === 'function';
+    if (!native) d.classList.add('hu-dlg--nm');
+
+    var inner = make('div', 'hu-dlg-in');
+    var head = make('div', 'hu-dlg-head');
+    var h = make('h2', 'hu-dlg-title', opts.title || '');
+    h.id = id + '-t';
+    h.setAttribute('tabindex', '-1');             // focusable by script only: a card that is all reading starts here
+    var x = make('button', 'hu-dlg-x');
+    x.setAttribute('aria-label', 'Close');
+    x.innerHTML = ICON_X;
+    var body = make('div', 'hu-dlg-body');
+    head.appendChild(h); head.appendChild(x);
+    inner.appendChild(head); inner.appendChild(body);
+    d.appendChild(inner);
+    document.body.appendChild(d);
+
+    var open = false, opener = null, downOnSelf = false;
+    var rec = { el: d, native: native, close: close };
+
+    function show() {
+      if (open) return;
+      opener = document.activeElement;
+      open = true;
+      dlgStack.push(rec);
+      if (native) { try { d.showModal(); } catch (err) { d.setAttribute('open', ''); } }
+      else d.setAttribute('open', '');
+      dlgSync();
+      var f = typeof opts.focus === 'function' ? opts.focus() : opts.focus;
+      f = f || firstControl(body) || x;
+      if (f && f.focus) f.focus();
+      if (opts.onOpen) opts.onOpen();
+    }
+    function close(why) {
+      if (!open) return;
+      open = false;
+      var i = dlgStack.indexOf(rec);
+      if (i > -1) dlgStack.splice(i, 1);
+      d.classList.remove('hu-dlg--under');
+      if (native && d.open) d.close(); else d.removeAttribute('open');
+      dlgSync();                                  // un-hide the card below BEFORE focusing into it
+      if (opener && opener.focus && document.contains(opener)) opener.focus();
+      opener = null;
+      if (opts.onClose) opts.onClose(why || 'api');
+    }
+
+    x.addEventListener('click', function () { close('x'); });
+    d.addEventListener('cancel', function (e) {
+      if (e.preventDefault) e.preventDefault();   // the kit closes it, so focus return and onClose run
+      if (dlgStack[dlgStack.length - 1] === rec) close('esc');
+    });
+    // shut some other way (the browser's own close watcher, a method=dialog form): catch up.
+    // d.open is checked because a card closed and reopened in one task gets a stale 'close'.
+    d.addEventListener('close', function () { if (open && !d.open) close('esc'); });
+    // a backdrop tap lands on the <dialog> itself; the card inside covers every other point.
+    // Both ends of the press must be outside, or a drag out of the card would shut it.
+    d.addEventListener('pointerdown', function (e) { downOnSelf = e.target === d; });
+    d.addEventListener('click', function (e) {
+      if (opts.backdropClose && downOnSelf && e.target === d) close('backdrop');
+      downOnSelf = false;
+    });
+
+    var api = { el: d, body: body, heading: h, x: x, open: show, close: close, isOpen: function () { return open; } };
+    var b = typeof opts.body === 'function' ? opts.body(body, api) : opts.body;
+    if (typeof b === 'string') body.appendChild(make('p', 'hu-dlg-text', b));
+    else if (b) body.appendChild(b);
+    return api;
+  }
+  dialog.anyOpen = function () { return dlgStack.length > 0; };
+  dialog.consumed = function () { return dlgGuard ? dlgGuard.consumed() : false; };
+
+  /* ── Confirm ──────────────────────────────────────────────────
+     The iPhone's "Delete Photo": the button says the act, never Yes or OK,
+     and the destructive one is red.
+
+       HUKit.confirm({ title, body, verb, danger }) -> Promise<boolean>
+
+     The verb comes first (left in a row, top in a stack), then Cancel, with
+     room between them. Only the verb resolves true; Cancel, the X, Esc and
+     the back gesture all resolve false. With danger:true the verb is drawn
+     red and focus starts on Cancel, so a stray Enter cannot destroy anything
+     (the WAI-ARIA alert dialog pattern). One card per question, removed once
+     it is answered. A verb that does not name the act throws, loudly, at
+     the call. */
+  var NOT_A_VERB = /^(yes|ok|okay|sure|confirm)$/i;
+  function confirm(opts) {
+    opts = opts || {};
+    var verb = String(opts.verb || '').trim();
+    if (!verb || NOT_A_VERB.test(verb)) {
+      throw new TypeError('HUKit.confirm: the button names the act, e.g. "Restart the shift", not "' + verb + '"');
+    }
+    return new Promise(function (resolve) {
+      var said = false, go = null, cancel = null;
+      var card = dialog({
+        title: opts.title || verb + '?',
+        role: 'alertdialog',
+        className: 'hu-dlg--confirm',
+        body: function (body, api) {
+          if (opts.body) {
+            var p = typeof opts.body === 'string' ? make('p', 'hu-dlg-text', opts.body) : opts.body;
+            if (!p.id) p.id = uid();
+            api.el.setAttribute('aria-describedby', p.id);
+            body.appendChild(p);
+          }
+          var acts = make('div', 'hu-dlg-acts');
+          go = make('button', 'hu-dlg-btn ' + (opts.danger ? 'hu-dlg-btn--danger' : 'hu-dlg-btn--primary'), verb);
+          cancel = make('button', 'hu-dlg-btn', 'Cancel');
+          go.addEventListener('click', function () { said = true; api.close('verb'); });
+          cancel.addEventListener('click', function () { api.close('cancel'); });
+          acts.appendChild(go); acts.appendChild(cancel);
+          body.appendChild(acts);
+        },
+        focus: function () { return opts.danger ? cancel : go; },
+        onClose: function () {
+          if (card.el.remove) card.el.remove();
+          resolve(said);
+        }
+      });
+      card.open();
+    });
+  }
+
+  /* ── Settings ─────────────────────────────────────────────────
+     Wordle's gear: a few toggle rows, each a label, one line under it saying
+     what it does, and a switch on the right. A flip applies at once and is
+     remembered. There is no Save button.
+
+       HUKit.settings(opts) -> { el, dialog, list, open(), close(), isOpen(),
+                                 get(key), values(), set(key, value) }
+
+     id        the game's short id ('af', 'ug', 'da'); values persist in
+               localStorage under 'hu-settings-<id>'. No id, nothing persists.
+     title     default 'Settings'
+     rows      [{ key, label, help, value }], value being the default
+     onChange(key, value, values)   the game applies it; the kit remembers it.
+               set() from code does not call it back.
+
+     Storage can be absent or throw (a private window, blocked site data), so
+     every read and write is fenced and a blocked store still draws the
+     defaults. Each row is ONE <button role="switch">, so the whole row is the
+     target and .hu-sw is only its picture.
+
+     HUKit.settings.assist carries three ready rows a game can opt into. There
+     is deliberately no motion row and no theme row: motion follows the
+     device and the theme follows the site, and Apple's guidance is not to
+     rebuild a system setting inside an app. */
+  function storage() { try { return window.localStorage || null; } catch (e) { return null; } }
+  function load(k) { var s = storage(); if (!s) return null; try { return s.getItem(k); } catch (e) { return null; } }
+  function save(k, v) { var s = storage(); if (!s) return; try { s.setItem(k, v); } catch (e) {} }
+
+  function settings(opts) {
+    opts = opts || {};
+    var key = opts.id ? 'hu-settings-' + opts.id : '';
+    var rows = opts.rows || [];
+    var vals = {}, sws = {};
+    rows.forEach(function (r) { vals[r.key] = !!r.value; });
+    var saved = null;
+    if (key) { try { saved = JSON.parse(load(key) || 'null'); } catch (e) { saved = null; } }
+    if (saved && typeof saved === 'object') {
+      rows.forEach(function (r) { if (typeof saved[r.key] === 'boolean') vals[r.key] = saved[r.key]; });
+    }
+    function values() { var o = {}; for (var k in vals) o[k] = vals[k]; return o; }
+    function paint(k) {
+      var s = sws[k]; if (!s) return;
+      s.b.setAttribute('aria-checked', vals[k] ? 'true' : 'false');
+      if (vals[k]) s.sw.classList.add('on'); else s.sw.classList.remove('on');
+    }
+    function put(k, v, tell) {
+      if (!Object.prototype.hasOwnProperty.call(vals, k)) return;
+      vals[k] = !!v;
+      paint(k);
+      if (key) save(key, JSON.stringify(vals));
+      if (tell && opts.onChange) opts.onChange(k, vals[k], values());
+    }
+
+    var list = make('ul', 'hu-gm-set');
+    rows.forEach(function (r) {
+      var id = uid();
+      var li = make('li');
+      var b = make('button', 'hu-gm-toggle');
+      b.setAttribute('role', 'switch');
+      b.setAttribute('aria-labelledby', id + '-l');
+      var txt = make('span', 'hu-gm-toggle-txt');
+      var name = make('span', 'hu-gm-toggle-name', r.label);
+      name.id = id + '-l';
+      txt.appendChild(name);
+      if (r.help) {
+        var help = make('span', 'hu-gm-toggle-help', r.help);
+        help.id = id + '-h';
+        b.setAttribute('aria-describedby', id + '-h');
+        txt.appendChild(help);
+      }
+      var sw = make('span', 'hu-sw');
+      sw.setAttribute('aria-hidden', 'true');
+      b.appendChild(txt); b.appendChild(sw);
+      b.addEventListener('click', function () { put(r.key, !vals[r.key], true); });
+      sws[r.key] = { b: b, sw: sw };
+      paint(r.key);
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+    rowWalk(list, '.hu-gm-toggle');
+
+    var card = dialog({ title: opts.title || 'Settings', className: 'hu-dlg--settings', body: list, onClose: opts.onClose });
+    return {
+      el: card.el, dialog: card, list: list,
+      open: card.open, close: card.close, isOpen: card.isOpen,
+      get: function (k) { return vals[k]; },
+      values: values,
+      set: function (k, v) { put(k, v, false); }
+    };
+  }
+  // ready rows; a game spreads one into its own to change the default
+  settings.assist = Object.freeze({
+    moreTime: Object.freeze({ key: 'moreTime', label: 'More time', help: 'Clocks and countdowns run slower.', value: false }),
+    soundsAsText: Object.freeze({ key: 'soundsAsText', label: 'Show sounds as text', help: 'Alarms and cues also appear as words on screen.', value: false }),
+    hints: Object.freeze({ key: 'hints', label: 'Hints', help: 'A short tip shows next to the thing it explains.', value: true })
+  });
+
+  function pressed(btns, on) { btns.forEach(function (b) { b.setAttribute('aria-expanded', on ? 'true' : 'false'); }); }
+
+  /* ── How to play ──────────────────────────────────────────────
+     Wordle's "How To Play": it opens BY ITSELF on the first visit only, and
+     after that only when asked, from the game's "?" or the menu's Help row.
+     Up to three short rules, then an example if the game has one.
+
+       HUKit.howTo(opts) -> { el, dialog, open(), close(), isOpen(), seen(),
+                              firstVisit(), button() }
+
+     id       the game's short id; the flag lives in localStorage 'hu-howto-<id>'
+     title    default 'How to play'
+     rules    up to three strings. A fourth is not drawn: past three it is a
+              manual, and the peek is where the rest of the words go.
+     example  a node, or a builder fn(el), shown under the rules
+     action   optional { label, run } for a primary button at the foot, e.g.
+              { label: 'Clock in', run: startShift }. It closes the card, then runs.
+     auto     default true: open now if this browser has not seen it. false
+              leaves the moment to the game, which calls firstVisit() itself.
+
+     The flag is written when the card CLOSES, so a reload mid-read shows it
+     again. Where storage is blocked it cannot be remembered, so the card
+     shows on each visit rather than never. A tap outside the card closes it.
+     button() makes the "?" (44px, named "How to play"). */
+  function howTo(opts) {
+    opts = opts || {};
+    var key = opts.id ? 'hu-howto-' + opts.id : '';
+    var rules = opts.rules || [];
+    var btns = [], act = null;
+    if (rules.length > 3 && typeof console !== 'undefined') console.warn('HUKit.howTo: three rules at most; the rest were not drawn');
+    var card = dialog({
+      title: opts.title || 'How to play',
+      className: 'hu-dlg--howto',
+      backdropClose: true,
+      body: function (body, api) {
+        var ol = make('ol', 'hu-gm-rules');
+        rules.slice(0, 3).forEach(function (t) { ol.appendChild(make('li', null, t)); });
+        body.appendChild(ol);
+        if (opts.example) {
+          var ex = make('div', 'hu-gm-ex');
+          ex.appendChild(make('p', 'hu-gm-cap', 'Example'));
+          var n = typeof opts.example === 'function' ? opts.example(ex) : opts.example;
+          if (n && typeof n === 'object') ex.appendChild(n);
+          body.appendChild(ex);
+        }
+        if (opts.action) {
+          var a = opts.action;
+          act = make('button', 'hu-dlg-btn hu-dlg-btn--primary hu-gm-go', a.label);
+          act.addEventListener('click', function () { api.close('action'); if (a.run) a.run(); });
+          body.appendChild(act);
+        }
+      },
+      // A card that is all reading starts on its title (the WAI-ARIA dialog pattern), so a screen
+      // reader begins at the top and nothing lights up at first paint. The X is one Tab away.
+      focus: function () { return act || card.heading; },
+      // Focusing the action scrolls a short card (a sideways phone) down to it, past rules 1 and 2.
+      // The reading starts at the top; the action is still focused, so Enter still plays.
+      onOpen: function () { pressed(btns, true); var bd = card.el.querySelector('.hu-dlg-body'); if (bd) bd.scrollTop = 0; },
+      onClose: function (why) {
+        if (key) save(key, '1');
+        pressed(btns, false);
+        if (opts.onClose) opts.onClose(why);
+      }
+    });
+    function seen() { return !!key && load(key) === '1'; }
+    function firstVisit() { if (!key || seen()) return false; card.open(); return true; }
+    if (opts.auto !== false) firstVisit();
+    return {
+      el: card.el, dialog: card,
+      open: card.open, close: card.close, isOpen: card.isOpen,
+      seen: seen, firstVisit: firstVisit,
+      button: function () {
+        var b = make('button', 'hu-gm-q', '?');
+        b.setAttribute('aria-label', 'How to play');
+        b.setAttribute('title', 'How to play');
+        b.setAttribute('aria-haspopup', 'dialog');
+        b.setAttribute('aria-expanded', card.isOpen() ? 'true' : 'false');
+        b.addEventListener('click', function () { b.focus(); card.open(); });   // Safari: see gameMenu's opens()
+        btns.push(b);
+        return b;
+      }
+    };
+  }
+
+  /* ── Game menu ────────────────────────────────────────────────
+     The pause menu of any console game, the same rows in the same order in
+     every game on the site:
+       Resume     primary, first, and where focus starts. Closes the menu.
+       Help       opens the how-to card (a HUKit.howTo, or any function)
+       Settings   opens the settings card (a HUKit.settings, or any function)
+       Restart    asks first, through HUKit.confirm, with the game's own verb
+       Leave      a link the game names, e.g. back to /learn/
+       Site menu  last. Closes this and opens the site's own nav.
+     Every row but Resume is optional; one that is not given is not drawn.
+     Help and Settings open OVER the menu, so closing them lands back on it.
+
+       HUKit.gameMenu(opts) -> { el, dialog, open(), close(), isOpen(), button() }
+
+     title      the card's h2, default 'Menu'
+     onResume() after Resume closes it. onClose(why) runs for every way out,
+                so pause in onOpen and unpause in onClose.
+     help, settings   an api with open(), or a function
+     restart    { verb: 'Restart the shift', title, body, run() }
+     leave      { href: '/learn/', label: 'Leave' }, or just the href
+     siteMenu   default true
+     escOpens   opt-in: Esc with nothing open opens the menu. true, or a
+                function(e) that returns true when the game has nothing of its
+                own open, because the kit cannot see a game's own overlays. It
+                listens in the capture phase, so it decides before a page's own
+                Esc handler has closed anything.
+
+     button() makes the one menu button a game puts in its toolbar: the icon
+     and the visible word Menu, 44px, aria-expanded kept in step. A game that
+     adopts it drops its own site-menu button: the Site menu row replaces it. */
+  /** @param {string} s @returns {HTMLElement|null} */
+  function q(s) { return document.querySelector ? /** @type {HTMLElement|null} */ (document.querySelector(s)) : null; }
+  function siteMenu() {
+    // The merged band parks the nav behind [data-nav-summon]. A game may keep that control
+    // hidden and let this row press it, which is what Alarm Fatigue's phone menu already does.
+    var s = q('[data-nav-summon]');
+    if (s) { s.click(); return; }
+    // an ordinary page: the hamburger where it shows, else the links are on screen already
+    var ham = q('#navHam');
+    var shown = !!ham && (!window.getComputedStyle || window.getComputedStyle(ham).display !== 'none');
+    if (shown) ham.click();
+    var first = q(shown ? '#navLinks a' : 'nav[aria-label="Primary"] a');
+    if (first && first.focus) first.focus();
+  }
+  function leaveClick(e, href) {
+    // On a phone the back guard holds a spare history entry while a card is up. Following the
+    // link on top of it leaves that entry behind, and back would later land on the game twice.
+    // Replacing it takes the spare entry's place instead.
+    if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (!phone() || !location.replace) return;
+    if (e.preventDefault) e.preventDefault();
+    location.replace(href);
+  }
+
+  function gameMenu(opts) {
+    opts = opts || {};
+    var btns = [];
+    var card = null;
+    function row(ul, tag, label, primary) {
+      var li = make('li');
+      var b = make(tag, 'hu-gm-row' + (primary ? ' hu-gm-row--primary' : ''), label);
+      li.appendChild(b);
+      ul.appendChild(li);
+      return b;
+    }
+    // A row that opens a card over the menu takes focus first. Safari does not focus a button
+    // on click, and without this the card below would hand focus back to Resume, not to the row.
+    function opens(b, fn) { b.addEventListener('click', function () { if (b.focus) b.focus(); fn(); }); }
+    function open(t) { if (typeof t === 'function') t(); else if (t && t.open) t.open(); }
+
+    var ul = make('ul', 'hu-gm-list');
+    row(ul, 'button', 'Resume', true).addEventListener('click', function () {
+      card.close('resume');
+      if (opts.onResume) opts.onResume();
+    });
+    if (opts.help) opens(row(ul, 'button', 'Help'), function () { open(opts.help); });
+    if (opts.settings) opens(row(ul, 'button', 'Settings'), function () { open(opts.settings); });
+    if (opts.restart) {
+      var rs = opts.restart;
+      opens(row(ul, 'button', 'Restart'), function () {
+        confirm({ title: rs.title, body: rs.body, verb: rs.verb || 'Restart', danger: true }).then(function (yes) {
+          if (!yes) return;
+          card.close('restart');
+          if (rs.run) rs.run();
+        });
+      });
+    }
+    if (opts.leave) {
+      var lv = typeof opts.leave === 'string' ? { href: opts.leave } : opts.leave;
+      var a = row(ul, 'a', lv.label || 'Leave');
+      a.setAttribute('href', lv.href);
+      a.addEventListener('click', function (e) { leaveClick(e, lv.href); });
+    }
+    if (opts.siteMenu !== false) {
+      row(ul, 'button', 'Site menu').addEventListener('click', function () { card.close('site'); siteMenu(); });
+    }
+    rowWalk(ul, '.hu-gm-row');
+
+    card = dialog({
+      title: opts.title || 'Menu',
+      className: 'hu-dlg--menu',
+      body: ul,
+      onOpen: function () { pressed(btns, true); if (opts.onOpen) opts.onOpen(); },
+      onClose: function (why) { pressed(btns, false); if (opts.onClose) opts.onClose(why); }
+    });
+
+    if (opts.escOpens) {
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return;
+        if (dlgStack.length || peekOn) return;
+        if (q('dialog[open]') || q('.nav-links.open')) return;
+        if (document.body.classList.contains('nav-summoned')) return;
+        if (typeof opts.escOpens === 'function' && !opts.escOpens(e)) return;
+        // or this same press reaches the new card as 'cancel' and shuts it again
+        if (e.preventDefault) e.preventDefault();
+        card.open();
+      }, true);
+    }
+
+    return {
+      el: card.el, dialog: card,
+      open: card.open, close: card.close, isOpen: card.isOpen,
+      button: function () {
+        var b = make('button', 'hu-gm-btn');
+        b.setAttribute('aria-haspopup', 'dialog');
+        b.setAttribute('aria-expanded', card.isOpen() ? 'true' : 'false');
+        b.innerHTML = ICON_MENU + '<span>Menu</span>';
+        opens(b, function () { card.open(); });
+        btns.push(b);
+        return b;
+      }
+    };
+  }
+
+  window.HUKit = { phone: phone, dcap: dcap, peek: peek, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, conusView: conusView, CONUS: CONUS, PHONE_MQ: PHONE_MQ,
+    dialog: dialog, gameMenu: gameMenu, settings: settings, howTo: howTo, confirm: confirm };
 })();

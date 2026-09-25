@@ -52,7 +52,7 @@ async function until(page, fn, arg) { try { await page.waitForFunction(fn, arg, 
 const pause = ms => new Promise(r => setTimeout(r, ms));
 
 async function open(browser, dev, url, init, ready, who) {
-  const ctx = await browser.newContext({ ...dev, acceptDownloads: true });
+  const ctx = await browser.newContext({ ...dev, acceptDownloads: true, colorScheme: 'dark' });
   if (init) await ctx.addInitScript(init);
   const page = await ctx.newPage();
   page.__touch = !!dev.hasTouch;   // a phone taps, a laptop clicks
@@ -60,7 +60,18 @@ async function open(browser, dev, url, init, ready, who) {
   page.on('pageerror', e => errors.push(`[${who}] ${e.message}`));
   await page.goto(url, { waitUntil: 'networkidle' });
   if (!(await until(page, ready))) throw new Error(who + ': the page never got ready at ' + url);
+  await passHowTo(page);
   return page;
+}
+// every game opens its how-to card by itself on a first visit (the menus contract, 2026-09-23); a player reads it
+// and presses its button (Clock in) or the X, and so does this script, or every tap lands on the modal card
+/** @param {import('playwright').Page} page */
+async function passHowTo(page) {
+  const card = page.locator('dialog.hu-dlg--howto[open]').first();
+  try { await card.waitFor({ timeout: 1500 }); } catch { return; }
+  const go = card.locator('.hu-gm-go');
+  if (await go.count()) await tap(page, 'dialog.hu-dlg--howto[open] .hu-gm-go'); else await tap(page, 'dialog.hu-dlg--howto[open] .hu-dlg-x');
+  await pause(400);
 }
 // a lobby re-renders itself when the roster changes, so a control can vanish between finding it and
 // pressing it; find it again rather than fail on a race the player never sees
@@ -165,6 +176,7 @@ async function theTable(browser) {
   const phone = await open(browser, PHONE, url, init, ready, 'table phone');
   const laptop = await open(browser, LAPTOP, url, init, ready, 'table laptop');
   try {
+    await tap(phone, '#ug-tab-table');   // the table lives on its own tab of the start card since 2026-09-24
     await fill(phone, '#ug-netname', 'Dave');
     await tap(phone, '[data-act="hosttable"]');
     const hosted = await until(phone, () => window.__ug.NET.mode === 'host' && window.__ug.NET.chan && window.__ug.NET.chan.kind === 'internet');
@@ -173,6 +185,7 @@ async function theTable(browser) {
     await shot(phone, 'table-1-phone-hosted');
     if (!step(S, 'phone hosted a table over the internet relay, code on screen', hosted && codeShown, code ? 'table ' + code : '')) return;
 
+    await tap(laptop, '#ug-tab-table');
     await fill(laptop, '#ug-netname', 'Sam');
     await tap(laptop, '[data-act="jointable"]');
     await fill(laptop, '#ug-joincode', code);
@@ -224,7 +237,8 @@ async function theTable(browser) {
 /* ── THE CARD ─────────────────────────────────────────────────── */
 async function theCard(browser) {
   const S = 'card';
-  const phone = await open(browser, PHONE, BASE + '/fun/alarm-fatigue/', null, () => !!(window.__af && document.getElementById('bigBtn')), 'card phone');
+  // the game's hook exists only when __UG_TEST is set before its script runs (games.md; gated 2026-09-23)
+  const phone = await open(browser, PHONE, BASE + '/fun/alarm-fatigue/', () => { window.__UG_TEST = true; }, () => !!(window.__af && document.getElementById('bigBtn')), 'card phone');
   try {
     // the phone gets a "best on a bigger screen" card first; David would tap Clock in anyway
     if (await phone.locator('#afbsGo').isVisible().catch(() => false)) { await tap(phone, '#afbsGo'); await pause(400); }
@@ -259,13 +273,13 @@ async function theCard(browser) {
 /* ── THE ARTICLE ──────────────────────────────────────────────── */
 async function theArticle(browser) {
   const S = 'article';
-  const phone = await open(browser, PHONE, BASE + '/learn/alarm-fatigue/', null, () => !!document.querySelector('.afe-h1'), 'article phone');
+  const phone = await open(browser, PHONE, BASE + '/learn/alarm-fatigue/', null, () => !!document.querySelector('.hu-read-h1'), 'article phone');
   try {
     await shot(phone, 'article-1-phone-top');
-    const h1 = (await phone.locator('.afe-h1').textContent()) || '';
+    const h1 = (await phone.locator('.hu-read-h1').textContent()) || '';
     step(S, 'the page opened on the phone', h1.includes('Alarm fatigue'), h1.trim());
 
-    const links = await phone.evaluate(() => Array.from(document.querySelectorAll('.afe-src a')).map(a => ({ href: a.getAttribute('href'), ext: a.target === '_blank' })));
+    const links = await phone.evaluate(() => Array.from(document.querySelectorAll('.afe-src a')).map(a => ({ href: a.getAttribute('href'), ext: a.getAttribute('target') === '_blank' })));
     const external = links.filter(l => /^https:\/\//.test(l.href) && l.ext).length;
     const appendix = links.some(l => l.href === '/learn/sources/');
     await phone.locator('.afe-src a').first().scrollIntoViewIfNeeded();

@@ -40,7 +40,9 @@ test('the ladder: the non-rebreather level sits after the timed level, the fault
   assert.ok(seq.indexOf('lnrb') === seq.indexOf('l1t') + 1, 'NRB right after the timed level: ' + seq.join(','));
   assert.ok(seq.indexOf('f1') > seq.indexOf('l5') && seq.indexOf('f3') === seq.indexOf('sb') - 1, 'fault walls between capnography and the sandbox');
   const k = id => da.LEVELS.find(L => L.id === id).kicker;
-  assert.deepStrictEqual([k('lnrb'), k('l2'), k('l3'), k('l4'), k('l5')], ['Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6']);
+  assert.deepStrictEqual([k('lnrb'), k('l2'), k('l3'), k('l5')], ['Level 2', 'Level 3', 'Level 4', 'Level 5']);
+  // bubble CPAP is parked (David, 2026-09-23): kept for the engine tests, out of every list a player sees
+  assert.strictEqual(da.LEVELS.find(L => L.id === 'l4').parked, true);
   for (const id of ['f1', 'f2', 'f3']) { const L = da.LEVELS.find(x => x.id === id); assert.strictEqual(L.kind, 'fault'); assert.ok(L.build && L.fault && L.fault.parts.length, id + ' carries a build and a fault'); }
 });
 
@@ -79,10 +81,10 @@ test('find the fault 1: both flowmeters up, the cannula tubing on the air tree; 
   assert.match(ev.lines.map(l => l.t).join(' '), /not oxygen/, 'the engine names the wrong gas');
   assert.strictEqual(da.faultMatches(S, itemOf(S, 'xmas-air').uid), true, 'the air tree');
   assert.strictEqual(da.faultMatches(S, itemOf(S, 'flowmeter-air').uid), true, 'the air flowmeter');
-  const lead = S.tubes.find(t => t.lead === itemOf(S, 'cannula').uid);
+  const lead = S.tubes.find(t => t.lead === itemOf(S, 'cannula-14').uid);
   assert.strictEqual(da.faultMatches(S, lead.uid), true, 'the run pushed onto the air tree');
   assert.strictEqual(da.faultMatches(S, itemOf(S, 'flowmeter').uid), false, 'the oxygen flowmeter is innocent');
-  assert.strictEqual(da.faultMatches(S, itemOf(S, 'cannula').uid), false, 'so is the cannula');
+  assert.strictEqual(da.faultMatches(S, itemOf(S, 'cannula-14').uid), false, 'so is the cannula');
 });
 
 test('find the fault 2: the heated humidifier is in the path and unplugged; plugging it in makes the wall work', () => {
@@ -97,7 +99,7 @@ test('find the fault 2: the heated humidifier is in the path and unplugged; plug
   const cord = S.tubes.find(t => t.lead === heated.uid && t.def.kind === 'cord');
   assert.ok(cord, 'the cord hangs off the base');
   assert.strictEqual(da.faultMatches(S, cord.uid), true, 'the hanging cord answers too');
-  assert.strictEqual(da.faultMatches(S, itemOf(S, 'cannula').uid), false);
+  assert.strictEqual(da.faultMatches(S, itemOf(S, 'cannula-14').uid), false);
   const outlet = S.items.find(i => i.def.id === 'deco-elec');
   const plug = da.connectPorts(S, port(heated.uid, 'cord'), port(outlet.uid, da.portsOf(outlet)[0].pi), null);
   assert.ok(plug.ok, plug.why);
@@ -110,7 +112,7 @@ test('find the fault is a repair: each wall can be fixed with what is on it, and
   // f1: move the cannula tubing from the air tree to the oxygen tree
   let S = da.start('f1', 'left');
   assert.strictEqual(da.evaluate(S).ok, false);
-  const can = itemOf(S, 'cannula'), lead = S.tubes.find(t => t.lead === can.uid);
+  const can = itemOf(S, 'cannula-14'), lead = S.tubes.find(t => t.lead === can.uid);
   lead.to = null; lead.path = []; lead.short = 0;                       // what beginReplug does when you pull the end off
   const o2tree = itemOf(S, 'xmas');
   const r1 = da.connectPorts(S, port(can.uid, 'lead'), port(o2tree.uid, barbOf(da, o2tree).pi), null);

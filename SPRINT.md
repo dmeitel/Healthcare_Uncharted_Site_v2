@@ -65,12 +65,10 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
 
 ### AFTER THE 2026-09-23 COMMIT AND PUSH, in order
 
-1. **Confirm the deploy (Claude, read-only).** Production built from the new commit. Spot-check
-   the live site:
-   - /tools/cost-of-living/ loads
-   - /tools/assignment-compass/ lands on it
-   - the three new redirects land on /tools/ and /atlas/
-   - a light and a dark page render
+1. **Confirm the deploy. DONE 2026-09-23.** Production is `ready` on 47c0781 ("Major update
+   again"). /tools/cost-of-living/ serves 200; /tools/assignment-compass/, /tools/ai-skills/,
+   /tools/skill-demo/ and /atlas/craft/ all 301 to the right place; the new source links are
+   live on /learn/sources/.
 2. **Netlify cleanup (David's hands).** Delete `healthcareuncharted` (a09e2c0f) and
    `verdant-treacle-8c70aa`. The one WITH the hyphen is live. Until both are gone, every push
    builds three times. Steps are in DECISIONS.md.
@@ -81,6 +79,16 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
    - a SLOW-DATA pass that holds data files back two seconds
    The worst defects: the Career Tree's phone error when its data is slow, the Blueprint panel
    covering the building, and the "Pati…" metric name.
+   **DONE 2026-09-23, nine of ten, the tenth narrowed.** The three checks are in `npm run phone`,
+   each proven to fail on the unfixed pages and on a planted test page first. The Career Tree no
+   longer errors on slow data, the Blueprint opens on the hospital, the metric name reads in full,
+   and the other six are fixed. The tool bars that wrap (defect 7): SQL Mystery's no longer stays
+   pinned; fitting either on one row is the tool-chrome shell's call (item 9).
+   The new checks also found faults the review had not: text cut at tablet widths on
+   System Layers and the population map (Rankings was off screen at 700), the oxygen-cuts chart's
+   percentages, the laws page's eras grid, the Sources search (26px wide on a phone), and three
+   search placeholders cut mid-word. All fixed. Full sweep: 48 of 49 pages clean, the one red page
+   is item 10. Shots in tmp/tool-review-batch1/.
 4. **DECISIONS T1 to T3 (David).**
    - Make the ten rules the standard (DESIGN.md Tier 3).
    - Cut System Layers' 113 unsourced numbers.
@@ -88,14 +96,54 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
 5. **A standing link check (Claude).** Turn the one-off outbound check into
    `scripts/link-check.js`. Run it monthly, NOT in the gate, because outside sites fail for
    reasons that are not ours. Open the six unverifiable links once in a real browser.
-6. **Theme-pass spin-offs.** Confirm the two tasks it sent out actually shipped: the Atlas phone
-   search bar covering the breadcrumb, and the home respiratory timeline's rail items that the
-   keyboard cannot reach.
+   **DONE 2026-09-23.** `npm run links` (build first). First run: 456 links, 0 dead, 49 unsure
+   (publisher and congress.gov bot walls, LinkedIn), 11 moved to a new host. The browser check
+   overturned half of the old "works in a browser" list: both medicaid.gov links were really gone
+   and the CHAI coalition had moved to chai.org, so all three now point at the live pages. The
+   two ACEND links do work in a browser and are marked as such. Next run: late October.
+6. **Theme-pass spin-offs: THEY DID NOT SHIP (checked 2026-09-23 after the push).** Each task ran
+   three times in its own worktree under .claude/worktrees/, and none was committed or brought
+   back to main:
+   - The Atlas phone search bar: `fervent-lehmann` and `elated-jepsen`.
+   - The timeline keyboard: `zen-mendel` is the fullest; `lucid-dubinsky` and `magical-lalande`
+     are partial.
+   - A third fix found along the way, the sheet X painting under the grabber so a tap resizes
+     instead of closing (Atlas, Cost of Living, Device Assembly), with a regression test:
+     `elated-torvalds`.
+   All six are based on 3f41307. Their data-build and derived JSON changes are rebuild noise.
+   **DONE 2026-09-23, in main, uncommitted.** On the Atlas the search sits inside the map and
+   no longer covers the breadcrumb, the breadcrumb gets its own row from 700 to 1099, and the
+   sheet X takes the tap (the fix is in hu-global.css, so Cost of Living and Device Assembly get
+   it too). On the timeline the rail rows are buttons: Tab, Enter and Previous/Next all work.
+   Verify 226/226, phone gate clean on all three pages. Worktrees removed and their diffs kept in
+   tmp/worktree-patches/. The six claude/* branches are still there because deleting them was
+   refused by the permission prompt. They only point at 3f41307, so they are harmless.
+   Later the same day: the six side sessions were archived on David's yes, which released the
+   folders, and the six empty folders are gone. The branch names stay until David deletes them
+   (GitHub Desktop, Branch menu); they carry nothing.
 7. **Information freshness, one line each:**
    - Career Tree pay is BLS wage year May 2024; check for a newer edition.
    - The Vendor Directory needs a "status checked" date (its data was compiled 2026-08-10).
    - The Operations map's source line says "current" where it should give a date.
    - The Hospital Blueprint has no source line at all.
+   **DONE 2026-09-23, except the re-pull.** The Vendor Directory says "vendor statuses compiled
+   Aug 10, 2026"; the Operations map says "pulled June 2026"; the Blueprint now says it is a
+   composite hospital whose numbers are illustrations, not cited data. BLS HAS a newer edition,
+   checked live 2026-09-23: May 2025 wages came out 2026-05-15, and the respiratory therapist page
+   reads $82,280 where the Career Tree still shows the May 2024 $80,450. Re-pulling the tree's
+   pay is open.
+   **Re-pull DONE 2026-09-23.** The Handbook was already on its 2025-35 edition, so all 49
+   occupations moved together: pay, the 10th to 90th range, growth and openings. A new fetcher,
+   `npm run pull:ooh` (scripts/pull/ooh.js, dry run by default, `pull:all` picks it up), reads
+   each Handbook page and the Employment Projections table and cross-checks every median against
+   it; next September it is one command. What changed that a reader would notice: respiratory
+   therapists $82,280 and growth 12% to 9% (the new projection, confirmed on the page);
+   physicians $275,930, an exact median now instead of "$239,200+"; health specialties teachers
+   $147,570 to $107,310 (the old figure was not the median; the table's is); a pay range now
+   shows on 46 of 49 occupations (was 14) and openings on all 49 (was 5). The two roles whose number comes
+   from the table (health specialties teachers, clinical and counseling psychologists) and
+   ophthalmic technicians (their wage page is gone) link to the table. Source line, Sources
+   entry and the growth legend say 2025. Verify 229/229, Career Tree clean at nine viewports.
 8. **Cost of living, what is left.** The ~546 words (explanation behind an "i", warnings David
    rules on one by one, live output that stays), and the From side's "Rate there" label.
 9. **The tool-chrome shell.** Five pages hand-roll a bar that two share, and a tool's name
@@ -107,9 +155,256 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
     waived the design floors on this surface ("go wild"), but the wall screen is text meant to be
     read. It belongs with his pending phone play at 360. Either the game gets a phone layout, or
     the art is marked as a magnifiable scene so the gate exempts it on his ruling.
+    **DONE 2026-09-23 on David's pick from three mockups at 360: "B, copy under the wall."** Where
+    the bedside screen is under 150px on the glass (an upright phone), its words read out directly
+    under the wall as real text with 44px tabs (Order, Hint, Alerts, Test, Note), one fixed height
+    so the screen turning pages never moves Complete, and the floating toast goes quiet because the
+    readout carries it. Sideways phones and desktop are unchanged. The wall svg is marked
+    `data-drawing`: the phone gate now skips the type, stroke and ink floors for text and lines
+    printed on it (his "go wild" waiver on this surface) and prints the count on every phone line.
+    Device Assembly is clean at all nine viewports; 51/51 of its tests, verify 229/229.
+    Follow-up the same evening (David: "the double chart seems unneeded"): where the readout
+    shows, the wall stops drawing the screen, so an upright phone has one copy, not two.
+13. **Device Assembly, the patient who moves. DONE 2026-09-23** (David: "can we make it so his
+    body can move around the wall like anything else? that functionality will matter when we start
+    making complex semi mazes"). His calls: the level places him and the sandbox lets you drag him;
+    one row lower after the tutorials with longer tubing. Built: the patient is his three pieces, a
+    level names his spot, the sandbox drags him with his cannula; the body is four columns of
+    shoulders instead of a wall of blanket; Level 1 on sit a row lower with the real 14 ft cannula
+    (Salter 1600-14, checked today); Level 2 and the sandbox keep the old spot because their masks
+    only come with 7 ft tubing. Six pars re-derived. 5 new tests, verify 234/234, phone gate clean.
+    Record: docs/HU-DESIGN-PHASE-LOG.md, Round 17. The mazes themselves are not built.
+14. **The other games, bug pass. DONE 2026-09-23** (David: "play them and find the bugs or confirm
+    what strange stuff i was seeing"). Three read-only hunters played and fuzzed Alarm Fatigue,
+    Uncharted Regional and ER Charge; Claude hunted the NaN in Uncharted General. THE NaN: not
+    reproduced. 36 full browser games of the hospital game with every slider (custom start, pay,
+    overhead) at random and extreme values, all four ownerships, tooltips and bar widths scanned:
+    zero. Regional has no sliders; ER's only NaN path needs hand-edited browser storage (now
+    guarded). If David sees it again, a screenshot or the save string pins it.
+    Fixed in Uncharted Regional: "Look at the region" was a dead end (a Why-it-ended button now);
+    adding a line charged twice on a second tap (the menu closes); access goals lost at the number
+    they asked for (judged at the rounding shown); a spend goal lost to a red net said only spend;
+    hints outlived their quarter and their term; bad stored settings broke the start menu; the
+    Copied label lied on failure; a restored Suburban Boom did nothing; phone targets to 44px;
+    pop-ups are keyboard dialogs (the hospital game's focus helper, ported).
+    Fixed in ER Charge: desktop clicks were swallowed by the five-a-second redraw (the board holds
+    still under a press); keyboard focus survives the redraw; STAT Labs, Priority CT, Fast Track
+    and Rapid Response refuse a patient they cannot help and speed a step already underway, and
+    Rapid Response's text no longer promises a wait that stops hurting; a patient who walked out
+    stays selected no more; the phone card tip stays on screen; "critical patients handled" counts
+    criticals that reached a bed; head counts lost their "+"; a queue-free shift says so; bad stored
+    settings fall back. tests/games-cleanup.test.js (5). Open for David: Regional's strain never
+    builds (a balance call, see DECISIONS or the chat).
+    Fixed in Alarm Fatigue (the public game, 14 from its hunter): on phones the family and Joint
+    Commission cards covered the big button (a centre tap hit a card 89 of 90 times); they now sit
+    above it, grow upward and follow the button as the monitor bank fills. The 360 monitor tile
+    shows the whole heart rate; the 1800 report stops asking about beds reading "--" and pumps
+    mid-fault; the lunch and clock-out screens clear the top bar and open at the top; the Code
+    Blue box and the chat window scroll on a sideways phone; no Code Blue fires during lunch;
+    Restart asks before wiping a big shift; the free-tech card leaves when a tech is bought and no
+    longer blocks break reminders; Biomed puts the bag name back; "Need 0 more" rounds up;
+    lunch cannot be bought mid-report; overtime after 1800 no longer raises the lunch price or
+    awards the after-lunch badge; the IT badge waits for the close; the sideways card's Clock in
+    clocks in; the test hook window.__af now needs __UG_TEST (games.md), and scripts/phone-qa.js
+    sets it. Left alone on purpose: the med-due sheet over the button (a deliberate bottom sheet),
+    and the lunch line "by 1300 your ears" at an early lunch (copy, David's).
 11. **Script type warnings.** `npm run check:scripts` (not part of the gate) reports about 113
     type errors across 11 scripts, most in the backend checkers and phone-qa.js. None came from
     this batch. Either make it green and add it to verify, or delete the command.
+    **DONE 2026-09-23: made green and added to `npm run verify`.** It had grown to 132, and none
+    was a real bug: 96 were the games' test hooks (declared once in types/test-hooks.d.ts), the
+    rest type notes in 12 scripts. The call: keep it, because the phone sweep it covers grows
+    every week.
+12. **The hospital game bug pass. DONE 2026-09-23, David's ask ("go back to the uncharted
+    General game and fix some of the issues and bugs").** Found by a seeded fuzz (650+ quarters
+    through the real verbs), a scripted walk of a run at 360 and 1280, fifteen forced rare
+    screens, and a keyboard-only playthrough. The fuzz found no crash, no NaN and no broken text.
+    What was wrong, all fixed in src/secret-menu/uncharted-general/index.html:
+    - The Start bar on the start menu stuck 30px above the menu's bottom edge, so the name box
+      showed through underneath it.
+    - Spend the first quarter's cash before building and every build card greyed out while the
+      hint still said "Build". The hint and the build menu now name the gap and the way back
+      (a unit's Undo, or Borrow).
+    - The staffing steppers (RN, Tech, physicians, travelers) were 25 and 28px on a phone and the
+      pay sliders 16px tall: 44px now, phone only. The steppers and sliders had no accessible names.
+    - A seat's hire or expand named its unit by list position, so a closure landing first sent it
+      to the wrong unit or crashed the host. Unit verbs carry the unit id now; a stale draft pick
+      is dropped instead of thrown.
+    - No pop-up handled a keyboard: focus stayed behind it, and every hire redraw threw focus to
+      the top of the page. Now a pop-up is a real dialog (focus in, Tab stays in, Escape is Cancel,
+      focus back to the opener) and a redrawn board keeps focus on the same control.
+    - "eat a 8-point reputation hit" reads "an 8-point".
+    Proof: tests/uncharted-general-guards.test.js (3 new), `npm test` 229/229, tsc clean, the phone
+    gate clean at all nine viewports. Balance was not touched. The fuzz script and the Playwright
+    walks are one-offs in tmp/ug-bugs/, not gates.
+15. **The games track, 2026-09-23 (David: "what are our next steps", on the review's order).**
+    The order: (1) Alarm Fatigue's fixes and (2) the shared menus into it; (3) Uncharted General,
+    menus plus a sticky Run bar, a "short by" line and Continue; (4) Device Assembly, sideways,
+    Tutorial 1, the hint wording, the fault titles; (5) Regional, a warning before a missed goal;
+    (6) the expansions, one game at a time. Docs: docs/HU-GAME-REVIEW-2026-09-23.md,
+    docs/HU-GAME-MENUS-2026-09-23.md, docs/HU-GAME-EXPANSION-2026-09-23.md.
+    **Steps 1 and 2 DONE 2026-09-23.** Alarm Fatigue loads the kit (hu-kit.js?v=20260923, its own
+    stamp because the other pages pin a kit without the menu pieces) and uses all of them: the
+    "?" and Menu in the bar (Restart, Learn and the site menu are rows now), the how-to card on a
+    first visit with Clock in (it replaced the "turn sideways" notice, whose rotate tip now shows
+    on an upright phone only), Settings with More time (the code clock 30 to 45 s), Show sounds as
+    text (every sound that carries news, named as in the mixer) and Hints, plus a Sound mix row to
+    the eleven sliders. Any card pauses the floor: live() and six loops read away(), tones stop,
+    the audio context parks. On David's answers: a DNR room gets a rapid response and never a
+    code, and the card names the code status; adenosine and atropine left the code drugs
+    (magnesium for torsades stays, flagged to him). The code text takes the patient's pronoun from
+    the nurse brain. The first falling sat of a shift says the rule once (Hints). A phone clock
+    rides beside the task count. Below 380px the "?" yields so the bar stays one row with Silence
+    keeping its word (Help is the menu's second row). Also: "1 task clicked", the lunch shake
+    under reduced motion.
+    Proof: a Playwright walk at 360, 740x360 and 1280 (tmp/af-kit/check.js, result.json, shots),
+    the phone gate clean at nine viewports, verify 267/267. Still open on this game: a Continue
+    after reload needs the engine to hold its state in one object first; the rapid response card's
+    body can disagree with its question (a comfortable 94% or a post-op patient under Room 5's
+    "working to breathe"), content
+    for David; NSVT still clips at 1280; the med card still takes focus.
+    **Step 3 DONE 2026-09-23 (David: "lets keep rolling").** Uncharted General on the kit
+    (hu-kit.js?v=20260923): the "?" and Menu beside the back link (Resume, Help, Restart as "Start
+    a new run?", Leave, Site menu; no Settings row, nothing to slow or caption in a turn-based
+    silent game); the how-to waits for the first board, not the start screen. THE GOAL LINE beside
+    Run, the goal's own test on the projection (the same call runQuarter makes, so it is exact):
+    "Short by $308k", "On track: 1,369 of 1,185 patients", red when cash ends below zero. Run on a
+    projected miss or a red quarter asks first ("Run it anyway"). An upright phone puts the map
+    under the goal and pins Run with the goal line to the bottom (chrome 18% at 360, budget 20);
+    a sideways phone keeps the old order, since a pinned bar would take ~30%. CONTINUE: a solo run
+    autosaves its save string after every render, the start screen opens with "Continue your run ·
+    Year 1, Quarter 2 · Dr. Vega, MD", a finished run is forgotten the moment it ends (or Continue
+    would undo a loss), Restart forgets it, a table is left to the kit. Also: Esc leaves the Chart
+    Room, choice effects in their own colors (a morale hit was green), "Cash after" red below zero,
+    reduced motion (burn pulse, carousel, the hint scroll), and the bankruptcy post-mortem names a
+    crisis that took most of the loss instead of blaming staffing. On a phone the back link reads
+    "← Secret Menu", as Device Assembly's does. Proof: tmp/ug-kit/check.js at 360, 740x360 and
+    1280 (start, build, Q1, the goal line, a forced miss, the warning, Menu, reload, Continue,
+    Restart), zero console errors, the phone gate clean at nine viewports. Not done: the start
+    screen is still the 46-control form (the Balatro tabs from the menus doc, section 3.4), the
+    solver's staffing-only loop, the payer spread (DECISIONS 16).
+    **Step 4 DONE 2026-09-23, except Level 3.** Device Assembly on the kit: Walls (the button said Levels, the page
+    WALLS), the "?" and Menu (Resume, Help, Settings with More time, "Reset this wall?", Leave, Site menu; the Secret
+    Menu link and the site menu moved into it; the "?" yields under 380px, as on Alarm Fatigue). The result card closes
+    on Esc and the phone back gesture (the keydown handler used to return early while it was up), traps Tab, and Esc
+    with nothing to step back opens the menu. Reset can be undone. A reload resumes the last wall (progress dropped
+    'last' on load). Undo keeps the tubing's name. The blender's drag ghost no longer draws rotate(NaN). Touch is told to
+    tap and use the dock. Tutorials rest on the HINT page. A sideways phone fits the wall to the screen's height (290 of
+    360: the rail, the outlets and the patient together). Tutorial 1 puts the cannula on the nose first (step one used to
+    walk the player into TOO SHORT) and loses the spare tubing that did nothing. Every "test it / submit it" says press
+    Complete. The fault walls are titled by their orders, not their answers. David's calls: Level 5 parked, Tutorial 3's
+    order rewritten (DECISIONS log). The phone gate learned that an open modal card is not chrome (the first-visit how-to
+    is bar-shaped on a phone and read as 35%). Proof: tmp/da-kit/, the three changed games clean at nine viewports, verify
+    267/267. LEVEL 3 WAITS on one answer from David: what carries the gas from the high-flow flowmeter into the chamber.
+    **Level 3 DONE 2026-09-23 (David: "keep rolling", no answer on the dry side, so the game's own dry side stands).**
+    A heated breathing circuit joined the part database ("Heated breathing circuit", 22 mm, its source note is Fisher &
+    Paykel's RT302 kit page); the rule that a humidified high-flow circuit must be the heated one, with a rain-out line
+    when it is not; the cart carries it; par re-set. Building it found Level 3 could not be finished before, whatever
+    the player did. Only the dry side (flowmeter to chamber) is still the game's guess, and it stays in DECISIONS 16.
+    Proof: the Device Assembly tests 74/74.
+    **Step 5 DONE 2026-09-23.** Uncharted Regional on the kit: the "?" and Menu (Resume, Help, "Start a new term?",
+    Leave, Site menu), the how-to after the first board, every `data-def` through HUKit.peek. The goal line beside Run
+    in the goal's own words ("Short by 12 points", "Over the cap by $75k", "In the red by $X") and "Run it anyway"
+    before a projected miss. Each goal type's own loss line. An upright phone pins Run and the goal line (18% at 360).
+    Continue after a reload, forgotten when a term ends. A restore no longer re-rolls the goal or the event (a reload
+    was a free do-over). Esc on the result and end cards, an "i" beside each shared service, served % colored against
+    the goal, focus kept after a change. Balance and G1 untouched. Proof: tests/uncharted-regional-kit.test.js (10),
+    tmp/regional-kit/ (74 checks at three sizes), the phone gate clean at nine viewports. Owner vetoes listed in the
+    DECISIONS log.
+    **ER Charge on the kit DONE 2026-09-24 (menus contract, maintenance; its first minute and balance untouched, no
+    phase).** It never loaded the kit before. The "?" and Menu (Resume, Help, Settings, "Restart the shift?", Leave,
+    Site menu), any open card holds the shift clock, More time runs it at two thirds, the how-to opens on a first
+    visit in place of the start card. Pause stays a plain toggle (a paused board can still be scrolled and read on a
+    phone, a card over it cannot); Resume clears it. Defects: the critical and target pulses hold under reduced
+    motion, "1 batched step", the start and end cards are real dialogs (focus in, Tab kept, Esc to the menu). The
+    STAT Labs tooltip was already fixed. The kit's how-to opened scrolled to its action on a sideways phone, rules
+    1 and 2 out of sight, in every game; fixed in hu-kit.js (the card's body starts at the top, the action keeps
+    focus). Proof: tests/er-charge-kit.test.js (10), tmp/er-kit/walk.js 82/82 at three sizes, the phone gate clean
+    at nine viewports.
+    **Uncharted General's start screen DONE 2026-09-24 (the "next piece" from step 3; reading-load phase).** The
+    46-control form is a four-tab card: Continue, New run, Scenarios, The Table (a real tab strip, arrow keys, 44 px).
+    New run opens on the CEO carousel and one Start; difficulty, ownership, size and length fold under "Change the
+    run", which reads back "Normal · Nonprofit · Community · Endless" when closed. Continue opens first when a solo run
+    is saved, with the restore box under it. The Table opens first for a host, a guest or a table to resume. First
+    paint at 360: 48 words and a card 4.2 screens tall, to 38 words on one screen; a returning player 57 words to 20.
+    Start names the scenario when one is picked. Locked ownerships say how to earn them on tap, not only on hover.
+    scripts/phone-qa.js taught to open the table tab. Proof: tests/uncharted-general-start.test.js (8), all 60 of
+    the game's tests, tmp/ug-start/ (68 checks at three sizes), the phone gate clean at nine viewports.
+17. **Alarm Fatigue, real or nuisance, 2026-09-24 (David's approved expansion, DECISIONS 17).** BUILT, not yet
+    played by David; it changes the central mechanic of the site's one public game. Each pulse ox alarm is drawn real
+    or nuisance, about 7 in 10 nuisance (Sendelbach and Funk 2013: 72 to 99 percent of clinical alarms are false),
+    weighted by the brain sheet (Room 22's pneumonia on 3L runs real 55%, Room 8's wanderer mostly motion; Room 7's
+    secret untouched). The clue is on the tile: a real one slides a point a tick with a full signal bar; motion
+    bounces with an amber flickering bar (and a jittering strip with tele); a probe off drops off a cliff with an
+    empty bar. SILENCE (the button) ends a nuisance and only mutes a real one, which keeps falling and codes at 80
+    ("You silenced it at 89. It kept falling."). CHECK (the sat box) is a 3 second walk: the task button reads "In
+    Room 4" and earns nothing; a real catch pays 4x, a nuisance 1x with a reason. Unanswered nuisances clear in 18 to
+    30 s. The end report counts real alarms caught and silenced; the how-to teaches the two verbs; the first real and
+    the first nuisance each get a one-line hint with the action. A code after a SILENCED real alarm pays half, the
+    other half "went to the safety report", because a code paid 60 times a catch and letting a real one fall was the
+    best play. Proof: tests/alarm-fatigue-alarms.test.js (18, the alarm logic in its own block), tmp/af-real/walk.js
+    at three sizes, scripts/phone-qa.js 19/19, the phone gate clean at nine viewports.
+    **The whole list, 2026-09-24:** `npm run verify` 339/339; the phone gate clean at nine viewports on all seven
+    changed pages; phone-qa.js 19/19 (it had gone stale on three counts: the how-to cards, the table tab, the
+    article's reading-shell heading); the real relay checked for Ballpark, Device Assembly and Uncharted General.
+16. **Vital Stats (built as Ballpark; renamed 2026-09-24, David: "Vital Stats is good, allows us to expand onto it with more data sets"), the multiplayer game, 2026-09-23 (David: "i want you to make a new game that is multiplayer... turn
+    based or phased base and everyone has to make a choice during that phase... healthcare related... place it in the
+    secret menu").** BUILT and play-test ready at /secret-menu/vital-stats/. A party game in the Wits and Wagers mold: a
+    real number from American healthcare, everyone guesses at once, then everyone bets two chips on whose guess is
+    closest without going over (long shots pay up to 5 to 1, the low slot 6), the answer arrives with its source and
+    check date, most chips after 5, 7 or 10 rounds wins, and the last round allows all in. 2 to 8 players; bots fill a
+    table (up to six of seven: Priya · RT, Marcus · CFO, a charge nurse, a hospitalist and a coder among them). Rooms: a four-letter code and an invite link, over the same relay
+    as The Table (host-authoritative, hu-table.js), or tabs of one browser with no internet. The kit learned two
+    things for it: an any-seat verb ('*', the host stamps the sender's chair) and auto seating (first come, first
+    seated; watchers when all eight are taken). The question bank: 208 questions in five categories
+    (scripts/build-vital-stats.js, 45 hand-curated and checked live, the rest built from the site's own sourced data),
+    tests/vital-stats-questions.test.js. The engine: one JSON state, dispatchAct, HURng seed, bots on the host's clock,
+    tests/vital-stats.test.js (9, including a three-browser fake bus). Menus by the contract. A returning host gets
+    unseen questions before repeats. Proof: `npm run backend:check:vs` (three real browsers over the real relay, two
+    rounds, every copy identical to the host's), the phone gate clean at nine viewports, Playwright shots of every
+    phase at 360, 740x360 and 1280 in tmp/bp/.
+    **State games DONE 2026-09-24 (David, after playing it: "this functionality is good. in the create a room i want to
+    be able to ask questions that are state by state, or select a list of states that its from... now we can add and
+    twist").** The lobby has "Where the numbers come from": The whole U.S. (the everyday mix, unchanged at 208) or State
+    by state, with a Pick states card (51 toggles, the four Census regions as quick picks, None picked = every state) and
+    a live count ("58 questions match"; "Only 3 match, so the game runs 3 rounds"; Deal disabled at none). The bank now
+    writes every state metric and every per-state count for all fifty states and DC: 1,390 questions, 1,271 about one
+    state, 17 to 32 per state (37 KB gzipped, one file). Each carries its state and its template, so a deal never asks the
+    same kind of question twice and spreads the rounds across the picked states. A state question wears its state beside
+    the category. Found on the way: "Lock it in" sent the guess and the lock as two intents; over the real relay the
+    lock could land first and freeze that player until the clock ran out (two of three live runs failed). They are one
+    intent now; three of three pass. Proof: tests/vital-stats.test.js (13), the bank tests (11), verify 343/343, the phone
+    gate clean at nine viewports, tmp/bp/states.js (lobby, picker, a Utah and Idaho deal, a guest's read-only view).
+    **Three twists DONE 2026-09-24 (David: "yeah lets do those 3 ideas").** (1) THE REVEAL STRIP: a state question's
+    answer shows every state's answer to the same question as dots low to high, the asked state lit in gold, the two
+    ends labelled, and its place read from the nearer end ("Utah: 3rd lowest of 51"); a log scale where the spread
+    passes 8x (hospital counts); built on the host from the bank and carried in the state. (2) PAY BY STATE: a new
+    pull, scripts/pull/oews-states.js (npm run pull:oews-states), BLS OEWS May 2025 state medians for ten jobs (RN, RT,
+    LPN, NP, PA, pharmacist, rad tech, nursing assistant, medical assistant, health services manager) through the BLS
+    public API, 510 of 510 figures, cached, into src/assets/data/state-pay.json; 510 new questions, two of them (RNs in
+    California, RTs in Utah) in the everyday mix. Every state now has 27 to 42 questions. (3) HOME TURF: each player
+    names a home state in the lobby (a card like Pick states, their own verb through their own chair); the host deals
+    one round per home state, spaced through the game, and the closest guess on it pays double whoever makes it
+    ("Dana defended home turf" or "Sam took Dana's home turf"); the round wears a "Home turf: Dana" tag; the host
+    can turn it off. Also: the deal keeps one category from taking more than its share. Proof: tests/vital-stats.test.js
+    (16), verify 346/346, the phone gate clean at nine viewports, tmp/bp/twists.js at three sizes, and the real-relay
+    check now has a guest set a home state (npm run backend:check:vs).
+    **Question variety DONE 2026-09-24 (David: "the questions lack variety or different sayings").** Every template
+    has two or three sayings, picked by a hash of the question's id so the bank stays deterministic ("Out of every 100
+    adults in...", "Half the households in Utah earned more than...", "Half the people in Maine are older than...").
+    Four new forms from the same numbers: ONE IN N ("About one in how many adults in West Virginia smoked?", answers
+    print "1 in 5"), A PLACE ("Rank the fifty states and DC by adult obesity, highest first. What place is Utah?",
+    answers print "#41"), PER HOUR (the OEWS annual median over 2,080 hours, the BLS full-time year), and HOW MANY
+    STATES (eight lines across the map, each chosen to land in the middle: 13 states pay RNs a median of $100,000 or
+    more). Plus the gap between the best- and lowest-paid state for four jobs. A form shares its template with the
+    plain question, so a game never asks the same fact twice. The page speaks each form (the label, the hint, the
+    placeholder, bots kept inside a place's range); a rank or one-in-N question has no strip (one in N runs backwards).
+    The bank: 3,325 questions (89 KB gzipped), the everyday mix 240, each state 51 to 70. The most common opening in the
+    everyday mix is now 18 percent of it, and tests/vital-stats-questions.test.js holds that under 25 with at least 20
+    openings. Proof: 29 Ballpark tests, verify 348/348, the phone gate clean, the real-relay check, tmp/bp/forms.js.
+    **Renamed Vital Stats 2026-09-24.** Every file, the address (/secret-menu/vital-stats/), the code names (VitalStatsEngine,
+    window.__vs, the vs- class prefix, vs- storage keys, the vs-room- relay channel), npm run build:vital-stats and
+    npm run backend:check:vs. Verify 348/348, the phone gate clean, the real relay identical across three browsers.
 
 ---
 

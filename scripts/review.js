@@ -24,6 +24,7 @@ const MIRROR = require('./mirror-snippet');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = path.join(ROOT, '_site');
+const ASSETS = path.join(ROOT, 'src', 'assets');
 const PORT = Number(process.env.REVIEW_PORT || 8081);
 
 const MIME = {
@@ -77,6 +78,33 @@ const server = http.createServer((req, res) => {
   if (url === '/__review/pages.json') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify(pages()));
+  }
+  /* LIVE (2026-09-23, David: "let me see in real time the changes"). The review screen polls this
+     and reloads both frames when it moves: the newest time among the page as the dev server last
+     built it and the shared CSS and JS. */
+  if (url === '/__review/stamp') {
+    const p = new URL(req.url, 'http://x').searchParams.get('p') || '/';
+    const page = path.join(SITE, decodeURIComponent(p), 'index.html');
+    let t = 0;
+    const stat = (f) => { try { t = Math.max(t, fs.statSync(f).mtimeMs); } catch (e) { /* not built yet */ } };
+    if (page.startsWith(SITE)) stat(page);
+    for (const d of ['css', 'js']) {
+      const dir = path.join(ASSETS, d);
+      try { for (const f of fs.readdirSync(dir)) stat(path.join(dir, f)); } catch (e) { /* no such folder */ }
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end(JSON.stringify({ t }));
+  }
+
+  /* /assets/ comes straight from src/assets. The build copies that folder unchanged, but the dev
+     server only writes it on a full build, so _site/assets lags an edit and Live would reload into
+     stale CSS and JS. */
+  if (url.startsWith('/assets/')) {
+    const src = path.join(ASSETS, decodeURIComponent(url.slice('/assets/'.length)));
+    if (src.startsWith(ASSETS) && fs.existsSync(src) && fs.statSync(src).isFile()) {
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(src).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+      return fs.createReadStream(src).pipe(res);
+    }
   }
 
   let file = path.join(SITE, decodeURIComponent(url));

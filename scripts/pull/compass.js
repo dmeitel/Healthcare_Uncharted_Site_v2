@@ -178,7 +178,7 @@ async function pullAcs() {
   for (const year of ACS_YEARS) {
     try {
       const out = { year, county: {}, state: {}, us: {} };
-      for (const [endpoint, vars] of [['detail', DETAIL_VARS], ['subject', SUBJECT_VARS]]) {
+      for (const [endpoint, vars] of /** @type {Array<[string, string[]]>} */ ([['detail', DETAIL_VARS], ['subject', SUBJECT_VARS]])) {
         const base = `https://api.census.gov/data/${year}/acs/acs5${endpoint === 'subject' ? '/subject' : ''}?get=${vars.join(',')}`;
         for (const geo of ['county', 'state', 'us']) {
           const file = path.join(CACHE, `compass-acs-${year}-${endpoint}-${geo}.json`);
@@ -322,6 +322,7 @@ async function pullNri() {
   if (Object.keys(states).length !== 51) problems.push(`${Object.keys(states).length} states (expected 51)`);
   if (!(national.r > 900 && national.r < 2500)) problems.push(`national median rent ${national.r} outside sanity band`);
   if (!(national.v > 200000 && national.v < 600000)) problems.push(`national median home value ${national.v} outside sanity band`);
+  /** @type {Array<[string, string, (c: any) => boolean]>} */
   const spot = [
     ['49035', 'Salt Lake UT', (c) => c.r > 900 && c.r < 3000],
     ['06067', 'Sacramento CA', (c) => c.r > 1200 && c.r < 3500],

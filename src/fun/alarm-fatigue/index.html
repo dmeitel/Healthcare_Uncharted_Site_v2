@@ -57,7 +57,7 @@ date: 2026-09-10
      rather than pushing the menu off the end of the row. */
   .af .tool-bar-kicker{display:none;}
   @media (max-width:1200px){ .af .tool-bar-crumb{display:none;} }
-  @media (max-width:1000px){ .af .af-back{display:none;} }
+  /* (the "Learn" back chip moved into the game menu as its Leave row, 2026-09-23) */
   /* one pill for sound: the label toggles the floor quiet, the fader opens the
      mixer. Two chips for one subject was the widest thing up there. */
   .af .chip-split{display:inline-flex; align-items:stretch;}
@@ -686,7 +686,7 @@ date: 2026-09-10
   .edock-chip.blink .ct{animation:afblink .9s step-end infinite;}
 
   #chatWin{
-    position:absolute; right:16px; bottom:130px; z-index:9; width:min(300px, 82vw);
+    position:absolute; right:16px; bottom:130px; z-index:9; width:min(300px, 82vw); max-height:calc(100% - 140px); overflow-y:auto;
     background:var(--ecell); color:var(--ecellf); border:1px solid var(--elin);
     box-shadow:0 8px 24px rgba(0,0,0,.28); display:none; font-family:var(--font);
     border-radius:6px 6px 0 0; overflow:hidden;
@@ -779,20 +779,35 @@ date: 2026-09-10
   #bank.tele-on .bank-tile .rhy{display:block;}
   .bank-tile .rm{grid-area:rm; font-size:var(--t-micro); color:var(--mon-dim); letter-spacing:.08em;}
   .bank-tile .hr{grid-area:hr; font-size:var(--t-ui); color:var(--mon-green); justify-self:end;}
-  /* SpO2 in a square that highlights as the number drops (real-monitor cyan) */
+  /* SpO2 in a square that highlights as the number drops (real-monitor cyan).
+     2026-09-24, real or nuisance: the square is a button now, and pressing it is CHECK (walk to
+     the room). Its third line says so, dim while the room is quiet and lit while it alarms, the
+     way SILENCE beside it is. Three lines always, so an alarm never changes the tile's height. */
   .bank-tile .sat-box{
     grid-area:box; justify-self:start; display:flex; flex-direction:column; align-items:center;
-    justify-content:center; min-width:56px; padding:3px 8px; line-height:1;
+    justify-content:center; min-width:56px; min-height:44px; padding:3px 8px; line-height:1;
     border:1px solid var(--mon-wellb); border-radius:5px; background:var(--mon-well);
   }
   .bank-tile .sat-box .pl{font-size:var(--t-micro); letter-spacing:.08em; color:#5fa8b4;}
   .bank-tile .sat-box .sv{font-size:20px; font-weight:700; color:var(--mon-cyan);}
+  .bank-tile .sat-box .ck{font-size:var(--t-micro); letter-spacing:.06em; color:var(--mon-dim);}
+  /* the signal bar beside the number, the signal-quality bar a bedside monitor shows. Full and
+     green is a clean reading; short and amber is a finger that moved; an empty red stub is no
+     finger at all. The height says it, so the colour is never the only signal. */
+  .bank-tile .sat-box .sv-row{display:flex; align-items:center; gap:4px;}
+  .bank-tile .sat-box .sig{display:flex; align-items:flex-end; width:6px; height:18px;
+    border:1px solid var(--mon-dim); border-radius:2px; overflow:hidden;}
+  .bank-tile .sat-box .sig i{display:block; width:100%; height:var(--sig, 90%); background:var(--mon-green);}
+  .bank-tile .sat-box .sig[data-q="weak"] i{background:var(--amber);}
+  .bank-tile .sat-box .sig[data-q="flat"] i{background:var(--red); height:2px;}
   .bank-tile .sat-box.warn{border-color:var(--amber); background:#2a2109;}
-  .bank-tile .sat-box.warn .sv, .bank-tile .sat-box.warn .pl{color:var(--amber);}
+  .bank-tile .sat-box.warn .sv, .bank-tile .sat-box.warn .pl, .bank-tile .sat-box.warn .ck{color:var(--amber);}
   .bank-tile .sat-box.crit{border-color:var(--red); background:#2c1113;
     animation:afblink .5s step-end infinite;}
-  .bank-tile .sat-box.crit .sv, .bank-tile .sat-box.crit .pl{color:var(--red);}
-  /* the clear button: what you push to silence a sat, not the number itself */
+  .bank-tile .sat-box.crit .sv, .bank-tile .sat-box.crit .pl, .bank-tile .sat-box.crit .ck{color:var(--red);}
+  /* on the way to the room: the number holds and the box stops shouting */
+  .bank-tile.checking .sat-box{animation:none;}
+  /* SILENCE: what you push to stop the tone, not the number itself (it was CLEAR until 2026-09-24) */
   .bank-tile .clr{
     grid-area:clr; align-self:stretch; min-height:44px; padding:0 10px; cursor:pointer;
     border:1px solid var(--mon-btnb); border-radius:5px; background:var(--mon-btn); color:#93a79e;
@@ -800,6 +815,8 @@ date: 2026-09-10
   }
   .bank-tile.alarming .clr{border-color:var(--amber); background:#3a2c08; color:#ffd98a;
     animation:afblink .8s step-end infinite;}
+  /* silenced but still falling: the button goes quiet, the number does not */
+  .bank-tile.alarming.hushed .clr{border-color:var(--mon-btnb); background:var(--mon-btn); color:#93a79e; animation:none;}
   /* the strip: hidden until tele, then that patient's own trace */
   .bank-tile .tile-cv{grid-area:cv; display:none; width:100%; height:40px; border-radius:4px; background:var(--mon-well);}
   #bank.tele-on .bank-tile .tile-cv{display:block;}
@@ -809,8 +826,13 @@ date: 2026-09-10
   #bank.wide .bank-grid{grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; padding:5px;}
   #bank.wide .bank-tile{padding:5px 6px; gap:4px; grid-template-columns:auto minmax(0,1fr) auto;}
   #bank.wide .bank-tile .rhy, #bank.wide .bank-tile .hr{overflow:hidden; text-overflow:ellipsis; max-width:100%;}
-  #bank.wide .bank-tile .clr{padding:0 6px; min-height:40px; font-size:var(--t-micro);}
+  #bank.wide .bank-tile .clr{padding:0 6px; min-height:44px; font-size:var(--t-micro); letter-spacing:.06em;}
   #bank.wide .bank-tile .sat-box{min-width:50px; padding:2px 6px;}
+  /* SILENCE is two letters longer than CLEAR, and four across the middle column was already
+     down to 27px (the rate wrapped under its heart). The rate and the rhythm take their own row
+     here, the way the phone tile has since 2026-09-23, so both read whole. 2026-09-24. */
+  #bank.wide .bank-tile{grid-template-areas:"rm rm clr" "box box clr" "hr rhy rhy" "cv cv cv";}
+  #bank.wide .bank-tile .hr{justify-self:start; white-space:nowrap;}
   /* tele flags sit ON that patient's strip (the tile is position:relative) */
   .af .teleflag{
     position:absolute; left:6px; right:6px; bottom:6px; z-index:3; background:rgba(11,20,17,.92);
@@ -850,24 +872,28 @@ date: 2026-09-10
     color:var(--af-qf,#1f4d3a); background:var(--af-qb,#eef5f1); border:1px solid var(--af-qbd,#cfe0d6); border-radius:6px;}
   .sm-quiet[hidden]{display:none;}
 
-  /* the phone menu. Same shell as the sound panel, a list instead of sliders. */
-  .gamemenu{
-    position:absolute; top:8px; right:12px; z-index:60; width:min(250px,86vw);
-    background:var(--af-card,#fff); color:var(--af-cardf,#22302a); border:1px solid var(--line); border-radius:10px;
-    box-shadow:0 10px 26px rgba(0,0,0,.28); font-family:var(--font); padding:0 0 6px;
-  }
-  .gamemenu[hidden]{display:none;}
-  .af .gm-item{
-    display:flex; align-items:center; gap:9px; width:100%; min-height:46px;
-    padding:8px 14px; background:none; border:0; border-radius:0; text-align:left;
-    font-family:var(--font); font-size:var(--t-sub); color:var(--af-cardf,#22302a); cursor:pointer;
-    text-decoration:none; box-shadow:none;
-  }
-  .af .gm-item:hover{background:var(--af-soft,#eef3f0);}
-  .af .gm-item + .gm-item{border-top:1px solid var(--line);}
-  .af .gm-item:focus-visible{outline:2px solid var(--af-focus,#1B5FA8); outline-offset:-2px;}
-  /* the extra control only exists where the bar cannot afford the originals */
-  #gmBtn{display:none;}
+  /* the "?" and the game menu are the kit's (HUKit.howTo, HUKit.gameMenu); the bar only
+     makes room. The merged band's site-menu button stays in the markup and never shows,
+     because the menu's last row presses it. */
+  .af .af-kit{display:flex; gap:6px; align-items:center;}
+  .af [data-nav-summon]{display:none;}
+  /* the shift clock beside the task count, on a phone only: the bar has no room for it */
+  .af .af-pclock{display:none;}
+  /* Show sounds as text (Settings): the last few sounds as words, top centre of the floor,
+     gone in under three seconds, never in the way of a tap */
+  .af .af-caps{position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:40;
+    display:flex; flex-direction:column; align-items:center; gap:4px; pointer-events:none; max-width:92%;}
+  .af .af-cap{background:var(--surface); color:var(--t1); border:1px solid var(--border2); border-radius:999px;
+    padding:3px 12px; font-family:var(--mono); font-size:var(--t-fine); white-space:nowrap;}
+  /* the how-to card lives outside .af (the kit hangs it off body): the rotate tip is for an
+     upright phone only */
+  .af-rot{display:none; margin-top:10px; color:var(--t3);}
+  @media (max-width:699px) and (orientation:portrait){ .af-rot{display:block;} }
+  /* Under 380 the bar cannot hold hex, title, Silence, "?" and Menu in one row (measured at
+     360: it wrapped to two, 48px of floor gone). Silence keeps its word (the 2026-09-21 rule),
+     so the "?" is the one that yields: Help is the menu's second row, and the card still opens
+     by itself on a first visit. 390 and up keep all five. */
+  @media (max-width:379px){ .af .af-kit .hu-gm-q{display:none;} }
 
   /* the family member is a talking head: a small face beside a speech bubble.
      The mouth flaps and the head bobs while a question types itself out; the
@@ -1116,7 +1142,9 @@ date: 2026-09-10
   #codeLayer{
     position:fixed; inset:0; z-index:60; display:none; align-items:center;
     justify-content:center; background:rgba(120,10,20,.45);
+    overflow-y:auto; padding:56px 8px 8px; box-sizing:border-box;   /* taller than a sideways phone: it scrolls, clear of the site bar */
   }
+  .codebox{margin:auto;}
   #codeLayer.show{display:flex;}
   .codebox{
     background:var(--af-card,#fff); color:var(--af-cardf,#22302a); width:min(480px, 92vw); border-radius:10px; overflow:hidden;
@@ -1145,30 +1173,9 @@ date: 2026-09-10
   }
   .codebox .hint{font-size:var(--t-fine); color:var(--af-cbh,#8a5560); margin-top:10px; min-height:16px;}
 
-  /* ---------- "best on a bigger screen" notice (small screens, once/session) ---------- */
-  #afBigScreen{
-    position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center;
-    background:rgba(13,17,23,.72); padding:24px;
-  }
-  #afBigScreen.show{display:flex;}
-  .afbs-card{
-    background:var(--surface); color:var(--t1); border:1px solid var(--border2);
-    border-radius:14px; max-width:340px; padding:22px 20px 20px; text-align:center;
-    box-shadow:0 20px 60px rgba(0,0,0,.5); font-family:var(--font);
-  }
-  .afbs-card h2{font-family:var(--display); font-size:19px; font-weight:800; margin-bottom:10px; color:var(--t1);}
-  .afbs-card p{font-size:var(--t-sub); color:var(--t2); line-height:1.6; margin-bottom:16px;}
-  .afbs-card button{
-    min-height:44px; padding:10px 22px; border-radius:10px; border:1px solid var(--border2);
-    background:var(--raised); color:var(--t1); font-size:var(--t-sub); font-weight:600; cursor:pointer;
-    font-family:var(--font);
-  }
-  .afbs-card button:hover{border-color:var(--teal);}
-  .afbs-card button:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
-
   /* ---------- lunch ---------- */
   #lunch{
-    position:fixed; inset:0; z-index:100; display:none; align-items:center;
+    position:fixed; inset:0; z-index:100; padding-top:56px; box-sizing:border-box;   /* clears the site bar (z 150) that sits over it */ display:none; align-items:center;
     justify-content:center; text-align:center; color:var(--af-luf,#324a56);
     background:var(--af-lu,linear-gradient(180deg,#dfeef2 0%, #cfe4de 60%, #c3dccf 100%));
     opacity:0; transition:opacity 3s ease; font-family:var(--font);
@@ -1306,7 +1313,6 @@ date: 2026-09-10
     /* the bar earns its rows back: kicker and back-chip retire (the title
        and the summon menu carry both), so the bar wraps to two rows max */
     .af .tool-bar-kicker{display:none;}
-    .af .af-back{display:none;}
     /* the fader half of the sound pill is an icon: it still owes a thumb 44px
        in BOTH directions, and the row gets its width back from the gap */
     .af .tool-bar-actions{gap:6px;}
@@ -1343,13 +1349,18 @@ date: 2026-09-10
     /* The bar cannot hold five things at 360 and the hex is not optional any more, so the
        duplicate goes. The shift clock already reads in the console sub-line, under the big
        button where the thumb is ("0600. One patient..."), so on a phone the bar copy was
-       saying it twice. That is the 48px the hex needed. Desktop keeps both. 2026-09-21. */
+       saying it twice. That is the 48px the hex needed. Desktop keeps both. 2026-09-21.
+       2026-09-23: the sub-line stops naming the hour after the first purchase, so the clock
+       now rides beside the task count instead (.af-pclock). */
     .af #clockV{display:none;}
     .af #clockV{padding-left:4px; padding-right:4px;}
-    .af #resetBtn, .af #mixBtn, .af [data-nav-summon]{display:none;}
-    .af #gmBtn{display:flex;}
+    .af #mixBtn{display:none;}
+    .af .af-pclock{display:inline; margin-left:8px; font-size:.6em; font-weight:600; color:var(--af-mute,#4a5a52);}
+    /* hex, title, Silence, the "?" and the menu: the menu drops to its icon (its name stays
+       for a screen reader). Silence keeps its word, for the reason above. */
+    .af .af-kit .hu-gm-btn{width:44px; padding:0; justify-content:center;}
+    .af .af-kit .hu-gm-btn span{display:none;}
     .af .chip-split .toggle-chip{border-radius:999px; padding-right:12px;}
-    .gamemenu{right:8px;}
     .af .chip-split .toggle-chip + .toggle-chip{min-width:44px; justify-content:center;}
     .af.hu-shell{height:calc(100vh - var(--nav-h)); height:calc(100dvh - var(--nav-h));
       overflow:hidden; min-height:0;}
@@ -1461,8 +1472,12 @@ date: 2026-09-10
     .bank-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     .bank-tile{padding:5px 6px; gap:4px; grid-template-columns:auto minmax(0,1fr) auto;}
     .bank-tile .sat-box{min-width:44px; padding:2px 5px;}
-    .bank-tile .clr{padding:0 6px; font-size:var(--t-micro); letter-spacing:.08em;}
+    .bank-tile .clr{padding:0 6px; font-size:var(--t-micro); letter-spacing:.04em;}
     .bank-tile .rhy, .bank-tile .hr{overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+    /* 2026-09-23: at 360 the middle column was 9px and the heart rate read "♥ 1" for 104; the rate and
+       the rhythm get their own row, so both read whole (the hand-off report asks for both) */
+    .bank-tile{grid-template-areas:"rm rm clr" "box box clr" "hr rhy rhy" "cv cv cv";}
+    .bank-tile .hr{justify-self:start; white-space:nowrap;}
     /* and if the lane is still too narrow to hold them, the console pans
        sideways rather than clipping a monitor off the edge */
     #bank{min-width:228px;}
@@ -1474,6 +1489,7 @@ date: 2026-09-10
     .af .cw-opt{min-height:44px;}
     #ibWin{left:8px; right:8px; width:auto; top:48px;}
     .bank-tile .sat-box .sv{font-size:17px;}
+    .bank-tile .sat-box .sig{height:15px;}   /* no taller than the number, so the tile keeps its height */
     #bank.wide .bank-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     #bank.wide .bank-tile .clr{min-height:44px;}
     .af .ib-o{min-height:44px;}
@@ -1523,7 +1539,7 @@ date: 2026-09-10
   @media (prefers-reduced-motion: reduce){
     .af .monitor.warn, .af .monitor.crit, .af .room.lit, .af .bedbanner .inner,
     .af .teleflag, .codebox .head, .af .tech.idle .face,
-    .codebox .opt.wrong, .af.code-on #floor{animation:none;}
+    .codebox .opt.wrong, .af.code-on #floor, #lunch.shake .lcard{animation:none;}
     .af .float{animation:affade 1.1s ease-out forwards;}
     .af .toast, .af .banner .inner, .af .banner .pager, .af .banner .led, .af[data-bling] #bigBtn::after, .af .pizza{animation:none;}
     .af .float, #lunch, .af .tjc-pop{transition:none;}
@@ -1560,15 +1576,18 @@ date: 2026-09-10
       <button class="toggle-chip" id="muteBtn" type="button" aria-pressed="false">&#128266; Sound</button>
       <button class="toggle-chip" id="mixBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Sound settings" title="Sound settings">&#127898;</button>
     </span>
-    <button class="toggle-chip" id="resetBtn" type="button">Restart</button>
-    <a href="/learn/#fun" class="toggle-chip af-back">&#8592; Learn</a>
-    <button class="icon-btn" id="gmBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Menu" title="Menu"><i data-lucide="menu" aria-hidden="true"></i></button>
-    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <!-- the "?" and the game menu (HUKit.howTo, HUKit.gameMenu) go in here. Restart, Learn and
+         the site menu are rows inside the menu now, so the bar holds one menu at every width. -->
+    <span class="af-kit" id="afKitBtns"></span>
+    <!-- kept, never shown: the menu's Site menu row presses it (the merged band's summon) -->
+    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu" tabindex="-1"><i data-lucide="menu" aria-hidden="true"></i></button>
   </div>
 </header>
 
 <div class="shell-main">
 <div id="floor" class="shell-canvas">
+  <!-- Show sounds as text (Settings): the sound's name, for a player who cannot hear it -->
+  <div class="af-caps" id="afCaps" aria-hidden="true"></div>
   <div id="ehr">
     <div class="ehrBanner ehr-dim" aria-hidden="true"><b>DOE, JONATHAN</b><span>58 y.o. &middot; M</span><span>MRN 00012345</span><span>Allergies: NKDA</span><span>Code: FULL</span><span>Attending: Patel, R</span><span>Isolation: none (for now)</span></div>
     <div class="ehrTabs">
@@ -1706,15 +1725,6 @@ date: 2026-09-10
     <label class="sm-row"><span>Task chimes</span><input type="range" min="0" max="100" value="100" data-vol="good"></label>
     <p class="sm-quiet" hidden>Every alarm at zero. The floor is exactly as busy as it was.</p>
   </div>
-  <!-- one control on a phone in place of three: the fader, Restart and the
-       site menu all live in here below 700px -->
-  <div id="gameMenu" class="gamemenu" role="dialog" aria-label="Menu" hidden>
-    <div class="sm-hd"><span>MENU</span><button type="button" class="hit sm-x gm-x" aria-label="Close menu">&#10005;</button></div>
-    <button type="button" class="gm-item" id="gmSound">&#127898; Sound settings</button>
-    <button type="button" class="gm-item" id="gmRestart">&#8635; Restart shift</button>
-    <a class="gm-item" href="/learn/#fun">&#8592; Back to Learn</a>
-    <button type="button" class="gm-item" id="gmSite">&#9776; Site menu</button>
-  </div>
 
   <!-- the game console: vitals + EKGs sit ABOVE the button, centered -->
   <div class="stage">
@@ -1725,7 +1735,7 @@ date: 2026-09-10
     <div class="clicker">
       <button id="bigBtn" type="button">Clock in</button>
       <div class="readout">
-        <div class="count mono"><b id="taskCt">0</b> <span class="u">tasks</span></div>
+        <div class="count mono"><b id="taskCt">0</b> <span class="u">tasks</span><span class="af-pclock" id="clockP">0600</span></div>
         <div class="rate mono" id="tpsCt" hidden>0 tasks/min</div>
         <div class="rate mono" id="expCt" hidden></div>
         <div class="sub" id="subLine">0600. One patient. It's quiet. Don't say it out loud.</div>
@@ -1747,14 +1757,9 @@ date: 2026-09-10
 <div id="codeLayer"></div>
 <div id="lunch"></div>
 
-<div id="afBigScreen" role="dialog" aria-modal="true" aria-labelledby="afbsH">
-  <div class="afbs-card">
-    <h2 id="afbsH">Turn your phone sideways</h2>
-    <p>More room for the monitors. Swipe the console if a tile runs off the edge.</p>
-    <button id="afbsGo" type="button">Clock in</button>
-  </div>
-</div>
-
+<!-- the shared game pieces (menu, how-to, settings, confirm). Its own version stamp: the
+     other pages still pin an older kit that has none of them. -->
+<script src="/assets/js/hu-kit.js?v=20260923"></script>
 <script>
 (function(){
 "use strict";
@@ -1833,7 +1838,15 @@ let btnBox=null;   /* the big button never moves between resizes either */
 /* a Code Blue freezes the shift: no accrual, no clock, no new spawns until it
    clears or fails. codeActive is declared later; live() only runs post-boot. */
 let breakActive=false;   /* the break you bought, for the few seconds it lasts */
-function live(){ return S.started && !S.over && !codeActive && !reportActive && !breakActive && !document.hidden; }
+/* a card from the kit (the menu, the how-to, settings, a confirm) pauses the floor the way a
+   hidden tab does: the menu says Resume, so it has to mean it */
+function menuUp(){ return !!(window.HUKit && HUKit.dialog && HUKit.dialog.anyOpen && HUKit.dialog.anyOpen()); }
+/* the how-to card and the settings, built with the menu near the end of this script; the
+   loops read them through these, so a sound that fires first finds null and not a crash */
+let afHelpRef=null, afSetRef=null;
+function setOn(k, dflt){ return afSetRef ? !!afSetRef.get(k) : dflt; }
+function away(){ return document.hidden || menuUp(); }
+function live(){ return S.started && !S.over && !codeActive && !reportActive && !breakActive && !away(); }
 document.addEventListener('visibilitychange', ()=>{
   if(!AC) return;
   if(document.hidden){ if(AC.state==='running') AC.suspend(); }
@@ -1890,7 +1903,7 @@ function audio(){
   return AC;
 }
 function tone(freq, dur, type, vol, when){
-  if(S.over) return;
+  if(S.over || away()) return;   /* a hidden tab or an open menu: silence, not a pile of tones on resume */
   /* a mixer slider at zero means SILENCE. (vol||0.18 used to swap a zero for
      the default level, which is why muting one alarm family made it louder.) */
   const v = (vol==null) ? 0.18 : vol;
@@ -1933,7 +1946,7 @@ const snd = {
    birdsong. Same families, same mixer sliders, a different noise. A code
    still gets the klaxon and the bed alarm still does its two-note thing. */
 function glide(f0, f1, dur, type, vol, when){
-  if(S.over) return;
+  if(S.over || away()) return;
   const v=(vol==null)?0.18:vol; if(v<=0.0005) return;
   const ac=audio(); if(!ac) return; when=ac.currentTime+(when||0);
   const o=ac.createOscillator(), g=ac.createGain();
@@ -1963,6 +1976,32 @@ const SND_STD={};
     if(m==='std') return SND_STD[k](a);
     const v=base*worn(k)*vol(k==='trash' ? 'ding' : k);
     if(m==='jazz') jazzTone(k, v); else birdTone(k, v);
+  };
+});
+/* Show sounds as text (Settings): every sound that carries news also shows as its name, for
+   a player who cannot hear it. The names are the mixer's. Task chimes and the trash are
+   left out: they confirm a tap, they do not report anything. Shown muted or not, since the
+   player who needs the words may well have the sound off. */
+/* the klaxon sounds for both kinds of emergency, so its words follow the one on screen */
+let codeKind='Code Blue';
+const CAPS={spo2:'Pulse ox tone falling', pump:'IV pump alarm', chime:'Call light', vocera:'Smart Badge call',
+  ding:'Chart ding', im:'Secure chat', page:'Overhead page', buzz:'Text buzz', klaxon:()=>codeKind, bed:'Bed alarm', bedOn:'Bed alarm'};
+const capEl=document.getElementById('afCaps'), capLast={};
+function caption(k, extra){
+  if(!capEl || S.over || !setOn('soundsAsText', false)) return;
+  const now=Date.now(); if(capLast[k] && now-capLast[k]<2500) return; capLast[k]=now;
+  const lbl=typeof CAPS[k]==='function' ? CAPS[k]() : CAPS[k];
+  const c=document.createElement('div'); c.className='af-cap'; c.textContent=lbl+(extra ? ' · '+extra : '');
+  capEl.appendChild(c);
+  while(capEl.children.length>3) capEl.firstChild.remove();
+  setTimeout(()=>c.remove(), 2600);
+}
+Object.keys(CAPS).forEach(k=>{
+  const f=snd[k]; if(!f) return;
+  snd[k]=function(a){
+    if(k!=='spo2') caption(k);
+    else if(a!=null && a<93) caption(k, String(a));   /* the tone drops with the sat; only a low one is news */
+    return f.apply(this, arguments);
   };
 });
 const SOUNDS=[
@@ -2021,9 +2060,11 @@ function clockStr(m){
 let clockMode='shift', playT0=0;
 function mmss(ms){ const s=Math.max(0, Math.floor(ms/1000)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
   return (h ? h+':'+String(m).padStart(2,'0') : String(m))+':'+String(x).padStart(2,'0'); }
+const clockP=document.getElementById('clockP');   /* the phone's copy, beside the task count */
 function paintClock(){
   if(clockMode==='played' && S.started) clockV.textContent='⏱ '+mmss(Date.now()-playT0);
   else clockV.textContent=clockStr(clockMin);
+  if(clockP) clockP.textContent=clockStr(clockMin);
 }
 clockV.addEventListener('click', ()=>{
   clockMode = clockMode==='shift' ? 'played' : 'shift';
@@ -2080,6 +2121,20 @@ function layoutFloats(){
 /* the interactive cards (break reminder, the free tech) sit just above the
    big button too, never on it: the button is the one thing that must stay
    tappable, and on a phone the button is pinned to the bottom of the console */
+/* 2026-09-23 (a playtest found the family and Joint Commission cards over the big button on phones, a
+   tap on its centre landing on a card 89 times in 90): on a phone the two bottom cards sit ABOVE the
+   button and grow upward as a question types; on a wider screen they keep their bottom corners. */
+const PHONE_Q='(max-width:699px), (max-height:500px)';
+function anchorAboveButton(w){
+  if(!w || !w.isConnected) return;
+  if(!window.matchMedia(PHONE_Q).matches){ w.style.top='auto'; w.style.bottom='calc(var(--bank-h, 10px) + 12px)'; return; }
+  const r=bigBtn.getBoundingClientRect(), f=floor.getBoundingClientRect();
+  w.style.top='auto'; w.style.bottom=Math.max(8, Math.round(f.bottom-r.top+12))+'px';
+}
+const reAnchor=()=>document.querySelectorAll('.widget.family, .widget.surveyor').forEach(anchorAboveButton);
+window.addEventListener('resize', reAnchor);
+/* the button moves as the monitor bank above it fills in, so the cards follow the stage, not just the window */
+if(window.ResizeObserver){ const st=document.querySelector('.af .stage')||document.querySelector('.stage'); if(st) new ResizeObserver(reAnchor).observe(st); }
 function placeAboveButton(w){
   const r=rectOf(bigBtn);
   w.style.bottom='auto';
@@ -2153,7 +2208,7 @@ function restLabel(){
   setBtnLabel(pick(REST_LINES));
 }
 every(()=>{
-  if(!S.started || !live() || S.over) return;
+  if(!S.started || !live() || S.over || S.walk.room!=null) return;   /* on the walk the button says where you are */
   const now=Date.now();
   if(now-lastPress < REST_AFTER || now < nextRest) return;
   restLabel(); nextRest = now + REST_ROTATE;
@@ -2166,8 +2221,11 @@ function clickPower(){ return 1 + Object.keys(S.owned).length + (S.owned.tech||0
 bigBtn.addEventListener('click', ()=>{
   audio();
   lastPress=Date.now(); nextRest=0;
+  if(S.walk.room!=null) return;   /* you are in a room (CHECK): the button is not asking for anything */
   if(resting){ resting=false; bigBtn.classList.remove('rest'); }
-  if(!S.started){ S.started=true; playT0=Date.now(); floorBox=floor.getBoundingClientRect(); track('clock-in'); }
+  if(!S.started){ S.started=true; playT0=Date.now(); floorBox=floor.getBoundingClientRect(); track('clock-in');
+    /* the how-to's foot button said Clock in; from here on it only sends you back */
+    const go=afHelpRef && afHelpRef.el.querySelector('.hu-gm-go'); if(go) go.textContent='Back to the floor'; }
   if(!live()) return;   /* a code (or the break) freezes the count, clicks included */
   const power = clickPower();
   addTasks(power); S.stats.clicks++; credit('clicks', power);
@@ -2278,7 +2336,7 @@ UPG.forEach(u=>{
   if(u.id!=='spo2') d.style.display='none'; else u.revealed=true;
   /* one purchase path, shared by the menu button and the under-button pop-up */
   u.buy=function(){
-    if(S.over || d.classList.contains('owned') || S.tasks<u.curCost) return false;
+    if(S.over || reportActive || d.classList.contains('owned') || S.tasks<u.curCost) return false;   /* not mid hand-off */
     if(u.needs && !S.owned[u.needs]) return false;
     if(u.gate && !u.gate()) return false;   /* a timed item (the break) outside its window */
     S.tasks-=u.curCost; S.tps+=u.tps;
@@ -2486,12 +2544,14 @@ function addBankRow(room){
   el.className='bank-tile';
   el.innerHTML='<span class="rm">RM '+room+'</span>'+
     '<span class="hr" hidden></span><span class="rhy" aria-hidden="true"></span>'+
-    '<span class="sat-box"><span class="pl">SpO₂</span><span class="sv">98</span></span>'+
-    '<button type="button" class="clr" aria-label="Silence pulse ox alarm, room '+room+'">CLEAR</button>'+
+    '<button type="button" class="hit sat-box" aria-label="Check room '+room+'"><span class="pl" aria-hidden="true">SpO₂</span>'+
+      '<span class="sv-row" aria-hidden="true"><span class="sv">98</span><span class="sig" data-q="ok"><i></i></span></span>'+
+      '<span class="ck" aria-hidden="true">CHECK</span></button>'+
+    '<button type="button" class="clr" aria-label="Silence pulse ox alarm, room '+room+'">SILENCE</button>'+
     '<canvas class="tile-cv" aria-hidden="true"></canvas>';
   bankGrid.appendChild(el);
   const cv=el.querySelector('.tile-cv');
-  const row={ room, el, box:el.querySelector('.sat-box'), sv:el.querySelector('.sv'),
+  const row={ room, el, box:el.querySelector('.sat-box'), sv:el.querySelector('.sv'), sig:el.querySelector('.sig'),
     hrEl:el.querySelector('.hr'), rhyEl:el.querySelector('.rhy'), clr:el.querySelector('.clr'), cv, cx:cv.getContext('2d'),
     mid:20, hr:ri(62,96), col:'#3fe28f',
     /* each strip has its own personality: gain, a slow baseline wander, artifact
@@ -2547,64 +2607,235 @@ ELEM.east=function(){
   const t=document.querySelector('#brain .br-title i'); if(t) t.textContent='4 West + 4 East · 0600 to 1800 · still you';
   const crumb=document.querySelector('.tool-bar-crumb'); if(crumb) crumb.textContent='4 West + 4 East · Med/Surg';
 };
+/* ================= REAL OR NUISANCE (2026-09-24, DECISIONS 17) =================
+   Most alarms on a real floor are not about the patient. Sendelbach and Funk put false clinical
+   alarms at 72 to 99 percent ("Alarm fatigue: a patient safety concern", AACN Advanced Critical
+   Care 2013;24(4):378-86, doi:10.1097/NCI.0b013e3182a903f9; read on PubMed 24153215, 2026-09-24).
+   Here about 7 pulse ox alarms in 10 are nuisance, and the tile shows which without a word for it:
+     REAL    the number slides one point a tick and the signal bar stays full
+     MOTION  the number bounces (91, 84, 90, 79) and the bar flickers; with tele, the strip jitters
+     PROBE   the number falls off a cliff in one tick (97 to the low 60s) and the bar goes flat
+   Two verbs answer it. SILENCE is one tap: a nuisance is done, a real one only loses its tone and
+   keeps falling to 80 and a code. CHECK walks you to the room: the big button earns nothing for the
+   walk, and whatever it was is fixed when you get there. The captions do not change (the monitor
+   cannot tell either).
+   Between the two markers below is data and verbs with no DOM and nothing from the rest of this
+   script, so tests/alarm-fatigue-alarms.test.js loads that block by itself. Every verb takes an
+   optional rng and falls back to Math.random, like the rest of this game. */
+/* ALARM ENGINE BEGIN */
+const ALARM={
+  CHECK_MS:3000,      /* the walk to the room, in live time: a menu, a code or the report pauses it */
+  CODE_AT:80,         /* a real one that reaches this codes, as every desat did before */
+  FLOOR:74,           /* where a real slide bottoms out while a code is still cooling down */
+  BASE_REAL:0.28,     /* a room with nothing on its sheet: 72 percent nuisance */
+  /* the nurse brain weights the draw. Lungs on oxygen run real more often (Room 4, COPD on 2L;
+     Room 22, pneumonia and COPD on 3L); a patient who will not stay in bed runs nuisance (Room 8,
+     dementia, WANTS TO WALK). Across all eight rooms it averages 3 real in 10. Room 7 is left at
+     the base rate: its secret is on the tele strip, not here. */
+  REAL_BY_ROOM:{4:0.40, 5:0.30, 8:0.15, 21:0.25, 22:0.55, 25:0.20},
+  MOTION_BY_ROOM:{8:0.8, 25:0.65},   /* of the nuisance, how much is movement rather than a probe */
+  SETTLE:[15,25],     /* ticks before a nuisance nobody answered settles by itself (18 to 30 s) */
+  PAY:{silence:1, checkReal:4, checkNuisance:1}   /* bonus() multipliers; CLEAR paid 2 */
+};
+function aRng(rng){ return rng || Math.random; }
+function aInt(rng, a, b){ return a + Math.floor(rng()*(b-a+1)); }
+function realOdds(room){ const p=ALARM.REAL_BY_ROOM[room]; return p==null ? ALARM.BASE_REAL : p; }
+/* what an alarm on this room turns out to be, decided the moment it starts */
+function drawAlarm(room, rng){
+  rng=aRng(rng);
+  if(rng()<realOdds(room)) return 'real';
+  const m=ALARM.MOTION_BY_ROOM[room];
+  return rng()<(m==null ? 0.5 : m) ? 'motion' : 'probe';
+}
+/* one pulse ox as plain data: the number, the signal (0 to 1), and the alarm, if there is one */
+function newOx(){ return {sat:98, sig:0.95, kind:null, age:0, settle:0, silenced:false, silencedAt:null, checking:false}; }
+function oxClear(o, sat){ o.kind=null; o.age=0; o.settle=0; o.silenced=false; o.silencedAt=null; o.checking=false; o.sat=(sat==null ? 96 : sat); o.sig=0.95; }
+function oxStart(o, kind, rng){
+  rng=aRng(rng);
+  o.kind=kind; o.age=0; o.silenced=false; o.silencedAt=null; o.checking=false;
+  o.settle = kind==='real' ? 0 : aInt(rng, ALARM.SETTLE[0], ALARM.SETTLE[1]);
+}
+/* one tick of the monitor. Returns true when a nuisance nobody answered settled on its own. */
+function oxTick(o, rng){
+  rng=aRng(rng);
+  if(o.checking) return false;   /* you are at the bedside: the number holds */
+  if(!o.kind){ o.sat=Math.min(99, Math.max(94, o.sat+aInt(rng,-1,1))); o.sig=0.85+rng()*0.15; return false; }
+  o.age++;
+  if(o.kind==='real'){ o.sat=Math.max(o.sat-1, ALARM.FLOOR); o.sig=0.85+rng()*0.15; return false; }
+  if(o.age>=o.settle){ oxClear(o, 97); return true; }
+  if(o.kind==='motion'){
+    const up = o.age%2===1;      /* high, low, high, low: 91, 84, 90, 79 */
+    o.sat = up ? aInt(rng, 88, 92) : aInt(rng, 77, 86);
+    o.sig = up ? 0.35+rng()*0.25 : 0.05+rng()*0.2;
+  } else {                       /* a probe off the finger: the low 60s at once, and no signal */
+    o.sat = aInt(rng, 60, 64); o.sig = 0;
+  }
+  return false;
+}
+function oxCodeDue(o){ return o.kind==='real' && !o.checking && o.sat<=ALARM.CODE_AT; }
+/* SILENCE. A nuisance is done. A real one loses its tone and nothing else: it keeps falling. */
+function oxSilence(o){
+  if(!o.kind || o.checking || o.silenced) return null;
+  const k=o.kind;
+  if(k==='real'){ o.silenced=true; o.silencedAt=o.sat; }
+  else oxClear(o, 97);
+  return k;
+}
+/* CHECK: you set off for the room, and the number holds while you walk */
+function oxCheck(o){ if(!o.kind || o.checking) return false; o.checking=true; return true; }
+/* ...and get there. Whatever it was is fixed; this says what it was and the number you found. */
+function oxArrive(o){
+  if(!o.checking) return null;
+  const found={kind:o.kind, sat:o.sat, silenced:o.silenced};
+  oxClear(o, o.kind==='real' ? 95 : 97);
+  return found;
+}
+/* the walk: one room at a time, counted down in live milliseconds. walkTick returns the room
+   when you arrive, and null until then. */
+function walkStart(W, room){ if(W.room!=null) return false; W.room=room; W.left=ALARM.CHECK_MS; return true; }
+function walkTick(W, ms){ if(W.room==null) return null; W.left-=ms; if(W.left>0) return null; const r=W.room; W.room=null; W.left=0; return r; }
+/* ALARM ENGINE END */
+
+S.walk={room:null, left:0};
+S.stats.realCaught=0; S.stats.realSilenced=0;
+/* what you find when you get there. Plain and clinical, and short: a float is one line, and at
+   360 a line holds about 38 characters before it ends in an ellipsis. */
+const NUISANCE_WHY={
+  motion:['Eating breakfast','Brushing teeth','Shivering','Up to the commode','Picking at the lines','Scratching an itch'],
+  probe:['Probe, wrong finger','Probe in the sheets','Probe on the floor','Off to use the phone','Probe on the blanket']
+};
+/* the first nuisance and the first real alarm of a shift each get one line naming the clue
+   (Hints, in Settings). This replaced the first-desat hint, which said every fall was real. */
+function alarmHint(o, room, from){
+  if(!setOn('hints', true)) return;
+  const y=floorBox.height-bankHeight()-24;
+  if(o.kind==='real'){
+    if(S.tipReal) return; S.tipReal=true;
+    floatText(30, y, 'RM '+room+': steady slide. Real. CHECK it.', true);
+  } else {
+    if(S.tipNuis) return; S.tipNuis=true;
+    floatText(30, y, o.kind==='probe'
+      ? 'RM '+room+': cliff drop. Probe off. SILENCE.'
+      : 'RM '+room+': jumpy number. Motion. SILENCE.', true);
+  }
+}
 function spawnSat(room, slot){
   const row=addBankRow(room);
-  const box=row.box, val=row.sv;
-  let sat=98, desat=false, coding=false, issue=null;
-  /* a new admit in this bed: fresh numbers, nothing alarming, same monitor */
-  row.rebirth=function(){
-    sat=97; desat=false; coding=false;
-    box.classList.remove('warn','crit'); row.el.classList.remove('alarming');
-    if(issue){ killIssue(issue); issue=null; }
-    val.textContent=sat;
-  };
-
-  function resolve(by){
-    if(!desat) return;
-    desat=false; coding=false; sat = by==='code' ? 93 : 96;
-    box.classList.remove('warn','crit'); row.el.classList.remove('alarming');
-    if(issue){ killIssue(issue); issue=null; }
-    if(by==='you'){
-      tire('spo2');
-      const b=bonus(2);
-      floatText(30, floorBox.height-bankHeight()-24, 'RM '+room+' probe repositioned +'+b);
-      snd.good();
-    } else if(byHelp(by)){
-      const b=bonus(1.5);
-      floatText(30, floorBox.height-bankHeight()-24, whoIs(by)+' fixed the RM '+room+' probe +'+b);
-    }
-  }
-
-  every(()=>{
-    if(document.hidden) return;
-    if(row.blank){ val.textContent='--'; return; }   /* the bed is empty: nothing to read */
-    if(codeActive){ if(coding) snd.spo2(sat); return; }
-    if(desat){ sat=Math.max(sat-1, 74); }
-    else { sat=Math.min(99, Math.max(94, sat + ri(-1,1))); }
-    val.textContent=sat;
-    const warn=sat<93 && sat>=87, crit=sat<87;
+  const box=row.box, val=row.sv, sigEl=row.sig;
+  const o=newOx(); row.ox=o;
+  let coding=false, issue=null;
+  function dropIssue(){ if(issue){ killIssue(issue); issue=null; } }
+  /* rendering reads the ox and writes the tile; nothing in here decides anything */
+  function paint(){
+    val.textContent=o.sat;
+    const warn=o.sat<93 && o.sat>=87, crit=o.sat<87;
     box.classList.toggle('warn', warn);
     box.classList.toggle('crit', crit);
     row.el.classList.toggle('alarming', warn||crit);
-    if((warn||crit) && desat && !issue) issue=addIssue(row.el, resolve, true);   /* a tech crossing the row clears it */
-    snd.spo2(sat);
-    /* nobody caught it: the patient codes */
-    if(desat && sat<=80 && !codeActive && Date.now()>codeCooldownUntil){
-      coding=true;
-      startCode(()=>resolve('code'), room);
+    row.el.classList.toggle('hushed', o.silenced);
+    row.el.classList.toggle('checking', o.checking);
+    const q = o.sig>=0.7 ? 'ok' : o.sig>=0.02 ? 'weak' : 'flat';
+    sigEl.dataset.q=q; sigEl.style.setProperty('--sig', Math.round(Math.max(0.08, o.sig)*100)+'%');
+    /* the clue, for a screen reader: the same two things the eye reads, the number and the signal */
+    box.setAttribute('aria-label', 'Check room '+room+'. SpO2 '+o.sat+', signal '+(q==='ok' ? 'strong' : q==='weak' ? 'weak' : 'none'));
+    row.clr.setAttribute('aria-label', (o.silenced ? 'Pulse ox alarm silenced' : 'Silence pulse ox alarm')+', room '+room);
+  }
+  /* a new admit in this bed: fresh numbers, nothing alarming, same monitor */
+  row.rebirth=function(){ oxClear(o, 97); coding=false; dropIssue(); paint(); };
+
+  /* the code and the helpers: a tech or the float RN crossing the row checks it for you */
+  function resolve(by){
+    if(by==='code'){ coding=false; dropIssue(); oxClear(o, 93); paint(); return; }
+    if(!o.kind || o.checking) return;
+    const k=o.kind, at=o.sat;
+    dropIssue();
+    oxClear(o, k==='real' ? 95 : 97); coding=false; paint();
+    if(byHelp(by)){
+      const b=bonus(1.5);
+      floatText(30, floorBox.height-bankHeight()-24, k==='real' ? whoIs(by)+' caught RM '+room+' at '+at+' +'+b : whoIs(by)+' fixed the RM '+room+' probe +'+b);
     }
-  }, 1200+slot*90);   /* staggered so four pulse tones do not chorus */
+  }
+  function startAlarm(kind){ oxStart(o, kind); }
+  row.force=function(kind){ startAlarm(kind); tick(); };   /* the test hook's door */
+
+  function tick(){
+    if(row.blank){ val.textContent='--'; return; }   /* the bed is empty: nothing to read */
+    if(codeActive){ if(coding && !o.silenced) snd.spo2(o.sat); return; }
+    const from=o.sat;
+    if(oxTick(o)) dropIssue();   /* a nuisance settled by itself: nobody gets credit */
+    paint();
+    if(o.kind==='motion' && teleOn) row.art=performance.now()+1500;   /* the strip shows the movement too */
+    const lit=box.classList.contains('warn') || box.classList.contains('crit');
+    if(lit && o.kind && !o.checking && !issue) issue=addIssue(row.el, resolve, true);
+    if(lit && o.kind) alarmHint(o, room, from);
+    if(!o.silenced) snd.spo2(o.sat);   /* SILENCE on a real one stops this and nothing else */
+    /* nobody caught it: the patient codes */
+    if(oxCodeDue(o) && live() && Date.now()>codeCooldownUntil){   /* live(): not on a break, a report or another code */
+      coding=true;
+      startCode(()=>resolve('code'), room, o.silenced ? o.silencedAt : null);
+    }
+  }
+  row.tick=tick;
+  every(()=>{ if(!away()) tick(); }, 1200+slot*90);   /* staggered so four pulse tones do not chorus */
 
   every(()=>{
     if(!live()) return;
-    if(!desat && !codeActive && Math.random()<.35){ desat=true; }
+    if(!o.kind && !coding && !codeActive && !row.blank && Math.random()<.35) startAlarm(drawAlarm(room));
   }, 14000+slot*700);
 
+  /* SILENCE: one tap, and it pays the same whatever it was. A real one keeps falling. */
   row.clr.addEventListener('click', ()=>{
-    if(!desat) return;   /* no alarm, no credit, no comment */
-    resolve('you');
+    const k=oxSilence(o);
+    if(!k) return;   /* no alarm, no credit, no comment */
+    tire('spo2');
+    if(k==='real') S.stats.realSilenced++;
+    else dropIssue();
+    paint();
+    const b=bonus(ALARM.PAY.silence);
+    floatText(30, floorBox.height-bankHeight()-24, 'RM '+room+' silenced +'+b);
   });
+  /* CHECK: the box itself. You walk to the room, and a passing tech leaves it to you. */
+  box.addEventListener('click', ()=>{
+    if(!o.kind || o.checking) return;
+    if(S.walk.room!=null){ floatText(30, floorBox.height-bankHeight()-24, 'Still in Room '+S.walk.room+'.'); return; }
+    if(!oxCheck(o)) return;
+    walkStart(S.walk, room);
+    dropIssue(); paint(); walkBegin(room);
+  });
+  row.arrive=function(){
+    const f=oxArrive(o); if(!f) return;
+    coding=false; paint();
+    const y=floorBox.height-bankHeight()-24;
+    if(f.kind==='real'){
+      S.stats.realCaught++;
+      const b=bonus(ALARM.PAY.checkReal);
+      floatText(30, y, 'RM '+room+' was real. Caught at '+f.sat+' +'+b, true);
+      snd.good(); snd.good();
+    } else {
+      const b=bonus(ALARM.PAY.checkNuisance);
+      floatText(30, y, 'RM '+room+' · '+pick(NUISANCE_WHY[f.kind])+' +'+b);
+      snd.good();
+    }
+  };
+  paint();
 }
+/* the walk to the room: the big button says where you are and earns nothing until you are back */
+let walkSaved=null;
+function walkBegin(room){
+  walkSaved={tpl:btnTpl, resting};
+  resting=false; bigBtn.classList.add('rest');
+  setBtnLabel('In Room '+room);
+}
+every(()=>{
+  if(S.walk.room==null || !live()) return;
+  const r=walkTick(S.walk, 100);
+  if(r==null) return;
+  const sv=walkSaved||{tpl:pick(btnLabels), resting:false}; walkSaved=null;
+  resting=sv.resting; bigBtn.classList.toggle('rest', resting);
+  setBtnLabel(sv.tpl);
+  const row=bankRows.find(x=>x.room===r);
+  if(row && row.arrive) row.arrive();
+}, 100);
 
 /* --- Productivity tracking: the rate is a metric you have to buy --- */
 ELEM.prodtrack=function(){
@@ -2646,8 +2877,6 @@ function makeDoseQ(){
     ()=>({t:'V-fib arrest. Epi comes 1 mg in 10 mL (1:10,000). You need the full 1 mg.', q:'How many mL do you push?', a:10, u:'mL'}),
     ()=>{ const mg=pick([150,300]); return {t:'Amiodarone '+mg+' mg IV. The vial is 50 mg/mL.', q:'How many mL?', a:mg/50, u:'mL'}; },
     ()=>{ const mcg=pick([10,20,30]); return {t:'Push-dose epi is mixed at 10 mcg/mL. You need '+mcg+' mcg.', q:'How many mL?', a:mcg/10, u:'mL'}; },
-    ()=>({t:'Adenosine 6 mg rapid push. The vial is 3 mg/mL.', q:'How many mL?', a:2, u:'mL'}),
-    ()=>({t:'Atropine 1 mg. The prefilled syringe is 0.1 mg/mL.', q:'How many mL?', a:10, u:'mL'}),
     ()=>({t:'Lidocaine at 1 mg/kg. The patient is '+kg+' kg. The vial is 20 mg/mL.', q:'How many mL?', a:kg/20, u:'mL'}),
     ()=>({t:'You\'re mixing an epi drip: 4 mg in 250 mL.', q:'What\'s the concentration in mcg/mL?', a:16, u:'mcg/mL'}),
     ()=>{ const mg=pick([1,2]); return {t:'Magnesium '+mg+' g for torsades. The vial is 500 mg/mL.', q:'How many mL?', a:(mg*1000)/500, u:'mL'}; }
@@ -2708,7 +2937,9 @@ function doseOptions(a){
   return out;
 }
 let klaxonIv=null, curCodeQ=null;
-function startCode(onResolved, room){
+/* silencedAt: the number a real alarm read when you silenced it, if you did. Only then does the
+   card open by saying so. */
+function startCode(onResolved, room, silencedAt){
   codeActive=true; S.stats.codes++;
   if(S.stats.codes===1) track('first-code');
   floorBox=floor.getBoundingClientRect();   /* fresh box so the rush aims true */
@@ -2722,9 +2953,20 @@ function startCode(onResolved, room){
     later(()=>shell.classList.remove('code-on'), 500);
   }
   const layer=document.getElementById('codeLayer');
+  /* who is in the bed, read off the nurse brain: sex for the words, code status for the call.
+     A DNR room never gets a code (David, 2026-09-23): the sat still falls and somebody still
+     comes, as a rapid response, and the card says why. */
+  const brainPt=[...document.querySelectorAll('#brain .br-pt')].find(p=>{ const i=p.querySelector('.br-id i'); return i && i.textContent.trim()===String(room||4); });
+  const ids=brainPt ? [...brainPt.querySelectorAll('.br-id i')].map(i=>i.textContent.trim()) : [];
+  const sx=/\bF\b/.test(ids[2]||'') ? 'F' : /\bM\b/.test(ids[2]||'') ? 'M' : '';
+  const P = sx==='F' ? {He:'She', Hes:'She\'s', Heis:'She is'} : sx==='M' ? {He:'He', Hes:'He\'s', Heis:'He is'} : {He:'They', Hes:'They\'re', Heis:'They are'};
+  const codeStatus=ids[4]||'', dnr=/DNR/i.test(codeStatus);
   /* not every one is an arrest: a rapid response is an oxygen call, and the
      right answer is a device and a flow instead of a dose */
-  const rapid = Math.random()<0.45;
+  const rapid = dnr || Math.random()<0.45;
+  codeKind = rapid ? 'Rapid response' : 'Code Blue';
+  /* the clock across the top: thirty seconds, forty-five with More time (Settings) */
+  const CODE_SECS = setOn('moreTime', false) ? 45 : 30, SECS_W = CODE_SECS===45 ? 'forty-five' : 'thirty';
   const Q = rapid ? makeO2Q() : makeDoseQ(); curCodeQ=Q;
   const OPTS = rapid ? o2Options(Q) : doseOptions(Q.a);
   const ans = rapid ? Q.a : fmtDose(Q.a)+' '+Q.u;
@@ -2737,16 +2979,19 @@ function startCode(onResolved, room){
       '<div class="head" id="codeHead">'+(rapid ? '🚨 RAPID RESPONSE' : '🚨 CODE BLUE')+' &middot; ROOM '+(room||4)+'</div>'+
       '<div class="tline" aria-hidden="true"><i></i></div>'+
       '<div class="body">'+
-        (rapid
-          ? 'The sat you\'ve been watching finally meant something. He\'s awake, he\'s working to breathe, and Respiratory is two floors away. Everyone is looking at you.'
-          : 'The sat you\'ve been ignoring finally meant something. He\'s down. The cart is at the bedside and everyone is looking at you.')+
+        (silencedAt!=null ? 'You silenced it at '+silencedAt+'. It kept falling. ' : '')+
+        (dnr
+          ? 'Room '+(room||4)+' is '+codeStatus+'. Nobody calls a code. '+P.Hes+' awake and working to breathe, and the rapid response nurse wants a plan for the oxygen. Everyone is looking at you.'
+          : rapid
+          ? 'The sat you\'ve been watching finally meant something. '+P.Hes+' awake, '+P.Hes.toLowerCase()+' working to breathe, and Respiratory is two floors away. Everyone is looking at you.'
+          : 'The sat you\'ve been ignoring finally meant something. '+P.Hes+' down. The cart is at the bedside and everyone is looking at you.')+
         '<div class="q">'+Q.t+'<br>'+Q.q+'</div>'+
         '<div class="opts" role="group" aria-label="'+(rapid ? 'Pick the oxygen' : 'Pick the dose')+'">'+
           OPTS.map((v,i)=> rapid
             ? '<button type="button" class="opt o2" data-v="'+esc(v)+'">'+esc(v)+'</button>'
             : '<button type="button" class="opt" data-v="'+v+'">'+fmtDose(v)+' '+Q.u+'</button>').join('')+
         '</div>'+
-        '<div class="hint" id="codeHint">Nothing else happens until you get this right. The line at the top is thirty seconds.</div>'+
+        '<div class="hint" id="codeHint">Nothing else happens until you get this right. The line at the top is '+SECS_W+' seconds.</div>'+
       '</div>'+
     '</div>';
   layer.classList.add('show');
@@ -2756,13 +3001,13 @@ function startCode(onResolved, room){
   const opts=[...layer.querySelectorAll('.opt')];
   later(()=>{ if(opts[0]) opts[0].focus(); }, 50);
   let fails=0, takenOver=false;
-  /* the line across the top is the clock: thirty seconds before Dr. Patel stops waiting */
-  const CODE_SECS=30; let left=CODE_SECS; const tl=box.querySelector('.tline i');
+  /* the line across the top is the clock: thirty seconds (forty-five with More time) before Dr. Patel stops waiting */
+  let left=CODE_SECS; const tl=box.querySelector('.tline i');
   const tiv=every(()=>{
     if(!codeActive){ clearInterval(tiv); return; }
-    if(document.hidden) return;
+    if(away()) return;
     left-=0.1; tl.style.transform='scaleX('+Math.max(0,left/CODE_SECS)+')';
-    if(left<=0){ clearInterval(tiv); takeover(rapid ? 'Thirty seconds. '+O2TAKER+' takes the mask. '+ans+'. They do not look at you.' : 'Thirty seconds. Dr. Patel takes the syringe. '+ans+'. She does not look at you.'); }
+    if(left<=0){ clearInterval(tiv); takeover(rapid ? SECS_W[0].toUpperCase()+SECS_W.slice(1)+' seconds. '+O2TAKER+' takes the mask. '+ans+'. They do not look at you.' : SECS_W[0].toUpperCase()+SECS_W.slice(1)+' seconds. Dr. Patel takes the syringe. '+ans+'. She does not look at you.'); }
   }, 100);
   /* the room stops waiting for you: three strikes or the clock, same ending */
   function takeover(msg){
@@ -2792,12 +3037,14 @@ function startCode(onResolved, room){
     const right = rapid ? (btn.dataset.v===Q.a) : (Math.abs(parseFloat(btn.dataset.v)-Q.a)<0.011);
     if(right){
       endCode();
-      /* a code run right pays once, big: four minutes of the whole floor */
-      const b=Math.max(500, Math.round(effTps()*240));
+      /* a code run right pays once, big: four minutes of the whole floor. After an alarm you SILENCED it
+         pays two; the other two go to the safety report, or letting a real one fall beats catching it */
+      const filed = silencedAt!=null;
+      const b=Math.max(500, Math.round(effTps()*(filed ? 120 : 240)));
       addTasks(b); S.stats.saves++; credit('saves', b);
       earn('rosc');
       if(fails===0) earn('firsttry');
-      floatText(floorBox.width/2-60, 140, (rapid ? 'Sat back up. ' : 'ROSC. ')+ans+'. +'+fmt(b)+'. Four minutes of the floor, in one push.', true);
+      floatText(floorBox.width/2-60, 140, (rapid ? 'Sat back up. ' : 'ROSC. ')+ans+'. +'+fmt(b)+'. '+(filed ? 'Two minutes of the floor. The other two went to the safety report.' : 'Four minutes of the floor, in one push.'), true);
       snd.good(); snd.good();
     } else {
       fails++;
@@ -2807,19 +3054,19 @@ function startCode(onResolved, room){
         takeover(rapid ? O2TAKER+' takes the mask. '+ans+'. They do not look at you.' : 'Dr. Patel takes the syringe. '+ans+'. She does not look at you.');
       } else {
         document.getElementById('codeHint').textContent = rapid
-          ? pick(['Sat is still 84. He is looking at you.',
+          ? pick(['Sat is still 84. '+P.Heis+' looking at you.',
                   'RT, from the doorway: "That is not the one." Try again.',
                   'The mask is on. The number did not move.',
                   'Wrong device. The flowmeter hisses at you.',
-                  'He pulls it off. Try again.',
+                  P.He+' pulls it off. Try again.',
                   'Not enough. Or too much. Not right.'])
-          : pick(['That\'s not it. He\'s still down.',
+          : pick(['That\'s not it. '+P.Hes+' still down.',
                 'The pharmacist winces. Try again.',
                 'Compressions continue. So does the math.',
                 'Wrong dose. The room got quieter.',
                 'Wrong. The pharmacist is doing it in her head now.',
                 'That would be a lot of epi. Or not enough. It is not right.',
-                'Try again. He is not going anywhere. That is the problem.',
+                'Try again. '+P.Heis+' not going anywhere. That is the problem.',
                 'Someone whispers the answer. You do not hear it.']);
         const nxt=opts.find(o=>!o.disabled); if(nxt) nxt.focus();
       }
@@ -2974,7 +3221,7 @@ ELEM.pump=function(){
       fault=false; paged=false; w.classList.remove('warn');
       S.stats.biomed=(S.stats.biomed||0)+1;
       pf(pick(BIOMED), true); snd.good();
-      if(running){ st.textContent='INFUSING'; setBtn('RUNNING','Pump running', true); } else idle();
+      if(running){ st.textContent='INFUSING'; showBag(); setBtn('RUNNING','Pump running', true); } else idle();
     }, ri(8000,20000));
   }
   function showBag(){ bagEl.textContent=bag.nm+' · '+bag.dur+'s'; }
@@ -3204,7 +3451,7 @@ const idleLines=['📱 checking their phone','☕ getting coffee','💬 mid-stor
   '🍩 someone brought donuts','📱 “it is my kid’s school”','🚻 “back in a sec”','📱 “what is the Wi-Fi again”'];
 const chatLines=['💬 “did you see the email?”','💬 “anyway, so then she said”','💬 “five minutes, I swear”','💬 “who has 7 tonight?”','☕ “I have not sat down”',
   '💬 “did you hear about 5 North?”','💬 “I am not covering Saturday”','☕ “is this decaf? it is decaf.”','💬 “the surveyor asked me about fire”'];
-ELEM.tech=function(){ spawnTech(false); };
+ELEM.tech=function(){ spawnTech(false); document.querySelectorAll('.nag.help').forEach(n=>n.remove()); };   /* buying one retires the free offer */
 /* the float pool RN: the only other license on this hallway. She walks the same
    loop the techs do and picks up the two things they are not allowed to touch. */
 ELEM.floatrn=function(){ spawnTech(true); };
@@ -3256,7 +3503,7 @@ function techFrame(now){
   const dt=Math.min(100, now-techLast); techLast=now;
   /* the break, a report, an unstarted or hidden shift: everyone holds. A code
      is NOT a hold for techs, they rush. live() is false during one, so gate by hand. */
-  if(!S.started || reportActive || breakActive || document.hidden) return;
+  if(!S.started || reportActive || breakActive || away()) return;
   const k=dt/50;   /* dx/dy stay authored in per-50ms units */
   const W=floorBox.width, H=floorBox.height;
   const bottomPad = 10;   /* the bank floats in the centre now, floor is free */
@@ -3549,7 +3796,7 @@ ELEM.inbasket=function(){
   document.addEventListener('keydown', e=>{ if(e.key==='Escape' && win.classList.contains('open')) closeIB(); });
   /* the pile refills whether or not you are looking at it */
   every(()=>{
-    if(document.hidden) return;
+    if(away()) return;
     const n=ri(1,3); for(let k=0;k<n && IB.length<47;k++) IB.push(mk(pick(IB_MSGS)));
     paint(); if(Math.random()<.5) snd.ding();
   }, 4000);
@@ -3592,10 +3839,11 @@ ELEM.bulkdel=function(){
    cheap, climbs every time, resolves in its own time with its own note. --- */
 let ticketNo=4471;
 ELEM.ticket=function(){
-  ticketNo++; const n=ticketNo; S.stats.tickets=(S.stats.tickets||0)+1;
+  ticketNo++; const n=ticketNo;
   floatText(0,0,'Ticket #'+n+' submitted. Estimated resolution: 6 to 8 weeks.', true);
   later(()=>{
     if(S.over) return;
+    S.stats.tickets=(S.stats.tickets||0)+1;   /* counted when IT closes it, which is what the badge says */
     ELEM._bulkRepair && ELEM._bulkRepair();
     floatText(0,0,'Ticket #'+n+' closed: '+pick(['"Restarted it."','"Could not reproduce." It works now.','"User error." It works now.','"Working as designed." It also works now.'])+' Delete all is back. Once.', true);
     snd.good();
@@ -3632,7 +3880,7 @@ ELEM.bpa=function(){
     const BPA_SECS=12; let left=BPA_SECS; const tl=layer.querySelector('.tline i');
     const tiv=every(()=>{
       if(!layer.classList.contains('show')){ clearInterval(tiv); return; }
-      if(document.hidden) return;
+      if(away()) return;
       left-=0.1; tl.style.transform='scaleX('+Math.max(0,left/BPA_SECS)+')';
       if(left<=0){
         close();
@@ -3734,7 +3982,7 @@ ELEM.tele=function(){
   /* the number on the tile is what a monitor would show: the average of the
      last few R-R intervals, so AF wanders and flutter 4:1 reads a steady 75 */
   every(()=>{
-    if(document.hidden) return;
+    if(away()) return;
     const now=performance.now();
     bankRows.forEach(r=>{
       if(r.rrs && r.rrs.length){ const avg=r.rrs.reduce((a,b)=>a+b,0)/r.rrs.length; r.hr=Math.round(60/avg); }
@@ -3877,6 +4125,7 @@ ELEM.family=function(){
   ];
   const w=document.createElement('div');
   w.className='widget family'; w.style.left='20px'; w.style.bottom='calc(var(--bank-h, 10px) + 12px)';
+  requestAnimationFrame(()=>anchorAboveButton(w));
   /* a talking head: SVG face (eyes blink, mouth flaps while a question types)
      + a bubble. The face is drawn fresh for every new relative: skin, hair,
      glasses, a beard now and then, a shirt, so the desk never looks like the
@@ -3955,7 +4204,7 @@ ELEM.family=function(){
   function ask(){
     if(S.over || !live()){ later(ask, 5000); return; }   /* not during a code, a report, or the break */
     if(nextIsNew){ newRelative(); nextIsNew=false; }
-    w.classList.remove('quiet');
+    w.classList.remove('quiet'); anchorAboveButton(w);
     btn.disabled=false; btn.textContent='Answer the question';
     say(pick(qs));
     arm();
@@ -3986,7 +4235,7 @@ const NAG_LINES=[
   'The poster says ten minutes off makes you 20% more productive. The poster has never worked a shift. Try anyway?'
 ];
 function breakNag(){
-  if(document.querySelector('.nag') || breakActive || !live()) return;
+  if(document.querySelector('.nag:not(.help)') || breakActive || !live()) return;   /* the help offer is not a nag */
   lastNagMin=clockMin;
   const w=document.createElement('div'); w.className='nag'; w.setAttribute('role','group'); w.setAttribute('aria-label','Break reminder');
   w.innerHTML='<div class="who">Break reminder</div><div>'+pick(NAG_LINES)+'</div>'+
@@ -3998,7 +4247,7 @@ function breakNag(){
   w.querySelectorAll('.opts button').forEach(b=>b.addEventListener('click', ()=>{
     const u=UPG.find(x=>x.id==='brk'); const kind=b.dataset.kind;
     if(!u || u.el.classList.contains('owned')){ floatText(Math.max(10, floorBox.width/2-90), 120, 'You stopped trying to take breaks. It shows.', true); gone(); return; }
-    if(S.tasks<u.curCost){ snd.buzz(); floatText(Math.max(10, floorBox.width/2-90), 120, 'Need '+fmt(u.curCost-S.tasks)+' more tasks to '+BREAK_KIND[kind].nm.toLowerCase()+'.', true); return; }
+    if(S.tasks<u.curCost){ snd.buzz(); floatText(Math.max(10, floorBox.width/2-90), 120, 'Need '+fmt(Math.ceil(u.curCost-S.tasks))+' more tasks to '+BREAK_KIND[kind].nm.toLowerCase()+'.', true); return; }
     breakKind=kind; if(kind==='bathroom') S.stats.bathroom=(S.stats.bathroom||0)+1; gone(); u.buy();
   }));
   w.querySelector('.nx').addEventListener('click', gone);
@@ -4020,6 +4269,7 @@ function offerTech(){
   floor.appendChild(w); placeAboveButton(w); snd.ding();
   w.querySelector('.take').addEventListener('click', ()=>{
     w.remove();
+    if(S.owned.tech) return;   /* a tech was bought while the card was up: the offer is moot */
     S.owned.tech=1; S.tps+=u.tps; u.revealed=true; u.floated=true; u.el.style.display='';
     u.curCost=Math.round(u.curCost*(u.esc||2.4)); u.relabel && u.relabel();
     ELEM.tech(); renderTop(); renderShop();
@@ -4195,6 +4445,7 @@ ELEM.tjc=function(){
   }
   const w=document.createElement('div');
   w.className='widget surveyor'; w.style.right='16px'; w.style.bottom='calc(var(--bank-h, 10px) + 12px)';
+  requestAnimationFrame(()=>anchorAboveButton(w));
   w.innerHTML='<div class="who">🕴 Joint Commission</div><div>They are observing.</div><div class="note" id="tjcNote"></div>';
   floor.appendChild(w);
   /* the comment lands in the widget AND on a sticky note somewhere on the
@@ -4291,17 +4542,22 @@ function checkShiftChange(){
 function satOf(r){ return parseInt(r.sv.textContent,10); }
 function buildReportQs(){
   const qs=[];
-  bankRows.forEach(r=>{
+  /* 2026-09-23: a bed reading "--" (empty, or a lead off) has no number to report, so it asks nothing */
+  const onMon=bankRows.filter(r=>!r.blank && !r.leadOff);
+  onMon.forEach(r=>{
     qs.push({t:'Room '+r.room+' SpO2 right now?', kind:'num', u:'%', ok:v=>Math.abs(v-satOf(r))<=2});
     if(teleOn) qs.push({t:'Room '+r.room+' heart rate?', kind:'num', u:'bpm', ok:v=>Math.abs(v-r.hr)<=4});
     if(teleOn && r.rhy) qs.push({t:'Room '+r.room+' rhythm?', kind:'pick', opts:rhyOpts(r), ok:v=>v===r.rhy.nm});
   });
-  if(bankRows.length>=2) qs.push({t:'Which room has the lowest sat right now?', kind:'pick',
-    opts:bankRows.map(r=>'Room '+r.room),
-    ok:v=>{ const lo=Math.min.apply(null, bankRows.map(satOf)); return bankRows.some(r=>satOf(r)===lo && ('Room '+r.room)===v); }});
+  if(onMon.length>=2) qs.push({t:'Which room has the lowest sat right now?', kind:'pick',
+    opts:onMon.map(r=>'Room '+r.room),
+    ok:v=>{ const lo=Math.min.apply(null, onMon.map(satOf)); return onMon.some(r=>satOf(r)===lo && ('Room '+r.room)===v); }});
   if(document.querySelector('.callboard')) qs.push({t:'How many call lights are on?', kind:'num', u:'',
     ok:v=>v===document.querySelectorAll('.callboard .room.lit').length});
   document.querySelectorAll('.pump').forEach(p=>{
+    /* a pump mid-fault, dirty or waiting on Biomed shows a message, not a bag: nothing to report on */
+    const bt=p.querySelector('.bag').textContent.split(' · ')[0];
+    if(p.querySelector('.status').textContent!=='NO BAG HUNG' && !PUMP_BAGS.some(b=>b.nm===bt)) return;
     qs.push({t:'What is hanging on '+p.querySelector('.lbl').textContent.replace('IV PUMP · ','')+'?', kind:'pick',
       opts:PUMP_BAGS.map(b=>b.nm).concat(['Nothing']),
       ok:v=>{ const s=p.querySelector('.status').textContent;
@@ -4991,7 +5247,7 @@ function renderSounds(){
     b.addEventListener('click', ()=>{
       if(S.over) return;
       if(!MEM.sndOwned[s.id]){
-        if(S.tasks<s.cost){ snd.buzz(); floatText(0,0,'Need '+fmt(s.cost-S.tasks)+' more for '+s.nm+'.', true); return; }
+        if(S.tasks<s.cost){ snd.buzz(); floatText(0,0,'Need '+fmt(Math.ceil(s.cost-S.tasks))+' more for '+s.nm+'.', true); return; }
         S.tasks-=s.cost; MEM.sndOwned[s.id]=1;
       }
       MEM.snd=s.id; saveMem(); renderTop(); renderChart();
@@ -5017,7 +5273,7 @@ function renderBling(){
     b.addEventListener('click', ()=>{
       if(S.over) return;
       if(!MEM.scrubOwned[s.id]){
-        if(S.tasks<s.cost){ snd.buzz(); floatText(Math.max(10, floorBox.width/2-90), 120, 'Need '+short(s.cost-S.tasks)+' more for '+s.nm+'.', true); return; }
+        if(S.tasks<s.cost){ snd.buzz(); floatText(Math.max(10, floorBox.width/2-90), 120, 'Need '+short(Math.ceil(s.cost-S.tasks))+' more for '+s.nm+'.', true); return; }
         S.tasks-=s.cost; MEM.scrubOwned[s.id]=1;
       }
       MEM.scrub=s.id; saveMem(); applyBtnLook(); renderTop(); renderChart(); snd.good();
@@ -5039,7 +5295,7 @@ function renderBling(){
       if(S.over) return;
       if(!MEM.blingOwned[x.id]){
         if(!next) return;
-        if(S.tasks<x.cost){ snd.buzz(); floatText(Math.max(10, floorBox.width/2-90), 120, 'Need '+short(x.cost-S.tasks)+' more for '+x.nm+'.', true); return; }
+        if(S.tasks<x.cost){ snd.buzz(); floatText(Math.max(10, floorBox.width/2-90), 120, 'Need '+short(Math.ceil(x.cost-S.tasks))+' more for '+x.nm+'.', true); return; }
         S.tasks-=x.cost; MEM.blingOwned[x.id]=1;
         if(x.id==='gold') earn('goldbtn');
         floatText(Math.max(10, floorBox.width/2-90), 120, x.nm+'. The button, not the shift.', true);
@@ -5237,11 +5493,12 @@ function resumeShift(){
   L.classList.remove('in');
   later(()=>L.classList.remove('show'), 450);
   S.over=false;
-  earn('endless');
+  const afterLunch = lastEndKind==='lunch';
+  if(afterLunch) earn('endless');
   /* back on the floor: the lunch comes around again, twice the price, and the
      time after that it is free, because by then it is just leaving */
-  lunchN++;
-  const lu=UPG.find(x=>x.id==='lunch');
+  if(afterLunch) lunchN++;
+  const lu=afterLunch ? UPG.find(x=>x.id==='lunch') : null;
   if(lu){
     S.owned.lunch=0; lu.el.classList.remove('owned');
     if(lunchN===1){ lu.curCost=lu.cost*2; lu.nm='Another lunch break'; lu.ds='Thirty more minutes. Twice the price. The chair remembers you.'; }
@@ -5295,7 +5552,15 @@ async function shiftCard(kind, download){
   if(download && blob){ const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download='alarm-fatigue-shift-'+(MEM.shifts||1)+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u), 1500); }
   return blob;
 }
+/* the real alarms, on the report: the ones you walked to and the ones you silenced. Only once
+   there has been one of either. */
+function realLine(){
+  const c=S.stats.realCaught||0, s=S.stats.realSilenced||0;
+  return (c||s) ? '<br>real alarms: '+c+' caught, '+s+' silenced' : '';
+}
+let lastEndKind='';   /* how the last stretch ended: resumeShift only treats a lunch as a lunch */
 function endShift(kind){
+  lastEndKind=kind;
   const early = kind==='lunch';
   const newSkin = early && !MEM.ach.lunch;
   if(early) earn('lunch');
@@ -5316,7 +5581,7 @@ function endShift(kind){
 
   if(master) master.gain.linearRampToValueAtTime(0.0001, AC.currentTime+2);
   const L=document.getElementById('lunch');
-  L.innerHTML='<div class="lcard">'+
+  L.scrollTop=0; L.innerHTML='<div class="lcard">'+
     '<h1>'+clockStr(clockMin)+'.</h1>'+
     (early
       ? '<p>The break room is empty and the chair by the window is open. That has not been true once today.</p>'+
@@ -5325,7 +5590,7 @@ function endShift(kind){
       : '<p>Night shift is here. You gave report, most of it from memory, and the memory was mostly right.</p>'+
         '<p>Twelve hours. '+fmt(S.stats.alarms)+' interruptions, '+S.stats.codes+' code'+(S.stats.codes===1?'':'s')+', '+S.stats.missed+' thing'+(S.stats.missed===1?'':'s')+' that got past you and '+S.stats.saves+' that did not. Every upgrade you bought today added something that beeps. That was the deal here, and it is the deal on a real floor: every improvement arrives with a sound attached, and nobody is in charge of the total.</p>'+
         '<p>Your badge is still on. The inbox will still be there tomorrow. It is always still there.</p>')+
-    '<div class="stats mono">'+S.stats.clicks+' tasks clicked &middot; '+S.stats.alarms+' interruptions handled &middot; '+
+    '<div class="stats mono">'+S.stats.clicks+(S.stats.clicks===1 ? ' task' : ' tasks')+' clicked &middot; '+S.stats.alarms+' interruptions handled &middot; '+
       S.stats.codes+' codes run &middot; '+S.stats.saves+' caught early &middot; '+S.stats.missed+' missed'+
       (S.stats.flubs ? ' &middot; '+S.stats.flubs+' dose'+(S.stats.flubs>1?'s':'')+' Dr. Patel pushed for you' : '')+
       (S.stats.meds ? ' &middot; '+S.stats.meds+' med'+(S.stats.meds>1?'s':'')+' given' : '')+
@@ -5336,6 +5601,7 @@ function endShift(kind){
       (S.stats.biomed ? ' &middot; Biomed '+S.stats.biomed+' time'+(S.stats.biomed>1?'s':'') : '')+
       (S.eap ? '<br>EAP appointment: '+S.eap+'. Hang in there until then.' : '')+
       (S.stats.maxStreak>=3 ? ' &middot; best streak ×'+S.stats.maxStreak : '')+
+      realLine()+
       (worst<100 ? '<br>most-silenced alarm, down to '+worst+'% volume by clock-out' : '')+
       (early && prevBest && !isRecord ? '<br>your earliest clock-out is still '+clockStr(prevBest) : '')+
       (isRecord && prevBest ? '<br>earliest clock-out yet' : '')+
@@ -5384,7 +5650,7 @@ function clockOut(){
   track('clock-out');
   if(master) master.gain.linearRampToValueAtTime(0.0001, AC.currentTime+3);
   const L=document.getElementById('lunch');
-  L.innerHTML='<div class="sunset" aria-hidden="true"><div class="sun"></div><div class="mtn m1"></div><div class="mtn m2"></div><div class="mtn m3"></div><div class="ground"></div></div>'+
+  L.scrollTop=0; L.innerHTML='<div class="sunset" aria-hidden="true"><div class="sun"></div><div class="mtn m1"></div><div class="mtn m2"></div><div class="mtn m3"></div><div class="ground"></div></div>'+
     '<div class="lcard out">'+
     '<h1>'+clockStr(clockMin)+'. Clocked out.</h1>'+
     '<p>Badge on the desk, keys in your hand, and the parking lot is orange.</p>'+
@@ -5392,6 +5658,7 @@ function clockOut(){
     '<p>Alarm fatigue is not a nurse being careless. It is a system that made every warning the same volume and then asked one person to tell them apart for twelve hours. Today that person was you, '+fmt(S.stats.alarms)+' times. The mountains have been out there the whole time.</p>'+
     '<div class="stats mono">'+S.stats.clicks+' tasks by hand &middot; '+S.stats.alarms+' interruptions &middot; '+S.stats.codes+' codes &middot; '+
       (S.stats.meds||0)+' meds &middot; '+(S.stats.breaks||0)+' breaks bought, 0 taken'+
+      realLine()+
       '<br>shift '+MEM.shifts+' in the books. Tomorrow starts at +'+Math.round((expMult()-1)*100)+'% experience</div>'+
     '<button type="button" class="hit lunch-more" id="lunchMore" aria-expanded="false">More info</button>'+
     '<div class="lunch-info" id="lunchInfo" hidden>'+LUNCH_INFO+'</div>'+
@@ -5484,7 +5751,7 @@ ELEM.brk=function(){
   const kind=BREAK_KIND[breakKind]||BREAK_KIND.rest; breakKind='rest';
   const seat = n>=7 ? pick(BREAK_SEATS_LATE) : (kind.seats.length ? pick(kind.seats) : pick(BREAK_SEATS));
   const L=document.getElementById('lunch');
-  L.innerHTML='<div class="lcard brk"><h1>'+clockStr(clockMin)+'.</h1>'+
+  L.scrollTop=0; L.innerHTML='<div class="lcard brk"><h1>'+clockStr(clockMin)+'.</h1>'+
     '<p>'+seat+'</p>'+
     '<p class="mono" style="font-size:var(--t-ui);opacity:.8">Break '+n+' of the day. Minutes actually taken today: 0.</p>'+
     '<p class="mono" style="font-size:var(--t-fine);opacity:.7">Poster on the wall: TEN MINUTES OFF = 20% MORE PRODUCTIVE. Productivity bonus earned so far: none.</p>'+
@@ -5570,48 +5837,60 @@ soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !soundMenu.hidden) closeSound(); });
 document.addEventListener('click', e=>{
-  /* a click on the menu's Sound settings row opens this panel, and the same
-     click then bubbles to here: without the gameMenu guard it closed again in
-     the same gesture */
+  /* Settings' Sound mix row opens this panel a beat after its own click, so that click
+     never reaches here with the panel open (see mixRow below) */
   if(soundMenu.hidden || soundMenu.contains(e.target) || mixBtn.contains(e.target)) return;
-  if(gameMenu && gameMenu.contains(e.target)) return;
   closeSound();
 });
 if(MEM.vol && MEM.vol.master!=null){ delete MEM.vol.master; saveMem(); }   /* an older build's master, now unreachable */
 paintMute();
-function restartShift(){
-  if(!S.over && S.tasks>500 && !confirm('Walk off the floor and start the shift over?')) return;
-  reloadNow();
-}
-document.getElementById('resetBtn').addEventListener('click', restartShift);
-
-/* the phone menu: the same open/close/Esc/outside-click contract the sound
-   panel already uses, so both popovers behave identically */
-const gmBtn=document.getElementById('gmBtn');
-const gameMenu=document.getElementById('gameMenu');
-function openGm(){
-  closeSound();
-  gameMenu.hidden=false; gmBtn.setAttribute('aria-expanded','true');
-  const f=gameMenu.querySelector('.gm-item'); if(f) f.focus();
-}
-function closeGm(){
-  if(gameMenu.hidden) return;
-  gameMenu.hidden=true; gmBtn.setAttribute('aria-expanded','false'); gmBtn.focus();
-}
-gmBtn.addEventListener('click', ()=>{ if(gameMenu.hidden) openGm(); else closeGm(); });
-gameMenu.querySelector('.gm-x').addEventListener('click', closeGm);
-document.getElementById('gmSound').addEventListener('click', ()=>{ closeGm(); openSound(); });
-document.getElementById('gmRestart').addEventListener('click', ()=>{ closeGm(); restartShift(); });
-/* the site nav is the shared merged-band control; the menu just presses it */
-document.getElementById('gmSite').addEventListener('click', ()=>{
-  closeGm();
-  const s=document.querySelector('[data-nav-summon]'); if(s) s.click();
+/* The game menu, the "?" and settings are the site's shared pieces, the same in every game
+   (.claude/rules/games.md, Menus; docs/HU-GAME-MENUS-2026-09-23.md). Restart, Learn and the
+   site menu used to sit in the bar and in a phone-only popover; they are rows in here now.
+   Any of these cards pauses the floor: live() and away() read HUKit.dialog.anyOpen(). */
+const afSet=HUKit.settings({ id:'af', rows:[HUKit.settings.assist.moreTime, HUKit.settings.assist.soundsAsText, HUKit.settings.assist.hints] });
+afSetRef=afSet;
+/* the eleven sliders stay one row away. The mixer is its own panel, so the cards close first
+   and it opens a beat later: on the same click its outside-click rule would shut it again. */
+const mixRow=document.createElement('button');
+mixRow.type='button'; mixRow.className='hu-dlg-btn af-mixrow'; mixRow.textContent='Sound mix';
+mixRow.addEventListener('click', ()=>{ afSet.close(); afMenu.close(); setTimeout(openSound, 0); });
+afSet.dialog.body.appendChild(mixRow);
+const helpEx=document.createElement('div');
+/* one line each, rules and example: at 740x360 the card has to show Clock in without a scroll */
+helpEx.innerHTML='<p><b>SpO2 97, then 62</b>, signal bar empty. A probe came off.</p>'+
+  '<p class="af-rot">On a phone, turn it sideways for more room.</p>';
+/* by itself on a first visit only, then behind the "?" and the menu's Help row. Its button
+   clocks you in, which is the notice this replaced (the phone-only "turn sideways" card). */
+const afHelp=HUKit.howTo({ id:'af',
+  rules:['Press the big button for tasks. Buy your way to lunch.',
+         'Most alarms are false. SILENCE is a tap, CHECK a walk.',
+         'A slow slide on a full signal is real. It codes at 80.'],
+  example:helpEx,
+  action:{ label:'Clock in', run:()=>{ if(!S.started) bigBtn.click(); } } });
+afHelpRef=afHelp;
+function restartShift(){ reloadNow(); }
+const afMenu=HUKit.gameMenu({
+  title:'Alarm Fatigue', help:afHelp, settings:afSet,
+  restart:{ verb:'Restart the shift', title:'Restart the shift?', body:'The floor starts over at 0600, and this shift\'s tasks are gone.', run:restartShift },
+  leave:{ href:'/learn/#fun' },
+  onOpen:()=>closeSound(),
+  /* Esc opens the menu only when nothing of the floor's own is up to close first */
+  escOpens:()=> soundMenu.hidden && !ehrPanel.classList.contains('show') && !codeActive && !reportActive && !breakActive &&
+    !document.getElementById('lunch').classList.contains('show')
 });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !gameMenu.hidden) closeGm(); });
-document.addEventListener('click', e=>{
-  if(gameMenu.hidden || gameMenu.contains(e.target) || gmBtn.contains(e.target)) return;
-  closeGm();
-});
+const kitSlot=document.getElementById('afKitBtns');
+const menuBtn=afMenu.button(); menuBtn.setAttribute('aria-label','Menu');   /* the word hides on a phone; the name stays */
+kitSlot.append(afHelp.button(), menuBtn);
+/* the floor's sound pauses with the floor: tone() stops starting notes, and this parks the
+   ones already running (the bed alarm's held tone) until the card closes */
+let cardWasUp=false;
+every(()=>{
+  const up=menuUp(); if(up===cardWasUp) return; cardWasUp=up;
+  if(!AC) return;
+  if(up){ if(AC.state==='running') AC.suspend(); }
+  else if(!document.hidden && !S.muted && !S.over && AC.state==='suspended') AC.resume();
+}, 150);
 
 /* sub line changes as chaos grows */
 every(()=>{
@@ -5712,21 +5991,9 @@ renderTop(); renderShop();
 /* milestone achievements: one poller reads them off state a few times a second */
 every(()=>checkAch(), 400);
 
-/* small-screen notice: this floor is dense on a phone (see the neal.fun clicker),
-   so we say so up front. Once per session, one tap to dismiss. */
-(function(){
-  const note=document.getElementById('afBigScreen'), go=document.getElementById('afbsGo');
-  if(!note || !go) return;
-  let seen=false; try{ seen=sessionStorage.getItem('hu-af-bigscreen')==='1'; }catch(e){}
-  if(!seen && window.matchMedia('(max-width:699px), (max-height:500px)').matches) note.classList.add('show');
-  function dismiss(){ note.classList.remove('show'); try{ sessionStorage.setItem('hu-af-bigscreen','1'); }catch(e){} bigBtn.focus(); }
-  go.addEventListener('click', dismiss);
-  note.addEventListener('keydown', e=>{ if(e.key==='Escape') dismiss(); });
-})();
-
 /* test hook (same pattern as the sim games' window.__hs/__er): lets a
    playtest or a harness drive the blocking flows without waiting on RNG */
-window.__af={ shiftCard, startCode, sendIM, MGR_IM, IMS, get IMQ(){return IMQ;}, S, earn,
+if(window.__UG_TEST) window.__af={ shiftCard, startCode, sendIM, MGR_IM, IMS, get IMQ(){return IMQ;}, S, earn,
   techs, effTps, renderTop, bankRows, get teleOn(){return teleOn;}, popHuddle,
   openEhrPanel, ACH, ACH_TEST, checkAch, resumeShift, wear, achCount, ELEM,
   announceUpgrade, UPG, renderShop, expMult, get MEM(){return MEM;},
@@ -5738,7 +6005,13 @@ window.__af={ shiftCard, startCode, sendIM, MGR_IM, IMS, get IMQ(){return IMQ;},
   restLabel, paintBtn, setBtnLabel, REST_LINES, hourStr,
   medHint, medSeq, medOrderText, get medHintN(){return medHintN;}, set medHintN(v){medHintN=v;},
   get btnTpl(){return btnTpl;}, get resting(){return resting;},
-  set lastPress(v){lastPress=v;}, set nextRest(v){nextRest=v;} };
+  set lastPress(v){lastPress=v;}, set nextRest(v){nextRest=v;},
+  menu:afMenu, settings:afSet, help:afHelp, live, away, get codeActive(){return codeActive;},
+  /* real or nuisance: start a known alarm on a room's monitor, read its ox, step it a tick */
+  ALARM, drawAlarm, get walk(){return S.walk;},
+  forceAlarm(room, kind){ const r=bankRows.find(x=>x.room===room); if(!r || !r.force) return null; r.force(kind); return r.ox; },
+  oxOf(room){ const r=bankRows.find(x=>x.room===room); return r ? r.ox : null; },
+  tickRoom(room){ const r=bankRows.find(x=>x.room===room); if(r && r.tick) r.tick(); return r ? r.ox : null; } };
 })();
 </script>
 {% endraw %}

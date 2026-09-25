@@ -116,7 +116,7 @@ test('a cannula parked against a barb pushes straight on, and re-routes when it 
   assert.strictEqual(res.tube.direct, true);
   assert.strictEqual(res.tube.lead, can.uid, 'no cart tubing was used: it is the cannula\'s own 7 ft');
   assert.ok(da.evaluate(S).path.includes(can.uid), 'the cannula is on the circuit');
-  const mv = da.moveItem(S, can.uid, NOSE[0], NOSE[1], 0);
+  const mv = da.moveItem(S, can.uid, da.GRID.nose[0], da.GRID.nose[1], 0);
   assert.strictEqual(mv.ok, true);
   assert.strictEqual(mv.detached, 0, 'the tubing followed');
   const tb = S.tubes.find(t => t.lead === can.uid);
@@ -159,7 +159,7 @@ test('the air tree threads only onto the air flowmeter; the 14 ft tubing sits be
 test('a Venturi mask sets FiO2 by jet, snapping to the jets it actually has', () => {
   const da = load();
   const S = da.start('sb', 'left');
-  da.place(S, 'venturi', NOSE[0], NOSE[1], 0);
+  da.place(S, 'venturi', da.GRID.nose[0], da.GRID.nose[1], 0);
   const v = itemOf(S, 'venturi');
   assert.strictEqual(v.fio2, 24, 'starts on the lowest jet');
   assert.strictEqual(da.setFio2(S, v.uid, 30).fio2, 31, 'asks for 30, gets the 31 jet');
@@ -186,7 +186,7 @@ test('cool aerosol: nebulizer, corrugated tubing, aerosol mask; the collar sets 
   da.place(S, 'lvn', 3, 3, 0);                 // nut onto the DISS outlet; cone points E at (3,4)
   const neb = itemOf(S, 'lvn');
   da.setFio2(S, neb.uid, 35);
-  da.place(S, 'aeromask', NOSE[0], NOSE[1], 0);
+  da.place(S, 'aeromask', da.GRID.nose[0], da.GRID.nose[1], 0);
   const mask = itemOf(S, 'aeromask');
   const res = da.connectPorts(S, ref(portOf(da, neb, p => p.std === 'iso22')), ref(portOf(da, mask, p => p.std === 'iso22')), null);
   assert.strictEqual(res.ok, true);
@@ -197,7 +197,7 @@ test('cool aerosol: nebulizer, corrugated tubing, aerosol mask; the collar sets 
   // a trach collar takes the same tubing and the same need, but it goes on the neck, not the face
   da.removeThing(S, mask.uid);
   S.level = Object.assign({}, S.level, { req: { iface: ['trach'], flow: 10, humid: true, fio2: 35 } });
-  da.place(S, 'trach-collar', NOSE[0], NOSE[1], 0);
+  da.place(S, 'trach-collar', da.GRID.nose[0], da.GRID.nose[1], 0);
   let tc = itemOf(S, 'trach-collar');
   assert.ok(!da.onPatientLinks(da.computeLinks(S), tc), 'its patient side meets the face port, and neck on face is not a fit');
   const atNose = da.connectPorts(S, ref(portOf(da, neb, p => p.std === 'iso22')), ref(portOf(da, tc, p => p.std === 'iso22')), null);
@@ -266,7 +266,7 @@ test('level 3, trach collar: nebulizer on the flowmeter, collar on the neck, the
   const run = da.connectPorts(S, ref(portOf(da, neb, p => p.std === 'iso22')), ref(portOf(da, tc, p => p.std === 'iso22')), null);
   assert.strictEqual(run.ok, true);
   assert.strictEqual(run.picked, 'tube-22-10');
-  assert.strictEqual(run.len, 7);
+  assert.strictEqual(run.len, 8, 'a row further since the patient lies one row lower (Round 17)');
   const ev = da.evaluate(S);
   assert.ok(ev.ok, JSON.stringify(ev.lines));
   const ft = da.functionTest(S);
@@ -275,7 +275,7 @@ test('level 3, trach collar: nebulizer on the flowmeter, collar on the neck, the
   assert.strictEqual(sc.assembly, 100, JSON.stringify(sc.facts) + ' ' + JSON.stringify(sc.s));
   // the aerosol mask on the face satisfies the humidity but not the order
   da.removeThing(S, tc.uid);
-  da.place(S, 'aeromask', NOSE[0], NOSE[1], 0);
+  da.place(S, 'aeromask', da.GRID.nose[0], da.GRID.nose[1], 0);
   const am = itemOf(S, 'aeromask');
   assert.strictEqual(da.connectPorts(S, ref(portOf(da, neb, p => p.std === 'iso22')), ref(portOf(da, am, p => p.std === 'iso22')), null).ok, true);
   const ev2 = da.evaluate(S);
@@ -291,8 +291,8 @@ test('level 4, bubble CPAP: the two-limb circuit, and an open expiratory limb is
   da.place(S, 'xmas', 4, 5, 0);
   da.place(S, 'ad-22f-barb', 5, 6, 1);
   da.place(S, 'heated', 6, 6, 0);
-  da.place(S, 'cpap-iface', 3, 9, 0);
-  da.place(S, 'cpap-gen', 5, 10, 0);
+  da.place(S, 'cpap-iface', da.GRID.nose[0], da.GRID.nose[1], 0);
+  da.place(S, 'cpap-gen', 5, da.GRID.nose[1] + 1, 0);   // one row below the ear, wherever he lies (Round 17)
   const tree = itemOf(S, 'xmas'), ad = itemOf(S, 'ad-22f-barb'), ht = itemOf(S, 'heated'), ifc = itemOf(S, 'cpap-iface'), gen = itemOf(S, 'cpap-gen');
   assert.strictEqual(gen.cpap, 5, 'the generator ships with the probe at 5');
   assert.strictEqual(da.rotate(S, ifc.uid).ok, false, 'the prongs do not turn');
@@ -342,8 +342,8 @@ test('level 5, capnography: the sampling cannula runs oxygen in and exhaled gas 
   const tree = itemOf(S, 'xmas');
   const barb = portOf(da, tree, p => p.std === 'barb');
   // the plain cannula satisfies the oxygen but not the order
-  da.place(S, 'cannula', NOSE[0], NOSE[1], 0);
-  const plain = itemOf(S, 'cannula');
+  da.place(S, 'cannula-14', da.GRID.nose[0], da.GRID.nose[1], 0);
+  const plain = itemOf(S, 'cannula-14');
   assert.strictEqual(da.connectPorts(S, port(plain.uid, 'lead'), ref(barb), null).ok, true);
   let ev = da.evaluate(S);
   assert.strictEqual(ev.ok, false);
@@ -351,13 +351,13 @@ test('level 5, capnography: the sampling cannula runs oxygen in and exhaled gas 
   assert.match(da.functionTest(S).rows.find(r => r.k === 'Capnography').t, /No sampling cannula/);
   da.removeThing(S, plain.uid);
   // the sampling cannula: two leads, two directions
-  da.place(S, 'etco2-cannula', NOSE[0], NOSE[1], 0);
+  da.place(S, 'etco2-cannula', da.GRID.nose[0], da.GRID.nose[1], 0);
   const can = itemOf(S, 'etco2-cannula');
   assert.strictEqual(can.def.leads.length, 2);
   assert.strictEqual(da.rotate(S, can.uid).ok, false, 'it does not turn');
   assert.strictEqual(S.tubes.filter(t => t.lead === can.uid).length, 2, 'both lines come with it');
   const o2 = da.connectPorts(S, port(can.uid, 'lead'), ref(barb), null);
-  assert.strictEqual(o2.ok, true); assert.strictEqual(o2.len, 6); assert.strictEqual(o2.state, 'ok');
+  assert.strictEqual(o2.ok, true); assert.strictEqual(o2.len, 7); assert.strictEqual(o2.state, 'ok');
   ev = da.evaluate(S);
   assert.strictEqual(ev.ok, false, 'oxygen alone is not the order');
   assert.ok(ev.lines.some(l => /not in the monitor/.test(l.t)), JSON.stringify(ev.lines));
@@ -371,7 +371,7 @@ test('level 5, capnography: the sampling cannula runs oxygen in and exhaled gas 
   assert.strictEqual(S.tubes.filter(t => t.lead === can.uid).length, 2, 'pulling a lead off leaves it attached to the cannula');
   const sample = da.connectPorts(S, port(can.uid, 'sample'), ref(co2), null);
   assert.strictEqual(sample.ok, true);
-  assert.strictEqual(sample.len, 12, 'twelve cells to the far side of the wall (the port sits one row lower on the taller monitor since Round 12)');
+  assert.strictEqual(sample.len, 13, 'thirteen cells to the far side of the wall (the port sits one row lower on the taller monitor since Round 12, the patient one row lower since Round 17)');
   assert.strictEqual(sample.short, 0, 'and the long line reaches exactly');
   assert.strictEqual(sample.state, 'ok', 'luer lock into the luer port');
   assert.strictEqual(da.capnoOn(S), true);

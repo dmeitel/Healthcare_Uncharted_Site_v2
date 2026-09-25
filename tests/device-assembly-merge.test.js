@@ -48,14 +48,14 @@ test('the level ladder: five tutorials, the puzzle, the timed run, the non-rebre
 
 test('function test: eight lines with reasons, and the verdict tracks the build', () => {
   const da = load();
-  const S = da.start('l1', 'left');
+  const S = da.start('l1', 'left');   // the patient lies a row lower on level 1, so its cart carries the 14 ft cannula (Round 17)
   let t = da.functionTest(S);
   assert.strictEqual(t.ok, false);
   assert.strictEqual(t.rows.length, 8);
   assert.deepStrictEqual(rowsOf(t), { 'Oxygen source': false, 'Flow control': false, 'Humidification': false, 'Tubing continuity': true, 'Patient interface': false, 'FiO2': null, 'Capnography': null, 'CPAP': null });
   da.place(S, 'flowmeter', 3, 1, 0);
   da.place(S, 'xmas', 3, 3, 0);
-  const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can = da.place(S, 'cannula-14', da.GRID.nose[0], da.GRID.nose[1], 0).item;
   assert.ok(joinLead(da, S, can, itemOf(S, 'xmas'), barb).ok);
   t = da.functionTest(S);
   assert.strictEqual(t.ok, false, 'connected and on the patient, but the order says humidified');
@@ -75,7 +75,7 @@ test('function test: eight lines with reasons, and the verdict tracks the build'
   assert.strictEqual(rowsOf(t)['Patient interface'], false);
   assert.match(t.rows.find(r => r.k === 'Patient interface').t, /nose/);
   // a short run breaks continuity, with the reason on the line
-  da.moveItem(S, can.uid, 7, 11);
+  da.moveItem(S, can.uid, 12, 12);   // past even the 14 ft tube this wall carries (Round 17)
   t = da.functionTest(S);
   assert.strictEqual(rowsOf(t)['Tubing continuity'], false);
   assert.match(t.rows.find(r => r.k === 'Tubing continuity').t, /too short/);
@@ -88,7 +88,7 @@ test('undo walks the wall back one move at a time, cart counts included', () => 
   const da = load();
   const S = da.start('t2', 'left');
   da.remember(S); da.place(S, 'xmas', 3, 3, 0);
-  da.remember(S); const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  da.remember(S); const can = da.place(S, 'cannula', da.GRID.nose[0], da.GRID.nose[1], 0).item;
   da.remember(S); assert.ok(joinLead(da, S, can, itemOf(S, 'xmas'), barb).ok);
   assert.strictEqual(S.tubes.length, 1);
   assert.ok(leadOf(S, can).to, 'joined');
@@ -111,7 +111,7 @@ test('the score is six percentages and one number: par reads 100 Excellent, the 
   let S = da.start('t5', 'left');
   da.place(S, 'flowmeter', 3, 1, 0);
   da.place(S, 'bubble', 3, 3, 0);
-  const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can = da.place(S, 'cannula', da.GRID.nose[0], da.GRID.nose[1], 0).item;
   assert.ok(joinLead(da, S, can, itemOf(S, 'bubble'), barb).ok);
   let ev = da.evaluate(S);
   assert.ok(ev.ok);
@@ -129,7 +129,7 @@ test('the score is six percentages and one number: par reads 100 Excellent, the 
   const cp = itemOf(S, 'coupler'), bub = itemOf(S, 'bubble');
   const t = da.connectPorts(S, port(bub.uid, portOf(da, bub, barb).pi), port(cp.uid, portOf(da, cp, p => p.s === 'W').pi), 'tube-o2-25');
   assert.ok(t.ok && t.state === 'ok');
-  const can2 = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can2 = da.place(S, 'cannula', da.GRID.nose[0], da.GRID.nose[1], 0).item;
   const j = joinLead(da, S, can2, cp, p => p.s === 'E');
   assert.ok(j.ok && j.short === 0, j.why);
   ev = da.evaluate(S);
@@ -147,7 +147,7 @@ test('tutorial 4 (Place): the shelf makes one outlet a straight run and the othe
   let S = da.start('t4', 'left');
   da.place(S, 'flowmeter', 3, 1, 0);
   da.place(S, 'bubble', 3, 3, 0);
-  let can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  let can = da.place(S, 'cannula', da.GRID.nose[0], da.GRID.nose[1], 0).item;
   let j = joinLead(da, S, can, itemOf(S, 'bubble'), barb);
   assert.ok(j.ok && j.state === 'ok', j.why);
   assert.strictEqual(j.len, 7);
@@ -159,7 +159,7 @@ test('tutorial 4 (Place): the shelf makes one outlet a straight run and the othe
   S = da.start('t4', 'left');
   da.place(S, 'flowmeter', 2, 1, 0);
   da.place(S, 'bubble', 2, 3, 0);
-  can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  can = da.place(S, 'cannula', da.GRID.nose[0], da.GRID.nose[1], 0).item;
   j = joinLead(da, S, can, itemOf(S, 'bubble'), barb);
   assert.ok(j.ok, 'the run is laid anyway');
   assert.ok(j.bends >= 1, 'it goes around the shelf');
@@ -186,7 +186,7 @@ test('tutorial 5 (Optimize): the heated humidifier route is overkill, and it wor
   assert.strictEqual(links.filter(l => l.kind === 'adj' && l.s === 'ok' && [l.a, l.b].some(p => p.uid === heated.uid)).length, 2, 'both sockets seat on the chamber cones');
   const t = da.connectPorts(S, port(itemOf(S, 'xmas').uid, portOf(da, itemOf(S, 'xmas'), barb).pi), port(a1.uid, portOf(da, a1, barb).pi), 'tube-o2-7');
   assert.ok(t.ok && t.state === 'ok', t.why);
-  const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can = da.place(S, 'cannula', da.GRID.nose[0], da.GRID.nose[1], 0).item;
   const j = joinLead(da, S, can, a2, barb);
   assert.ok(j.ok && j.state === 'ok' && j.short === 0, j.why);
   // gas gets through, but the heater base has no power yet
@@ -239,11 +239,11 @@ test('level 2 (High flow): the blender needs both gases and the right dial; the 
   da.removeThing(S, itemOf(S, 'flowmeter').uid);
   assert.ok(da.place(S, 'flowmeter-hf', 4, 3, 0).ok);
   assert.ok(da.computeLinks(S).some(l => l.kind === 'adj' && l.s === 'ok' && [l.a, l.b].some(p => p.item.def.id === 'flowmeter-hf')), 'the DISS nut threads on');
-  // the heated chain from tutorial 5, then 22 mm tubing onto the Optiflow
-  da.place(S, 'xmas', 4, 5, 0); da.place(S, 'heated', 5, 7, 0); da.place(S, 'ad-22f-barb', 4, 7, 1); da.place(S, 'hfnc', NOSE[0], NOSE[1], 0);
+  // the heated chain from tutorial 5, then the heated circuit onto the Optiflow (Level 3 rebuilt the real way, 2026-09-23)
+  da.place(S, 'xmas', 4, 5, 0); da.place(S, 'heated', 5, 7, 0); da.place(S, 'ad-22f-barb', 4, 7, 1); da.place(S, 'hfnc', da.GRID.nose[0], da.GRID.nose[1], 0);   // the chamber where its 10 ft cord reaches a receptacle in both rooms; the 7 ft circuit reaches the lower patient
   const xm = itemOf(S, 'xmas'), ad = itemOf(S, 'ad-22f-barb'), he = itemOf(S, 'heated'), hf = itemOf(S, 'hfnc');
   assert.ok(da.connectPorts(S, port(xm.uid, portOf(da, xm, barb).pi), port(ad.uid, portOf(da, ad, barb).pi), 'tube-o2-7').ok);
-  const t22 = da.connectPorts(S, port(he.uid, portOf(da, he, p => p.label === 'Chamber outlet').pi), port(hf.uid, portOf(da, hf, p => p.label === 'Breathing tube inlet').pi), 'tube-22');
+  const t22 = da.connectPorts(S, port(he.uid, portOf(da, he, p => p.label === 'Chamber outlet').pi), port(hf.uid, portOf(da, hf, p => p.label === 'Breathing tube inlet').pi), 'tube-heated');
   assert.ok(t22.ok && t22.state === 'ok' && t22.short === 0, t22.why);
   const outlet = S.items.find(i => i.def.id === 'deco-elec');
   assert.ok(da.connectPorts(S, port(he.uid, 'cord'), port(outlet.uid, 0), null).ok);
@@ -267,6 +267,121 @@ test('level 2 (High flow): the blender needs both gases and the right dial; the 
   assert.strictEqual(da.setFio2(S, bl.uid, 140).fio2, 100);
   da.remember(S); da.setFio2(S, bl.uid, 60); da.undo(S);
   assert.strictEqual(itemOf(S, 'blender').fio2, 100, 'undo restores the dial');
+});
+
+/* Level 3 rebuilt the real way (2026-09-23, David, RRT): heated high flow runs through the heated-wire circuit, and plain
+   22 mm tubing onto the Optiflow rains out. The straight build, in zone columns so it is the same wall in both rooms. */
+function straightHighFlow(da, room, material, opts) {
+  const o = opts || {};
+  const S = da.start('l2', room), dx = S.room.dx;
+  const bl = da.place(S, 'blender', dx + 3, 1, 0).item; da.setFio2(S, bl.uid, 40);
+  da.place(S, 'flowmeter-hf', dx + 4, 3, 0);
+  const xm = da.place(S, 'xmas', dx + 4, 5, 0).item;
+  const hy = o.chamberRow || 7;
+  const he = da.place(S, 'heated', dx + 5, hy, 0).item, ad = da.place(S, 'ad-22f-barb', dx + 4, hy, 1).item;
+  const hf = da.place(S, 'hfnc', da.GRID.nose[0], da.GRID.nose[1], 0).item;
+  if (o.cart) Object.assign(S.cart, o.cart);
+  const o2 = da.connectPorts(S, port(xm.uid, portOf(da, xm, barb).pi), port(ad.uid, portOf(da, ad, barb).pi), 'tube-o2-7');
+  const run = da.connectPorts(S, port(he.uid, portOf(da, he, p => p.label === 'Chamber outlet').pi), port(hf.uid, portOf(da, hf, p => p.label === 'Breathing tube inlet').pi), material);
+  let plug = null;
+  if (!o.unplugged) {
+    const rcpt = S.items.filter(i => i.def.id === 'deco-elec');
+    for (const r of rcpt) { da.remember(S); plug = da.connectPorts(S, port(he.uid, 'cord'), port(r.uid, 0), null); if (plug.ok && plug.short === 0) break; da.undo(S); plug = null; }
+  }
+  return { S, he, hf, o2, run, plug };
+}
+const RAIN = /Unheated tubing at 35 L\/min rains out: the gas leaves the chamber near body temperature and condenses in the cool tube, and the water runs to the cannula\. High flow uses the heated-wire circuit that plugs into the heater base\./;
+
+test('level 3, heated high flow: the heated circuit is on the cart, and the straight build through it meets par in both rooms', () => {
+  const da = load();
+  const L = da.LEVELS.find(x => x.id === 'l2');
+  assert.strictEqual(L.kicker, 'Level 3');
+  const C = da.DB['tube-heated'];
+  assert.ok(C && C.tube && C.heatedWire && C.kind === 'heat22', 'the heated circuit is tubing with a heater wire');
+  assert.deepStrictEqual({ std: C.ends.std, g: C.ends.g }, { std: 'iso22', g: 'f' }, '22 mm socket ends, like the corrugated tubing');
+  assert.match(C.source, /RT302/); assert.match(C.source, /modeled/);
+  const cart = Object.fromEntries(L.cart);
+  assert.strictEqual(cart['tube-heated'], 1, 'the heated circuit is on the cart');
+  assert.strictEqual(cart['tube-22-10'], 1, 'and plain 22 mm tubing long enough to make the same run, the wrong choice');
+  assert.ok(!('tube-22' in cart), 'the 6 ft piece is gone: it would fail on too short and never teach why plain tubing is wrong');
+  assert.ok(da.LEVELS.find(x => x.id === 'sb').cart.some(c => c[0] === 'tube-heated'), 'the sandbox carries it too');
+  for (const room of ['right', 'left']) {
+    const b = straightHighFlow(da, room, 'tube-heated');
+    assert.ok(b.o2.ok && b.o2.state === 'ok' && b.o2.short === 0, room + ': ' + b.o2.why);
+    assert.ok(b.run.ok && b.run.state === 'ok' && b.run.short === 0, room + ': the circuit reaches: ' + b.run.why);
+    assert.strictEqual(b.run.len, 7, room + ': seven feet from the chamber outlet to the cannula');
+    assert.ok(b.plug && b.plug.state === 'ok', room + ': the ten foot cord reaches a receptacle');
+    const links = da.computeLinks(b.S);
+    assert.strictEqual(da.circuitHeats(b.S, links, b.run.tube), true, room + ': on a powered chamber the wire heats');
+    const ev = da.evaluate(b.S);
+    assert.ok(ev.ok, room + ': ' + JSON.stringify(ev.lines));
+    const ft = da.functionTest(b.S);
+    assert.ok(ft.ok && ft.rows.every(r => r.ok === true || r.ok === null), room + ': ' + JSON.stringify(rowsOf(ft)));
+    const sc = da.score(b.S, ev, 100);
+    assert.deepStrictEqual({ comps: sc.facts.comps, cells: sc.facts.cells, conns: sc.facts.conns, len: sc.facts.len, adapters: sc.facts.adapters, bends: sc.facts.bends },
+      { comps: L.par.comp, cells: L.par.cells, conns: L.par.conn, len: L.par.len, adapters: L.par.adapters, bends: L.par.bends }, room + ': par is the straight build');
+    assert.strictEqual(sc.assembly, 100, room);
+  }
+});
+
+test('level 3: plain 22 mm tubing onto the Optiflow rains out, and the cart hands you plain tubing unless you pick the circuit', () => {
+  const da = load();
+  // the plain tube on the cart, laid on the same run
+  let b = straightHighFlow(da, 'right', 'tube-22-10');
+  assert.ok(b.run.ok && b.run.state === 'ok' && b.run.short === 0, 'it seats and it reaches: ' + b.run.why);
+  let ev = da.evaluate(b.S);
+  assert.strictEqual(ev.kind, 'invalid');
+  assert.deepStrictEqual(ev.lines.map(l => l.t).filter(t => RAIN.test(t)).length, 1, JSON.stringify(ev.lines));
+  assert.strictEqual(ev.lines.length, 1, 'the rain-out is the only thing wrong: ' + JSON.stringify(ev.lines));
+  const ft = da.functionTest(b.S);
+  assert.strictEqual(ft.ok, false);
+  assert.strictEqual(rowsOf(ft)['Humidification'], false, 'humidity that rains out before the nose does not count');
+  assert.match(ft.rows.find(r => r.k === 'Humidification').t, /rains out/);
+  // the literal 6 ft tube-22 fails the same way where it reaches: the left room with the chamber a row lower (the old build)
+  b = straightHighFlow(da, 'left', 'tube-22', { chamberRow: 8, cart: { 'tube-22': 1 } });
+  assert.ok(b.run.ok && b.run.state === 'ok' && b.run.short === 0, b.run.why);
+  ev = da.evaluate(b.S);
+  assert.strictEqual(ev.ok, false);
+  assert.ok(ev.lines.some(l => RAIN.test(l.t)), JSON.stringify(ev.lines));
+  // left to choose, the cart grabs the plain tubing: the heated circuit is a deliberate pick
+  b = straightHighFlow(da, 'right', null);
+  assert.strictEqual(b.run.picked, 'tube-22-10');
+  assert.ok(da.evaluate(b.S).lines.some(l => RAIN.test(l.t)));
+  // swap it for the circuit and the wall works
+  da.removeThing(b.S, b.run.tube.uid);
+  const he = b.he, hf = b.hf;
+  const fix = da.connectPorts(b.S, port(he.uid, portOf(da, he, p => p.label === 'Chamber outlet').pi), port(hf.uid, portOf(da, hf, p => p.label === 'Breathing tube inlet').pi), 'tube-heated');
+  assert.ok(fix.ok && fix.state === 'ok' && fix.short === 0, fix.why);
+  ev = da.evaluate(b.S);
+  assert.ok(ev.ok, JSON.stringify(ev.lines));
+});
+
+test('level 3: the heated circuit on an unpowered heater is not heated', () => {
+  const da = load();
+  const b = straightHighFlow(da, 'right', 'tube-heated', { unplugged: true });
+  assert.ok(b.run.ok && b.run.state === 'ok', b.run.why);
+  let links = da.computeLinks(b.S);
+  assert.strictEqual(da.powered(b.S, links, b.he), false);
+  assert.strictEqual(da.circuitHeats(b.S, links, b.run.tube), false, 'the wire takes its power from the base');
+  let ev = da.evaluate(b.S);
+  assert.strictEqual(ev.ok, false);
+  assert.ok(ev.lines.some(l => /not plugged in/.test(l.t)), 'the line to read is the power: ' + JSON.stringify(ev.lines));
+  assert.ok(ev.lines.some(l => /needs heated humidification/.test(l.t)), JSON.stringify(ev.lines));
+  assert.ok(!ev.lines.some(l => RAIN.test(l.t)), 'with the heater cold, the gas is not warm, so no rain-out claim');
+  // plug it in and the same circuit heats
+  const rcpt = b.S.items.find(i => i.def.id === 'deco-elec' && i.x === 13);
+  const plug = da.connectPorts(b.S, port(b.he.uid, 'cord'), port(rcpt.uid, 0), null);
+  assert.ok(plug.ok && plug.short === 0, JSON.stringify(plug.why));
+  links = da.computeLinks(b.S);
+  assert.strictEqual(da.circuitHeats(b.S, links, b.run.tube), true);
+  assert.ok(da.evaluate(b.S).ok);
+  // and a circuit whose chamber end is not on a heater outlet is cold, powered base or not
+  const S = da.start('sb', 'left');
+  da.place(S, 'flowmeter', 3, 1, 0); da.place(S, 'lvn', 3, 3, 0);
+  const neb = itemOf(S, 'lvn'); da.place(S, 'aeromask', da.GRID.nose[0], da.GRID.nose[1], 0);
+  const r = da.connectPorts(S, port(neb.uid, portOf(da, neb, p => p.std === 'iso22').pi), port(itemOf(S, 'aeromask').uid, portOf(da, itemOf(S, 'aeromask'), p => p.std === 'iso22').pi), 'tube-heated');
+  assert.ok(r.ok && r.state === 'ok', r.why);
+  assert.strictEqual(da.circuitHeats(S, da.computeLinks(S), r.tube), false, 'on a nebulizer cone it is only tubing');
 });
 
 test('fixtures block placement and routing the same way parts do', () => {

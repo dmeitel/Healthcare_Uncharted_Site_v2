@@ -67,7 +67,7 @@
   <!-- versioned: /assets/css/* ships with stale-while-revalidate, so returning
        visitors get a CACHED copy after a deploy unless the URL changes. Bump
        the v= stamp whenever hu-global.css changes. -->
-  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260923a">
+  <link rel="stylesheet" href="/assets/css/hu-global.css?v=20260923d">
   <link rel="stylesheet" href="/brand/web/brand.css">
 
   <!-- Structured data: brand + author identity -->
@@ -126,11 +126,29 @@
 
   {% block extraHead %}{% endblock %}
   <script>
+    /* The theme. A choice made with the toggle wins on every visit (hu-theme). With no choice made yet, the
+       page takes the device's own light or dark setting, and keeps taking it if the device switches while
+       the page is open (a phone that goes dark at sunset). David, 2026-09-24: first visits match the phone. */
     (function(){
-      var t = localStorage.getItem('hu-theme') === 'light' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', t);
-      var m = document.getElementById('metaThemeColor');
-      if (m) m.setAttribute('content', t === 'light' ? '#EEF2F7' : '#0a0f1a');
+      var saved = null;
+      try { saved = localStorage.getItem('hu-theme'); } catch (e) {}
+      var chose = saved === 'light' || saved === 'dark';
+      var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+      function apply(t){
+        document.documentElement.setAttribute('data-theme', t);
+        var m = document.getElementById('metaThemeColor');
+        if (m) m.setAttribute('content', t === 'light' ? '#EEF2F7' : '#0a0f1a');
+      }
+      apply(chose ? saved : (mq && mq.matches ? 'light' : 'dark'));
+      if (!chose && mq) {
+        var follow = function(e){
+          var s = null; try { s = localStorage.getItem('hu-theme'); } catch (x) {}
+          if (s === 'light' || s === 'dark') return;            // they picked one since: theirs wins
+          apply(e.matches ? 'light' : 'dark');
+          if (typeof window.syncToggleLabel === 'function') window.syncToggleLabel();
+        };
+        if (mq.addEventListener) mq.addEventListener('change', follow); else if (mq.addListener) mq.addListener(follow);
+      }
     })();
   </script>
 </head>
@@ -344,7 +362,7 @@ syncToggleLabel();
 if (themeToggle) themeToggle.addEventListener('click', () => {
   const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('hu-theme', next);
+  try { localStorage.setItem('hu-theme', next); } catch (e) {}   // a browser that refuses storage still switches for this page
   const m = document.getElementById('metaThemeColor');
   if (m) m.setAttribute('content', next === 'light' ? '#EEF2F7' : '#0a0f1a');
   syncToggleLabel();

@@ -117,7 +117,7 @@ test('a full quarter runs: trust drifts, strain accrues, the term can end', () =
   assert.strictEqual(hs.sys.over, true, 'insolvency ends the term');
 });
 
-test('a term rides an HUS1 save string, quarter honestly re-rolled on restore', async () => {
+test('a term rides an HUS1 save string, its quarter restored as dealt', async () => {
   const { hs } = loadSystem();
   hs.sys.cash = 1234;
   hs.sys.facilities[0].staff = 30;
@@ -130,5 +130,5 @@ test('a term rides an HUS1 save string, quarter honestly re-rolled on restore', 
   assert.strictEqual(hs.sys.facilities[0].staff, 30);
   assert.strictEqual(hs.sys.zones.rural.trust, 42);
   assert.ok(hs.sys.facilities.find(f => f.id === 'crossroads').lines.mat, 'the closure did not survive the restore');
-  assert.ok(hs.sys.goal && hs.sys.goal.label, 'the restored quarter has a freshly sized goal');
+  assert.ok(hs.sys.goal && hs.sys.goal.label, 'the restored quarter has its goal');
 });

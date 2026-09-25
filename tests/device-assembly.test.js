@@ -43,6 +43,7 @@ const leadOf = (S, it) => S.tubes.find(t => t.lead === it.uid);
 const portOf = (da, it, pred) => da.portsOf(it).find(pred);
 const barb = p => p.std === 'barb';
 const NOSE = [3, 9];
+const NOSE_LOW = [3, 10];   // Level 1 on: the patient lies one row lower, with the 14 ft cannula on the cart (Round 17)
 /** lay a part's attached tubing to a port on another part: click the anchor beside the part, click the port */
 const joinLead = (da, S, it, target, pred) => da.connectPorts(S, port(it.uid, 'lead'), port(target.uid, portOf(da, target, pred).pi), null);
 /** lay cart tubing between two ports */
@@ -73,12 +74,12 @@ test('the headwall: seven gas outlets on the rail, fixtures taking up wall space
   assert.strictEqual(da.place(S, 'xmas', 12, 2, 0).ok, false, 'and it takes up space');
   assert.strictEqual(da.place(S, 'xmas', 9, 1, 0).ok, true, 'but not the square under the red outlet: a cord has to be able to reach it');
   da.removeThing(S, itemOf(S, 'xmas').uid);
-  assert.strictEqual(J(da.GRID.nose), J(NOSE));
+  assert.strictEqual(J(da.GRID.nose), J(NOSE_LOW));
   const chin = itemOf(S, 'pt-cheek');
   const face = da.portsOf(chin)[0];
   assert.strictEqual(face.t, 'patient');
-  assert.strictEqual(J([face.x, face.y, face.s]), J([2, 9, 'E']), 'the face port looks sideways into the nose square');
-  assert.strictEqual(da.place(S, 'coupler', NOSE[0], NOSE[1], 0).ok, true, 'the nose square is free, even for the wrong part');
+  assert.strictEqual(J([face.x, face.y, face.s]), J([2, 10, 'E']), 'the face port looks sideways into the nose square');
+  assert.strictEqual(da.place(S, 'coupler', NOSE_LOW[0], NOSE_LOW[1], 0).ok, true, 'the nose square is free, even for the wrong part');
   assert.ok(da.computeLinks(S).some(l => l.kind === 'adj' && l.s === 'bad' && /patient interface/.test(l.why)), 'and the pairing says only an interface goes there');
 });
 
@@ -144,15 +145,15 @@ test('the wall is a workbench: only the rail and overlaps refuse a part; the pat
   assert.strictEqual(da.place(S, 'xmas', 2, 0, 0).ok, false, 'nothing goes on the rail');
   assert.strictEqual(da.place(S, 'xmas', 0, 1, 0).ok, true, 'the edge of the wall is fine');
   assert.strictEqual(da.place(S, 'coupler', 7, 11, 0).ok, true, 'a connector can lie on the floor while you think');
-  assert.strictEqual(da.place(S, 'cannula', 4, 5, 0).ok, true, 'the cannula can be assembled on the wall');
+  assert.strictEqual(da.place(S, 'cannula-14', 4, 5, 0).ok, true, 'the cannula can be assembled on the wall');
   assert.strictEqual(da.place(S, 'bubble', 4, 5, 0).ok, false, 'but not on top of something');
   assert.strictEqual(da.place(S, 'tube-o2-7', 5, 5, 0).ok, false, 'tubing is not placed; it is laid between ports');
   assert.strictEqual(da.place(S, 'heated', 2, 10, 0).ok, false, 'the patient takes up space too');
-  assert.strictEqual(S.cart.cannula, 0, 'the cart is finite');
-  assert.strictEqual(da.place(S, 'cannula', NOSE[0], NOSE[1], 0).ok, false, 'none left');
+  assert.strictEqual(S.cart['cannula-14'], 0, 'the cart is finite');
+  assert.strictEqual(da.place(S, 'cannula-14', NOSE_LOW[0], NOSE_LOW[1], 0).ok, false, 'none left');
   assert.strictEqual(S.tubes.length, 1, 'the cannula brought its own tubing');
-  da.removeThing(S, itemOf(S, 'cannula').uid);
-  assert.strictEqual(S.cart.cannula, 1, 'back on the cart');
+  da.removeThing(S, itemOf(S, 'cannula-14').uid);
+  assert.strictEqual(S.cart['cannula-14'], 1, 'back on the cart');
   assert.strictEqual(S.tubes.length, 0, 'and its tubing left with it');
 });
 
@@ -287,7 +288,7 @@ test('level 1: two working builds, two different scores, and the simpler one win
   da.place(S, 'flowmeter', 3, 1, 0);
   da.place(S, 'bubble', 3, 3, 0);
   const bub = itemOf(S, 'bubble');
-  const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can = da.place(S, 'cannula-14', NOSE_LOW[0], NOSE_LOW[1], 0).item;
   const j = joinLead(da, S, can, bub, barb);
   assert.ok(j.ok && j.bends === 0, 'straight up the wall beside the ear');
   let ev = da.evaluate(S);
@@ -307,7 +308,7 @@ test('level 1: two working builds, two different scores, and the simpler one win
   const t = lay(da, S, bub2, barb, cp, p => p.s === 'W', 'tube-o2-25');
   assert.ok(t.ok && t.state === 'ok', 'tubing end onto a barb, both ends');
   assert.ok(t.bends >= 1, 'it had to bend to get there');
-  const can2 = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can2 = da.place(S, 'cannula-14', NOSE_LOW[0], NOSE_LOW[1], 0).item;
   const j2 = joinLead(da, S, can2, cp, p => p.s === 'E');
   assert.ok(j2.ok && j2.short === 0, j2.why);
   ev = da.evaluate(S);
@@ -341,7 +342,7 @@ test('level 1 distractors teach: keyed probes, keyed threads, and a suction regu
   // now the real build next to it
   da.place(S, 'flowmeter', 3, 1, 0);
   da.place(S, 'bubble', 3, 3, 0);
-  const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can = da.place(S, 'cannula-14', NOSE_LOW[0], NOSE_LOW[1], 0).item;
   assert.ok(joinLead(da, S, can, itemOf(S, 'bubble'), barb).ok);
   let ev = da.evaluate(S);
   assert.ok(ev.ok);
@@ -349,12 +350,12 @@ test('level 1 distractors teach: keyed probes, keyed threads, and a suction regu
   assert.strictEqual(sc.facts.loose, 0, 'a regulator seated in the vacuum outlet and an air flowmeter in the air outlet are hooked up, not loose');
   // and the HFNC cannula: reachable through a socket adapter beside the face, still invalid for what it needs
   da.removeThing(S, can.uid);
-  da.place(S, 'ad-22f-barb', 4, 9, 3);                // socket faces the Optiflow's inlet cone, barb faces away
+  da.place(S, 'ad-22f-barb', 4, 10, 3);               // socket faces the Optiflow's inlet cone, barb faces away
   const ad = itemOf(S, 'ad-22f-barb');
   assert.strictEqual(portOf(da, ad, barb).s, 'E');
   const r = lay(da, S, itemOf(S, 'bubble'), barb, ad, barb, 'tube-o2-25');
   assert.ok(r.ok && r.state === 'ok', r.why);
-  da.place(S, 'hfnc', NOSE[0], NOSE[1], 0);
+  da.place(S, 'hfnc', NOSE_LOW[0], NOSE_LOW[1], 0);
   links = da.computeLinks(S);
   assert.ok(links.some(l => l.kind === 'adj' && l.s === 'ok' && [l.a, l.b].some(p => p.item.def.id === 'hfnc') && l.a.t === 'gas'), 'socket onto the Optiflow inlet cone');
   ev = da.evaluate(S);
@@ -371,7 +372,7 @@ test('an air flowmeter feeding the patient is caught at submit, not at placement
   assert.strictEqual(da.computeLinks(S).filter(l => l.s === 'ok').length, 1, 'only the probe seats');
   da.removeThing(S, itemOf(S, 'xmas').uid);
   da.place(S, 'ad-22f-15m', 4, 3, 0);                   // also red, and allowed to sit there
-  const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can = da.place(S, 'cannula-14', NOSE_LOW[0], NOSE_LOW[1], 0).item;
   const ev = da.evaluate(S);
   assert.strictEqual(ev.kind, 'incomplete');
   assert.ok(can, 'nothing stopped any of it being built');
@@ -388,7 +389,7 @@ test('routing goes around fixtures, parts and the patient, counts bends, and hon
   assert.strictEqual(da.route(S, [3, 5], [7, 5], 5, null), null, 'five feet is not enough for that detour');
   assert.strictEqual(da.route(S, [2, 0], [7, 0], 25, null), null, 'the rail is not a lane');
   assert.strictEqual(da.route(S, [1, 3], [1, 5], 25, null).length, 3, 'past the sharps container the wall is open');
-  assert.strictEqual(da.route(S, [3, 8], [3, 11], 25, null), null, 'the patient is not a lane either');
+  assert.strictEqual(da.route(S, [3, 9], [3, 12], 25, null), null, 'the patient is not a lane either');
 });
 
 test('the timed score is the patient: how low the sat got before the system worked', () => {
@@ -397,7 +398,7 @@ test('the timed score is the patient: how low the sat got before the system work
   assert.strictEqual(S.sat, 96, 'a timed run starts at 96%');
   da.place(S, 'flowmeter', 3, 1, 0);
   da.place(S, 'bubble', 3, 3, 0);
-  const can = da.place(S, 'cannula', NOSE[0], NOSE[1], 0).item;
+  const can = da.place(S, 'cannula-14', NOSE_LOW[0], NOSE_LOW[1], 0).item;
   assert.ok(joinLead(da, S, can, itemOf(S, 'bubble'), barb).ok);
   const ev = da.evaluate(S);
   assert.ok(ev.ok);

@@ -14,7 +14,7 @@
  * already describe every state, so linking a role to its metric drops the whole
  * career tree onto the geographic spine.
  */
-module.exports = [
+const LINKS = [
   // ── Respiratory therapy (RRT/CRT) — the first worked example ──────────────
   { from: 'role:rrt', rel: 'uses', to: 'expertise:airway' },
   { from: 'role:rrt', rel: 'uses', to: 'expertise:vent' },
@@ -136,9 +136,9 @@ const METRIC_EXPECT = {
 };
 
 // Throws when any referenced metric index no longer means what the link meant.
-module.exports.verifyMetricTargets = function verifyMetricTargets(metricsConfig) {
+function verifyMetricTargets(metricsConfig) {
   const bad = [];
-  for (const cl of module.exports) {
+  for (const cl of LINKS) {
     for (const end of [cl.from, cl.to]) {
       if (!/^metric:/.test(end)) continue;
       const expect = METRIC_EXPECT[end];
@@ -150,4 +150,7 @@ module.exports.verifyMetricTargets = function verifyMetricTargets(metricsConfig)
     }
   }
   if (bad.length) throw new Error('[cross-links] positional metric references drifted:\n  ' + [...new Set(bad)].join('\n  '));
-};
+}
+
+// the edge list, with its guard riding along as a property (the shape build-entities reads)
+module.exports = Object.assign(LINKS, { verifyMetricTargets });

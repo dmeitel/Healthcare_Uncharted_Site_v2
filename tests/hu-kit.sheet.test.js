@@ -68,3 +68,26 @@ test('open() and close() honour the contract', () => {
   api.close();
   assert.equal(dismissed, 1, 'a second close does nothing');
 });
+
+/* The grabber is sticky, full width and 40px tall on touch, so anything in the sheet's top
+   band sits under it unless it paints higher. The Atlas X lost that fight until 2026-09-23:
+   a tap on it hit the grabber and resized the sheet instead of closing it. */
+test('the sheet close button paints above the grabber', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const src = path.join(__dirname, '..', 'src');
+  const css = fs.readFileSync(path.join(src, 'assets', 'css', 'hu-global.css'), 'utf8');
+  const z = (sel) => {
+    const re = new RegExp('^\\' + sel + '\\s*\\{[^}]*z-index:\\s*(\\d+)', 'm');
+    const m = css.match(re);
+    assert.ok(m, sel + ' declares a z-index');
+    return Number(m[1]);
+  };
+  assert.ok(z('.hu-sheet-x') > z('.hu-sheet-grab'), '.hu-sheet-x outranks .hu-sheet-grab');
+
+  // the Atlas X rides the kit class instead of a hand-rolled twin with its own stacking
+  const atlas = fs.readFileSync(path.join(src, 'atlas', 'index.njk'), 'utf8');
+  assert.match(atlas, /<button id="hud-close" class="hu-sheet-x"/);
+  const rule = atlas.match(/^#hud-close\s*\{[^}]*\}/m);
+  assert.ok(rule && !/z-index/.test(rule[0]), '#hud-close sets no z-index of its own');
+});

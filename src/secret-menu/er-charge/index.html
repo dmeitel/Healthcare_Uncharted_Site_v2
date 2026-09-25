@@ -24,6 +24,10 @@ eleventyExcludeFromCollections: true
 .er-wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px;font-family:var(--font)}
 .er-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none}
 .er-back:hover{color:var(--acc)}
+/* the back link keeps the left and the kit's "?" and Menu take the right (HUKit.howTo, HUKit.gameMenu),
+   the same row Uncharted Regional puts them in (.hs-topbar) */
+.er-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.er-kit{display:flex;gap:8px;align-items:center}
 .er-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .er-titles h1{font-family:var(--display);font-size:clamp(22px,3.4vw,32px);font-weight:800;letter-spacing:-.03em}
 .er-titles h1 em{font-style:normal;color:var(--acc)}
@@ -58,6 +62,8 @@ eleventyExcludeFromCollections: true
 .er-bed.empty .b-open{color:var(--t3);font-size:var(--t-fine);margin-top:26px;text-align:center}
 .er-bed.target{border-color:var(--acc);animation:erpulse 1s ease infinite}
 .er-bed.over{border-color:var(--acc);background:rgba(232,168,56,.12);box-shadow:0 0 0 3px rgba(232,168,56,.4)}
+/* reduced motion: the pulse holds still at its widest frame, so a critical still reads as one */
+@media (prefers-reduced-motion:reduce){.er-pt.crit,.er-bed.target{animation:none}.er-pt.crit{box-shadow:0 0 0 4px rgba(223,87,82,.25)}}
 .er-ghost{position:fixed;z-index:400;pointer-events:none;background:var(--raised);border:1px solid var(--acc);border-radius:10px;padding:7px 11px;font-family:var(--font);font-size:var(--t-fine);color:var(--t1);box-shadow:0 10px 28px rgba(0,0,0,.5);transform:rotate(-2deg)}
 .er-bed.crit{border-color:var(--lt-crit,rgba(223,87,82,.8))}
 .er-bed.board{border-color:var(--lt-blue,rgba(106,173,255,.7))}
@@ -100,6 +106,7 @@ eleventyExcludeFromCollections: true
 .er-overlay[hidden]{display:none}
 .er-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;padding:28px}
 .er-modal h2{font-family:var(--display);font-weight:800;font-size:24px;margin-bottom:8px;color:var(--acc)}
+.er-modal h2:focus{outline:none}   /* focused from script only (tabindex -1) when a card is all reading, as the kit's titles are */
 .er-modal .mo-sub{font-size:var(--t-ui);color:var(--t2);line-height:1.65;margin-bottom:14px}
 .er-go{width:100%;min-height:48px;margin-top:14px;padding:13px;border-radius:10px;border:none;font-family:var(--display);font-weight:700;font-size:var(--t-body);color:#1d1503;background:linear-gradient(135deg,#E8A838,#c98a1e);cursor:pointer}
 .er-seg{display:flex;gap:8px;margin:8px 0 2px}
@@ -116,9 +123,12 @@ eleventyExcludeFromCollections: true
 </style>
 
 <div class="er-wrap" id="er">
+  <div class="er-topbar">
+    <a class="er-back" href="/secret-menu/">&larr; Secret Menu</a>
+    <span class="er-kit" id="er-kit"></span>
+  </div>
   <div class="er-top">
     <div class="er-titles">
-      <a class="er-back" href="/secret-menu/">&larr; Secret Menu</a>
       <h1>ER <em>Charge Nurse</em></h1>
     </div>
     <div class="er-hud">
@@ -147,10 +157,12 @@ eleventyExcludeFromCollections: true
   <div class="er-overlay" id="er-overlay" hidden></div>
 </div>
 
+<script src="/assets/js/hu-kit.js?v=20260923"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const pl=(n, w)=>w+(n===1?'':'s');   // the word after a count: 1 batched step, 3 batched steps
 
   // ── THE SHIFT: 12 hours in 12 minutes. All engine time is SIM MINUTES (720 per shift);
   // one real second is one simulated minute. The tick engine is a pure step function so the
@@ -164,6 +176,7 @@ eleventyExcludeFromCollections: true
     backlog: {easy:4, normal:6, hard:7},                 // the overnight leftovers already waiting at 07:00
     upstairsEvery: [45,75],                              // sim-min range between upstairs bed offers
     lwbsPenalty: 4, harmPenalty: 10,
+    moreTime: 2/3,                                       // Settings, More time: the shift clock runs at two thirds (18 real minutes)
   };
   // Accents ride the light-theme steps when the page is light (the --lt-x tokens in the style block);
   // var() in an inline style re-resolves when the theme flips, so nothing has to repaint.
@@ -194,16 +207,17 @@ eleventyExcludeFromCollections: true
   const typeOf = id => TYPES.find(t=>t.id===id);
   const CARDS = [
     {id:'statlab', name:'STAT Labs',    n:2, target:'bed', desc:'This patient&rsquo;s lab work runs at four times speed, current or next lab step.'},
-    {id:'prict',   name:'Priority CT',  n:2, target:'bed', desc:'Front of the CT line and the scan runs twice as fast.'},
+    {id:'prict',   name:'Priority CT',  n:2, target:'bed', desc:'Front of the CT line and the scan runs twice as fast, current or next CT step.'},
     {id:'fast',    name:'Fast Track',   n:2, target:'bed', desc:'A low-acuity patient (level 4-5): every remaining step runs at double speed.'},
     {id:'pull',    name:'Pull a Nurse', n:1, target:'now', desc:'One extra nurse on the floor for 90 minutes of shift time.'},
     {id:'bedreq',  name:'Bed Request',  n:2, target:'now', desc:'Escalate upstairs: the longest-boarding admit moves up RIGHT NOW.'},
-    {id:'code',    name:'Rapid Response',n:1,target:'bed', desc:'Stabilize one deteriorating patient: their wait stops hurting and their care runs double speed for 60 minutes.'},
+    {id:'code',    name:'Rapid Response',n:1,target:'bed', desc:'Stabilize one patient in a bed: their care runs double speed for 60 minutes, the step underway included.'},
   ];
   const NAMES = ['Maria','James','Ruth','Deshawn','Elena','Walt','Priya','Sam','Dolores','Ty','Ana','Chuck','Nadia','Owen','Grace','Hector','Lily','Bo','Ivy','Ray','June','Cole','Faye','Max'];
 
   let settings = { difficulty:'normal' };
   try { const sv=JSON.parse(localStorage.getItem('er_settings')); if (sv) settings=Object.assign(settings,sv); } catch(e){}
+  if (!['easy','normal','hard'].includes(settings.difficulty)) settings.difficulty='normal';   // stored settings from anywhere
   const saveSettings=()=>{ try{ localStorage.setItem('er_settings', JSON.stringify(settings)); }catch(e){} };
 
   let G=null, timer=null, sel=null, lastRender=0;
@@ -351,6 +365,7 @@ eleventyExcludeFromCollections: true
     const p=G.waiting.find(x=>x.id===pid); const b=G.beds.find(x=>x.num===bedNum);
     if (!p||!b||b.pt) return false;
     G.waiting=G.waiting.filter(x=>x!==p);
+    if (p.crit && !p.harmed) G.stats.critBedded=(G.stats.critBedded||0)+1;   // a critical reached a bed before deteriorating
     b.pt=p; p.beddedAt=G.t; p.harmed=false;
     G.stats.seen++; G.stats.waitSum += (G.t-p.arrivedAt); G.stats.waitN++;
     return true;
@@ -361,12 +376,15 @@ eleventyExcludeFromCollections: true
     const bedded = pid!=null ? G.beds.map(b=>b.pt).find(p=>p&&p.id===pid) : null;
     const qlen = id => queueFor(id).length + G.res[id].busy.length - Math.min(G.res[id].busy.length, resCap(id));
     let ok=false, note='';
-    if (cardId==='statlab' && bedded){ bedded.statLab=true; ok=true; note=queueFor('lab').length>=2?'good':'quiet'; }
-    else if (cardId==='prict' && bedded){ bedded.priCt=true; ok=true; note=queueFor('ct').length>=2?'good':'quiet'; }
-    else if (cardId==='fast' && bedded && bedded.acuity>=4){ bedded.fastUntil=G.t+999; ok=true; note='good'; }
+    /* a card acts on a step that is still ahead or running; a boarder has none, and a patient with no lab or CT step has nothing for those cards */
+    const ahead = (p, res) => !p.boarding && typeOf(p.type).steps.slice(p.stepIdx).some(x=>x[0]===res);
+    const running = (p, res) => G.res[res] && G.res[res].busy.find(j=>j.p===p);
+    if (cardId==='statlab' && bedded && ahead(bedded,'lab')){ const j=running(bedded,'lab'); if (j) j.speed*=4; else bedded.statLab=true; ok=true; note=queueFor('lab').length>=2?'good':'quiet'; }
+    else if (cardId==='prict' && bedded && ahead(bedded,'ct')){ const j=running(bedded,'ct'); if (j) j.speed*=2; else bedded.priCt=true; ok=true; note=queueFor('ct').length>=2?'good':'quiet'; }
+    else if (cardId==='fast' && bedded && !bedded.boarding && bedded.acuity>=4){ bedded.fastUntil=G.t+999; ok=true; note='good'; }
     else if (cardId==='pull'){ G.extraRnUntil=G.t+90; ok=true; note=queueFor('rn').length>=2?'good':'quiet'; }
     else if (cardId==='bedreq'){ ok=releaseBoarder(true); note=ok&&G.upQueue.length>=1?'good':(ok?'quiet':''); }
-    else if (cardId==='code' && bedded){ bedded.codedUntil=G.t+60; bedded.patience=bedded.maxPatience; ok=true; note=bedded.crit?'good':'quiet'; }
+    else if (cardId==='code' && bedded && !bedded.boarding){ bedded.codedUntil=G.t+60; const j=bedded.claimed && running(bedded, bedded.claimed); if (j) j.speed*=2; ok=true; note=bedded.crit?'good':'quiet'; }
     if (!ok) return false;
     G.cards[cardId]--;
     G.cardLog.push({card:card.name, at:G.t, note});
@@ -383,7 +401,7 @@ eleventyExcludeFromCollections: true
     const raw=G.score + goodCards*2;
     const final=clamp(Math.round(raw), 0, 100+raw);
     const grade= raw>=190?'A':raw>=150?'B':raw>=110?'C':raw>=70?'D':'F';
-    return {seen:st.seen, arrived:st.arrived, dc:st.dc, admit:st.admit, lwbs:st.lwbs, harm:st.harm, crit:st.crit,
+    return {critBedded:st.critBedded||0, seen:st.seen, arrived:st.arrived, dc:st.dc, admit:st.admit, lwbs:st.lwbs, harm:st.harm, crit:st.crit,
       avgWait, util, bottle1:bottle[0], bottle2:bottle[1], batch:st.batch, goodCards, quietCards, raw, final, grade,
       boarding:G.upQueue.length};
   }
@@ -391,13 +409,13 @@ eleventyExcludeFromCollections: true
     G.over=true; if (timer){ clearInterval(timer); timer=null; }
     const d=report();
     const tal=(l,v,cls)=>`<div class="${cls||''}">${l}<b>${v>0&&cls==='pos'?'+':''}${v}</b></div>`;
-    $('er-overlay').innerHTML=`<div class="er-modal"><h2>SHIFT COMPLETE <span class="er-grade" style="color:${ACUITY_COLOR[{A:5,B:4,C:3,D:2,F:1}[d.grade]]}">${d.grade}</span></h2>
+    $('er-overlay').innerHTML=`<div class="er-modal" role="dialog" aria-modal="true" aria-labelledby="er-mo-h"><h2 id="er-mo-h" tabindex="-1">SHIFT COMPLETE <span class="er-grade" style="color:${ACUITY_COLOR[{A:5,B:4,C:3,D:2,F:1}[d.grade]]}">${d.grade}</span></h2>
       <div class="mo-sub">Twelve hours on the board. Here is what the department did, and why.</div>
       <div class="er-tally">
-        ${tal('Patients seen', d.seen, 'pos')}
-        ${tal('Discharged', d.dc, 'pos')}
-        ${tal('Admitted upstairs', d.admit, 'pos')}
-        ${tal('Critical patients handled', d.crit-d.harm, 'pos')}
+        ${tal('Patients seen', d.seen)}
+        ${tal('Discharged', d.dc)}
+        ${tal('Admitted upstairs', d.admit)}
+        ${tal('Critical patients handled', d.critBedded)}
         ${tal('Left without being seen', -d.lwbs*CFG.lwbsPenalty, d.lwbs?'neg':'')}
         ${tal('Deterioration events', -d.harm*CFG.harmPenalty, d.harm?'neg':'')}
         ${tal('Well-timed charge cards', d.goodCards*2, d.goodCards?'pos':'')}
@@ -405,13 +423,13 @@ eleventyExcludeFromCollections: true
       </div>
       <div class="er-pm">
         <div class="pm-h">The bottleneck</div>
-        <b>${d.bottle1.r.name}</b> was your primary constraint (${Math.round(d.bottle1.w)} patient-minutes spent waiting on it), with ${d.bottle2.r.name} second. ${d.util[d.bottle1.r.id]>=90?'It ran essentially saturated; nothing you staffed elsewhere could buy throughput past it.':'It clogged in bursts; spreading the load or spending a priority card there paid.'}
+        ${d.bottle1.w<0.5 ? 'No queue formed anywhere this shift, so nothing was a constraint.' : `<b>${d.bottle1.r.name}</b> was your primary constraint (${Math.round(d.bottle1.w)} ${pl(Math.round(d.bottle1.w),'patient-minute')} spent waiting on it), with ${d.bottle2.r.name} second. ${d.util[d.bottle1.r.id]>=90?'It ran essentially saturated; nothing you staffed elsewhere could buy throughput past it.':'It clogged in bursts; spreading the load or spending a priority card there paid.'}`}
         <div class="pm-h">Flow</div>
         Average door-to-bed wait ran <b>${d.avgWait} minutes</b>. ${d.lwbs?`<b>${d.lwbs}</b> ${d.lwbs===1?'person':'people'} gave up and walked out; each was a patient the department never got credit for.`:'Nobody walked out. The waiting room believed the board was moving.'} ${d.boarding?`<b>${d.boarding}</b> admitted patient${d.boarding===1?' was':'s were'} still boarding in ED beds at shift end; every one was a bed the next patient could not have.`:''}
         ${G.stats.slowed>1?`<div class="pm-h">Crisis drag</div>
-        <b>${Math.round(G.stats.slowed)}</b> patient-minutes ran slow in beds NEXT TO an active critical. Codes pull the room. Corner beds have one neighbor; that is what they are for.`:''}
+        <b>${Math.round(G.stats.slowed)}</b> ${pl(Math.round(G.stats.slowed),'patient-minute')} ran slow in beds NEXT TO an active critical. Codes pull the room. Corner beds have one neighbor; that is what they are for.`:''}
         <div class="pm-h">Batching</div>
-        ${d.batch? `Your placement created <b>${d.batch}</b> batched steps: same work, back to back, done faster. That is the grouping bonus working.` : 'No batched steps this shift: similar patients never landed near each other in time. Grouping look-alikes is free speed, when the queue can take it.'}
+        ${d.batch? `Your placement created <b>${d.batch}</b> ${pl(d.batch,'batched step')}: same work, back to back, done faster. That is the grouping bonus working.` : 'No batched steps this shift: similar patients never landed near each other in time. Grouping look-alikes is free speed, when the queue can take it.'}
         <div class="pm-h">Charge cards</div>
         ${G.cardLog.length? `You played ${G.cardLog.length}: ${d.goodCards} into real pressure, ${d.quietCards} into quiet moments${d.quietCards?' (the card you spend at a calm minute is the card you will want in the storm)':''}.` : 'You never played a card. They do not carry over to the next shift.'}
         <div class="pm-h">Utilization</div>
@@ -419,14 +437,23 @@ eleventyExcludeFromCollections: true
       </div>
       <button class="er-go" data-act="restart">Run another shift &#9656;</button></div>`;
     $('er-overlay').hidden=false;
+    focusIn('#er-mo-h');                                  // all reading first, so it starts on the title; Tab reaches the button
   }
   // ── UI ────────────────────────────────────────────────────────────────
   let hintUntil=0;
+  let pressing=false;   /* a control under a held button: the board does not rebuild it out from under the click */
+  window.addEventListener('pointerdown', e=>{ if (e.target && e.target.closest && e.target.closest('#er [data-act]')) pressing=true; }, true);
+  window.addEventListener('pointerup', ()=>{ pressing=false; }, true);
+  window.addEventListener('pointercancel', ()=>{ pressing=false; }, true);
   function hint(m){ const h=$('er-hint'); if(h){ h.textContent=m; hintUntil=Date.now()+4000; } }
+  // The start and end cards are dialogs: focus goes in when one opens and Tab stays inside (the
+  // trap under WIRING). preventScroll keeps a sideways phone on the card's first line.
+  function focusIn(s){ const el=document.querySelector && document.querySelector(s); if (el && el.focus) el.focus({preventScroll:true}); }
   function acuBadge(p){ return `<span class="p-a" style="color:${ACUITY_COLOR[p.acuity]};border:1px solid ${ACUITY_COLOR[p.acuity]}">A${p.acuity}</span>`; }
   function render(){
     if (!G) return;
-    if (drag && drag.active) return;                     // the board holds still under a live drag
+    const fa=document.activeElement, fk=(fa && fa.dataset && fa.dataset.act && fa.closest && fa.closest('#er')) ? fa.dataset : null;
+    if ((drag && drag.active) || pressing) return;       // the board holds still under a live drag or a held press
     const clock=$('er-clock'); clock.textContent=G.over?'19:00':fmtClock(G.t); clock.classList.toggle('late', G.t>560);
     $('er-score').textContent=G.score;
     $('er-pausebtn').textContent=G.paused?'Resume':'Pause';
@@ -441,6 +468,7 @@ eleventyExcludeFromCollections: true
         ${acuBadge(p)}<div class="p-n">${p.name}</div><div class="p-c">${typeOf(p.type).label}</div>
         <div class="p-wait"><span style="width:${Math.round(w*100)}%;background:${w>0.5?ACUITY_COLOR[5]:w>0.25?ACUITY_COLOR[3]:ACUITY_COLOR[1]}"></span></div></button>`;
     }).join('') || '<div style="color:var(--t3);font-size:var(--t-fine);align-self:center">Empty. Enjoy it while it lasts.</div>';
+    if (sel && sel.kind==='pt' && !G.waiting.some(p=>p.id===sel.id)) sel=null;   // they walked out, or went to a bed
     const placing = sel && sel.kind==='pt';
     $('er-beds').innerHTML = G.beds.map(b=>{
       if (!b.pt) return `<button class="er-bed empty${placing?' target':''}" data-act="bed" data-num="${b.num}"><span class="b-num">BED ${String(b.num).padStart(2,'0')}</span><div class="b-open">${placing?'Place here':'open'}</div></button>`;
@@ -465,6 +493,10 @@ eleventyExcludeFromCollections: true
     $('er-cards').innerHTML = CARDS.map(c=>`<button class="er-card${sel&&sel.kind==='card'&&sel.id===c.id?' sel':''}" data-act="card" data-id="${c.id}" ${G.cards[c.id]?'':'disabled'} data-def="${c.desc}"><span class="c-n">${c.name}</span><span class="c-ct">&times;${G.cards[c.id]}</span></button>`).join('');
     $('er-up').innerHTML = `${G.upQueue.length? `<b>${G.upQueue.length}</b> admitted, boarding in ED beds.` : 'No one boarding.'}<br>Next upstairs bed in about <b>${Math.max(0,Math.round(G.upNext))}</b> min.`;
     renderFeed();
+    if (fk && (!document.activeElement || document.activeElement===document.body)){   // the button that had focus was rebuilt: focus its twin
+      const q='[data-act="'+fk.act+'"]'+(fk.id!=null?'[data-id="'+fk.id+'"]':'')+(fk.num!=null?'[data-num="'+fk.num+'"]':'');
+      const tw=$('er').querySelector(q); if (tw) tw.focus({preventScroll:true});
+    }
   }
   // Disposition toasts: append each new event ONCE (uid-keyed) so its CSS fade runs uninterrupted
   // by the 5-per-second render loop, then drain the queue. The DOM node removes itself.
@@ -479,14 +511,15 @@ eleventyExcludeFromCollections: true
     });
     G.feed=[];
   }
-  function openStartMenu(){
-    const seg=['easy','normal','hard'].map(k=>`<button data-act="diff" data-key="${k}" class="${settings.difficulty===k?'on':''}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('');
-    $('er-overlay').innerHTML=`<div class="er-modal"><h2>ER Charge Nurse</h2>
+  function openStartMenu(keep){
+    const seg=['easy','normal','hard'].map(k=>`<button data-act="diff" data-key="${k}" class="${settings.difficulty===k?'on':''}" aria-pressed="${settings.difficulty===k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('');
+    $('er-overlay').innerHTML=`<div class="er-modal" role="dialog" aria-modal="true" aria-labelledby="er-mo-h"><h2 id="er-mo-h" tabindex="-1">ER Charge Nurse</h2>
       <div class="mo-sub">A 12-hour shift in 12 real minutes, and night shift left you a FULL lobby. You are not at the bedside; you run the BOARD. Drag a waiting patient onto an open bed (tapping one then the other works too) and the department does the work, IF the right resource is free. Watch the queues on the right: that is where shifts are won. Criticals flash red, cannot wait, and slow down the beds NEXT to them, so corner beds are a decision. Your six charge cards bend the rules; they do not come back. The clock starts when you do, and pausing stops the board too.</div>
       <div class="er-seg">${seg}</div>
       <div class="mo-sub" style="margin-top:10px;font-size:var(--t-label);color:var(--t3)">${{easy:'10 beds, gentler arrivals.',normal:'9 beds, the intended shift.',hard:'8 beds, the waiting room does not care about your feelings.'}[settings.difficulty]}</div>
       <button class="er-go" data-act="start">Clock in &#9656;</button></div>`;
     $('er-overlay').hidden=false;
+    focusIn(keep ? '#er-overlay [data-key="'+keep+'"]' : '#er-overlay .er-go');   // a difficulty pick redraws the card and keeps its button
   }
   // ── DRAG: pick a waiting patient up and drop them on a bed. Pointer-based so mouse and touch
   // both work; on touch a VERTICAL pull starts the drag (horizontal still scrolls the strip);
@@ -545,8 +578,8 @@ eleventyExcludeFromCollections: true
     const t=e.target.closest('[data-act]'); if (!t) { sel=null; render(); return; }
     const act=t.dataset.act;
     if (G && !G.over && G.paused && ['pt','bed','card','bedpt'].includes(act)){ hint('The clock is stopped. So is the board.'); return; }
-    if (act==='diff'){ settings.difficulty=t.dataset.key; saveSettings(); openStartMenu(); return; }
-    if (act==='start'){ saveSettings(); startShift(); return; }
+    if (act==='diff'){ settings.difficulty=t.dataset.key; saveSettings(); openStartMenu(t.dataset.key); return; }
+    if (act==='start'){ saveSettings(); startShift(e.detail===0); return; }   // detail 0: pressed from the keyboard
     if (act==='restart'){ $('er-overlay').hidden=true; openStartMenu(); return; }
     if (act==='pause'){ if (G&&!G.over){ G.paused=!G.paused; render(); } return; }
     if (!G||G.over) return;
@@ -577,9 +610,21 @@ eleventyExcludeFromCollections: true
     dt.innerHTML=t.dataset.def; dt.hidden=false;
     const r=t.getBoundingClientRect(); let x=r.left-250, y=r.top;
     if (x<8) x=r.right+10;
+    x=Math.min(x, window.innerWidth-dt.offsetWidth-8);   // on a phone the right side has no room either: keep it on screen
     dt.style.left=Math.max(8,x)+'px'; dt.style.top=Math.min(y, window.innerHeight-120)+'px';
   });
   $('er').addEventListener('mouseout', e=>{ if(e.target.closest('[data-def]')) $('er-deftip').hidden=true; });
+  // The start and end cards hold the keyboard the way a modal does: Tab and Shift+Tab go round the
+  // card's own buttons. Escape is the kit's: the game menu opens over the card (escOpens below), the
+  // same call Uncharted Regional makes for its start card. A kit card on top keeps its own focus.
+  document.addEventListener('keydown', e=>{
+    if (e.key!=='Tab' || menuUp()) return;
+    const ov=$('er-overlay'); if (!ov || ov.hidden || !ov.querySelectorAll) return;
+    const f=[...ov.querySelectorAll('button:not([disabled])')]; if (!f.length) return;
+    const i=f.indexOf(document.activeElement);
+    if (e.shiftKey && i<=0){ e.preventDefault(); f[f.length-1].focus(); }
+    else if (!e.shiftKey && (i===-1 || i===f.length-1)){ e.preventDefault(); f[0].focus(); }
+  });
   // 07:00 inherits the night shift's leftovers: a full waiting room, some of them already
   // halfway through their patience. Day shift starts behind. It always does.
   function seedBacklog(){
@@ -591,20 +636,61 @@ eleventyExcludeFromCollections: true
       p.patience -= waited; p.arrivedAt = -waited;
     }
   }
-  function startShift(){
+  // ── THE CLOCK DRIVER. Any kit card open (the menu, the how-to, settings, a confirm) stops the
+  // shift, the way Alarm Fatigue's floor stops: the menu says Resume, so it has to mean it. The
+  // board does not redraw under a card either, so the control that opened it is still there to
+  // take focus back. More time (Settings) runs the shift clock at CFG.moreTime. The tick itself
+  // stays pure: all of this is the driver's, and a test drives tick() directly.
+  let erSet=null, erHelp=null, erMenu=null;
+  function menuUp(){ const K=window.HUKit; return !!(K && K.dialog && K.dialog.anyOpen && K.dialog.anyOpen()); }
+  const pace = () => (erSet && erSet.get('moreTime')) ? CFG.moreTime : 1;
+  function beat(){ if (menuUp()) return; tick(CFG.tickMs/1000 * CFG.simPerSec * pace()); render(); }
+  function startShift(fromKeys){
     initShift();
     $('er-overlay').hidden=true; $('er-overlay').innerHTML='';
     seedBacklog();
     if (timer) clearInterval(timer);
-    timer = setInterval(()=>{ tick(CFG.tickMs/1000 * CFG.simPerSec); render(); }, CFG.tickMs);
+    timer = setInterval(beat, CFG.tickMs);
     render();
     hint('Night shift left you a full lobby. Drag a patient onto a bed (tapping works too).');
+    // Clock in went with the card. From the keyboard, focus lands on the first patient; a tap or
+    // a click leaves it be, or the first patient would wear a ring that reads as picked.
+    if (fromKeys) focusIn('#er-wait [data-act="pt"]');
   }
-  openStartMenu();
+
+  // ── THE GAME MENU: the kit's shared pieces, the same in every game (.claude/rules/games.md,
+  // Menus), wired the way Alarm Fatigue wires them. The Pause button stays a plain toggle beside it:
+  // a paused board can still be scrolled and read on a phone, which a card over it cannot. The
+  // menu's Resume clears that toggle too, so Resume always starts the clock.
+  (function kit(){
+    const K=window.HUKit;
+    if (!K || !K.gameMenu || !$('er-kit') || !document.createElement) return;
+    erSet=K.settings({ id:'er', rows:[K.settings.assist.moreTime] });
+    const ex=document.createElement('div');
+    ex.innerHTML='<p><b>Lab &middot; 3 waiting</b>, and the chest pain in bed 4 is one of them. STAT Labs runs that patient&rsquo;s labs at four times speed.</p>';
+    // The three rules are the engine's: placement by drag or tap-tap (the pointer and click
+    // handlers), queueFor's sickest-first order, and the waiting room in tick() with crisisNear().
+    erHelp=K.howTo({ id:'er', auto:false,
+      rules:['Drag a waiting patient onto an open bed, or tap the patient, then the bed.',
+             'In a bed, each step waits its turn for a nurse, provider, tech, lab, X-ray or CT. The sickest goes first.',
+             'Red A1 patients cannot wait: left in the lobby they get worse, and in a bed they slow the beds beside them. Anyone else who waits too long walks out. Both cost points.'],
+      example:ex,
+      action:{ label:'Clock in', run:()=>{ if (!G || G.over){ if (erMenu) erMenu.close(); startShift(); } } },
+      // a first visit opens this INSTEAD of the start card; closed without clocking in, the start card follows
+      onClose:why=>{ if (why!=='action' && !G && $('er-overlay').hidden) openStartMenu(); } });
+    erMenu=K.gameMenu({ title:'ER Charge Nurse', help:erHelp, settings:erSet,
+      restart:{ verb:'Restart the shift', title:'Restart the shift?', body:'The board starts over at 07:00, and this shift’s score is gone.', run:()=>startShift() },
+      leave:{ href:'/secret-menu/' },
+      onResume:()=>{ if (G && !G.over && G.paused){ G.paused=false; render(); } },
+      escOpens:true });
+    $('er-kit').append(erHelp.button(), erMenu.button());
+  })();
+  if (!(erHelp && erHelp.firstVisit())) openStartMenu();   // a first visit gets the how-to in place of the start card
 
   if (typeof window!=='undefined' && window.__UG_TEST){ window.__er={ get G(){return G;}, get settings(){return settings;}, get sel(){return sel;},
     CFG, TYPES, RESOURCES, CARDS, typeOf, stepOf, queueFor, resCap,
-    initShift, spawn, tick, placePatient, playCard, releaseBoarder, report, endShift, render, startShift, openStartMenu, fmtClock, seedBacklog, crisisNear }; }
+    initShift, spawn, tick, placePatient, playCard, releaseBoarder, report, endShift, render, startShift, openStartMenu, fmtClock, seedBacklog, crisisNear,
+    beat, pace, menuUp, get kit(){ return {set:erSet, help:erHelp, menu:erMenu}; } }; }
 })();
 </script>
 {% endraw %}

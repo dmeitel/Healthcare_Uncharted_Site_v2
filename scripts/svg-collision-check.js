@@ -14,9 +14,9 @@ const srv=http.createServer((q,s)=>{let p=decodeURIComponent(q.url.split('?')[0]
   const f=path.join(SITE,p); if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){s.writeHead(404);return s.end();}
   s.writeHead(200,{'Content-Type':T[path.extname(f)]||'application/octet-stream'}); fs.createReadStream(f).pipe(s);});
 (async()=>{
-  await new Promise(r=>srv.listen(0,r)); const port=srv.address().port;
+  await new Promise(r=>srv.listen(0,()=>r(undefined))); const port=/** @type {import('net').AddressInfo} */ (srv.address()).port;
   const b=await chromium.launch();
-  const ctx=await b.newContext({viewport:{width:360,height:900},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  const ctx=await b.newContext({viewport:{width:360,height:900},deviceScaleFactor:2,isMobile:true,hasTouch:true,colorScheme:'dark'});
   const pg=await ctx.newPage();
   await pg.goto('http://localhost:'+port+PAGE,{waitUntil:'networkidle',timeout:45000});
   await pg.evaluate(()=>{document.querySelectorAll('.lp-panel').forEach(p=>p.classList.add('active'));});

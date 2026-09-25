@@ -15,6 +15,7 @@ const ROOT = path.join(__dirname, '..');
 const PAGES = {
   'the hospital game': path.join(ROOT, 'src', 'secret-menu', 'uncharted-general', 'index.html'),
   'device assembly': path.join(ROOT, 'src', 'secret-menu', 'device-assembly', 'index.html'),
+  'vital-stats': path.join(ROOT, 'src', 'secret-menu', 'vital-stats', 'index.html'),
 };
 const TOML = path.join(ROOT, 'netlify.toml');
 

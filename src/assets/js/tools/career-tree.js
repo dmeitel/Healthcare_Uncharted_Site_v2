@@ -196,7 +196,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     skill:      { title:'Skills',     kind:'spiral', grid:'bp-grid-skill',      search:['bp-skill-search','bp-skill-suggest'], picker:'skill',     ph:'Search skills (airway, vitals, charting…)' },
     spec:       { title:'Specializations',  kind:'spiral', grid:'bp-grid-spec',       search:['bp-spec-search','bp-spec-suggest'],   picker:'spec',      ph:'Search focus areas (ICU, peds, trauma…)' },
     experience: { title:'Experience',       kind:'spiral', grid:'bp-grid-experience', search:['bp-exp-search','bp-exp-suggest'],     picker:'experience', ph:'Search settings (ICU, ED, rural…)' },
-    population: { title:'Populations',       kind:'spiral', grid:'bp-grid-population', search:['bp-pop-search','bp-pop-suggest'],     picker:'population', ph:'Search patient types & journeys (peds, ICU patient, prenatal…)' },
+    population: { title:'Populations',       kind:'spiral', grid:'bp-grid-population', search:['bp-pop-search','bp-pop-suggest'],     picker:'population', ph:'Search patient types (peds, ICU, prenatal…)' },
     next:       { title:'Next Steps',       kind:'next' },
     sw:         { title:'Strengths & Weaknesses', kind:'text', field:'sw',    ph:"What you bring, and what you're working on…" },
     notes:      { title:'Notes',            kind:'text', field:'notes', ph:'Anything you want to remember…' },
@@ -374,7 +374,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     if (colorMode === 'fam'){ el.style.display = 'none'; return; }
     const isPay = colorMode === 'pay';
     const grad = isPay ? 'linear-gradient(90deg,#3a5a7a,#E8A838)' : 'linear-gradient(90deg,#3a5a7a,#4ECDC4)';
-    el.innerHTML = '<div class="cl-ttl">' + (isPay ? 'Median pay &middot; BLS' : 'Job growth &middot; 2024–34') + '</div>' +
+    el.innerHTML = '<div class="cl-ttl">' + (isPay ? 'Median pay &middot; BLS' : 'Job growth &middot; ' + ((BLS && BLS.projYears) || '2025–35')) + '</div>' +
       '<div class="cl-bar" style="background:' + grad + '"></div>' +
       '<div class="cl-ends"><span>' + (isPay ? '$35k' : '0%') + '</span><span>' + (isPay ? '$87k' : '12%') + '</span><span>' + (isPay ? '$140k+' : '25%+') + '</span></div>' +
       '<div class="cl-nd"><i></i> No BLS match yet</div>';
@@ -1469,7 +1469,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     const pay = o.payText || ('$' + Number(o.pay).toLocaleString('en-US'));
     let h = '<div class="hct-bls"><div class="hct-bls-grid">' +
       '<div class="hct-bls-stat"><div class="v">' + esc(pay) + '</div><div class="k">Median pay / yr</div></div>' +
-      '<div class="hct-bls-stat"><div class="v ' + gc + '">' + (g >= 0 ? '+' : '') + g + '%</div><div class="k">Job growth, ' + esc(BLS.projYears) + '</div></div>' +
+      '<div class="hct-bls-stat"><div class="v ' + gc + '">' + (g >= 0 ? '+' : '') + g + '%</div><div class="k">Job growth, <span style="white-space:nowrap">' + esc(BLS.projYears) + '</span></div></div>' +
       '</div>';
     if (o.low && o.high && o.high > o.low){
       const pos = Math.max(4, Math.min(96, (o.pay - o.low) / (o.high - o.low) * 100));
@@ -6246,7 +6246,9 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     document.addEventListener('click', e => { if (!hit(e,'.bp-addwrap')){ const m=document.getElementById('bp-add-menu'); if (m) m.classList.remove('open'); } });
     document.addEventListener('click', e => { if (!hit(e,'.bp-pick')) qsa(document,'.bp-suggest:not(.bp-float).open').forEach(s=>s.classList.remove('open')); });
 
-    window.addEventListener('resize', () => { fit(false); renderMyPath(); });
+    // My Path reads the tree data, and a phone fires resize before it arrives (the browser bar
+    // settling): on slow data that threw in renderSpiral. The data load paints it anyway.
+    window.addEventListener('resize', () => { fit(false); if (DATA) renderMyPath(); });
 
     fetch('/assets/data/career-tree-bls.json').then(r=>r.ok?r.json():null).then(b => { BLS = b; }).catch(()=>{});   // BLS pay/outlook enrichment; optional
     fetch('/assets/data/career-tree-creds.json').then(r=>r.ok?r.json():null).then(c => { CREDS = c; }).catch(()=>{});   // credential reality (pass rate / length / fee); optional

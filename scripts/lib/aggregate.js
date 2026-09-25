@@ -75,7 +75,7 @@ function per100k(count, pop) { return pop > 0 ? +(count / pop * 100000).toFixed(
 
 /**
  * Main entry. Inputs are already-parsed JSON.
- * @returns { national, byState, byCounty, bySystem, systemsSeed, join }
+ * @returns {{ national: any, byState: any, byCounty: any, bySystem: any, systemsSeed: any, join: any }}
  */
 function aggregate({ facilities, counties, geo, countyPop }) {
   const geoStates = geo.states;

@@ -64,7 +64,7 @@ function download(url, dest) {
     https.get(url, { headers: { 'User-Agent': UA, Accept: 'text/plain' } }, (res) => {
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode + ' for ' + url)); }
       res.pipe(f);
-      f.on('finish', () => f.close(() => resolve()));
+      f.on('finish', () => f.close(() => resolve(undefined)));
     }).on('error', (e) => { fs.unlink(dest, () => reject(e)); });
   });
 }

@@ -36,6 +36,34 @@ kit needs from any game that joins it (docs/HU-GAME-DESIGN-2026-09-06.md section
 - The backend host is named in one place per game and must match the CSP; a test enforces it
   (`tests/backend-host.test.js` is the pattern).
 
+## Menus
+
+Adopted 2026-09-23 on David's yes (DECISIONS 15). The reference apps, the prompt words and the
+reasoning are in docs/HU-GAME-MENUS-2026-09-23.md; where each game stands is in
+docs/HU-GAME-REVIEW-2026-09-23.md. A game's menus are built from the kit, never by hand:
+`HUKit.dialog` (every card), `HUKit.gameMenu`, `HUKit.settings` (with `HUKit.settings.assist`),
+`HUKit.howTo` and `HUKit.confirm`. Tests in tests/hu-kit.menu.test.js.
+
+1. The first screen has one primary button, and it starts or resumes play. Everything else has a
+   default.
+2. One game menu button (`gameMenu().button()`), in the same corner in every game: Resume, Help,
+   Settings, Restart, Leave, Site menu, in that order.
+3. Every card closes on its X, on Esc and on the phone back gesture. With nothing open, Esc opens
+   the game menu.
+4. Help is the "?" (`howTo().button()`); the how-to card opens by itself on the first visit only.
+   Where a phone bar cannot hold the "?" in one row, it may yield below 380px, never the menu:
+   Help is always the menu's second row (Alarm Fatigue, 2026-09-23).
+5. Settings are toggle rows, remembered between visits. Nothing repeats a device setting: motion
+   follows the device, the theme follows the site. A game with a clock offers More time; a game
+   built on sound offers Show sounds as text.
+6. The same words for the same act in every game: Continue, New run, Restart, Help, Settings,
+   Leave, Share, Next. A game may dress up its play button ("Clock in"), never the system verbs.
+7. The primary button comes first, left in a row or top in a stack. Cancel is never the primary.
+8. A destructive act asks once through `HUKit.confirm`, and the button names the act. The kit
+   refuses "Yes" and "OK".
+9. An item shows its name and one number; the paragraph goes behind `HUKit.peek`.
+10. Every menu reads and every button is reachable at 740x360.
+
 ## Tests
 
 - Every game exposes a test hook when `window.__UG_TEST` is set before its script runs:

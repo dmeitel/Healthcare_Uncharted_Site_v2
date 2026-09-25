@@ -117,7 +117,9 @@ const tcase = s => String(s || '').toLowerCase().replace(/[\w']+/g, w => {
       properties: { id: h.id, n: tcase(h.n), c: tcase(h.c), s: h.s, t: 'pharmacy' }
     });
   });
-  let pkb = 0, pmax = ['', 0], pn = 0;
+  let pkb = 0, pn = 0;
+  /** @type {[string, number]} */
+  let pmax = ['', 0];
   Object.entries(byAbbr).forEach(([ab, feats]) => {
     const p = path.join(OUT, 'pharmacy', ab + '.json');
     fs.writeFileSync(p, JSON.stringify({ type: 'FeatureCollection', features: feats }));

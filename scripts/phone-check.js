@@ -10,6 +10,9 @@
 //     because a clipped page does not scroll and the overflow check saw nothing.
 //   interactive targets under 44 CSS px at the phone widths (a warning, not a failure)
 //   stylesheet rules that say 100vh without a 100dvh line beside them
+//   FLOATING OVER A CONTROL, CUT BY ITS CONTAINER, and a SLOW-DATA pass (a phone with every
+//     data file held back two seconds), all three added 2026-09-23 after the tool review
+//     found four defects this harness had passed. --no-slow skips the slow pass.
 // Screenshots land in tmp/phone/<slug>-<width>.png. Exit code 1 on any console error or
 // overflow, so it can gate a build. Usage:
 //   npm run phone -- /tools/ai-skills/ /tools/skill-demo/        (serves _site itself)
@@ -56,6 +59,10 @@ const viewports = opt('--widths', '360x740,430x932,699x900,700x900,768x1024,1024
   return { w, h: m[2] ? Number(m[2]) : (w <= 699 ? 800 : 900) };
 }).filter(Boolean);
 const base = opt('--base', null);
+// the slow-data pass (see where it runs); --no-slow skips it for a quick layout-only read
+const NO_SLOW = argv.includes('--no-slow');
+const SLOW_MS = 2000;
+const DATA_FILE = /\.(json|geojson|topojson|csv|tsv|pbf)$/i;
 if (!paths.length) paths.push('/', '/tools/', '/learn/');
 
 function serveSite() {
@@ -70,7 +77,7 @@ function serveSite() {
       res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' });
       fs.createReadStream(f).pipe(res);
     });
-    srv.listen(0, '127.0.0.1', () => resolve({ srv, url: 'http://127.0.0.1:' + srv.address().port }));
+    srv.listen(0, '127.0.0.1', () => resolve({ srv, url: 'http://127.0.0.1:' + /** @type {import('net').AddressInfo} */ (srv.address()).port }));
   });
 }
 
@@ -151,7 +158,7 @@ function inspect({ phone, deviceWidth }) {
       // clipped by the svg box, so a hex tile 5000px "past the edge" is a pan
       // target, not a defect. The Atlas alone reported 1,857 of these. Check the
       // root <svg> itself, never its children.
-      if (el.ownerSVGElement) continue;
+      if (/** @type {SVGElement} */ (el).ownerSVGElement) continue;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height || r.right <= vw + 1) continue;
       // ENTIRELY past the edge is a parked panel (a closed drawer translated out,
@@ -225,6 +232,12 @@ function inspect({ phone, deviceWidth }) {
   };
   const tiny = [];
   let softCount = 0;
+  // A GAME DRAWING is exempt for the labels printed on it (David 2026-09-23, Device Assembly: "go wild" on
+  // that surface, and he picked the readout that puts the bedside screen's words under the wall as real
+  // text). Marked `data-drawing` on the svg: the type floor skips <text> inside it and the stroke and ink
+  // floors skip the svg, never the HTML UI around it, and the count is printed so the exemption is seen
+  // rather than silent. The 44px touch floor still applies to everything.
+  let drawnCount = 0;
   /* A layout fault is a fault at every size. This used to be phone-gated, so a tablet and a
      desktop were never checked for it at all: the report printed n/a and the page "passed".
      David, 2026-09-21: "I want every page to be able to look good on phone, and
@@ -242,10 +255,11 @@ function inspect({ phone, deviceWidth }) {
       if (!r.width || !r.height || r.right < 0 || r.bottom < 0) continue;
       let px, text;
       if (el.tagName.toLowerCase() === 'text') {
-        const m = el.getScreenCTM ? el.getScreenCTM() : null;
+        const g = /** @type {SVGGraphicsElement} */ (el);
+        const m = g.getScreenCTM ? g.getScreenCTM() : null;
         px = parseFloat(cs.fontSize) * (m ? Math.abs(m.a) : 1);
         text = (el.textContent || '').trim();
-      } else if (!el.ownerSVGElement) {
+      } else if (!/** @type {SVGElement} */ (el).ownerSVGElement) {
         text = [...el.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim()).map((n) => n.textContent.trim()).join(' ');
         if (!text) continue;
         px = parseFloat(cs.fontSize);
@@ -255,6 +269,7 @@ function inspect({ phone, deviceWidth }) {
       // Reporting it as a floor violation is a false positive (/atlas/ did).
       if (!text || text.length < 2 || !isFinite(px) || px <= 0 || px >= FUNC - 0.4) continue;
       if (zoomScene(el)) continue;
+      if (el.tagName.toLowerCase() === 'text' && el.closest('svg[data-drawing]')) { drawnCount++; continue; }
       if (px < ABS - 0.4) tiny.push([Math.round(px * 10) / 10, sel(el), text.slice(0, 30)]);
       else softCount++;   // between the absolute and the functional floor
     }
@@ -326,6 +341,10 @@ function inspect({ phone, deviceWidth }) {
       const cs = getComputedStyle(el);
       if (cs.position !== 'fixed' && cs.position !== 'sticky') continue;
       if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
+      // A modal card is not chrome: it is dismissed, and it takes the screen on purpose. The kit's first-visit
+      // how-to is a bottom sheet on a phone, bar-shaped enough to pass the size test below, and it put Device
+      // Assembly at 35% on the run that caught it (2026-09-23).
+      if (el.closest && el.closest('dialog[open], [aria-modal="true"]')) continue;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) continue;
       const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
@@ -385,6 +404,7 @@ function inspect({ phone, deviceWidth }) {
     for (const svg of document.querySelectorAll('svg')) {
       const box = svg.getBoundingClientRect();
       if (box.width < 120 || box.height < 90) continue;          // an icon, not a figure
+      if (svg.hasAttribute('data-drawing')) continue;            // a game drawing: its ink is the art (see drawnCount)
       const bg = behind(svg);
       for (const el of svg.querySelectorAll('line,path,polyline,rect,polygon,circle,ellipse')) {
         const cs = getComputedStyle(el);
@@ -426,6 +446,7 @@ function inspect({ phone, deviceWidth }) {
     for (const svg of document.querySelectorAll('svg')) {
       const box = svg.getBoundingClientRect();
       if (box.width < 120 || box.height < 90) continue;
+      if (svg.hasAttribute('data-drawing')) continue;            // a game drawing: its label contrast is the art (see drawnCount)
       const page = pageBg(svg);
       // every filled shape in the drawing, so a label can be measured against the one it sits on
       const shapes = [];
@@ -580,6 +601,215 @@ function inspect({ phone, deviceWidth }) {
       sy > 8 ? sy : 0, sx > 8 ? sx : 0, sel(out), (out.textContent || '').trim().slice(0, 30)]);
   }
 
+  // Shared by the two checks below, both added 2026-09-23 after the tool review found four
+  // defects this gate had passed (docs/HU-TOOL-REVIEW-2026-09-23.md section 3).
+  const CTRL = 'button, input:not([type="hidden"]), select, textarea, [role="button"], [role="tab"], [role="switch"], summary';
+  const CS = new Map();
+  const gcs = (e) => { let s = CS.get(e); if (!s) { s = getComputedStyle(e); CS.set(e, s); } return s; };
+  // checkVisibility walks the ancestors for display, visibility AND opacity, which is what a
+  // faded-out loading message needs; a bare opacity read on the element itself misses a parent.
+  const onShow = (el) => (el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : gcs(el).display !== 'none');
+  // The ancestors that actually CLIP an element. overflow on an ancestor below an absolute
+  // element's containing block does not clip it, and nothing but a transformed ancestor clips a
+  // fixed one, so walk the containing-block chain rather than every parent.
+  const clippers = (el) => {
+    const out = [];
+    const es = gcs(el);
+    let mode = es.position === 'fixed' ? 'fixed' : es.position === 'absolute' ? 'abs' : null;
+    for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+      const s = gcs(p);
+      const tf = s.transform !== 'none' || s.filter !== 'none' || s.perspective !== 'none';
+      if (mode === 'fixed' && !tf) continue;
+      if (mode === 'abs' && !tf && s.position === 'static') continue;
+      if (s.overflowX !== 'visible' || s.overflowY !== 'visible') out.push(p);
+      mode = s.position === 'fixed' ? 'fixed' : s.position === 'absolute' ? 'abs' : null;
+    }
+    return out;
+  };
+  const clipBox = (el, r) => {
+    let L = r.left, T = r.top, R = r.right, B = r.bottom;
+    for (const a of clippers(el)) {
+      const ar = a.getBoundingClientRect();
+      L = Math.max(L, ar.left + a.clientLeft); T = Math.max(T, ar.top + a.clientTop);
+      R = Math.min(R, ar.left + a.clientLeft + a.clientWidth); B = Math.min(B, ar.top + a.clientTop + a.clientHeight);
+    }
+    return { left: L, top: T, right: R, bottom: B };
+  };
+  // a transform between an element and its clipper means a pan scene or a carousel track is
+  // being driven (the same test the CLIPPED check uses), so what is out of the frame is a pan away
+  const driven = (el, stop) => {
+    for (let p = el; p && p !== stop && p !== document.documentElement; p = p.parentElement) {
+      if (p.hasAttribute && p.hasAttribute('data-zoom-scene')) return true;
+      const m = gcs(p).transform;
+      if (m && m !== 'none') {
+        const n = m.match(/matrix\(([^)]+)\)/);
+        if (n) { const v = n[1].split(',').map(Number); if (Math.abs(v[0] - 1) > 0.01 || Math.abs(v[3] - 1) > 0.01 || Math.abs(v[4]) > 20) return true; }
+      }
+    }
+    return false;
+  };
+
+  // FLOATING OVER A CONTROL. A positioned message, badge or caption whose text sits on a
+  // button or an input. Nothing else here looks for it: SPILL wants overflow and the collision
+  // check only compares SVG text to SVG text. The tool review found three (2026-09-23): the
+  // population map's loading message over its metric card, the operations map's over its draw
+  // button, and a faint "System Layers 8 Deep" caption painted across System Layers' pin and
+  // reset buttons. Measured against the control's CONTENT box, so a "$" parked in an input's
+  // own padding, which is the point of that padding, is not a collision. A badge inside a
+  // control belongs to it, and an open modal is meant to cover what is behind it.
+  const floats = [];
+  {
+    const ctrls = [];
+    for (const c of document.querySelectorAll(CTRL)) {
+      const r = c.getBoundingClientRect();
+      if (r.width < 8 || r.height < 8 || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > vw) continue;
+      if (!onShow(c)) continue;
+      // a control that is part of a pinch-zoom scene is terrain: a hint over a pannable
+      // building or map is over ground the reader moves anyway (the same scene exemption the
+      // type floor has, and for the same reason)
+      if (zoomScene(c)) continue;
+      const s = gcs(c);
+      const b = { left: r.left + parseFloat(s.borderLeftWidth) + parseFloat(s.paddingLeft), top: r.top + parseFloat(s.borderTopWidth) + parseFloat(s.paddingTop),
+        right: r.right - parseFloat(s.borderRightWidth) - parseFloat(s.paddingRight), bottom: r.bottom - parseFloat(s.borderBottomWidth) - parseFloat(s.paddingBottom) };
+      ctrls.push({ c, b: (b.right - b.left > 4 && b.bottom - b.top > 4) ? b : r });
+    }
+    const paints = (s) => {
+      const bg = String(s.backgroundColor).match(/rgba?\(([^)]+)\)/);
+      const a = bg ? bg[1].split(',').map(Number) : null;
+      return (a && (a.length < 4 || a[3] > 0.1)) || s.backgroundImage !== 'none';
+    };
+    const seenKey = new Set();
+    for (const el of document.querySelectorAll('body *')) {
+      if (/** @type {SVGElement} */ (el).ownerSVGElement || el.tagName.toLowerCase() === 'svg') continue;
+      const s = gcs(el);
+      if (s.position !== 'absolute' && s.position !== 'fixed') continue;
+      if (el.matches(CTRL) || el.closest(CTRL) || el.querySelector(CTRL + ', a[href]')) continue;
+      if (el.closest('[aria-modal="true"], dialog[open]')) continue;
+      const text = (/** @type {HTMLElement} */ (el).innerText || '').trim().replace(/\s+/g, ' ');
+      if (text.length < 2 || !onShow(el)) continue;
+      // a visually-hidden live region (1px, clipped) is read aloud, never seen
+      const own = el.getBoundingClientRect();
+      if (own.width <= 2 || own.height <= 2 || s.clip !== 'auto' || s.clipPath !== 'none') continue;
+      let boxes;
+      if (paints(s)) boxes = [own];
+      else {
+        // only the text this element positions itself: text inside a nested absolute or fixed
+        // child is that child's, and it gets its own turn (a frame holding two captions was
+        // reported three times)
+        boxes = [];
+        const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        for (let t = tw.nextNode(); t; t = tw.nextNode()) {
+          if (!t.textContent.trim()) continue;
+          let owner = t.parentElement;
+          while (owner && owner !== el && !/^(absolute|fixed)$/.test(gcs(owner).position)) owner = owner.parentElement;
+          if (owner !== el) continue;
+          const rg = document.createRange(); rg.selectNodeContents(t);
+          for (const r of rg.getClientRects()) if (r.width > 1 && r.height > 1) boxes.push(r);
+        }
+        // text past the element's own clipping edge is not painted either
+        if (s.overflowX !== 'visible' || s.overflowY !== 'visible') boxes = boxes.map((r) => ({ left: Math.max(r.left, own.left), top: Math.max(r.top, own.top), right: Math.min(r.right, own.right), bottom: Math.min(r.bottom, own.bottom) }));
+      }
+      boxes = boxes.map((r) => clipBox(el, r)).filter((r) => r.right - r.left > 1 && r.bottom - r.top > 1);
+      for (const { c, b } of ctrls) {
+        if (el.contains(c) || c.contains(el)) continue;
+        let hit = 0;
+        for (const r of boxes) {
+          const ox = Math.min(r.right, b.right) - Math.max(r.left, b.left);
+          const oy = Math.min(r.bottom, b.bottom) - Math.max(r.top, b.top);
+          if (ox > 3 && oy > 3) { hit = Math.round(Math.min(ox, oy)); break; }
+        }
+        if (!hit) continue;
+        const who = (c.getAttribute('aria-label') || c.innerText || c.value || c.placeholder || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+        const key = who + '|' + text.slice(0, 30);
+        if (seenKey.has(key)) continue;
+        seenKey.add(key);
+        floats.push([hit, sel(el), text.slice(0, 40), sel(c), who]);
+      }
+    }
+    floats.sort((a, b) => b[0] - a[0]);
+  }
+
+  // CUT BY ITS CONTAINER. The CLIPPED check only knows about the SCREEN's edge. A row wider than
+  // a box with overflow hidden is cut at that box's edge instead, anywhere on the page, and reads
+  // clean to every other check. The tool review found the Career Tree's stats row (413px of
+  // "Roles held ... Goals" in a 390px box, cut at both ends) and the population map's metric
+  // name cut to "Pati..." on a desktop (2026-09-23). Three forms, all measured, all failing:
+  //   a row or label past the edge of the box that clips it (text or a control, partly on show);
+  //   text ellipsized to less than half of itself (a card title that loses its last word is a
+  //     choice; a picker that shows four letters of the thing it picks is not);
+  //   a placeholder wider than its input, which the browser cuts mid-word with no ellipsis.
+  // A scroller is not a cut, the rest is a swipe away. Neither is a driven pan scene.
+  const cut = [];
+  {
+    const seen = new Set();
+    for (const el of document.querySelectorAll('body *')) {
+      if (/** @type {SVGElement} */ (el).ownerSVGElement || el.tagName.toLowerCase() === 'svg') continue;
+      const isCtl = el.matches(CTRL);
+      const tn = [...el.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim());
+      if (!tn.length && !isCtl) continue;
+      const er = el.getBoundingClientRect();
+      if (er.width < 2 || er.height < 2 || er.bottom < 0 || er.top > innerHeight) continue;
+      if (!onShow(el)) continue;
+      const s = gcs(el);
+      const text = (tn.length ? tn.map((n) => n.textContent.trim()).join(' ') : (el.getAttribute('aria-label') || /** @type {HTMLElement} */ (el).innerText || '')).replace(/\s+/g, ' ').trim();
+      if (tn.length && s.textOverflow === 'ellipsis' && s.overflowX !== 'visible' && el.scrollWidth > el.clientWidth + 1) {
+        // Only text that NAMES a control is judged: a one-line teaser in a list of links is a
+        // layout that chose the ellipsis (the home page's recent rows), a picker is not.
+        const shown = el.clientWidth / el.scrollWidth;
+        if (shown < 0.5 && el.closest(CTRL + ', label') && !seen.has(el)) { seen.add(el); cut.push([Math.round(el.scrollWidth - el.clientWidth), sel(el), text.slice(0, 40), 'ellipsis, ' + Math.round(shown * 100) + '% of it on show']); }
+        continue;
+      }
+      let box = er;
+      if (tn.length) { const rg = document.createRange(); rg.setStartBefore(tn[0]); rg.setEndAfter(tn[tn.length - 1]); box = rg.getBoundingClientRect(); }
+      if (box.width < 2 || box.height < 2) continue;
+      for (const a of clippers(el)) {
+        if (a === document.body) break;
+        const as = gcs(a);
+        if (as.overflowX === 'auto' || as.overflowX === 'scroll') {
+          // A scroller reaches everything past its END edge and nothing before its START:
+          // scrollLeft cannot go negative. A centred row wider than its scroller overhangs
+          // both ends and its first few px are simply gone (the Career Tree's counts, and the
+          // hospital legend's flex-end rail before it). Measured at scrollLeft 0.
+          const ar2 = a.getBoundingClientRect();
+          const L2 = ar2.left + a.clientLeft;
+          const before = L2 - (box.left + a.scrollLeft);
+          if (before > 3 && box.right > L2 + 2 && !driven(el, a) && box.bottom > ar2.top && box.top < ar2.bottom) {
+            const k = sel(a) + '|' + text.slice(0, 20);
+            if (!seen.has(k)) { seen.add(k); cut.push([Math.round(before), sel(el), text.slice(0, 40), 'before the start of ' + sel(a) + ', where no swipe reaches']); }
+          }
+          break;
+        }
+        if (as.overflowX === 'visible') continue;
+        const ar = a.getBoundingClientRect();
+        if (ar.width < 4 || ar.height < 4) break;                       // a visually-hidden utility
+        if (driven(el, a)) break;
+        const L = ar.left + a.clientLeft, R = L + a.clientWidth;
+        const T = ar.top + a.clientTop, B = T + a.clientHeight;
+        if (box.bottom <= T + 1 || box.top >= B - 1) break;              // clipped away vertically: folded, not cut
+        if (box.right <= L + 2 || box.left >= R - 2) break;              // parked entirely outside
+        const past = Math.max(0, L - box.left) + Math.max(0, box.right - R);
+        if (past > 3) {                                                  // a few px is a glyph's side bearing, not a cut
+          const k = sel(a) + '|' + text.slice(0, 20);
+          if (!seen.has(k)) { seen.add(k); cut.push([Math.round(past), sel(el), text.slice(0, 40), 'past the edge of ' + sel(a)]); }
+        }
+        break;
+      }
+    }
+    const cv = document.createElement('canvas').getContext('2d');
+    for (const inp of /** @type {NodeListOf<HTMLInputElement>} */ (document.querySelectorAll('input[placeholder]'))) {
+      if (inp.value || !inp.placeholder || !onShow(inp)) continue;
+      const r = inp.getBoundingClientRect();
+      if (r.width < 8 || r.bottom < 0 || r.top > innerHeight) continue;
+      const ps = getComputedStyle(inp, '::placeholder');
+      const is = gcs(inp);
+      cv.font = [ps.fontStyle, ps.fontWeight, ps.fontSize, ps.fontFamily].join(' ');
+      const need = cv.measureText(inp.placeholder).width + (parseFloat(ps.letterSpacing) || 0) * inp.placeholder.length;
+      const room = inp.clientWidth - parseFloat(is.paddingLeft) - parseFloat(is.paddingRight);
+      if (need > room + 2) cut.push([Math.round(need - room), sel(inp), inp.placeholder.slice(0, 40), 'placeholder, ' + Math.round(need) + 'px in ' + Math.round(room) + 'px']);
+    }
+    cut.sort((a, b) => b[0] - a[0]);
+  }
+
   const vh = [];
   for (const sheet of document.styleSheets) {
     let rules; try { rules = sheet.cssRules; } catch { continue; }
@@ -587,11 +817,13 @@ function inspect({ phone, deviceWidth }) {
     walk(rules);
   }
   return { overflow, scrollWidth: document.documentElement.scrollWidth, vw, culprits: culprits.slice(0, 6), small: small.slice(0, 12), smallCount: small.length, clipped: clipped.slice(0, 8), clippedCount: clipped.length, vh: [...new Set(vh)].slice(0, 8),
-    tiny: tiny.slice(0, 8), tinyCount: tiny.length, softCount, chromeBars, chromeH, chromePct, topBars, collide: collide.slice(0, 6), collideCount: collide.length, vhPx: innerHeight,
+    tiny: tiny.slice(0, 8), tinyCount: tiny.length, softCount, drawnCount, chromeBars, chromeH, chromePct, topBars, collide: collide.slice(0, 6), collideCount: collide.length, vhPx: innerHeight,
     faint: faint.slice(0, 8), faintCount: faint.length, dim: dim.slice(0, 8), dimCount: dim.length,
     spill: spill.slice(0, 8), spillCount: spill.length,
     unhidden: unhidden.slice(0, 8), unhiddenCount: unhidden.length,
-    burst: burst.slice(0, 8), burstCount: burst.length };
+    burst: burst.slice(0, 8), burstCount: burst.length,
+    floats: floats.slice(0, 8), floatsCount: floats.length,
+    cut: cut.slice(0, 8), cutCount: cut.length };
 }
 
 (async () => {
@@ -609,7 +841,7 @@ function inspect({ phone, deviceWidth }) {
   // Counts merge as a MAX rather than a sum: the same offender seen at two scroll positions
   // must not count twice, and for the only thing that matters here, whether the page passes,
   // max is exact (if any position saw one, the page has one).
-  const LISTS = ['culprits', 'small', 'clipped', 'tiny', 'collide', 'faint', 'dim', 'spill', 'burst', 'unhidden'];
+  const LISTS = ['culprits', 'small', 'clipped', 'tiny', 'collide', 'faint', 'dim', 'spill', 'burst', 'unhidden', 'floats', 'cut'];
   const mergeFindings = (a, b) => {
     if (!a) return b;
     const out = Object.assign({}, a);
@@ -619,6 +851,7 @@ function inspect({ phone, deviceWidth }) {
     out.chromePct = Math.max(a.chromePct || 0, b.chromePct || 0);
     out.topBars = Math.max(a.topBars || 0, b.topBars || 0);
     out.softCount = Math.max(a.softCount || 0, b.softCount || 0);
+    out.drawnCount = Math.max(a.drawnCount || 0, b.drawnCount || 0);
     for (const k of LISTS) {
       const seen = new Set();
       const rows = [];
@@ -663,7 +896,10 @@ function inspect({ phone, deviceWidth }) {
       // touch, still the phone floors, even though its width is over the 699 line.
       const phone = Math.min(w, h) <= 699;
       const label = w + 'x' + h;
-      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone });
+      // colorScheme pinned 2026-09-24: pages now follow the device's light or dark setting on a first visit, and
+      // Playwright's device says light unless told. The gate has always measured the dark side; the light side
+      // was swept whole by the 2026-09-23 theme pass (tmp/theme-scan/scan.js).
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone, colorScheme: 'dark' });
       const page = await ctx.newPage();
       // The goat tracker polls the LIVE GoatCounter API. Read nine times over, the real service
       // answered 429 and the page timed out on two viewports, so the gate failed on someone
@@ -703,7 +939,7 @@ function inspect({ phone, deviceWidth }) {
         await page.goto(origin + p, { waitUntil: 'networkidle', timeout: 30000 });
       } catch (e) { errors.push('navigation: ' + e.message.split('\n')[0]); }
       await page.waitForTimeout(600);
-      const EMPTY = { overflow: false, unhidden: [], unhiddenCount: 0, culprits: [], small: [], smallCount: 0, clipped: [], clippedCount: 0, vh: [], tiny: [], tinyCount: 0, softCount: 0, chromeBars: [], chromeH: 0, chromePct: 0, topBars: 0, collide: [], collideCount: 0, spill: [], spillCount: 0, burst: [], burstCount: 0 };
+      const EMPTY = { overflow: false, unhidden: [], unhiddenCount: 0, culprits: [], small: [], smallCount: 0, clipped: [], clippedCount: 0, vh: [], tiny: [], tinyCount: 0, softCount: 0, chromeBars: [], chromeH: 0, chromePct: 0, topBars: 0, collide: [], collideCount: 0, spill: [], spillCount: 0, burst: [], burstCount: 0, floats: [], floatsCount: 0, cut: [], cutCount: 0 };
       const { r, steps } = await readWholePage(page, { phone, deviceWidth: w }, EMPTY);
       const shot = path.join(OUT, slug + '-' + label + '.png');
       await page.screenshot({ path: shot }).catch(() => {});
@@ -728,21 +964,24 @@ function inspect({ phone, deviceWidth }) {
       // band between the absolute and the functional floor, only reports: it is
       // the migration backlog, not a defect.
       const overBudget = phone && (r.chromePct > 20 || r.topBars > 1);
-      const bad = realErrors > 0 || r.overflow || r.collideCount > 0 || r.spillCount > 0 || r.unhiddenCount > 0 || r.burstCount > 0 || (phone && r.tinyCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget;
+      const bad = realErrors > 0 || r.overflow || r.collideCount > 0 || r.spillCount > 0 || r.unhiddenCount > 0 || r.burstCount > 0 || r.floatsCount > 0 || r.cutCount > 0 || (phone && r.tinyCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget;
       if (bad) failed = true;
-      console.log(`  ${label.padStart(8)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      console.log(`  ${label.padStart(8)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
       for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
       for (const u of [...new Set(offOrigin)]) console.log('         (not a defect) third-party origin the harness may not call: ' + u);
       for (const e of errors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
       for (const [px, s] of r.culprits) console.log('         overflows by ' + px + 'px: ' + s);
       for (const [px, s, txt] of (r.clipped || [])) console.log('         CLIPPED ' + px + 'px past the edge: ' + s + (txt ? ' "' + txt + '"' : ''));
       for (const [over, txt, tw, bw] of (r.burst || [])) console.log('         LABEL PAST ITS BOX by ' + over + 'px: "' + txt + '" is ' + tw + 'px in a ' + bw + 'px box');
+      for (const [px, who, txt, ctl, name] of (r.floats || [])) console.log('         FLOATING OVER A CONTROL by ' + px + 'px: ' + who + ' "' + txt + '" sits on ' + ctl + (name ? ' "' + name + '"' : ''));
+      for (const [px, who, txt, how] of (r.cut || [])) console.log('         CUT BY ITS CONTAINER by ' + px + 'px: ' + who + (txt ? ' "' + txt + '"' : '') + ' (' + how + ')');
       for (const [who, disp, txt] of (r.unhidden || [])) console.log('         HIDDEN BUT SHOWN ' + who + ' renders as display:' + disp + (txt ? ' "' + txt + '"' : '') + '  (fix: that selector plus [hidden] { display:none })');
       for (const [who, box, content, sy, sx, kid, txt] of (r.spill || [])) console.log('         SPILL ' + who + ' box ' + box + ' holds ' + content + (sy ? ', ' + sy + 'px below' : '') + (sx ? ', ' + sx + 'px right' : '') + ' -> ' + kid + (txt ? ' "' + txt + '"' : ''));
       for (const [s, size, txt] of r.small.slice(0, 6)) console.log('         small: ' + s + ' ' + size + (txt ? ' "' + txt + '"' : ''));
       for (const [px, s, txt] of (r.tiny || [])) console.log('         UNDER THE TYPE FLOOR at ' + px + 'px: ' + s + (txt ? ' "' + txt + '"' : ''));
       for (const [pct, a, b] of (r.collide || [])) console.log('         LABELS COLLIDE, ' + pct + '% overlap: "' + a + '"  x  "' + b + '"');
       if (phone && r.softCount) console.log('         (backlog, not a fail) ' + r.softCount + ' element(s) between the absolute and the functional floor');
+      if (phone && r.drawnCount) console.log('         (game drawing, exempt) ' + r.drawnCount + ' label(s) printed on an svg marked data-drawing; its line and label contrast are not measured either');
       for (const t of (r.dim || [])) console.log('         LABEL UNDER THE INK FLOOR, ' + t);
       for (const t of (r.faint || [])) console.log('         LINE UNDER THE STROKE FLOOR, ' + t + ' (a connector carries meaning; 3:1 is the floor)');
       if (overBudget) console.log('         CHROME OVER BUDGET: ' + r.chromeH + 'px of ' + r.vhPx + ' is ' + r.chromePct + '%'
@@ -750,6 +989,63 @@ function inspect({ phone, deviceWidth }) {
         + '  [' + r.chromeBars.join(' ') + ']');
       for (const s of r.vh) console.log('         100vh without dvh: ' + s);
       if (r.evalError) console.log('         inspect failed: ' + r.evalError);
+      await ctx.close();
+    }
+
+    // THE SLOW-DATA PASS, 2026-09-23. Every read above waits for the network to go quiet, so a
+    // page is only ever measured AFTER its data has arrived, on a fast local server. A real
+    // phone on a cell connection spends seconds in between, and two defects lived there: the
+    // Career Tree threw a script error when its data came late (a resize before the data ran a
+    // drawing step with nothing to draw; a phone fires that resize as its browser bar settles),
+    // and both U.S. maps parked a loading message on top of a control. Neither was visible to a
+    // gate that only looks once the page is ready. So each page loads once more on a phone with
+    // every same-origin data file held back two seconds, the browser bar is jiggled while the
+    // data is held, and the page is read while it is still loading. It fails on a script error
+    // at any point, or on anything floating over a control while the page waits.
+    if (!NO_SLOW) {
+      const [sw, sh] = [360, 740];
+      const ctx = await browser.newContext({ viewport: { width: sw, height: sh }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'dark' });
+      const page = await ctx.newPage();
+      await page.route(/goatcounter\.com\/api\//, (route) => route.abort());
+      const errors = [], serverless = [], offOrigin = [], held = [];
+      const here = new URL(origin).origin;
+      await page.route((u) => u.origin === here && DATA_FILE.test(u.pathname), async (route) => {
+        held.push(new URL(route.request().url()).pathname);
+        await new Promise((res) => setTimeout(res, SLOW_MS));
+        await route.continue().catch(() => {});
+      });
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+      page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+      page.on('response', (res) => {
+        if (res.status() >= 400 && /\/\.netlify\/functions\//.test(res.url())) serverless.push(res.status() + ' ' + res.url());
+        if (res.status() >= 400 && !res.url().startsWith(origin)) offOrigin.push(res.url());
+      });
+      page.on('requestfailed', (req) => { if (!req.url().startsWith(origin) && !req.url().startsWith('data:')) offOrigin.push(req.url()); });
+      try { await page.goto(origin + p, { waitUntil: 'domcontentloaded', timeout: 30000 }); }
+      catch (e) { errors.push('navigation: ' + e.message.split('\n')[0]); }
+      await page.waitForTimeout(600);
+      // the browser bar settling: a phone resizes the viewport in the first second or two
+      await page.setViewportSize({ width: sw, height: sh - 56 }).catch(() => {});
+      await page.waitForTimeout(120);
+      await page.setViewportSize({ width: sw, height: sh }).catch(() => {});
+      await page.waitForTimeout(500);
+      /** @type {any} */
+      const early = held.length
+        ? await page.evaluate(inspect, { phone: true, deviceWidth: sw }).catch((e) => ({ floats: [], floatsCount: 0, evalError: e.message }))
+        : { floats: [], floatsCount: 0 };
+      if (held.length) {
+        await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
+        await page.waitForTimeout(600);
+      }
+      const cantReach = serverless.length > 0 || offOrigin.length > 0;
+      const realErrors = errors.filter((e) => !((cantReach && /Failed to load resource|ERR_FAILED|ERR_CONNECTION|net::/i.test(e))
+        || (offOrigin.length > 0 && /Access to fetch at|blocked by CORS|Cross-Origin/i.test(e))));
+      const bad = realErrors.length > 0 || early.floatsCount > 0;
+      if (bad) failed = true;
+      console.log(`  ${'slow-data'.padStart(9)} ${bad ? 'FAIL' : 'ok  '}  ${sw}x${sh}, ${held.length} data file${held.length === 1 ? '' : 's'} held ${SLOW_MS / 1000}s  console errors: ${realErrors.length}  floating over a control while loading: ${early.floatsCount}`);
+      for (const e of realErrors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
+      for (const [px, who, txt, ctl, name] of (early.floats || [])) console.log('         FLOATING OVER A CONTROL WHILE LOADING by ' + px + 'px: ' + who + ' "' + txt + '" sits on ' + ctl + (name ? ' "' + name + '"' : ''));
+      if (early.evalError) console.log('         inspect failed: ' + early.evalError);
       await ctx.close();
     }
   }

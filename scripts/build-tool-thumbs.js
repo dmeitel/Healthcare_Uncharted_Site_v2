@@ -251,7 +251,18 @@ return {
      <path d="M140 330 L280 300 L420 315 L560 250 L700 275 L840 190 L980 210 L1120 120 L1120 360 L140 360 Z" fill="${GGREEN}" opacity=".12"/>
      ${[[280, 300], [560, 250], [840, 190], [1120, 120]].map(([x, y]) =>
        `<circle cx="${x}" cy="${y}" r="8" fill="${GGREEN}"/>`).join('')}
-     <circle cx="1120" cy="120" r="18" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".5"/>`)
+     <circle cx="1120" cy="120" r="18" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".5"/>`),
+  // vital stats: the guesses laid out low to high, odds tabs on each, chips on the ones people trust, and the
+  // answer's marker landing just past the winning guess (closest without going over)
+  'sm-vital-stats': frame(
+    `${[0, 1, 2, 3, 4, 5].map(i => { const x = 120 + i * 178, win = i === 3;
+       return `<rect x="${x}" y="150" width="150" height="200" rx="14" fill="${win ? GGREEN : PANEL}" opacity="${win ? 0.35 : 1}" stroke="${win ? GGREEN : LINE}" stroke-width="${win ? 5 : 3}"/>
+        <rect x="${x + 16}" y="168" width="62" height="26" rx="6" fill="${AMBER}"/>
+        <rect x="${x + 16}" y="214" width="${[70, 90, 110, 96, 84, 120][i]}" height="18" rx="9" fill="${INK}" opacity=".55"/>`; }).join('')}
+     ${[[4, 0, TEAL], [3, 1, SKY], [3, 2, GGREEN], [3, 3, AMBER], [2, 0, PURPLE], [5, 0, CORAL]].map(([slot, k, c]) =>
+       `<circle cx="${120 + slot * 178 + 30 + k * 32}" cy="318" r="13" fill="${c}" stroke="${BG}" stroke-width="3"/>`).join('')}
+     <line x1="${120 + 3 * 178 + 170}" y1="70" x2="${120 + 3 * 178 + 170}" y2="380" stroke="${GGREEN}" stroke-width="4" stroke-dasharray="10 8"/>
+     <path d="M${120 + 3 * 178 + 170} 60 l-16 -26 h32 z" fill="${GGREEN}"/>`)
 };
 };
 

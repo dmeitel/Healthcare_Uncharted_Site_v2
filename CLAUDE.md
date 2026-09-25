@@ -113,10 +113,12 @@ needs before touching the surface:
   the engine, the level data, the part database and the copy stay under the change budget.
 - The mechanisms that exist now, so nobody rebuilds them: THE ROOM (layout is data a level names,
   ROOMS.left/right/mirror, builds and extras in zone columns, the body four columns right and no further
-  without a smaller cell, David's call); THE MIRROR (it.f, Flip F, auto-orient tries it first, a room's
+  without a smaller cell, David's call); THE PATIENT (Round 17: he is his three pieces, a level's `face`
+  places him, `movePatient` lets the sandbox drag him, Level 1 on lie a row lower with the 14 ft cannula);
+  THE MIRROR (it.f, Flip F, auto-orient tries it first, a room's
   patient can face the other way); THE WALL SCREEN (the bedside computer: ORDER / HINT / ALERTS / TEST /
-  NOTE / WALLS pages, tappable, text sized to the box; the toast floats only where the screen is under 150
-  px); NOTHING FLOATS otherwise (no title card, no brief card, no tooltip, no marks on seated joints, the
+  NOTE / WALLS pages, tappable, text sized to the box; where the screen is under 150 px it reads out under
+  the wall as real text with 44 px tabs, Round 16, and the wall svg is `data-drawing` for the phone gate); NOTHING FLOATS otherwise (no title card, no brief card, no tooltip, no marks on seated joints, the
   status line reads, the touch verbs in a dock beside the trash, the mouse verbs on the spec sheet); the art
   system (one soft ink, edges from the fill, glints, one soft shadow per part, the patient and the bed at
   scale). Tester hatches: ?unlock=1 opens every wall, ?room=mirror|left picks the room.

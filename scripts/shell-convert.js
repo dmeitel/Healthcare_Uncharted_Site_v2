@@ -74,7 +74,7 @@ const skipped = [];
 for (const r of rules(css)) {
   const cls = classOf(r.selector);
   if (!cls) continue;
-  const hit = MAP.find(function (e) { return e[0].test(cls); });
+  const hit = MAP.find(function (e) { return /** @type {RegExp} */ (e[0]).test(cls); });
   if (!hit) continue;
   if (!typographicOnly(r.body)) { skipped.push({ cls, why: 'carries page-specific properties', body: r.body.replace(/\s+/g, ' ').trim().slice(0, 90) }); continue; }
   plan.push({ cls, to: hit[1], selector: r.selector });

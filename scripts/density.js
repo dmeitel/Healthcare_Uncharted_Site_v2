@@ -121,12 +121,12 @@ const PROBE = () => {
 };
 
 (async () => {
-  await new Promise((r) => server.listen(PORT, r));
+  await new Promise((r) => server.listen(PORT, () => r(undefined)));
   const browser = await chromium.launch();
   const rows = [];
   for (const p of paths) {
     for (const [w, h] of [[390, 844], [1440, 900]]) {
-      const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: w <= 699, hasTouch: w <= 699 });
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: w <= 699, hasTouch: w <= 699, colorScheme: 'dark' });
       const page = await ctx.newPage();
       try {
         await page.goto('http://localhost:' + PORT + p, { waitUntil: 'load', timeout: 25000 });

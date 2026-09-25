@@ -109,6 +109,25 @@ eleventyExcludeFromCollections: true
 .da-toast.warn{border-left-color:var(--da-warn);} .da-toast.bad{border-left-color:var(--da-bad);} .da-toast.info{border-left-color:var(--teal);}
 /* ROUND 10: on the wall the toast is spoken (aria-live) but not seen; the wall screen shows it */
 .da-toast.sr, .da-toast.sr.in{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); opacity:0; pointer-events:none;}
+/* ROUND 16: the bedside screen, read out under the wall where the wall is too small to read it. The
+   screen's own colors: clinical white glass, a grey tab strip, the wall's ink. */
+.da-read{margin:0 8px 8px; background:#f6f9fc; border:1px solid var(--border); border-radius:10px; overflow:hidden; flex-shrink:0;}
+.da-read[hidden]{display:none;}
+.da-read-tabs{display:flex; background:#e1e8ee;}
+.da-read-tabs button{flex:1; min-height:44px; border:none; background:none; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.06em; text-transform:uppercase; color:#52616f; cursor:pointer; padding:0 2px;}
+.da-read-tabs button[aria-current="true"]{color:#0b6b65; font-weight:600; text-decoration:underline; text-underline-offset:4px;}
+.da-read-tabs button:focus-visible{outline:2px solid #0b6b65; outline-offset:-3px;}
+/* one height for every page: the screen turns pages by itself (an alert, then the hint, then the order), and a
+   body that grew and shrank with them moved Complete under the thumb by up to 166 px. Four lines and the page
+   name show; a longer chart note scrolls inside. */
+.da-read-body{height:calc(var(--t-micro)*1.6 + var(--t-ui)*1.4*4 + 18px); overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box;
+  padding:8px 12px 10px; color:#2b4468; font-family:var(--display); font-weight:600; font-size:var(--t-ui); line-height:1.4;}
+.da-read-body:focus-visible{outline:2px solid #0b6b65; outline-offset:-3px;}
+.da-read-body p, .da-read-body ul{margin:0;} .da-read-body ul{list-style:none; padding:0;}
+.da-read-k{display:block; font-family:var(--mono); font-size:var(--t-micro); letter-spacing:.1em; text-transform:uppercase; color:#0b6b65; margin-bottom:2px;}
+.da-read-body .is-bad{color:#b3261e;} .da-read-k.is-ok{color:#1d7a4d;}
+.da-read-big{font-size:var(--t-lede); font-weight:700;}
+.da-read-old{font-family:var(--mono); font-size:var(--t-micro); color:#52616f; margin-top:4px !important;}
 /* the drag ghost follows the pointer 1:1 (transform only, never left/top); the lift is on an
    inner wrapper so the follow never lags behind a transition */
 .da-ghost{position:fixed; left:0; top:0; z-index:420; pointer-events:none; will-change:transform;}
@@ -261,6 +280,7 @@ eleventyExcludeFromCollections: true
 #board .marq{fill:rgba(78,205,196,.10); stroke:var(--teal); stroke-width:2; stroke-dasharray:6 5; pointer-events:none;}
 #board:focus-visible .kb{display:block;}
 #board .it{cursor:grab;} #board .it.fixed{cursor:default;}
+#board .pt-art.movable{cursor:grab;} #board .pt-art.moving{opacity:.25;}   /* Round 17: the sandbox patient picks up like a part */
 #board .it .fp{fill:transparent; stroke:transparent; stroke-width:4;}
 /* ROUND 2 PART 2 (feel phase): a card behind every part so it reads as an object on the wall, the
    way NandGame boxes its nodes: light backing, 1.5 unit ink edge, a short hard shadow. The art stays. */
@@ -303,7 +323,9 @@ eleventyExcludeFromCollections: true
 
 /* ---------- tablet: the spec sheet becomes a side drawer ---------- */
 .da .da-ico{display:none;}
-@media (max-width:999px){ .da .da-back{display:none;} }
+/* the "?" and Menu are the kit's; the bar only makes room. The site-menu summon stays in the markup for the menu's last row. */
+.da .da-kit{display:flex; gap:6px; align-items:center;}
+.da [data-nav-summon]{display:none;}
 @media (max-width:999px) and (min-width:700px) and (min-height:501px){
   .da .shell-dock--left{width:250px;}
   .da .shell-dock--right{position:fixed; top:var(--nav-h); right:0; bottom:0; width:320px; z-index:300; border-left:1px solid var(--border2);
@@ -323,6 +345,11 @@ eleventyExcludeFromCollections: true
     .da-boardwrap{padding:8px; flex:0 0 auto;}
   .da .tool-bar{gap:8px;} .da .tool-bar-title{font-size:var(--t-sub);}
   .da #menuBtn{display:none;} .da .da-ico{display:inline-flex;}
+  /* the menu drops to its icon on a phone (its name stays for a screen reader), which is the room the "?" takes */
+  .da .da-kit .hu-gm-btn{width:44px; padding:0; justify-content:center;} .da .da-kit .hu-gm-btn span{display:none;}
+  /* under 380 the bar cannot hold hex, title, Walls, "?" and Menu in one row (measured 110px at 360): the "?" yields,
+     Help stays the menu's second row (the games rule, Menus 4; Alarm Fatigue does the same) */
+  @media (max-width:379px){ .da .da-kit .hu-gm-q{display:none;} }
   .da-cart-h{padding:8px 12px 0;}
   /* two-row rail: every part reachable in a swipe or two, no page scroll to fetch a part */
   #cartList{display:grid; grid-auto-flow:column; grid-template-rows:auto auto; overflow-x:auto; gap:6px; padding:6px 10px 10px; scrollbar-width:none; overflow-y:hidden;}
@@ -372,10 +399,12 @@ eleventyExcludeFromCollections: true
   <span class="tool-bar-spacer"></span>
   <div class="tool-bar-actions">
     <span class="da-time" id="clock" hidden aria-live="off">01:30</span>
-    <button class="toggle-chip" id="menuBtn" type="button">Levels</button>
-    <a href="/secret-menu/" class="toggle-chip da-back">&#8592; Secret Menu</a>
-    <button class="icon-btn da-ico" id="menuBtnI" type="button" aria-label="Levels" title="Levels"><i data-lucide="list" aria-hidden="true"></i></button>
-    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <button class="toggle-chip" id="menuBtn" type="button">Walls</button>
+    <button class="icon-btn da-ico" id="menuBtnI" type="button" aria-label="Walls" title="Walls"><i data-lucide="list" aria-hidden="true"></i></button>
+    <!-- the "?" and the game menu (HUKit.howTo, HUKit.gameMenu). The Secret Menu link and the site menu are rows inside it now. -->
+    <span class="da-kit" id="daKit"></span>
+    <!-- kept, never shown: the menu's Site menu row presses it (the merged band's summon) -->
+    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu" tabindex="-1"><i data-lucide="menu" aria-hidden="true"></i></button>
   </div>
 </header>
 
@@ -388,7 +417,7 @@ eleventyExcludeFromCollections: true
 
   <div class="shell-canvas da-stage" id="stage">
     <div class="da-boardwrap" id="boardWrap">
-      <svg id="board" xmlns="http://www.w3.org/2000/svg" role="application" tabindex="0" aria-label="Assembly tray. Arrow keys move the cursor, Enter places or selects, R rotates, Delete removes, Escape steps back."></svg>
+      <svg id="board" data-drawing xmlns="http://www.w3.org/2000/svg" role="application" tabindex="0" aria-label="Assembly tray. Arrow keys move the cursor, Enter places or selects, R rotates, Delete removes, Escape steps back."></svg>
       <!-- CONNECTOR GLYPHS · one symbol per standard, drawn in a 24-unit box pointing up (the mating direction).
            Shape is the standard, fill is the gender (solid male, hollow female), the --g color is the gas.
            ROUND 6: a hollow glyph is see-through; the wall or the card shows inside it.
@@ -425,6 +454,10 @@ eleventyExcludeFromCollections: true
       <div class="da-toasts" id="toasts" aria-live="polite"></div>
       <button class="da-trash" id="trash" type="button" aria-label="Put the selected part back on the cart" title="Drop a part here, or on the cart, to put it back"><i data-lucide="trash-2" aria-hidden="true"></i></button>
     </div>
+    <section class="da-read" id="screenRead" aria-label="Bedside screen" hidden>
+      <div class="da-read-tabs" id="screenReadTabs"></div>
+      <div class="da-read-body" id="screenReadBody" tabindex="0"></div>
+    </section>
     <div class="da-submitbar">
       <button class="da-submit" id="submitBtn" type="button">Complete</button>
       <button class="da-ghostbtn" id="resetBtn" type="button">Reset</button>
@@ -442,7 +475,7 @@ eleventyExcludeFromCollections: true
 <div class="da-overlay" id="overlay" hidden></div>
 </div>
 
-<script src="/assets/js/hu-kit.js?v=20260920"></script>
+<script src="/assets/js/hu-kit.js?v=20260923"></script>
 <script src="/assets/js/vendor/supabase-2.115.0.min.js"></script>
 <script src="/assets/js/hu-table.js?v=20260920"></script>
 
@@ -600,6 +633,12 @@ def({id:'cannula', name:'Nasal cannula, adult', short:'Nasal cannula', mfr:'Salt
   desc:'Low-flow interface, 1 to 6 L/min. It ships with 7 ft of small-bore tubing attached, which ends in a soft connector that pushes onto any oxygen barb.',
   ports:[PT()], lead:LEAD(7,[0,0],'E','barb','7 ft supply tube'), flowMin:1, flowMax:6, tags:[], needs:['metered'], provides:[], tier:'v',
   source:'Salter Labs 1600 series catalog (adult cannula, 7 ft tubing). Flow range is standard oxygen-therapy teaching.'});
+/* Round 17: the same cannula with twice the tubing, for the walls where the patient lies a row lower
+   (David 2026-09-23: "one row lower, longer tubing"). A real catalog part, checked 2026-09-23. */
+def({id:'cannula-14', name:'Nasal cannula, adult, 14 ft', short:'Cannula 14 ft', mfr:'Salter Labs', model:'1600-14, 14 ft supply tube', cat:'interface', role:'cannula', draw:'cannula', w:1, h:1,
+  desc:'The same low-flow cannula, 1 to 6 L/min, with 14 ft of small-bore tubing attached instead of 7. The extra length is for a patient who lies further from the wall than the short tube reaches.',
+  ports:[PT()], lead:LEAD(14,[0,0],'E','barb','14 ft supply tube'), flowMin:1, flowMax:6, tags:[], needs:['metered'], provides:[], tier:'v',
+  source:'Salter Labs 1600-14 catalog listing (adult nasal cannula, 14 ft supply tube), checked 2026-09-23. Flow range is standard oxygen-therapy teaching.'});
 
 def({id:'mask', name:'Simple oxygen mask, adult', short:'Simple mask', mfr:'Teleflex (Hudson RCI)', model:'1041, 7 ft supply tube', cat:'interface', role:'mask', draw:'mask', w:1, h:1,
   desc:'Medium-flow interface. Below about 5 L/min the mask cannot flush exhaled CO2, so a low-flow order rules it out. Ships with 7 ft of oxygen tubing.',
@@ -612,8 +651,8 @@ def({id:'nrb', name:'Non-rebreather mask, adult', short:'Non-rebreather', mfr:'T
   source:'Hudson RCI catalog listing. Minimum flow is standard oxygen-therapy teaching.'});
 
 def({id:'hfnc', name:'High-flow nasal cannula', short:'HFNC cannula', mfr:'Fisher & Paykel', model:'Optiflow OPT944, adult', cat:'interface', role:'hfnc', draw:'hfnc', w:1, h:1,
-  desc:'The interface for heated high flow: a blender feeding a high-flow flowmeter, a heated humidifier, and 22 mm tubing onto its inlet cone. It expects flows a wall flowmeter cannot deliver and gas that has been through a heater.',
-  ports:[P('iso22','m','in',[0,0],'E','Breathing tube inlet', 'i'), PT()], flowMin:10, flowMax:60, tags:[], needs:['metered','heated','highflow'], provides:[], tier:'v',
+  desc:'The interface for heated high flow: a blender feeding a high-flow flowmeter, a heated humidifier, and the heated breathing circuit from the chamber outlet onto its inlet cone. It expects flows a wall flowmeter cannot deliver, gas that has been through a heater, and a tube that stays warm the whole way.',
+  ports:[P('iso22','m','in',[0,0],'E','Breathing tube inlet', 'i'), PT()], flowMin:10, flowMax:60, tags:[], needs:['metered','heated','highflow'], needsCircuit:true, provides:[], tier:'v',
   source:'Fisher & Paykel Optiflow product documentation for the identity. The 22 mm inlet is inferred from the heated breathing tube it pairs with.'});
 
 /* tubing: ends are both female, both bi. reach is in cells (about 1 ft each, a gameplay scale) */
@@ -685,6 +724,14 @@ def({id:'yankauer', name:'Yankauer suction tip', short:'Yankauer', mfr:'Generic'
 def({id:'tube-22-10', name:'Aerosol tubing, cut from the roll, 10 ft', short:'22 mm tubing 10 ft', mfr:'Teleflex (Hudson RCI), representative', model:'Corrugated aerosol tubing, 22 mm, cut to length', cat:'tubing', tube:true, draw:'tube', kind:'c22', reach:10, ends:{std:'iso22', g:'f'}, w:1, h:1,
   desc:'Corrugated tubing comes in 6 ft lengths and in 100 ft rolls you cut to length. This is a 10 ft cut for the runs a 6 ft piece will not make.',
   ports:[], tags:[], provides:[], tier:'v', source:'Corrugated aerosol tubing is sold in fixed lengths and in bulk rolls across makers; the 10 ft cut is this level\'s choice.'});
+/* Level 3 rebuilt the real way (2026-09-23, David, RRT: "Rebuild it the real way"). Heated high flow does not run on
+   plain corrugated tubing: at high flow the gas leaves the chamber near body temperature, and in a cool unheated tube
+   it condenses and the water runs to the patient. The kit ships a heated-wire circuit for exactly that. heatedWire
+   marks it; whether it is heating is read off the wall (circuitHeats), never stored. */
+def({id:'tube-heated', name:'Heated breathing circuit', short:'Heated circuit', mfr:'Fisher & Paykel', model:'MicroCell heated inspiratory tube, from the RT302 kit', cat:'tubing', tube:true, heatedWire:true, draw:'tube', kind:'heat22', reach:7, ends:{std:'iso22', g:'f'}, w:1, h:1,
+  desc:'The tube that comes in the high-flow kit with the chamber and the cannula. A heater wire runs the length of it, and the wire plugs into the heater base at the chamber, so the tube stays warmer than the gas inside it and nothing condenses on the way to the nose. It heats only with its chamber end on the outlet of a heated humidifier that is plugged in. Anywhere else it is corrugated tubing with a wire in it.',
+  ports:[], tags:[], provides:[], tier:'v',
+  source:'Fisher & Paykel 850 System circuits and accessories page (fphcare.com/us/products/devices-and-humidifiers/850-system/adult/circuits-and-accessories/), checked 2026-09-23: RT302 is the "MicroCell circuit, MR290 water chamber and Optiflow+ nasal cannula kit". Verified for the identity. The heater wire is modeled: the circuit heats only when its chamber end sits on the outlet of a powered heated humidifier, standing in for the wire that plugs into the MR850 base, so no separate wire is laid. The 22 mm ends follow the chamber cones (inferred). The 7 ft reach is this wall\'s scale, not a catalog length (gameplay).'});
 def({id:'cpap-gen', name:'Bubble CPAP generator', short:'CPAP generator', mfr:'Fisher & Paykel', model:'Bubble CPAP generator, water column', cat:'device', draw:'cpapgen', w:1, h:2, cpapOptions:[4,5,6,7,8],
   desc:'A column of water with a probe in it. The expiratory limb ends under the surface, and how deep it sits IS the pressure: 5 cm under water is 5 cm H2O of CPAP. No dial, only a depth. If the expiratory limb does not reach it, the circuit is open and there is no CPAP at all.',
   ports:[P('iso22','m','in',[0,0],'N','Expiratory limb inlet', 'i')], tags:['cpap'], provides:['cpap'], tier:'v',
@@ -738,29 +785,59 @@ const DEFAULT_ROOM = 'right';
 const ROOM_PARAM = (typeof location!=='undefined' && (/[?&]room=([a-z]+)/i.exec(location.search)||[])[1]) || '';
 const roomOf = (level, name) => { const r = name || (ROOMS[ROOM_PARAM] ? ROOM_PARAM : (level.room || DEFAULT_ROOM)); return typeof r === 'string' ? ROOMS[r] : r; };
 function setRoom(room){ GRID.face=room.face; GRID.nose=room.nose; GRID.neck=room.neck; GRID.order=room.order; }
+/* ROUND 17 (2026-09-23, David: "can we make it so his body can move around the wall like anything else? that
+   functionality will matter when we start making complex semi mazes"; his call on who moves him: the level
+   places him, the sandbox lets you drag him). The patient is wherever his three pieces are. A level can name
+   the spot (level.face, in zone columns like extras); level.movePatient lets the player drag him. GRID still
+   answers "where is the face", and syncFace keeps it on the pieces after a build, an undo, a restore from the
+   wire, or a move, so the save and the table carry his position with nothing new in either. */
+const faceAt = (x, y, flip) => ({face:{x, y, w:3, h:3, flip:!!flip}, nose:[x+1, y+1], neck:[x+1, y+2]});
+const levelRoom = (room, level) => level && level.face ? Object.assign({}, room, faceAt(room.dx+level.face.x, level.face.y, room.face.flip)) : room;
+function syncFace(st){
+  const ch=st && st.items.find(i=>i.def.id==='pt-cheek'); if(!ch) return;
+  const m=!!(st.room && st.room.face && st.room.face.flip), f=faceAt(m ? ch.x-2 : ch.x, ch.y-1, m);
+  GRID.face=f.face; GRID.nose=f.nose; GRID.neck=f.neck;
+}
+/* what moves with him: his three pieces, and whatever is seated on his face or neck, with its own mated parts */
+function patientGroup(st){
+  const pts=new Set(st.items.filter(i=>i.def.cat==='patient').map(i=>i.uid)), out=new Set(pts);
+  for(const l of computeLinks(st)){ if(l.kind!=='adj' || l.s!=='ok') continue;
+    const other = pts.has(l.a.uid) ? l.b : (pts.has(l.b.uid) ? l.a : null);
+    if(other && !pts.has(other.uid)) for(const u of clusterOf(st, other.uid)) out.add(u); }
+  return [...out];
+}
 /* everything fixed on a wall: the rail, the fixtures, the three patient pieces, and the level's extras shifted into the zone */
 function roomFixed(room, extras){ const Fc=room.face, m=!!Fc.flip;   /* flip: the cheek is on the right of the nose, the tubing leaves over the left ear */
   return [...room.rail.map((def,x)=>({def, x, y:0, r:0})), ...room.fixtures.map(f=>({def:f.def, x:f.x, y:f.y, r:0})),
     {def:'pt-top', x:m?Fc.x+1:Fc.x, y:Fc.y, r:0}, {def:'pt-cheek', x:m?Fc.x+2:Fc.x, y:Fc.y+1, r:m?2:0}, {def:'pt-chin', x:m?Fc.x+2:Fc.x, y:Fc.y+2, r:m?2:0},
     ...(extras||[]).map(e=>({def:e.def, x:e.x+room.dx, y:e.y, r:e.r||0}))]; }
-const FULL_CART = [['flowmeter',1], ['flowmeter-chem',1], ['flowmeter-air',1], ['suction-reg',1], ['xmas',1], ['bubble',1], ['heated',1], ['tube-o2-7',1], ['tube-o2-25',1], ['tube-22',1], ['tube-15',1], ['ad-22f-15m',1], ['ad-22f-barb',2], ['ad-22m-barb',1], ['coupler',1], ['cannula',1], ['mask',1], ['hfnc',1]];
+/* Round 17 (2026-09-23, David): after the tutorials the patient lies one row lower than the room puts him,
+   and the cannula on those walls is the 14 ft one. Level 2 keeps the room's spot: its masks are only sold
+   with 7 ft tubing, so a lower patient there would need an extension, which is a different puzzle. The
+   sandbox keeps it too, for the same masks; there you can drag him wherever you like. */
+const LOWER = {x:2, y:9};
+const FULL_CART = [['flowmeter',1], ['flowmeter-chem',1], ['flowmeter-air',1], ['suction-reg',1], ['xmas',1], ['bubble',1], ['heated',1], ['tube-o2-7',1], ['tube-o2-25',1], ['tube-22',1], ['tube-15',1], ['ad-22f-15m',1], ['ad-22f-barb',2], ['ad-22m-barb',1], ['coupler',1], ['cannula-14',1], ['mask',1], ['hfnc',1]];
 const TRACH_CART = [['flowmeter',1], ['flowmeter-air',1], ['lvn',1], ['bubble',1], ['xmas',1], ['tube-22',2], ['tube-22-10',1], ['tube-o2-7',1], ['ad-22f-barb',1], ['ad-22m-barb',1], ['trach-collar',1], ['aeromask',1], ['mask',1]];
-const SEDATION_CART = [['flowmeter',1], ['flowmeter-air',1], ['xmas',1], ['bubble',1], ['tube-o2-7',1], ['tube-o2-14',1], ['coupler',1], ['cannula',1], ['etco2-cannula',1], ['mask',1]];
-const CPAP_CART = [['blender',1], ['flowmeter-hf',1], ['flowmeter',1], ['xmas',1], ['heated',1], ['tube-o2-7',1], ['tube-22',3], ['tube-22-10',1], ['ad-22f-barb',2], ['ad-22m-barb',1], ['cpap-gen',1], ['cpap-iface',1], ['cannula',1], ['hfnc',1]];
-const HF_CART = [['blender',1], ['flowmeter-hf',1], ['flowmeter',1], ['xmas',1], ['bubble',1], ['heated',1], ['tube-o2-7',1], ['tube-o2-25',1], ['tube-22',1], ['ad-22f-barb',2], ['ad-22m-barb',1], ['coupler',1], ['cannula',1], ['hfnc',1]];
+const SEDATION_CART = [['flowmeter',1], ['flowmeter-air',1], ['xmas',1], ['bubble',1], ['tube-o2-7',1], ['tube-o2-14',1], ['coupler',1], ['cannula-14',1], ['etco2-cannula',1], ['mask',1]];
+const CPAP_CART = [['blender',1], ['flowmeter-hf',1], ['flowmeter',1], ['xmas',1], ['heated',1], ['tube-o2-7',1], ['tube-22',3], ['tube-22-10',1], ['ad-22f-barb',2], ['ad-22m-barb',1], ['cpap-gen',1], ['cpap-iface',1], ['cannula-14',1], ['hfnc',1]];
+/* Level 3 (2026-09-23): the heated circuit, and a plain 22 mm tube beside it, the wrong choice that teaches. The plain one
+   is the 10 ft cut because it has to REACH: with the patient a row lower (Round 17) the chamber-to-cannula run is 7 ft,
+   and a 6 ft tube would fail on "too short" and never get to say why plain tubing is wrong. */
+const HF_CART = [['blender',1], ['flowmeter-hf',1], ['flowmeter',1], ['xmas',1], ['bubble',1], ['heated',1], ['tube-o2-7',1], ['tube-o2-25',1], ['tube-heated',1], ['tube-22-10',1], ['ad-22f-barb',2], ['ad-22m-barb',1], ['coupler',1], ['cannula-14',1], ['hfnc',1]];
 const LEVELS = [
   {id:'t1', kind:'tutorial', kicker:'Tutorial 1 of 5', title:'Connect', crumb:'Tutorial 1 · Connect',
    brief:'Get oxygen from the outlet on the headwall to the patient.',
    scenario:'The board is the wall behind the bed. Outlets are on the rail across the top, the patient is at the bottom with the order clipped beside them, and the wall between is your bench. The oxygen source is already on its outlet with a barb pointing out the side.',
    extras:[{def:'src-t1', x:3, y:1, r:0}],
-   cart:[['cannula',1], ['tube-o2-7',1]],
+   cart:[['cannula',1]],
    req:{iface:['cannula'], flow:2, humid:false},
    par:{comp:1, cells:8, conn:1, len:7, adapters:0, bends:0, time:60}, timer:null, scored:false,
    steps:[
-     {text:'Drag the nasal cannula out of the cart and put it down anywhere on the wall. The patient only matters when you press Complete.', done:F=>!!F.iface},
-     {text:'The cannula came with 7 ft of tubing. The ring beside it is where that tubing starts. Click the ring, then click the barb on the oxygen source, or press on the ring and pull to the barb.', done:F=>F.ifaceLinked},
-     {text:'Green means it seats. Now put the cannula on the patient: the free square in the middle of the face, under the nose. The tubing follows it and leaves over the ear.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Test the system to watch the gas go, then submit.', done:()=>false}]},
+     /* 2026-09-23: step one used to say "anywhere on the wall", and from the left half the 7 ft lead does not
+        reach the source, so the tutorial's own instruction ended in TOO SHORT. The nose first, then the lead. */
+     {text:'Drag the nasal cannula out of the cart onto the patient: the free square in the middle of the face, under the nose.', done:F=>!!F.iface&&F.onBed},
+     {text:'The cannula came with 7 ft of tubing. The ring beside it is where that tubing starts. Tap the ring, then tap the barb on the oxygen source, or press on the ring and pull to the barb.', done:F=>F.ifaceLinked&&F.onBed},
+     {text:'Green means it seats. Press Complete and watch the gas go.', done:()=>false}]},
 
   {id:'t2', kind:'tutorial', kicker:'Tutorial 2 of 5', title:'Adapt', crumb:'Tutorial 2 · Adapt',
    brief:'The flowmeter is on the outlet. Get its oxygen to the patient.',
@@ -774,20 +851,22 @@ const LEVELS = [
      {text:'Two adapters on the cart. Tap either one to read its spec sheet: one has a DISS nut on top and a barb underneath, and that is the one that turns a thread into something tubing can push onto.', done:F=>F.adapterOn||F.ifaceLinked},
      {text:'Now the tubing has a barb to go to. From the nose it runs up the column beside the face; one bend at the top is as short as this wall allows.', done:F=>F.ifaceLinked},
      {text:'Cannula on the nose, then press Complete.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Ready. Test the system, then submit.', done:()=>false}]},
+     {text:'Ready. Press Complete.', done:()=>false}]},
 
   {id:'t3', kind:'tutorial', kicker:'Tutorial 3 of 5', title:'Assemble', crumb:'Tutorial 3 · Assemble',
-   brief:'Order: oxygen at 2 L/min by nasal cannula or simple mask. Dry gas is fine.',
+   brief:'Order: oxygen by simple mask at 2 L/min. Dry gas is fine. Read that order twice.',
    scenario:'Seven parts on the cart, two oxygen outlets on the rail. Devices plug straight into outlets; tubing runs between any two ports you click; the score cares which parts you chose and which outlet you hung them on.',
    cart:[['flowmeter',1], ['xmas',1], ['bubble',1], ['tube-o2-7',1], ['coupler',1], ['cannula',1], ['mask',1]],
+   /* both interfaces answer the order, so the mask fails on its OWN spec ("at least 5 L/min"), which is the lesson;
+      accepting the cannula alone would have told a player who built the ordered mask that the order wanted a cannula */
    req:{iface:['cannula','mask'], flow:2, humid:false},
    par:{comp:3, cells:11, conn:3, len:7, adapters:1, bends:1, time:120}, timer:null, scored:true,
    steps:[
      {text:'Hang the flowmeter under a green outlet. It seats itself upright: a Thorpe tube reads by gravity, so it never goes sideways, and a part dropped next to something it fits turns to fit it.', done:F=>F.fmLinked},
      {text:'The outlet on the bottom of the flowmeter is a thread. Two parts on the cart have a DISS nut that fits it, and both end in a barb.', done:F=>F.barbOut},
-     {text:'A 2 L/min order rules out one of the two interfaces on the cart. The spec sheets carry the flow ranges.', done:F=>!!F.iface},
+     {text:'Read the spec sheet on the simple mask. Under 5 L/min it does not flush the CO2 the patient breathes out, so a mask at 2 L/min is an order to question. At 2 L/min the interface is the cannula; on a floor you would call and get the order changed.', done:F=>!!F.iface},
      {text:'Join the tubing, put the interface on the nose. Straight runs and unused parts left on the cart both score better.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Looks like a system. Test it, submit it, and read the score.', done:()=>false}]},
+     {text:'Looks like a system. Press Complete and read the score.', done:()=>false}]},
 
   {id:'t4', kind:'tutorial', kicker:'Tutorial 4 of 5', title:'Place', crumb:'Tutorial 4 · Place',
    brief:'Order: humidified oxygen at 2 L/min by nasal cannula. The wall is crowded.',
@@ -800,7 +879,7 @@ const LEVELS = [
      {text:'Two oxygen outlets, a shelf under the left one. Hang the flowmeter and think about where the humidifier barb will end up pointing.', done:F=>F.fmLinked},
      {text:'The order says humidified, so the bubble humidifier goes on the flowmeter. Its barb comes out the side, toward the column to its right.', done:F=>F.humidOn},
      {text:'Lay the tubing and read the length in the toast. If it bends around the shelf, pull it off, move the flowmeter to the other outlet, and lay it again. Moving a part re-routes its tubing.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Test it, then submit. Every bend is a foot you did not need, and the 25 ft tubing is on the cart in case you decide to go around.', done:()=>false}]},
+     {text:'Press Complete. Every bend is a foot you did not need, and the 25 ft tubing is on the cart in case you decide to go around.', done:()=>false}]},
 
   {id:'t5', kind:'tutorial', kicker:'Tutorial 5 of 5', title:'Optimize', crumb:'Tutorial 5 · Optimize',
    brief:'Order: humidified oxygen at 4 L/min by nasal cannula. Par: 3 parts, 7 ft of tubing, no adapters.',
@@ -811,26 +890,26 @@ const LEVELS = [
    steps:[
      {text:'Pick a humidifier. The bubble threads onto the flowmeter. The heated one has a 22 mm cone on each side; the socket adapters slide onto those cones, and they have to be turned so the socket faces the chamber. Right-click turns a part, even while you drag it.', done:F=>F.humidOn},
      {text:'Par is three parts, seven feet, no adapters. Anything you add past that costs points; anything that bends costs points.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Test it, submit it, then Build it again and beat the number.', done:()=>false}]},
+     {text:'Press Complete, then Build it again and beat the number.', done:()=>false}]},
 
-  {id:'l1', kind:'level', kicker:'Level 1', title:'Humidified oxygen', crumb:'Level 1 · Humidified oxygen',
+  {id:'l1', face:LOWER, kind:'level', kicker:'Level 1', title:'Humidified oxygen', crumb:'Level 1 · Humidified oxygen',
    brief:'Order: humidified oxygen at 4 L/min by nasal cannula.',
    scenario:'Full cart, full headwall. Three flowmeters, and only one of them belongs in an oxygen outlet. Two humidifiers, and only one of them threads onto a flowmeter. Build the simplest system that satisfies the order.',
    cart:FULL_CART,
    req:{iface:['cannula'], flow:4, humid:true},
-   par:{comp:3, cells:12, conn:3, len:7, adapters:0, bends:0, time:150}, timer:null, scored:true,
+   par:{comp:3, cells:13, conn:3, len:8, adapters:0, bends:0, time:150}, timer:null, scored:true,
    steps:[
      {text:'Start at the rail. Green outlets are oxygen; the flowmeters are keyed to a gas and to an outlet family, and the spec sheets say which.', done:F=>F.fmLinked},
      {text:'The order says humidified. Something on the cart has to add water on the way down the wall.', done:F=>F.humidOn},
      {text:'Tubing joined, interface on the nose. Fewer parts, shorter runs, fewer adapters.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Test it and submit when you are happy with it. You can rebuild it for a better score afterward.', done:()=>false}]},
+     {text:'Press Complete when you are happy with it. You can rebuild it for a better score afterward.', done:()=>false}]},
 
-  {id:'l1t', kind:'timed', kicker:'Timed', title:'Humidified oxygen, 90 seconds', crumb:'Timed · 90 seconds',
+  {id:'l1t', face:LOWER, kind:'timed', kicker:'Timed', title:'Humidified oxygen, 90 seconds', crumb:'Timed · 90 seconds',
    brief:'Same order: humidified oxygen at 4 L/min by nasal cannula. Ninety seconds.',
    scenario:'You know the cart and the wall now. The monitor is the clock: the patient is at 96% and falling from your first move, and the number climbs back once oxygen reaches them. At 80% the run is over.',
    cart:FULL_CART,
    req:{iface:['cannula'], flow:4, humid:true},
-   par:{comp:3, cells:12, conn:3, len:7, adapters:0, bends:0, time:90}, timer:90, scored:true,
+   par:{comp:3, cells:13, conn:3, len:8, adapters:0, bends:0, time:90}, timer:90, scored:true,
    steps:[{text:'Go. The sat starts falling on your first move and climbs once the system works.', done:()=>false}]},
 
   {id:'lnrb', kind:'level', kicker:'Level 2', title:'2 L cannula or 15 L non-rebreather', crumb:'Level 2 · Non-rebreather',
@@ -843,50 +922,55 @@ const LEVELS = [
      {text:'Oxygen flowmeter on a green outlet. Its outlet is a DISS thread, and the barb it needs is the nipple adapter on the cart.', done:F=>F.fmLinked},
      {text:'The order is 15 L/min. Read the spec sheets: one interface on the cart takes that flow and the others do not.', done:F=>F.ifaceLinked},
      {text:'Mask on the face, tubing joined. Nothing from the cart you do not need.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Test it and submit.', done:()=>false}]},
+     {text:'Press Complete.', done:()=>false}]},
 
-  {id:'l2', kind:'level', kicker:'Level 3', title:'High flow', crumb:'Level 3 · High flow',
+  {id:'l2', face:LOWER, kind:'level', kicker:'Level 3', title:'High flow', crumb:'Level 3 · High flow',
    brief:'Order: heated high-flow nasal cannula, 40% FiO2 at 35 L/min.',
-   scenario:'A percentage on the order changes everything. Pipeline oxygen is 100%; getting to 40% takes the oxygen-air blender, and it needs both gases to blend. Thirty-five liters a minute takes the high-flow flowmeter that hangs on the blender. Heated high flow takes the heated humidifier, plugged in, and 22 mm tubing onto the Optiflow. Set the dial on the blender\'s spec sheet.',
+   scenario:'A percentage on the order changes everything. Pipeline oxygen is 100%; getting to 40% takes the oxygen-air blender, and it needs both gases to blend. Thirty-five liters a minute takes the high-flow flowmeter that hangs on the blender. Heated high flow takes the heated humidifier, plugged in, and the heated breathing circuit from the chamber to the Optiflow. Two kinds of 22 mm tubing are on the cart, and only one of them has a heater wire in it. Set the dial on the blender\'s spec sheet.',
    cart:HF_CART,
    req:{iface:['hfnc'], flow:35, humid:true, fio2:40},
-   par:{comp:8, cells:22, conn:8, len:9, adapters:2, bends:2, time:240}, timer:null, scored:true,
+   /* par re-derived 2026-09-23 by replaying the straight build through the engine in the right room and the left:
+      blender, high-flow flowmeter, tree, 3 ft of oxygen tubing to the socket adapter, chamber one row under the tree
+      column's foot, 7 ft of heated circuit onto the Optiflow, cord to the plain receptacle. Same numbers as before. */
+   par:{comp:8, cells:23, conn:8, len:10, adapters:2, bends:2, time:240}, timer:null, scored:true,
    steps:[
      {text:'The blender has two probes, one keyed for oxygen and one for air, side by side. The rail has an oxygen outlet next to an air outlet for exactly that reason.', done:F=>F.blended},
      {text:'Its outlet is a DISS thread on the bottom, so the wall flowmeter is no use here; the high-flow flowmeter has a DISS nut and hangs on it. Then click the percentage on the blender (or its sliders corner) and set the dial to the order.', done:F=>F.fio2Ok},
-     {text:'From the flowmeter outlet the path is the heated route from Tutorial 5: tree, oxygen tubing, socket adapter, chamber (plug it in), then 22 mm tubing from the outlet cone onto the Optiflow.', done:F=>F.ifaceLinked&&F.onBed},
-     {text:'Test it and submit. Par is the whole chain; the score is about keeping the runs short.', done:()=>false}]},
+     {text:'From the flowmeter outlet the path is the heated route from Tutorial 5: tree, oxygen tubing, socket adapter, chamber (plug it in). Then tap the heated circuit on the cart, the chamber outlet, and the Optiflow. Its wire plugs into the heater base, so it only heats on the chamber.', done:F=>F.ifaceLinked&&F.onBed},
+     {text:'Press Complete. Par is the whole chain; the score is about keeping the runs short.', done:()=>false}]},
 
-  {id:'l3', kind:'level', kicker:'Level 4', title:'Trach collar', crumb:'Level 4 · Trach collar',
+  {id:'l3', face:LOWER, kind:'level', kicker:'Level 4', title:'Trach collar', crumb:'Level 4 · Trach collar',
    brief:'Order: cool aerosol, 35% FiO2 at 10 L/min, by trach collar.',
    scenario:'A tracheostomy bypasses the nose, so the gas has to arrive wet, and the collar goes on the NECK, the square right below the nose square, not on the face. The large-volume nebulizer does the humidifying and sets the percentage with its collar; corrugated tubing carries the aerosol. Read the lengths on the cart before you lay it: the nebulizer hangs high on the wall and the neck is low.',
    cart:TRACH_CART,
    req:{iface:['trach'], flow:10, humid:true, fio2:35},
-   par:{comp:4, cells:12, conn:4, len:7, adapters:0, bends:0, time:180}, timer:null, scored:true,
+   par:{comp:4, cells:13, conn:4, len:8, adapters:0, bends:0, time:180}, timer:null, scored:true,
    steps:[
      {text:'A flowmeter on an oxygen outlet, and the nebulizer threads straight onto its DISS outlet: its nut is the same thread the tree uses. Click the percentage on the nebulizer (or its sliders corner) and set the collar to the order.', done:F=>F.fio2Ok},
      {text:'The collar goes on the neck, the square right below the nose square. On the nose it reads red, and the toast says why.', done:F=>F.onBed},
      {text:'Corrugated tubing from the nebulizer cone to the collar cone, straight down the column beside the face. Six feet will not make it; the cart has a longer cut.', done:F=>F.ifaceLinked},
-     {text:'Test it and submit.', done:()=>false}]},
+     {text:'Press Complete.', done:()=>false}]},
 
-  {id:'l4', kind:'level', kicker:'Level 5', title:'Bubble CPAP', crumb:'Level 5 · Bubble CPAP',
+  /* PARKED 2026-09-23 (David): bubble CPAP is a neonatal therapy, and this wall puts it on the adult patient. Out of
+     every list a player sees until there is an infant to put it on; still here so the engine tests run the circuit. */
+  {id:'l4', face:LOWER, kind:'level', parked:true, kicker:'Parked', title:'Bubble CPAP', crumb:'Bubble CPAP (parked)',
    brief:'Order: bubble CPAP 5 cm H2O, 40% FiO2, 8 L/min, heated.',
    scenario:'A circuit with two limbs. Blended gas goes through the heated humidifier and down the inspiratory limb to the prongs; the expiratory limb leaves the prongs and ends under water in the generator, and the depth of that probe is the pressure. Leave the expiratory limb open and there is no CPAP, however good the rest looks.',
    cart:CPAP_CART,
    req:{iface:['cpap'], flow:8, humid:true, fio2:40, cpap:5},
-   par:{comp:8, cells:22, conn:8, len:8, adapters:2, bends:1, time:300}, timer:null, scored:true,
+   par:{comp:8, cells:23, conn:8, len:9, adapters:2, bends:1, time:300}, timer:null, scored:true,
    steps:[
      {text:'Same start as high flow: blender on the oxygen and air pair, high-flow flowmeter hanging on it, dial to 40.', done:F=>F.fio2Ok},
      {text:'Tree on the flowmeter, a short run of oxygen tubing to the socket adapter, chamber seated on the adapter. Keep the column under the tree clear: the inspiratory limb needs it to reach the prongs. Plug the heater in.', done:F=>F.humidOn},
      {text:'Prongs on the nose. The inspiratory limb comes down from the chamber outlet onto the top cone; the expiratory limb leaves the side cone and ends in the generator. Click the depth on the generator to set the probe.', done:F=>F.ifaceLinked&&F.onBed&&F.genLinked},
      {text:'Test it. The CPAP row only lights when the expiratory limb reaches the water.', done:()=>false}]},
 
-  {id:'l5', kind:'level', kicker:'Level 6', title:'Capnography', crumb:'Level 6 · Capnography',
+  {id:'l5', face:LOWER, kind:'level', kicker:'Level 5', title:'Capnography', crumb:'Level 5 · Capnography',
    brief:'Order: oxygen 2 L/min by nasal cannula with continuous EtCO2, for procedural sedation.',
    scenario:'Sedation wants exhaled CO2 on the monitor, breath by breath. The sampling cannula has two lines: the green one is oxygen and goes to a flowmeter like any cannula; the clear one carries exhaled gas the other way, to the CO2 port on the underside of the monitor. The scoop under the prongs catches mouth breathers. The monitor is on the far side of the wall, so the sampling line has to reach.',
    cart:SEDATION_CART,
    req:{iface:['cannula'], flow:2, capno:true},
-   par:{comp:3, cells:11, conn:3, len:6, adapters:1, bends:1, time:200}, timer:null, scored:true,
+   par:{comp:3, cells:12, conn:3, len:7, adapters:1, bends:1, time:200}, timer:null, scored:true,
    steps:[
      {text:'A flowmeter on an oxygen outlet and a tree on its outlet, the same start as the first tutorial.', done:F=>F.barbOut},
      {text:'Two cannulas on the cart. Read both spec sheets: only one has a sampling line and a scoop. That one goes on the nose.', done:F=>F.capnoIface&&F.onBed},
@@ -896,42 +980,42 @@ const LEVELS = [
   /* FIND THE FAULT (alpha backlog item 1): the wall arrives built with one thing wrong. Tap the part that is
      wrong: fix it with what is on the wall and submit. The builds run through the engine from the cart; the faults are the ones
      therapists confess on the sub (research doc section 4). Unlocked once level 1 is done. */
-  {id:'f1', kind:'fault', kicker:'Find the fault 1', title:'The tubing on the wrong tree', crumb:'Find the fault 1',
+  {id:'f1', face:LOWER, kind:'fault', kicker:'Find the fault 1', title:'A cannula at 2 L/min', crumb:'Find the fault 1',
    brief:'Order: oxygen at 2 L/min by nasal cannula. The wall is already built, and something on it is wrong. Fix it.',
    scenario:'You walked in on a setup somebody else did. Both flowmeters are up, everything seats, nothing is loose, and the patient is not getting what the order says.',
-   cart:[['flowmeter',1], ['xmas',1], ['flowmeter-air',1], ['xmas-air',1], ['cannula',1]],
+   cart:[['flowmeter',1], ['xmas',1], ['flowmeter-air',1], ['xmas-air',1], ['cannula-14',1]],
    req:{iface:['cannula'], flow:2, humid:false},
    par:{comp:3, cells:10, conn:3, len:7, adapters:1, bends:0, time:120}, timer:null, scored:false,
-   build:st=>{ const Z=st.room.dx; place(st,'flowmeter',Z+3,1,0); place(st,'xmas',Z+3,3,0); place(st,'flowmeter-air',Z+4,1,0); const tree=place(st,'xmas-air',Z+4,3,0).item; const can=place(st,'cannula',Z+3,9,0).item; connectPorts(st,{uid:can.uid,pi:'lead'},{uid:tree.uid,pi:portsOf(tree).find(p=>p.std==='barb').pi},null); },
+   build:st=>{ const Z=st.room.dx; place(st,'flowmeter',Z+3,1,0); place(st,'xmas',Z+3,3,0); place(st,'flowmeter-air',Z+4,1,0); const tree=place(st,'xmas-air',Z+4,3,0).item; const can=place(st,'cannula-14',GRID.nose[0],GRID.nose[1],0).item; connectPorts(st,{uid:can.uid,pi:'lead'},{uid:tree.uid,pi:portsOf(tree).find(p=>p.std==='barb').pi},null); },
    fault:{parts:['xmas-air','flowmeter-air'], name:'Tubing on the air tree', why:'The cannula tubing is pushed onto the nipple adapter of the AIR flowmeter. A barb is a barb, so it seats fine, and the patient is on room air at 2 L/min with a cannula in their nose. Two flowmeters side by side on a headwall is exactly where this happens.', fix:'Move the tubing to the tree on the oxygen flowmeter, the one in the green outlet. Then look at the ball in the tube you left behind: air was running the whole time.'},
-   steps:[{text:'Something on this wall is wrong. Follow the gas from the outlet to the patient, fix it with what is on the wall, and test it. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Submit it.', done:()=>false}]},
+   steps:[{text:'Something on this wall is wrong. Follow the gas from the outlet to the patient, and fix it with what is on the wall. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
 
-  {id:'f2', kind:'fault', kicker:'Find the fault 2', title:'The humidifier that never got plugged in', crumb:'Find the fault 2',
+  {id:'f2', face:LOWER, kind:'fault', kicker:'Find the fault 2', title:'Humidified at 4 L/min', crumb:'Find the fault 2',
    brief:'Order: humidified oxygen at 4 L/min by nasal cannula. The wall is built, and something on it is wrong. Fix it.',
    scenario:'Somebody chose the heated humidifier for a 4 L/min cannula, which is more than the order needs, and it would still work. It does not.',
-   cart:[['flowmeter',1], ['xmas',1], ['heated',1], ['ad-22f-barb',2], ['tube-o2-7',1], ['cannula',1]],
+   cart:[['flowmeter',1], ['xmas',1], ['heated',1], ['ad-22f-barb',2], ['tube-o2-7',1], ['cannula-14',1]],
    req:{iface:['cannula'], flow:4, humid:true},
    par:{comp:6, cells:16, conn:6, len:14, adapters:2, bends:2, time:180}, timer:null, scored:false,
-   build:st=>{ const Z=st.room.dx; place(st,'flowmeter',Z+3,1,0); const x=place(st,'xmas',Z+3,3,0).item; place(st,'heated',Z+4,6,0); const a1=place(st,'ad-22f-barb',Z+3,6,1).item, a2=place(st,'ad-22f-barb',Z+6,6,3).item; const bp=it=>portsOf(it).find(p=>p.std==='barb').pi; connectPorts(st,{uid:x.uid,pi:bp(x)},{uid:a1.uid,pi:bp(a1)},'tube-o2-7'); const can=place(st,'cannula',Z+3,9,0).item; connectPorts(st,{uid:can.uid,pi:'lead'},{uid:a2.uid,pi:bp(a2)},null); },
+   build:st=>{ const Z=st.room.dx; place(st,'flowmeter',Z+3,1,0); const x=place(st,'xmas',Z+3,3,0).item; place(st,'heated',Z+4,6,0); const a1=place(st,'ad-22f-barb',Z+3,6,1).item, a2=place(st,'ad-22f-barb',Z+6,6,3).item; const bp=it=>portsOf(it).find(p=>p.std==='barb').pi; connectPorts(st,{uid:x.uid,pi:bp(x)},{uid:a1.uid,pi:bp(a1)},'tube-o2-7'); const can=place(st,'cannula-14',GRID.nose[0],GRID.nose[1],0).item; connectPorts(st,{uid:can.uid,pi:'lead'},{uid:a2.uid,pi:bp(a2)},null); },
    fault:{parts:['heated'], name:'Not plugged in', why:'The heater base has no power. The chamber is in the path and the gas goes through it, but a heated humidifier unplugged heats nothing and humidifies nothing, so the order for humidified oxygen is not met. The cord is right there.', fix:'Plug the cord into a wall receptacle, white or red. On a real floor, look at the heater display before you leave the room; a dark display is this exact wall.'},
-   steps:[{text:'Something on this wall is wrong. Follow the gas from the outlet to the patient, fix it with what is on the wall, and test it. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Submit it.', done:()=>false}]},
+   steps:[{text:'Something on this wall is wrong. Follow the gas from the outlet to the patient, and fix it with what is on the wall. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
 
-  {id:'f3', kind:'fault', kicker:'Find the fault 3', title:'The line that is not in the port', crumb:'Find the fault 3',
+  {id:'f3', face:LOWER, kind:'fault', kicker:'Find the fault 3', title:'Sedation with EtCO2', crumb:'Find the fault 3',
    brief:'Order: oxygen at 2 L/min by nasal cannula with continuous EtCO2. The wall is built, and something on it is wrong. Fix it.',
    scenario:'A sampling cannula on a sedated patient, oxygen running, the monitor on. The number the team is waiting for never shows up.',
    cart:[['flowmeter',1], ['xmas',1], ['etco2-cannula',1]],
    req:{iface:['cannula'], flow:2, humid:false, capno:true},
    par:{comp:3, cells:11, conn:3, len:6, adapters:1, bends:1, time:200}, timer:null, scored:false,
-   build:st=>{ const Z=st.room.dx; place(st,'flowmeter',Z+3,1,0); const x=place(st,'xmas',Z+3,3,0).item; const can=place(st,'etco2-cannula',Z+3,9,0).item; connectPorts(st,{uid:can.uid,pi:'lead'},{uid:x.uid,pi:portsOf(x).find(p=>p.std==='barb').pi},null); },
+   build:st=>{ const Z=st.room.dx; place(st,'flowmeter',Z+3,1,0); const x=place(st,'xmas',Z+3,3,0).item; const can=place(st,'etco2-cannula',GRID.nose[0],GRID.nose[1],0).item; connectPorts(st,{uid:can.uid,pi:'lead'},{uid:x.uid,pi:portsOf(x).find(p=>p.std==='barb').pi},null); },
    fault:{parts:['etco2-cannula','deco-monitor'], name:'Sampling line not connected', why:'The oxygen side is fine. The CO2 sampling line is hanging: it never went into the sampling port on the underside of the monitor, so there is no capnogram and no number, and nobody notices until they need it.', fix:'Luer the sampling line into the CO2 port on the monitor and watch for the waveform before you leave the room.'},
-   steps:[{text:'Something on this wall is wrong. Follow the gas from the outlet to the patient, fix it with what is on the wall, and test it. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Submit it.', done:()=>false}]},
+   steps:[{text:'Something on this wall is wrong. Follow the gas from the outlet to the patient, and fix it with what is on the wall. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
 
   {id:'sb', kind:'sandbox', kicker:'Sandbox', title:'Everything on the cart', crumb:'Sandbox · Everything on the cart',
    brief:'Order: humidified oxygen at 4 L/min by nasal cannula. Or build whatever you want and test it.',
    scenario:'Every part in the catalog, two of most. The order is only there so submit has something to judge; the point of this wall is to try pairings, read spec sheets, and see what the equipment thinks. Use the search box on the cart.',
    cart:ALL_CART,
    req:{iface:['cannula'], flow:4, humid:true},
-   par:{comp:3, cells:12, conn:3, len:7, adapters:0, bends:0, time:300}, timer:null, scored:true,
+   par:{comp:3, cells:12, conn:3, len:7, adapters:0, bends:0, time:300}, timer:null, scored:true, movePatient:true,
    steps:[{text:'Nothing to teach here. Try things.', done:()=>false}]}
 ];
 const levelById = id => LEVELS.find(l=>l.id===id);
@@ -1211,6 +1295,7 @@ function evaluate(S){
   if(L.req.flow>iface.def.flowMax) bad.push('A '+ROLE_NAME[iface.def.role]+' tops out at '+iface.def.flowMax+' L/min. The order is '+L.req.flow+' L/min.');
   if(L.req.humid && !provides.has('humid')) bad.push('The order calls for humidified oxygen. The gas path has no humidifier in it.');
   for(const need of (iface.def.needs||[])) if(!provides.has(need)) bad.push('This '+ROLE_NAME[iface.def.role]+' '+NEED_TEXT[need]+'.');
+  const cw=circuitWhy(S, links, ev, provides); if(cw) bad.push(cw.t);   /* the Optiflow's gas arrives through the heated circuit, heating */
   if(bad.length){ ev.kind='invalid'; ev.title='System invalid'; ev.lines=bad.map(t=>({h:'Requirement', t})); return ev; }
   ev.ok=true; ev.kind='complete'; ev.title='System complete';
   return ev;
@@ -1226,10 +1311,11 @@ function functionTest(S){
   const shortL=ev.links.filter(l=>l.short).length, unjoined=S.tubes.filter(t=>!t.to).length;
   const red=ev.links.filter(l=>l.s==='bad'&&!l.short).length, amber=ev.links.filter(l=>l.s==='warn').length;
   const iface=ev.iface, placed=S.items.find(it=>it.def.cat==='interface');
+  const cw=circuitWhy(S, ev.links, ev, provides);   /* humidity that rains out before the nose is not humidity */
   const rows=[
     {k:'Oxygen source', ok: ev.path.length>0 && provides.has('o2'), t: ev.path.length ? (provides.has('o2')?'Pipeline oxygen reaches the patient side.':'The gas reaching the patient is not oxygen.') : 'No outlet is connected through to an interface.'},
     {k:'Flow control', ok: provides.has('metered'), t: provides.has('metered')?'A flowmeter is in the path.':'No flowmeter in the path.'},
-    {k:'Humidification', ok: L.req.humid ? provides.has('humid') : null, t: L.req.humid ? (provides.has('humid')?'A humidifier is in the path.': unpowered.length ? 'The '+unpowered[0].def.short.toLowerCase()+' is not plugged in.' : 'The order calls for humidity. None in the path.') : 'Not required by this order.'},
+    {k:'Humidification', ok: L.req.humid ? (provides.has('humid') && !cw) : null, t: L.req.humid ? (provides.has('humid') ? (cw ? cw.row : 'A humidifier is in the path.') : unpowered.length ? 'The '+unpowered[0].def.short.toLowerCase()+' is not plugged in.' : 'The order calls for humidity. None in the path.') : 'Not required by this order.'},
     {k:'Tubing continuity', ok: !shortL && !unjoined && !red && !amber, t: shortL ? shortL+(shortL>1?' runs are':' run is')+' too short.' : unjoined ? 'Tubing is hanging loose, not joined at both ends.' : red ? red+' incompatible pairing'+(red>1?'s':'')+' on the wall.' : amber ? amber+' pairing'+(amber>1?'s':'')+' waiting on an adapter.' : 'Every joint seats.'},
     {k:'Patient interface', ok: !!iface && onPatientLinks(ev.links, iface) && L.req.iface.includes(iface.def.role), t: !placed?'No interface on the wall or the patient.': !iface?'The interface is not connected to the supply.': !onPatientLinks(ev.links, iface)?'The interface is not on the patient. It goes on the '+siteText(iface)+'.': !L.req.iface.includes(iface.def.role)?'Wrong interface for the order.':'On the patient, matching the order.'},
     (()=>{ if(!L.req.fio2) return {k:'FiO2', ok:null, t:'Not on this order; pipeline oxygen as it comes.'};
@@ -1341,6 +1427,7 @@ function raceDispatch(act, data, who){
     if(race.winner || !race.level || typeof data.snap!=='string') return;
     const Lv=levelById(race.level); if(!Lv) return;
     let ok=false; try{ const st=newState(Lv); restore(st, data.snap); ok=functionTest(st).ok; }catch(e){ ok=false; }
+    if(S) syncFace(S);   /* judging their wall set GRID to their patient; put it back on ours */
     if(ok){ race.winner=who||'Guest'; race.at=Date.now(); otherWall=data.snap; uiSeq++; showRaceResult(); }
   }
 }
@@ -1427,12 +1514,13 @@ function wireTableFold(el){
   const rej=q('daRejoin'); if(rej) rej.addEventListener('click', ()=>{ RACE.rejoin(); renderTableFold(); });
 }
 function newState(level, roomName){
-  const room=roomOf(level, roomName); setRoom(room);   /* the room first: the build and the fixed pieces both read it */
+  const room=levelRoom(roomOf(level, roomName), level); setRoom(room);   /* the room first: the build and the fixed pieces both read it */
   const st={level, room, items:[], tubes:[], cart:{}, uidN:1, sel:null, hand:null, link:null, material:null, t0:0, elapsed:0, moves:0, tried:false, finished:false, timedOut:false, cursor:[room.dx+4,5], preview:null, history:[], flow:null, sat:level.timer?96:97, functional:false, satAtFunctional:null, lamp:false, cartQuery:''};
   st.screen={page:'order', alerts:[]};   /* ROUND 10: what the wall screen shows */
   for(const [id,n] of level.cart) st.cart[id]=(st.cart[id]||0)+n;
   if(level.build){ level.build(st); st.history=[]; st.moves=0; }   /* find the fault: the wall arrives built, from the cart */
   for(const f of roomFixed(room, level.extras)){ const it={uid:'i'+(st.uidN++), def:DB[f.def], x:f.x, y:f.y, r:f.r, fixed:true}; st.items.push(it); }
+  syncFace(st);
   return st;
 }
 const touches = (tb, uid) => tb.lead===uid || (tb.from&&tb.from.uid===uid) || (tb.to&&tb.to.uid===uid);
@@ -1473,7 +1561,9 @@ function tubeMaterialFor(st, A, B, len){
   const fits=cands.filter(id=>{ const e={std:DB[id].ends.std, g:DB[id].ends.g}; return mates(e,A)||mates(e,B); });
   const pool=fits.length?fits:cands;
   if(!pool.length) return null;
-  pool.sort((a,b)=>DB[a].reach-DB[b].reach);
+  /* a heated circuit is a deliberate pick (Level 3, 2026-09-23): left to choose, the cart grabs plain tubing, and the
+     heated circuit only when nothing plain reaches. Tap it on the cart to use it. */
+  pool.sort((a,b)=>(!!DB[a].heatedWire-!!DB[b].heatedWire) || DB[a].reach-DB[b].reach);
   return pool.find(id=>DB[id].reach>=len) || pool[pool.length-1];
 }
 /* lay tubing between two anchors. Any two: the color of the result is the feedback, and a run
@@ -1557,7 +1647,7 @@ function clusterOf(st, uid){
 }
 /* can a set of parts shift by (dx,dy) as one? Their own cells and the runs touching them do not block. */
 function moveGroupCheck(st, uids, dx, dy){
-  const set=new Set(uids); const items=st.items.filter(i=>set.has(i.uid) && !i.fixed);
+  const set=new Set(uids); const items=st.items.filter(i=>set.has(i.uid) && (!i.fixed || i.def.cat==='patient'));   /* the patient is fixed to everything but his own move */
   if(!items.length) return {ok:false, why:'Nothing to move.'};
   const occ=new Set();
   for(const it of st.items){ if(set.has(it.uid)) continue; for(const c of cellsOf(it)) occ.add(key(c[0],c[1])); }
@@ -1577,6 +1667,7 @@ function moveGroup(st, uids, dx, dy){
   if(!dx && !dy) return {ok:true, moved:0, detached:0};
   const {items, set, occ, touching}=c;
   for(const it of items){ it.x+=dx; it.y+=dy; }
+  if(items.some(i=>i.def.cat==='patient')) syncFace(st);
   st.moves++;
   const both=tb=>tb.to && set.has(tb.from.uid) && set.has(tb.to.uid);
   const keep=new Set();
@@ -1655,18 +1746,39 @@ function powered(st, links, it){
   }
   return true;
 }
+/* THE HEATED CIRCUIT (Level 3, 2026-09-23). Its heater wire takes power from the heater base at the chamber, so the
+   circuit heats only when one of its ends is seated on the OUTLET of a heated humidifier that is plugged in. The
+   player never lays the wire; the seat on the chamber outlet stands in for it. */
+function circuitHeats(st, links, tb){
+  if(!tb || !tb.def || !tb.def.heatedWire) return false;
+  return links.some(l=>l.kind==='tube' && l.s==='ok' && l.a.uid===tb.uid && l.b.item && l.b.k==='out' && l.b.item.def.provides.includes('heated') && powered(st, links, l.b.item));
+}
+/* what the gas arrives through at the interface: the last thing on the path before it, a run or a part */
+const feedOf = (st, ev) => { const u=ev.path[ev.path.length-2]; return u ? (st.tubes.find(t=>t.uid===u) || st.items.find(i=>i.uid===u) || null) : null; };
+/* an interface that needs the heated circuit (the Optiflow), fed warm humid gas through anything else: why it fails, or
+   null. Only asked once the heater is in the path and plugged in, because before that the gas is not warm and the
+   power line is the one to read. */
+function circuitWhy(st, links, ev, provides){
+  const iface=ev.iface; if(!iface || !iface.def.needsCircuit || !provides.has('heated')) return null;
+  const feed=feedOf(st, ev), wired=!!(feed && feed.def && feed.def.heatedWire);
+  if(wired && circuitHeats(st, links, feed)) return null;
+  const flow=st.level.req.flow>=iface.def.flowMin ? st.level.req.flow+' L/min' : 'high flow';
+  if(wired) return {t:'The heated circuit is not heating. Its wire plugs into the heater base, so it has to run straight off the chamber outlet onto the cannula; anywhere else in the chain it is cold tubing, and at '+flow+' cold tubing rains out.', row:'The heated circuit is not on the chamber outlet, so it is not heating.'};
+  return {t:'Unheated tubing at '+flow+' rains out: the gas leaves the chamber near body temperature and condenses in the cool tube, and the water runs to the cannula. High flow uses the heated-wire circuit that plugs into the heater base.', row:'Unheated tubing onto the Optiflow: at this flow it rains out.'};
+}
 const notReadyWhy = it => it.def.needsBoth ? 'The '+it.def.name.toLowerCase()+' has only one of its two gases. It blends nothing until an oxygen probe and an air probe are both seated.' : 'The '+it.def.name.toLowerCase()+' is in the path but not plugged in. Its power cord goes to a wall outlet; the red one stays live on the generator.';
 /* undo: a snapshot of everything on the wall, taken before each move. Defs are stored by id and
    rehydrated, so a snapshot is plain JSON. */
 function snapshot(st){
   return JSON.stringify({items:st.items.map(i=>({uid:i.uid, def:i.def.id, x:i.x, y:i.y, r:i.r, f:!!i.f, fixed:i.fixed, fio2:i.fio2, cpap:i.cpap})),
-    tubes:st.tubes.map(t=>({uid:t.uid, def:t.def, from:t.from, to:t.to, path:t.path, short:t.short, lead:t.lead, direct:!!t.direct, stub:!!t.stub})), cart:st.cart, uidN:st.uidN});
+    tubes:st.tubes.map(t=>({uid:t.uid, def:t.def, name:t.name, from:t.from, to:t.to, path:t.path, short:t.short, lead:t.lead, direct:!!t.direct, stub:!!t.stub})), cart:st.cart, uidN:st.uidN});
 }
 function restore(st, snap){
   const s=JSON.parse(snap);
   st.items=s.items.map(i=>({uid:i.uid, def:DB[i.def], x:i.x, y:i.y, r:i.r, f:!!i.f, fixed:i.fixed, fio2:i.fio2, cpap:i.cpap}));
-  st.tubes=s.tubes.map(t=>({uid:t.uid, def:DB[t.def.id]||t.def, from:t.from, to:t.to, path:t.path, short:t.short, lead:t.lead, direct:!!t.direct, stub:!!t.stub}));
+  st.tubes=s.tubes.map(t=>({uid:t.uid, def:DB[t.def.id]||t.def, name:t.name||((DB[t.def.id]||t.def).short||t.def.name), from:t.from, to:t.to, path:t.path, short:t.short, lead:t.lead, direct:!!t.direct, stub:!!t.stub}));
   st.cart=s.cart; st.uidN=s.uidN; st.sel=null; st.link=null; st.hand=null;
+  syncFace(st);   /* an undo or a wall off the wire puts the patient back where that wall had him */
 }
 function remember(st){ st.history.push(snapshot(st)); if(st.history.length>60) st.history.shift(); }
 function undo(st){ if(!st.history.length) return false; restore(st, st.history.pop()); return true; }
@@ -1733,7 +1845,7 @@ const ART={
   outlet:(W,H,d)=>R(6,4,W-12,H-8,BODY,9)+C(W/2,H/2-5,15,'#22364f',0)+`<circle cx="${W/2}" cy="${H/2-5}" r="12" fill="none" stroke="${GAS_FILL[d.gas]||WHITE}" stroke-width="5"/><path d="M${W/2-8} ${H/2-10} a10 10 0 0 1 6 -7" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".55"/>`+C(W/2,H/2-5,4,'#0d1a2c',0)+T(W/2,H-7,9,d.short),
   flowmeter:(W,H,d)=>R(W/2-7,0,14,14,DKMETAL,3,2)+R(13,10,W-26,H-24,BODY,9)+`<rect x="17" y="16" width="${W-34}" height="7" rx="2" fill="${d.tint||GRN}"/>`+R(W/2-8,26,16,H-70,GLASS,5,2)+`<rect x="${W/2-5}" y="30" width="3" height="${H-78}" rx="1.5" fill="#ffffff" opacity=".55"/>`+[0,1,2,3,4].map(i=>`<path d="M${W/2+3} ${31+i*(H-80)/4} h4" stroke="${INK}" stroke-width="1.5" opacity=".5"/>`).join('')+C(W/2,H*0.52,5,'#e6ebef',1.5)+`<circle cx="${W/2-1.5}" cy="${H*0.52-1.5}" r="1.4" fill="#ffffff"/>`+R(W/2-13,H-26,26,13,d.tint||GRN,6,2)+`<path d="M${W/2-6} ${H-19.5} h12" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".5"/>`+R(W/2-7,H-13,14,12,METAL,2,2),
   src:(W,H)=>R(W/2-7,0,14,14,DKMETAL,3,2)+R(13,10,W-26,H-46,BODY,9)+`<rect x="17" y="16" width="${W-34}" height="7" rx="2" fill="${GRN}"/>`+R(W/2-8,26,16,H-92,GLASS,5,2)+GL(W/2-5,30,3,H-100)+[0,1,2,3].map(i=>`<path d="M${W/2+3} ${31+i*(H-102)/3} h4" stroke="${INK}" stroke-width="1.5" opacity=".5"/>`).join('')+C(W/2,H*0.4,5,'#e6ebef',1.5)+`<circle cx="${W/2-1.5}" cy="${H*0.4-1.5}" r="1.4" fill="#ffffff"/>`+R(W/2-14,H-38,28,11,METAL,4,2)+GL(W/2-11,H-36,22,3)+`<path d="M${W/2-9} ${H-27} h18 l-3 8 h-12z M${W/2-7} ${H-17} h14 l-3 8 h-8z" fill="${GRN}" stroke="${edge(GRN)}" stroke-width="2" stroke-linejoin="round"/>`,
-  blender:(W,H,d,it)=>R(W*0.25-7,0,14,14,DKMETAL,3,2)+R(W*0.75-7,0,14,14,DKMETAL,3,2)+R(10,10,W-20,H-24,BODY,11)+`<rect x="16" y="16" width="${W*0.5-20}" height="8" rx="2" fill="${GRN}"/><rect x="${W*0.5+4}" y="16" width="${W*0.5-20}" height="8" rx="2" fill="${YEL}"/>`+DIAL(W/2,H*0.47,27,((it?it.fio2:21)-21)/79*270-135,INK)+`<rect x="${W/2-22}" y="${H*0.5+32}" width="44" height="18" rx="3" fill="${SCREEN}"/>`+`<g class="setk"><rect x="${W/2-22}" y="${H*0.5+30}" width="44" height="30"/>`+T(W/2,H*0.5+45,12,(it?it.fio2:21)+'%','#4ECDC4','font-family="IBM Plex Mono,monospace"')+`</g>`+T(W/2,H*0.5+60,7,'FiO2','#6b7a88')+R(W*0.75-7,H-14,14,14,METAL,2,2),
+  blender:(W,H,d,it)=>R(W*0.25-7,0,14,14,DKMETAL,3,2)+R(W*0.75-7,0,14,14,DKMETAL,3,2)+R(10,10,W-20,H-24,BODY,11)+`<rect x="16" y="16" width="${W*0.5-20}" height="8" rx="2" fill="${GRN}"/><rect x="${W*0.5+4}" y="16" width="${W*0.5-20}" height="8" rx="2" fill="${YEL}"/>`+DIAL(W/2,H*0.47,27,((it&&it.fio2!=null?it.fio2:21)-21)/79*270-135,INK)+`<rect x="${W/2-22}" y="${H*0.5+32}" width="44" height="18" rx="3" fill="${SCREEN}"/>`+`<g class="setk"><rect x="${W/2-22}" y="${H*0.5+30}" width="44" height="30"/>`+T(W/2,H*0.5+45,12,(it&&it.fio2!=null?it.fio2:21)+'%','#4ECDC4','font-family="IBM Plex Mono,monospace"')+`</g>`+T(W/2,H*0.5+60,7,'FiO2','#6b7a88')+R(W*0.75-7,H-14,14,14,METAL,2,2),
   suction:(W,H)=>R(W/2-7,0,14,14,DKMETAL,3,2)+R(13,10,W-26,H-24,BODY,9)+DIAL(W/2,H*0.36,15,40,RED)+R(W/2-13,H-36,26,13,SHADE,5,2)+GL(W/2-9,H-33,18,3,.6)+R(W/2-7,H-13,14,12,METAL,2,2),
   xmas:(W,H,d)=>R(W/2-15,6,30,13,METAL,4,2)+GL(W/2-12,8,24,3,.55)+`<path d="M${W/2-11} 19 h22 l-4 10 h-14z M${W/2-8} 31 h16 l-4 10 h-8z M${W/2-5} 43 h10 l-3 9 h-4z" fill="${(d&&d.tint)||GRN}" stroke="${edge((d&&d.tint)||GRN)}" stroke-width="2" stroke-linejoin="round"/>`,
   bubble:(W,H)=>R(14,2,W-28,18,METAL,5,2)+R(10,18,W-20,H-24,GLASS,10,2)+`<rect x="14" y="${H*0.46}" width="${W-28}" height="${H*0.54-10}" rx="8" fill="${WATER}"/><path d="M16 ${H*0.46+1} h${W-32}" stroke="#ffffff" stroke-width="2" opacity=".6"/><rect x="15" y="26" width="4" height="${H-42}" rx="2" fill="#ffffff" opacity=".5"/>`+C(W/2-6,H*0.62,3,WHITE,0)+C(W/2+5,H*0.74,2.5,WHITE,0)+C(W/2,H*0.86,3,WHITE,0)+R(W-16,6,16,9,GRN,2,2),
@@ -1759,7 +1871,7 @@ const ART={
   cpapiface:(W,H)=>R(16,30,36,10,'#e8eef4',3,3)+R(22,40,8,12,GLASS,2,2)+R(38,40,8,12,GLASS,2,2)+`<path d="M52 35 h20" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`+R(70,24,38,20,METAL,5,3)+R(84,4,12,22,METAL,3,2)+R(104,28,14,12,METAL,3,2),
   canister:(W,H)=>R(14,2,W-28,16,METAL,4)+R(10,16,W-20,H-22,GLASS,10,2)+GL(15,22,4,H-38)+`<rect x="14" y="${H*0.7}" width="${W-28}" height="${H*0.3-10}" rx="8" fill="#c9a07a" opacity=".7"/>`+R(W-16,20,16,10,METAL,2,3)+T(W/2,H*0.5,7,'1200',INK,'font-family="IBM Plex Mono,monospace"'),
   yankauer:(W,H)=>`<path d="M8 ${H/2} h14 q26 0 30 -14" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M8 ${H/2} h14 q26 0 30 -14" fill="none" stroke="${WHITE}" stroke-width="6" stroke-linecap="round"/>`+R(6,H/2-8,14,16,'#2a6fb8',4,3),
-  tube:(W,H,d)=>{ const col={o2:'#7ed6a4',c22:'#aab8c6',c15:'#b6c6d3',suct:'#dfe6ea'}[d&&d.kind]||'#7ed6a4', w={o2:7,c22:13,c15:10,suct:8}[d&&d.kind]||7; const p=`M8 ${H*0.7} c14 -30 ${W-30} 30 ${W-16} -${H*0.2}`; return `<path d="${p}" fill="none" stroke="${INK}" stroke-width="${w+6}" stroke-linecap="round"/><path d="${p}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`; },
+  tube:(W,H,d)=>{ const col={o2:'#7ed6a4',c22:'#aab8c6',heat22:'#aab8c6',c15:'#b6c6d3',suct:'#dfe6ea'}[d&&d.kind]||'#7ed6a4', w={o2:7,c22:13,heat22:13,c15:10,suct:8}[d&&d.kind]||7; const p=`M8 ${H*0.7} c14 -30 ${W-30} 30 ${W-16} -${H*0.2}`; return `<path d="${p}" fill="none" stroke="${INK}" stroke-width="${w+6}" stroke-linecap="round"/><path d="${p}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`+(d&&d.kind==='heat22'?`<path d="${p}" fill="none" stroke="${WIRE.hot}" stroke-width="${w}" stroke-dasharray="2.5 4.5"/>`:''); },
   /* fixtures */
   monitor:(W,H)=>R(6,6,W-12,H-12,'#3a4653',9)+`<rect id="monScreen" x="14" y="14" width="${W-28}" height="${H-44}" rx="4" fill="${SCREEN}"/>`+`<path id="ecgTrace" d="M20 ${H*0.26} h${W-88}" fill="none" stroke="${TRACE}" stroke-width="2.5" stroke-linejoin="round"/>`+`<path id="plethTrace" d="M20 ${H*0.45} h${W-88}" fill="none" stroke="#5ad7e6" stroke-width="2.5" stroke-linejoin="round"/>`+`<path id="capnoTrace" d="M20 ${H*0.64} h${W-88}" fill="none" stroke="#f2d64b" stroke-width="2.5" stroke-linejoin="round" display="none"/>`+`<text id="hrNum" x="${W-22}" y="${H*0.29}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-weight="700" font-size="13" fill="${TRACE}">72</text>`+`<text id="spo2Num" x="${W-22}" y="${H*0.48}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-weight="700" font-size="13" fill="#5ad7e6">97</text>`+`<text id="co2Num" x="${W-22}" y="${H*0.67}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-weight="700" font-size="13" fill="#f2d64b" display="none">38</text>`+`<text x="${W-22}" y="${H*0.35}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="6" fill="#6b7a88">HR</text><text x="${W-22}" y="${H*0.54}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="6" fill="#6b7a88">SpO2</text><text id="co2Lbl" x="${W-22}" y="${H*0.73}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="6" fill="#6b7a88" display="none">EtCO2</text>`+`<rect id="monAlarm" x="8" y="8" width="${W-16}" height="${H-16}" rx="8" fill="none" stroke="${RED}" stroke-width="4" opacity="0"/>`+R(W/2-16,H-26,32,10,DKMETAL,3,3)+R(W/4-6,H-10,12,8,'#cdd6de',2,2),
   elec:(W,H)=>R(10,6,W-20,H-12,BODY,6)+`<rect x="${W/2-10}" y="14" width="5" height="12" rx="1" fill="${INK}"/><rect x="${W/2+5}" y="14" width="5" height="12" rx="1" fill="${INK}"/><path d="M${W/2-4} 34 a4 4 0 0 0 8 0z" fill="${INK}"/><rect x="${W/2-10}" y="${H-30}" width="5" height="12" rx="1" fill="${INK}"/><rect x="${W/2+5}" y="${H-30}" width="5" height="12" rx="1" fill="${INK}"/><path d="M${W/2-4} ${H-10} a4 4 0 0 0 8 0z" fill="${INK}"/>`+C(W/2,H/2,2.5,DKMETAL,0),
@@ -1801,18 +1913,28 @@ function fitBoard(){
   const wrap=$('boardWrap'), svg=$('board'); if(!wrap||!svg) return;
   const aw=wrap.clientWidth-16, ah=wrap.clientHeight-16;
   let w,h;
-  if(HUKit.phone() || ah<120){ w=Math.max(200,aw); h=w*GRID.rows/GRID.cols; }
+  /* a phone on its side: the wall is taller than it is wide, so full width made it 724 tall on a 360
+     screen and the outlets and the patient were never on screen together. Fit the height instead:
+     the rail, the wall and the patient in one view, the cart and Complete a scroll below. */
+  const side = HUKit.phone() && window.innerWidth > window.innerHeight;
+  if(side){ const bar=document.querySelector('.tool-bar'); const room=Math.max(200, window.innerHeight-(bar?bar.getBoundingClientRect().height:52)-12);
+    h=Math.min(room, Math.max(200,aw)*GRID.rows/GRID.cols); w=h*GRID.cols/GRID.rows; }
+  else if(HUKit.phone() || ah<120){ w=Math.max(200,aw); h=w*GRID.rows/GRID.cols; }
   else { const s=Math.min(aw/(GRID.cols*U), ah/(GRID.rows*U)); w=GRID.cols*U*s; h=GRID.rows*U*s; }
   /* the viewBox is what makes the 600 x 720 unit wall scale to the element; without it the
      board renders 1:1 and clips, and every tap lands on the wrong square (found 2026-09-13) */
   svg.setAttribute('viewBox', '0 0 '+(GRID.cols*U)+' '+(GRID.rows*U));
   svg.setAttribute('width', Math.round(w)); svg.setAttribute('height', Math.round(h));
   scale=w/(GRID.cols*U);
-  positionVerbs();
+  positionVerbs(); if(S) renderScreen();   /* a turn of the phone crosses the 150 px line: the screen moves between the wall and the readout */
 }
 /* ROUND 2 PART 2: one weight lighter than the circuit pass, ink outline 2 units instead of 3, so wires read
    as wires and not hoses. */
-const TUBE_STYLE={o2:{col:'#7ed6a4', w:5}, c22:{col:'#c3cfda', w:8}, c15:{col:'#bccbd8', w:7}, cord:{col:'#3a4652', w:3}, suct:{col:'#e3e9ee', w:6}, co2:{col:'#f2d64b', w:3}};
+const TUBE_STYLE={o2:{col:'#7ed6a4', w:5}, c22:{col:'#c3cfda', w:8}, heat22:{col:'#c9d2da', w:8}, c15:{col:'#bccbd8', w:7}, cord:{col:'#3a4652', w:3}, suct:{col:'#e3e9ee', w:6}, co2:{col:'#f2d64b', w:3}};
+/* the heated circuit's wire: coils of copper around the 22 mm body, dull when cold, glowing when the base powers it */
+const WIRE={cold:'#a8734a', hot:'#ff7a2e'};
+const wireGlow=(d,w)=>`<path d="${d}" fill="none" stroke="${WIRE.hot}" stroke-width="${w+8}" opacity=".3" style="stroke-linecap:round;stroke-linejoin:round;pointer-events:none"/>`;
+const coilPath=(d,w,hot)=>`<path d="${d}" fill="none" stroke="${hot?WIRE.hot:WIRE.cold}" stroke-width="${w}" stroke-dasharray="1.8 4.2" style="stroke-linecap:butt;stroke-linejoin:round;pointer-events:none"/>`;
 /* the size a connector reads at a glance: what you would say out loud handing it over */
 const GAUGE={'iso22':'22', 'iso15':'15', 'barb':'barb', 'suct-barb':'suct', 'diss-1240':'DISS', 'diss-1160':'DISS', 'qc-o2':'O2', 'qc-air':'AIR', 'qc-vac':'VAC', 'qc-chem-o2':'O2', 'nema':'plug', 'luer':'luer'};
 /* connector glyphs: the symbol ids in #daDefs, male then female, per standard; and the gas each standard
@@ -1841,10 +1963,11 @@ function wireD(pts, rad){
   }
   const e=pts[pts.length-1]; return d+' L'+e[0]+' '+e[1];
 }
-function tubePath(pts, kind, sel, uid, flow){
+function tubePath(pts, kind, sel, uid, flow, hot){
   const st=TUBE_STYLE[kind]||TUBE_STYLE.o2, d=wireD(pts, 16);
-  let out=`<g class="tb${sel?' sel':''}"${uid?' data-tube="'+uid+'"':''}><path class="tube" d="${d}" stroke="${edge(st.col)}" stroke-width="${st.w+1.5}"/><path class="tube core" d="${d}" stroke="${st.col}" stroke-width="${st.w}"/>`;
+  let out=`<g class="tb${sel?' sel':''}${kind==='heat22'?(hot?' hot':' cold'):''}"${uid?' data-tube="'+uid+'"':''}>${kind==='heat22'&&hot?wireGlow(d, st.w):''}<path class="tube" d="${d}" stroke="${edge(st.col)}" stroke-width="${st.w+1.5}"/><path class="tube core" d="${d}" stroke="${st.col}" stroke-width="${st.w}"/>`;
   if(kind==='c22') out+=`<path class="tube" d="${d}" stroke="#eef2f6" stroke-width="3" stroke-dasharray="4 5" opacity=".9"/>`;
+  if(kind==='heat22') out+=coilPath(d, st.w, hot);
   /* the test's gas: an overlay on the core, revealed in traversal order (data-fl is the depth from the outlet) */
   if(flow){ const dep=(S.flowDepth&&S.flowDepth.get(uid))||0; out+=`<path class="tube flowov${S.flowPhase==='march'?' march':''}" d="${d}" stroke-width="${Math.max(2.5, st.w-2.5)}" data-fl="${dep}"/>`; }
   if(uid) out+=`<path class="tube hit" data-tube="${uid}" d="${d}"/>`;
@@ -1889,11 +2012,48 @@ let screenH=null;
 /* ROUND 12b (David: "a better way to scale this text"): the largest type that fits the box, wrapped to its width */
 const fitBlock=(text,w,h,maxF,minF)=>{ for(let f=maxF; f>=minF; f-=0.5){ const maxChars=Math.max(8, Math.floor(w/(f*0.55))); const lines=wrapText(text,maxChars); const lh=f*1.28; if(lines.length*lh<=h) return {f, lines, lh}; } const f=minF, lh=f*1.28, lines=wrapText(text, Math.max(8, Math.floor(w/(f*0.55)))); const n=Math.max(1, Math.floor(h/lh)); return {f, lh, lines:lines.slice(0,n).map((l,i)=>i===n-1&&lines.length>n?l.replace(/\s*\S*$/,'')+'...':l)}; };
 const wrapText=(t, max)=>{ const words=String(t||'').split(/\s+/), lines=[]; let cur=''; for(const w of words){ if((cur+' '+w).trim().length>max && cur){ lines.push(cur); cur=w; } else cur=(cur+' '+w).trim(); } if(cur) lines.push(cur); return lines; };
+/* The words on the screen, shared by the wall and the readout under it, so the two never drift */
+const TEST_IDLE='Press Complete and the gas lights up whatever is hooked to an outlet.';
+const screenHintTag=()=>S.level.kind==='timed'?'TIMED':'HINT '+((S.coachStep|0)+1)+'/'+S.level.steps.length;
+const screenNoteText=()=>{ const L=S.level; return String(L.scenario||'')+(L.scored?' Par: '+L.par.comp+' parts from the cart, '+L.par.len+' ft of tubing, '+(L.par.adapters?L.par.adapters+' adapter.':'no adapters.'):''); };
+function screenOrderLines(){ const rq=S.level.req;
+  const head = rq.cpap ? 'Bubble CPAP' : (rq.iface.length===1&&rq.iface[0]==='hfnc') ? 'Heated high flow' : rq.iface.every(r=>r==='aerosol'||r==='trach') ? 'Cool aerosol' : rq.humid ? 'Humidified oxygen' : 'Oxygen';
+  return [head, rq.flow+' L/min'+(rq.fio2?' · '+rq.fio2+'% FiO2':'')+(rq.cpap?' · '+rq.cpap+' cm H2O':'')+(rq.capno?' · continuous EtCO2':''), 'by '+rq.iface.map(r=>ROLE_NAME[r]).join(' or ')];
+}
+/* ROUND 16 (2026-09-23, David picked it from three mockups at 360: "B, copy under the wall"). Under 150 px
+   on the glass the screen's words render at 7 px on an upright phone, and they are the whole tutorial. So
+   the screen reads out directly under the wall, in the flow, with real 44 px tabs: the same page, the
+   same words, and the toast that used to float over the wall goes quiet because the readout carries it. */
+const screenSmall=()=>(U*GRID.order.w*scale)<150;
+function screenReadout(){
+  const box=$('screenRead'); if(!box || TEST) return;
+  const on=!!(S && S.screen) && screenSmall();
+  box.hidden=!on; if(!on) return;
+  const sc=S.screen, page=sc.page==='levels' ? 'order' : (sc.page||'order');
+  const tabs=$('screenReadTabs'), body=$('screenReadBody');
+  tabs.innerHTML=[['order','Order'],['hint','Hint'],['alerts','Alerts'],['test','Test'],['note','Note']]
+    .map(([id,l])=>'<button type="button" data-page="'+id+'"'+(page===id?' aria-current="true"':'')+'>'+l+'</button>').join('');
+  const K=(t,cls)=>'<span class="da-read-k'+(cls?' '+cls:'')+'">'+esc(t)+'</span>', P=t=>'<p>'+esc(t)+'</p>';
+  let h='';
+  if(page==='hint') h=K(screenHintTag())+P(S.coachText||S.level.brief);
+  else if(page==='note') h=K('Chart note')+P(screenNoteText());
+  else if(page==='alerts'){ const a=sc.alerts[0];
+    h = !a ? K('No alerts') : K(a.head, 'is-'+a.kind)+P(a.body)+sc.alerts.slice(1,3).map(e=>'<p class="da-read-old">earlier: '+esc(e.head)+'</p>').join(''); }
+  else if(page==='test'){
+    if(!lastTest) h=K('Not tested yet')+P(TEST_IDLE);
+    else { const t=lastTest, live=t.rows.filter(r=>r.ok!==null), fail=live.find(r=>!r.ok);
+      h=K(t.ok?'System functional':'Not functional', t.ok?'is-ok':'is-bad')+'<ul>'+live.slice(0,5).map(r=>'<li class="'+(r.ok?'':'is-bad')+'">'+(r.ok?'✓ ':'✗ ')+esc(r.k)+'</li>').join('')+'</ul>'+(fail?P(fail.t):''); } }
+  else { const [head, flow, byWhat]=screenOrderLines(); h=K('Order')+'<p class="da-read-big">'+esc(head)+'</p>'+P(flow+' '+byWhat)+(statusPlain?'<p class="da-read-old">'+esc(statusPlain)+'</p>':''); }
+  body.innerHTML=h;
+  if(box.dataset.page!==page){ body.scrollTop=0; box.dataset.page=page; }   /* a new page starts at its top; a redraw of the same page keeps the reader's place */
+}
 function screenSVG(){
   const Oc=GRID.order, x=Oc.x*U+6, y=Oc.y*U+8, w=Oc.w*U-12, h=Oc.h*U-16, sc=S.screen||{page:'order', alerts:[]};
   const TL=(tx,ty,fs,txt,fill,extra)=>'<text x="'+tx+'" y="'+ty+'" font-family="Outfit,Trebuchet MS,sans-serif" font-weight="700" font-size="'+fs+'" fill="'+(fill||INK)+'" '+(extra||'')+'>'+esc(txt)+'</text>';
   const MONO='font-family="IBM Plex Mono,monospace" letter-spacing="1.5"';
-  let out=R(x-54, y+16, 16, 40, METAL, 4, 2)+R(x-44, y+30, 50, 11, DKMETAL, 4, 2)+R(x+w/2-18, y, 36, 12, DKMETAL, 3, 2);   /* the wall plate and the arm */
+  /* the wall plate and the arm, left out when the patient lies where it would run into him (Round 17: he can lie lower now) */
+  const Fp=GRID.face, clear=(x+6)<=Fp.x*U-30 || (x-54)>=Fp.x*U+210 || (y+56)<=Fp.y*U-2 || (y+16)>=Fp.y*U+4*U+40;
+  let out=(clear ? R(x-54, y+16, 16, 40, METAL, 4, 2)+R(x-44, y+30, 50, 11, DKMETAL, 4, 2) : '')+R(x+w/2-18, y, 36, 12, DKMETAL, 3, 2);
   out+=R(x, y+8, w, h-8, '#2f3a48', 12, 2);
   const sx=x+8, sy=y+16, sw=w-16, sh=h-36;
   out+='<rect x="'+sx+'" y="'+sy+'" width="'+sw+'" height="'+sh+'" rx="6" fill="#f6f9fc"/><rect x="'+sx+'" y="'+sy+'" width="'+sw+'" height="26" rx="6" fill="#e1e8ee"/><rect x="'+sx+'" y="'+(sy+18)+'" width="'+sw+'" height="8" fill="#e1e8ee"/>';
@@ -1903,7 +2063,7 @@ function screenSVG(){
   for(const [id,label,tx,tw] of TABS){ const on=page===id; out+=TL(sx+tx, sy+18, 9.5, label, on?'#0f7f78':'#6b7a88', MONO+(on?' text-decoration="underline"':''))+'<rect class="scrtab" data-page="'+id+'" x="'+(sx+tx-5)+'" y="'+sy+'" width="'+tw+'" height="26" fill="transparent" style="pointer-events:all; cursor:pointer"/>'; }
   out+=C(x+w/2, y+h-10, 2.6, page==='order'?GRN:(page==='test'&&lastTest&&!lastTest.ok?RED:'#4ECDC4'), 0);
   const by=sy+46, lx=sx+14;
-  if(page==='hint'){ const step=S.level.kind==='timed'?'TIMED':'HINT '+((S.coachStep|0)+1)+'/'+S.level.steps.length;
+  if(page==='hint'){ const step=screenHintTag();
     out+=TL(lx, by-8, 9, step, '#0f7f78', MONO);
     const fb=fitBlock(S.coachText||S.level.brief, sw-28, sh-62, 18, 10);
     fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); });
@@ -1916,7 +2076,7 @@ function screenSVG(){
       g.walls.forEach((w,i)=>{ const y=by+2+i*18, name=(w.L.kicker+' \u00b7 '+w.L.title), nm=name.length>34?name.slice(0,33)+'\u2026':name, st=w.done?'\u2713 done':(w.best?'best '+w.best:w.un?'open':'locked');
         out+=TL(lx, y+11, 9.5, (w.L.id===cur?'\u25cf ':'')+nm, w.un?INK:'#9aa8b5', 'font-weight="600"')+TL(sx+sw-14, y+11, 7.5, st, w.done?GRN:'#6b7a88', MONO+' text-anchor="end"')+(w.un?'<rect class="scrlvl" data-level="'+w.L.id+'" x="'+sx+'" y="'+(y-2)+'" width="'+sw+'" height="18" fill="transparent" style="pointer-events:all; cursor:pointer"/>':''); }); }
   }
-  else if(page==='note'){ const L=S.level; const txt=String(L.scenario||'')+(L.scored?' Par: '+L.par.comp+' parts from the cart, '+L.par.len+' ft of tubing, '+(L.par.adapters?L.par.adapters+' adapter.':'no adapters.'):'');
+  else if(page==='note'){ const txt=screenNoteText();
     out+=TL(lx, by-8, 9, 'CHART NOTE', '#0f7f78', MONO);
     const fb=fitBlock(txt, sw-28, sh-62, 16, 8); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); });
   }
@@ -1926,55 +2086,46 @@ function screenSVG(){
       out+=TL(lx, by, 10, String(a.head).toUpperCase(), col, MONO);
       const fb=fitBlock(a.body, sw-30, sh-92, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+8+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); });
       sc.alerts.slice(1,3).forEach((e,i)=>{ out+=TL(lx, sy+sh-24+i*12, 9, 'earlier: '+e.head, '#6b7a88', MONO); }); } }
-  else if(page==='test'){ if(!lastTest){ out+=TL(lx, by, 10, 'NOT TESTED YET', '#6b7a88', MONO); const fb=fitBlock('Press Complete and the gas lights up whatever is hooked to an outlet.', sw-28, sh-62, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); }); }
+  else if(page==='test'){ if(!lastTest){ out+=TL(lx, by, 10, 'NOT TESTED YET', '#6b7a88', MONO); const fb=fitBlock(TEST_IDLE, sw-28, sh-62, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); }); }
     else { const t=lastTest; out+=TL(lx, by, 10, t.ok?'SYSTEM FUNCTIONAL':'NOT FUNCTIONAL', t.ok?GRN:RED, MONO);
       const live=t.rows.filter(r=>r.ok!==null), fail=live.find(r=>!r.ok);
       const rows=live.slice(0,5), rf=Math.max(11, Math.min(16, (sh-(fail?96:70))/(rows.length*1.3)));
       rows.forEach((r,i)=>{ out+=TL(lx, by+rf*0.6+8+i*rf*1.3, rf, (r.ok?'\u2713 ':'\u2717 ')+r.k, r.ok?INK:RED, 'font-weight="600"'); });
       if(fail){ const fb=fitBlock(fail.t, sw-28, 30, 12, 9); fb.lines.forEach((ln,i)=>{ out+=TL(lx, sy+sh-34+fb.f*0.9+i*fb.lh, fb.f, ln, RED, 'font-weight="600"'); }); } } }
-  else { const rq=S.level.req;
-    const head = rq.cpap ? 'Bubble CPAP' : (rq.iface.length===1&&rq.iface[0]==='hfnc') ? 'Heated high flow' : rq.iface.every(r=>r==='aerosol'||r==='trach') ? 'Cool aerosol' : rq.humid ? 'Humidified oxygen' : 'Oxygen';
+  else { const [head, flow, byWhat]=screenOrderLines();
     out+=TL(lx, by+12, 24, head);
-    out+=TL(lx, by+46, 18, rq.flow+' L/min'+(rq.fio2?' · '+rq.fio2+'% FiO2':'')+(rq.cpap?' · '+rq.cpap+' cm H2O':'')+(rq.capno?' · continuous EtCO2':''));
-    out+=TL(lx, by+76, 16, 'by '+rq.iface.map(r=>ROLE_NAME[r]).join(' or '), INK, 'font-weight="600"');
+    out+=TL(lx, by+46, 18, flow);
+    out+=TL(lx, by+76, 16, byWhat, INK, 'font-weight="600"');
     out+='<path d="M'+lx+' '+(sy+sh-26)+' h'+(sw-28)+'" stroke="#c5d0da" stroke-width="1.5"/>'+TL(lx, sy+sh-10, 9, statusPlain || 'Nothing on the wall yet', '#6b7a88', MONO);
   }
   return out;
 }
-function renderScreen(){ const g=$('wallScreen'); if(g) g.innerHTML=screenSVG(); }
+function renderScreen(){ const g=$('wallScreen'); if(g) g.innerHTML=screenSmall()?'':screenSVG(); screenReadout(); }
 /* after an alert the screen goes back to the test read if the wall has not changed since the test, else to the order */
 /* a new step and an alert often land in the same tick: the alert shows first, the hint follows it, then the screen rests */
 function screenShow(page, ms){ if(!S||!S.screen) return;
   if(page==='hint' && ms && S.screen.page==='alerts' && screenH){ S.screen.next='hint'; return; }
   if(page==='alerts' && S.screen.page==='hint' && screenH) S.screen.next='hint';
   S.screen.page=page; renderScreen(); clearTimeout(screenH);
-  if(ms) screenH=setTimeout(()=>{ if(!(S && S.screen && S.screen.page===page)) return; const nx=S.screen.next; S.screen.next=null; if(nx){ screenShow(nx, 5000); return; } S.screen.page=(lastTest && S.screen.testAt===S.history.length) ? 'test' : 'order'; renderScreen(); }, ms); }
-function renderBoard(){
-  if(TEST) return;
-  const svg=$('board'); const links=computeLinks(S), pst=portStates(links);
-  const Wb=GRID.cols*U, Hb=GRID.rows*U, Fc=GRID.face, Oc=GRID.order;
-  /* ROUND 7: the wall has depth: a soft vertical gradient, a shadow under the rail, quieter dots */
-  let out=`<defs><linearGradient id="wallg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4576"/><stop offset="1" stop-color="#122b4b"/></linearGradient><linearGradient id="railsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050c16" stop-opacity=".45"/><stop offset="1" stop-color="#050c16" stop-opacity="0"/></linearGradient><linearGradient id="railg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6ecf1"/><stop offset="1" stop-color="#bfc9d2"/></linearGradient><filter id="partsh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.5" stdDeviation="2.2" flood-color="#050c16" flood-opacity=".38"/></filter></defs><rect x="0" y="0" width="${Wb}" height="${Hb}" fill="url(#wallg)"/>`;
-  /* the wall face: a dot at every free cell, like the pipe puzzles */
-  for(let y=GRID.rail+1;y<GRID.rows;y++) for(let x=0;x<GRID.cols;x++) out+=`<circle cx="${x*U+U/2}" cy="${y*U+U/2}" r="2.8" fill="#28528c"/>`;
-  /* ROUND 7: the patient. A pillow with a shadow under the head, a rounder face with open eyes and a
-     smile, hair with a highlight, a gown with a v-neck and a blanket pulled up to the chest, two tones
-     and an ink edge like the parts. The nose and mouth still sit in the one free square the interface
-     goes on, so a cannula or a mask draws over them; the pillow stops short of the ear column. */
-  { const fx=Fc.x*U, fy=Fc.y*U, cx=fx+1.5*U, SKIN='#f0c8a8', SKIN2='#dfa886', HAIR='#3b2a20', GOWN='#a9cbe6', BLANKET='#8ec5cf';
-    const outBefore=out; out='';   /* the patient is drawn on its own, then mirrored as one piece when the room faces the other way */
-    out+=R(fx-30, fy-2, 240, 108, '#f6f9fc', 32, 4);
-    out+=`<ellipse cx="${cx}" cy="${fy+92}" rx="72" ry="12" fill="#cbd6e0" opacity=".9"/>`;
-    out+=`<path d="M${fx-10} ${fy+28} q10 20 0 44 M${fx+190} ${fy+28} q-10 20 0 44" fill="none" stroke="#cbd6e0" stroke-width="3" stroke-linecap="round"/>`;
-    /* neck, then the gown rising into the neck square so a trach collar sits at the base of the neck, then the blanket */
-    out+=R(cx-17, fy+96, 34, 70, SKIN, 9, 3);
-    { const top=fy+3*U-22;
-      out+=`<path d="M${fx-60} ${fy+6*U} V${top+58} q0 -52 52 -58 h196 q52 6 52 58 V${fy+6*U}z" fill="${GOWN}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
-      out+=`<path d="M${cx-22} ${top+2} q22 26 44 0" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
-      for(const [dx,dy] of [[-110,60],[-84,78],[-56,54],[-30,70],[-4,56],[24,72],[52,54],[80,74],[108,58],[-46,92],[10,96],[46,94],[-96,100],[96,98]]) out+=`<circle cx="${cx+dx}" cy="${top+dy}" r="2.6" fill="#ffffff" opacity=".55"/>`;
-      out+=`<path d="M${fx-90} ${fy+6*U} V${top+96} q30 -24 90 -14 q70 10 140 -2 q70 -8 130 14 V${fy+6*U}z" fill="${BLANKET}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
-      out+=`<path d="M${fx-60} ${top+122} q80 -14 160 -2 q60 8 140 -4" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".35"/>`;
-      out+=`<path d="M${fx-70} ${top+108} q40 -10 80 -2 M${fx+150} ${top+112} q40 -8 80 0" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" opacity=".25"/>`; }
+  if(ms) screenH=setTimeout(()=>{ if(!(S && S.screen && S.screen.page===page)) return; const nx=S.screen.next; S.screen.next=null; if(nx){ screenShow(nx, 5000); return; } S.screen.page=(lastTest && S.screen.testAt===S.history.length) ? 'test' : (S.level && S.level.kind==='tutorial' ? 'hint' : 'order'); renderScreen(); }, ms); }
+/* ROUND 7 drew the patient; ROUND 17 (2026-09-23) cut him down to size. The gown and blanket used to fill the wall
+   from the chin to the floor, seven columns wide; David: "we do not have to give that much space on the board for
+   his body". Now the pillow, the head, and shoulders under a blanket that stops a row and a half under the chin,
+   four columns wide. A function of the face block alone, so the wall and the drag ghost draw the same man. */
+function patientArt(fx, fy){
+  const cx=fx+1.5*U, SKIN='#f0c8a8', SKIN2='#dfa886', HAIR='#3b2a20', GOWN='#a9cbe6', BLANKET='#8ec5cf';
+  let out='';
+  out+=R(fx-16, fy-2, 212, 106, '#f6f9fc', 30, 4);
+  out+=`<ellipse cx="${cx}" cy="${fy+92}" rx="66" ry="11" fill="#cbd6e0" opacity=".9"/>`;
+  out+=`<path d="M${fx+2} ${fy+28} q10 20 0 44 M${fx+178} ${fy+28} q-10 20 0 44" fill="none" stroke="#cbd6e0" stroke-width="3" stroke-linecap="round"/>`;
+  /* neck, then the gown rising into the neck square so a trach collar sits at the base of the neck, then the blanket */
+  out+=R(cx-17, fy+96, 34, 70, SKIN, 9, 3);
+  { const top=fy+3*U-22, bot=fy+4*U+22;
+    out+=`<path d="M${fx-24} ${bot} V${top+46} q0 -46 46 -46 h136 q46 0 46 46 V${bot}z" fill="${GOWN}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+    out+=`<path d="M${cx-22} ${top+2} q22 26 44 0" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
+    for(const [dx,dy] of [[-70,40],[-44,58],[-16,42],[16,56],[44,40],[70,56]]) out+=`<circle cx="${cx+dx}" cy="${top+dy}" r="2.6" fill="#ffffff" opacity=".55"/>`;
+    out+=`<path d="M${fx-30} ${bot+10} V${top+78} q24 -16 70 -10 q44 6 88 -2 q44 -8 82 12 V${bot+10} q0 8 -8 8 H${fx-22} q-8 0 -8 -8z" fill="${BLANKET}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+    out+=`<path d="M${fx-14} ${top+94} q70 -10 140 -2 q30 4 60 -2" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".35"/>`; }
     /* ears, then the head over them */
     out+=C(cx-46, fy+70, 11, SKIN, 3); out+=C(cx+46, fy+70, 11, SKIN, 3);
     out+=`<path d="M${cx-49} ${fy+66} q-3 6 0 10 M${cx+49} ${fy+66} q3 6 0 10" fill="none" stroke="${SKIN2}" stroke-width="2" stroke-linecap="round"/>`;
@@ -1989,12 +2140,32 @@ function renderBoard(){
     out+=`<ellipse cx="${cx-31}" cy="${fy+88}" rx="9" ry="5" fill="#e8998f" opacity=".45"/><ellipse cx="${cx+31}" cy="${fy+88}" rx="9" ry="5" fill="#e8998f" opacity=".45"/>`;
     out+=`<path d="M${cx-2} ${fy+74} q-7 12 3 16" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
     out+=`<path d="M${cx-12} ${fy+102} q12 10 24 0" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
-    if(S.lamp) out+=`<ellipse cx="${cx}" cy="${fy+40}" rx="120" ry="90" fill="#f2b32b" opacity=".16"/>`;
-    if(S.hand && S.hand.def.cat==='interface'){ const tg=S.hand.def.ports.some(p=>p.t==='patient'&&p.std==='neck')?GRID.neck:GRID.nose; out+=`<rect x="${tg[0]*U+3}" y="${tg[1]*U+3}" width="${U-6}" height="${U-6}" rx="8" fill="none" stroke="var(--teal)" stroke-width="3" stroke-dasharray="6 5"/>`; }
-    const ptArt=out; out=outBefore+(Fc.flip?`<g transform="translate(${2*cx},0) scale(-1,1)">${ptArt}</g>`:ptArt);
+  return out;
+}
+function renderBoard(){
+  if(TEST) return;
+  const svg=$('board'); const links=computeLinks(S), pst=portStates(links);
+  const Wb=GRID.cols*U, Hb=GRID.rows*U, Fc=GRID.face, Oc=GRID.order;
+  /* ROUND 7: the wall has depth: a soft vertical gradient, a shadow under the rail, quieter dots */
+  let out=`<defs><linearGradient id="wallg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4576"/><stop offset="1" stop-color="#122b4b"/></linearGradient><linearGradient id="railsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050c16" stop-opacity=".45"/><stop offset="1" stop-color="#050c16" stop-opacity="0"/></linearGradient><linearGradient id="railg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6ecf1"/><stop offset="1" stop-color="#bfc9d2"/></linearGradient><filter id="partsh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.5" stdDeviation="2.2" flood-color="#050c16" flood-opacity=".38"/></filter></defs><rect x="0" y="0" width="${Wb}" height="${Hb}" fill="url(#wallg)"/>`;
+  /* the wall face: a dot at every free cell, like the pipe puzzles */
+  for(let y=GRID.rail+1;y<GRID.rows;y++) for(let x=0;x<GRID.cols;x++) out+=`<circle cx="${x*U+U/2}" cy="${y*U+U/2}" r="2.8" fill="#28528c"/>`;
+  /* ROUND 7: the patient. A pillow with a shadow under the head, a rounder face with open eyes and a
+     smile, hair with a highlight, a gown with a v-neck and a blanket pulled up to the chest, two tones
+     and an ink edge like the parts. The nose and mouth still sit in the one free square the interface
+     goes on, so a cannula or a mask draws over them; the pillow stops short of the ear column. */
+  /* the patient, drawn from his face block and mirrored as one piece when he faces the other way; the
+     bed light and the interface target ride in the same group. Round 17: the group is the handle that
+     drags him where a level lets you (level.movePatient). */
+  { const fx=Fc.x*U, fy=Fc.y*U, cx=fx+1.5*U;
+    let out2=patientArt(fx, fy);
+    if(S.lamp) out2+=`<ellipse cx="${cx}" cy="${fy+40}" rx="120" ry="90" fill="#f2b32b" opacity=".16"/>`;
+    if(S.hand && S.hand.def.cat==='interface'){ const tg=S.hand.def.ports.some(p=>p.t==='patient'&&p.std==='neck')?GRID.neck:GRID.nose; out2+=`<rect x="${tg[0]*U+3}" y="${tg[1]*U+3}" width="${U-6}" height="${U-6}" rx="8" fill="none" stroke="var(--teal)" stroke-width="3" stroke-dasharray="6 5"/>`; }
+    const ptMoving=S.items.some(i=>i.def.cat==='patient' && movingSet.has(i.uid));
+    out+='<g class="pt-art'+(S.level.movePatient?' movable':'')+(ptMoving?' moving':'')+'">'+(Fc.flip?`<g transform="translate(${2*cx},0) scale(-1,1)">${out2}</g>`:out2)+'</g>';
   }
   /* the wall screen, where the order card was: it carries the order, the alerts and the test read */
-  out+='<g id="wallScreen">'+screenSVG()+'</g>';
+  out+='<g id="wallScreen">'+(screenSmall()?'':screenSVG())+'</g>';   /* on an upright phone the readout under the wall IS the screen; one copy, not two (David, 2026-09-23) */
   /* the rail */
   out+=`<rect x="0" y="0" width="${Wb}" height="${U}" fill="url(#railg)"/><rect x="0" y="0" width="${Wb}" height="3" fill="#f4f7f9"/><rect x="0" y="${U-7}" width="${Wb}" height="7" fill="#8d99a5"/><rect x="0" y="${U}" width="${Wb}" height="18" fill="url(#railsh)"/>`;
   /* drop preview: a persistent group that setPreview() fills in place, so a pointer move never rebuilds
@@ -2012,16 +2183,16 @@ function renderBoard(){
       stubEnds.push({tb, fp, xy:e}); continue; }
     if(!tb.to) continue;
     const fromP=findPort(S,tb.from), toP=findPort(S,tb.to); if(!fromP||!toP) continue;
-    const k=tb.def.kind, sel=S.sel===tb.uid, flow=!!(S.flow && S.flow.has(tb.uid));
+    const k=tb.def.kind, sel=S.sel===tb.uid, flow=!!(S.flow && S.flow.has(tb.uid)), hot=k==='heat22' && circuitHeats(S, links, tb);   /* the wire glows when the base powers it */
     const pts=[portXY(fromP), ...tb.path.map(cellXY), portXY(toP)];
     const endSt=(p)=>pst.get(pkey(p))||'ok';
     if(tb.direct){ /* a jumper: the two ports share a point; draw a short coupling there you can still grab */
       const a=portXY(fromP), st=TUBE_STYLE[k]||TUBE_STYLE.o2, worst=[endSt(fromP),endSt(toP)].includes('bad')?'bad':[endSt(fromP),endSt(toP)].includes('warn')?'warn':'ok';
       out+=`<g class="tb${sel?' sel':''}" data-tube="${tb.uid}"><circle class="core" cx="${a[0]}" cy="${a[1]}" r="9" fill="${st.col}" stroke="${edge(st.col)}" stroke-width="2"/><circle class="tube hit" data-tube="${tb.uid}" cx="${a[0]}" cy="${a[1]}" r="14" style="pointer-events:all"/></g>`;
       nodesOut+=node(a, worst, 5); continue; }
-    if(!tb.short){ out+=tubePath(pts, k, sel, tb.uid, flow); nodesOut+=node(portXY(fromP), fromP.internal?'ok':endSt(fromP))+node(portXY(toP), endSt(toP))+jpop(fromP, fromP.internal?'ok':endSt(fromP))+jpop(toP, endSt(toP)); continue; }
+    if(!tb.short){ out+=tubePath(pts, k, sel, tb.uid, flow, hot); nodesOut+=node(portXY(fromP), fromP.internal?'ok':endSt(fromP))+node(portXY(toP), endSt(toP))+jpop(fromP, fromP.internal?'ok':endSt(fromP))+jpop(toP, endSt(toP)); continue; }
     const have=pts.slice(0, tb.def.reach+1), gap=pts.slice(tb.def.reach);
-    out+=tubePath(have, k, sel, tb.uid, flow); nodesOut+=node(portXY(fromP), fromP.internal?'ok':endSt(fromP))+node(portXY(toP),'bad')+jpop(fromP, fromP.internal?'ok':endSt(fromP));
+    out+=tubePath(have, k, sel, tb.uid, flow, hot); nodesOut+=node(portXY(fromP), fromP.internal?'ok':endSt(fromP))+node(portXY(toP),'bad')+jpop(fromP, fromP.internal?'ok':endSt(fromP));
     const gd='M'+gap.map(p=>p[0]+' '+p[1]).join(' L');
     out+=`<path class="tube gap" d="${gd}"/><path class="tube hit" data-tube="${tb.uid}" d="${gd}"/>`;
     const m=gap[Math.floor(gap.length/2)]; out+=`<text class="shortlbl" x="${m[0]}" y="${m[1]-14}">${tb.short} ft short</text>`;
@@ -2105,7 +2276,7 @@ function toast(kind, head, body){
   if(TEST) return;
   /* ROUND 10: the wall screen shows it; the floating card is for a phone, where the screen is too small to read */
   if(S && S.screen){ S.screen.alerts.unshift({kind, head, body:body||''}); if(S.screen.alerts.length>3) S.screen.alerts.length=3; screenShow('alerts', 4500); }
-  const onWall=(U*GRID.order.w*scale)>=150;   /* the screen is readable at 150 px wide; below that the card floats */
+  const onWall=!screenSmall() || !!$('screenRead');   /* the screen is readable at 150 px wide; below that its readout under the wall carries the alert (ROUND 16), so the card no longer floats */
   const box=$('toasts'); const last=box.lastElementChild;
   const gone=el=>{ if(el.parentNode) el.parentNode.removeChild(el); };
   const arm=el=>{ clearTimeout(el._t1); clearTimeout(el._t2); el._t1=setTimeout(()=>el.classList.add('out'), 3200); el._t2=setTimeout(()=>gone(el), 3450); };
@@ -2126,7 +2297,8 @@ function linkToast(c, aLabel, bLabel, extra){
 function renderCoach(){
   const L=S.level, F=facts(S); let i=L.steps.findIndex(s=>!s.done(F)); if(i<0) i=L.steps.length-1;
   let text=L.steps[i].text;
-  if(S.hand) text='Tap a square on the wall to set the '+S.hand.def.short.toLowerCase()+' down. Right-click or R turns it. Esc puts it back.';
+  const touchy=typeof matchMedia==='function' && matchMedia('(hover: none)').matches;
+  if(S.hand) text='Tap a square on the wall to set the '+S.hand.def.short.toLowerCase()+' down. '+(touchy ? 'The turn button turns it; the cart takes it back.' : 'Right-click or R turns it. Esc puts it back.');
   else if(S.link) text='Now click the port it connects to. Ringed ports are open; the panel on the right lists them with what the equipment thinks of each.';
   else if(multi.size>1) text=multi.size+' parts selected. Drag any one of them to move them together. Delete puts them all back on the cart. Esc clears the selection.';
   /* ROUND 11: the step is on the wall screen too; a new step turns the screen to it for a few seconds */
@@ -2152,7 +2324,7 @@ function renderStatus(F){
 function render(){
   if(TEST) return;
   S.capno=capnoOn(S);
-  renderCart(); const F=renderCoach(); renderStatus(F); renderBoard(); positionVerbs();
+  renderCart(); const F=renderCoach(); renderStatus(F); renderBoard(); positionVerbs(); screenReadout();
   S.functional=F.ev.ok;
   /* the dock is permanent, so undo earns its width only once there is something to undo. Same
      conditional-width pattern the Set-it verb already uses. */
@@ -2456,7 +2628,7 @@ function pickJump(jk){
   const worst=res.ends.find(l=>l.s==='bad')||res.ends.find(l=>l.s==='warn')||res.ends[0];
   if(lead) linkToast(worst||{s:'ok'}, lead.item.def.short+' tubing', (lead===pa?pb:pa).item.def.short+' '+(lead===pa?pb:pa).label.toLowerCase());
   else if(worst && worst.s!=='ok') linkToast(worst, pa.item.def.short, pb.item.def.short);
-  else { const kind={o2:'oxygen tubing', suct:'suction tubing', c22:'22 mm tubing', c15:'15 mm tubing'}[res.tube.def.kind]||'tubing'; toast('ok','Jumper laid', 'A short piece of '+kind+' joins the '+pa.item.def.short.toLowerCase()+' to the '+pb.item.def.short.toLowerCase()+' in place.'); }
+  else { const kind={o2:'oxygen tubing', suct:'suction tubing', c22:'22 mm tubing', heat22:'heated circuit', c15:'15 mm tubing'}[res.tube.def.kind]||'tubing'; toast('ok','Jumper laid', 'A short piece of '+kind+' joins the '+pa.item.def.short.toLowerCase()+' to the '+pb.item.def.short.toLowerCase()+' in place.'); }
   render();
 }
 function pickPort(pk){
@@ -2477,7 +2649,9 @@ function setPreview(p){
 /* ROUND 3 (the hand, part 2). Dim or restore wall parts IN PLACE: the pickup used to rebuild the whole
    wall before the ghost appeared, which was the hitch on every grab. Rects are read once per drag and
    moves are coalesced to one update per frame, so a pointer move never forces a layout. */
-function dimWall(uids, on){ const b=$('board'); if(!b) return; for(const u of uids){ b.querySelectorAll('.it[data-uid="'+u+'"], .cn[data-uid="'+u+'"], .pt[data-port^="'+u+':"]').forEach(el=>el.classList.toggle('moving', !!on)); } }
+function dimWall(uids, on){ const b=$('board'); if(!b) return;
+  if(uids.some(u=>{ const it=S && S.items.find(i=>i.uid===u); return it && it.def.cat==='patient'; })) b.querySelectorAll('.pt-art').forEach(el=>el.classList.toggle('moving', !!on));
+  for(const u of uids){ b.querySelectorAll('.it[data-uid="'+u+'"], .cn[data-uid="'+u+'"], .pt[data-port^="'+u+':"]').forEach(el=>el.classList.toggle('moving', !!on)); } }
 const inRect=(r, ev)=> !!r && ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
 const dragRects=()=>({board:$('board').getBoundingClientRect(), trash:$('trash').getBoundingClientRect(), dock:$('cartDock').getBoundingClientRect()});
 const REDUCED=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2507,7 +2681,11 @@ function liftSVG(members){
   const minx=Math.min(...members.map(m=>m.x)), miny=Math.min(...members.map(m=>m.y));
   const W=(Math.max(...members.map(m=>m.x+dims(m.def,m.r).w))-minx)*U, H=(Math.max(...members.map(m=>m.y+dims(m.def,m.r).h))-miny)*U;
   const inner=members.map(m=>`<g transform="translate(${(m.x-minx)*U},${(m.y-miny)*U})">${bodySVG(m.def,m.r,m).inner}</g>`).join('');
-  return '<div class="da-lift"><svg viewBox="0 0 '+W+' '+H+'" width="'+(W*scale)+'" height="'+(H*scale)+'">'+inner+'</svg></div>';
+  /* a patient in hand is drawn whole, pillow and shoulders past the edges of his pieces (Round 17) */
+  const ch=members.find(m=>m.def.id==='pt-cheek');
+  const pt=ch ? (()=>{ const mir=!!(S && S.room && S.room.face && S.room.face.flip), fx=(ch.x-(mir?2:0)-minx)*U, fy=(ch.y-1-miny)*U, art=patientArt(fx, fy);
+    return mir ? `<g transform="translate(${2*(fx+1.5*U)},0) scale(-1,1)">${art}</g>` : art; })() : '';
+  return '<div class="da-lift"><svg viewBox="0 0 '+W+' '+H+'" width="'+(W*scale)+'" height="'+(H*scale)+'"'+(pt?' style="overflow:visible"':'')+'>'+pt+inner+'</svg></div>';
 }
 function ghostFor(members){
   const g=document.createElement('div'); g.className='da-ghost'; g.innerHTML=liftSVG(members);
@@ -2571,6 +2749,7 @@ function beginDrag(e, spec){
     const back=ids=>{ setPreview(null); if(d.uid) ghostTo(d.ghost, br.left+minx*cell, br.top+miny*cell, ()=>dimWall(ids,false)); else ghostGone(d.ghost); };
     suppressClick=true; setTimeout(()=>suppressClick=false,0);
     const uids=d.uid ? d.members.map(q=>q.uid) : [];
+    if(d.patient && (inRect(d.rects.trash,ev) || inRect(d.rects.dock,ev))){ toast('info','He stays on the wall','The patient does not go back on the cart. Set him down anywhere on the wall.'); back(uids); return; }
     if(inRect(d.rects.trash,ev) || (d.uid && inRect(d.rects.dock,ev))){
       ghostGone(d.ghost);
       if(d.uid){ remember(S); for(const u of uids) removeThing(S,u); S.sel=null; multi=new Set(); infoMode='level'; toast('info','Back on the cart', uids.length>1 ? uids.length+' parts are back on the cart.' : d.def.short+' is back on the cart.'); }
@@ -2581,7 +2760,7 @@ function beginDrag(e, spec){
       remember(S); const res=moveGroup(S, uids, dx, dy);
       if(!res.ok){ S.history.pop(); toast('bad','No',res.why); shake(); back(uids); return; }
       S.landing=new Set(uids); armClock(); if(res.detached) toast('info','Tubing came off','No run was possible from there. Lay it again.');
-      if(d.fromMulti){ multi=new Set(uids); S.sel=null; infoMode='level'; render(); }
+      if(d.fromMulti || d.patient){ multi=d.patient ? new Set() : new Set(uids); S.sel=null; infoMode='level'; render(); }
       else { multi=new Set(); toast('info','Moved together', (uids.length-1)+' seated part'+(uids.length>2?'s':'')+' came along with it.'); markSettle(d.uid); select(d.uid); }
       land(dx,dy,uids,d.uid); return; }
     if(d.uid){ const m=d.members[0]; remember(S); const res=moveItem(S,d.uid,m.x+dx,m.y+dy,m.r); if(!res.ok){ S.history.pop(); toast('bad','No',res.why); shake(); back(uids); return; } S.landing=new Set(uids); armClock(); if(res.detached) toast('info','Tubing came off','No run was possible from there. Lay it again.'); const ao=autoOrient(S,d.uid); if(ao.turned) toast('info','Turned to fit', DB[d.def.id].short+' turned itself to seat.'); afterChange(d.uid); land(dx,dy,uids,d.uid); return; }
@@ -2670,6 +2849,11 @@ function wireBoard(){
       }
     }
     const g=e.target.closest('.it');
+    /* Round 17: where the level lets you (the sandbox), press anywhere on the patient and he comes with you,
+       with whatever is seated on his face or neck */
+    if(S.level.movePatient && !S.link && !S.material){ const gi=g?S.items.find(i=>i.uid===g.dataset.uid):null;
+      if((gi && gi.def.cat==='patient') || (!g && e.target.closest('.pt-art'))){ const ch=S.items.find(i=>i.def.id==='pt-cheek');
+        if(ch){ beginDrag(e, {def:ch.def, r:ch.r, uid:ch.uid, group:patientGroup(S), fromMulti:false, patient:true}); return; } } }
     if(!g){ if(!S.link && !S.material && !e.target.closest('.tube.hit') && !e.target.closest('.node') && !e.target.closest('.scrtab') && !e.target.closest('.scrlvl')) beginMarquee(e); return; }
     const it=S.items.find(i=>i.uid===g.dataset.uid); if(!it||it.fixed) return;
     if(e.shiftKey) return;   /* shift-click is a selection toggle; the click handler takes it */
@@ -2778,12 +2962,21 @@ function rotateSel(){
 function removeSel(){
   if(multi.size>1){ remember(S); const n=multi.size; for(const u of [...multi]) removeThing(S,u); multi=new Set(); S.sel=null; infoMode='level'; render(); toast('info','Back on the cart', n+' parts are back on the cart.'); return; }
   if(!S.sel) return; remember(S); const res=removeThing(S,S.sel); if(!res.ok){ S.history.pop(); if(res.why) toast('bad','No',res.why); return; } S.sel=null; infoMode='level'; render(); }
+/* Reset used to clear the wall with no way back. The history rides across the restart, so Ctrl+Z (or Undo)
+   puts the wall back as it was. */
+function resetWall(){ if(!S) return; const keep=S.history.concat([snapshot(S)]); startLevel(S.level.id); S.history=keep.slice(-60); render(); toast('info','Wall reset','Undo puts it back.'); }
 function undoStep(){ if(!S || S.finished) return; if(undo(S)){ infoMode='level'; render(); toast('info','Undone',''); } }
 function wireGlobal(){
   document.addEventListener('keydown', e=>{
-    if(!S || $('overlay').hidden===false) return;
+    if(!S) return;
+    if(window.HUKit && HUKit.dialog && HUKit.dialog.anyOpen && HUKit.dialog.anyOpen()) return;   /* a kit card (menu, how-to, settings) has the keys */
+    const ovUp=$('overlay').hidden===false;
+    /* the result card is aria-modal: Tab walks its buttons and does not leave it for the page behind */
+    if(ovUp && e.key==='Tab'){ const bs=[...$('overlay').querySelectorAll('button, a[href]')]; if(bs.length){ const i=bs.indexOf(document.activeElement); const j=e.shiftKey ? (i<=0 ? bs.length-1 : i-1) : (i<0 || i===bs.length-1 ? 0 : i+1); bs[j].focus(); e.preventDefault(); } return; }
     if(e.target && e.target.closest && e.target.closest('input,textarea,select')) return;
-    if(e.key==='Escape'){ if(escapeStep()) e.preventDefault(); return; }
+    /* Esc closes the card too (it used to stop here while one was up), and with nothing to step back it opens the menu */
+    if(e.key==='Escape'){ if(escapeStep()) e.preventDefault(); else if(!ovUp && daMenu){ e.preventDefault(); daMenu.open(); } return; }
+    if(ovUp) return;
     if((e.ctrlKey||e.metaKey) && (e.key==='z'||e.key==='Z')){ undoStep(); e.preventDefault(); return; }
     if(e.key==='r'||e.key==='R'){ if(drag) rotateDrag(); else rotateSel(); e.preventDefault(); }
     if(e.key==='f'||e.key==='F'){ if(!drag) flipSel(); e.preventDefault(); }
@@ -2797,7 +2990,7 @@ function wireGlobal(){
   $('vInfo').addEventListener('click', ()=>{ const it=S.items.find(i=>i.uid===S.sel); const tb=S.tubes.find(t=>t.uid===S.sel); if(it) openInfo(it.def,it.uid); else if(tb) openInfo(tb.lead?S.items.find(i=>i.uid===tb.lead).def:tb.def,null); });
   $('cancelBtn').addEventListener('click', ()=>{ S.link=null; S.hand=null; S.preview=null; render(); });
   $('submitBtn').addEventListener('click', ()=>submit(false));
-  $('resetBtn').addEventListener('click', ()=>startLevel(S.level.id));
+  $('resetBtn').addEventListener('click', resetWall);
   $('vUndo').addEventListener('click', undoStep);
   $('menuBtn').addEventListener('click', showLevels);
   $('menuBtnI').addEventListener('click', showLevels);
@@ -2806,6 +2999,7 @@ function wireGlobal(){
     if(b.dataset.cpapset){ const it=S.items.find(i=>i.uid===infoUid); if(!it) return; remember(S); const r=setCpap(S, it.uid, Number(b.dataset.cpapset)); if(r.ok){ armClock(); renderInfo('item', it.def, it.uid); render(); toast('info','Probe at '+r.cpap+' cm H2O',''); } return; }
     if(b.dataset.fio2 || b.dataset.fio2set){ const it=S.items.find(i=>i.uid===infoUid); if(!it) return; remember(S); const r=setFio2(S, it.uid, b.dataset.fio2set ? Number(b.dataset.fio2set) : it.fio2+Number(b.dataset.fio2)); if(r.ok){ armClock(); renderInfo('item', it.def, it.uid); render(); toast('info', it.def.short+' at '+r.fio2+'%',''); } return; }
     pickPort(b.dataset.port); if(window.innerWidth<1000 && sheetApi && S.link) sheetApi.close(); });
+  { const rt=$('screenReadTabs'); if(rt) rt.addEventListener('click', e=>{ const b=e.target.closest('button[data-page]'); if(b) screenShow(b.dataset.page, 0); }); }   /* the readout's tabs turn the same page the wall's tabs do */
   window.addEventListener('resize', ()=>{ fitBoard(); if(window.innerWidth>=1000 && sheetApi){ ['dt-peek','dt-half','dt-full'].forEach(c=>$('infoDock').classList.remove(c)); } });
 }
 
@@ -2814,7 +3008,7 @@ function wireGlobal(){
    ===================================================================== */
 const PKEY='hu-da';
 let progress={done:{}, best:{}};
-try{ const p=JSON.parse(localStorage.getItem(PKEY)||'null'); if(p&&p.done) progress={done:p.done||{}, best:p.best||{}}; }catch(e){}
+try{ const p=JSON.parse(localStorage.getItem(PKEY)||'null'); if(p&&p.done) progress={done:p.done||{}, best:p.best||{}, last:p.last||null}; }catch(e){}   /* 'last' used to be dropped here, so a reload always resumed on Tutorial 1 */
 /* the tester hatch: ?unlock=1 opens every level for this visit without touching saved progress (alpha, 2026-09-18) */
 const UNLOCK_ALL = typeof location!=='undefined' && /[?&]unlock=1/.test(location.search);
 function saveProgress(){ try{ localStorage.setItem(PKEY, JSON.stringify(progress)); }catch(e){} }
@@ -2844,14 +3038,16 @@ if(typeof addEventListener==='function') addEventListener('pagehide', ()=>{
   if(!everStarted || daLeft) return; daLeft=true;
   track('played-'+daMinBucket()+'-min'); track('walls-'+daWallBucket());
 });
-const unlocked = i => UNLOCK_ALL || i===0 || LEVELS[i].kind==='sandbox' || (LEVELS[i].kind==='fault' && !!progress.done.l1) || !!progress.done[LEVELS[i-1].id];
+/* a wall unlocks off the one before it that a player can see: a parked wall never gets done, so it cannot hold the next one shut */
+const prevLive = i => { for(let j=i-1;j>=0;j--) if(!LEVELS[j].parked) return LEVELS[j]; return null; };
+const unlocked = i => !LEVELS[i].parked && (UNLOCK_ALL || i===0 || LEVELS[i].kind==='sandbox' || (LEVELS[i].kind==='fault' && !!progress.done.l1) || !!(prevLive(i) && progress.done[prevLive(i).id]));
 let timerH=null;
 function fmt(sec){ sec=Math.max(0,Math.ceil(sec)); return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0'); }
 /* the clock is the patient: the sat falls from 96 until the system works, then climbs back. 80 ends the run. */
 function tickClock(){
   const L=S.level; if(!L.timer||S.finished||!S.t0) return;
   const dt=0.25;
-  if(S.functional) S.sat=Math.min(98, S.sat+0.6*dt); else S.sat=Math.max(80, S.sat-(16/L.timer)*dt);
+  if(S.functional) S.sat=Math.min(98, S.sat+0.6*dt); else S.sat=Math.max(80, S.sat-(16/(L.timer*(daMoreTime()?1.5:1)))*dt);   /* More time (Settings): two thirds the fall */
   if(S.functional && S.satAtFunctional==null) S.satAtFunctional=S.sat;
   const c=$('clock'); c.textContent='SpO2 '+Math.round(S.sat)+'%'; c.classList.toggle('low', S.sat<90);
   if(S.sat<=80){ S.timedOut=true; submit(true); }
@@ -2883,8 +3079,8 @@ function monitorLoop(ts){
   if(hands && Math.floor(ts/1000)!==Math.floor((ts-dt*1000)/1000)){ const now=new Date(), m=now.getMinutes(), hh=(now.getHours()%12)+m/60; const cd=DB['deco-clock'], ccx=cd.w*U/2, ccy=cd.h*U/2, ck=Math.min(cd.w,cd.h)*U*0.42/20; hands.setAttribute('transform',''); hands.innerHTML='<path d="M'+ccx+' '+ccy+' L'+(ccx+9*ck*Math.sin(hh/12*2*Math.PI)).toFixed(1)+' '+(ccy-9*ck*Math.cos(hh/12*2*Math.PI)).toFixed(1)+'" stroke="#2b4468" stroke-width="3" stroke-linecap="round"/><path d="M'+ccx+' '+ccy+' L'+(ccx+13*ck*Math.sin(m/60*2*Math.PI)).toFixed(1)+' '+(ccy-13*ck*Math.cos(m/60*2*Math.PI)).toFixed(1)+'" stroke="#2b4468" stroke-width="2.5" stroke-linecap="round"/>'; }
 }
 /* the overlay enters on the site curve (backdrop fades, the card eases up from .97); it closes at once, the wall is waiting */
-function overlay(html){ const o=$('overlay'); o.classList.remove('in'); o.innerHTML='<div class="da-modal" role="dialog" aria-modal="true">'+html+'</div>'; o.hidden=false; void o.offsetWidth; o.classList.add('in'); const f=o.querySelector('button'); if(f) f.focus({preventScroll:true}); }
-function closeOverlay(){ const o=$('overlay'); o.classList.remove('in'); o.hidden=true; o.innerHTML=''; }
+function overlay(html){ const o=$('overlay'); o.classList.remove('in'); o.innerHTML='<div class="da-modal" role="dialog" aria-modal="true">'+html+'</div>'; o.hidden=false; void o.offsetWidth; o.classList.add('in','open'); const f=o.querySelector('button'); if(f) f.focus({preventScroll:true}); }
+function closeOverlay(){ const o=$('overlay'); o.classList.remove('in','open'); o.hidden=true; o.innerHTML=''; }
 /* ROUND 15 (David: "integrate this first pop-up menu into the game... we do not have a start screen menu for the
    RN task game"): no title card. The game opens on the wall you left, or the first tutorial. The walls are a
    page on the bedside screen (WALLS, from the Levels button) and a fold of real buttons in the level panel. */
@@ -2892,12 +3088,12 @@ const PITCH='<p>Clinicals start in two weeks and the part you are afraid of is t
 const FOOTNOTE='<p class="da-small">Every part is a real category with real connector standards, and every spec sheet labels its facts verified, inferred or gameplay. It is the floor\\\'s way of doing it, which is not always the exam\\\'s wording. The walls map to Section II of the NBRC TMC content outline, Assemble / Troubleshoot Devices: gas delivery interfaces, metering devices, humidifiers. Nothing here is clinical guidance. Progress stays on this device.</p>';
 function wallGroups(){
   const groups=[['Tutorial', L=>L.kind==='tutorial'], ['Levels', L=>L.kind==='level'||L.kind==='timed'], ['Find the fault', L=>L.kind==='fault'], ['Sandbox', L=>L.kind==='sandbox']];
-  return groups.map(([name,pick])=>{ const walls=LEVELS.map((L,i)=>({L,i})).filter(w=>pick(w.L)).map(w=>({L:w.L, i:w.i, un:unlocked(w.i), done:!!progress.done[w.L.id], best:progress.best[w.L.id]>100?null:progress.best[w.L.id]})); return {name, walls, done:walls.filter(w=>w.done).length}; }).filter(g=>g.walls.length);
+  return groups.map(([name,pick])=>{ const walls=LEVELS.map((L,i)=>({L,i})).filter(w=>pick(w.L)&&!w.L.parked).map(w=>({L:w.L, i:w.i, un:unlocked(w.i), done:!!progress.done[w.L.id], best:progress.best[w.L.id]>100?null:progress.best[w.L.id]})); return {name, walls, done:walls.filter(w=>w.done).length}; }).filter(g=>g.walls.length);
 }
 /* step back in where you left off: the last wall if it is still open, else the next one up */
 function resumeTarget(){
-  const last=progress.last && LEVELS.find(L=>L.id===progress.last);
-  const nextUndone=LEVELS.find((L,i)=>unlocked(i)&&!progress.done[L.id]);
+  const last=progress.last && LEVELS.find(L=>L.id===progress.last && !L.parked);
+  const nextUndone=LEVELS.find((L,i)=>!L.parked&&unlocked(i)&&!progress.done[L.id]);
   return (last && !progress.done[last.id] && unlocked(LEVELS.indexOf(last))) ? last : (nextUndone || last || LEVELS[0]);
 }
 function showLevels(){
@@ -2979,7 +3175,7 @@ function submit(timedOut){
      how a guest enters a two-wall race. raceSubmit had exactly one caller and it was that button. */
   runTest();
   const ev=evaluate(S), L=S.level; S.elapsed=S.t0 ? (Date.now()-S.t0)/1000 : 0;
-  const idx=LEVELS.indexOf(L), next=LEVELS[idx+1];
+  const idx=LEVELS.indexOf(L), next=LEVELS.slice(idx+1).find(l=>!l.parked);
   if(!ev.ok){
     if(!daMissed){ daMissed=true; track('first-miss'); }
     if(timedOut){ S.finished=true; if(timerH){ clearInterval(timerH); timerH=null; } }
@@ -3013,7 +3209,7 @@ function submit(timedOut){
   } else body='<p>Connection established. Gas gets from the outlet to the patient through green connections only, the interface matches the order, and it is on the patient.</p>';
   saveProgress();
   overlay('<div class="da-k teal">'+esc(L.kicker)+'</div><h2>'+(L.kind==='fault'?'Wall <span>fixed</span>':L.scored?'System <span>functional</span>':'Connection <span>established</span>')+'</h2>'+body+
-    '<div class="btns">'+(next?'<button type="button" class="da-go" id="nextBtn">'+(next.kind==='timed'?'Try it timed':'Next')+'</button>':'')+'<button type="button" class="da-ghostbtn" id="againBtn">Build it again</button><button type="button" class="da-ghostbtn" id="shareBtn">Share card</button><button type="button" class="da-ghostbtn" id="lvBtn">Levels</button></div>');
+    '<div class="btns">'+(next?'<button type="button" class="da-go" id="nextBtn">'+(next.kind==='timed'?'Try it timed':'Next')+'</button>':'')+'<button type="button" class="da-ghostbtn" id="againBtn">Build it again</button><button type="button" class="da-ghostbtn" id="shareBtn">Share card</button><button type="button" class="da-ghostbtn" id="lvBtn">Walls</button></div>');
   if(next) $('nextBtn').addEventListener('click', ()=>startLevel(next.id));
   $('againBtn').addEventListener('click', ()=>startLevel(L.id)); $('lvBtn').addEventListener('click', showLevels);
   $('shareBtn').addEventListener('click', ()=>shareWall(L.kicker+' · Device Assembly', shareTitle, 'device-assembly-'+L.id));
@@ -3022,16 +3218,41 @@ function submit(timedOut){
 /* =====================================================================
    15. INIT + TEST HOOK
    ===================================================================== */
+/* The game menu, the "?" and settings, the kit's shared pieces (.claude/rules/games.md, Menus). Settings carries
+   More time only: the timed wall's sat falls at two thirds the speed. There is no sound to caption, and the hints
+   are the bedside screen itself. Esc with nothing to step back opens the menu (the keydown handler above). */
+let daMenu=null, daSet=null;
+function daMoreTime(){ return !!(daSet && daSet.get('moreTime')); }
+function wireMenus(){
+  if(!window.HUKit || !HUKit.gameMenu || !$('daKit')) return;
+  daSet=HUKit.settings({ id:'da', rows:[HUKit.settings.assist.moreTime] });
+  const ex=document.createElement('div');
+  ex.innerHTML='<p>The order says <b>humidified oxygen at 4 L/min by nasal cannula</b>. A flowmeter on a green outlet, the bubble humidifier on it, the cannula on the nose, tubing between. Then press Complete.</p>';
+  const help=HUKit.howTo({ id:'da', auto:false,
+    rules:['Read the order on the bedside screen. It says what to build.',
+           'Drag parts from the cart onto the wall. Tap a ring or port, then the one it joins.',
+           'Press Complete. The test says what works and what does not, in RT words.'],
+    example:ex });
+  daMenu=HUKit.gameMenu({ title:'Device Assembly', help, settings:daSet,
+    restart:{ verb:'Reset the wall', title:'Reset this wall?', body:'Everything on it goes back on the cart. Undo puts it back.', run:resetWall },
+    leave:{ href:'/secret-menu/' } });
+  $('daKit').appendChild(help.button()); const mb=daMenu.button(); mb.setAttribute('aria-label','Menu'); $('daKit').appendChild(mb);
+  /* the walls open on a tutorial for a first visit; the how-to waits for the first wall to settle, once */
+  setTimeout(()=>{ if($('overlay').hidden) help.firstVisit(); }, 400);
+}
 function init(){
   sheetApi=HUKit.sheet($('infoDock'), {startDetent:'dt-half'});
   HUKit.backGuard({watch:$('infoDock'), active:()=>$('infoDock').classList.contains('open'), step:()=>sheetApi.close()});
+  /* the result cards close on the phone's back gesture too, the same step Esc takes (they carry 'open' while up) */
+  HUKit.backGuard({watch:$('overlay'), active:()=>!$('overlay').hidden, step:()=>escapeStep()});
+  wireMenus();
   wireBoard(); wireCart(); wireGlobal();
   if(window.ResizeObserver) new ResizeObserver(()=>fitBoard()).observe($('boardWrap'));
   S=newState(LEVELS[0]); render(); fitBoard();
   requestAnimationFrame(monitorLoop);
   startLevel(resumeTarget().id);   /* ROUND 15: straight onto the wall */
 }
-const daHook=()=>({track, daIsQuiet, daMinBucket, daWallBucket, faultMatches, flip, flipSide, ROOMS, roomOf, roomFixed, DEFAULT_ROOM, DB, STD, LEVELS, GRID, compat, rotCell, rotSide, portsOf, cellsOf, computeLinks, route, bendsOf, evaluate, score, functionTest, newState, place, moveItem, rotate, removeThing, connectPorts, tubeOn, reflow, facts, canPlace, onPatientLinks, atNose, portTaken, remember, undo, snapshot, restore, autoOrient, okJointsAt, powered, setFio2, setCpap, generatorOf, capnoOn, facingPort, jumpable, hangTube, findPort, GAUGE, GLYPH, GAS_OF, glyphOf, clusterOf, moveGroup, moveGroupCheck,
+const daHook=()=>({syncFace, patientGroup, faceAt, levelRoom, startLevel, render, track, daIsQuiet, daMinBucket, daWallBucket, faultMatches, flip, flipSide, ROOMS, roomOf, roomFixed, DEFAULT_ROOM, DB, STD, LEVELS, GRID, compat, rotCell, rotSide, portsOf, cellsOf, computeLinks, route, bendsOf, evaluate, score, functionTest, newState, place, moveItem, rotate, removeThing, connectPorts, tubeOn, reflow, facts, canPlace, onPatientLinks, atNose, portTaken, remember, undo, snapshot, restore, autoOrient, okJointsAt, powered, circuitHeats, circuitWhy, setFio2, setCpap, generatorOf, capnoOn, facingPort, jumpable, hangTube, findPort, GAUGE, GLYPH, GAS_OF, glyphOf, clusterOf, moveGroup, moveGroupCheck,
     get S(){ return S; }, set S(v){ S=v; }, start(id, room){ S=newState(levelById(id), room); return S; },
     T:RACE, get NET(){ return NET; }, race:()=>race, otherWall:()=>otherWall, raceStart, raceDispatch, raceState, raceSubmit, netSync, raceLeave, setRaceName, raceName, setChannelFactory:fn=>RACE.setChannelFactory(fn),
 });

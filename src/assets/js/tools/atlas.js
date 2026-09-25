@@ -261,6 +261,9 @@ const ZONE_DEFS = [
   // ── PUBLIC HEALTH — south ──────────────────────────────────────────────────
   {
     id:'pubhealth', label:'Public Health', displayLabel:'Public Health', abbr:'PH', color:'#5DBF87',
+    // named along its south edge: its north edge meets the Patient zone, so a name above it printed
+    // across the Patient hexes (tool review 2026-09-23)
+    labelSouth:true,
     desc:'Health at the population level. Epidemiology, prevention, social determinants, and the infrastructure that keeps the system from being overwhelmed when it fails.',
     cells:[
       {q:-1, r:3,  type:'node',    label:'Prevention\n& Screening', nodeId:'prevention',
@@ -1378,6 +1381,7 @@ ZONE_DEFS.forEach(zone => {
   zone.cx = nc.reduce((a,c)=>a+c.wx,0)/nc.length;
   zone.cy = nc.reduce((a,c)=>a+c.wy,0)/nc.length;
   zone.topY = Math.min(...nc.map(c=>c.wy));
+  zone.botY = Math.max(...nc.map(c=>c.wy));
 });
 
 // ── HUB SPOKES (behind everything) ───────────────────────────────────────────
@@ -2076,10 +2080,11 @@ ZONE_DEFS.forEach(zone => {
 
   // ── ZONE NAME — Foxhole-style: large, clean, no pill box, fades out on zoom-in
   const nlG = zg.append('g').attr('class','az-zone-label').attr('pointer-events','none')
-    .attr('data-cx',zone.cx).attr('data-cy',zone.topY - 16).attr('data-zoneid',zone.id);
+    .attr('data-cx',zone.cx).attr('data-cy',zone.labelSouth ? zone.botY + 30 : zone.topY - 16).attr('data-zoneid',zone.id);
 
-  // Anchor just above the zone's northernmost hex — keeps MedSci label above the hub
-  const labelY = zone.topY - 16;
+  // Anchor just above the zone's northernmost hex, which keeps the MedSci label above the hub.
+  // A zone whose north edge touches another zone is named along its south edge instead.
+  const labelY = zone.labelSouth ? zone.botY + 30 : zone.topY - 16;
   nlG.append('text')
     .attr('x',zone.cx).attr('y',labelY)
     .attr('text-anchor','middle')

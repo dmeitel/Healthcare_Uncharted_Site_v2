@@ -260,7 +260,7 @@ function streamCsv(stream, onRow) {
         else field += ch;
       }
     });
-    stream.on('end', () => { if (field !== '' || row.length) endRow(); resolve(); });
+    stream.on('end', () => { if (field !== '' || row.length) endRow(); resolve(undefined); });
     stream.on('error', reject);
   });
 }

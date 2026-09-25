@@ -27,6 +27,8 @@ states changed, a fresh release landed and it's time to `--write`.
 | `places.js` | CDC PLACES | County 2025 release `swc5-untb` (BRFSS) | county → state rollup | annual (~summer), ~2yr lag | patient lens (10 metrics: health status + smoking, COPD, asthma, BP, depression) |
 | `bls.js` | BLS LAUS | bulk `la.data.64.County` | county → state rollup | annual averages (~spring) + monthly | economics + baseline unemployment |
 | `acs.js` | Census ACS 5-year | API `acs/acs5` + `acs5/subject` | county + official state rows | annual (~December) | median age (patient), household size + age mix (baseline) |
+| `ooh.js` | BLS Occupational Outlook Handbook + Employment Projections table 1.2 | one page per occupation in `career-tree-bls.json` | national, per occupation | annual (~September) | Career Tree pay, 10th to 90th percentile, growth, openings |
+| `oews-states.js` | BLS Occupational Employment and Wage Statistics | public data API, series `OEUS<state>00000000000<soc>13` (annual median), 25 series a request, cached | state, per occupation (10 healthcare jobs) | annual (~spring, May estimates) | `src/assets/data/state-pay.json`: Vital Stats state pay questions |
 | `chr.js` | County Health Rankings | analytic CSV (`analytic_data<yr>[_v2].csv`) | county + official state rows | annual (~spring) | outcomes: premature death + low birthweight (patient) |
 
 Fetchers address metrics by **stable id** (`lens/slug` in `metricsConfig.json`),

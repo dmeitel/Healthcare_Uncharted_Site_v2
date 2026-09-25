@@ -52,7 +52,7 @@ test('every room is a whole wall: a rail the width of the wall with five gas out
       }
     }
     assert.ok(!seen.has(room.nose.join(',')) && !seen.has(room.neck.join(',')), name + ': the nose and the neck are free squares');
-    assert.strictEqual(da.GRID.nose, room.nose, name + ': the grid follows the room');
+    assert.deepStrictEqual([...da.GRID.nose], [...room.nose], name + ': the grid follows the patient, who starts where the room puts him');
     assert.strictEqual(da.GRID.order, room.order, name + ': so does the order card');
     const cheek = itemOf(S, 'pt-cheek');
     assert.deepStrictEqual([room.face.flip ? cheek.x - 1 : cheek.x + 1, cheek.y], [...room.nose], name + ': the cheek looks into the nose square');
@@ -117,7 +117,7 @@ test('the fault walls arrive built in the right room, broken the same way, and t
   assert.strictEqual(S.room.dx, 4);
   assert.strictEqual(Object.values(S.cart).reduce((a, b) => a + b, 0), 0, 'the build consumed the cart');
   assert.match(da.evaluate(S).lines.map(l => l.t).join(' '), /not oxygen/);
-  const can = itemOf(S, 'cannula'), lead = S.tubes.find(t => t.lead === can.uid);
+  const can = itemOf(S, 'cannula-14'), lead = S.tubes.find(t => t.lead === can.uid);
   assert.strictEqual(lead.short, 0, 'the lead reaches the air tree, so nothing looks loose');
   assert.strictEqual(da.faultMatches(S, itemOf(S, 'xmas-air').uid), true);
   lead.to = null; lead.path = []; lead.short = 0;

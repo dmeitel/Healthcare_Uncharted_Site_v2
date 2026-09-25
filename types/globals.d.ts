@@ -38,6 +38,81 @@ interface HUKitBackGuard {
   arm(): void;
 }
 
+/** HUKit.dialog: the modal card the game menus sit on (X, Esc and phone back close it) */
+interface HUKitDialog {
+  el: HTMLDialogElement;
+  body: HTMLElement;
+  /** the h2; focusable by script (tabindex -1) for a card that is all reading */
+  heading: HTMLHeadingElement;
+  /** the X, for a card that wants focus to start there */
+  x: HTMLButtonElement;
+  open(): void;
+  /** why reaches onClose; the kit itself passes 'x', 'esc', 'back' or 'backdrop' */
+  close(why?: string): void;
+  isOpen(): boolean;
+}
+
+interface HUKitDialogOpts {
+  title?: string;
+  body?: Node | string | ((body: HTMLElement, api: HUKitDialog) => Node | string | void);
+  className?: string;
+  role?: 'dialog' | 'alertdialog';
+  /** opt-in: a tap outside the card closes it */
+  backdropClose?: boolean;
+  /** where focus starts; default the first control in the body, else the X */
+  focus?: HTMLElement | (() => HTMLElement | null | undefined);
+  onOpen?: () => void;
+  onClose?: (why: string) => void;
+}
+
+/** anything a menu row can open: a kit card, or a function */
+type HUKitOpener = { open(): void } | (() => void);
+
+/** one toggle row: the label, one line of help, and the default */
+interface HUKitSettingRow {
+  key: string;
+  label: string;
+  help?: string;
+  value?: boolean;
+}
+
+interface HUKitSettings {
+  el: HTMLDialogElement;
+  dialog: HUKitDialog;
+  list: HTMLUListElement;
+  open(): void;
+  close(why?: string): void;
+  isOpen(): boolean;
+  get(key: string): boolean | undefined;
+  values(): Record<string, boolean>;
+  /** from code; does not call onChange back */
+  set(key: string, value: boolean): void;
+}
+
+interface HUKitHowTo {
+  el: HTMLDialogElement;
+  dialog: HUKitDialog;
+  open(): void;
+  close(why?: string): void;
+  isOpen(): boolean;
+  /** this browser has closed the card before */
+  seen(): boolean;
+  /** open it if this is the first visit; true when it opened */
+  firstVisit(): boolean;
+  /** the "?" button, 44px, named "How to play" */
+  button(): HTMLButtonElement;
+}
+
+interface HUKitGameMenu {
+  el: HTMLDialogElement;
+  dialog: HUKitDialog;
+  open(): void;
+  close(why?: string): void;
+  isOpen(): boolean;
+  /** the one toolbar button: the icon and the word Menu, 44px */
+  button(): HTMLButtonElement;
+}
+
 interface HUKitApi {
   /** true at or under the 699px phone line */
   phone(): boolean;
@@ -86,6 +161,60 @@ interface HUKitApi {
     debounce?: number;
   }): HUKitUrlState;
   PHONE_MQ: MediaQueryList;
+  /** the modal card every game menu sits on */
+  dialog: {
+    (opts?: HUKitDialogOpts): HUKitDialog;
+    /** a kit card is up; a game's own key handlers should stand down */
+    anyOpen(): boolean;
+    /** the last popstate was the card stack's back guard, not a real navigation */
+    consumed(): boolean;
+  };
+  /** Resume, Help, Settings, Restart, Leave, Site menu, in that order */
+  gameMenu(opts?: {
+    title?: string;
+    onResume?: () => void;
+    help?: HUKitOpener;
+    settings?: HUKitOpener;
+    restart?: { verb?: string; title?: string; body?: string | Node; run?: () => void };
+    leave?: string | { href: string; label?: string };
+    siteMenu?: boolean;
+    escOpens?: boolean | ((e: KeyboardEvent) => boolean);
+    onOpen?: () => void;
+    onClose?: (why: string) => void;
+  }): HUKitGameMenu;
+  /** toggle rows that apply at once and persist per game */
+  settings: {
+    (opts?: {
+      id?: string;
+      title?: string;
+      rows?: HUKitSettingRow[];
+      onChange?: (key: string, value: boolean, values: Record<string, boolean>) => void;
+      onClose?: (why: string) => void;
+    }): HUKitSettings;
+    /** ready rows a game can opt into; no motion or theme row, those follow the device and the site */
+    readonly assist: {
+      readonly moreTime: HUKitSettingRow;
+      readonly soundsAsText: HUKitSettingRow;
+      readonly hints: HUKitSettingRow;
+    };
+  };
+  /** the how-to-play card: by itself on the first visit only */
+  howTo(opts?: {
+    id?: string;
+    title?: string;
+    rules?: string[];
+    example?: Node | ((el: HTMLElement) => Node | void);
+    action?: { label: string; run?: () => void };
+    auto?: boolean;
+    onClose?: (why: string) => void;
+  }): HUKitHowTo;
+  /** true only from the named verb; Cancel, X, Esc and back resolve false */
+  confirm(opts: {
+    title?: string;
+    body?: string | Node;
+    verb: string;
+    danger?: boolean;
+  }): Promise<boolean>;
 }
 
 /**

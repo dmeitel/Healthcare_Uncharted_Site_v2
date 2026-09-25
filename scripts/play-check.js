@@ -88,7 +88,7 @@ const FIND_OVERLAPS = () => {
   let failed = false;
 
   for (const w of WIDTHS) {
-    const ctx = await browser.newContext({
+    const ctx = await browser.newContext({ colorScheme: 'dark',
       viewport: { width: w, height: 820 }, deviceScaleFactor: 2, isMobile: w <= 699, hasTouch: w <= 699
     });
     const page = await ctx.newPage();

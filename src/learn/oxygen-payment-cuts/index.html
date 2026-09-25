@@ -1128,6 +1128,7 @@ function renderChart() {
         overflow:hidden;
       `;
       const cutLabel = document.createElement('span');
+      cutLabel.className = 'bar-cut-label';
       cutLabel.style.cssText = `
         font-family:'DM Mono',monospace;
         font-size:var(--t-micro);
@@ -1166,7 +1167,18 @@ function renderChart() {
   });
 
   renderXAxis();
+  fitCutLabels();
 }
+
+// A cut segment can be narrower than its own percentage on a phone (MIPPA's is about 10px wide
+// at 360) and the segment clips, so the number showed as a sliver of itself. A label that does
+// not fit steps aside; the row's detail, one tap away, states the same cut (2026-09-23).
+function fitCutLabels() {
+  document.querySelectorAll('.bar-cut-label').forEach((l) => {
+    l.style.visibility = l.offsetWidth > l.parentElement.clientWidth ? 'hidden' : '';
+  });
+}
+window.addEventListener('resize', fitCutLabels);
 
 function renderXAxis() {
   const xAxisEl = document.getElementById('xAxis');

@@ -1,0 +1,1148 @@
+---
+layout: base.njk
+title: "Vital Stats: The Healthcare Numbers Game"
+description: "A multiplayer party game about the real numbers in American healthcare. Everyone guesses, then bets on whose guess is closest without going over."
+noindex: true
+nav_merged: true
+no_footer: true
+eleventyExcludeFromCollections: true
+---
+{% raw %}
+<style>
+/* VITAL STATS · the healthcare numbers game (2026-09-23). A table game, so the page is a table: one felt, the
+   players around it, one question at a time. Built on the site's tokens; the eight player colors are the
+   accents the other games already draw with (dark first, a deep text step in light). */
+#vs, .vs-picker{ --felt:#0f2338; --felt2:#132c46; --edge:#23456b; --card:#17273f; --card2:#1d3150; --ink:#e6eef8; --mut:#8fabcc;
+  --acc:#4ECDC4; --acc-ink:#062024; --gold:#E8A838; --win:#4ecb8d; --lose:#ff7a7a;
+  --c0:#6aadff; --c1:#4ECDC4; --c2:#4ecb8d; --c3:#E8A838; --c4:#ff7a7a; --c5:#b06bff; --c6:#8fabcc; --c7:#f0c36a; }
+[data-theme="light"] #vs, [data-theme="light"] .vs-picker{ --felt:#eef3f8; --felt2:#e2eaf3; --edge:#c3d2e2; --card:#ffffff; --card2:#f4f7fb; --ink:#10233a; --mut:#4a5568;
+  --acc:#0D7268; --acc-ink:#ffffff; --gold:#7A5700; --win:#1B6B4C; --lose:#A8352F;
+  --c0:#1B5FA8; --c1:#1f7f79; --c2:#1B6B4C; --c3:#7A5700; --c4:#A8352F; --c5:#6b3fa0; --c6:#4A5568; --c7:#8a5a00; }
+
+#vs{ min-height:calc(100dvh - var(--nav-bar-h, 0px)); background:
+  radial-gradient(120% 80% at 50% 0%, var(--felt2) 0%, var(--felt) 60%); color:var(--ink); font-family:var(--font); }
+#vs .tool-bar{ background:transparent; }
+#vs .tool-bar-title span{ color:var(--acc); }
+#vs [data-nav-summon]{ display:none; }
+.vs-kit{ display:flex; gap:6px; align-items:center; }
+.vs-roomchip{ font-family:var(--mono); font-size:var(--t-label); letter-spacing:.14em; padding:6px 10px; border:1px solid var(--edge);
+  border-radius:999px; color:var(--mut); white-space:nowrap; }
+.vs-roomchip b{ color:var(--ink); letter-spacing:.2em; }
+.vs-stage{ max-width:1180px; margin:0 auto; padding:14px 18px 96px; display:grid; grid-template-columns:1fr 260px; gap:18px; align-items:start; }
+.vs-main{ min-width:0; }
+.vs-rail{ position:sticky; top:12px; display:flex; flex-direction:column; gap:8px; }
+.vs-rail:empty{ display:none; }
+
+/* one reusable card */
+.vs-card{ background:var(--card); border:1px solid var(--edge); border-radius:16px; padding:22px; box-shadow:var(--shadow); }
+.vs-k{ font-family:var(--mono); font-size:var(--t-label); letter-spacing:.14em; text-transform:uppercase; color:var(--mut); }
+.vs-h{ font-family:var(--display); font-weight:800; letter-spacing:-.02em; line-height:1.15; }
+.vs-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:12px 20px; border-radius:12px;
+  border:1px solid var(--edge); background:var(--card2); color:var(--ink); font:700 var(--t-ui)/1 var(--font); cursor:pointer; text-decoration:none;
+  transition:transform .12s, border-color .12s, background .12s; }
+.vs-btn:hover{ border-color:var(--acc); }
+.vs-btn:active{ transform:translateY(1px); }
+.vs-btn:focus-visible, .vs-slot:focus-visible, .vs-chipbtn:focus-visible, .vs-seg button:focus-visible, .vs-in:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; }
+.vs-btn--go{ background:var(--acc); border-color:var(--acc); color:var(--acc-ink); }
+.vs-btn--go:hover{ filter:brightness(1.06); }
+.vs-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+.vs-btn--wide{ width:100%; }
+.vs-note{ color:var(--mut); font-size:var(--t-fine); line-height:1.5; }
+.vs-where{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px; }
+.vs-where-v{ font-weight:700; color:var(--ink); }
+.vs-btn--sm{ min-height:44px; padding:0 14px; }
+.vs-cat--st{ margin-left:6px; }
+.vs-regions{ margin:10px 0 12px; }
+.vs-stgrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(52px, 1fr)); gap:6px; }
+.vs-stgrid button{ min-height:44px; border-radius:10px; border:1px solid var(--edge); background:var(--card2); color:var(--mut);
+  font:700 var(--t-fine)/1 var(--mono); cursor:pointer; }
+.vs-stgrid button[aria-pressed="true"]{ background:var(--acc); border-color:var(--acc); color:var(--acc-ink); }
+.vs-stgrid button:focus-visible, .vs-regions button:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; }
+.vs-home-row{ margin-top:14px; }
+.vs-turf{ color:var(--gold); border-color:var(--gold); }
+.vs-spread{ margin:14px 0 6px; }
+.vs-spread-track{ position:relative; height:40px; margin:0 10px; }
+.vs-spread-track::before{ content:''; position:absolute; left:-6px; right:-6px; top:27px; height:2px; border-radius:2px; background:var(--edge); }
+.vs-spread-track i{ position:absolute; top:23px; width:10px; height:10px; margin-left:-5px; border-radius:50%; background:var(--mut); opacity:.5; }
+.vs-spread-track i.on{ top:20px; width:16px; height:16px; margin-left:-8px; background:var(--gold); opacity:1; box-shadow:0 0 0 3px var(--card); }
+.vs-spread-track b{ position:absolute; top:0; transform:translateX(-50%); font:700 var(--t-fine)/1 var(--mono); color:var(--gold); white-space:nowrap; }
+.vs-spread-track b.l{ transform:translateX(-8px); } .vs-spread-track b.r{ transform:translateX(calc(-100% + 8px)); }
+.vs-spread figcaption{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top:4px; font:600 var(--t-fine)/1.3 var(--mono); color:var(--mut); }
+.vs-spread-rank{ font-family:var(--font); color:var(--ink); text-align:center; }
+.vs-picker .vs-pickn{ margin-top:4px; color:var(--ink); font-weight:600; }
+.vs-picker .vs-pickdone{ margin-top:14px; }
+
+/* HOME */
+.vs-home{ display:grid; grid-template-columns:1.1fr .9fr; grid-template-areas:'hero form' 'steps form'; gap:18px; align-items:start; }
+.vs-home .vs-hero{ grid-area:hero; } .vs-home .vs-form{ grid-area:form; } .vs-home .vs-steps{ grid-area:steps; margin-top:0; }
+.vs-stage.is-home{ grid-template-columns:1fr; max-width:980px; }
+.vs-stage.is-home .vs-rail{ display:none; }
+.vs-hero{ padding:28px; }
+.vs-hero .vs-h{ font-size:clamp(34px,6vw,58px); margin:6px 0 10px; }
+.vs-hero .vs-h span{ color:var(--acc); }
+.vs-hero p{ color:var(--mut); font-size:var(--t-body); line-height:1.6; max-width:52ch; }
+.vs-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:20px; }
+.vs-step{ background:var(--card2); border:1px solid var(--edge); border-radius:12px; padding:12px; }
+.vs-step b{ display:block; font-family:var(--display); font-size:var(--t-ui); margin-bottom:4px; }
+.vs-step span{ display:block; color:var(--mut); font-size:var(--t-fine); line-height:1.45; }
+.vs-form{ display:flex; flex-direction:column; gap:12px; }
+.vs-lbl{ display:block; font-size:var(--t-fine); color:var(--mut); margin-bottom:6px; font-weight:600; }
+.vs-in{ width:100%; min-height:48px; padding:10px 14px; border-radius:12px; border:1px solid var(--edge); background:var(--card2); color:var(--ink);
+  font:600 var(--t-ui)/1.2 var(--font); }
+.vs-in::placeholder{ color:var(--mut); opacity:.8; }
+.vs-row{ display:flex; gap:8px; }
+.vs-row .vs-in{ flex:1; min-width:0; }
+.vs-code{ text-transform:uppercase; letter-spacing:.3em; font-family:var(--mono); }
+.vs-or{ display:flex; align-items:center; gap:10px; color:var(--mut); font-size:var(--t-fine); }
+.vs-or::before, .vs-or::after{ content:''; flex:1; height:1px; background:var(--edge); }
+.vs-offer{ border-color:var(--win); color:var(--win); }
+
+/* LOBBY */
+.vs-lobby{ display:grid; gap:16px; }
+.vs-roomcode{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.vs-roomcode .code{ font-family:var(--mono); font-size:clamp(34px,7vw,52px); font-weight:700; letter-spacing:.24em; color:var(--ink); }
+.vs-set{ display:grid; gap:14px; }
+.vs-seg{ display:flex; gap:6px; flex-wrap:wrap; }
+.vs-seg button{ min-height:44px; min-width:44px; padding:8px 14px; border-radius:10px; border:1px solid var(--edge); background:var(--card2); color:var(--mut);
+  font:700 var(--t-fine)/1 var(--font); cursor:pointer; }
+.vs-seg button[aria-pressed="true"]{ background:var(--acc); border-color:var(--acc); color:var(--acc-ink); }
+.vs-seg button:disabled{ cursor:default; }
+.vs-stepper{ display:inline-flex; align-items:center; gap:10px; }
+.vs-stepper button{ width:44px; height:44px; border-radius:10px; border:1px solid var(--edge); background:var(--card2); color:var(--ink); font:700 20px/1 var(--font); cursor:pointer; }
+.vs-stepper b{ font-family:var(--mono); font-size:var(--t-ui); min-width:2ch; text-align:center; }
+
+/* PLAYERS */
+.vs-p{ display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:12px; background:var(--card); border:1px solid var(--edge); }
+.vs-p.me{ border-color:var(--acc); }
+.vs-p.gone{ opacity:.5; }
+.vs-av{ width:34px; height:34px; flex:none; border-radius:50%; display:grid; place-items:center; font:800 13px/1 var(--display);
+  color:#0d1117; background:var(--pc); box-shadow:inset 0 0 0 2px rgba(255,255,255,.25); }
+.vs-pn{ flex:1; min-width:0; }
+.vs-pn b{ display:block; font-size:var(--t-fine); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.vs-pn span{ font-size:var(--t-micro); color:var(--mut); }
+/* light theme draws each player in a deep shade, so the initials go white to keep 4.5:1 */
+[data-theme="light"] .vs-av, [data-theme="light"] .vs-who i{ color:#fff; }
+.vs-chips{ font-family:var(--mono); font-weight:700; font-size:var(--t-fine); color:var(--gold); white-space:nowrap; }
+.vs-st{ width:22px; text-align:center; font-weight:800; color:var(--win); }
+.vs-st.wait{ color:var(--mut); }
+.vs-st.wait::after{ content:'\2026'; }
+.vs-bot{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; border:1px solid var(--edge); border-radius:6px; padding:1px 5px; margin-left:4px; color:var(--mut); }
+
+/* ROUND HEADER + TIMER */
+.vs-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.vs-top .vs-k b{ color:var(--ink); }
+.vs-timer{ position:relative; width:52px; height:52px; flex:none; }
+.vs-timer svg{ width:52px; height:52px; transform:rotate(-90deg); }
+.vs-timer circle{ fill:none; stroke-width:5; }
+.vs-timer .bg{ stroke:var(--edge); }
+.vs-timer .fg{ stroke:var(--acc); stroke-linecap:round; transition:stroke-dashoffset .25s linear; }
+.vs-timer.low .fg{ stroke:var(--lose); }
+.vs-timer span{ position:absolute; inset:0; display:grid; place-items:center; font:700 var(--t-fine)/1 var(--mono); }
+.vs-cat{ display:inline-block; font-family:var(--mono); font-size:var(--t-micro); letter-spacing:.12em; text-transform:uppercase;
+  padding:4px 8px; border-radius:6px; border:1px solid var(--edge); color:var(--acc); }
+
+/* QUESTION */
+.vs-q{ font-family:var(--display); font-weight:700; font-size:clamp(21px,3vw,30px); line-height:1.3; letter-spacing:-.01em; margin:12px 0 18px; }
+.vs-ans{ display:flex; align-items:stretch; gap:0; border:2px solid var(--edge); border-radius:14px; background:var(--card2); overflow:hidden; }
+.vs-ans:focus-within{ border-color:var(--acc); }
+.vs-ans .fx{ display:grid; place-items:center; padding:0 14px; font:700 24px/1 var(--mono); color:var(--mut); }
+.vs-ans input{ flex:1; min-width:0; border:0; background:transparent; color:var(--ink); font:700 clamp(26px,5vw,34px)/1 var(--mono);
+  padding:14px 6px; outline:none; }
+.vs-echo{ min-height:22px; margin-top:8px; font-family:var(--mono); font-size:var(--t-fine); color:var(--mut); }
+.vs-locked{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:14px; border:1px solid var(--win); color:var(--ink); background:rgba(78,203,141,.08); }
+.vs-locked .v{ font:700 var(--t-lede, 24px)/1 var(--mono); }
+
+/* THE BOARD: the guesses laid out low to high */
+.vs-board{ display:flex; gap:10px; overflow-x:auto; padding:6px 2px 10px; scroll-snap-type:x mandatory; }
+.vs-slot{ scroll-snap-align:start; flex:1 0 128px; min-height:168px; display:flex; flex-direction:column; gap:8px; align-items:stretch; text-align:left;
+  padding:12px; border-radius:14px; border:1px solid var(--edge); background:var(--card); color:var(--ink); cursor:pointer; position:relative;
+  transition:transform .15s, border-color .15s, box-shadow .15s; }
+.vs-slot:hover{ border-color:var(--acc); }
+.vs-slot > *{ pointer-events:none; }
+.vs-slot.mine{ border-color:var(--acc); box-shadow:0 0 0 1px var(--acc) inset; }
+.vs-slot.win{ border-color:var(--win); box-shadow:0 0 0 2px var(--win) inset, 0 10px 30px rgba(78,203,141,.25); transform:translateY(-3px); }
+.vs-slot.lose{ opacity:.55; }
+.vs-odds{ align-self:flex-start; font:800 var(--t-fine)/1 var(--mono); color:var(--acc-ink); background:var(--gold); padding:4px 8px; border-radius:6px; }
+.vs-slot .val{ font:700 22px/1.1 var(--mono); word-break:break-word; }
+.vs-slot.low .val{ font:700 var(--t-fine)/1.3 var(--font); color:var(--mut); }
+.vs-who{ display:flex; flex-wrap:wrap; gap:4px; }
+.vs-who i{ width:22px; height:22px; border-radius:50%; background:var(--pc); display:grid; place-items:center; font:800 10px/1 var(--display); color:#0d1117; font-style:normal; }
+.vs-bets{ margin-top:auto; display:flex; flex-wrap:wrap; gap:4px; min-height:22px; }
+.vs-bets .ch{ width:20px; height:20px; border-radius:50%; background:var(--pc); border:2px dashed rgba(255,255,255,.7); animation:vsDrop .28s ease-out; }
+.vs-bets .ch.all{ border-style:solid; border-color:var(--gold); }
+@keyframes vsDrop{ from{ transform:translateY(-10px) scale(.6); opacity:0; } to{ transform:none; opacity:1; } }
+.vs-tray{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:6px; }
+.vs-tray .ch{ width:26px; height:26px; border-radius:50%; background:var(--pc); border:2px dashed rgba(255,255,255,.75); }
+.vs-tray .ch.used{ opacity:.25; }
+.vs-allin{ margin-top:14px; padding:14px; border-radius:14px; border:1px dashed var(--gold); display:grid; gap:10px; }
+
+/* REVEAL */
+.vs-truth{ text-align:center; padding:8px 0 4px; }
+.vs-truth .v{ font:800 clamp(40px,9vw,72px)/1 var(--mono); color:var(--win); letter-spacing:-.02em; }
+.vs-why{ margin-top:10px; font-size:var(--t-body); line-height:1.55; }
+.vs-src{ margin-top:8px; font-size:var(--t-fine); color:var(--mut); }
+.vs-src a{ color:var(--acc); }
+.vs-pay{ display:grid; gap:6px; margin-top:14px; }
+.vs-pay div{ display:flex; justify-content:space-between; gap:10px; padding:8px 12px; border-radius:10px; background:var(--card2); font-size:var(--t-fine); }
+.vs-pay div > span{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0; }
+.vs-pay div > b{ align-self:center; }
+.vs-pay .vs-av{ width:28px; height:28px; font-size:11px; }
+.vs-pay b.up{ color:var(--win); font-family:var(--mono); }
+.vs-pay b.dn{ color:var(--lose); font-family:var(--mono); }
+
+/* FINAL */
+.vs-podium{ display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:10px; align-items:end; margin:18px 0; }
+.vs-pod{ text-align:center; border-radius:14px 14px 6px 6px; background:var(--card2); border:1px solid var(--edge); padding:14px 8px; }
+.vs-pod .vs-av{ margin:0 auto 8px; width:44px; height:44px; font-size:16px; }
+.vs-pod.p1{ min-height:170px; border-color:var(--gold); }
+.vs-pod.p2{ min-height:140px; } .vs-pod.p3{ min-height:120px; }
+.vs-pod .n{ font-weight:700; font-size:var(--t-fine); }
+.vs-pod .c{ font:800 var(--t-ui)/1.2 var(--mono); color:var(--gold); }
+.vs-pod .r{ font:800 28px/1 var(--display); color:var(--mut); }
+.vs-pod.p1 .r{ color:var(--gold); }
+
+/* the phone dock: the one action of the phase, under the thumb */
+.vs-dock{ display:none; }
+.vs-toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); opacity:0; pointer-events:none; z-index:130;
+  background:var(--card); border:1px solid var(--edge); color:var(--ink); padding:10px 16px; border-radius:12px; font-size:var(--t-fine);
+  transition:opacity .2s, transform .2s; box-shadow:var(--shadow); max-width:min(92vw,440px); }
+.vs-toast.show{ opacity:1; transform:translateX(-50%); }
+
+@media (max-width:980px){ .vs-stage{ grid-template-columns:1fr; } .vs-rail{ position:static; flex-direction:row; overflow-x:auto; } .vs-rail .vs-p{ flex:0 0 auto; } .vs-home{ grid-template-columns:1fr; grid-template-areas:'hero' 'form' 'steps'; } }
+@media (max-width:699px), (max-height:500px){
+  .vs-stage{ padding:10px 12px 110px; gap:12px; }
+  .vs-card{ padding:16px; border-radius:14px; }
+  .vs-hero{ padding:20px; }
+  .vs-steps{ grid-template-columns:1fr; }
+  #vs .tool-bar-kicker, #vs .tool-bar-crumb{ display:none; }
+  .vs-kit .hu-gm-btn{ width:44px; padding:0; justify-content:center; } .vs-kit .hu-gm-btn span{ display:none; }
+  .vs-board{ flex-direction:column; overflow:visible; scroll-snap-type:none; }
+  .vs-slot{ flex:none; min-height:0; flex-direction:row; align-items:center; flex-wrap:wrap; }
+  .vs-slot .val{ flex:1; font-size:20px; }
+  .vs-slot .vs-bets{ margin-top:0; width:100%; }
+  .vs-slot .vs-bets:empty, .vs-slot .vs-who:empty{ display:none; }
+  .vs-slot{ padding:10px 12px; gap:6px 10px; }
+  .vs-podium{ gap:6px; }
+  .vs-rail .vs-p{ padding:6px 10px; }
+  .vs-rail .vs-pn span{ display:none; }
+}
+/* an upright phone gets the phase's action pinned under the thumb */
+@media (max-width:699px) and (min-height:501px){
+  .vs-dock{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:110; gap:10px; align-items:center;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:var(--card); border-top:1px solid var(--edge); }
+  .vs-dock:empty{ display:none; }
+  .vs-dock .vs-btn{ flex:1; }
+  .vs-main .vs-act{ display:none; }
+}
+@media (max-width:420px){ .vs-spread figcaption{ flex-wrap:wrap; } .vs-spread-rank{ order:-1; flex-basis:100%; text-align:left; } }
+@media (prefers-reduced-motion: reduce){
+  .vs-btn, .vs-slot, .vs-timer .fg, .vs-toast{ transition:none; }
+  .vs-bets .ch{ animation:none; }
+  .vs-slot.win{ transform:none; }
+}
+</style>
+
+<div class="vs hu-shell" id="vs">
+<header class="tool-bar">
+  <a class="tb-brand" href="/" aria-label="Healthcare Uncharted, home">
+    <img src="/brand/hu-mark-dark.svg" alt="" class="hu-logo-ondark">
+    <img src="/brand/hu-mark.svg" alt="" class="hu-logo-onlight">
+  </a>
+  <span class="tool-bar-kicker">Secret Menu</span>
+  <h1 class="tool-bar-title">Vital <span>Stats</span></h1>
+  <span class="tool-bar-crumb">The healthcare numbers game</span>
+  <span class="tool-bar-spacer"></span>
+  <div class="tool-bar-actions">
+    <span class="vs-roomchip" id="vsRoom" hidden></span>
+    <span class="vs-kit" id="vsKit"></span>
+    <!-- kept, never shown: the menu's Site menu row presses it (the merged band's summon) -->
+    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu" tabindex="-1"><i data-lucide="menu" aria-hidden="true"></i></button>
+  </div>
+</header>
+<div class="vs-stage">
+  <main class="vs-main" id="vsMain"></main>
+  <aside class="vs-rail" id="vsRail" aria-label="Players at the table"></aside>
+</div>
+<div class="vs-dock" id="vsDock"></div>
+<div class="vs-toast" id="vsToast" role="status" aria-live="polite"></div>
+<div class="visually-hidden" id="vsSay" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+</div>
+
+<script src="/assets/js/vendor/supabase-2.115.0.min.js"></script>
+<script src="/assets/js/hu-kit.js?v=20260923"></script>
+<script src="/assets/js/hu-rng.js?v=20260920"></script>
+<script src="/assets/js/hu-table.js?v=20260923"></script>
+
+<!-- THE ENGINE. Plain data and verbs, no DOM (.claude/rules/games.md): one state object that
+     serializes to JSON, every change through dispatchAct, dice from the seeded generator, and the
+     clock passed in, never read. The page below renders it; the tests load this block alone. -->
+<script id="vs-engine">
+(function(root){
+'use strict';
+const CATS = ['Workforce','Coverage','Hospitals','Money','Health'];
+const SEATS = [1,2,3,4,5,6,7,8].map(n=>({ id:'p'+n, label:'Chair '+n, desc:'' }));
+/* every player makes the same moves for their own chair ('*': the table kit stamps the sender's seat);
+   the host runs the table */
+const VERB_SEAT = { answer:'*', lock:'*', bet:'*', allin:'*', home:'*', start:'host', set:'host', bots:'host', next:'host', again:'host' };
+const BOTS = [['Priya','RT'],['Marcus','CFO'],['Lena','Charge RN'],['Dr. Ruiz','Hospitalist'],['Ada','Informatics'],['Sam','Coder'],['Grace','Case Mgr']];
+const SPEED = { relaxed:1.5, normal:1, quick:0.7 };
+const SECS = { answer:40, bet:25, reveal:10 };
+const MAX_PLAYERS = 8, CLOSEST_BONUS = 3, LOW_ODDS = 6, MAX_ODDS = 5;
+/* the fifty states and DC, for a state game (the bank tags each state question with its code) */
+const STATE_NAMES = { AL:'Alabama', AK:'Alaska', AZ:'Arizona', AR:'Arkansas', CA:'California', CO:'Colorado', CT:'Connecticut',
+  DE:'Delaware', DC:'District of Columbia', FL:'Florida', GA:'Georgia', HI:'Hawaii', ID:'Idaho', IL:'Illinois', IN:'Indiana', IA:'Iowa',
+  KS:'Kansas', KY:'Kentucky', LA:'Louisiana', ME:'Maine', MD:'Maryland', MA:'Massachusetts', MI:'Michigan', MN:'Minnesota',
+  MS:'Mississippi', MO:'Missouri', MT:'Montana', NE:'Nebraska', NV:'Nevada', NH:'New Hampshire', NJ:'New Jersey', NM:'New Mexico',
+  NY:'New York', NC:'North Carolina', ND:'North Dakota', OH:'Ohio', OK:'Oklahoma', OR:'Oregon', PA:'Pennsylvania', RI:'Rhode Island',
+  SC:'South Carolina', SD:'South Dakota', TN:'Tennessee', TX:'Texas', UT:'Utah', VT:'Vermont', VA:'Virginia', WA:'Washington',
+  WV:'West Virginia', WI:'Wisconsin', WY:'Wyoming' };
+const STATES = Object.keys(STATE_NAMES).sort();
+/* the Census Bureau's four regions, the quick picks in the state picker */
+const REGIONS = {
+  West:['AK','AZ','CA','CO','HI','ID','MT','NM','NV','OR','UT','WA','WY'],
+  Midwest:['IA','IL','IN','KS','MI','MN','MO','ND','NE','OH','SD','WI'],
+  South:['AL','AR','DC','DE','FL','GA','KY','LA','MD','MS','NC','OK','SC','TN','TX','VA','WV'],
+  Northeast:['CT','MA','ME','NH','NJ','NY','PA','RI','VT'] };
+
+function rngOf(G){ const r = root.HURng.make(G.rng.seed); r.restore(G.rng); return r; }
+function saveRng(G, r){ G.rng = r.state(); }
+function gauss(r){ let u = 0, v = 0; while(!u) u = r(); while(!v) v = r(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+const roundTo = (v, dp) => { const f = Math.pow(10, dp||0); return Math.round(v*f)/f; };
+
+function newGame(seed){
+  return { v:1, rng:{ seed:seed>>>0, n:0 }, phase:'lobby', round:0, seq:0, hostNow:0,
+    settings:{ rounds:7, speed:'normal', cats:CATS.slice(), bots:2, where:'us', states:[], turf:true },
+    turf:{}, spread:null,
+    players:{}, order:[], deck:[], q:null, slots:[], deadline:0, phaseAt:0, last:null };
+}
+function colorFor(G){ const used = new Set(Object.values(G.players).filter(p=>!p.gone).map(p=>p.color)); for(let i=0;i<8;i++) if(!used.has(i)) return i; return 0; }
+function blank(p){ p.answer = null; p.locked = false; p.bets = [null, null]; p.allin = null; p.plan = null; return p; }
+function addPlayer(G, id, name, bot){
+  if (G.players[id]){ G.players[id].name = name || G.players[id].name; G.players[id].gone = false; return G.players[id]; }
+  if (active(G).length >= MAX_PLAYERS) return null;
+  const p = blank({ id, name:String(name||'Player').slice(0,24), bot:!!bot, color:colorFor(G), chips:0, gone:false, joined:G.round, home:'' });
+  G.players[id] = p; G.order.push(id); return p;
+}
+function dropPlayer(G, id){
+  const p = G.players[id]; if (!p) return;
+  if (G.phase === 'lobby'){ delete G.players[id]; G.order = G.order.filter(x=>x!==id); }
+  else p.gone = true;                                     // mid-game a seat keeps its chips and sits out
+}
+function active(G){ return G.order.map(id=>G.players[id]).filter(p=>p && !p.gone); }
+function syncBots(G){
+  const want = Math.max(0, Math.min(6, G.settings.bots|0));
+  let bots = G.order.filter(id=>G.players[id] && G.players[id].bot);
+  while (bots.length > want){ const id = bots.pop(); dropPlayer(G, id); }
+  let i = 0;
+  while (bots.length < want && active(G).length < MAX_PLAYERS){
+    while (G.players['b'+(i+1)]) i++;
+    const [n, role] = BOTS[i % BOTS.length];
+    addPlayer(G, 'b'+(i+1), n+' · '+role, true); bots.push('b'+(i+1)); i++;
+  }
+}
+
+/* the board: every distinct guess low to high, plus the slot below them all; the middle pays 2 to 1
+   and the odds climb toward the edges, the way the classic board pays long shots */
+function oddsFor(i, k){ const mid = (k-1)/2; const d = Math.round(Math.abs(i-mid) - 0.01); return Math.min(MAX_ODDS, 2 + Math.max(0, d)); }
+function slotsFor(G){
+  const groups = new Map();
+  active(G).forEach(p=>{ if (p.answer == null) return; const k = String(p.answer); if (!groups.has(k)) groups.set(k, { val:p.answer, seats:[] }); groups.get(k).seats.push(p.id); });
+  const list = Array.from(groups.values()).sort((a,b)=>a.val-b.val);
+  return [{ val:null, low:true, seats:[], odds:LOW_ODDS }].concat(list.map((s,i)=>({ val:s.val, low:false, seats:s.seats, odds:oddsFor(i, list.length) })));
+}
+/* closest WITHOUT going over: the highest guess at or under the truth; if every guess is over, the low slot */
+function winningSlot(slots, truth){ let w = 0; slots.forEach((s,i)=>{ if (i>0 && s.val <= truth) w = i; }); return w; }
+
+function secs(G, key){ return Math.round(SECS[key] * (SPEED[G.settings.speed] || 1)); }
+function botEstimate(G, r, p){
+  const q = G.q, skill = 0.22 + ((p.color*37) % 30)/100;   // each bot its own steady hand, 0.22 to 0.51
+  let v = q.a * Math.exp(gauss(r)*skill);
+  if (q.suf === '%' && q.a <= 100) v = Math.min(100, v);
+  if (q.pre === '#') v = Math.min(51, Math.max(1, v));       /* a place among the states */
+  if (q.pre === '1 in ') v = Math.max(1, v);
+  return Math.max(0, roundTo(v, q.dp||0));
+}
+function planBots(G, now, r){
+  const span = (G.deadline - now);
+  active(G).forEach(p=>{ if (!p.bot) return; p.plan = { at: now + 1500 + Math.floor(r()*Math.max(1000, span*0.55)) }; if (G.phase === 'answer') p.plan.val = botEstimate(G, r, p); });
+}
+function botBets(G, r, p){
+  const belief = p.answer != null ? p.answer * Math.exp(gauss(r)*0.12) : G.q.a * Math.exp(gauss(r)*0.4);
+  const target = winningSlot(G.slots, belief);
+  p.bets = [target, r() < 0.62 ? target : Math.max(0, Math.min(G.slots.length-1, target + (r()<0.5?-1:1)))];
+  if (finalRound(G) && p.chips > 0) p.allin = { slot:target, amt:Math.floor(p.chips*(0.2 + r()*0.4)) };
+}
+/* a narrow state game can hold fewer questions than the rounds asked for; the deck is then the length */
+const roundsIn = G => (G.deck && G.deck.length) ? Math.min(G.settings.rounds, G.deck.length) : G.settings.rounds;
+const finalRound = G => G.round === roundsIn(G);
+
+/* every question the table's settings allow. The whole U.S. is the everyday mix; state by state is only
+   questions about one state, from the picked states (none picked means every state). */
+function poolFor(G){
+  const s = G.settings, B = G.bank || {}, picked = s.states || [];
+  return Object.keys(B).filter(id=>{
+    const q = B[id];
+    if (s.cats.indexOf(q.cat) < 0) return false;
+    if (s.where === 'states') return !!q.st && (!picked.length || picked.indexOf(q.st) > -1);
+    return !q.more;
+  });
+}
+/* the deal: shuffled, unseen first, then no template twice (one obesity question a game) and, in a state
+   game, the rounds spread across the picked states before any state gets a second turn */
+function dealDeck(G, r, seen){
+  const B = G.bank || {}, s = G.settings, n = s.rounds, pool = poolFor(G);
+  for (let i = pool.length-1; i > 0; i--){ const j = Math.floor(r()*(i+1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+  if (seen.length) pool.sort((a,b)=>(seen.indexOf(a) > -1) - (seen.indexOf(b) > -1));
+  const many = s.where === 'states' ? ((s.states || []).length || STATES.length) : 0;
+  const cap = many ? Math.ceil(n / Math.min(many, n)) : Infinity;
+  const catCap = Math.ceil(n / Math.max(1, s.cats.length)) + 1;
+  const out = [], took = new Set(), usedK = new Set(), perSt = {}, perCat = {};
+  const passes = [q => !usedK.has(q.k || q.id) && (perSt[q.st] || 0) < cap && (perCat[q.cat] || 0) < catCap, q => !usedK.has(q.k || q.id), () => true];
+  for (const ok of passes){
+    for (const id of pool){
+      if (out.length >= n) break;
+      if (took.has(id) || !ok(B[id])) continue;
+      out.push(id); took.add(id); usedK.add(B[id].k || id); if (B[id].st) perSt[B[id].st] = (perSt[B[id].st] || 0) + 1; perCat[B[id].cat] = (perCat[B[id].cat] || 0) + 1;
+    }
+  }
+  return out;
+}
+
+function beginRound(G, now, r){
+  G.round += 1; G.phase = 'answer'; G.q = G.bank[G.deck[G.round-1]] || null; G.slots = []; G.last = null; G.spread = null;
+  active(G).forEach(blank);
+  G.phaseAt = now; G.deadline = now + secs(G,'answer')*1000; planBots(G, now, r);
+}
+function toBet(G, now, r){
+  G.phase = 'bet'; G.slots = slotsFor(G);
+  active(G).forEach(p=>{ p.locked = false; p.bets = [null,null]; p.allin = null; });
+  G.phaseAt = now; G.deadline = now + secs(G,'bet')*1000; planBots(G, now, r);
+}
+function settle(G){
+  const truth = G.q.a, w = winningSlot(G.slots, truth), delta = {}, why = {};
+  active(G).forEach(p=>{ delta[p.id] = 0; why[p.id] = []; });
+  if (w > 0) G.slots[w].seats.forEach(id=>{ if (delta[id]==null) return; delta[id] += CLOSEST_BONUS; why[id].push('closest guess +'+CLOSEST_BONUS); });
+  const tf = G.turf && G.turf[G.round];
+  if (tf && w > 0) G.slots[w].seats.forEach(id=>{ if (delta[id]==null) return; delta[id] += CLOSEST_BONUS; why[id].push('home turf +'+CLOSEST_BONUS); });
+  active(G).forEach(p=>{
+    p.bets.forEach(b=>{ if (b === w){ delta[p.id] += G.slots[w].odds; why[p.id].push('chip at '+G.slots[w].odds+' to 1 +'+G.slots[w].odds); } });
+    if (p.allin && p.allin.amt > 0){
+      const amt = Math.min(p.allin.amt, p.chips);
+      if (p.allin.slot === w){ delta[p.id] += amt*G.slots[w].odds; why[p.id].push('all in '+amt+' at '+G.slots[w].odds+' to 1 +'+(amt*G.slots[w].odds)); }
+      else { delta[p.id] -= amt; why[p.id].push('all in '+amt+' lost'); }
+    }
+    p.chips = Math.max(0, p.chips + delta[p.id]);
+  });
+  G.last = { win:w, truth, delta, why, turf: tf ? { st:tf.st, seats:tf.seats.slice(), won: w > 0 ? G.slots[w].seats.slice() : [] } : null };
+}
+function toReveal(G, now){ G.phase = 'reveal'; settle(G); G.spread = spreadFor(G, G.q); G.phaseAt = now; G.deadline = now + secs(G,'reveal')*1000; }
+/* HOME TURF: one round about each player's home state, spaced through the game. The closest guess on
+   that round pays double, whoever makes it: the locals defend it or somebody takes it. Bots have no home. */
+function placeTurf(G, r){
+  G.turf = {};
+  if (!G.settings.turf) return;
+  const B = G.bank || {}, s = G.settings, deck = G.deck, n = deck.length, homes = [];
+  active(G).forEach(p=>{ if (p.bot || !p.home || !STATE_NAMES[p.home]) return; const h = homes.find(x=>x.st === p.home); if (h) h.seats.push(p.id); else homes.push({ st:p.home, seats:[p.id] }); });
+  const use = homes.slice(0, n);
+  const usedK = new Set(deck.map(id=>B[id].k || id));
+  use.forEach((h, j)=>{
+    const pos = Math.min(n-1, Math.floor((j+1) * n / (use.length+1)));
+    const cands = Object.keys(B).filter(id=>B[id].st === h.st && s.cats.indexOf(B[id].cat) > -1 && deck.indexOf(id) < 0).sort();
+    if (!cands.length) return;
+    for (let i = cands.length-1; i > 0; i--){ const k = Math.floor(r()*(i+1)); const t = cands[i]; cands[i] = cands[k]; cands[k] = t; }
+    const pick = cands.find(id=>!usedK.has(B[id].k || id)) || cands[0];
+    deck[pos] = pick; usedK.add(B[pick].k || pick);
+    G.turf[pos+1] = { st:h.st, seats:h.seats.slice() };
+  });
+}
+/* THE STRIP: at the reveal, the same question's answer for every state, low to high, so the table sees
+   where the asked state sits. Built from the bank on the host and carried in the state. */
+function spreadFor(G, q){
+  /* a county per state is not a state; ranks are evenly spaced; one in N runs backwards (the most smokers is the SMALLEST N) */
+  if (!q || !q.st || !q.k || q.k === 'uninsured-county' || q.f === 'rank' || q.f === 'in') return null;
+  const B = G.bank || {}, pts = [];
+  for (const id in B){ const x = B[id]; if (x.k === q.k && x.st && (x.f || '') === (q.f || '')) pts.push([x.st, x.a]); }
+  if (pts.length < 10) return null;
+  return pts.sort((a,b)=>a[1]-b[1] || (a[0] < b[0] ? -1 : 1));
+}
+function afterReveal(G, now, r){ if (G.round >= roundsIn(G)){ G.phase = 'final'; G.deadline = 0; } else beginRound(G, now, r); }
+
+function allLocked(G){ const a = active(G); return a.length > 0 && a.every(p=>p.locked); }
+
+/* THE ONE DOOR. Every change is a verb with plain data. The host (or a solo page) calls it; a guest's
+   intent reaches it through the table kit with data.seat stamped. `now` rides in the data. */
+function dispatchAct(G, verb, d){
+  d = d || {}; const now = +d.now || 0; let changed = true;
+  const me = d.seat && G.players[d.seat];
+  const r = rngOf(G);
+  if (verb === 'set' && G.phase === 'lobby'){
+    if (d.key === 'rounds' && [5,7,10].indexOf(+d.val) > -1) G.settings.rounds = +d.val;
+    else if (d.key === 'speed' && SPEED[d.val]) G.settings.speed = d.val;
+    else if (d.key === 'where' && (d.val === 'us' || d.val === 'states')) G.settings.where = d.val;
+    else if (d.key === 'turf' && (d.val === 'on' || d.val === 'off')) G.settings.turf = d.val === 'on';
+    else if (d.key === 'states' && Array.isArray(d.val)) G.settings.states = STATES.filter(c=>d.val.indexOf(c) > -1);
+    else if (d.key === 'cat' && CATS.indexOf(d.val) > -1){ const on = G.settings.cats.indexOf(d.val) > -1; if (on && G.settings.cats.length > 1) G.settings.cats = G.settings.cats.filter(c=>c!==d.val); else if (!on) G.settings.cats = G.settings.cats.concat([d.val]); }
+    else changed = false;
+  }
+  else if (verb === 'home' && (G.phase === 'lobby' || G.phase === 'final') && me && !me.bot && (d.val === '' || STATE_NAMES[d.val])){ me.home = d.val; }
+  else if (verb === 'bots' && G.phase === 'lobby'){ G.settings.bots = Math.max(0, Math.min(6, (G.settings.bots|0) + (+d.by||0))); syncBots(G); }
+  else if (verb === 'start' && (G.phase === 'lobby' || G.phase === 'final')){
+    if (active(G).length < 2) changed = false;
+    else {
+      if (!G.settings.where) G.settings.where = 'us';          /* a table saved before state games existed */
+      if (!Array.isArray(G.settings.states)) G.settings.states = [];
+      const seen = Array.isArray(d.seen) ? d.seen : [];   /* a returning host gets fresh questions before repeats */
+      G.deck = dealDeck(G, r, seen); placeTurf(G, r); G.round = 0;
+      active(G).forEach(p=>{ p.chips = 0; });
+      if (G.deck.length) beginRound(G, now, r); else changed = false;
+    }
+  }
+  else if (verb === 'answer' && G.phase === 'answer' && me && !me.locked){
+    const v = +d.val; if (!isFinite(v) || v < 0 || v > 1e15) changed = false; else me.answer = roundTo(v, 6);
+  }
+  /* a guess and its lock travel as ONE intent (val rides the lock): sent as two, the relay can deliver the lock
+     first, the host refuses a lock with no guess, and that player sits frozen until the clock runs out */
+  else if (verb === 'lock' && me && !me.locked && (G.phase === 'bet' || G.phase === 'answer')){
+    if (G.phase === 'answer' && d.val != null && d.val !== ''){ const v = +d.val; if (!isFinite(v) || v < 0 || v > 1e15) changed = false; else { me.answer = roundTo(v, 6); me.locked = true; } }
+    else if (G.phase === 'answer' && me.answer == null) changed = false;
+    else me.locked = true;
+  }
+  else if (verb === 'bet' && G.phase === 'bet' && me && !me.locked){
+    const i = +d.i, s = d.slot == null || d.slot === '' ? null : +d.slot;
+    if ((i !== 0 && i !== 1) || (s != null && !(s >= 0 && s < G.slots.length))) changed = false; else me.bets[i] = s;
+  }
+  else if (verb === 'allin' && G.phase === 'bet' && finalRound(G) && me && !me.locked){
+    const s = +d.slot, amt = Math.max(0, Math.min(me.chips, Math.floor(+d.amt||0)));
+    if (!(s >= 0 && s < G.slots.length)) changed = false; else me.allin = amt > 0 ? { slot:s, amt } : null;
+  }
+  else if (verb === 'next'){
+    if (G.phase === 'answer') toBet(G, now, r);
+    else if (G.phase === 'bet') toReveal(G, now);
+    else if (G.phase === 'reveal') afterReveal(G, now, r);
+    else changed = false;
+  }
+  else if (verb === 'again' && G.phase === 'final'){ G.phase = 'lobby'; G.round = 0; G.q = null; G.slots = []; G.last = null; G.turf = {}; G.spread = null; active(G).forEach(p=>{ blank(p); p.chips = 0; }); }
+  else changed = false;
+  saveRng(G, r);
+  if (changed){ G.seq++; G.hostNow = now; }
+  return changed;
+}
+/* the host's clock: bots act on their own schedule, and a phase ends when everyone is in or time is up */
+function tick(G, now){
+  if (G.phase !== 'answer' && G.phase !== 'bet' && G.phase !== 'reveal') return false;
+  const r = rngOf(G); let changed = false;
+  /* bots take their time while a human is still thinking, and stop making anyone wait once every human is in */
+  const humansIn = active(G).filter(p=>!p.bot).every(p=>p.locked);
+  if (G.phase !== 'reveal') active(G).forEach(p=>{
+    if (!p.bot || p.locked || !p.plan || (now < p.plan.at && !humansIn)) return;
+    if (G.phase === 'answer') p.answer = p.plan.val; else botBets(G, r, p);
+    p.locked = true; changed = true;
+  });
+  const done = G.phase !== 'reveal' && allLocked(G);
+  if (done || now >= G.deadline){
+    if (G.phase === 'answer'){ active(G).forEach(p=>{ if (p.answer != null) p.locked = true; }); toBet(G, now, r); }
+    else if (G.phase === 'bet') toReveal(G, now);
+    else afterReveal(G, now, r);
+    changed = true;
+  }
+  saveRng(G, r);
+  if (changed){ G.seq++; G.hostNow = now; }
+  return changed;
+}
+/* the wire and the save are the same object: the bank rides once, as the questions this game dealt */
+function packState(G){ const out = JSON.parse(JSON.stringify(Object.assign({}, G, { bank:undefined }))); out.bank = undefined; delete out.bank; return out; }
+function applyState(G, data, bank){ const next = JSON.parse(JSON.stringify(data)); next.bank = bank || (G && G.bank) || null; return next; }
+
+root.VitalStatsEngine = { CATS, SEATS, VERB_SEAT, SPEED, SECS, CLOSEST_BONUS, LOW_ODDS, MAX_PLAYERS, STATE_NAMES, STATES, REGIONS, poolFor, dealDeck, roundsIn, placeTurf, spreadFor,
+  newGame, addPlayer, dropPlayer, active, syncBots, slotsFor, oddsFor, winningSlot, settle, dispatchAct, tick, packState, applyState, finalRound, botEstimate };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<!-- THE PAGE: reads the state and draws it. The table kit carries it between browsers. -->
+<script>
+(function(){
+'use strict';
+const E = window.VitalStatsEngine;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const TEST = !!window.__UG_TEST;
+/* the multiplayer backend, the same project as the other table games (the CSP names it once) */
+const SUPA = { url:'https://swntgsmpcqyuapkkyaqj.supabase.co', anonKey:'sb_publishable_XMnCUWKng3-7JhqP2FJehQ_a42gkCwQ' };
+const NAME_KEY = 'vs-name';
+
+let G = null;            // the game: the host's truth, a guest's copy
+let BANK = null;         // id -> question, loaded once
+let mode = 'home';       // home | solo | table
+let offset = 0;          // a guest's clock correction: host time minus this browser's time
+let shownKey = '';       // which screen is drawn, so typing is never interrupted by a redraw
+let lastSay = '';
+
+/* ── numbers: typing them and showing them ── */
+function parseNum(str){
+  if (str == null) return NaN;
+  let s = String(str).trim().toLowerCase().replace(/[$,%\s]/g, '').replace(/percent$/, '');
+  const m = s.match(/^(-?\d*\.?\d+)(k|m|b|t|thousand|million|billion|trillion)?$/);
+  if (!m) return NaN;
+  const mult = { k:1e3, thousand:1e3, m:1e6, million:1e6, b:1e9, billion:1e9, t:1e12, trillion:1e12 }[m[2]] || 1;
+  return parseFloat(m[1]) * mult;
+}
+/* some answers are already counted in a unit (556.6 billion dollars): a typed "556b" means 556 of THOSE */
+function scaleOf(q){ const t = ((q && q.suf) || '') + ' ' + ((q && q.unit) || ''); return /trillion/i.test(t) ? 1e12 : /billion/i.test(t) ? 1e9 : /million/i.test(t) ? 1e6 : /thousand/i.test(t) ? 1e3 : 1; }
+function readGuess(q, str){ const v = parseNum(str); if (!isFinite(v)) return NaN; const sc = scaleOf(q); return sc > 1 && /[a-z]/i.test(String(str)) ? v / sc : v; }
+function hintFor(q){ if (q && q.pre === '1 in ') return 'Type the N in one in N, like 8.'; if (q && q.pre === '#') return 'Type a place, like 12. Number 1 is the top.'; if (q && q.pre === '$' && q.dp === 2) return 'Type dollars and cents, like 38.50.'; const sc = scaleOf(q); if (sc === 1e12) return 'Type the number of trillions, like 4.5.'; if (sc === 1e9) return 'Type the number of billions, like 450.'; if (sc === 1e6) return 'Type the number of millions, like 12.5.'; if (sc === 1e3) return 'Type the number of thousands, like 85.'; if (q && q.suf === '%') return 'Type a percent, like 12.5.'; if (q && q.pre === '$') return 'Type a number. 82k, 1.2M and 4.9 trillion all work.'; return 'Type a number. 82k and 1.2M both work.'; }
+function big(v, dp){
+  const a = Math.abs(v);
+  const f = (x, d) => x.toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:d });
+  if (a >= 1e12) return f(v/1e12, 2) + ' trillion';
+  if (a >= 1e9) return f(v/1e9, 2) + ' billion';
+  if (a >= 1e7) return f(v/1e6, 1) + ' million';
+  return f(v, dp == null ? 0 : dp);
+}
+function fmtVal(q, v){ if (v == null) return ''; return (q && q.pre || '') + big(v, q ? q.dp : 0) + (q && q.suf || ''); }
+
+/* ── who am I ── */
+function mySeat(){ return mode === 'table' ? T.NET.seat : (mode === 'solo' ? 'p1' : null); }
+function me(){ const s = mySeat(); return s && G && G.players[s] || null; }
+function isHost(){ return mode === 'solo' || (mode === 'table' && T.NET.mode === 'host'); }
+function hostNow(){ return Date.now() + (isHost() ? 0 : offset); }
+function playerName(){ let n = ''; try { n = localStorage.getItem(NAME_KEY) || ''; } catch(e){} return n; }
+function setName(n){ try { localStorage.setItem(NAME_KEY, n); } catch(e){} }
+
+/* ── the table kit ── */
+const T = window.HUTable.create({
+  channelPrefix:'vs-room-', memoKey:'vs_room', backend:SUPA, seats:E.SEATS, verbSeat:E.VERB_SEAT, autoSeat:true, wire:'vs',
+  name: () => playerName() || 'Player',
+  envelope: () => ({ save: G ? E.packState(G) : null, ui: { kind: G ? G.phase : 'none', seq: G ? G.seq : 0 } }),
+  onState: env => {
+    if (!env.save) return;
+    T.NET.lastUiSeq = env.ui ? env.ui.seq : 0;
+    G = E.applyState(G, env.save, BANK);
+    offset = (G.hostNow || Date.now()) - Date.now();
+    render();
+  },
+  onResume: env => { if (env.save){ G = E.applyState(G, env.save, BANK); mode = 'table'; syncRoster(); render(); } },
+  onRoster: () => { if (mode === 'table' && isHost()) syncRoster(); },
+  lobby: note => { mode = 'table'; if (!G) showJoining(note); },
+  dispatch: (act, data) => { if (!G) return; data = Object.assign({}, data || {}, { now: Date.now() }); if (E.dispatchAct(G, act, data)) render(); },
+  hint: msg => toast(msg),
+});
+/* the host keeps the players in step with the chairs the kit hands out */
+function syncRoster(){
+  if (!G) return;
+  const seated = T.NET.seats || {};
+  E.SEATS.forEach(s=>{ const name = seated[s.id]; if (name) E.addPlayer(G, s.id, name, false); else if (G.players[s.id] && !G.players[s.id].bot) E.dropPlayer(G, s.id); });
+  G.seq++; G.hostNow = Date.now();
+  render(); T.broadcast();
+}
+const SEEN_KEY = 'vs-seen';
+function seenIds(){ try { const a = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'); return Array.isArray(a) ? a.slice(-180) : []; } catch (e) { return []; } }
+function markSeen(id){ if (!id) return; try { const a = seenIds().filter(x=>x!==id); a.push(id); localStorage.setItem(SEEN_KEY, JSON.stringify(a)); } catch (e) {} }
+function act(verb, data){
+  data = data || {};
+  if (mode === 'solo'){ data.seat = data.seat || 'p1'; data.now = Date.now(); if (E.dispatchAct(G, verb, data)) render(); return; }
+  if (mode === 'table') T.act(verb, data);
+}
+
+/* ── the host's clock: four times a second, bots move and phases turn over ── */
+let clock = null;
+function startClock(){
+  if (clock) return;
+  clock = setInterval(()=>{
+    if (G && isHost() && E.tick(G, Date.now())){ render(); if (mode === 'table') T.broadcast(); }
+    paintTimer();
+  }, 250);
+}
+
+/* ── the bank ── */
+async function loadBank(){
+  if (BANK) return BANK;
+  const res = await fetch('/assets/data/vital-stats-questions.json', { cache:'no-cache' });
+  if (!res.ok) throw new Error('bank ' + res.status);
+  const data = await res.json(); const map = {};
+  (data.questions || []).forEach(q=>{ map[q.id] = q; });
+  BANK = map; if (G) G.bank = BANK;
+  return BANK;
+}
+
+/* ── beginnings ── */
+async function playSolo(){
+  const name = ($('vsName') && $('vsName').value.trim()) || playerName() || 'You';
+  setName(name);
+  try { await loadBank(); } catch(e){ toast('The questions did not load. Check the connection and try again.'); return; }
+  mode = 'solo';
+  G = E.newGame(window.HURng.freshSeed()); G.bank = BANK;
+  E.addPlayer(G, 'p1', name, false); E.syncBots(G);
+  render(); startClock();
+}
+async function hostRoom(){
+  const name = ($('vsName') && $('vsName').value.trim()) || playerName();
+  if (!name){ toast('Pick a name first, so the table knows who is dealing.'); $('vsName').focus(); return; }
+  setName(name);
+  try { await loadBank(); } catch(e){ toast('The questions did not load. Check the connection and try again.'); return; }
+  G = E.newGame(window.HURng.freshSeed()); G.bank = BANK; G.settings.bots = 0;
+  if (!T.host()){ return; }
+  mode = 'table'; syncRoster(); startClock();
+}
+async function joinRoom(code){
+  const name = ($('vsName') && $('vsName').value.trim()) || playerName();
+  if (!name){ toast('Pick a name first, so the table knows who you are.'); $('vsName').focus(); return; }
+  code = String(code || '').trim().toUpperCase();
+  if (code.length < 4){ toast('Room codes are four letters.'); return; }
+  setName(name);
+  try { await loadBank(); } catch(e){}
+  G = null; mode = 'table';
+  if (!T.join(code, name)){ toast('That code did not open a room.'); mode = 'home'; render(); return; }
+  startClock();
+}
+function leaveGame(){
+  if (mode === 'table') T.leave();
+  mode = 'home'; G = null; shownKey = ''; render();
+}
+function showJoining(note){
+  $('vsMain').innerHTML = `<section class="vs-card"><div class="vs-k">Room ${esc(T.NET.room)}</div><h2 class="vs-h" style="font-size:28px;margin:8px 0">Finding the table</h2><p class="vs-note">${note || 'Knocking on the door&hellip;'}</p><p style="margin-top:14px"><button class="vs-btn" data-go="leave">Back</button></p></section>`;
+  shownKey = 'joining';
+}
+
+/* ── drawing ── */
+function toast(msg){ const t = $('vsToast'); if (!t) return; t.innerHTML = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('show'), 3200); }
+function say(msg){ if (msg === lastSay) return; lastSay = msg; const s = $('vsSay'); if (s) s.textContent = msg; }
+const initials = n => String(n||'?').replace(/^Dr\.\s*/,'').split(/[\s·]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+const pc = p => `style="--pc:var(--c${p.color})"`;
+function av(p){ return `<span class="vs-av" ${pc(p)} aria-hidden="true">${esc(initials(p.name))}</span>`; }
+
+function render(){
+  const room = $('vsRoom');
+  if (room){ const on = mode === 'table' && T.NET.room; room.hidden = !on; if (on) room.innerHTML = 'Room <b>' + esc(T.NET.room) + '</b>'; }
+  const stage = document.querySelector('.vs-stage'); if (stage) stage.classList.toggle('is-home', mode === 'home' || !G);
+  if (mode === 'home' || !G){ if (mode !== 'table') drawHome(); renderRail(); paintDock(); return; }
+  const key = [G.phase, G.round, G.phase === 'lobby' ? G.seq : ''].join(':');
+  const redraw = key !== shownKey;
+  if (G.phase === 'lobby') drawLobby();
+  else if (G.phase === 'answer') drawAnswer(redraw);
+  else if (G.phase === 'bet') drawBet(redraw);
+  else if (G.phase === 'reveal') drawReveal(redraw);
+  else if (G.phase === 'final') drawFinal(redraw);
+  shownKey = key;
+  renderRail(); paintDock(); paintTimer();
+}
+
+function drawHome(){
+  if (shownKey === 'home') return;
+  const name = playerName();
+  const q = new URLSearchParams(location.search), code = (q.get('room') || '').toUpperCase().slice(0,4);
+  const off = T.offers();
+  const offers = (off.host ? `<button class="vs-btn vs-offer vs-btn--wide" data-go="resume">Resume room ${esc(off.host.room)}</button>` : '')
+               + (off.guest ? `<button class="vs-btn vs-offer vs-btn--wide" data-go="rejoin">Rejoin room ${esc(off.guest.room)} as ${esc(off.guest.name)}</button>` : '');
+  $('vsMain').innerHTML = `
+  <div class="vs-home">
+    <section class="vs-card vs-hero">
+      <div class="vs-k">Secret Menu &middot; a table game for 2 to 8</div>
+      <h2 class="vs-h">Vital <span>Stats</span></h2>
+      <p>Every round is a real number from American healthcare: a wage, a price, a count of hospitals. Guess it, then bet on whose guess is closest without going over.</p>
+    </section>
+    <div class="vs-steps">
+      <div class="vs-step"><b>1 &middot; Guess</b><span>Type your best number before the clock runs out.</span></div>
+      <div class="vs-step"><b>2 &middot; Bet</b><span>Put two chips on the guesses you trust. Long shots pay more.</span></div>
+      <div class="vs-step"><b>3 &middot; Reveal</b><span>The answer comes with its source. Most chips after the last round takes it.</span></div>
+    </div>
+    <section class="vs-card vs-form" aria-label="Start a game">
+      ${code ? `<div class="vs-k">You were invited to room <b style="color:var(--ink)">${esc(code)}</b></div>` : ''}
+      <div><label class="vs-lbl" for="vsName">Your name at the table</label>
+        <input class="vs-in" id="vsName" maxlength="24" autocomplete="nickname" placeholder="Dana, RRT" value="${esc(name)}"></div>
+      ${offers}
+      ${code ? `<button class="vs-btn vs-btn--go vs-btn--wide" data-go="join" data-code="${esc(code)}">Join room ${esc(code)}</button><div class="vs-or">or</div>` : ''}
+      <button class="vs-btn ${code ? '' : 'vs-btn--go'} vs-btn--wide" data-go="solo">Play with bots</button>
+      <button class="vs-btn vs-btn--wide" data-go="host">Create a room</button>
+      <div class="vs-or">have a code?</div>
+      <div class="vs-row"><input class="vs-in vs-code" id="vsCode" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="ABCD" aria-label="Room code" value="${code ? '' : ''}"><button class="vs-btn" data-go="joincode">Join</button></div>
+      <p class="vs-note">Rooms run through the site's game relay; a room code opens the table in any browser. Tabs of one browser work with no internet at all.</p>
+    </section>
+  </div>`;
+  shownKey = 'home';
+  say('Vital Stats. The healthcare numbers game.');
+}
+
+function drawLobby(){
+  const host = isHost(), players = E.active(G), s = G.settings;
+  const link = location.origin + location.pathname + '?room=' + (T.NET.room || '');
+  const cur = k => k === 'turf' ? (s.turf === false ? 'off' : 'on') : s[k];
+  const seg = (key, opts) => `<div class="vs-seg" role="group">${opts.map(([v,l])=>`<button type="button" data-set="${key}" data-val="${v}" aria-pressed="${String(cur(key)==v)}" ${host?'':'disabled'}>${l}</button>`).join('')}</div>`;
+  const cats = `<div class="vs-seg" role="group" aria-label="Categories">${E.CATS.map(c=>`<button type="button" data-set="cat" data-val="${c}" aria-pressed="${String(s.cats.indexOf(c)>-1)}" ${host?'':'disabled'}>${c}</button>`).join('')}</div>`;
+  const hostName = mode === 'table' ? ((G.players[(Object.keys(T.NET.seats||{}).find(k=>T.NET.seats[k]===T.NET.roster[0])||'')]||{}).name || T.NET.roster[0] || 'the host') : '';
+  $('vsMain').innerHTML = `
+  <div class="vs-lobby">
+    <section class="vs-card">
+      ${mode === 'table' ? `<div class="vs-k">Room code</div>
+        <div class="vs-roomcode"><span class="code">${esc(T.NET.room)}</span>
+          <button class="vs-btn" data-go="copy" data-link="${esc(link)}">Copy invite link</button></div>
+        <p class="vs-note" style="margin-top:6px">Friends open the link, or go to Vital Stats and type the code.</p>`
+      : `<div class="vs-k">Table for ${players.length}</div><h2 class="vs-h" style="font-size:30px;margin-top:6px">You and the bots</h2>`}
+      ${me() ? `<div class="vs-where vs-home-row"><span class="vs-lbl" style="margin:0">Your home state</span><button type="button" class="vs-btn vs-btn--sm" data-go="pickhome">${me().home ? esc(E.STATE_NAMES[me().home]) : 'Set it'}</button></div>` : ''}
+    </section>
+    <section class="vs-card vs-set" aria-label="Table settings">
+      <div><span class="vs-lbl">Rounds</span>${seg('rounds', [[5,'5'],[7,'7'],[10,'10']])}</div>
+      <div><span class="vs-lbl">Clock</span>${seg('speed', [['relaxed','Relaxed'],['normal','Normal'],['quick','Quick']])}</div>
+      <div><span class="vs-lbl">Where the numbers come from</span>${seg('where', [['us','The whole U.S.'],['states','State by state']])}
+        ${s.where === 'states' ? `<div class="vs-where"><span class="vs-where-v" id="vsWhere">${esc(statesLine(s.states))}</span>${host ? '<button type="button" class="vs-btn vs-btn--sm" data-go="pickstates">Pick states</button>' : ''}</div>` : ''}</div>
+      <div><span class="vs-lbl">Home turf rounds</span>${seg('turf', [['on','On'],['off','Off']])}
+        ${s.turf ? '<p class="vs-note" style="margin-top:8px">A round about each player\'s home state. Its closest guess pays double.</p>' : ''}</div>
+      <div><span class="vs-lbl">Questions about</span>${cats}</div>
+      ${host && G.bank ? `<p class="vs-note" id="vsMatch">${esc(matchLine())}</p>` : ''}
+      <div><span class="vs-lbl">Bots at the table</span>
+        <div class="vs-stepper"><button type="button" data-go="bot-" aria-label="One fewer bot" ${host?'':'disabled'}>&minus;</button><b>${s.bots}</b><button type="button" data-go="bot+" aria-label="One more bot" ${host?'':'disabled'}>+</button></div></div>
+    </section>
+    <div class="vs-act">${host ? `<button class="vs-btn vs-btn--go vs-btn--wide" data-go="start" ${players.length<2 || !matches()?'disabled':''}>${players.length<2?'Waiting for a second player':!matches()?'No questions match':'Deal the first question'}</button>`
+      : `<p class="vs-note">Waiting for ${esc(hostName)} to deal.</p>`}</div>
+  </div>`;
+  say(host ? 'Lobby. Set the table and deal.' : 'Lobby. Waiting for the host.');
+  if (help) setTimeout(()=>help.firstVisit(), 300);
+}
+
+/* the lobby's plain read of the state list and of how many questions it leaves */
+function statesLine(list){
+  if (!list || !list.length) return 'Every state';
+  if (list.length <= 3) return list.map(c=>E.STATE_NAMES[c]).join(list.length === 2 ? ' and ' : ', ');
+  for (const [name, reg] of Object.entries(E.REGIONS)) if (reg.length === list.length && reg.every(c=>list.indexOf(c) > -1)) return 'The ' + name;
+  return list.length + ' states';
+}
+function matches(){ return G && G.bank ? E.poolFor(G).length : 1; }
+function matchLine(){
+  const n = matches();
+  if (!n) return 'No questions match. Add a category or a state.';
+  if (n < G.settings.rounds) return 'Only ' + n + ' question' + (n === 1 ? '' : 's') + ' match, so the game runs ' + n + ' round' + (n === 1 ? '' : 's') + '.';
+  return n.toLocaleString('en-US') + ' questions match.';
+}
+/* the state picker: every toggle is a host verb, so the lobby behind it and every guest follow along */
+let picker = null;
+function openPicker(){
+  if (!picker){
+    picker = HUKit.dialog({ title:'Pick states', className:'vs-picker',
+      body: function(body){
+        body.innerHTML = `<p class="vs-note">Tap states to add them. None picked means every state.</p>
+          <p class="vs-note vs-pickn" id="vsPickN" aria-live="polite"></p>
+          <div class="vs-seg vs-regions" role="group" aria-label="Quick picks"><button type="button" data-pick="all">Every state</button>${Object.keys(E.REGIONS).map(n=>`<button type="button" data-pick="${n}">${n}</button>`).join('')}</div>
+          <div class="vs-stgrid" role="group" aria-label="States">${E.STATES.map(c=>`<button type="button" data-st="${c}" aria-label="${esc(E.STATE_NAMES[c])}" title="${esc(E.STATE_NAMES[c])}" aria-pressed="false">${c}</button>`).join('')}</div>
+          <button type="button" class="vs-btn vs-btn--go vs-btn--wide vs-pickdone" data-pick="done">Done</button>`;
+        body.addEventListener('click', e=>{
+          const b = e.target.closest('[data-st],[data-pick]'); if (!b || !G) return;
+          const cur = (G.settings.states || []).slice();
+          if (b.dataset.pick === 'done'){ picker.close(); return; }
+          let next = cur;
+          if (b.dataset.pick === 'all') next = [];
+          else if (b.dataset.pick) next = E.REGIONS[b.dataset.pick].slice();
+          else { const c = b.dataset.st; next = cur.indexOf(c) > -1 ? cur.filter(x=>x!==c) : cur.concat([c]); }
+          act('set', { key:'states', val:next });
+          paintPicker();
+        });
+      }
+    });
+  }
+  paintPicker(); picker.open();
+}
+let homeCard = null;
+function openHome(){
+  if (!homeCard){
+    homeCard = HUKit.dialog({ title:'Your home state', className:'vs-picker',
+      body: function(body){
+        body.innerHTML = `<p class="vs-note">One round is about it. The closest guess on that round pays double, so defend it.</p>
+          <div class="vs-stgrid" role="group" aria-label="States">${E.STATES.map(c=>`<button type="button" data-home="${c}" aria-label="${esc(E.STATE_NAMES[c])}" title="${esc(E.STATE_NAMES[c])}" aria-pressed="false">${c}</button>`).join('')}</div>
+          <button type="button" class="vs-btn vs-btn--wide vs-pickdone" data-home="">No home state</button>`;
+        body.addEventListener('click', e=>{
+          const b = e.target.closest('[data-home]'); if (!b || !G) return;
+          act('home', { val:b.dataset.home }); homeCard.close();
+        });
+      }
+    });
+  }
+  const mine = (me() || {}).home || '';
+  homeCard.el.querySelectorAll('[data-home]').forEach(b=>{ if (b.dataset.home) b.setAttribute('aria-pressed', String(b.dataset.home === mine)); });
+  homeCard.open();
+}
+function paintPicker(){
+  if (!picker || !G) return;
+  const list = G.settings.states || [];
+  picker.el.querySelectorAll('[data-st]').forEach(b=>b.setAttribute('aria-pressed', String(list.indexOf(b.dataset.st) > -1)));
+  const reg = picker.el.querySelectorAll('[data-pick]');
+  reg.forEach(b=>{ if (b.dataset.pick === 'done') return; const on = b.dataset.pick === 'all' ? !list.length : statesLine(list) === 'The ' + b.dataset.pick; b.setAttribute('aria-pressed', String(on)); });
+  const n = $('vsPickN'); if (n) n.textContent = statesLine(list) + '. ' + matchLine();
+}
+
+function turfNow(){ return G && G.turf && G.turf[G.round] || null; }
+function turfNames(ids){ const n = ids.map(id=>G.players[id] ? G.players[id].name : '').filter(Boolean); return n.length > 2 ? n.slice(0,-1).join(', ') + ' and ' + n[n.length-1] : n.join(' and '); }
+
+/* the strip at the reveal: every state's answer to the same question, low to high, the asked one lit */
+function spreadHtml(q){
+  const pts = G.spread; if (!pts || !pts.length || !q.st) return '';
+  const lo = pts[0][1], hi = pts[pts.length-1][1]; if (!(hi > lo)) return '';
+  const log = lo > 0 && hi / lo > 8;   /* hospital counts run from 5 to 500: a log scale keeps the small states apart */
+  const at = v => log ? (Math.log(v) - Math.log(lo)) / (Math.log(hi) - Math.log(lo)) * 100 : (v - lo) / (hi - lo) * 100;
+  const me = pts.find(p=>p[0] === q.st); if (!me) return '';
+  const hiR = 1 + pts.filter(p=>p[1] > me[1]).length, loR = 1 + pts.filter(p=>p[1] < me[1]).length, x = at(me[1]);
+  /* the nearer end names the place: 2nd lowest reads faster than 50th highest */
+  const place = hiR <= loR ? (hiR === 1 ? 'highest' : ordinalOf(hiR) + ' highest') : (loR === 1 ? 'lowest' : ordinalOf(loR) + ' lowest');
+  const name = E.STATE_NAMES[q.st], edge = x < 14 ? 'l' : x > 86 ? 'r' : '';
+  const dots = pts.map(p=>p[0] === q.st ? '' : `<i style="left:${at(p[1]).toFixed(1)}%" title="${esc(E.STATE_NAMES[p[0]])}: ${esc(fmtVal(q, p[1]))}"></i>`).join('');
+  const said = `${name} is ${place} of ${pts.length}. Lowest ${E.STATE_NAMES[pts[0][0]]} at ${fmtVal(q, lo)}, highest ${E.STATE_NAMES[pts[pts.length-1][0]]} at ${fmtVal(q, hi)}.`;
+  return `<figure class="vs-spread" aria-label="${esc(said)}"><div class="vs-spread-track" aria-hidden="true">${dots}<i class="on" style="left:${x.toFixed(1)}%"></i><b class="${edge}" style="left:${x.toFixed(1)}%">${esc(q.st)}</b></div>
+    <figcaption><span>${esc(pts[0][0])} ${esc(fmtVal(q, lo))}</span><span class="vs-spread-rank">${esc(name)}: ${place} of ${pts.length}</span><span>${esc(pts[pts.length-1][0])} ${esc(fmtVal(q, hi))}</span></figcaption></figure>`;
+}
+function ordinalOf(n){ const s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); }
+function turfLine(L){
+  const t = L && L.turf; if (!t) return '';
+  const own = turfNames(t.seats);
+  if (!t.won.length) return ' Every guess was over, so nobody took the home turf bonus.';
+  const held = t.won.filter(id=>t.seats.indexOf(id) > -1);
+  return held.length ? ' ' + turfNames(held) + ' defended home turf.' : ' ' + turfNames(t.won) + ' took ' + own + (t.seats.length > 1 ? '\'' : '\'s') + ' home turf.';
+}
+
+function topBar(label){
+  const q = G.q || {};
+  return `<div class="vs-top"><div><div class="vs-k">Round <b>${G.round}</b> of ${E.roundsIn(G)}${E.finalRound(G)?' &middot; <b style="color:var(--gold)">last call</b>':''}</div>
+    <div style="margin-top:6px"><span class="vs-cat">${esc(q.cat||'')}</span>${q.st ? ` <span class="vs-cat vs-cat--st">${esc(E.STATE_NAMES[q.st] || q.st)}</span>` : ''}${turfNow() ? ` <span class="vs-cat vs-turf">Home turf: ${esc(turfNames(turfNow().seats))}</span>` : ''} <span class="vs-k" style="margin-left:6px">${label}</span></div></div>
+    <div class="vs-timer" id="vsTimer" aria-hidden="true"><svg viewBox="0 0 52 52"><circle class="bg" cx="26" cy="26" r="22"/><circle class="fg" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="0"/></svg><span>--</span></div></div>`;
+}
+
+function drawAnswer(redraw){
+  const p = me(), q = G.q;
+  if (redraw){
+    $('vsMain').innerHTML = `<section class="vs-card">${topBar('Guess')}
+      <p class="vs-q">${esc(q.q)}</p>
+      <div id="vsAnsZone"></div></section>`;
+    say('Round ' + G.round + '. ' + q.q);
+  }
+  const z = $('vsAnsZone'); if (!z) return;
+  if (!p){ z.innerHTML = `<p class="vs-note">You are watching this one. You can play from the next deal.</p>`; return; }
+  if (p.locked){
+    if (z.dataset.state !== 'locked:' + p.answer){
+      z.innerHTML = `<div class="vs-locked"><span style="font-size:22px">&#10003;</span><div><div class="vs-k">Locked in</div><div class="v">${esc(fmtVal(q, p.answer))}</div></div></div>
+        <p class="vs-note" style="margin-top:10px" id="vsWaiting"></p>`;
+      z.dataset.state = 'locked:' + p.answer;
+    }
+    const left = E.active(G).filter(x=>!x.locked).length; const w = $('vsWaiting'); if (w) w.textContent = left ? 'Waiting on ' + left + ' more.' : 'Everyone is in.';
+    return;
+  }
+  if (z.dataset.state !== 'open'){
+    z.innerHTML = `<form id="vsAnsForm" autocomplete="off">
+      <label class="vs-lbl" for="vsAns">Your guess${q.pre === '1 in ' ? ': one in how many' : q.pre === '#' ? ': a place' : q.unit ? ', in ' + esc(q.unit) : ''}</label>
+      <div class="vs-ans">${q.pre ? `<span class="fx" aria-hidden="true">${esc(q.pre)}</span>` : ''}
+        <input id="vsAns" inputmode="decimal" enterkeyhint="done" placeholder="${q.pre === '1 in ' ? '8' : q.pre === '#' ? '12' : q.pre === '$' && q.dp === 2 ? '38.50' : q.suf === '%' ? '12.5' : scaleOf(q) > 1 ? '450' : '82k'}" aria-describedby="vsEcho">
+        ${q.suf ? `<span class="fx" aria-hidden="true">${esc(q.suf.trim())}</span>` : ''}</div>
+      <div class="vs-echo" id="vsEcho">${esc(hintFor(q))}</div>
+      <div class="vs-act" style="margin-top:12px"><button class="vs-btn vs-btn--go vs-btn--wide" type="button" data-go="lockans">Lock it in</button></div>
+    </form>`;
+    z.dataset.state = 'open';
+    const inp = $('vsAns'); if (inp && !matchMedia('(hover: none)').matches) inp.focus({ preventScroll:true });
+  }
+}
+function lockAnswer(){
+  const inp = $('vsAns'); if (!inp) return;
+  const v = readGuess(G.q, inp.value);
+  if (!isFinite(v) || v < 0){ toast('That did not read as a number. Try 82000, 82k or 12.5.'); inp.focus(); return; }
+  const r = Math.pow(10, G.q.dp || 0);
+  act('lock', { val: Math.round(v * r) / r });
+}
+
+function slotCard(s, i, opts){
+  const q = G.q, mine = me();
+  const bets = [betsHtml(i)];
+  const isMine = mine && (mine.bets.indexOf(i) > -1 || (mine.allin && mine.allin.slot === i));
+  const cls = ['vs-slot', s.low ? 'low' : '', isMine ? 'mine' : '', opts.win === i ? 'win' : (opts.win != null ? 'lose' : '')].join(' ');
+  const who = s.seats.map(id=>G.players[id]).filter(Boolean).map(p=>`<i ${pc(p)} title="${esc(p.name)}">${esc(initials(p.name))}</i>`).join('');
+  const label = s.low ? 'Lower than every guess' : fmtVal(q, s.val);
+  const aria = `${label}, pays ${s.odds} to 1` + (s.seats.length ? ', guessed by ' + s.seats.map(id=>G.players[id] ? G.players[id].name : '').join(', ') : '');
+  return `<button type="button" class="${cls}" data-slot="${i}" aria-label="${esc(aria)}" ${opts.play ? '' : 'disabled'}>
+    <span class="vs-odds">${s.odds} to 1</span><span class="val">${esc(label)}</span><span class="vs-who">${who}</span><span class="vs-bets">${bets.join('')}</span></button>`;
+}
+/* Built once per phase, then PATCHED: every chip anyone places arrives as a broadcast, and replacing the
+   board under a finger loses the tap (the ER review's lost clicks, found again here on the relay). */
+function betsHtml(i){
+  const out = [];
+  E.active(G).forEach(p=>{ p.bets.forEach(b=>{ if (b === i) out.push(`<span class="ch" ${pc(p)} title="${esc(p.name)}"></span>`); }); if (p.allin && p.allin.slot === i) out.push(`<span class="ch all" ${pc(p)} title="${esc(p.name)} all in"></span>`); });
+  return out.join('');
+}
+function trayHtml(p){
+  if (!p) return '';
+  const used = p.bets.filter(b=>b!=null).length;
+  return `<span class="vs-k">Your chips</span>${[0,1].map(i=>`<span class="ch ${p.bets[i]!=null?'used':''}" ${pc(p)}></span>`).join('')}
+    <span class="vs-note">${p.locked ? 'Bets are in.' : used < 2 ? 'Tap a guess to put a chip on it. Tap it again to take it back.' : 'Both chips are down. Tap a guess to move one.'}</span>`;
+}
+function allinHtml(p, play){
+  if (!p || !E.finalRound(G)) return '';
+  const q = G.q;
+  return `<div class="vs-k" style="color:var(--gold)">Last call: all in</div>
+    <p class="vs-note">Put any of your ${p.chips} chips on one guess. It pays the same odds; lose it and the chips are gone.</p>
+    <div class="vs-row" style="align-items:center;flex-wrap:wrap">
+      <div class="vs-stepper"><button type="button" data-go="all-" aria-label="Five fewer chips" ${play?'':'disabled'}>&minus;</button><b id="vsAllAmt">${p.allin?p.allin.amt:0}</b><button type="button" data-go="all+" aria-label="Five more chips" ${play?'':'disabled'}>+</button></div>
+      <span class="vs-note">on ${p.allin ? esc(G.slots[p.allin.slot].low ? 'lower than every guess' : fmtVal(q, G.slots[p.allin.slot].val)) : 'the guess your first chip is on'}</span></div>`;
+}
+function patchBet(){
+  const p = me(), play = !!(p && !p.locked);
+  document.querySelectorAll('#vsMain .vs-slot').forEach(el=>{
+    const i = +el.dataset.slot, b = el.querySelector('.vs-bets'), html = betsHtml(i);
+    if (b && b.innerHTML !== html) b.innerHTML = html;
+    el.classList.toggle('mine', !!(p && (p.bets.indexOf(i) > -1 || (p.allin && p.allin.slot === i))));
+    el.disabled = !play;
+  });
+  const tray = $('vsTray'); if (tray){ const h = trayHtml(p); if (tray.innerHTML !== h) tray.innerHTML = h; }
+  const all = $('vsAllin'); if (all){ const h = allinHtml(p, play); if (all.innerHTML !== h) all.innerHTML = h; }
+  const a = $('vsBetAct'); if (a){ const h = play ? '<button class="vs-btn vs-btn--go vs-btn--wide" data-go="betdone">Done betting</button>' : '<p class="vs-note">' + (p ? 'Waiting on the table.' : 'You are watching this one.') + '</p>'; if (a.innerHTML !== h) a.innerHTML = h; }
+}
+function drawBet(redraw){
+  if (!redraw){ patchBet(); return; }
+  const p = me(), q = G.q, play = !!(p && !p.locked);
+  say('Bets. The guesses are on the board.');
+  const board = G.slots.map((s,i)=>slotCard(s, i, { play })).join('');
+  $('vsMain').innerHTML = `<section class="vs-card">${topBar('Bet')}
+    <p class="vs-q" style="font-size:clamp(18px,2.4vw,22px);margin-bottom:10px">${esc(q.q)}</p>
+    <div class="vs-board" role="group" aria-label="The guesses, low to high">${board}</div>
+    ${p ? '<div class="vs-tray" id="vsTray"></div>' : ''}${p && E.finalRound(G) ? '<div class="vs-allin" id="vsAllin"></div>' : ''}
+    <div class="vs-act" id="vsBetAct" style="margin-top:12px"></div></section>`;
+  patchBet();
+}
+function placeChip(i){
+  const p = me(); if (!p || p.locked) return;
+  const at = p.bets.indexOf(i);
+  if (at > -1){ act('bet', { i:at, slot:'' }); return; }
+  const free = p.bets.indexOf(null);
+  act('bet', { i: free > -1 ? free : 1, slot:i });
+}
+function stepAllin(by){
+  const p = me(); if (!p) return;
+  const slot = p.allin ? p.allin.slot : (p.bets[0] != null ? p.bets[0] : null);
+  if (slot == null){ toast('Put a chip on a guess first; all in rides on that guess.'); return; }
+  const amt = Math.max(0, Math.min(p.chips, (p.allin ? p.allin.amt : 0) + by));
+  act('allin', { slot, amt });
+}
+
+function drawReveal(redraw){
+  const q = G.q, L = G.last; if (!L) return;
+  const w = L.win, ws = G.slots[w];
+  const winners = ws.low ? 'Every guess was over the answer, so the low slot wins.' : 'Closest without going over: ' + ws.seats.map(id=>G.players[id] ? G.players[id].name : '').join(' and ') + ' at ' + fmtVal(q, ws.val) + '.';
+  const rows = E.active(G).slice().sort((a,b)=>(L.delta[b.id]||0)-(L.delta[a.id]||0)).map(p=>{
+    const d = L.delta[p.id] || 0;
+    const wy = L.why[p.id] || [], note = wy.length === 1 ? wy[0].replace(/ +d+$/, '') : wy.length ? wy.join(', ') : 'no chip on the winner';
+    return `<div><span>${av(p)} ${esc(p.name)} <span class="vs-note">&middot; ${esc(note)}</span></span><b class="${d>0?'up':d<0?'dn':''}">${d>0?'+':''}${d}</b></div>`; }).join('');
+  if (redraw){
+    $('vsMain').innerHTML = `<section class="vs-card">${topBar('Reveal')}
+      <p class="vs-q" style="font-size:clamp(18px,2.4vw,22px);margin-bottom:6px">${esc(q.q)}</p>
+      <div class="vs-truth"><div class="vs-k">The answer</div><div class="v" id="vsTruth">${esc(fmtVal(q, q.a))}</div></div>
+      <p class="vs-why">${esc(winners)}${esc(turfLine(L))} ${esc(q.why || '')}</p>
+      ${spreadHtml(q)}
+      <p class="vs-src">Source: ${q.url ? `<a href="${esc(q.url)}" target="_blank" rel="noopener">${esc(q.src)}</a>` : esc(q.src)}${q.year ? ', ' + esc(q.year) : ''}${q.checked ? ' &middot; checked ' + esc(q.checked) : ''}</p>
+      <div class="vs-board" aria-label="The guesses, with the winner marked">${G.slots.map((s,i)=>slotCard(s, i, { play:false, win:w })).join('')}</div>
+      <div class="vs-pay">${rows}</div>
+      <div class="vs-act" style="margin-top:14px">${isHost() ? `<button class="vs-btn vs-btn--go vs-btn--wide" data-go="next">${G.round >= E.roundsIn(G) ? 'See the final table' : 'Next question'}</button>` : `<p class="vs-note">The next question deals itself in a few seconds.</p>`}</div></section>`;
+    countUp(q); markSeen(q.id);
+    say('The answer is ' + fmtVal(q, q.a) + '. ' + winners + turfLine(L));
+  }
+}
+function countUp(q){
+  const el = $('vsTruth'); if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const t0 = performance.now(), dur = 900, to = q.a;
+  const step = t => { const k = Math.min(1, (t - t0)/dur), e = 1 - Math.pow(1-k, 3); el.textContent = fmtVal(q, k < 1 ? Math.round(to*e*Math.pow(10,q.dp||0))/Math.pow(10,q.dp||0) : to); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function drawFinal(redraw){
+  if (!redraw) return;
+  const ranked = E.active(G).slice().sort((a,b)=>b.chips-a.chips);
+  const top = ranked[0], tie = ranked[1] && ranked[1].chips === top.chips;
+  const pod = [ranked[1], ranked[0], ranked[2]].map((p,k)=>p ? `<div class="vs-pod p${[2,1,3][k]}">${av(p)}<div class="r">${[2,1,3][k]}</div><div class="n">${esc(p.name)}</div><div class="c">${p.chips} chips</div></div>` : '<div></div>').join('');
+  $('vsMain').innerHTML = `<section class="vs-card"><div class="vs-k">Final table &middot; ${E.roundsIn(G)} rounds</div>
+    <h2 class="vs-h" style="font-size:clamp(28px,5vw,40px);margin:8px 0">${tie ? 'A tie at the top' : esc(top.name) + ' takes the table'}</h2>
+    <div class="vs-podium">${pod}</div>
+    <div class="vs-pay">${ranked.map((p,i)=>`<div><span>${i+1}. ${av(p)} ${esc(p.name)}${p.bot?'<span class="vs-bot">BOT</span>':''}</span><b class="up">${p.chips}</b></div>`).join('')}</div>
+    <div class="vs-act vs-row" style="margin-top:16px">${isHost() ? `<button class="vs-btn vs-btn--go" style="flex:1" data-go="again">Play again</button>` : `<p class="vs-note" style="flex:1">The host can deal another game.</p>`}<button class="vs-btn" data-go="leave">Leave the table</button></div></section>`;
+  say((tie ? 'A tie at the top.' : top.name + ' takes the table') + ' with ' + top.chips + ' chips.');
+}
+
+function renderRail(){
+  const rail = $('vsRail'); if (!rail) return;
+  if (!G || mode === 'home'){ rail.innerHTML = ''; return; }
+  const my = mySeat();
+  rail.innerHTML = G.order.map(id=>G.players[id]).filter(Boolean).map(p=>{
+    const waiting = (G.phase === 'answer' || G.phase === 'bet') && !p.gone;
+    const st = waiting ? (p.locked ? '<span class="vs-st" aria-label="in">&#10003;</span>' : '<span class="vs-st wait" aria-label="thinking"></span>') : '';
+    return `<div class="vs-p ${p.id===my?'me':''} ${p.gone?'gone':''}">${av(p)}<div class="vs-pn"><b>${esc(p.name)}${p.id===my?' (you)':''}${p.bot?'<span class="vs-bot">BOT</span>':''}</b><span>${p.gone ? 'left the table' : G.phase === 'lobby' ? (p.home ? 'from ' + esc(E.STATE_NAMES[p.home]) : 'at the table') : ''}</span></div><span class="vs-chips">${p.chips}</span>${st}</div>`;
+  }).join('');
+}
+function paintDock(){
+  const dock = $('vsDock'); if (!dock) return;
+  const src = document.querySelector('#vsMain .vs-act');
+  const html = src ? src.innerHTML : '';
+  if (dock.innerHTML !== html) dock.innerHTML = html;   /* replacing it on every broadcast would eat a thumb's tap */
+}
+function paintTimer(){
+  const el = $('vsTimer'); if (!el || !G || !G.deadline) return;
+  const total = G.phase === 'answer' ? G.deadline - G.phaseAt : G.phase === 'bet' ? G.deadline - G.phaseAt : G.deadline - G.phaseAt;
+  const left = Math.max(0, G.deadline - hostNow());
+  const s = Math.ceil(left/1000);
+  el.querySelector('span').textContent = s;
+  el.querySelector('.fg').style.strokeDashoffset = String(138.2 * (1 - left/Math.max(1,total)));
+  el.classList.toggle('low', s <= 5);
+}
+
+/* ── one listener for every button on the page ── */
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-go],[data-set],[data-slot]');
+  if (!b || !document.getElementById('vs').contains(b)) return;
+  if (b.dataset.slot != null && !b.disabled) return placeChip(+b.dataset.slot);
+  if (b.dataset.set){ act('set', { key:b.dataset.set, val:b.dataset.val }); return; }
+  if (b.dataset.go === 'pickstates'){ if (isHost()) openPicker(); return; }
+  if (b.dataset.go === 'pickhome'){ if (me()) openHome(); return; }
+  const go = b.dataset.go;
+  if (go === 'solo') playSolo();
+  else if (go === 'host') hostRoom();
+  else if (go === 'join') joinRoom(b.dataset.code);
+  else if (go === 'joincode') joinRoom($('vsCode') && $('vsCode').value);
+  else if (go === 'resume'){ loadBank().catch(()=>{}).then(()=>{ G = E.newGame(1); G.bank = BANK; if (T.resume()){ mode = 'table'; startClock(); } }); }
+  else if (go === 'rejoin'){ mode = 'table'; if (!T.rejoin()) { mode = 'home'; render(); } else startClock(); }
+  else if (go === 'copy'){ const l = b.dataset.link; (navigator.clipboard ? navigator.clipboard.writeText(l) : Promise.reject()).then(()=>toast('Invite link copied.'), ()=>toast(l)); }
+  else if (go === 'bot+') act('bots', { by:1 });
+  else if (go === 'bot-') act('bots', { by:-1 });
+  else if (go === 'start') act('start', { seen: seenIds() });
+  else if (go === 'next') act('next', {});
+  else if (go === 'again') act('again', {});
+  else if (go === 'betdone') act('lock', {});
+  else if (go === 'lockans') lockAnswer();   /* the phone dock's copy sits outside the form, so it cannot submit it */
+  else if (go === 'all+') stepAllin(5);
+  else if (go === 'all-') stepAllin(-5);
+  else if (go === 'leave') leaveGame();
+});
+document.addEventListener('submit', e=>{ if (e.target && e.target.id === 'vsAnsForm'){ e.preventDefault(); lockAnswer(); } });
+document.addEventListener('input', e=>{
+  if (e.target && e.target.id === 'vsAns'){ const v = readGuess(G.q, e.target.value), echo = $('vsEcho'); if (echo) echo.textContent = e.target.value.trim() === '' ? hintFor(G.q) : isFinite(v) ? '= ' + fmtVal(G.q, v) : 'That is not a number yet.'; }
+  if (e.target && e.target.id === 'vsCode') e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0,4);
+});
+document.addEventListener('keydown', e=>{ if (e.key === 'Enter' && e.target && e.target.id === 'vsCode'){ e.preventDefault(); joinRoom(e.target.value); } });
+
+/* ── the menu, the "?" ── */
+let help = null;
+function wireMenus(){
+  if (!window.HUKit || !HUKit.gameMenu || !$('vsKit')) return;
+  const ex = document.createElement('div');
+  ex.innerHTML = '<p>How many hospitals are in the CMS hospital file? Guesses: 3,000, 5,000 and 7,500. The answer is 5,366, so <b>5,000</b> is closest without going over. Its guesser gets 3 chips, and every chip on it pays its odds.</p>';
+  /* not over the home screen, which already shows the three steps: once, in the first lobby, before any clock runs */
+  help = HUKit.howTo({ id:'vs', auto:false,
+    rules:['Guess the number before the clock runs out.',
+           'Bet two chips on the guesses you trust. The edges pay more than the middle.',
+           'Closest without going over wins the round. Most chips after the last round wins the game.'],
+    example: ex });
+  const menu = HUKit.gameMenu({ title:'Vital Stats', help,
+    restart:{ verb:'Leave this game', title:'Leave this game?', body:'You leave the table. In a room, the others keep playing.', run:()=>leaveGame() },
+    leave:{ href:'/secret-menu/' } });
+  $('vsKit').appendChild(help.button());
+  const mb = menu.button(); mb.setAttribute('aria-label', 'Menu'); $('vsKit').appendChild(mb);
+}
+
+/* __UG_TEST: the engine alone, for the vm tests. __VS_HOOK: the whole page running, for the relay check. */
+if (TEST || window.__VS_HOOK) window.__vs = { E, parseNum, readGuess, scaleOf, fmtVal, big, get G(){ return G; }, set G(v){ G = v; }, T, render, act, get mode(){ return mode; }, set mode(v){ mode = v; }, setBank(b){ BANK = b; if (G) G.bank = b; } };
+if (!TEST){
+  wireMenus();
+  render();
+  const code = new URLSearchParams(location.search).get('room');
+  if (code && playerName()) setTimeout(()=>{ const n = $('vsName'); if (n) n.value = playerName(); }, 0);
+}
+})();
+</script>
+{% endraw %}

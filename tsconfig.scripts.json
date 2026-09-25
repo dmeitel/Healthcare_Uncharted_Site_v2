@@ -1,12 +1,14 @@
 {
   "//": [
-    "Opt-in type check for the build and data-pull scripts: `npm run check:scripts`.",
-    "NOT part of `npm run verify`, deliberately. A first pass found 11 errors and zero",
-    "real bugs: every one was TypeScript widening a heterogeneous array literal (for",
-    "example [['detail', VARS], ['subject', VARS]] infers string|string[], so .join()",
-    "looks unsafe when it is not). Silencing those needs JSDoc annotations throughout",
-    "scripts/, which is worth doing when someone next works in there, not before.",
-    "A gate that always fails is a gate everyone learns to ignore."
+    "Type check for the build, data-pull and QA scripts: `npm run check:scripts`.",
+    "PART OF `npm run verify` since 2026-09-23. It had been left out on purpose while it",
+    "reported errors that were never bugs (a first pass found 11, and by 2026-09-23 there",
+    "were 132). All 132 were inference, not defects: the games' test hooks read inside",
+    "Playwright callbacks (96, declared once in types/test-hooks.d.ts), page code that",
+    "sees a plain Element, mixed-type array literals, untyped Promises. Each got a JSDoc",
+    "annotation, and the gate went in the day it went green, because the scripts it",
+    "covers (the phone sweep above all) are the ones that grow every week.",
+    "A gate that always fails is a gate everyone learns to ignore; this one starts clean."
   ],
   "extends": "./tsconfig.json",
   "include": ["types/**/*.d.ts", "scripts/**/*.js"]

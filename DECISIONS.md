@@ -61,6 +61,9 @@ are the veto. Two defects it found run as their own tasks, not here.
 | T1 | **Should the cost of living tool become the standard for every tool?** That means closing its design phase and writing its ten rules into DESIGN.md: answer first, explanations behind an "i", one fold, views, plain words, a source and date on every number, links that restore, the chart rules, little chrome, the phone as the shorter side. | You asked to take its lessons to the other tools. Until the rules are written down, nothing holds a tool to them and each rebuild argues from scratch. The full list with every tool measured against it is docs/HU-TOOL-REVIEW-2026-09-23.md. | Yes. What is left on the tool (about 546 words to sort) becomes ordinary maintenance under the written rules. | 2026-09-23 |
 | T2 | **System Layers shows 113 numbers with no source.** Cut them, or have Claude hunt a source for each and cut what has none? | 301 "By the numbers" tiles; 188 name a source, 113 do not, and some read as invented ("8m 42s" average time, "98.2%" eligibility accuracy). The tool has no source line or date at all. | Cut them now. The 188 sourced tiles stay, and any that matter come back later with a source. | 2026-09-23 |
 | T3 | **Which tool gets the cost of living treatment next?** Naming it opens its design phase. | Every tool not named stays under the change budget, so defects get fixed but nothing is redesigned. | The Vendor Directory (70 screens tall on a phone, the list starts below the first screen), then the Career Tree. | 2026-09-23 |
+| G1 | **Uncharted Regional's staff strain never builds. Make it real?** | A playtest ran 28,571 quarters: strain peaked at 7 and no nurse ever quit, because it recovers 12 a quarter and can rise at most 9. So the strain warning never shows and the $45k a quarter Float Pool buys nothing. | Yes: strain recovers a little slower than the fastest it can build, so a hospital run flat out for a few quarters starts losing nurses and the Float Pool earns its price. | 2026-09-23 |
+| 16 | WAITING (rule 3). **The rest of the clinical flags in the game review.** Alarm Fatigue's and three of Device Assembly's are ANSWERED (log, 2026-09-23). Left: Level 3's dry-gas line (Level 3 was rebuilt without it 2026-09-23, keeping the game's own dry side; log), the capnography connector and Level 2's title in Device Assembly; ED flow in ER Charge; the payer spread in both hospital games. Section 4 of docs/HU-GAME-REVIEW-2026-09-23.md. | They are RT and clinical calls a reviewer cannot make, and a respiratory audience will screenshot any that are wrong. | The dry-gas line first: the one piece of Level 3 still the game's guess. The payer spread is verified: RAND puts private plans at 254 percent of Medicare in 2022; the games use about 120. | 2026-09-23 |
+| 17 | WAITING (rule 3). **The other four expansions.** Alarm Fatigue's is ANSWERED and BUILT 2026-09-24 (real or nuisance; play it before the push, log). Left: Device Assembly, the order changes mid-shift; Uncharted General, payer contract offers; ER Charge, triage at the door plus EMS calling ahead; Regional, a board that forgives one miss. docs/HU-GAME-EXPANSION-2026-09-23.md, with two alternatives for each. | An expansion changes a game's rules, so choosing one opens that game's design phase. | Yes to all four, each after that game's fixes. ER Charge waits until you choose to open it. | 2026-09-23 |
 
 ---
 
@@ -97,6 +100,137 @@ No decision needed. Listed so you can veto any of them.
 ---
 
 ## LOG
+
+- **2026-09-24** PRE-PUSH QA, GREEN (David: "I will do a commit after you do a full scan QA run and test"). npm run qa on a
+  clean build: build, types and tests ok, the viewport sweep clean on all 51 pages at nine viewports (54 minutes); Tier 2 held
+  after one fix (the Vital Stats description was 190 characters, now 145, so over-long descriptions sit at the ceiling of 30).
+  verify 348/348. The phone playthrough 19/19. The real relay identical for the hospital game, Device Assembly and Vital
+  Stats. Links: 476 checked, the one "dead" (oig.hhs.gov) was a local DNS miss and loads; 49 unsure are bot walls; the link
+  check now also reads the Vital Stats question bank (65 of 66 ok, the NAPLEX PDF is a bot wall, opened in a browser).
+  Left for later, not blocking: 11 links whose sources moved host still work through a redirect.
+
+- **2026-09-24** FIRST VISITS MATCH THE PHONE'S LIGHT OR DARK SETTING, David: "yeah im down for that, think it would be neat."
+  A choice made with the site's toggle still wins on every visit. With no choice made, the page takes the device's setting
+  and follows it if the device switches while the page is open, until the visitor picks one. base.njk and Camp Nauvoo (the
+  one page with its own head). The QA scripts are pinned to dark, the side they have always measured. Proof:
+  tmp/theme-follow.js (13 cases), verify 348/348.
+
+- **2026-09-24** BALLPARK IS NOW VITAL STATS, David: "Vital Stats is good, allows us to expand onto it with more data sets and
+  other ideas, the core function is there and i like it." Renamed everywhere before its first push: the page and its address
+  (/secret-menu/vital-stats/), the secret menu card, the question bank and its builder, the tests and the relay check. The
+  log entries below keep the old name as it was when they were written.
+
+- **2026-09-23** BALLPARK, THE NEW MULTIPLAYER GAME, BUILT on David's challenge ("make a new game that is
+  multiplayer... turn based or phased base and everyone has to make a choice during that phase... healthcare
+  related... name it whatever you like"). Every call in it was Claude's, stated here so David can veto by playing:
+  THE NAME is Ballpark ("a ballpark figure"). THE GAME is Wits and Wagers' shape (guess, then bet on the guesses)
+  because it is the one party format where a player who knows nothing can still win by reading the table, which
+  suits a room of mixed roles. THE NUMBERS are real, each with its source and check date on the reveal. BOTS fill a
+  table so one person can play alone. NO ACCOUNTS: a name and a four-letter code, the relay The Table already uses.
+  Open for David, none blocking: whether the question bank should lean harder into RT and informatics numbers (it is
+  mostly workforce, 67 of 208, then health 51, hospitals 37, money 29, coverage 24); the bank's wage questions read
+  the BLS refresh that rides this same commit. The three explanation lines that came from general knowledge were
+  checked live 2026-09-24 and carry their source in scripts/build-ballpark.js: the Amish settlement line (Young
+  Center, true), the critical access line (true), and the rural emergency hospital line, which said Medicare created
+  the designation in 2023 and now says it began in 2023 (Congress created it in 2021).
+
+- **2026-09-24** BALLPARK'S THREE TWISTS, BUILT on David's yes ("lets do those 3 ideas"): the reveal strip, pay by
+  state, home turf. Claude's calls, veto by playing: home turf's bonus goes to whoever guesses closest, locals or not
+  (a visitor who beats the locals "took" it), rather than only to the locals; one turf round per home state, and two
+  players from the same state share one; bots have no home; turf is on by default and the host can switch it off; a
+  county question gets no strip (a county per state is not a state). The pay pull used 21 of the BLS public API's 25
+  free requests for the day; it caches, so re-running it costs nothing until --refresh.
+
+- **2026-09-24** BALLPARK STATE GAMES, BUILT on David's ask ("ask questions that are state by state, or select a list
+  of states"). Claude's calls, veto by playing: "State by state" is a second choice beside The whole U.S., not a
+  replacement, so the everyday game is unchanged; no states picked means every state; the quick picks are the Census
+  Bureau's four regions (DC sits in the South, as the Census puts it); a state game never asks the same kind of
+  question twice and spreads its rounds across the picked states; a pick too narrow to fill the rounds plays shorter
+  instead of repeating. Workforce is thin per state (unemployment only), because the site has no state pay data yet;
+  state RN and RT pay from BLS would fix that and is the obvious next pull. Claude's follow-up, no decision: the
+  table kit cannot tell a guest when one of its moves was lost if the host broadcast anything else in the meantime.
+
+- **2026-09-24** ALARM FATIGUE'S REAL OR NUISANCE ALARMS, BUILT on David's yes (row 17). Settle it by playing, not by
+  reading: is a 3 second walk the right price for CHECK, and is 7 in 10 nuisance the right mix (both are one number
+  each at the top of the alarm block)? Claude's calls, veto by playing: CHECK is the sat box itself, labelled, not a
+  second button (a second 44 px button made every monitor row 33 px taller on a phone); a code after an alarm you
+  silenced pays half and says the rest went to the safety report (before that, letting a real alarm fall paid 60
+  times more than catching it); a nuisance nobody answers clears itself in 18 to 30 seconds. Known, not new: on a
+  sideways phone about 95 px of the monitors shows above the task button (13 px less than before); the telemetry
+  strip still flickers at random, so a real alarm can look like motion there for a moment.
+
+- **2026-09-24** UNCHARTED GENERAL'S START SCREEN, no question needed (SPRINT item 15). Calls David can veto by
+  playing: Continue is always a tab (a pasted save needs a home) but opens first only with a saved run; The Table
+  opens first when hosting, a guest, or holding a table under 12 hours old; the CEO paragraph sits behind its "i" on
+  the start card (the mid-run CEO swap keeps the full card); Start stays pinned at the card's foot, under the fold;
+  Start names the scenario when one is picked; the subtitle line under the title is gone. An old quirk left alone:
+  picking a scenario and unpicking it keeps that scenario's settings.
+
+- **2026-09-24** ER CHARGE ON THE SHARED MENUS, no question needed (SPRINT item 15). Calls David can veto by
+  playing: Restart deals a fresh shift at the same difficulty (the hospital games go back to their start menus);
+  a first-time player starts on Normal from the how-to's Clock in without seeing the difficulty choice; after a tap
+  on Clock in, focus stays off the board (moving it drew a ring that looked like a selection); the 120-word
+  paragraph on the start card is unchanged because ER is in no design phase.
+
+- **2026-09-23** UNCHARTED REGIONAL, STEP 5, no question needed (SPRINT item 15). Calls David can veto by playing:
+  Esc on the start card or the payer table opens the game menu (neither card has a way back); Esc on a result card
+  continues to the next quarter; with a saved term, Continue is the main button; a reload on a result card opens the
+  next quarter (the result already counted); short of an access goal turns Region served amber, not red; the payer
+  table's odds are colored gain green, loss red, as in the hospital game; the old "New here?" guide still opens on
+  quarter one beside the new how-to card.
+
+- **2026-09-23** DEVICE ASSEMBLY LEVEL 3, REBUILT without the dry-side answer (David said keep rolling; the question
+  stays in row 16). The heated circuit side is sourced (Fisher & Paykel RT302); the flowmeter to chamber link is the
+  game's existing one. Building it found the old Level 3 could not be finished at all.
+
+- **2026-09-23** DEVICE ASSEMBLY'S THREE RT CALLS, ANSWERED on the recommendation. Level 3 (high flow): rebuild it the real way. Level 5 (bubble CPAP): hide it until there is an infant patient. Tutorial 3: the order becomes a simple mask at 2 L/min, and the player catches it. Built: Level 5 is parked (kept for the engine tests, out of every list a player sees, Capnography is now Level 5); Tutorial 3 reads "Order: oxygen by simple mask at 2 L/min... Read that order twice", both interfaces still answer it so the mask fails on its own spec (at least 5 L/min, or the patient rebreathes CO2) and the cannula passes, the RT's call to get the order changed. Level 3 is NOT rebuilt yet: Fisher & Paykel's RT302 kit (a heated MicroCell circuit, the MR290 chamber and Optiflow+) confirms the heated side, but no source found says how the gas gets from the high-flow flowmeter into the chamber, so that one detail went back to David instead of being guessed.
+
+- **2026-09-23** UNCHARTED GENERAL, STEP 3 OF THE GAMES TRACK, no question needed (SPRINT item 15):
+  the shared menus, the goal line beside Run ("Short by $308k", exact), a warning before a losing
+  quarter, an upright phone's pinned Run bar, and Continue after a reload. Every call in it was a
+  build call. The start screen's 46 controls are the next thing on this game, not done here.
+
+- **2026-09-23** ALARM FATIGUE'S CLINICAL CALLS AND ITS EXPANSION, ANSWERED. David, all three on
+  the recommendation: a DNR room gets a rapid response and never a code ("No code, rapid
+  response"); the code drugs are arrest drugs only; the expansion is real or nuisance alarms,
+  after the fixes. Built the same night (SPRINT item 15): the DNR card names the code status,
+  adenosine and atropine are out. Magnesium for torsades stayed, because it is an arrest drug and
+  the answer was "arrest drugs only", but the question listed only epi, amiodarone and lidocaine,
+  so it is his to veto. The pronoun fix was not a question; it follows the nurse brain.
+
+- **2026-09-23** 15 ANSWERED, 17 ADDED. David, on the review's recommended order: "ok that sounds
+  like a good plan." Read as a yes to the order and to question 15, since step 2 of that order IS
+  the shared menu rulebook. The shared menu pieces (a dialog, the game menu, settings with three
+  assist switches, the how-to card, a named-verb confirm) are being built in the kit now, without
+  touching the games, because another session is editing them. The ten rules go into
+  .claude/rules/games.md once the pieces land, so the rule can name them. His follow-up: "keep in
+  the theme of the games or their core ideas, but expand upon them. we want them to be fun an
+  accessable." Answered with docs/HU-GAME-EXPANSION-2026-09-23.md: a one-sentence core idea per
+  game, a five-point test every expansion must pass, the assist switches, and three options per
+  game with one recommended (question 17).
+
+- **2026-09-23** GAME REVIEW, all five games, on David's ask: "ok can you do a scan and review of
+  all games give me an evaluation." Written to docs/HU-GAME-REVIEW-2026-09-23.md with a scorecard,
+  a verdict per game, what the five share, the clinical reads (question 16) and a recommended
+  order. Headline: the phone gate passes all five clean, and every game still loses a new player
+  on a phone in a way the gate cannot see. Every game scores 2 on menus; sideways is the worst view
+  in all five; no run survives a reload in any of them. Two ER Charge defects a reviewer reported
+  (lost clicks, lost focus) did not reproduce on a re-run and were first called false. CORRECTED
+  the same night: they were real, and the other session had fixed both in between (SPRINT item 14).
+  Nothing in the games was changed by this review.
+
+- **2026-09-23** GAME MENUS, on David's question: "For all of our games the menuing should not
+  be hard to figure out and should follow what the best and highest rated and consumed apps do.
+  what do we need to do for that goal to be achived?" Answered with docs/HU-GAME-MENUS-2026-09-23.md:
+  what Apple's guidelines and the Game Accessibility Guidelines already require (checked live),
+  one app to copy per menu job, the words to use in a draft prompt, a ten-rule contract, and all
+  three games measured against it. The cause of the inconsistency is structural: no shared menu
+  component, so each game built its own overlay and every rule has to be fixed three times.
+  Four defects came out of the read and are Claude's to fix: Alarm Fatigue tells a phone that is
+  already sideways to turn sideways, and that notice's "Clock in" button does not clock in;
+  Device Assembly's results card ignores Esc; Uncharted General's start screen, Chart Room and
+  end screen have no close control. None were touched, because another session was editing the
+  games at the time. Nothing built. Question 15 waits behind T1 to T3.
 
 - **2026-09-22** QUESTION 2 OVERTAKEN BY A REBUILD, not answered. It asked David to read the
   unread round 2 phone layout. He opened the tool instead and said: "its extreamly complex, hard

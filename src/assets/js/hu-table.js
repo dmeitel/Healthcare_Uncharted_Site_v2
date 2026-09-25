@@ -17,7 +17,14 @@
        memoKey: 'ug_table',            // localStorage keys <memoKey>_host / _guest
        backend: { url, anonKey },      // the Supabase project, or null for local only
        seats: [{ id, label, desc }],   // the chairs a guest can claim
-       verbSeat: { hire: 'clinical', start: 'host', ... },
+       verbSeat: { hire: 'clinical', start: 'host', guess: '*', ... },
+                                       // '*' = any SEATED player, for games where every player
+                                       // makes the same move (a party game's estimate, a bet): the
+                                       // host stamps data.seat with the sender's own chair, so a
+                                       // guest can never act for somebody else's seat
+       autoSeat: false,                // true: the host takes the first chair and every new name
+                                       // that knocks takes the next open one (a party game has no
+                                       // seat picker; when the chairs run out, the rest watch)
        name: () => 'the player name',
        envelope: () => ({ save, ui }), // the host's packed state, plus what overlay is up
        onState: env => {},             // a guest received the host's envelope
@@ -52,13 +59,15 @@
 
   /** @param {any} opts */
   function create(opts) {
-    const o = Object.assign({ channelPrefix: 'table-', memoKey: 'table', backend: null, seats: [], verbSeat: {}, wire: 'ug' }, opts || {});
+    const o = Object.assign({ channelPrefix: 'table-', memoKey: 'table', backend: null, seats: [], verbSeat: {}, wire: 'ug', autoSeat: false }, opts || {});
     const hook = (n, ...a) => (typeof o[n] === 'function' ? o[n](...a) : undefined);
     const NET = { mode: null, room: '', name: '', seat: null, chan: null, seats: {}, roster: [], lastUiSeq: -1, pendingT: null, want: null, _supa: null };
     const memo = makeMemo(o.memoKey);
     const roomCode = () => Array.from({ length: 4 }, () => ROOM_CHARS[Math.floor(Math.random() * ROOM_CHARS.length)]).join('');
     const seatOf = name => { for (const s in NET.seats) if (NET.seats[s] === name) return s; return null; };
     const seatLabel = id => { const s = o.seats.find(x => x.id === id); return s ? s.label.replace(' &middot; ', ' / ') : id; };
+    const openSeat = () => { const s = o.seats.find(x => !NET.seats[x.id]); return s ? s.id : null; };
+    function seatNew(name) { if (!o.autoSeat || seatOf(name)) return; const s = openSeat(); if (s) NET.seats[s] = name; if (name === NET.name) NET.seat = seatOf(name); }
 
     function defaultChannelFactory(room) {
       const b = o.backend;
@@ -120,12 +129,18 @@
     function onMessage(m) {
       if (!m || !m.t) return;
       if (NET.mode === 'host') {
-        if (m.t === 'hello') { if (NET.roster.indexOf(m.name) < 0) NET.roster.push(m.name); broadcast(); hook('onRoster'); }
+        if (m.t === 'hello') { if (NET.roster.indexOf(m.name) < 0) NET.roster.push(m.name); seatNew(m.name); broadcast(); hook('onRoster'); }
         else if (m.t === 'claim') applyClaim(m.name, m.seat);
         else if (m.t === 'bye') { NET.roster = NET.roster.filter(n => n !== m.name); for (const s in NET.seats) if (NET.seats[s] === m.name) delete NET.seats[s]; broadcast(); hook('onRoster'); }
         else if (m.t === 'intent') {
           const need = o.verbSeat[m.act];
           if (!need || need === 'host') return;              // not a seat verb: refused quietly
+          if (need === '*') {                                // any seated player, as themselves
+            const own = seatOf(m.name); if (!own) return;    // a watcher has no seat to act for
+            hook('dispatch', m.act, Object.assign({}, m.data || {}, { seat: own }), m.name);
+            broadcast();
+            return;
+          }
           if (NET.seats[need] !== m.name) return;            // seat not theirs: refused
           hook('dispatch', m.act, m.data || {}, m.name);     // the sender's name: a game with one wall per player needs it
           broadcast();
@@ -148,6 +163,7 @@
       const chan = channelFactory(code);
       if (!chan) { hook('hint', 'This browser cannot open a table.'); return false; }
       NET.mode = 'host'; NET.room = code; NET.chan = chan; NET.name = hook('name') || 'Host'; NET.seat = null; NET.seats = {}; NET.roster = [NET.name]; NET.lastUiSeq = -1;
+      seatNew(NET.name);
       NET.chan.onmsg(onMessage);
       hook('onRoster');
       return true;
@@ -213,7 +229,8 @@
         const need = o.verbSeat[verb];
         if (!need) { hook('dispatch', verb, data); return; }
         if (need === 'host') { hook('hint', 'The host runs that. Say it out loud instead.'); return; }
-        if (NET.seat !== need) { hook('hint', 'That is the ' + seatLabel(need) + ' seat. Make the case to whoever holds it.'); return; }
+        if (need === '*' && !NET.seat) { hook('hint', 'Every chair is taken; you are watching this one.'); return; }
+        if (need !== '*' && NET.seat !== need) { hook('hint', 'That is the ' + seatLabel(need) + ' seat. Make the case to whoever holds it.'); return; }
         NET.chan.send({ t: 'intent', name: NET.name, act: verb, data: data || {} });
         // every applied intent comes back as a state; if none does, the host did not hear it (a
         // resumed host still joining, a dropped socket), and silence would look like a dead button
@@ -222,12 +239,14 @@
         hook('afterIntent', verb);
         return;
       }
+      // the host plays as its own chair; a solo game passes whatever seat the page chose
+      if (o.verbSeat[verb] === '*' && NET.mode === 'host') data = Object.assign({}, data || {}, { seat: NET.seat });
       hook('dispatch', verb, data);
       broadcast();
     }
 
     return {
-      NET, memo, escape, seatOf, roomCode,
+      NET, memo, escape, seatOf, roomCode, openSeat,
       host, join, leave, claim, act, broadcast, onMessage, envelope, offers, resume, rejoin,
       setChannelFactory(fn) { channelFactory = fn || defaultChannelFactory; },
     };

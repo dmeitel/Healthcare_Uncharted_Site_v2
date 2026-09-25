@@ -114,12 +114,12 @@ const PROBE = () => {
 };
 
 (async () => {
-  await new Promise((r) => server.listen(PORT, r));
+  await new Promise((r) => server.listen(PORT, () => r(undefined)));
   const browser = await chromium.launch();
   const rows = {};
 
   for (const w of only) {
-    const ctx = await browser.newContext({
+    const ctx = await browser.newContext({ colorScheme: 'dark',
       viewport: { width: w, height: w <= 699 ? 844 : 900 },
       deviceScaleFactor: 1, isMobile: w <= 699, hasTouch: w <= 699,
     });

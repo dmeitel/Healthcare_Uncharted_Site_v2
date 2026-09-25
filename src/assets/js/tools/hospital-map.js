@@ -1817,6 +1817,17 @@ if (window.HUKit ? HUKit.phone() : window.innerWidth < 700) {
     0.3, 2.5,
     true  // auto-center the building on init
   );
+} else {
+  // The campus (wing, hospital, office building) is about 2,000px wide and its column opened
+  // scrolled to the far left, so the hospital the tool is named for ran off the column's right
+  // edge beside the panel: 290px of it at 1440, more than half at 1280 (tool review
+  // 2026-09-23). Open on the hospital, centred when it fits, left edge first when it does not.
+  const sc = document.querySelector('.hm-building-scroll');
+  const hosp = /** @type {HTMLElement|null} */ (document.querySelector('.hm-campus-bldg--hospital'));
+  if (sc && hosp) {
+    const x = hosp.getBoundingClientRect().left - sc.getBoundingClientRect().left + sc.scrollLeft;
+    sc.scrollLeft = Math.max(0, x - Math.max(0, (sc.clientWidth - hosp.offsetWidth) / 2));
+  }
 }
 
 // ── direct manipulation (the Operators type-legend pattern): tap a legend

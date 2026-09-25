@@ -62,6 +62,7 @@ const PAIRS = [
   ['dark',  '#FFFFFF',    '--blue-deep', 4.5, 'primary hover'],
   ['dark',  '#062024',    '--teal',      4.5, 'the Ink State Rule: chips, icon-btn, v2 button'],
   ['dark',  '#062024',    '--green',     4.5, 'sql-mystery Run button: the same ink on the green fill (white was 3.48)'],
+  ['dark',  '--red',      '--surface',   4.5, 'the kit confirm: a danger verb on the dialog card (4.77)'],
   ['light', '--t1',       '--dark',      4.5, 'headings on the light ground'],
   ['light', '--t2',       '--dark',      4.5, 'body text on the light ground'],
   ['light', '--t2',       '--surface',   4.5, 'body text on white cards'],

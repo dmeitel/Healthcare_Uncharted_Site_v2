@@ -1296,7 +1296,11 @@ nav.nav-yield:focus-within { transform: none; }
 /* The drag handle is the grab target for the whole sheet and measured 20px tall
    (its visible bar is 4px). Padding, not height, so the bar itself stays 4px. */
 @media (hover:none) { .hu-sheet-grab { padding:20px 0 16px; } }
-.hu-sheet-x { position:absolute; top:10px; right:10px; z-index:2; }
+/* The X paints ONE ABOVE the grabber (z 6). When the grabber went sticky it spanned the
+   sheet's full width, 40px tall on touch, so it sat on top of the X: a tap on the X
+   resized the sheet instead of closing it (Atlas, Cost of Living, Device Assembly,
+   2026-09-23). The two maps had already patched their own X to 7 locally. */
+.hu-sheet-x { position:absolute; top:10px; right:10px; z-index:7; }
 
 /* Chip rail · one horizontal, non-wrapping filter row. Chips apply state,
    they never navigate. Rail scrolls; chips keep the 44px floor on touch. */
@@ -1789,6 +1793,14 @@ nav.nav-yield:focus-within { transform: none; }
   letter-spacing:0; text-transform:none; color:var(--t3); text-align:right;
 }
 @media (prefers-reduced-motion:reduce) { .hu-fold > summary::before { transition:none; } }
+/* PHONE: a label and its note could not share one row. Both wrapped ("NARROW IT / DOWN" beside a
+   two-line note) and each header grew to a different height (tool review 2026-09-23). The note
+   takes its own line under the label instead, in the label size, so every header reads as a
+   title and a subtitle. A button note (a badge) keeps its place on the row. */
+@media (max-width:699px), (max-height:500px) {
+  .hu-fold > summary:has(> span.hu-fold-note) { flex-wrap:wrap; row-gap:1px; padding-top:6px; padding-bottom:6px; }
+  .hu-fold > summary > span.hu-fold-note { flex:1 0 100%; margin-left:0; padding-left:19px; text-align:left; font-size:var(--t-label); line-height:1.3; }
+}
 
 /* a collapsible CARD: the bordered square that folds shut */
 .hu-fold--panel {
@@ -1805,3 +1817,182 @@ nav.nav-yield:focus-within { transform: none; }
 }
 .hu-fold--drop > summary { padding:0 clamp(14px,3vw,28px); }
 .hu-fold--drop[open] > summary { border-bottom:1px solid var(--border); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE GAME MENUS. HUKit.dialog, .gameMenu, .settings, .howTo and .confirm.
+
+   Added 2026-09-23 on David's brief: "For all of our games the menuing should
+   not be hard to figure out and should follow what the best and highest rated
+   and consumed apps do." Five games had each built their own overlays, so the
+   X, Esc, the back gesture, help and settings differed in every one of them
+   (docs/HU-GAME-MENUS-2026-09-23.md). This is the one set, and no game wears it
+   yet; each adopts it in its own pass.
+
+   Nothing new enters the palette. The card is a card: Chart Surface, a
+   Sounding Line Bold edge, 12px corners, and the ambient shadow it earns by
+   floating. The primary row is .btn-primary's blue. The destructive verb is red
+   INK on the card, the way the iPhone's "Delete Photo" is, and never a red
+   fill: white on --red is 3.7:1. The switch is .hu-sw.
+
+   A PHONE gets the card as a bottom sheet in the thumb zone, the way every
+   phone popover on this site already becomes one. SIDEWAYS, with 360px of
+   height, the menu rows go two across so all six fit with no scroll (contract
+   rule 10). When a card opens over another, a phone shows only the top one,
+   one transient surface at a time (DESIGN.md Tier 1); a desktop dims the one
+   beneath instead, so a confirm keeps its context.
+
+   The browser hides a closed <dialog> with its own display rule, and ANY
+   author display beats it, so the layout is keyed to [open].
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+dialog.hu-dlg {
+  width:min(420px, calc(100vw - 32px)); max-width:none;
+  max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px);
+  margin:auto; padding:0; overflow:hidden; overscroll-behavior:contain;
+  background:var(--surface); color:var(--t1);
+  border:1px solid var(--border2); border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+dialog.hu-dlg[open] { display:flex; flex-direction:column; }
+dialog.hu-dlg::backdrop { background:rgba(0,0,0,.5); }
+/* no showModal in this engine: the open attribute alone draws it in the flow, so pin it */
+dialog.hu-dlg--nm[open] { position:fixed; inset:0; z-index:400; }
+html.hu-dlg-lock { overflow:hidden; }
+@media (prefers-reduced-motion:no-preference) {
+  dialog.hu-dlg[open] { animation:hu-pop-in .2s ease-out; }
+}
+
+.hu-dlg-in { display:flex; flex-direction:column; flex:1 1 auto; min-height:0; }
+.hu-dlg-head { display:flex; align-items:center; gap:8px; flex:none; padding:6px 6px 0 20px; }
+.hu-dlg-title {
+  flex:1 1 auto; min-width:0; padding:8px 0;
+  font-family:var(--display); font-size:var(--t-lede); font-weight:800;
+  line-height:1.25; letter-spacing:-.01em; color:var(--t1);
+}
+/* the title takes focus from script only (tabindex -1, never a Tab stop) when a card is all
+   reading; it is not a control, so it draws no ring */
+.hu-dlg-title:focus { outline:none; }
+.hu-dlg-x {
+  display:inline-flex; align-items:center; justify-content:center; flex:none;
+  width:44px; height:44px; padding:0; border:none; border-radius:10px;
+  background:none; color:var(--t2); cursor:pointer;
+  transition:background-color .15s, color .15s;
+}
+.hu-dlg-x svg { width:20px; height:20px; }
+.hu-dlg-x:hover { background:var(--raised); color:var(--t1); }
+.hu-dlg-body { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:6px 20px 20px; }
+.hu-dlg-text { font-size:var(--t-body); line-height:1.6; color:var(--t2); }
+
+/* the confirm: the verb first, Cancel after it with room between */
+.hu-dlg-acts { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+.hu-dlg-btn {
+  display:inline-flex; align-items:center; justify-content:center; flex:1 1 auto;
+  min-height:44px; padding:0 18px; border:1px solid var(--border2); border-radius:10px;
+  background:var(--raised); color:var(--t1);
+  font-family:var(--font); font-size:var(--t-sub); font-weight:600; line-height:1.25; text-align:center;
+  cursor:pointer; transition:background-color .15s, border-color .15s;
+}
+.hu-dlg-btn:hover { border-color:var(--teal); }
+.hu-dlg-btn--primary { background:var(--blue); border-color:var(--blue); color:#fff; }
+.hu-dlg-btn--primary:hover { background:var(--blue-deep); border-color:var(--blue-deep); }
+.hu-dlg-btn--danger { background:transparent; border-color:var(--red); color:var(--red); }
+/* hover thickens the rule; a raised fill under red ink drops it to 4.4:1 */
+.hu-dlg-btn--danger:hover { border-color:var(--red); box-shadow:inset 0 0 0 1px var(--red); }
+
+/* the game menu: one column of rows, Resume first and a little taller */
+.hu-gm-list { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.hu-gm-row {
+  display:flex; align-items:center; width:100%; min-height:48px; padding:0 16px;
+  border:1px solid var(--border); border-radius:10px; background:var(--raised); color:var(--t1);
+  font-family:var(--font); font-size:var(--t-sub); font-weight:600; line-height:1.25;
+  text-align:left; text-decoration:none; cursor:pointer;
+  transition:background-color .15s, border-color .15s;
+}
+.hu-gm-row:hover { border-color:var(--teal); color:var(--t1); }
+.hu-gm-row--primary { min-height:52px; background:var(--blue); border-color:var(--blue); color:#fff; }
+.hu-gm-row--primary:hover { background:var(--blue-deep); border-color:var(--blue-deep); color:#fff; }
+
+/* settings: Wordle's rows. The whole row is the switch; .hu-sw is only its picture */
+.hu-gm-set { list-style:none; margin:0 -8px; padding:0; }
+.hu-gm-set > li + li { border-top:1px solid var(--border); }
+.hu-gm-toggle {
+  display:flex; align-items:center; gap:16px; width:100%; min-height:60px; padding:10px 8px;
+  border:none; border-radius:8px; background:none; color:var(--t1);
+  font-family:var(--font); text-align:left; cursor:pointer; transition:background-color .15s;
+}
+.hu-gm-toggle:hover { background:var(--raised); }
+.hu-gm-toggle-txt { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.hu-gm-toggle-name { font-size:var(--t-sub); font-weight:600; line-height:1.3; color:var(--t1); }
+.hu-gm-toggle-help { font-size:var(--t-ui); line-height:1.45; color:var(--t2); }
+.hu-gm-toggle .hu-sw { pointer-events:none; }
+
+/* how to play: three numbered rules, an example under a rule, an optional go button */
+.hu-gm-rules { margin:0; padding:0 0 0 22px; display:grid; gap:10px; font-size:var(--t-body); line-height:1.55; color:var(--t2); }
+.hu-gm-rules li { padding-left:4px; }
+.hu-gm-rules li::marker { font-family:var(--mono); font-weight:600; color:var(--teal); }
+.hu-gm-ex { margin-top:18px; padding-top:14px; border-top:1px solid var(--border); }
+.hu-gm-cap {
+  margin:0 0 8px; font-family:var(--mono); font-size:var(--t-label); font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--t3);
+}
+.hu-gm-go { width:100%; margin-top:20px; }
+
+/* the two toolbar buttons a game places: Menu (icon and word) and "?" */
+.hu-gm-btn, .hu-gm-q {
+  display:inline-flex; align-items:center; justify-content:center; flex:none;
+  min-height:44px; border:1px solid var(--border2); border-radius:10px;
+  background:var(--surface); color:var(--t1); cursor:pointer; transition:border-color .15s;
+}
+.hu-gm-btn { gap:8px; padding:0 14px 0 12px; font-family:var(--font); font-size:var(--t-ui); font-weight:600; }
+.hu-gm-btn svg { width:18px; height:18px; flex:none; }
+.hu-gm-q { width:44px; padding:0; font-family:var(--mono); font-size:var(--t-sub); font-weight:700; }
+.hu-gm-btn:hover, .hu-gm-q:hover,
+.hu-gm-btn[aria-expanded="true"], .hu-gm-q[aria-expanded="true"] { border-color:var(--teal); }
+
+/* states every control here shares: the press, the ring, the disabled step */
+:is(.hu-dlg-btn, .hu-gm-row, .hu-gm-btn, .hu-gm-q):active { transform:translateY(1px); }
+:is(.hu-dlg-x, .hu-dlg-btn, .hu-gm-row, .hu-gm-toggle, .hu-gm-btn, .hu-gm-q):focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+.hu-dlg-x:focus-visible, .hu-gm-toggle:focus-visible { outline-offset:-2px; }
+:is(.hu-dlg-btn, .hu-gm-row, .hu-gm-toggle, .hu-gm-btn, .hu-gm-q):disabled { opacity:.45; cursor:not-allowed; transform:none; }
+
+/* LIGHT: teal and red as ink or edge drop to their deep steps (The Deep-Step Rule), and the
+   lifted card takes the ink-blue shadow the light theme uses for every lifted surface */
+[data-theme="light"] dialog.hu-dlg { box-shadow:0 12px 40px rgba(13,32,54,.18); }
+[data-theme="light"] :is(.hu-dlg-x, .hu-dlg-btn, .hu-gm-row, .hu-gm-toggle, .hu-gm-btn, .hu-gm-q):focus-visible { outline-color:var(--teal-dk); }
+[data-theme="light"] :is(.hu-dlg-btn, .hu-gm-row, .hu-gm-btn, .hu-gm-q):hover,
+[data-theme="light"] :is(.hu-gm-btn, .hu-gm-q)[aria-expanded="true"] { border-color:var(--teal-dk); }
+[data-theme="light"] .hu-dlg-btn--primary:hover,
+[data-theme="light"] .hu-gm-row--primary:hover { border-color:var(--blue-deep); }
+[data-theme="light"] .hu-dlg-btn--danger,
+[data-theme="light"] .hu-dlg-btn--danger:hover { color:var(--red-dk); border-color:var(--red-dk); }
+[data-theme="light"] .hu-dlg-btn--danger:hover { box-shadow:inset 0 0 0 1px var(--red-dk); }
+[data-theme="light"] .hu-gm-rules li::marker { color:var(--teal-ink); }
+/* .hu-sw's track is --raised2, which has no light value, so on a white card an OFF switch drew as
+   a navy pill darker than ON, its knob at 1.9:1 against the track. Scoped to these rows so the
+   switch elsewhere is untouched: off takes the light raised step (knob 6.1:1), and on keeps its
+   teal with the deep-step edge, because bright teal alone is 1.9:1 on white. */
+[data-theme="light"] .hu-gm-toggle .hu-sw:not(.on) { background:var(--raised); }
+[data-theme="light"] .hu-gm-toggle .hu-sw.on { border-color:var(--teal-dk); }
+
+/* A PHONE: a bottom sheet in the thumb zone, one card showing at a time */
+@media (max-width:699px), (max-height:500px) {
+  dialog.hu-dlg {
+    width:100%; max-height:92vh; max-height:92dvh; margin:auto 0 0;
+    border-width:1px 0 0; border-radius:16px 16px 0 0;
+    box-shadow:0 -12px 40px rgba(0,0,0,.45);
+  }
+  .hu-dlg-body { padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+  dialog.hu-dlg--under { visibility:hidden; }
+  @media (prefers-reduced-motion:no-preference) {
+    dialog.hu-dlg[open] { animation:hu-sheet-in .25s cubic-bezier(.2,.8,.2,1); }
+  }
+}
+/* SIDEWAYS: the sheet keeps a readable width, and the menu goes two across under Resume */
+@media (max-height:500px) {
+  dialog.hu-dlg {
+    width:min(560px, 100%); max-height:calc(100vh - 8px); max-height:calc(100dvh - 8px);
+    margin:auto auto 0; border-width:1px 1px 0;
+  }
+  .hu-dlg--menu .hu-gm-list { grid-template-columns:1fr 1fr; }
+  .hu-dlg--menu .hu-gm-list > li:first-child { grid-column:1 / -1; }
+}

@@ -75,6 +75,7 @@
     <button id="next" title="Next page">&#8594;</button>
   </div>
   <button id="reload" title="Reload both frames">Reload</button>
+  <button id="live" class="on" title="Reload both frames by themselves whenever the page or the shared CSS and JS change">Live</button>
 
   <div class="seg" id="sizes">
     <button data-w="w360">360</button>
@@ -107,7 +108,7 @@
 
 <div class="hint">
   With <b>Linked</b> on, either frame pulls the other to the same page and the same place on it. <kbd>&#8592;</kbd> <kbd>&#8594;</kbd> step through pages,
-  <kbd>r</kbd> reloads, <kbd>t</kbd> toggles theme. The phone frame is a real viewport at that width, not a scaled screenshot.
+  <kbd>r</kbd> reloads, <kbd>t</kbd> toggles theme. <b>Live</b> reloads both frames by itself when the page is rebuilt. The phone frame is a real viewport at that width, not a scaled screenshot.
 </div>
 
 <script>
@@ -255,6 +256,27 @@
     if (e.key === 'r') { desk.contentWindow.location.reload(); phone.contentWindow.location.reload(); }
     if (e.key === 't') themeBtn.click();
   });
+
+  /* LIVE. With the dev server running, every edit rebuilds the page; this watches the stamp the
+     review server keeps and reloads both frames when it moves, so a change shows up without a
+     hand on the Reload key. Off stops it, for when a reload mid-game would lose a run. */
+  var liveBtn = document.getElementById('live');
+  var live = true, lastStamp = 0;
+  try { live = localStorage.getItem('hu-review-live') !== 'off'; } catch (e) {}
+  liveBtn.classList.toggle('on', live); liveBtn.textContent = live ? 'Live' : 'Live off';
+  liveBtn.addEventListener('click', function () {
+    live = !live;
+    liveBtn.classList.toggle('on', live); liveBtn.textContent = live ? 'Live' : 'Live off';
+    try { localStorage.setItem('hu-review-live', live ? 'on' : 'off'); } catch (e) {}
+  });
+  setInterval(function () {
+    if (!live || document.hidden) return;
+    var p; try { p = desk.contentWindow.location.pathname; } catch (e) { return; }
+    fetch('/__review/stamp?p=' + encodeURIComponent(p), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+      if (lastStamp && s.t > lastStamp) { desk.contentWindow.location.reload(); phone.contentWindow.location.reload(); }
+      lastStamp = s.t;
+    }).catch(function () { /* the review server is restarting */ });
+  }, 1500);
 
   var phoneStage = document.getElementById('phoneStage');
   var phoneScale = document.getElementById('phoneScale');

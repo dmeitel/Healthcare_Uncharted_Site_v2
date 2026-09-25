@@ -239,6 +239,8 @@ eleventyExcludeFromCollections: true
 .ug-stepper button:hover{border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
 .ug-stepper button:disabled{opacity:.3;cursor:not-allowed}
 .ug-stepper .s-num{font-family:var(--mono);font-weight:600;min-width:22px;text-align:center;color:var(--t1)}
+/* the steppers are the game's main verbs, 25 and 28 px was under the touch floor; the sliders were 16 px tall. After both base rules so it wins. */
+@media (max-width:699px), (max-height:500px){.uc-step button,.ug-stepper button{width:44px;height:44px;border-radius:9px}#ug input[type=range]{height:44px;margin-top:0}}
 .ug-expand{width:100%;margin-top:12px;padding:9px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:var(--t-fine);cursor:pointer;font-family:var(--font);transition:all .15s}
 .ug-expand:hover:not(:disabled){border-color:var(--lt-green,#4ecb8d);color:var(--lt-green,#4ecb8d)}
 .ug-expand:disabled{opacity:.4;cursor:not-allowed}
@@ -361,6 +363,7 @@ eleventyExcludeFromCollections: true
 .ug-overlay{position:fixed;inset:0;z-index:200;background:rgba(2,8,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px}
 .ug-overlay[hidden]{display:none}
 .ug-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:760px;width:100%;max-height:88vh;overflow-y:auto;padding:30px}
+.ug-modal:focus{outline:none}   /* the dialog box takes focus so Tab starts inside it; its controls keep their rings */
 .ug-modal h2{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
 .ug-modal h2.win{color:var(--lt-green,#4ecb8d)}.ug-modal h2.lose{color:var(--lt-red,#ff7a7a)}
 .ug-modal .mo-sub{font-size:var(--t-sub);color:var(--t2);line-height:1.6;margin-bottom:20px}
@@ -445,8 +448,9 @@ eleventyExcludeFromCollections: true
 .ug-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 22px}
 @media(max-width:560px){.ug-set-grid{grid-template-columns:1fr}}
 .ug-start-sep{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.16em;text-transform:uppercase;color:var(--lt-green,#4ecb8d);margin:26px 0 6px;padding-top:20px;border-top:1px solid var(--border)}
-.ug-start-foot{position:sticky;bottom:0;z-index:6;margin:22px -30px -30px;padding:20px 30px 30px;background:var(--surface);box-shadow:0 -14px 24px -8px rgba(13,17,23,.96)}
+.ug-start-foot{position:sticky;bottom:-30px;z-index:6;margin:22px -30px -30px;padding:20px 30px 30px;background:var(--surface);box-shadow:0 -14px 24px -8px rgba(13,17,23,.96)}
 @media (max-width:699px), (max-height:500px){.ug-start-foot{padding:12px 30px 14px}}   /* 106px plus the 64px nav was 21% of a phone screen, the budget is 20%; must follow the base rule to win */
+/* bottom:-30px: a sticky child of a padded scroller stops at the padding edge, so bottom:0 left the modal's 30px padding as a strip where scrolled content showed under the Start bar */
 .ug-start-go{width:100%;padding:16px;border:none;border-radius:11px;font-family:var(--display);font-weight:700;font-size:var(--t-lede);letter-spacing:.02em;color:#04140b;background:linear-gradient(135deg,#4ecb8d,#2D9B6F);cursor:pointer;transition:all .15s;box-shadow:0 6px 18px rgba(45,155,111,.3)}
 .ug-start-go:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(45,155,111,.45)}
 .ug-start-go:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;filter:saturate(.35);color:#0b2b1d}
@@ -481,6 +485,40 @@ eleventyExcludeFromCollections: true
 .ceo-dot:hover{background:var(--lt-dot-hi,rgba(255,255,255,.42))}
 .ceo-dot.on{background:var(--lt-green,#4ecb8d);width:22px;border-radius:5px}
 @media(max-width:560px){.ceo-viewport{margin:0 40px}.ceo-slide .ug-enh{max-width:none}}
+/* The start card is Balatro's Play panel (docs/HU-GAME-MENUS-2026-09-23.md 3.4, 2026-09-24): four
+   tabs, each with its choices already made, so Start works on the first tap. The settings form it
+   replaced was 513 words and 48 controls with the CEO last. The tab rule is an inset shadow, not a
+   border, because the strip scrolls sideways on a narrow phone and would clip a -1px overlap. */
+.ug-stabs{display:flex;gap:2px;margin:4px 0 16px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.ug-stabs::-webkit-scrollbar{display:none}
+.ug-stab{flex:1 0 auto;min-height:44px;padding:10px 12px;border:none;background:none;color:var(--t3);font-family:var(--font);font-size:var(--t-ui);font-weight:600;white-space:nowrap;cursor:pointer;transition:color .12s,box-shadow .12s}
+.ug-stab:hover{color:var(--t1)}
+.ug-stab[aria-selected="true"]{color:var(--lt-green,#4ecb8d);box-shadow:inset 0 -2px 0 var(--lt-green,#4ecb8d)}   /* one weight for every tab, so a switch never shifts the row */
+.ug-stab:focus-visible{outline:2px solid var(--lt-green,#4ecb8d);outline-offset:-2px;border-radius:6px}
+.ug-tp[hidden],.ug-start-foot[hidden]{display:none}
+/* the card hangs from one top edge instead of centering, so switching to a shorter tab never moves
+   the tab strip out from under the thumb; the offset centers the tallest tab */
+.ug-overlay:has(> .ug-modal-start){align-items:flex-start;padding-top:max(24px, calc((100dvh - 660px) / 2))}
+.ug-modal-start{max-height:min(88vh, 660px)}
+.ug-modal-start .ceo-carousel{margin-top:0}
+.ug-modal-start .ceo-dots{margin-bottom:14px}   /* the fold follows the dots now, so the old 48px clearance is not needed */
+.ug-modal-start .hu-fold[open] > summary{margin-bottom:14px}
+.ug-modal-start .hu-fold .ug-set:last-child{margin-bottom:6px}
+.ug-modal-start .hu-fold .ug-load-row{margin:0 0 8px}
+.ug-ceo-compact .en-name .hu-i{margin-left:8px}
+.ug-ceo-compact .ceo-effects{margin-top:12px}   /* the effects follow the trait; a shorter card leaves its slack at the bottom */
+.ug-continue{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:18px}
+.ug-cont-meta{font-family:var(--mono);font-size:var(--t-fine);font-weight:600;letter-spacing:0}
+@media (max-width:699px), (max-height:500px){
+  /* four tabs in one row at 360 needs the room: a thinner frame, a thinner card edge */
+  .ug-overlay:has(> .ug-modal-start){padding:10px;padding-top:max(10px, calc((100dvh - 640px) / 2))}
+  .ug-modal-start{padding:18px 14px 20px;max-height:88vh;max-height:min(calc(100dvh - 20px), 640px)}
+  .ug-modal-start h2{font-size:24px;margin-bottom:2px}
+  .ug-modal-start .ug-start-foot{margin:18px -14px -20px;padding:12px 14px 14px;bottom:-20px}
+  .ug-stabs{gap:0}
+  .ug-stab{padding:10px 6px;font-size:var(--t-fine)}
+}
+@media (prefers-reduced-motion: reduce){.ug-stab{transition:none}}
 .ug-end-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .ug-end-actions .ug-restart{margin-top:0}
 .ug-peek-btn{padding:14px 22px;border:1px solid var(--border2);border-radius:11px;font-family:var(--display);font-weight:700;font-size:var(--t-sub);color:var(--t2);background:transparent;cursor:pointer;transition:all .15s}
@@ -489,10 +527,48 @@ eleventyExcludeFromCollections: true
 .ug-reopen:hover{filter:brightness(1.1)}
 .ug-reopen[hidden]{display:none}
 .ug-reopen.win{background:linear-gradient(135deg,#4ecb8d,#2D9B6F);color:#04140b;box-shadow:0 8px 24px rgba(45,155,111,.45)}
+
+/* 2026-09-23, the games track (docs/HU-GAME-REVIEW-2026-09-23.md 3.2). The "?" and Menu are the
+   kit's (HUKit.howTo, HUKit.gameMenu); the back link keeps its place on the left. */
+.ug-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ug-kit{display:flex;gap:8px;align-items:center}
+/* on a phone the link says what Device Assembly's says, so it fits one line beside the menu */
+@media (max-width:699px), (max-height:500px){.ug-back-long{display:none}}
+/* the goal, read off the projection: the same arithmetic Run uses, so it is the answer, not a guess */
+.ug-track{margin:0 0 10px;font-family:var(--mono);font-size:var(--t-fine);font-weight:700;letter-spacing:.02em;text-align:center;line-height:1.45}
+.ug-track:empty{display:none}
+.ug-track.ok{color:var(--lt-green,#4ecb8d)}
+.ug-track.short{color:var(--lt-amber,#E8A838)}
+.ug-track.broke{color:var(--lt-red,#ff7a7a)}
+.pj-row b.neg-cash{color:var(--lt-red,#ff7a7a)}
+/* a choice's effects read in their own colors: a cost in red, a gain in green, a plain change in the body color */
+.ug-choice .ch-eff{color:var(--t3)}
+.ug-choice .ch-eff .good{color:var(--lt-green,#4ecb8d)}
+.ug-choice .ch-eff .bad{color:var(--lt-red,#ff7a7a)}
+.ug-choice .ch-eff .flat{color:var(--t2)}
+/* An upright phone: the map (the units, where the quarter is decided) comes straight after the
+   goal, and Run rides the bottom edge with the goal line on it. A sideways phone keeps the old
+   order: a pinned bar there would take ~30% of a 360px screen, past the 20% chrome budget. */
+@media (max-width:699px) and (min-height:501px){
+  .ug-main{grid-template-areas:"map" "side" "chart"}
+  .ug-rundock{position:fixed;left:0;right:0;bottom:0;z-index:110;display:flex;align-items:center;gap:10px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border2)}
+  .ug-rundock .ug-track{flex:1;margin:0;text-align:left}
+  .ug-rundock .ug-run{width:auto;flex:none;padding:12px 16px;min-height:48px}
+  .ug-rundock[hidden]{display:none}
+  #ug{padding-bottom:84px}
+}
+@media (prefers-reduced-motion: reduce){
+  .ug-card-burn,.ug-flash{animation:none}
+  .ceo-track,.ceo-slide,.uc-burn span,.ceo-hex-bg,.ceo-act,.ug-empty .es-rect,.ug-room .rm-bg,.ug-enh,.ug-run{transition:none}
+}
 </style>
 
 <div class="ug-wrap" id="ug">
-  <a class="ug-back" href="/secret-menu/">&larr; Back to the Secret Menu</a>
+  <div class="ug-topbar">
+    <a class="ug-back" href="/secret-menu/">&larr; <span class="ug-back-long">Back to the </span>Secret Menu</a>
+    <span class="ug-kit" id="ug-kitbtns"></span>
+  </div>
   <div class="ug-head">
     <div class="ug-titles">
       <h1>Uncharted <em>General</em></h1>
@@ -505,7 +581,10 @@ eleventyExcludeFromCollections: true
 
   <div class="ug-main">
     <aside class="ug-side">
-      <button class="ug-run" id="ug-run">RUN THE QUARTER &#9656;</button>
+      <div class="ug-rundock" id="ug-rundock">
+        <div class="ug-track" id="ug-track" aria-live="polite"></div>
+        <button class="ug-run" id="ug-run">RUN THE QUARTER &#9656;</button>
+      </div>
       <div id="ug-runhint" hidden></div>
       <button class="ug-save" data-act="save">Save this run</button>
       <div id="ug-table" class="ug-tablebar" hidden></div>
@@ -531,7 +610,7 @@ eleventyExcludeFromCollections: true
 </div>
 
 <script src="/assets/js/vendor/supabase-2.115.0.min.js"></script>
-<script src="/assets/js/hu-kit.js?v=20260920"></script>
+<script src="/assets/js/hu-kit.js?v=20260923"></script>
 <script src="/assets/js/hu-save.js?v=20260920"></script>
 <script src="/assets/js/hu-rng.js?v=20260920"></script>
 <script src="/assets/js/hu-table.js?v=20260920"></script>
@@ -1362,6 +1441,15 @@ eleventyExcludeFromCollections: true
     const opLoss = r.net < 0 ? -r.net : 0;
     const growthSpend = snap ? Math.round(snap.cash + r.net - run.cash) : null;   // net cash poured into growth this quarter
     const alt = disciplinedAlt();
+    // A crisis that took most of the loss is the cause, not the staffing: a billing cyberattack
+    // that cut revenue 35% used to be reported as "payroll and overhead outran" it (review 2026-09-23).
+    const ev = run.activeEvent;
+    const evRevLoss = (ev && ev.revMod && ev.revMod < 1) ? Math.round(r.revenue * (1/ev.revMod - 1)) : 0;
+    const evHit = evRevLoss + (r.eventCost || 0);
+    if (opLoss > 0 && ev && evHit >= opLoss*0.5){
+      return causeBlock(`What sank you: ${ev.name}`,
+        `${ev.name} took about <b class="neg">${money(evHit)}</b> out of this quarter${evRevLoss && r.eventCost ? ' in lost revenue and direct cost' : evRevLoss ? ' in lost revenue' : ' in direct cost'}, and the network ran <b class="neg">${money(-opLoss)}</b> in the red. The crisis was on the briefing before you pressed Run: that is the quarter to borrow ahead of it, or to trim spend until the projection holds.${alt}`);
+    }
     if (opLoss > 0){
       const extra = (growthSpend!==null && growthSpend > opLoss*0.5) ? ` On top of that, about <b class="neg">${money(growthSpend)}</b> went into hiring, expansion, and construction. Pace that against cash on hand.` : '';
       return causeBlock('What sank you: an operating loss',
@@ -1550,21 +1638,23 @@ eleventyExcludeFromCollections: true
     });
     return scaleEvent(e);
   }
+  // Each effect reads in its own color: a cost red, a gain green, a demand swing (good or bad
+  // depending on the beds) in the body color. They were all green, "morale hit" included.
   const optEffects = o => {
-    const p=[];
-    if(o.cost)   p.push(`&minus;${money(o.cost)} now`);
-    if(o.cash)   p.push(`+${money(o.cash)} now`);
-    if(o.morale) p.push(`${o.morale>0?'+':''}${o.morale} morale now`);
-    if(o.rep)    p.push(`${o.rep>0?'+':''}${o.rep} reputation now`);
-    if(o.moraleHit) p.push(`morale hit this quarter`);
-    if(o.repHit) p.push(`&minus;${o.repHit} reputation`);
-    if(o.revMod && o.revMod!==1) p.push(`revenue &times;${o.revMod}`);
-    if(o.demandAll && o.demandAll!==1) p.push(`demand &times;${o.demandAll}`);
-    if(o.capAll && o.capAll!==1) p.push(`capacity &times;${o.capAll}`);
-    if(o.demandMod){ for(const k in o.demandMod) p.push(`${k.toUpperCase()} demand &times;${o.demandMod[k]}`); }
-    if(o.capMod){ for(const k in o.capMod) p.push(`${k.toUpperCase()} capacity &times;${o.capMod[k]}`); }
-    if(o.grant)  p.push(`permanent: ${o.grant.name}`);
-    return p.join(' &middot; ') || 'No immediate cost';
+    const p=[], e=(cls, t)=>p.push(`<span class="${cls}">${t}</span>`), sg=v=>v>0?'good':'bad';
+    if(o.cost)   e('bad', `&minus;${money(o.cost)} now`);
+    if(o.cash)   e('good', `+${money(o.cash)} now`);
+    if(o.morale) e(sg(o.morale), `${o.morale>0?'+':''}${o.morale} morale now`);
+    if(o.rep)    e(sg(o.rep), `${o.rep>0?'+':''}${o.rep} reputation now`);
+    if(o.moraleHit) e('bad', `morale hit this quarter`);
+    if(o.repHit) e('bad', `&minus;${o.repHit} reputation`);
+    if(o.revMod && o.revMod!==1) e(sg(o.revMod-1), `revenue &times;${o.revMod}`);
+    if(o.demandAll && o.demandAll!==1) e('flat', `demand &times;${o.demandAll}`);
+    if(o.capAll && o.capAll!==1) e(sg(o.capAll-1), `capacity &times;${o.capAll}`);
+    if(o.demandMod){ for(const k in o.demandMod) e('flat', `${k.toUpperCase()} demand &times;${o.demandMod[k]}`); }
+    if(o.capMod){ for(const k in o.capMod) e(sg(o.capMod[k]-1), `${k.toUpperCase()} capacity &times;${o.capMod[k]}`); }
+    if(o.grant)  e('good', `permanent: ${o.grant.name}`);
+    return p.join(' &middot; ') || '<span class="flat">No immediate cost</span>';
   };
   // The passive crisis deck, at module scope so BREWS can reference it. Entries are shared data:
   // ALWAYS pick through pickFromPool (deep-copies the nested mods) because scaleEvent mutates in place.
@@ -1659,12 +1749,15 @@ eleventyExcludeFromCollections: true
   function pickCeo(c){ run.ceo=c; if(c.onPick) c.onPick(run); closeOverlay(); startLevel(true); }
   // ── CEO MID-RUN MANAGEMENT: in a morale crisis you can fire a deeply unpopular chief for a jolt of morale,
   //    then you've got a year to appoint a replacement. Shared card markup powers the start menu + this overlay.
-  function ceoCardHtml(c, action, extra){
-    return `<button class="ug-enh ug-ceo${extra||''}${(action==='selceo'&&selectedCeoId===c.id)?' sel':''}" data-act="${action}" data-id="${c.id}">
+  // compact (the start card): the name, the trait and the numbers stay on the card; the paragraph
+  // goes behind the peek, answered by hover, focus, or a tap on the "i" (rule 9 of the menu contract)
+  function ceoCardHtml(c, action, extra, compact){
+    const def = compact ? ` data-def="${defAttr('<b>'+c.name+' &middot; '+c.trait+'</b>'+c.desc)}"` : '';
+    return `<button class="ug-enh ug-ceo${extra||''}${compact?' ug-ceo-compact':''}${(action==='selceo'&&selectedCeoId===c.id)?' sel':''}" data-act="${action}" data-id="${c.id}"${def}>
       <div class="ceo-cred">${c.cred}</div>
-      <div class="en-name">${c.name}</div>
+      <div class="en-name">${c.name}${compact?'<span class="hu-i" aria-hidden="true">i</span>':''}</div>
       <div class="ceo-trait">${c.trait}</div>
-      <div class="en-desc">${c.desc}</div>
+      ${compact?'':`<div class="en-desc">${c.desc}</div>`}
       <div class="ceo-effects">
         ${c.perks.map(p=>`<div class="ce-perk">&#9650; ${p}</div>`).join('')}
         ${c.costs.map(p=>`<div class="ce-cost">&#9660; ${p}</div>`).join('')}
@@ -1674,10 +1767,10 @@ eleventyExcludeFromCollections: true
   // CEO selection is a carousel: one card centered at a time, arrows + dots to move through the slate.
   // The card in front is the active pick; START / Appoint commits it. `ceoSlide` is the current index.
   const ceoOrder = () => CEOS.concat([NO_CEO]);
-  function ceoCarouselHtml(action){
+  function ceoCarouselHtml(action, compact){
     const order = ceoOrder();
     ceoSlide = clamp(ceoSlide, 0, order.length-1);
-    const slides = order.map((c,i)=>`<div class="ceo-slide${i===ceoSlide?' active':''}">${ceoCardHtml(c, action, c.noCeo?' ug-ceo-none':'')}</div>`).join('');
+    const slides = order.map((c,i)=>`<div class="ceo-slide${i===ceoSlide?' active':''}">${ceoCardHtml(c, action, c.noCeo?' ug-ceo-none':'', compact)}</div>`).join('');
     const dots = order.map((c,i)=>`<button class="ceo-dot${i===ceoSlide?' on':''}" data-act="ceodot" data-i="${i}" aria-label="${c.name}" title="${c.name}"></button>`).join('');
     return `<div class="ceo-carousel"><div class="ceo-stage">
         <button class="ceo-arrow prev" data-act="ceonav" data-dir="-1" ${ceoSlide<=0?'disabled':''} aria-label="Previous CEO">&#10094;</button>
@@ -1701,7 +1794,7 @@ eleventyExcludeFromCollections: true
     if (qa) qa('.ceo-dot').forEach((d,idx)=> d.classList.toggle('on', idx===ceoSlide));
     const prev=q&&q('.ceo-arrow.prev'); if(prev) prev.disabled = ceoSlide<=0;
     const next=q&&q('.ceo-arrow.next'); if(next) next.disabled = ceoSlide>=order.length-1;
-    const sb=q&&q('.ug-start-go'); if(sb) sb.innerHTML = `Start &middot; ${order[ceoSlide].name} &#9656;`;
+    const sb=q&&q('.ug-start-go[data-act="start"]'); if(sb) sb.innerHTML = startLabel();
     const ab=q&&q('.ceo-appoint-btn'); if(ab) ab.innerHTML = `Appoint ${order[ceoSlide].name} &#9656;`;
   }
   const canFireCeo = () => !!(run.ceo && !run.ceo.noCeo && !run.ceoVacant && run.morale <= CFG.fireMoraleFloor);
@@ -1710,7 +1803,7 @@ eleventyExcludeFromCollections: true
     overlayOpen = true;
     const c = run.ceo;
     $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 class="lose">Fire ${c.name}?</h2>
-      <div class="mo-sub">Morale is on the floor and the staff blame the corner office. Cutting the chief loose rallies them: an immediate <b style="color:var(--lt-green,#4ecb8d)">+${CFG.fireMoraleBoost} morale</b>. But you lose the <b>${c.trait}</b> trait, eat a <b style="color:var(--lt-red,#ff7a7a)">${CFG.fireRepHit}-point reputation</b> hit for the turmoil, and the board gives you <b>${CFG.ceoGraceQuarters} quarters</b> to name a replacement. Run a full year leaderless and they won't let you continue.</div>
+      <div class="mo-sub">Morale is on the floor and the staff blame the corner office. Cutting the chief loose rallies them: an immediate <b style="color:var(--lt-green,#4ecb8d)">+${CFG.fireMoraleBoost} morale</b>. But you lose the <b>${c.trait}</b> trait, eat ${aOrAn(CFG.fireRepHit)} <b style="color:var(--lt-red,#ff7a7a)">${CFG.fireRepHit}-point reputation</b> hit for the turmoil, and the board gives you <b>${CFG.ceoGraceQuarters} quarters</b> to name a replacement. Run a full year leaderless and they won't let you continue.</div>
       <div class="ug-end-actions">
         <button class="ug-peek-btn" data-act="cancel">Keep them on</button>
         <button class="ug-restart" data-act="firego" style="background:linear-gradient(135deg,#C22F2F,#A8352F)">Fire the CEO &#9656;</button>
@@ -1833,7 +1926,7 @@ eleventyExcludeFromCollections: true
       flashHint('A full year without a chief. The board won’t let you run another quarter until you appoint a CEO.');
       openCeoReplace(); return;
     }
-    if (run.level===1 && run.builtUnits.length===0){ flashHint('Hit ＋ Build on the map and pick a unit. That’s this quarter’s objective.'); return; }
+    if (run.level===1 && run.builtUnits.length===0){ flashHint(brokeForBuild() || 'Hit ＋ Build on the map and pick a unit. That’s this quarter’s objective.'); return; }
     const ev = run.activeEvent;
     const r = computeQuarter(run, ev);
     run.cash += r.net;
@@ -1961,6 +2054,7 @@ eleventyExcludeFromCollections: true
   }
   // ── SERVICE CLOSURE: irreversible this run. Severance for the floor staff, a public reputation
   // hit (double for a Public District), and a share of the patients show up at the ED anyway.
+  const aOrAn = n => /^(8|11|18)/.test(String(n)) ? 'an' : 'a';   // "an 8-point", "an 11-point", "a 6-point"
   const closeQuote = d => {
     let sev = 0; STAFF.forEach(t=> sev += d.staff[t.key]*t.sev);
     return { sev,
@@ -1972,7 +2066,7 @@ eleventyExcludeFromCollections: true
     overlayOpen = true;
     const {sev, repHit, leak} = closeQuote(d);
     $('ug-overlay').innerHTML = `<div class="ug-modal"><h2 class="lose">Close ${d.name}?</h2>
-      <div class="mo-sub">This is permanent for the run. Severance for the floor staff runs <b>${money(sev)}</b>, the community answer is a <b style="color:var(--lt-red,#ff7a7a)">${repHit}-point reputation</b> hit and <b style="color:var(--lt-red,#ff7a7a)">${CFG.closeMoraleHit} morale</b>${run.klass && run.klass.id==='district' ? ' (a district closure is a public fight, the hit is doubled)' : ''}, and about <b>${num(leak)}</b> of its patients still show up, at the ED. The overhead goes away. So does the service.</div>
+      <div class="mo-sub">This is permanent for the run. Severance for the floor staff runs <b>${money(sev)}</b>, the community answer is ${aOrAn(repHit)} <b style="color:var(--lt-red,#ff7a7a)">${repHit}-point reputation</b> hit and <b style="color:var(--lt-red,#ff7a7a)">${CFG.closeMoraleHit} morale</b>${run.klass && run.klass.id==='district' ? ' (a district closure is a public fight, the hit is doubled)' : ''}, and about <b>${num(leak)}</b> of its patients still show up, at the ED. The overhead goes away. So does the service.</div>
       <div class="ug-end-actions">
         <button class="ug-peek-btn" data-act="cancel">Keep it open</button>
         <button class="ug-restart" data-act="closego" data-id="${d.id}" style="background:linear-gradient(135deg,#C22F2F,#A8352F)">Close the unit &#9656;</button>
@@ -2122,7 +2216,7 @@ eleventyExcludeFromCollections: true
     const mdShort = p.limit==='staff' && p.partMd <= p.partRn && p.partMd <= p.partSh;
     const mdTip = `<b>${spName} coverage</b>Physicians are staffed hospital-wide and spread across every unit in this specialty by demand. This unit currently draws <b>${p.physicians.toFixed(1)}</b>. ${mdShort? 'It needs more. Add '+spName+' physicians in the Medical Staff panel.' : 'Adjust the pool in the Medical Staff panel.'}`;
     const mdLine = `<div class="uc-md${mdShort?' short':''}" data-def="${mdTip}">${spName} &middot; <b>${p.physicians.toFixed(1)}</b> MD${mdShort?' <span class="need">need more</span>':''}</div>`;
-    const staff=STAFF.map(t=>`<div class="uc-staffrow"><span class="l">${t.label}</span><div class="uc-step"><button data-act="fire" data-i="${i}" data-type="${t.key}" ${d.staff[t.key]<=0?'disabled':''}>&minus;</button><span class="n">${d.staff[t.key]}</span><button data-act="hire" data-i="${i}" data-type="${t.key}">+</button></div></div>`).join('');
+    const staff=STAFF.map(t=>`<div class="uc-staffrow"><span class="l">${t.label}</span><div class="uc-step"><button data-act="fire" data-i="${i}" data-u="${d.id}" data-type="${t.key}" ${d.staff[t.key]<=0?'disabled':''} aria-label="Fewer ${t.label} in ${d.name}">&minus;</button><span class="n">${d.staff[t.key]}</span><button data-act="hire" data-i="${i}" data-u="${d.id}" data-type="${t.key}" aria-label="More ${t.label} in ${d.name}">+</button></div></div>`).join('');
     const pathLine = d.pathIn ? `<div class="uc-path" data-def="<b>Care pathways</b>Demand your other service lines generate here (referrals in), or siphon away (telehealth diverting the walk-ins). Recomputed every quarter from the actual flow.">${d.pathIn>0?'+':'&minus;'}${num(Math.abs(d.pathIn))} pts via pathways</div>` : '';
     const odds = incidentOdds(p, run);
     const safeLine = odds >= 0.005 ? `<div class="uc-safety${unitRisk(p)>0.8?' hot':''}" data-def="${DEFS.safety}">&#9888; Incident odds ${Math.round(odds*100)}%</div>` : '';
@@ -2145,8 +2239,8 @@ eleventyExcludeFromCollections: true
       ${burnBar}
       ${(a=>a>=CFG.equipWarn?`<button class="ug-expand uc-renew" data-act="renew" data-id="${d.id}" ${run.cash<renewCost(d)?'disabled':''} data-def="${DEFS.equip}">&#9881; ${a>=CFG.equipCrit?'OBSOLETE equipment':'Aging equipment'} &middot; capacity &minus;${Math.round((1-equipFactor(d))*100)}% &middot; renew ${money(renewCost(d))}</button>`:'')(equipAgeOf(d))}
       <div class="uc-actions">
-        <button data-act="expand" data-i="${i}" ${run.cash<expandCost?'disabled':''}>Expand +25%<br>${money(expandCost)}</button>
-        <button data-act="reset" data-i="${i}" ${(d._spent||0)<=0?'disabled':''}>Undo${(d._spent||0)>0?'<br>'+money(d._spent):''}</button>
+        <button data-act="expand" data-i="${i}" data-u="${d.id}" ${run.cash<expandCost?'disabled':''}>Expand +25%<br>${money(expandCost)}</button>
+        <button data-act="reset" data-i="${i}" data-u="${d.id}" ${(d._spent||0)<=0?'disabled':''}>Undo${(d._spent||0)>0?'<br>'+money(d._spent):''}</button>
         ${['ed','medsurg'].includes(d.id)?'':`<button class="uc-close" data-act="close" data-i="${i}" data-def="<b>Close this service line</b>Permanent for the run: severance, a public reputation hit, and a share of the patients land on the ED anyway.">Close</button>`}
       </div>
     </div>`;
@@ -2284,7 +2378,7 @@ eleventyExcludeFromCollections: true
     $('ug-pay').innerHTML = `<h3>Compensation by role${info('pay')}</h3>` + PAY_ROLES.map(t=>`
       <div class="ug-payrow">
         <div class="pr-head"><span>${t.label}</span><b id="payval-${t.key}">${Math.round(run.pay[t.key]*100)}%</b></div>
-        <input type="range" min="${payFloorOf()}" max="1.30" step="0.05" value="${Math.max(run.pay[t.key], payFloorOf())}" data-act="pay" data-type="${t.key}">
+        <input type="range" min="${payFloorOf()}" max="1.30" step="0.05" value="${Math.max(run.pay[t.key], payFloorOf())}" data-act="pay" data-type="${t.key}" aria-label="${t.label} pay, percent of market">
       </div>`).join('') + `<div class="ug-hint" id="payhint">${payHint()}${run.klass && run.klass.payFloor ? ' Public wages: the district never pays below '+Math.round(run.klass.payFloor*100)+'% of market.' : ''}</div>`;
   }
   function updatePayLabels(){ PAY_ROLES.forEach(t=>{ const el=$('payval-'+t.key); if(el) el.textContent=Math.round(run.pay[t.key]*100)+'%'; }); const ph=$('payhint'); if(ph) ph.innerHTML=payHint(); }
@@ -2302,9 +2396,9 @@ eleventyExcludeFromCollections: true
       return `<div class="ug-medrow${short?' short':''}">
         <div class="mr-info"><span class="mr-name">${sp.label}${short?' <span class="need">short</span>':''}</span><span class="mr-cover">${cover}</span></div>
         <div class="uc-step">
-          <button data-act="firephys" data-key="${sp.key}" ${head<=0?'disabled':''}>&minus;</button>
+          <button data-act="firephys" data-key="${sp.key}" ${head<=0?'disabled':''} aria-label="Fewer ${sp.label} physicians">&minus;</button>
           <span class="n">${head}</span>
-          <button data-act="hirephys" data-key="${sp.key}" ${run.cash<hireC?'disabled':''}>+</button>
+          <button data-act="hirephys" data-key="${sp.key}" ${run.cash<hireC?'disabled':''} aria-label="More ${sp.label} physicians">+</button>
         </div>
       </div>`;
     }).join('');
@@ -2339,7 +2433,32 @@ eleventyExcludeFromCollections: true
       ${r.bonus?`<div class="pj-row"><span>Standing income${info('income')}</span><b style="color:var(--lt-green,#4ecb8d)">+${money(r.bonus)}</b></div>`:''}
       <div class="pj-div"></div>
       <div class="pj-row pj-net"><span>Net this quarter${info('net')}</span><b class="${r.net>=0?'pos':'neg'}">${r.net>=0?'+':''}${money(r.net)}</b></div>
-      <div class="pj-row"><span>Cash after</span><b>${money(run.cash + r.net)}</b></div>`;
+      <div class="pj-row"><span>Cash after</span><b${run.cash + r.net < 0 ? ' class="neg-cash"' : ''}>${money(run.cash + r.net)}</b></div>`;
+    renderTrack(r);
+  }
+  /* The goal line beside Run: the projection judged by the goal's own test, the same call
+     runQuarter makes, so "short by" is exact. The safety incidents roll after the goal check
+     and are not in it, which is why the words stop at the goal and the cash. */
+  function trackOf(r){
+    if (!run || run.over || !run.goal) return null;
+    r = r || computeQuarter(run, run.activeEvent);
+    const g = run.goal, ok = !!g.test(r, run), cashAfter = run.cash + r.net;
+    let txt = '';
+    if (g.kind==='treat')      txt = ok ? `On track: ${num(r.throughput)} of ${num(g.target)} patients` : `Short by ${num(Math.ceil(g.target - r.throughput))} patients`;
+    else if (g.kind==='serve') txt = ok ? `On track: ${Math.floor(r.service*100)}% served` : `Short by ${Math.ceil(g.target - r.service*100)} points of demand met`;
+    else if (g.kind==='net')   txt = ok ? `On track: ${money(r.net)} in the black` : `Short by ${money(Math.ceil(g.target - r.net))}`;
+    else if (g.kind==='lean'){ const spend = r.salaries + r.overhead + r.eventCost;
+      txt = ok ? `On track: ${money(spend)} spent` : (spend >= g.target ? `Over the cap by ${money(Math.ceil(spend - g.target) || 1)}` : `In the red by ${money(Math.ceil(-r.net))}`); }
+    else if (!ok) txt = 'Build a unit first';
+    if (ok && cashAfter < 0) txt = `Cash ends at ${money(cashAfter)}`;
+    return { ok, txt, broke: cashAfter < 0, cashAfter, kind: g.kind };
+  }
+  function renderTrack(r){
+    const el = $('ug-track'); if (!el) return;
+    const t = trackOf(r);
+    el.textContent = t ? t.txt : '';
+    el.className = 'ug-track' + (t ? (t.broke ? ' broke' : t.ok ? ' ok' : ' short') : '');
+    const dock = $('ug-rundock'); if (dock) dock.hidden = !run || !!run.over;
   }
   /* the line under the slider reads the slider, nothing else; what the lever IS lives on the
      Operations badge now (David 2026-09-20: simplify the view, keep the detail one tap away) */
@@ -2349,7 +2468,7 @@ eleventyExcludeFromCollections: true
     const tc = run.travelers||0;
     $('ug-ops').innerHTML=`<h3>Operations${info('overhead', 'Dial it down and you keep cash now but throttle how many patients the building can take.')}</h3>
       <div class="pr-head" style="display:flex;justify-content:space-between;font-size:var(--t-fine);margin-bottom:5px"><span>Overhead spend</span><b id="austval">${Math.round(run.austerity*100)}%</b></div>
-      <input type="range" min="0.70" max="1.00" step="0.05" value="${run.austerity}" data-act="aust" style="width:100%;accent-color:var(--lt-amber,#E8A838)">
+      <input type="range" min="0.70" max="1.00" step="0.05" value="${run.austerity}" data-act="aust" aria-label="Overhead spend" style="width:100%;accent-color:var(--lt-amber,#E8A838)">
       <div class="ug-hint" id="austhint">${austHint()}</div>
       <div class="ug-staffhdr" style="margin-top:16px">Traveler contract${info('travelers')}</div>
       <div class="ug-staffrow" style="margin-bottom:4px"><span class="sr-lbl">Packs this quarter</span>
@@ -2405,7 +2524,7 @@ eleventyExcludeFromCollections: true
     el.hidden = false;
     el.innerHTML = `<b>Table ${NET.room}</b> &middot; ${NET.name} &middot; ${mine}<span>${SEATS.map(s=>`${s.id}: ${NET.seats[s.id]||(NET.mode==='host'||NET.mode==='guest'?'open':'')}`).join(' &middot; ')}</span>`;
   }
-  function renderAll(){ const d=$('ug-deftip'); if(d)d.hidden=true; renderKpis(); renderMission(); renderMap(); renderChart(); renderMedical(); renderPay(); renderOps(); renderFinance(); renderProjection(); renderTableBanner(); renderGmConsole(); }
+  function renderAll(){ const d=$('ug-deftip'); if(d)d.hidden=true; renderKpis(); renderMission(); renderMap(); renderChart(); renderMedical(); renderPay(); renderOps(); renderFinance(); renderProjection(); renderTableBanner(); renderGmConsole(); autosave(); }
   // The GM console: only a host sees it. The outside world's cards, one on the table at a time.
   function renderGmConsole(){
     const el = $('ug-gm'); if (!el) return;
@@ -2509,6 +2628,7 @@ eleventyExcludeFromCollections: true
     lastEndPayload = o;
     const gameOver = (!o.passed) || o.victory;       // a finished run, loss or a year-cap victory
     if (gameOver) run.over = true;
+    if (gameOver && solo()) forgetRun();   // or a reload would Continue from before the losing quarter
     if (gameOver) codexFinish(o);
     const newly = gameOver ? grantUnlocks(o) : [];
     const unlockBlock = newly.length ? `<div class="ug-unlock">UNLOCKED: ${newly.join(' &middot; ')}. New ownership on the start screen.</div>` : '';
@@ -2575,7 +2695,45 @@ eleventyExcludeFromCollections: true
     if (key==='startMorale'){ const el=$('ug-set-morale'); if(el) el.textContent=settings.startMorale; }
     if (key==='startRep')   { const el=$('ug-set-rep');    if(el) el.textContent=settings.startRep; }
   }
-  function openStartMenu(){ overlayOpen=true; selectedCeoId=null; ceoSlide=0; const rb=$('ug-reopen'); if(rb) rb.hidden=true; renderStartMenu(); setNetOverlay('menu'); }
+  // The start card is Balatro's Play panel (docs/HU-GAME-MENUS-2026-09-23.md 3.4): four tabs, each
+  // with its choices already made, so Start works on the first tap. It opens on Continue when a solo
+  // run is saved here, on The Table when a table is live or waiting to be resumed, on New run
+  // otherwise. Continue is always a tab, because the save-string box lives there with or without a
+  // run in this browser. Each tab keeps its own scroll across a redraw, and the folds stay as left.
+  const START_TABS = [['continue','Continue'], ['new','New run'], ['scen','Scenarios'], ['table','The Table']];
+  let startTab = 'new', startScroll = {}, startFresh = true, changeOpen = false, restoreOpen = false;
+  function startTabDefault(){
+    if (autoMeta()) return 'continue';
+    if (NET.mode==='host' || NET.mode==='guest') return 'table';
+    const off = T.offers();
+    return (off.host || off.guest) ? 'table' : 'new';
+  }
+  // Start is the primary on every tab but Continue; on The Table only the host starts the run
+  const startFootShown = () => startTab==='new' || startTab==='scen' || (startTab==='table' && NET.mode==='host');
+  // a scenario names itself on the button: some fix the CEO, so the carousel's name would be wrong
+  function startLabel(){
+    const sc = settings.scenario ? scenarioOf(settings.scenario) : null;
+    return `Start &middot; ${sc ? sc.name : ceoOrder()[clamp(ceoSlide, 0, ceoOrder().length-1)].name} &#9656;`;
+  }
+  function openStartMenu(tab){
+    overlayOpen=true; selectedCeoId=null; ceoSlide=0;
+    startTab = START_TABS.some(t=>t[0]===tab) ? tab : startTabDefault();
+    startScroll = {}; startFresh = true; changeOpen = false; restoreOpen = false;
+    const rb=$('ug-reopen'); if(rb) rb.hidden=true; renderStartMenu(); setNetOverlay('menu');
+  }
+  // A tab switch shows a panel; it does not redraw, so focus stays on the tab the player is on.
+  function showStartTab(k){
+    if (!START_TABS.some(t=>t[0]===k)) return;
+    const ov = $('ug-overlay');
+    const modal = ov && ov.querySelector ? ov.querySelector('.ug-modal-start') : null;
+    if (modal) startScroll[startTab] = modal.scrollTop;
+    startTab = k;
+    if (!modal) return;
+    modal.querySelectorAll('[role="tab"]').forEach(b=>{ const on = b.dataset.tab===k; b.setAttribute('aria-selected', on?'true':'false'); b.tabIndex = on ? 0 : -1; });
+    modal.querySelectorAll('[role="tabpanel"]').forEach(p=>{ p.hidden = p.id !== 'ug-tp-'+k; });
+    const foot = modal.querySelector('.ug-start-foot'); if (foot) foot.hidden = !startFootShown();
+    modal.scrollTop = startScroll[k] || 0;
+  }
   // The settings screen says what a thing IS, once, in the smallest words that work. Everything
   // else a player might want to know rides in a peek: hover an option, or tap the row's badge.
   const defAttr = html => String(html).replace(/"/g, '&quot;');
@@ -2603,15 +2761,15 @@ eleventyExcludeFromCollections: true
         <div class="ug-set-grid" style="margin-top:15px">
           <div class="ug-set">
             <div class="ug-set-lbl">Starting cash <b id="ug-set-cash">${money(settings.startCash)}</b></div>
-            <input type="range" data-act="set" data-key="startCash" min="300" max="900" step="50" value="${settings.startCash}">
+            <input type="range" data-act="set" data-key="startCash" aria-label="Starting cash" min="300" max="900" step="50" value="${settings.startCash}">
           </div>
           <div class="ug-set">
             <div class="ug-set-lbl">Starting morale <b id="ug-set-morale">${settings.startMorale}</b></div>
-            <input type="range" data-act="set" data-key="startMorale" min="50" max="90" step="5" value="${settings.startMorale}">
+            <input type="range" data-act="set" data-key="startMorale" aria-label="Starting morale" min="50" max="90" step="5" value="${settings.startMorale}">
           </div>
           <div class="ug-set">
             <div class="ug-set-lbl">Starting reputation <b id="ug-set-rep">${settings.startRep}</b></div>
-            <input type="range" data-act="set" data-key="startRep" min="35" max="70" step="5" value="${settings.startRep}">
+            <input type="range" data-act="set" data-key="startRep" aria-label="Starting reputation" min="35" max="70" step="5" value="${settings.startRep}">
           </div>
         </div>`;
     } else {
@@ -2622,35 +2780,77 @@ eleventyExcludeFromCollections: true
     const order = ceoOrder();
     ceoSlide = clamp(ceoSlide, 0, order.length-1);
     selectedCeoId = order[ceoSlide].id;
-    const startBtn = `<button class="ug-start-go" data-act="start">Start &middot; ${order[ceoSlide].name} &#9656;</button>`;
     const ov=$('ug-overlay');
-    const prevModal = ov.querySelector ? ov.querySelector('.ug-modal') : null;   // preserve scroll across re-renders
-    const scroll = prevModal ? prevModal.scrollTop : 0;
+    const prevModal = ov.querySelector ? ov.querySelector('.ug-modal-start') : null;   // a redraw keeps each tab's scroll and the folds as the player left them
+    if (prevModal && !startFresh){
+      startScroll[startTab] = prevModal.scrollTop;
+      const cf = prevModal.querySelector('.ug-change');  if (cf) changeOpen = cf.open;
+      const rf = prevModal.querySelector('.ug-restore'); if (rf) restoreOpen = rf.open;
+    }
+    startFresh = false;
     const prevLoad = ov.querySelector ? ov.querySelector('#ug-loadstr') : null;  // and a pasted save string
     const loadVal = prevLoad ? prevLoad.value : '';
-    ov.innerHTML = `<div class="ug-modal ug-modal-start">
-      <h2 style="color:var(--lt-green,#4ecb8d)">Uncharted General</h2>
-      <div class="mo-sub">Set the table and start. All of it can change between runs.</div>
-      <div class="ug-set">
-        <div class="ug-set-lbl">Difficulty <b>${diffOf().name}${badge(diffOf().name, diffOf().blurb)}</b></div>
-        <div class="ug-seg">${diffBtns}</div>
-      </div>
-      <div class="ug-set">
-        <div class="ug-set-lbl">Ownership <b>${klassSel().short}${badge(klassSel().short, klassBody(klassSel()))}</b></div>
-        <div class="ug-seg">${CLASSES.map(c=>{ const open=classUnlocked(c);
-          return `<button data-act="klass" data-key="${c.id}" class="${settings.klass===c.id?'on':''}${open?'':' lock'}" ${open?peek(c.short, klassBody(c)):`disabled title="${c.unlockHint}"`}>${open?c.short:'&#128274; '+c.short}</button>`; }).join('')}
+    const am = autoMeta();
+    const sc = settings.scenario ? scenarioOf(settings.scenario) : null;
+    const summary = [sc ? sc.name : '', diffOf().name, klassSel().short, sizeOf().name, yrTxt].filter(Boolean).join(' &middot; ');
+    const tabs = START_TABS.map(([k,l])=>`<button type="button" class="ug-stab" role="tab" id="ug-tab-${k}" aria-controls="ug-tp-${k}" aria-selected="${startTab===k}" tabindex="${startTab===k?0:-1}" data-act="stab" data-tab="${k}">${l}</button>`).join('');
+    const panel = (k, html) => `<div class="ug-tp" role="tabpanel" id="ug-tp-${k}" aria-labelledby="ug-tab-${k}"${startTab===k?'':' hidden'}>${html}</div>`;
+
+    // CONTINUE: the run this browser kept, and the save-string box, which is also a way back in
+    const restoreBox = `
+        <div class="ug-load-row">
+          <textarea class="ug-savebox in" id="ug-loadstr" rows="2" placeholder="Paste a save string (starts with HUG1)" aria-label="Save string"></textarea>
+          <button class="ug-load-go" data-act="loadsave">Restore &#9656;</button>
         </div>
-        <div class="ug-set-blurb">${CLASSES.some(c=>!classUnlocked(c))?`<span style="color:var(--t3)">Locked ownership opens by earning grades on the Board Report.</span>`:''}</div>
-      </div>
-      <div class="ug-set">
-        <div class="ug-set-lbl">Hospital <b>${sizeOf().name}${badge(sizeOf().name, sizeOf().blurb)}</b></div>
-        <div class="ug-seg">${sizeBtns}</div>
-        ${hospBody}
-      </div>
-      <div class="ug-set">
-        <div class="ug-set-lbl">Run length <b>${yrTxt}${badge(yrTxt, yrBlurb)}</b></div>
-        <div class="ug-seg small">${yearBtns}</div>
-      </div>
+        <div class="ug-set-blurb" id="ug-loaderr" hidden></div>`;
+    const contHtml = am
+      ? `<button class="ug-start-go ug-continue" data-act="continuerun">Continue &#9656;<span class="ug-cont-meta">Year ${yearOf(am.level)}, Quarter ${qInYear(am.level)}${am.ceo?` &middot; ${escName(am.ceo)}`:''}</span></button>
+        <details class="hu-fold ug-restore"${restoreOpen?' open':''}><summary>Restore a saved run</summary>${restoreBox}</details>`
+      : `<div class="ug-set-lbl">Restore a saved run</div>
+        <div class="ug-set-blurb" style="margin-top:0">No run is saved in this browser. A save string brings one back.</div>${restoreBox}`;
+
+    // NEW RUN: the CEO first, Start under it, and every other choice folded behind one line that reads them back
+    const newHtml = `
+      <div class="ug-set-lbl"><span>Your CEO</span>${badge('CEO', 'The trait is permanent and colors every quarter. Spin to the leader whose strengths fit how you want to play, or skip the chair entirely and bank the pay.')}</div>
+      ${ceoCarouselHtml('noop', true)}
+      <details class="hu-fold ug-change"${changeOpen?' open':''}>
+        <summary>Change the run<span class="hu-fold-note">${summary}</span></summary>
+        <div class="ug-set">
+          <div class="ug-set-lbl">Difficulty <b>${diffOf().name}${badge(diffOf().name, diffOf().blurb)}</b></div>
+          <div class="ug-seg">${diffBtns}</div>
+        </div>
+        <div class="ug-set">
+          <div class="ug-set-lbl">Ownership <b>${klassSel().short}${badge(klassSel().short, klassBody(klassSel()))}</b></div>
+          <div class="ug-seg">${CLASSES.map(c=>{ const open=classUnlocked(c);
+            return `<button data-act="klass" data-key="${c.id}" class="${settings.klass===c.id?'on':''}${open?'':' lock'}"${open?peek(c.short, klassBody(c)):` aria-disabled="true"${peek(c.short+' &middot; locked', c.unlockHint+'<p>'+c.desc+'</p>')}`}>${open?c.short:'&#128274; '+c.short}</button>`; }).join('')}
+          </div>
+          <div class="ug-set-blurb">${CLASSES.some(c=>!classUnlocked(c))?`<span style="color:var(--t3)">Locked ownership opens by earning grades on the Board Report.</span>`:''}</div>
+        </div>
+        <div class="ug-set">
+          <div class="ug-set-lbl">Hospital <b>${sizeOf().name}${badge(sizeOf().name, sizeOf().blurb)}</b></div>
+          <div class="ug-seg">${sizeBtns}</div>
+          ${hospBody}
+        </div>
+        <div class="ug-set">
+          <div class="ug-set-lbl">Run length <b>${yrTxt}${badge(yrTxt, yrBlurb)}</b></div>
+          <div class="ug-seg small">${yearBtns}</div>
+        </div>
+      </details>`;
+
+    // SCENARIOS: the authored runs and the Chart Room
+    const scenHtml = `
+      <div class="ug-set-lbl">Scenario <b>${sc ? sc.name : 'Free play'}</b></div>
+      ${SCENARIOS.map(s=>{ const on = settings.scenario===s.id; const done = codex.scen[s.id];
+        return `<button class="ug-prog${on?' on':''}" data-act="scen" data-id="${s.id}">
+          <span class="pg-name">${done?'&#10003; ':''}${s.name}</span>
+          <span class="pg-state">${s.years} yr &middot; ${s.difficulty}</span></button>`; }).join('')}
+      <div class="ug-set-blurb">${sc
+        ? sc.blurb + ' A scenario fixes the run settings and scripts certain quarters; the forecast tells you which.'
+        : 'Authored challenge runs from real situations. Picking one sets up the run for you; pick it again to go back to free play.'}</div>
+      <button class="ug-expand" data-act="chartroom" style="margin-top:10px">The Chart Room &middot; what this device has seen</button>`;
+
+    // THE TABLE: multiplayer, as it was
+    const tableHtml = `
       <div class="ug-set">
         <div class="ug-set-lbl">Multiplayer &middot; The Table <b>${NET.mode==='host'?`Table ${NET.room}`:'Solo'}</b></div>
         ${NET.mode==='host' ? `
@@ -2660,7 +2860,7 @@ eleventyExcludeFromCollections: true
             : 'Local table: this code works across TABS OF THIS BROWSER (no internet backend reachable right now).'}</div>
           <div class="ug-rowline" style="margin-top:8px"><span>At the table</span><b>${NET.roster.join(' &middot; ')}</b></div>
           <div class="ug-rowline"><span>Seats claimed</span><b>${SEATS.map(s=>NET.seats[s.id]?`${s.id}: ${NET.seats[s.id]}`:null).filter(Boolean).join(' &middot; ')||'none yet'}</b></div>
-          <div class="ug-set-blurb">Unclaimed seats answer to you. Set the table above and hit Start when everyone is in; the run appears on every screen.</div>
+          <div class="ug-set-blurb">Unclaimed seats answer to you. Pick the run under New run and hit Start when everyone is in; the run appears on every screen.</div>
           <button class="ug-expand" data-act="tableoff" style="margin-top:8px">Close the table</button>`
         : `
           ${tableOffers()}
@@ -2674,34 +2874,28 @@ eleventyExcludeFromCollections: true
             <button class="ug-load-go" data-act="joingo">Join &#9656;</button>
           </div>
           <div class="ug-set-blurb">This exact hospital, dealt out as seats. The host gets a 4-letter code and runs the quarters; friends join with the code, claim a seat, and hold its controls: <b>Operations</b> (building, closures, crisis calls), <b>Finance</b> (loans, travelers, fundraising), <b>Clinical</b> (staffing and pay). Everyone sees the same board live; anything outside your seat tells you whose call it is. That argument is the game.</div>`}
-      </div>
-      <div class="ug-set">
-        <div class="ug-set-lbl">Scenario <b>${settings.scenario ? (scenarioOf(settings.scenario)||{name:'?'}).name : 'Free play'}</b></div>
-        ${SCENARIOS.map(s=>{ const on = settings.scenario===s.id; const done = codex.scen[s.id];
-          return `<button class="ug-prog${on?' on':''}" data-act="scen" data-id="${s.id}">
-            <span class="pg-name">${done?'&#10003; ':''}${s.name}</span>
-            <span class="pg-state">${s.years} yr &middot; ${s.difficulty}</span></button>`; }).join('')}
-        <div class="ug-set-blurb">${settings.scenario
-          ? (scenarioOf(settings.scenario)||{}).blurb + ' Scenario runs fix the table above and script certain quarters; the forecast tells you which.'
-          : 'Authored challenge runs from real situations. Picking one sets the table for you; pick it again to go back to free play.'}</div>
-        <button class="ug-expand" data-act="chartroom" style="margin-top:10px">The Chart Room &middot; what this device has seen</button>
-      </div>
-      <div class="ug-set">
-        <div class="ug-set-lbl">Restore a saved run</div>
-        <div class="ug-load-row">
-          <textarea class="ug-savebox in" id="ug-loadstr" rows="2" placeholder="Paste a save string (starts with HUG1)" aria-label="Save string"></textarea>
-          <button class="ug-load-go" data-act="loadsave">Restore &#9656;</button>
-        </div>
-        <div class="ug-set-blurb" id="ug-loaderr" hidden></div>
-      </div>
-      <div class="ug-start-sep">Choose who runs the place</div>
-      <div class="mo-sub" style="margin-bottom:6px">The trait is permanent and colors every quarter. Spin to the leader whose strengths fit how you want to play, or skip the chair entirely and bank the pay.</div>
-      ${ceoCarouselHtml('noop')}
-      <div class="ug-start-foot">${startBtn}</div>
+      </div>`;
+
+    ov.innerHTML = `<div class="ug-modal ug-modal-start">
+      <h2 style="color:var(--lt-green,#4ecb8d)">Uncharted General</h2>
+      <div class="ug-stabs" role="tablist" aria-label="Start a run">${tabs}</div>
+      ${panel('continue', contHtml)}
+      ${panel('new', newHtml)}
+      ${panel('scen', scenHtml)}
+      ${panel('table', tableHtml)}
+      <div class="ug-start-foot"${startFootShown()?'':' hidden'}><button class="ug-start-go" data-act="start">${startLabel()}</button></div>
     </div>`;
     ov.hidden=false;
-    const nowModal = ov.querySelector && ov.querySelector('.ug-modal'); if (nowModal) nowModal.scrollTop = scroll;
+    const nowModal = ov.querySelector && ov.querySelector('.ug-modal'); if (nowModal) nowModal.scrollTop = startScroll[startTab] || 0;
     const nowLoad = ov.querySelector && ov.querySelector('#ug-loadstr'); if (nowLoad && loadVal) nowLoad.value = loadVal;
+  }
+  // Spend the level-1 cash before building and every card greys out while the objective still says
+  // build. Say so, and name the two ways back: a unit's Undo, or a loan.
+  function brokeForBuild(){
+    const open = run.departments.map(d=>d.id);
+    const costs = UNITS.filter(u=>!open.includes(u.id)).map(u=>u.capex);
+    if (!costs.length || run.cash >= Math.min(...costs)) return '';
+    return `The cheapest unit costs ${money(Math.min(...costs))} and you have ${money(run.cash)}. Hit Undo on a unit to get this quarter's spending back, or Borrow under Financing.`;
   }
   function openBuildMenu(tier){
     overlayOpen = true;
@@ -2715,14 +2909,16 @@ eleventyExcludeFromCollections: true
         <div class="en-desc">${money(u.capex)} capex &middot; builds in ${left} quarter${left===1?'':'s'}<br>Capacity ${num(u.capacity)} &middot; ${money(u.rev)}/patient<br>Opens with ${u.staff.rn} RN / ${u.staff.shared} Tech<br>Needs ${sp?sp.label:''} physicians</div>
       </button>`; }).join('') : `<div class="ug-hint">Nothing left to build on this floor.</div>`;
     const ov=$('ug-overlay');
-    ov.innerHTML=`<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">Build a New Unit${tierName?` &middot; ${tierName}`:''}</h2><div class="mo-sub">Capex is paid now; the unit comes online after construction finishes, then you staff and run it. Operating across more care tiers strengthens reputation (continuity of care).</div><div class="ug-cards">${cards}</div><button class="ug-restart" data-act="cancel" style="background:linear-gradient(135deg,#33527a,#4a6f9e);margin-top:18px">Cancel</button></div>`;
+    ov.innerHTML=`<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">Build a New Unit${tierName?` &middot; ${tierName}`:''}</h2><div class="mo-sub">Capex is paid now; the unit comes online after construction finishes, then you staff and run it. Operating across more care tiers strengthens reputation (continuity of care).</div>${brokeForBuild()?`<div class="ug-hint" style="color:var(--amber)">${brokeForBuild()}</div>`:''}<div class="ug-cards">${cards}</div><button class="ug-restart" data-act="cancel" style="background:linear-gradient(135deg,#33527a,#4a6f9e);margin-top:18px">Cancel</button></div>`;
     ov.hidden=false;
   }
   function closeOverlay(){ overlayOpen=false; const ov=$('ug-overlay'); ov.hidden=true; ov.innerHTML=''; setNetOverlay('none'); }
 
   function flashHint(msg){
     const h=$('ug-runhint'); if(h){ h.textContent=msg; h.hidden=false; }
-    const m=$('ug-mapwrap'); if(m){ m.classList.remove('ug-flash'); void m.offsetWidth; m.classList.add('ug-flash'); m.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+    const m=$('ug-mapwrap'); if(m){ m.classList.remove('ug-flash'); void m.offsetWidth; m.classList.add('ug-flash');
+      const still = typeof matchMedia==='function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      m.scrollIntoView({behavior: still ? 'auto' : 'smooth', block:'nearest'}); }
   }
 
   // ── THE TABLE: multiplayer on the same engine ─────────────────────────
@@ -2925,7 +3121,7 @@ eleventyExcludeFromCollections: true
     overlayOpen = true;
     const ov = $('ug-overlay');
     ov.innerHTML = `<div class="ug-modal"><h2 style="color:var(--lt-green,#4ecb8d)">Save This Run</h2>
-      <div class="mo-sub">This string is your whole run: Year ${yearOf(run.level)}, Quarter ${qInYear(run.level)}, the cash, the staff, the works. Copy it and keep it anywhere. A note on your phone works. Paste it into <b>Restore a saved run</b> on the start screen to pick up right here.</div>
+      <div class="mo-sub">This string is your whole run: Year ${yearOf(run.level)}, Quarter ${qInYear(run.level)}, the cash, the staff, the works. Copy it and keep it anywhere. A note on your phone works. Paste it into <b>Restore a saved run</b> under Continue on the start screen to pick up right here.</div>
       <textarea class="ug-savebox" id="ug-savestr" data-act="selsave" rows="5" readonly>${code}</textarea>
       <div class="ug-end-actions">
         <button class="ug-peek-btn" data-act="cancel">Close</button>
@@ -2938,6 +3134,41 @@ eleventyExcludeFromCollections: true
     const done = ()=>{ const b=$('ug-copybtn'); if (b) b.textContent='Copied ✓'; };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, ()=>{ ta.select(); done(); });
     else { ta.select(); try{ document.execCommand('copy'); }catch(e){} done(); }
+  }
+  /* Continue: a solo run keeps itself in this browser after every change, the same save string
+     the Save button prints, so a reload, a closed tab or a swipe back costs nothing. A table
+     keeps its own copy through the kit (T.memo), so the host and the guests are left alone. A
+     finished run is forgotten. */
+  const AUTO_KEY = 'hu-ug-run', AUTO_META = 'hu-ug-run-meta';
+  let autoT = null;
+  function solo(){ return NET.mode !== 'host' && NET.mode !== 'guest'; }
+  function forgetRun(){ try { localStorage.removeItem(AUTO_KEY); localStorage.removeItem(AUTO_META); } catch(e){} }
+  function autosave(){
+    if (!run || !solo() || typeof setTimeout !== 'function' || typeof localStorage === 'undefined') return;
+    clearTimeout(autoT);
+    autoT = setTimeout(async () => {
+      try {
+        if (!run) return;
+        if (run.over){ forgetRun(); return; }
+        const str = await encodeSave(packSave());
+        localStorage.setItem(AUTO_KEY, str);
+        localStorage.setItem(AUTO_META, JSON.stringify({ level: run.level, ceo: run.ceo && run.ceo.name ? run.ceo.name : '', at: Date.now() }));
+      } catch(e){}
+    }, 400);
+  }
+  function autoMeta(){
+    if (!solo()) return null;
+    try { const m = JSON.parse(localStorage.getItem(AUTO_META) || 'null'); return (m && localStorage.getItem(AUTO_KEY)) ? m : null; } catch(e){ return null; }
+  }
+  async function continueRun(){
+    let str = null; try { str = localStorage.getItem(AUTO_KEY); } catch(e){}
+    if (!str) return;
+    try {
+      applySave(await decodeSave(str));
+      const rb = $('ug-reopen'); if (rb) rb.hidden = true;
+      closeOverlay(); renderAll();
+      flashHint(`Welcome back: Year ${yearOf(run.level)}, Quarter ${qInYear(run.level)}.`);
+    } catch(e){ forgetRun(); renderStartMenu(); }
   }
   async function restoreFromMenu(){
     const ta = $('ug-loadstr'), err = $('ug-loaderr');
@@ -2965,7 +3196,7 @@ eleventyExcludeFromCollections: true
       return;
     }
     // A finished run is frozen for review, only board-review, restart, and start-menu controls stay live.
-    if (frozen && !['peek','reopen','restart','start','diff','size','cbuild','years','tut','ceonav','ceodot','loadsave','klass','hosttable','jointable','joingo','seatpick','tableoff','tableresume','tablerejoin','scen','chartroom','crback','cancel'].includes(act)) return;
+    if (frozen && !['peek','reopen','restart','start','continuerun','stab','diff','size','cbuild','years','tut','ceonav','ceodot','loadsave','klass','hosttable','jointable','joingo','seatpick','tableoff','tableresume','tablerejoin','scen','chartroom','crback','cancel'].includes(act)) return;
     // ── Screen-local acts: browse menus, confirms, carousels, saves. Never networked. ──
     if (act==='close')        return openCloseConfirm(run.departments[+t.dataset.i]);
     if (act==='fireceo')      return openFireConfirm();
@@ -2980,7 +3211,9 @@ eleventyExcludeFromCollections: true
     if (act==='peek')         return peekBoard();
     if (act==='reopen')       return reopenEnd();
     if (act==='chartroom')    return openChartRoom();
-    if (act==='crback')       return openStartMenu();    // the Chart Room is only reachable from the start screen
+    if (act==='crback')       return openStartMenu('scen');   // the Chart Room is only reachable from the start screen's Scenarios tab
+    if (act==='stab')         return showStartTab(t.dataset.tab);
+    if (act==='continuerun')  return void continueRun();
     // ── Table acts: hosting, joining, seats ──
     if (act==='hosttable')    { hostTable(); return; }
     if (act==='tableresume')  { resumeTable(); return; }
@@ -2988,7 +3221,7 @@ eleventyExcludeFromCollections: true
     if (act==='jointable')    { const j=$('ug-joinrow'); if(j) j.hidden=!j.hidden; return; }
     if (act==='joingo')       { const c=$('ug-joincode'); if (!joinTable(c&&c.value, playerName())) flashHint('Enter the 4-letter table code.'); return; }
     if (act==='seatpick')     { claimSeat(t.dataset.seat); return; }
-    if (act==='tableoff')     { leaveTable(); if (NET.mode!=='host') { closeOverlay(); openStartMenu(); } else renderStartMenu(); return; }
+    if (act==='tableoff')     { leaveTable(); if (NET.mode!=='host') { closeOverlay(); openStartMenu('table'); } else renderStartMenu(); return; }
     // ── The host owns the table settings; guests get a hint, not a menu ──
     if (['diff','klass','size','cbuild','years','restart','loadsave','scen'].includes(act)){
       if (NET.mode==='guest'){ flashHint('The host sets the table.'); return; }
@@ -2999,7 +3232,7 @@ eleventyExcludeFromCollections: true
         renderStartMenu(); return;
       }
       if (act==='diff')        { settings.difficulty=t.dataset.key; renderStartMenu(); }
-      else if (act==='klass')  { const c=classOf(t.dataset.key); if (classUnlocked(c)) settings.klass=c.id; renderStartMenu(); }
+      else if (act==='klass')  { const c=classOf(t.dataset.key); if (classUnlocked(c)){ settings.klass=c.id; renderStartMenu(); } }   // a locked one keeps its peek open: that is where how to earn it lives
       else if (act==='size')   { settings.size=t.dataset.key; renderStartMenu(); }
       else if (act==='cbuild') { settings.customBuild=t.dataset.key; renderStartMenu(); }
       else if (act==='years')  { settings.years=parseInt(t.dataset.val,10); renderStartMenu(); }
@@ -3012,15 +3245,21 @@ eleventyExcludeFromCollections: true
     if (act==='appointgo') data.id = ceoOrder()[ceoSlide].id;
     if (act==='start'){ if (!selectedCeoId) return; data.ceo = selectedCeoId; }
     netAct(act, data);
+    // the first board a browser sees gets the how-to, once, when nothing else is covering it
+    if ((act==='start' || act==='continue') && ugHelp) setTimeout(()=>{ if (!overlayOpen && run && !run.over) ugHelp.firstVisit(); }, 250);
   });
   // Every game mutation runs through here with PLAIN DATA, so a click on this screen and an
   // intent from a seat across the table execute the exact same code on the authoritative run.
   function dispatchAct(act, d){
     d = d || {};
-    if (act==='hire')        hire(run.departments[+d.i], d.type);
-    else if (act==='fire')   fire(run.departments[+d.i], d.type);
-    else if (act==='expand') expand(run.departments[+d.i]);
-    else if (act==='reset')  resetDept(run.departments[+d.i]);
+    // A unit verb names its unit by id as well as position: closing a unit shifts every position
+    // after it, and a seat's intent can land after the close. Gone means the intent is dropped.
+    const unitOf = () => d.u ? run.departments.find(x=>x.id===d.u) : run.departments[+d.i];
+    if (['hire','fire','expand','reset'].includes(act) && !unitOf()) return;
+    if (act==='hire')        hire(unitOf(), d.type);
+    else if (act==='fire')   fire(unitOf(), d.type);
+    else if (act==='expand') expand(unitOf());
+    else if (act==='reset')  resetDept(unitOf());
     else if (act==='hirephys') hirePhys(d.key);
     else if (act==='firephys') firePhys(d.key);
     else if (act==='continue') advance();
@@ -3032,7 +3271,7 @@ eleventyExcludeFromCollections: true
     else if (act==='fundraise') fundraiser();
     else if (act==='invdraw')   investorDraw();
     else if (act==='renew')  renewEquip(d.id);
-    else if (act==='enh')    pickEnhancement(pendingDraft[+d.i]);
+    else if (act==='enh')    { if (pendingDraft[+d.i]) pickEnhancement(pendingDraft[+d.i]); }
     else if (act==='build')  { const u=UNITS.find(x=>x.id===d.id); closeOverlay(); if(u) startConstruction(u); }
     else if (act==='appointgo') appointCeo(d.id ? (d.id==='none'?NO_CEO:CEOS.find(x=>x.id===d.id)) : ceoOrder()[ceoSlide]);
     else if (act==='firego')  fireCeo();
@@ -3062,6 +3301,18 @@ eleventyExcludeFromCollections: true
     const pay = e.target.closest('[data-act="pay"]'); if (pay){ netAct('pay', {type:pay.dataset.type, value:pay.value}); return; }
     const aust = e.target.closest('[data-act="aust"]'); if (aust){ netAct('aust', {value:aust.value}); return; }
   });
+  // The start card's tab strip answers the arrow keys, Home and End, the way any tab strip does
+  $('ug').addEventListener('keydown', e=>{
+    const tab = e.target && e.target.closest ? e.target.closest('.ug-stabs [role="tab"]') : null;
+    if (!tab) return;
+    const tabs = [...tab.parentElement.querySelectorAll('[role="tab"]')];
+    const i = tabs.indexOf(tab), n = tabs.length;
+    const j = e.key==='ArrowRight' ? (i+1)%n : e.key==='ArrowLeft' ? (i-1+n)%n : e.key==='Home' ? 0 : e.key==='End' ? n-1 : -1;
+    if (j < 0) return;
+    e.preventDefault();
+    showStartTab(tabs[j].dataset.tab);
+    tabs[j].focus();
+  });
   // metric + buff definition tooltips (and a catch-all to kill stale tooltips)
   $('ug').addEventListener('mouseover', e=>{
     const t = e.target.closest('[data-def]'); const dt=$('ug-deftip');
@@ -3073,11 +3324,101 @@ eleventyExcludeFromCollections: true
   // cards, the burnout bars, the offer terms. On a phone these were all unreachable before.
   if (window.HUKit && window.HUKit.peek) window.HUKit.peek({ root: document.body });
   window.addEventListener('scroll', ()=>{ const d=$('ug-deftip'); if(d)d.hidden=true; }, {passive:true});
-  $('ug-run').addEventListener('click', ()=>{ if(!overlayOpen && !(run&&run.over)) netAct('runq'); });
+  $('ug-run').addEventListener('click', ()=>{
+    if (overlayOpen || !run || run.over) return;
+    /* the projection already knows when this quarter ends the run: say so once, and let the
+       player run it anyway (the tutorial's build goal keeps its own hint in runQuarter) */
+    const t = trackOf();
+    if (t && t.kind!=='build' && (!t.ok || t.broke) && window.HUKit && HUKit.confirm){
+      const body = t.broke
+        ? `The projection ends this quarter with cash at ${money(t.cashAfter)}. Below zero, the board ends the run. Borrowing or trimming spend first changes that.`
+        : `The projection misses this quarter's goal: ${t.txt[0].toLowerCase() + t.txt.slice(1)}. A missed goal ends the run.`;
+      HUKit.confirm({ title: t.broke ? 'This quarter goes into the red' : 'This quarter misses the goal', body, verb:'Run it anyway', danger:true })
+        .then(yes => { if (yes && !overlayOpen && run && !run.over) netAct('runq'); });
+      return;
+    }
+    netAct('runq');
+  });
+  // Keyboard focus survives the redraws. The board and the overlay are rewritten with innerHTML on
+  // every change, which dropped focus to the top of the page: a keyboard player tabbed the whole board
+  // again after every hire, and never landed in a dialog at all. One observer does the work. The
+  // overlay is a dialog (focus goes in when it opens, Tab stays inside, Escape is Cancel where there
+  // is one, focus goes back to the control that opened it when it closes), and a redrawn board puts
+  // focus back on the same control.
+  (function focusKeeper(){
+    const root = $('ug'), ov = $('ug-overlay');
+    if (!root || !ov || typeof MutationObserver === 'undefined' || !document.querySelector) return;
+    const focusables = () => [...ov.querySelectorAll('button:not([disabled]):not([tabindex="-1"]), input, textarea, summary, [tabindex="0"]')].filter(el => el.offsetParent);   // a roving tab strip's resting tabs are not Tab stops
+    const ATTRS = ['key','id','i','u','type','d','val','seat','tier'];
+    const keyOf = el => el.id ? '#'+el.id
+      : el.dataset && (el.dataset.act || el.dataset.empty) ? (el.dataset.act ? `[data-act="${el.dataset.act}"]` : '[data-empty]') + ATTRS.map(k => el.dataset[k]!=null ? `[data-${k}="${el.dataset[k]}"]` : '').join('')
+      : '';
+    // an empty build slot names no unit, so it only counts as the same control when its label matches
+    const find = (scope, key, text) => { if (!key) return null; try { return [...scope.querySelectorAll(key)].find(el => el.offsetParent && !el.disabled && (text == null || el.textContent === text)) || null; } catch(e){ return null; } };
+    const lost = () => !document.activeElement || document.activeElement === document.body;
+    let dialogKey = '', boardKey = '', boardText = null;
+    root.addEventListener('focusin', e => { const k = keyOf(e.target); if (ov.contains(e.target)) dialogKey = k; else if (k){ boardKey = k; boardText = e.target.dataset.empty ? e.target.textContent : null; } });
+    new MutationObserver(() => {
+      const modal = ov.hidden ? null : ov.querySelector('.ug-modal');
+      if (!modal){
+        if (lost()){
+          const back = find(root, boardKey, boardText) || [$('ug-reopen'), $('ug-run')].find(b => b && !b.hidden);
+          if (back) back.focus({preventScroll:true});
+        }
+        return;
+      }
+      if (modal.hasAttribute('role')){                          // the same screen shown again (reopen after a peek)
+        if (!ov.contains(document.activeElement)) modal.focus({preventScroll:true});
+        return;
+      }
+      const h = modal.querySelector('h2');
+      if (h && !h.id) h.id = 'ug-dialog-h';
+      modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true');
+      if (h) modal.setAttribute('aria-labelledby', h.id);
+      modal.tabIndex = -1;
+      const same = find(modal, dialogKey);                     // a screen redrawn in place keeps its control
+      (same || modal).focus({preventScroll:true});
+      if (same && typeof same.value === 'string' && same.setSelectionRange) try { same.setSelectionRange(same.value.length, same.value.length); } catch(e){}
+    }).observe(root, {childList:true, subtree:true, attributes:true, attributeFilter:['hidden']});
+    document.addEventListener('keydown', e => {
+      if (ov.hidden || !ov.querySelector('.ug-modal')) return;
+      if (e.key === 'Escape'){
+        const peekCard = $('hu-peek'); if (peekCard && !peekCard.hidden) return;   // the first Escape closes an open peek card, the kit's job
+        const c = ov.querySelector('[data-act="cancel"], [data-act="crback"]'); if (c){ e.preventDefault(); c.click(); } return;   // the Chart Room's way out is Back
+      }
+      if (e.key !== 'Tab') return;
+      const f = focusables(); if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0){ e.preventDefault(); f[f.length-1].focus(); }
+      else if (!e.shiftKey && (i === -1 || i === f.length-1)){ e.preventDefault(); f[0].focus(); }
+    }, true);                                                    // capture: ahead of the kit's peek Escape, which would hide the card first
+  })();
 
+  /* The game menu and the "?", the kit's shared pieces, the same in every game (.claude/rules/
+     games.md, Menus). No Settings row: a turn-based game with no sound has no clock to slow and
+     nothing to caption, and its run settings live on the start screen. The how-to waits for the
+     board (auto:false): on a first visit the start screen is already a card. */
+  let ugHelp = null;
+  if (typeof window!=='undefined' && window.HUKit && HUKit.gameMenu && $('ug-kitbtns')){
+    const ex = document.createElement('div');
+    ex.innerHTML = '<p>The goal says <b>finish $316k in the black</b>. Beside Run it reads <b>Short by $307k</b>: hire, trim or borrow first. When the line turns green, run it.</p>';
+    ugHelp = HUKit.howTo({ id:'ug', auto:false,
+      rules:['Every quarter has one goal. Build, hire and set pay, then press Run.',
+             'Each unit says what holds it back: Staff-limited or Capacity-limited. Fix that one.',
+             'Miss the goal or run out of cash and the run ends. Burnout bills you a quarter later.'],
+      example: ex });
+    const ugMenu = HUKit.gameMenu({ title:'Uncharted General', help:ugHelp,
+      restart:{ verb:'Start a new run', title:'Start a new run?',
+        body:'This run ends here and cannot be picked up again, unless you copied its save string.',
+        run:()=>{ if (NET.mode==='guest'){ flashHint('The host sets the table.'); return; } forgetRun(); closeOverlay(); openStartMenu(); } },
+      leave:{ href:'/secret-menu/' },
+      escOpens:()=> !overlayOpen });
+    $('ug-kitbtns').appendChild(ugHelp.button());
+    $('ug-kitbtns').appendChild(ugMenu.button());
+  }
   openStartMenu();                       // the run opens on the start menu (settings), then the CEO pick
 
-  if (typeof window!=='undefined' && window.__UG_TEST){ window.__ug={get run(){return run;}, get settings(){return settings;}, DIFFICULTIES, SIZES, effectiveStart, PAYERS, DIFF_PAYERS, activePayerKeys, payerMix, blendedReimb, UNITS, SPECIALTIES, CEOS, NO_CEO, ceoBonus, computeQuarter, deptProject, physAlloc, bestEffort, howToWin, diagnoseBankruptcy, diagnoseWalkout, makeGoal, makeEvent, applyBurnout, peakBurnout, burnFactor, burnRelief, CFG, ENHANCEMENTS, CHOICE_EVENTS, pickChoiceEvent, resolveEventChoice, openEventChoice, finalizeLevel, runQuarter, advance, hire, expand, hirePhys, firePhys, startConstruction, pickEnhancement, pickCeo, setPay, initRun, openStartMenu, peekBoard, reopenEnd, fireCeo, appointCeo, openCeoReplace, openFireConfirm, canFireCeo, gotoCeoSlide, ceoOrder, get ceoSlide(){return ceoSlide;}, get selectedCeoId(){return selectedCeoId;}, difficulty, qInYear, yearOf, packSave, unpackSave, applySave, encodeSave, decodeSave, GOAL_BUILDERS, OPT_BUILDERS, applySeason, SEASON, BREWS, EVENT_POOL, pickFromPool, reportData, REPORT, setTravelers, startLevel, brewNext, scaleEvent, CLASSES, classOf, classUnlocked, get unlocks(){return unlocks;}, PATHWAYS, SYNERGIES, activeSynergies, PROGRAMS, derivePathDemand, toggleProgram, unitRisk, incidentOdds, worstIncidentOdds, applyIncidents, anchorTarget, safetyNetShare, closeUnit, fundraiser, investorDraw, grantUnlocks, safetyRelief, NET, SEATS, VERB_SEAT, hostTable, joinTable, leaveTable, claimSeat, resumeTable, rejoinTable, tableMemo, pinDice:fn=>{diceOverride=fn;}, OFFERS, playOffer, acceptOffer, declineOffer, signOffer, judgeDeals, dealRevMult, netAct, dispatchAct, onNetMsg, applyEnvelope, netEnvelope, endScreen, setChannelFactory:fn=>T.setChannelFactory(fn), SCENARIOS, scenarioOf, EQUIP_UNITS, equipFactor, equipAgeOf, renewCost, renewEquip, get codex(){return codex;}, codexSeen, codexFinish, openChartRoom}; }
+  if (typeof window!=='undefined' && window.__UG_TEST){ window.__ug={get run(){return run;}, get settings(){return settings;}, DIFFICULTIES, SIZES, effectiveStart, PAYERS, DIFF_PAYERS, activePayerKeys, payerMix, blendedReimb, UNITS, SPECIALTIES, CEOS, NO_CEO, ceoBonus, computeQuarter, deptProject, physAlloc, bestEffort, howToWin, diagnoseBankruptcy, diagnoseWalkout, makeGoal, makeEvent, applyBurnout, peakBurnout, burnFactor, burnRelief, CFG, ENHANCEMENTS, CHOICE_EVENTS, pickChoiceEvent, resolveEventChoice, openEventChoice, finalizeLevel, runQuarter, advance, hire, expand, hirePhys, firePhys, startConstruction, pickEnhancement, pickCeo, setPay, initRun, openStartMenu, peekBoard, reopenEnd, fireCeo, appointCeo, openCeoReplace, openFireConfirm, canFireCeo, gotoCeoSlide, ceoOrder, get ceoSlide(){return ceoSlide;}, get selectedCeoId(){return selectedCeoId;}, difficulty, qInYear, yearOf, packSave, unpackSave, applySave, encodeSave, decodeSave, GOAL_BUILDERS, OPT_BUILDERS, applySeason, SEASON, BREWS, EVENT_POOL, pickFromPool, reportData, REPORT, setTravelers, startLevel, brewNext, scaleEvent, CLASSES, classOf, classUnlocked, get unlocks(){return unlocks;}, PATHWAYS, SYNERGIES, activeSynergies, PROGRAMS, derivePathDemand, toggleProgram, unitRisk, incidentOdds, worstIncidentOdds, applyIncidents, anchorTarget, safetyNetShare, closeUnit, fundraiser, investorDraw, grantUnlocks, safetyRelief, NET, SEATS, VERB_SEAT, hostTable, joinTable, leaveTable, claimSeat, resumeTable, rejoinTable, tableMemo, pinDice:fn=>{diceOverride=fn;}, OFFERS, playOffer, acceptOffer, declineOffer, signOffer, judgeDeals, dealRevMult, netAct, dispatchAct, onNetMsg, applyEnvelope, netEnvelope, endScreen, setChannelFactory:fn=>T.setChannelFactory(fn), SCENARIOS, scenarioOf, EQUIP_UNITS, equipFactor, equipAgeOf, renewCost, renewEquip, get codex(){return codex;}, codexSeen, codexFinish, openChartRoom, showStartTab, startTabDefault, get startTab(){return startTab;}}; }
 })();
 </script>
 {% endraw %}
