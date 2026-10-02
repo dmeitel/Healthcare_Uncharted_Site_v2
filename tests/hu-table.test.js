@@ -93,6 +93,58 @@ test('a knock into the host\'s join window is repeated until the roster names th
   assert.strictEqual(B.T.NET.seat, 'b', 'the guest knows its chair');
 });
 
+/** a bus whose channels also have an inbox: post() reaches only the ends that called onpost (the host) */
+function makeInboxBus() {
+  const ends = [];
+  const tally = { send: 0, post: 0 };
+  const factory = room => {
+    const ch = {
+      room, cb: null, inbox: null,
+      send(m) { tally.send++; const w = JSON.stringify(m); ends.forEach(o => { if (o !== ch && o.room === room && o.cb) o.cb(JSON.parse(w)); }); },
+      onmsg(fn) { ch.cb = fn; },
+      post(m) { tally.post++; const w = JSON.stringify(m); ends.forEach(o => { if (o.room === room && o.inbox) o.inbox(JSON.parse(w)); }); },
+      onpost(fn) { ch.inbox = fn; },
+      close() { ch.cb = null; ch.inbox = null; },
+    };
+    ends.push(ch);
+    return ch;
+  };
+  factory.tally = tally;
+  return factory;
+}
+
+test('with an inbox, everything a guest says goes to the host alone, and the table still works', async () => {
+  const K = loadKit(), bus = makeInboxBus(), got = [];
+  const A = makePlayer(K, bus, 'Dave', { autoSeat: true, seats: [{ id: 'p1', label: '1' }, { id: 'p2', label: '2' }], verbSeat: { move: '*' },
+    dispatch: (/** @type {string} */ act, /** @type {any} */ data) => got.push({ act, seat: data.seat }) });
+  const B = makePlayer(K, bus, 'Sam', { autoSeat: true, seats: [{ id: 'p1', label: '1' }, { id: 'p2', label: '2' }], verbSeat: { move: '*' }, lobby: () => {} });
+  A.T.host(); B.T.join(A.T.NET.room, 'Sam');
+  await flush();
+  assert.strictEqual(A.T.NET.seats.p2, 'Sam', 'the knock reached the host through the inbox');
+  const sentBefore = bus.tally.send;
+  B.T.act('move', {}); await flush();
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(got)), [{ act: 'move', seat: 'p2' }], 'the move arrived, stamped with the guest\'s chair');
+  assert.ok(bus.tally.post >= 2, 'the knock and the move went by post');
+  assert.strictEqual(bus.tally.send - sentBefore, 1, 'the only shared-channel message after the move is the host\'s state');
+});
+
+test('spacing holds the host\'s broadcasts apart, and the held one carries the newest state', async () => {
+  const K = loadKit(), bus = makeBus();
+  /** @type {number[]} */
+  const at = []; let n = 0;
+  const A = makePlayer(K, bus, 'Dave', { spacing: () => 120, envelope: () => ({ save: { n }, ui: { kind: 'test', seq: n } }) });
+  const B = makePlayer(K, bus, 'Sam', { onState: (/** @type {any} */ env) => { at.push(env.save.n); } });
+  A.T.host(); B.T.join(A.T.NET.room, 'Sam');
+  await flush(200);
+  at.length = 0;
+  n = 1; A.T.broadcast(); await flush(5);
+  n = 2; A.T.broadcast(); n = 3; A.T.broadcast();
+  await flush(40);
+  assert.deepStrictEqual(at, [1], 'the second and third wait out the gap');
+  await flush(150);
+  assert.deepStrictEqual(at, [1, 3], 'one more broadcast, carrying the newest state');
+});
+
 test('a guest who chose Observer is not re-seated by the retry', async () => {
   const K = loadKit(), bus = makeBus();
   const A = makePlayer(K, bus, 'Dave'), B = makePlayer(K, bus, 'Sam', { lobby: () => {} });
@@ -105,4 +157,26 @@ test('a guest who chose Observer is not re-seated by the retry', async () => {
   A.T.broadcast(); await flush();
   assert.strictEqual(A.T.NET.seats.b, undefined, 'and stays open after the next state');
   assert.strictEqual(B.T.NET.seat, null);
+});
+
+test('a relay that never answers says so once, through the game\'s own hint', async () => {
+  /** a Supabase stand-in whose every channel fails to join, the way a paused project does */
+  const fake = { createClient: () => ({
+    channel: () => ({ on() { return this; }, subscribe(/** @type {any} */ cb) { setTimeout(() => { if (cb) { cb('CHANNEL_ERROR'); cb('CHANNEL_ERROR'); } }, 0); return this; }, send() {}, httpSend() { return Promise.resolve(); } }),
+    removeChannel() {},
+  }) };
+  const ctx = { window: { addEventListener() {}, supabase: fake }, navigator: {}, console, setTimeout, clearTimeout, Date, Promise,
+    localStorage: { _s: {}, getItem(/** @type {string} */ k) { return this._s[k] || null; }, setItem(/** @type {string} */ k, /** @type {any} */ v) { this._s[k] = String(v); }, removeItem(/** @type {string} */ k) { delete this._s[k]; } } };
+  vm.createContext(ctx);
+  new vm.Script(fs.readFileSync(path.join(__dirname, '..', 'src', 'assets', 'js', 'hu-table.js'), 'utf8'), { filename: 'hu-table.js' }).runInContext(ctx);
+  const K = /** @type {any} */ (ctx.window).HUTable;
+  const said = /** @type {string[]} */ ([]);
+  const T = K.create({ channelPrefix: 'kit-test-', memoKey: 'kit_test_down', backend: { url: 'https://example.invalid', anonKey: 'k' }, inbox: true,
+    seats: [{ id: 'b', label: 'Wall B', desc: '' }], verbSeat: {}, name: () => 'Dave',
+    envelope: () => ({ save: null, ui: { kind: 'test', seq: 0 } }), onState: () => {}, hint: (/** @type {string} */ m) => { said.push(m); } });
+  assert.ok(T.host(), 'the room still opens');
+  await flush(30);
+  assert.strictEqual(said.length, 1, 'one message for two failed channels and two failures each');
+  assert.match(said[0], /game server is not answering/);
+  assert.strictEqual(T.NET.chan.kind, 'internet');
 });

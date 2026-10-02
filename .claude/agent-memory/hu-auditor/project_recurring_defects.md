@@ -127,3 +127,33 @@ copy each other's machinery verbatim, so a defect in one is almost always in its
 Also: Learn prose type is now on three different steps across modules (15px --t-body,
 16px --t-lede, 17px literal). The 08-23 audit ruled 17px/1.78 the precedent; the 09-20
 token comment calls --t-body "prose". Unresolved, flag it as drift and let David rule.
+
+## Game-page classes (added 2026-10-01 from the Vital Stats audit, see [[vital-stats-audit]])
+
+These live in single-container game pages that render every screen by `innerHTML` into one
+`<main>`/div. Check them on every game in src/secret-menu/ and src/fun/.
+
+29. **Screen swap with no scroll reset.** The new screen inherits the old scroll offset, so at
+    740x360 the answer screen opens with the question above the viewport (VS: qTop -154px).
+    Only shows at short heights; a 360x740 walk misses it. Test: scroll to the primary at the
+    foot, tap it, read `.getBoundingClientRect().top` of the new screen's heading.
+30. **Focus dropped to body on re-render.** A lobby keyed on a sequence counter rebuilds on every
+    setting tap and every roster join; the kit dialog only returns focus to an opener still in
+    the document. Pages that already patch instead of rebuild (VS bet board L1403, big screen
+    L1135, the phone dock's compare-before-write) are the in-file precedent to cite.
+31. **A mode added later skips a payout the older mode's settle paid.** VS Trivia (2026-10-01)
+    never got the home-turf bonus Guess-and-bet pays (2026-09-24), while the lobby, the deal and
+    the top bar still advertise it. When a game grows a second settle path, diff its features.
+32. **`inputmode="decimal"` beside hints that teach letter shorthand** ("82k", "1.2M"). Phone
+    keypads have no letters.
+33. **Fixed toast vs fixed phone dock.** Toast `bottom:22px` above a z-lower dock covers the
+    primary button; also missing safe-area padding.
+34. **Game menu contract gaps** (games.md): `escOpens` missing (VS, device-assembly), a
+    `restart:` whose run() leaves instead of restarting, no `settings` (so no More time) on a
+    clocked game, and `leave:{ href:'/secret-menu/' }` surviving a move to /fun/.
+35. **Nested `<main>`** inside base.njk's `<main id="main-content">`. Only VS so far; grep
+    `<main` in src outside _includes on every audit.
+
+Also seen: the synchronous supabase vendor tag in all three relay games (VS L315,
+device-assembly L479, uncharted-general L612); IBM Plex Mono asked for at 700/800 when base.njk
+loads 400-600 only (faux bold).

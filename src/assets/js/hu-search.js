@@ -13,7 +13,8 @@ var lastMissLogged = '';
 var CLUSTERS = [
   { key: 'careers-pay',  label: 'Careers & Pay' },
   { key: 'maps-systems', label: 'Maps & Systems' },
-  { key: 'learn-play',   label: 'Learn & Play' }
+  { key: 'learn-play',   label: 'Learn & Play' },
+  { key: 'fun',          label: 'Fun' }   // the games' shelf on the Tools page (2026-10-02)
 ];
 var TYPE_ORDER = ['tool', 'learn', 'talk', 'rounds', 'fun', 'path'];
 var TYPE_LABEL = { tool: 'Tools', learn: 'Learn', talk: 'Talks', rounds: 'Rounds', fun: 'Fun', path: 'Paths' };

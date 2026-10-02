@@ -170,4 +170,41 @@ module.exports = [
     labNode:     'healthcare-career-tree'
   },
 
+  // ── FUN ─────────────────────────────────────────────────────────────────────
+  // The games, on their own shelf of the Tools page (David, 2026-10-02: "should go under the Tools tab not
+  // the Learn tab"). Their addresses stay under /fun/. The id is the thumbnail's name; searchType keeps them
+  // under Fun in site search.
+
+  {
+    id:          'fun-alarm-fatigue',
+    cluster:     'fun',
+    searchType:  'fun',
+    searchSub:   'A med-surg shift as an idle clicker. Somewhere in the noise is the alarm that matters.',
+    keys:        ['game', 'clicker', 'nurse', 'alarms', 'med surg', 'code blue', 'play', 'fun'],
+    status:      'live',
+    featured:    false,
+    title:       'Alarm Fatigue',
+    desc:        'A med-surg shift as an idle clicker. You start with one patient and one quiet room, then you buy the pulse ox, the call lights, the pump, the tele bank. Every upgrade earns faster and beeps louder. Somewhere in the noise is the one alarm that matters.',
+    url:         '/fun/alarm-fatigue/',
+    type:        'game',
+    badge:       'Game',
+    tags:        ['Game', 'Playable', '10 to 20 min']
+  },
+
+  {
+    id:          'fun-vital-stats',
+    cluster:     'fun',
+    searchType:  'fun',
+    searchSub:   'A multiplayer trivia game about the real numbers in American healthcare, for 2 to 48 players',
+    keys:        ['game', 'trivia', 'quiz', 'party', 'multiplayer', 'team building', 'numbers', 'health system', 'play', 'fun'],
+    status:      'live',
+    featured:    false,
+    title:       'Vital Stats',
+    desc:        'A party game about the real numbers in American healthcare. Everyone guesses a wage, a price or a count, and the closer you get, the more you score. Play the bots, or put a room\'s QR code on a big screen.',
+    url:         '/fun/vital-stats/',
+    type:        'game',
+    badge:       'Game',
+    tags:        ['Game', 'Multiplayer', '2 to 48 players']
+  },
+
   ];

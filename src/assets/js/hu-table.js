@@ -25,6 +25,14 @@
        autoSeat: false,                // true: the host takes the first chair and every new name
                                        // that knocks takes the next open one (a party game has no
                                        // seat picker; when the chairs run out, the rest watch)
+       inbox: false,                   // true: what a guest says to the host (a knock, a claim, a move,
+                                       // goodbye) goes by REST to a second channel only the host
+                                       // listens on. The relay counts a message once per receiver, so
+                                       // on the main channel one tap in a 24-person room costs 25; in
+                                       // the inbox it costs 2. (Supabase free plan: 100 a second.)
+       spacing: null,                  // n => ms: the least time between two of the host's state
+                                       // broadcasts in a room of n people; a big room's busy moment
+                                       // then cannot outrun the relay's per-second limit
        name: () => 'the player name',
        envelope: () => ({ save, ui }), // the host's packed state, plus what overlay is up
        onState: env => {},             // a guest received the host's envelope
@@ -59,7 +67,7 @@
 
   /** @param {any} opts */
   function create(opts) {
-    const o = Object.assign({ channelPrefix: 'table-', memoKey: 'table', backend: null, seats: [], verbSeat: {}, wire: 'ug', autoSeat: false }, opts || {});
+    const o = Object.assign({ channelPrefix: 'table-', memoKey: 'table', backend: null, seats: [], verbSeat: {}, wire: 'ug', autoSeat: false, inbox: false, spacing: null }, opts || {});
     const hook = (n, ...a) => (typeof o[n] === 'function' ? o[n](...a) : undefined);
     const NET = { mode: null, room: '', name: '', seat: null, chan: null, seats: {}, roster: [], lastUiSeq: -1, pendingT: null, want: null, _supa: null };
     const memo = makeMemo(o.memoKey);
@@ -78,13 +86,20 @@
         // over a one-way HTTP fallback: the other side hears us while we cannot hear them yet, and
         // a reply sent into that gap is lost (a resumed host missed a guest's move, 2026-09-20).
         // Queue until SUBSCRIBED; on a failed join, flush anyway so nothing is worse than before.
-        let joined = false; const queue = [];
+        let joined = false, warned = false; const queue = [];
+        // A relay that never answers (a paused project, no network) used to fail in silence: the host saw a room code
+        // nobody could use (2026-10-01). Say so once, in the game's own hint, and let the game carry on.
+        const warn = st => { if (warned || (st !== 'CHANNEL_ERROR' && st !== 'TIMED_OUT')) return; warned = true; hook('hint', 'The game server is not answering, so other people cannot join right now. Try again in a few minutes.'); };
         const push = m => { try { ch.send({ type: 'broadcast', event: o.wire, payload: m }); } catch (e) {} };
+        // the inbox: guests never join it, they post to it by REST; only the host subscribes
+        const inbox = o.inbox ? client.channel(o.channelPrefix + room + '-in', { config: { broadcast: { self: false } } }) : null;
         return {
           kind: 'internet',
           send: m => { if (joined) push(m); else queue.push(m); },
-          onmsg: fn => { ch.on('broadcast', { event: o.wire }, p => fn(p.payload)); ch.subscribe(st => { if (!joined && (st === 'SUBSCRIBED' || st === 'CHANNEL_ERROR' || st === 'TIMED_OUT')) { joined = true; queue.splice(0).forEach(push); } }); },
-          close: () => { try { client.removeChannel(ch); } catch (e) {} },
+          onmsg: fn => { ch.on('broadcast', { event: o.wire }, p => fn(p.payload)); ch.subscribe(st => { warn(st); if (!joined && (st === 'SUBSCRIBED' || st === 'CHANNEL_ERROR' || st === 'TIMED_OUT')) { joined = true; queue.splice(0).forEach(push); } }); },
+          post: inbox ? m => { try { inbox.httpSend(o.wire, m).catch(() => {}); } catch (e) {} } : undefined,
+          onpost: inbox ? fn => { inbox.on('broadcast', { event: o.wire }, p => fn(p.payload)); inbox.subscribe(warn); } : undefined,
+          close: () => { try { client.removeChannel(ch); if (inbox) client.removeChannel(inbox); } catch (e) {} },
         };
       }
       if (typeof BroadcastChannel === 'undefined') return null;
@@ -94,7 +109,7 @@
     let channelFactory = defaultChannelFactory;
 
     // ── the envelope: everything a guest needs, debounced to one send per microtask ──
-    let txQueued = false;
+    let txQueued = false, lastTx = 0;
     function envelope() {
       const e = hook('envelope') || {};
       return { save: e.save === undefined ? null : e.save, ui: e.ui || { kind: 'none', seq: 0 }, seats: Object.assign({}, NET.seats), roster: NET.roster.slice() };
@@ -102,14 +117,20 @@
     function broadcast() {
       if (NET.mode !== 'host' || !NET.chan || txQueued) return;
       txQueued = true;
-      Promise.resolve().then(() => {
+      const go = () => {
         txQueued = false;
         if (NET.mode !== 'host' || !NET.chan) return;
-        const env = envelope();
+        lastTx = Date.now();
+        const env = envelope();                                // built at send time, so a held broadcast carries the newest state
         NET.chan.send({ t: 'state', env });
         memo.set(memo.keys.host, { room: NET.room, env, at: Date.now() });   // every broadcast is the host's resume point
-      });
+      };
+      const gap = typeof o.spacing === 'function' ? Math.max(0, Number(o.spacing(NET.roster.length)) || 0) : 0;
+      const wait = gap ? lastTx + gap - Date.now() : 0;
+      if (wait > 0) setTimeout(go, wait); else Promise.resolve().then(go);
     }
+    /** what a guest says to the host: the inbox when there is one, else the shared channel */
+    const toHost = m => { if (!NET.chan) return; if (NET.chan.post) NET.chan.post(m); else NET.chan.send(m); };
 
     // ── seats ──
     function applyClaim(name, seat) {
@@ -121,7 +142,7 @@
       if (NET.mode === 'host') hook('onRoster');
     }
     function claim(seat) {
-      if (NET.mode === 'guest') { NET.want = seat; NET.chan.send({ t: 'claim', name: NET.name, seat }); return; }
+      if (NET.mode === 'guest') { NET.want = seat; toHost({ t: 'claim', name: NET.name, seat }); return; }
       if (NET.mode === 'host') applyClaim(NET.name, seat);
     }
 
@@ -151,7 +172,7 @@
         if (NET.pendingT) { clearTimeout(NET.pendingT); NET.pendingT = null; }
         NET.seats = m.env.seats || {}; NET.roster = m.env.roster || []; NET.seat = seatOf(NET.name);
         // a claim sent into the host's join window is gone; ask again while the chair is still open
-        if (NET.want && NET.want !== 'none' && !NET.seat && !NET.seats[NET.want] && NET.roster.indexOf(NET.name) >= 0) NET.chan.send({ t: 'claim', name: NET.name, seat: NET.want });
+        if (NET.want && NET.want !== 'none' && !NET.seat && !NET.seats[NET.want] && NET.roster.indexOf(NET.name) >= 0) toHost({ t: 'claim', name: NET.name, seat: NET.want });
         hook('onState', m.env);
       }
     }
@@ -165,6 +186,7 @@
       NET.mode = 'host'; NET.room = code; NET.chan = chan; NET.name = hook('name') || 'Host'; NET.seat = null; NET.seats = {}; NET.roster = [NET.name]; NET.lastUiSeq = -1;
       seatNew(NET.name);
       NET.chan.onmsg(onMessage);
+      if (NET.chan.onpost) NET.chan.onpost(onMessage);       // the guests' inbox, when the game asked for one
       hook('onRoster');
       return true;
     }
@@ -181,7 +203,7 @@
       const hello = () => {
         if (NET.mode !== 'guest' || NET.roster.indexOf(NET.name) >= 0) return;   // heard: the host's roster names us, not merely any state
         if (tries++ > 20) { if (NET.lastUiSeq < 0) hook('lobby', 'Nobody answered at that code. If the host&rsquo;s screen reloaded, ask them to hit Resume on their start menu, then leave this table and tap Rejoin.'); return; }
-        NET.chan.send({ t: 'hello', name: NET.name }); setTimeout(hello, 700);
+        toHost({ t: 'hello', name: NET.name }); setTimeout(hello, 700);
       };
       hello();
       hook('lobby', 'Knocking on the door&hellip;');
@@ -190,7 +212,7 @@
     function leave() {
       if (NET.mode === 'host') memo.clear(memo.keys.host);
       else if (NET.mode === 'guest' && NET.lastUiSeq >= 0) memo.clear(memo.keys.guest);   // leaving a LIVE table forgets it; a dead one stays rejoinable
-      if (NET.chan) { try { NET.chan.send({ t: 'bye', name: NET.name }); NET.chan.close(); } catch (e) {} }
+      if (NET.chan) { try { const bye = { t: 'bye', name: NET.name }; if (NET.mode === 'guest') toHost(bye); else NET.chan.send(bye); NET.chan.close(); } catch (e) {} }
       if (NET.pendingT) { clearTimeout(NET.pendingT); NET.pendingT = null; }
       NET.mode = null; NET.room = ''; NET.seat = null; NET.chan = null; NET.seats = {}; NET.roster = []; NET.want = null; NET.lastUiSeq = -1;
     }
@@ -231,7 +253,7 @@
         if (need === 'host') { hook('hint', 'The host runs that. Say it out loud instead.'); return; }
         if (need === '*' && !NET.seat) { hook('hint', 'Every chair is taken; you are watching this one.'); return; }
         if (need !== '*' && NET.seat !== need) { hook('hint', 'That is the ' + seatLabel(need) + ' seat. Make the case to whoever holds it.'); return; }
-        NET.chan.send({ t: 'intent', name: NET.name, act: verb, data: data || {} });
+        toHost({ t: 'intent', name: NET.name, act: verb, data: data || {} });
         // every applied intent comes back as a state; if none does, the host did not hear it (a
         // resumed host still joining, a dropped socket), and silence would look like a dead button
         clearTimeout(NET.pendingT);

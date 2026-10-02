@@ -115,14 +115,44 @@ test('re-running the builder reproduces the file byte for byte', () => {
   assert.equal(build(), raw.replace(/\r\n/g, '\n'), 'vital-stats-questions.json is stale or hand-edited. Run: node scripts/build-vital-stats.js');
 });
 
+// The cap was a quarter until 2026-10-01. David then ruled that rewording the same fact led to misreads, so
+// every percent question now opens the same plain way ("What percent of"), which alone is 28 percent of the mix.
+// Variety comes from the subjects now; the test still stops one opening from swallowing the game.
 test('variety: no one way of opening a question takes over the everyday mix', () => {
   const mix = bank.questions.filter((q) => !q.more);
   /** @type {Record<string, number>} */
   const opens = {};
   for (const q of mix) { const w = q.q.split(' ').slice(0, 3).join(' '); opens[w] = (opens[w] || 0) + 1; }
   const [top, n] = Object.entries(opens).sort((a, b) => b[1] - a[1])[0];
-  assert.ok(n / mix.length <= 0.25, '"' + top + '" opens ' + n + ' of ' + mix.length + ' everyday questions');
+  assert.ok(n / mix.length <= 1 / 3, '"' + top + '" opens ' + n + ' of ' + mix.length + ' everyday questions');
   assert.ok(Object.keys(opens).length >= 20, 'only ' + Object.keys(opens).length + ' different openings');
+});
+
+test('one wording per template: the same fact about another state reads the same, only the place and year change', () => {
+  const { STATE_NAMES } = require('../scripts/build-vital-stats.js');
+  /** @type {Record<string, Set<string>>} */
+  const forms = {};
+  for (const q of bank.questions) {
+    if (!q.k || q.k === 'uninsured-county') continue;                 // a county's name is its own place
+    const key = q.k + '|' + (q.f || '');
+    let t = q.q;
+    if (q.st) t = t.split(STATE_NAMES[q.st]).join('{S}');
+    t = t.replace(/\b(19|20)\d{2}\b/g, '{Y}');
+    (forms[key] = forms[key] || new Set()).add(t);
+  }
+  for (const [key, set] of Object.entries(forms)) assert.equal(set.size, 1, key + ' is asked ' + set.size + ' ways:\n' + Array.from(set).join('\n'));
+});
+
+test('no retired phrasing, and the forms that need a how-to line carry one', () => {
+  const retired = [/^Half (the|of)\b/, /^Out of every 100\b/, /^At the median\b/, /^Line up\b/, /^Count every\b/];
+  for (const q of bank.questions) {
+    for (const re of retired) assert.ok(!re.test(q.q), re + ' in ' + q.id + ': ' + q.q);
+    if (q.f === 'in' || q.f === 'rank' || q.f === 'hr') assert.ok(q.sub, 'a ' + q.f + ' question says how to answer (' + q.id + ')');
+    if ('sub' in q) {
+      assert.match(q.sub, /\.$/, 'a sub line ends in a period (' + q.id + ')');
+      assert.ok(!q.sub.includes('?') && q.sub.length <= 140, 'a sub line is short and plain (' + q.id + ')');
+    }
+  }
 });
 
 test('the forms keep their answers honest: one in N, a place, and per hour', () => {

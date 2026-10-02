@@ -1,5 +1,5 @@
 'use strict';
-// build-vital-stats.js · the question bank for Vital Stats (src/secret-menu/vital-stats/).
+// build-vital-stats.js · the question bank for Vital Stats (src/fun/vital-stats/).
 //
 // Vital Stats asks one healthcare NUMBER a round, everyone guesses, everyone bets on
 // the closest guess without going over, then the answer shows with its source and
@@ -117,9 +117,13 @@ function titleCase(s) {
 
 // ─── the sayings ─────────────────────────────────────────────────────────────
 //
-// David, 2026-09-24: "the questions lack variety or different sayings". Every template now has
-// two or three ways to ask it, and a question's id picks one (a hash, so the bank stays
-// deterministic). The first saying is always the original.
+// David, 2026-09-24: "the questions lack variety or different sayings", so every template got two or
+// three ways to ask it. David, 2026-10-01, after playing: "there is some variation but I think it also
+// leads to misinterpretation... make it so it can't be misinterpreted even if there needs to be subtext".
+// So: ONE wording per template, naming what is counted, where and when, and a `sub` line under the
+// question where a definition decides the number ("Medicare Advantage included"). The variety now comes
+// from the subjects, the states and the forms (one in N, a place), never from rewording the same fact.
+// pickSaying stays for a template that genuinely has two equal plain wordings; none does today.
 
 /** FNV-1a, 32 bits: the same id always picks the same saying @param {string} str */
 function hash(str) {
@@ -133,14 +137,14 @@ function pickSaying(id, list) { return list[hash(id) % list.length]; }
 // ─── the question record, keys always in the same order ─────────────────────
 
 /**
- * @param {{id:string,cat:string,q:string,a:number,unit:string,pre?:string,suf?:string,dp:number,
+ * @param {{id:string,cat:string,q:string,sub?:string,a:number,unit:string,pre?:string,suf?:string,dp:number,
  *          src:string,url?:string,year:number,checked:string,why:string,st?:string,k?:string,f?:string,more?:boolean}} o
  */
 function Q(o) {
-  const rec = {
-    id: o.id, cat: o.cat, q: o.q, a: round(o.a, o.dp), unit: o.unit,
-    pre: o.pre || '', suf: o.suf || '', dp: o.dp, src: o.src
-  };
+  /** @type {any} */
+  const rec = { id: o.id, cat: o.cat, q: o.q };
+  if (o.sub) rec.sub = o.sub;       // the line under the question: what counts, so the number cannot be misread
+  Object.assign(rec, { a: round(o.a, o.dp), unit: o.unit, pre: o.pre || '', suf: o.suf || '', dp: o.dp, src: o.src });
   if (o.url) rec.url = o.url;
   rec.year = o.year;
   rec.checked = o.checked;
@@ -157,7 +161,7 @@ function Q(o) {
 function curatedQuestions() {
   const cur = readJson(CURATED);
   return cur.questions.map((c) => Q({
-    id: c.id, cat: c.cat, q: c.q, a: c.a, unit: c.unit, pre: c.pre, suf: c.suf, dp: c.dp,
+    id: c.id, cat: c.cat, q: c.q, sub: c.sub, a: c.a, unit: c.unit, pre: c.pre, suf: c.suf, dp: c.dp,
     src: c.src, url: c.url, year: c.year, checked: c.checked, why: c.why
   }));
 }
@@ -196,69 +200,59 @@ const FAMILIES = {
 // Anything a family sets (unit, fmt, dp) a metric can override.
 const STATE_METRICS = [
   { id: 'patient/fair-poor-health', slug: 'fair-poor-health', fam: 'places', cat: 'Health', states: ['WV', 'CA', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} rated their own health as fair or poor in ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} rated their own health as fair or poor in ${y}?`,
+    sub: 'Adults rating their own health, from CDC survey estimates.' },
   { id: 'patient/diabetes', slug: 'diabetes', fam: 'places', cat: 'Health', states: ['WV', 'TX', 'CO', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} had diagnosed diabetes in ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} had diagnosed diabetes in ${y}?`,
+    sub: 'Adults a doctor or other health professional has told they have diabetes. Undiagnosed cases do not count.' },
   { id: 'patient/coronary-heart-disease', slug: 'heart-disease', fam: 'places', cat: 'Health', states: ['KY', 'UT'],
     q: (S, y) => `What percent of adults in ${S} reported coronary heart disease, angina or a past heart attack in ${y}?` },
   { id: 'patient/obesity', slug: 'obesity', fam: 'places', cat: 'Health', states: ['WV', 'CO', 'TX', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} had obesity (BMI 30 or higher, from self-reported height and weight) in ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} had obesity in ${y}?`,
+    sub: 'Obesity means a BMI of 30 or more, from the height and weight adults reported.' },
   { id: 'patient/routine-checkup', slug: 'checkup', fam: 'places', cat: 'Health', states: ['RI', 'AK', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} had a routine checkup within the past year, as of ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} had a routine checkup within the past year, as of ${y}?`,
+    /* the BRFSS question's own definition */
+    sub: 'A routine checkup is a general physical, not a visit for an injury or illness.' },
   { id: 'patient/current-smoking', slug: 'smoking', fam: 'places', cat: 'Health', states: ['WV', 'TN', 'CA', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} currently smoked cigarettes in ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} currently smoked cigarettes in ${y}?`,
+    /* the BRFSS current-smoker definition */
+    sub: 'Adults who have smoked 100 cigarettes in their life and smoke now, daily or some days.' },
   { id: 'patient/copd', slug: 'copd', fam: 'places', cat: 'Health', states: ['WV', 'CA', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} had diagnosed COPD in ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} had diagnosed COPD in ${y}?`,
+    sub: 'Adults ever told they have COPD, emphysema or chronic bronchitis.' },
   { id: 'patient/asthma', slug: 'asthma', fam: 'places', cat: 'Health', states: ['ME', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} had current asthma in ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} had current asthma in ${y}?`,
+    sub: 'Adults ever told they have asthma who say they still have it.' },
   { id: 'patient/high-blood-pressure', slug: 'high-bp', fam: 'places', cat: 'Health', states: ['MS', 'CO', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} had diagnosed high blood pressure in ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} had diagnosed high blood pressure in ${y}?`,
+    sub: 'Adults a doctor or other health professional has told they have high blood pressure.' },
   { id: 'patient/depression', slug: 'depression', fam: 'places', cat: 'Health', states: ['WV', 'NJ', 'FL', 'UT'],
-    q: (S, y) => `What percent of adults in ${S} had ever been diagnosed with depression, as of ${y}?` },
+    q: (S, y) => `What percent of adults in ${S} had ever been diagnosed with depression, as of ${y}?`,
+    sub: 'Adults ever told they have a depressive disorder, whether or not they have it now.' },
   { id: 'patient/premature-death', slug: 'ypll', fam: 'chr', cat: 'Health', states: ['MS', 'MA', 'UT'],
     unit: 'years per 100k', suf: '', dp: 0, fmt: (v) => commas(v),
-    q: (S, y) => `In the County Health Rankings ${y} release, how many years of life were lost before age 75 per 100,000 people in ${S}?` },
+    q: (S, y) => `How many years of life were lost to early deaths per 100,000 people in ${S}, by the County Health Rankings ${y} release?`,
+    sub: 'Each death before age 75 counts the years it fell short of 75, scaled to 100,000 people.' },
   { id: 'patient/low-birthweight', slug: 'low-birthweight', fam: 'chr', cat: 'Health', states: ['MS', 'AK', 'UT'],
-    q: (S, y) => `What percent of babies born in ${S} weighed under 2,500 grams, per the County Health Rankings ${y} release?` },
+    q: (S, y) => `What percent of babies born in ${S} weighed under 2,500 grams, by the County Health Rankings ${y} release?`,
+    sub: '2,500 grams is about 5.5 pounds.' },
   { id: 'patient/median-age', slug: 'median-age', fam: 'acs', cat: 'Health', states: ['ME', 'FL', 'UT'],
     unit: 'years', suf: ' yrs', fmt: (v) => commas(v, 1) + ' years',
-    q: (S, y) => `What was the median age of people living in ${S}, per the Census ${y - 4} to ${y} estimates, in years?` },
+    q: (S, y) => `What was the median age in ${S}, by the Census ${y - 4} to ${y} estimates?`,
+    sub: 'Half the people are older and half are younger. Answer in years.' },
   { id: 'baseline/pop-65-plus', slug: 'age-65-plus', fam: 'acs', cat: 'Coverage', states: ['ME', 'FL', 'UT'],
-    q: (S, y) => `What percent of people in ${S} were 65 or older, the age of Medicare eligibility, per the Census ${y - 4} to ${y} estimates?` },
+    q: (S, y) => `What percent of people in ${S} were 65 or older, by the Census ${y - 4} to ${y} estimates?`,
+    sub: '65 is the age most people become eligible for Medicare.' },
   { id: 'payer/uninsured', slug: 'uninsured', fam: 'sahie', cat: 'Coverage', states: ['TX', 'OK', 'FL', 'CA', 'MA', 'UT'],
     q: (S, y) => `What percent of people under 65 in ${S} had no health insurance in ${y}?` },
   { id: 'economics/median-household-income', slug: 'income', fam: 'saipe', cat: 'Money', states: ['MS', 'MA', 'CA', 'TX', 'NY', 'UT'],
-    q: (S, y) => `What was the median household income in ${S} in ${y}, in thousands of dollars?` },
+    q: (S, y) => `What was the median household income in ${S} in ${y}, in thousands of dollars?`,
+    sub: 'Half of households earned more and half less. 85 means $85,000.' },
   { id: 'economics/unemployment', slug: 'unemployment', fam: 'laus', cat: 'Workforce', states: ['SD', 'CA', 'UT'],
-    q: (S, y) => `What was the average unemployment rate in ${S} in ${y}, as a percent?` }
+    q: (S, y) => `What was the unemployment rate in ${S} in ${y}, averaged over the year?`,
+    sub: 'The percent of people in the labor force who were out of work and looking for it.' }
 ];
-
-// More ways to ask each state metric (the metric's own q is saying one). Keyed by slug.
-/** @type {Record<string, ((S:string, y:number) => string)[]>} */
-const SAYINGS = {
-  'fair-poor-health': [(S, y) => `Asked to rate their own health, what percent of adults in ${S} said fair or poor in ${y}?`,
-    (S, y) => `Out of every 100 adults in ${S}, how many called their own health fair or poor in ${y}?`],
-  diabetes: [(S, y) => `Out of every 100 adults in ${S}, how many had been told by a doctor that they have diabetes, as of ${y}?`],
-  'heart-disease': [(S, y) => `Out of every 100 adults in ${S}, how many reported coronary heart disease, angina or a past heart attack in ${y}?`],
-  obesity: [(S, y) => `What share of adults in ${S} had a BMI of 30 or more in ${y}, going by the height and weight they reported, as a percent?`],
-  checkup: [(S, y) => `What percent of adults in ${S} had been in for a routine checkup in the past year, as of ${y}?`,
-    (S, y) => `Out of every 100 adults in ${S}, how many had a routine checkup within the year, as of ${y}?`],
-  smoking: [(S, y) => `Out of every 100 adults in ${S}, how many were current cigarette smokers in ${y}?`],
-  copd: [(S, y) => `Out of every 100 adults in ${S}, how many had been told they have COPD, emphysema or chronic bronchitis, as of ${y}?`],
-  asthma: [(S, y) => `Out of every 100 adults in ${S}, how many were living with asthma in ${y}?`],
-  'high-bp': [(S, y) => `Out of every 100 adults in ${S}, how many had been told they have high blood pressure, as of ${y}?`,
-    (S, y) => `What share of adults in ${S} had diagnosed high blood pressure in ${y}, as a percent?`],
-  depression: [(S, y) => `Out of every 100 adults in ${S}, how many had ever been told they have a depressive disorder, as of ${y}?`],
-  ypll: [(S, y) => `Per 100,000 people in ${S}, how many years of life were lost to deaths before age 75, per the County Health Rankings ${y} release?`],
-  'low-birthweight': [(S, y) => `Out of every 100 babies born in ${S}, how many weighed under 2,500 grams (about 5.5 pounds), per the County Health Rankings ${y} release?`],
-  'median-age': [(S, y) => `Half the people in ${S} are older than what age, per the Census ${y - 4} to ${y} estimates, in years?`],
-  'age-65-plus': [(S, y) => `Out of every 100 people in ${S}, how many were 65 or older, old enough for Medicare, per the Census ${y - 4} to ${y} estimates?`],
-  uninsured: [(S, y) => `Out of every 100 people under 65 in ${S}, how many had no health insurance in ${y}?`,
-    (S, y) => `What share of people under 65 in ${S} went without health insurance in ${y}, as a percent?`],
-  income: [(S, y) => `Half the households in ${S} earned more than what amount in ${y}, in thousands of dollars?`,
-    (S, y) => `What did a typical (median) household in ${S} earn in ${y}, in thousands of dollars?`],
-  unemployment: [(S, y) => `Out of every 100 people in the labor force in ${S}, how many were out of work, on average, in ${y}?`]
-};
 // ONE IN HOW MANY: the same percent read as people, "about one in 7". Only where it reads naturally and the
 // share sits between 3 and 50 percent (one in 2 is not a guess, one in 40 is a rounding game).
 /** @type {Record<string, (S:string, y:number) => string>} */
@@ -276,14 +270,14 @@ const ONE_IN = {
   'age-65-plus': (S, y) => `About one in how many people in ${S} was 65 or older, per the Census ${y - 4} to ${y} estimates?`
 };
 // RANK: where a state places among all of them. top: which end is #1. Answers print as #7.
-/** @type {Record<string, {top:'highest'|'lowest', q:(S:string, y:number, n:string) => string}>} */
+/** @type {Record<string, {top:'highest'|'lowest', one:string, q:(S:string, y:number, n:string) => string}>} */
 const RANKS = {
-  obesity: { top: 'highest', q: (S, y, n) => `Rank the ${n} by adult obesity in ${y}, highest first. What place is ${S}?` },
-  smoking: { top: 'highest', q: (S, y, n) => `Line up the ${n} by adult smoking rate in ${y}, highest first. Where does ${S} land?` },
-  uninsured: { top: 'highest', q: (S, y, n) => `Rank the ${n} by the share of people under 65 with no health insurance in ${y}, highest first. What place is ${S}?` },
-  income: { top: 'highest', q: (S, y, n) => `Rank the ${n} by median household income in ${y}, richest first. What place is ${S}?` },
-  'age-65-plus': { top: 'highest', q: (S, y, n) => `Rank the ${n} by the share of people 65 or older, oldest first (Census ${y - 4} to ${y}). What place is ${S}?` },
-  'high-bp': { top: 'highest', q: (S, y, n) => `Rank the ${n} by adults with diagnosed high blood pressure in ${y}, highest first. What place is ${S}?` }
+  obesity: { top: 'highest', one: 'the highest adult obesity rate', q: (S, y, n) => `Rank the ${n} by adult obesity rate in ${y}, highest first. What place is ${S}?` },
+  smoking: { top: 'highest', one: 'the highest adult smoking rate', q: (S, y, n) => `Rank the ${n} by adult smoking rate in ${y}, highest first. What place is ${S}?` },
+  uninsured: { top: 'highest', one: 'the highest uninsured rate', q: (S, y, n) => `Rank the ${n} by the percent of people under 65 with no health insurance in ${y}, highest first. What place is ${S}?` },
+  income: { top: 'highest', one: 'the highest median household income', q: (S, y, n) => `Rank the ${n} by median household income in ${y}, highest first. What place is ${S}?` },
+  'age-65-plus': { top: 'highest', one: 'the highest percent of people 65 or older', q: (S, y, n) => `Rank the ${n} by the percent of people 65 or older (Census ${y - 4} to ${y}), highest first. What place is ${S}?` },
+  'high-bp': { top: 'highest', one: 'the highest rate of diagnosed high blood pressure', q: (S, y, n) => `Rank the ${n} by the percent of adults with diagnosed high blood pressure in ${y}, highest first. What place is ${S}?` }
 };
 /** "the 50 states and DC", or "the 49 states and DC with data" @param {number} n @param {boolean} dc */
 function field(n, dc) { return dc ? (n === 51 ? 'fifty states and DC' : (n - 1) + ' states and DC with data') : (n === 50 ? 'fifty states' : n + ' states with data'); }
@@ -336,7 +330,7 @@ function stateQuestions(cfg, stateData, years) {
       const id = m.slug + '-' + st.toLowerCase();
       const common = { cat: m.cat, src: fam.src(item, y), url: item.sourceUrl, year: y, checked: String(item.retrievedDate), st, k: m.slug };
       out.push(Q(Object.assign({}, common, {
-        id, q: pickSaying(id, [m.q].concat(SAYINGS[m.slug] || []))(STATE_NAMES[st], y),
+        id, q: m.q(STATE_NAMES[st], y), sub: m.sub,
         a: v, unit: m.unit || fam.unit, pre: m.pre ?? fam.pre, suf: m.suf ?? fam.suf, dp: m.dp ?? fam.dp,
         why: rangeWhy(vals, st, show), more: !core
       })));
@@ -345,6 +339,7 @@ function stateQuestions(cfg, stateData, years) {
         const n = Math.round(100 / v);
         out.push(Q(Object.assign({}, common, {
           id: m.slug + '-1in-' + st.toLowerCase(), q: ONE_IN[m.slug](STATE_NAMES[st], y),
+          sub: 'Answer the N in "1 in N". A smaller N means more common: 1 in 4 is more people than 1 in 10.',
           a: n, unit: 'people', pre: '1 in ', suf: '', dp: 0, f: 'in',
           why: `That is ${pct(v)}. ${rangeWhy(vals, st, show)}`, more: st !== m.states[0]
         })));
@@ -357,6 +352,7 @@ function stateQuestions(cfg, stateData, years) {
         const first = among.slice().sort((a, b) => (R.top === 'highest' ? Number(vals[b]) - Number(vals[a]) : Number(vals[a]) - Number(vals[b])) || a.localeCompare(b))[0];
         out.push(Q(Object.assign({}, common, {
           id: 'rank-' + m.slug + '-' + st.toLowerCase(), q: R.q(STATE_NAMES[st], y, field(among.length, among.includes('DC'))),
+          sub: `Place 1 has ${R.one}. Answer a place from 1 to ${among.length}.`,
           a: place, unit: 'place', pre: '#', suf: '', dp: 0, f: 'rank',
           why: place === 1 ? `${STATE_NAMES[st]} was first at ${show(v)}.` : `${STATE_NAMES[st]} was at ${show(v)}; ${STATE_NAMES[first]} was first at ${show(Number(vals[first]))}.`,
           more: st !== m.states[m.states.length - 1]
@@ -540,34 +536,32 @@ function blsQuestions() {
   };
   for (const soc of ASK.pay) {
     const { o, slug, job } = base(soc);
-    out.push(Q({ id: 'pay-' + slug, cat: 'Workforce', q: pickSaying('pay-' + slug, [
-        `What was the median annual pay for ${job} in the U.S. in ${wageLabel}, in dollars?`,
-        `Half of U.S. ${job} earned more than what a year in ${wageLabel}, in dollars?`,
-        `At the median, what did ${job} in the U.S. earn a year in ${wageLabel}, in dollars?`]),
+    out.push(Q({ id: 'pay-' + slug, cat: 'Workforce', q: `What was the median annual pay for ${job} in the U.S. in ${wageLabel}, in dollars?`,
+      sub: 'Half of them earned more and half less. Pay for a full year, before taxes.',
       a: o.pay, unit: 'dollars', pre: '$', suf: '', dp: 0, src: src.pay, url: o.url, year: wageYear, checked: BLS_CHECKED, why: why(soc, 'pay') }));
   }
   for (const soc of ASK.growth) {
     const { o, slug, job } = base(soc);
-    out.push(Q({ id: 'growth-' + slug, cat: 'Workforce', q: pickSaying('growth-' + slug, [
-        `By what percent does BLS project U.S. employment of ${job} to grow from ${projLabel}?`,
-        `BLS expects the number of jobs for ${job} in the U.S. to grow by what percent from ${projLabel}?`]),
+    out.push(Q({ id: 'growth-' + slug, cat: 'Workforce', q: `By what percent does BLS project the number of jobs for ${job} in the U.S. to grow from ${projLabel}?`,
+      sub: 'The change over the whole ten years, not each year.',
       a: o.growth, unit: 'percent', pre: '', suf: '%', dp: 0, src: src.proj, url: o.url, year: p0, checked: BLS_CHECKED, why: why(soc, 'growth') }));
   }
   for (const soc of ASK.openings) {
     const { o, slug, job } = base(soc);
-    out.push(Q({ id: 'openings-' + slug, cat: 'Workforce', q: pickSaying('openings-' + slug, [
-        `On average, how many job openings a year does BLS project for ${job} in the U.S. from ${projLabel}?`,
-        `How many openings for ${job} does BLS expect in the U.S. each year, on average, from ${projLabel}?`]),
+    out.push(Q({ id: 'openings-' + slug, cat: 'Workforce', q: `How many job openings a year does BLS project for ${job} in the U.S., on average, from ${projLabel}?`,
+      sub: 'Openings each year: new jobs plus the jobs people leave or retire from.',
       a: o.openings, unit: 'openings per year', pre: '', suf: '', dp: 0, src: src.proj, url: o.url, year: p0, checked: BLS_CHECKED, why: why(soc, 'openings') }));
   }
   for (const soc of ASK.high) {
     const { o, slug, job } = base(soc);
     out.push(Q({ id: 'pay-top10-' + slug, cat: 'Workforce', q: `In ${wageLabel}, the top-paid 10 percent of ${job} in the U.S. earned more than what amount a year, in dollars?`,
+      sub: 'The 90th percentile: 9 in 10 of them earned less than this.',
       a: o.high, unit: 'dollars', pre: '$', suf: '', dp: 0, src: src.pay, url: o.url, year: wageYear, checked: BLS_CHECKED, why: why(soc, 'high') }));
   }
   for (const soc of ASK.low) {
     const { o, slug, job } = base(soc);
     out.push(Q({ id: 'pay-bottom10-' + slug, cat: 'Workforce', q: `In ${wageLabel}, the lowest-paid 10 percent of ${job} in the U.S. earned less than what amount a year, in dollars?`,
+      sub: 'The 10th percentile: 1 in 10 of them earned less than this.',
       a: o.low, unit: 'dollars', pre: '$', suf: '', dp: 0, src: src.pay, url: o.url, year: wageYear, checked: BLS_CHECKED, why: why(soc, 'low') }));
   }
   return out;
@@ -607,9 +601,8 @@ function statePayQuestions() {
       const src = 'BLS, Occupational Employment and Wage Statistics, ' + P.period + ' state estimates';
       out.push(Q({
         id, cat: 'Workforce',
-        q: pickSaying(id, [`What was the median annual pay for ${job} in ${S} in ${P.period}, in dollars?`,
-          `Half of ${job} in ${S} earned more than what a year in ${P.period}, in dollars?`,
-          `At the median, what did ${job} in ${S} earn a year in ${P.period}, in dollars?`]),
+        q: `What was the median annual pay for ${job} in ${S} in ${P.period}, in dollars?`,
+        sub: 'Half of them earned more and half less. Pay for a full year, before taxes.',
         a: v, unit: 'dollars', pre: '$', suf: '', dp: 0, src, url: P.url,
         year: P.year, checked: P.checked, why: rangeWhy(o.pay, st, usd), st, k: 'pay-' + slug, more: !core
       }));
@@ -617,6 +610,7 @@ function statePayQuestions() {
       out.push(Q({
         id: 'pay-hr-' + slug + '-' + st.toLowerCase(), cat: 'Workforce',
         q: `What did the median ${JOB_ONE[soc]} in ${S} earn per hour in ${P.period}, in dollars?`,
+        sub: 'The yearly median divided by 2,080 hours, the full-time year BLS uses.',
         a: v / 2080, unit: 'dollars an hour', pre: '$', suf: '', dp: 2, f: 'hr',
         src: src + ' (the annual median divided by 2,080 hours, the full-time year BLS uses)', url: P.url,
         year: P.year, checked: P.checked, why: `That is ${usd(v)} a year over 2,080 hours.`, st, k: 'pay-' + slug, more: true
@@ -632,7 +626,8 @@ function statePayQuestions() {
     const lo = sts.slice().sort((a, b) => pay[a] - pay[b] || a.localeCompare(b))[0];
     out.push(Q({
       id: 'pay-gap-' + slug, cat: 'Workforce',
-      q: `At the median, how many dollars a year separated the best-paid state for ${job} from the lowest-paid in ${P.period}?`,
+      q: `How far apart, in dollars a year, were the median pay for ${job} in the best-paid state and in the lowest-paid state in ${P.period}?`,
+      sub: 'The best-paid state\'s median minus the lowest-paid state\'s median.',
       a: pay[hi] - pay[lo], unit: 'dollars', pre: '$', suf: '', dp: 0,
       src: 'BLS, Occupational Employment and Wage Statistics, ' + P.period + ' state estimates (the difference computed)', url: P.url,
       year: P.year, checked: P.checked, why: `${STATE_NAMES[hi]} paid ${usd(pay[hi])} and ${STATE_NAMES[lo]} ${usd(pay[lo])}.`
@@ -665,7 +660,8 @@ function countQuestions(cfg, stateData, years) {
   };
   const metric = (id) => { const { lens, index } = metricIndexById(cfg, id); return { item: cfg[lens].items[Number(index)], vals: stateData[lens][index], y: Number(years[lens][index]) }; };
   const places = (it, y) => 'CDC PLACES, ' + ((it.source.match(/(\d{4}) release/) || [])[1] || '') + ' release (county estimates rolled up to the state; the count computed)';
-  const push = (o) => { if (!o.a) throw new Error('[vital-stats] ' + o.id + ' counts zero states'); out.push(Q(Object.assign({ unit: 'states', pre: '', suf: '', dp: 0 }, o))); };
+  const push = (o) => { if (!o.a) throw new Error('[vital-stats] ' + o.id + ' counts zero states'); out.push(Q(Object.assign({ unit: 'states', pre: '', suf: '', dp: 0,
+    sub: 'Count the states that meet the line, from 0 to 50. DC is not counted.' }, o))); };
 
   let m = metric('patient/obesity');
   let list = over(m.vals, 100 / 3);
@@ -866,19 +862,20 @@ function facilityQuestions() {
     }
   };
   const byState = tally(H, (h) => h.s);
-  perState('hosp-count', byState, ['TX', 'CA', 'KS', 'UT', 'RI'], (S, id) => pickSaying(id, [`How many hospitals in ${S} were ${onList}?`,
-    `Count every hospital in ${S} on CMS's Care Compare list in ${P.label}. How many is that?`]));
+  perState('hosp-count', byState, ['TX', 'CA', 'KS', 'UT', 'RI'], (S) => `How many hospitals in ${S} were ${onList}?`,
+    { sub: 'Every kind counts: general, critical access, psychiatric, children\'s, VA and military hospitals.' });
   // the same count as a place among the fifty
   for (const st of STATES_50) {
     const place = placeOf(byState, st, 'highest', STATES_50);
     const top = STATES_50.slice().sort((a, b) => (byState[b] || 0) - (byState[a] || 0) || a.localeCompare(b))[0];
     add({ id: 'rank-hosp-count-' + st.toLowerCase(), cat: 'Hospitals', unit: 'place', pre: '#', f: 'rank', st, k: 'hosp-count', more: st !== 'UT',
       q: `Rank the fifty states by how many hospitals they have on CMS's Care Compare list (${P.label}), most first. What place is ${STATE_NAMES[st]}?`,
+      sub: 'Place 1 has the most hospitals. Answer a place from 1 to 50.',
       a: place, why: place === 1 ? `${STATE_NAMES[st]} has ${commas(byState[st])}, the most.` : `${STATE_NAMES[st]} has ${commas(byState[st] || 0)}; ${STATE_NAMES[top]} has the most, ${commas(byState[top])}.` });
   }
   const cahBy = tally(H.filter((h) => h.t === 'cah'), (h) => h.s);
-  perState('hosp-cah', cahBy, ['TX', 'KS', 'UT'], (S, id) => pickSaying(id, [`How many critical access hospitals in ${S} were ${onList}?`,
-    `${S} had how many critical access hospitals on CMS's Care Compare list in ${P.label}?`]));
+  perState('hosp-cah', cahBy, ['TX', 'KS', 'UT'], (S) => `How many critical access hospitals in ${S} were ${onList}?`,
+    { sub: 'Small rural hospitals with 25 inpatient beds at most, paid by Medicare on their costs.' });
   const fpBy = tally(H.filter((h) => h.o === 'fp'), (h) => h.s);
   perState('hosp-for-profit', fpBy, ['TX', 'LA'], (S) => `How many for-profit hospitals in ${S} were ${onList}?`, {},
     { LA: `That is ${commas(fpBy.LA / byState.LA * 100, 0)} percent of the ${commas(byState.LA)} Louisiana hospitals on the list.` });
@@ -904,8 +901,7 @@ function facilityQuestions() {
     a: (dChain['DaVita'] + dChain['Fresenius Medical Care']) / D.length * 100,
     src: dial.src.replace('counted', 'share computed'),
     why: `DaVita has ${commas(dChain['DaVita'])} and Fresenius ${commas(dChain['Fresenius Medical Care'])}.` }));
-  perState('dialysis', dBy, ['TX', 'UT'], (S, id) => pickSaying(id, [`How many dialysis facilities in ${S} were on CMS's list in ${P.label}?`,
-    `Counting every dialysis facility on CMS's list in ${P.label}, how many were in ${S}?`]), dial);
+  perState('dialysis', dBy, ['TX', 'UT'], (S) => `How many dialysis facilities in ${S} were on CMS's list in ${P.label}?`, dial);
 
   // ambulatory surgical centers
   const asc = {
@@ -918,8 +914,8 @@ function facilityQuestions() {
   const terrName = { PR: 'Puerto Rico', GU: 'Guam', VI: 'the U.S. Virgin Islands', AS: 'American Samoa', MP: 'the Northern Mariana Islands' };
   add(Object.assign({}, asc, { id: 'asc-total', cat: 'Hospitals', q: `How many ambulatory surgical centers were in CMS's ASC quality file in ${P.label}?`,
     a: A.length, why: `${commas(terrN)} of them are in ${joinNames(territories.map((k) => terrName[k] || k))}.` }));
-  perState('asc', aBy, ['CA', 'MD', 'UT'], (S, id) => pickSaying(id, [`How many ambulatory surgical centers in ${S} were in CMS's ASC quality file in ${P.label}?`,
-    `Outpatient surgery centers: how many in ${S} were in CMS's ASC quality file in ${P.label}?`]), asc);
+  perState('asc', aBy, ['CA', 'MD', 'UT'], (S) => `How many ambulatory surgical centers in ${S} were in CMS's ASC quality file in ${P.label}?`,
+    Object.assign({ sub: 'Ambulatory surgical centers do outpatient surgery: patients go home the same day.' }, asc));
   return out;
 }
 
@@ -946,7 +942,9 @@ function priceQuestions() {
     return r;
   };
   const out = [];
-  const add = (o) => out.push(Q(Object.assign({ cat: 'Money', unit: 'dollars', pre: '$', suf: '', dp: 0, src, checked, st: 'UT' }, o)));
+  const add = (o) => out.push(Q(Object.assign({ cat: 'Money', unit: 'dollars', pre: '$', suf: '', dp: 0, src, checked, st: 'UT',
+    sub: o.id.indexOf('cash') > -1 ? 'The price the hospital posts for a patient paying cash, without insurance.'
+      : 'The gross charge is the hospital\'s full list price, before any insurer\'s negotiated discount.' }, o)));
 
   const mri = rows('mribrain');
   const mriMin = mri.reduce((a, b) => (b.gross < a.gross ? b : a));
@@ -994,6 +992,7 @@ function validate(bank) {
     if (!Number.isInteger(q.year) || q.year < 2000 || q.year > 2100) throw new Error(tag + 'bad year');
     if ('st' in q && !STATE_NAMES[q.st]) throw new Error(tag + 'unknown state ' + q.st);
     if (q.more && !q.st) throw new Error(tag + 'a state-game-only question must name its state');
+    if ('sub' in q && !(typeof q.sub === 'string' && /\.$/.test(q.sub) && !/\?/.test(q.sub) && q.sub.length <= 140)) throw new Error(tag + 'a sub line is one or two plain sentences, 140 characters at most');
   }
   const text = JSON.stringify(bank);
   if (text.includes('\u2014')) throw new Error('[vital-stats] an em dash got into the bank');
@@ -1040,4 +1039,4 @@ if (require.main === module) {
     ' (' + Object.keys(perSt).length + ' states, ' + Math.min(...counts) + ' to ' + Math.max(...counts) + ' each)');
 }
 
-module.exports = { build, OUT };
+module.exports = { build, OUT, STATE_NAMES, CATS, Q, commas, round, joinNames, ordinal, median, titleCase, pickSaying, tally };

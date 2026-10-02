@@ -405,6 +405,38 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
     **Renamed Vital Stats 2026-09-24.** Every file, the address (/secret-menu/vital-stats/), the code names (VitalStatsEngine,
     window.__vs, the vs- class prefix, vs- storage keys, the vs-room- relay channel), npm run build:vital-stats and
     npm run backend:check:vs. Verify 348/348, the phone gate clean, the real relay identical across three browsers.
+18. **Vital Stats, health system games, 2026-10-01** (David: "include some stats about specific hospital systems so we
+    could look at like Kaiser or Intermountain or somewhere on the east coast or HCA... a fun game that you can play with
+    people within your company"). **BUILT.** The lobby's third choice, A health system, opens a picker: Intermountain,
+    Kaiser, HCA and Northwell first, then every system that can fill a game (250), with a search. Questions about one
+    system's hospitals: beds, ICU beds, discharges, average stay, how full, Medicare and Medicaid share (managed care
+    counted), employees, residents, hospitals by state, its share of its home state, critical access and rural counts,
+    system totals, and the four named systems' own numbers read live on their own pages (clinics, caregivers, plan
+    members, revenue, births). The reveal strip lines up the system's hospitals with the asked one lit. Data: a new pull,
+    `npm run pull:hcris` (Medicare cost reports, fiscal year 2024 file). Proof: tests/vital-stats-systems.test.js (7) and
+    two engine tests, all 357 tests green, the phone gate clean at nine viewports, `node scripts/backend-check-vital-stats.js --sys`
+    (three real browsers over the real relay, an Intermountain game, every copy identical), shots in tmp/vs-sys/.
+    **DAVID, next:** read docs/HU-VITAL-STATS-INTERMOUNTAIN-CHECK-2026-10-01.md (31 rows, one per hospital) and say which
+    number is wrong. Then play one on the test server: the dev server on the home wifi, no staging branch (his call).
+    **Same day, after his play: ONE WORDING PER QUESTION** (David: rewording "leads to misinterpretation"). Every kind of
+    question reads one way and carries a line underneath saying how it is counted, in both banks; the retired sayings are
+    gone and tests hold that. 360/360 tests, the phone gate clean, both relay checks identical.
+    **Then TEAM PLAY, on his pick.** Up to 48 people in 2 to 8 teams, any member moves for the team, the first lock counts.
+    The table kit gained `inbox` and `spacing` (opt-in) so a big room stays under the relay's 100 messages a second.
+    365/365 tests; `node scripts/backend-check-vital-stats.js --teams` plays it over the real relay; the other two
+    multiplayer games' relay checks still pass. Next for him: a real company game.
+    **Then TRIVIA MODE, on his ask.** Game style: Guess and bet or Trivia. Trivia has no betting, seats up to 48 each for
+    themselves (or teams), scores by how far off (5 down to 1, plus 2 for the closest). 369/369 tests;
+    `node scripts/backend-check-vital-stats.js --trivia` (add --teams for both) over the real relay.
+    **Then TRIVIA BY DEFAULT, GAME LINKS AND QR CODE JOIN, on his ask.** New tables play trivia; the host's last setup
+    comes back; Copy game link; Create a room from the bots lobby; the room's QR code in its card and a Big screen view.
+    New kit file src/assets/js/hu-qr.js (tests/hu-qr.test.js). 377/377 tests, phone gate clean on the game and the secret
+    menu. The relay check now plays trivia by default and takes `--bet` for the betting game. NOT RUN: the relay went
+    offline that night (DECISIONS, NEEDS YOU); rerun `npm run backend:check:vs` and `-- --bet` once it is restored.
+    **Then the TOUCH-UP AND THE MOVE, on his ask.** The game lives at src/fun/vital-stats/ (address /fun/vital-stats/,
+    netlify.toml forwards the old one), on the Learn page's Fun shelf and in site search; thumbnails renamed fun-vital-stats.
+    The auditor's and the polish reviewer's tables are tmp/vs-polish/audit.md and polish.md; what was fixed and what was
+    left is in DECISIONS (LOG, 2026-10-01 late). hu-table.js warns a host once when the relay never answers. 380/380.
 
 ---
 

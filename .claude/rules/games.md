@@ -35,6 +35,10 @@ kit needs from any game that joins it (docs/HU-GAME-DESIGN-2026-09-06.md section
   and internet, with the join queue). A game adapts to the kit; it does not fork it.
 - The backend host is named in one place per game and must match the CSP; a test enforces it
   (`tests/backend-host.test.js` is the pattern).
+- A room bigger than about eight people turns on the kit's `inbox` (guests talk to the host alone,
+  by REST) and `spacing` (the host's broadcasts held apart as the room grows). The relay counts a
+  message once per receiver and the free plan allows 100 a second, so without them one busy moment
+  in a 24-person room disconnects people. Vital Stats' team play is the pattern (2026-10-01).
 
 ## Menus
 

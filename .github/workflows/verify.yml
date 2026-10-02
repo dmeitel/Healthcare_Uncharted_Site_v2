@@ -6,9 +6,17 @@
 #
 # keep-awake: the multiplayer backend is a free Supabase project, and free projects pause after
 # a week without a request. It paused on 2026-09-13 and nobody noticed until 2026-09-20. Every
-# three days this job makes one request to it. The host and the publishable key are read from
+# day this job makes one request to it. The host and the publishable key are read from
 # the game page itself, so there is nothing to configure in GitHub and nothing secret involved
 # (the publishable key ships inside the page by design).
+#
+# It paused AGAIN on 2026-10-01 while this job was passing. Supabase counts "user queries" to
+# the database (supabase.com/docs/guides/platform/free-project-pausing, checked 2026-10-02), and
+# the games only use Realtime, which is not a database query. This job used to read a table that
+# did not exist and accept the 404, but PostgREST answers that from its schema cache without
+# running a query, so it proved the project was up without keeping it up. Now it reads the real
+# one-row `keepalive` table, accepts only 200, and runs daily (the docs ask for a few queries a
+# day). A 404 means the table is missing: create it with the SQL in DECISIONS.md (2026-10-02).
 
 name: verify
 
@@ -17,7 +25,7 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    - cron: '0 12 */3 * *'
+    - cron: '0 12 * * *'
 
 jobs:
   verify:
@@ -45,13 +53,14 @@ jobs:
           URL=$(grep -o "const SUPA = { url:'[^']*'" "$PAGE" | sed "s/.*url:'//; s/'$//")
           KEY=$(grep -o "anonKey:'[^']*'" "$PAGE" | head -1 | sed "s/anonKey:'//; s/'$//")
           echo "pinging $URL"
-          # A table read, not the API root: the root wants a secret key (401 even when healthy),
-          # while a read of a table that does not exist reaches the database and comes back 404
-          # with a PostgREST body. A paused project has no DNS at all (curl reports 000) and one
-          # still starting answers 521 from Cloudflare, so 200 and 404 are the only "awake" codes.
+          # A real table read, so the database runs a query and Supabase counts the project as in
+          # use. A paused project has no DNS at all (curl reports 000), one still starting answers
+          # 521 from Cloudflare, and a 404 means the keepalive table is missing, which keeps
+          # nothing awake. Only 200 passes.
           code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' -H "apikey: $KEY" "$URL/rest/v1/keepalive?select=id")
           echo "backend answered $code"
           case "$code" in
-            200|404) exit 0 ;;
+            200) exit 0 ;;
+            404) echo "the keepalive table is missing, so this request ran no query and the project can still pause"; exit 1 ;;
             *) echo "the backend did not answer like a running project; it may have paused"; exit 1 ;;
           esac

@@ -52,6 +52,35 @@ additions stay cancelled until the page over page review is done.
 
 **2026-09-23, 10 answered: delete both.** David: "Delete the project and Verdant Thing. Those are not needed." Checked read-only first: `healthcareuncharted` (a09e2c0f) and `verdant-treacle-8c70aa` (9fdd2a68) have no custom domain, no aliases, no forms and no submissions; healthcareuncharted.com is served by `healthcare-uncharted` (12eaf952), which is untouched. The deletion itself is permanent, so it stays in David's hands: app.netlify.com, signed in as eitelmdavid@gmail.com, open each project, Project configuration, Danger zone, Delete project. Delete ONLY those two. The one WITH the hyphen, `healthcare-uncharted`, is the live site.
 
+**2026-10-01, night: the game relay is offline, and only you can bring it back.** RESOLVED 2026-10-02: David restored it
+and every relay check passed. Kept below for the record; the keepalive SQL in the next paragraph is the part still open. Every multiplayer room (Vital Stats,
+The Table, Device Assembly) runs through the free Supabase project at `swntgsmpcqyuapkkyaqj.supabase.co`. That address
+stopped existing in public DNS that night (checked against Google's and Cloudflare's resolvers), which is what a paused
+project looks like. The every-three-days keep-awake check passed at 17:53 UTC the same day and Supabase's status page shows
+no outage, so the dashboard will have to say why. Steps: supabase.com, sign in, open the project, and if it says Paused,
+press Restore. Same address, nothing to change on the site. Games with bots, and tabs of one browser, still work meanwhile.
+
+**2026-10-02, why it paused, and the one step that stops it happening again.** Supabase's own page on pausing
+(supabase.com/docs/guides/platform/free-project-pausing, read 2026-10-02) says a free project pauses after 7 days with
+too few "user queries" to its database, and that the owner gets a warning email about a week before. The games never
+query the database: rooms run on its live-messaging side, which does not count. The keep-awake check was reading a table
+that does not exist, and that answer comes back without the database running a query, so it showed the project was up
+without keeping it up. Claude changed the check to run every day and to pass only on a real read. It needs a real
+table to read, and creating one is a write to your Supabase account, so it is yours. After Restore, open the project,
+choose SQL Editor, paste these four lines, and press Run:
+
+    create table if not exists public.keepalive (id int primary key);
+    insert into public.keepalive (id) values (1) on conflict do nothing;
+    alter table public.keepalive enable row level security;
+    create policy "anyone can read the keepalive row" on public.keepalive for select to anon using (true);
+    grant select on public.keepalive to anon;
+
+(The fifth line was added 2026-10-02 after the first four ran: this project does not hand new tables to the public
+key on its own, and the read came back "permission denied" until the grant.)
+
+It holds one number and nothing else, so reading it reveals nothing. Until it exists, the daily check fails and emails you,
+which is the point: a passing check now means the project is actually being kept awake.
+
 **2026-09-23, theme pass: no new questions.** Every call in it was a build call (which deeper
 shade, which fix for a label on the hospital map's painted sky) and Claude made it; the screenshots
 are the veto. Two defects it found run as their own tasks, not here.
@@ -100,6 +129,98 @@ No decision needed. Listed so you can veto any of them.
 ---
 
 ## LOG
+
+- **2026-10-02, evening** KEEPALIVE TABLE DONE. David ran the five lines; the daily check's exact request now answers
+  200 with the one row, so it is a real database read that counts toward keeping the free project awake. The pause
+  question is closed; the daily schedule starts with the next push.
+
+- **2026-10-02, evening** THE FUN SHELF MOVED TO THE TOOLS PAGE on David's ruling ("Games and other things that we would
+  put in the Fun section should go under the Tools tab not the Learn tab and maybe have a subsection for just fun
+  tools"). The Tools page has a fourth shelf, Fun, after Learn & Play; both games ride the same tools list as every
+  other tool (cluster `fun`), the Tools tab lights up on them, their Leave rows and Alarm Fatigue's "Back to Tools"
+  links go to it, and an old link to the Learn page's Fun shelf lands on the new one. Claude's call: the addresses stay
+  /fun/alarm-fatigue/ and /fun/vital-stats/, so nothing already shared breaks. Verify 380 green, phone gate clean on
+  Tools, Learn and both games.
+
+- **2026-10-02, evening** GAME SERVER RESTORED by David; it resolves again. Over the real relay, all green: Vital Stats
+  trivia, betting, a health system game and teams (three browsers each, every copy identical), the hospital game's
+  resume and rejoin, Device Assembly's race, and a phone joining a room from the QR code read off the big screen. The
+  keepalive table was not there yet (404), so the SQL step above is still David's.
+
+- **2026-10-02** David on the pre-push list and the screenshots: "all looks good to me". Vital Stats stays featured (home
+  page and RSS). Still open before the push: the game server is offline (DNS checked again this morning, still gone), and
+  the real-relay check waits on it.
+
+- **2026-10-01, late** VITAL STATS TOUCHED UP AND MOVED TO THE FUN SHELF on David's ask ("a clean up or a touch up on the
+  UI for the whole tool and then we can move it to the tool section or the fun section in learn"). Claude's calls, veto
+  by looking: the Fun shelf, because Alarm Fatigue set the pattern there (/fun/<game>/, a card on the Learn page's Fun
+  shelf); the address is now /fun/vital-stats/ and the old one forwards with its room code; it is featured, so it leads
+  "New on the site" on the home page and goes out in the RSS feed, as Alarm Fatigue did at launch; it left the secret menu.
+  Two read-only reviews (the site auditor and the polish reviewer) found about fifty things; fixed: on any laptop or tablet
+  the lobby could not scroll, so the deal button was out of reach (the tool shell pinned the page); home turf never paid
+  in Trivia (now the closest guess gets its 2 twice, as betting doubles its 3); a game with bots now holds the answer until
+  Next instead of 10 seconds; Restart in the menu restarts (it used to leave), Esc opens the menu; a new screen starts at
+  its top and at its question; a lobby change swaps only the part that changed and keeps focus on the pressed control;
+  phones are no longer told to type "82k" on a keypad with no k; type under the floor, faked bold numbers, light-theme
+  chip edges, the BOT tag hidden on phones, a toast over the phone's button, a two-row toolbar in a room on an iPhone,
+  thirty-odd hand-set styles, and the table changing width from screen to screen. The shared table kit now tells a host
+  when the game server does not answer, for every multiplayer game. Left as Claude's call: no Settings card (the lobby's
+  Clock already gives Relaxed time); the explain-on-tap cards stay a phase for the three games named in CLAUDE.md. Proof:
+  380 tests, the phone gate clean on the game, Learn, the secret menu and the home page, every fix measured in a browser.
+
+- **2026-10-01, night** VITAL STATS: TRIVIA BY DEFAULT, GAME LINKS, QR CODE JOIN, BUILT on David's ask ("set as default
+  mode as trivia... select all the details before you send out the link... make something and send to somebody... a QR
+  code sign up for big screens"). A new table plays Trivia; Guess and bet is the other style. Claude's calls, veto by
+  playing: the host's last lobby comes back next visit (style, rounds, clock, source, teams, topics; never the bots); the
+  bots lobby has Create a room, and the settings come along; Copy game link turns a lobby's settings into a link anyone can
+  open and play at their own table, with fresh questions each time (the link carries settings, not a question list); a
+  room card shows its QR code on a laptop and has Big screen, which fills the screen with the code, the room letters, who
+  is in, live, and the Deal button; on a phone the same view opens from Show QR code. The QR code is drawn on the page by
+  a new kit file (src/assets/js/hu-qr.js), no outside library. Proof: 377 tests; 338 codes of every size decoded by an
+  independent reader; in real browsers the code read off a screenshot of the big screen opened the room on a second
+  screen, the count went to 2, and Deal started the game. The internet relay could not be tested that night (see NEEDS
+  YOU), so the joins ran over the same-browser transport.
+
+- **2026-10-01** VITAL STATS TRIVIA MODE, BUILT on David's ask ("a version of the game that doesn't have the betting...
+  a large trivia game with a fun group of people"). Lobby: Game style, Guess and bet or Trivia. Claude's calls, veto by
+  playing: no betting means no board, so trivia seats everyone up to 48 each for themselves (betting stays eight, the rest
+  watch, and switching styles moves people in and out); points by how far off, over or under: within 5 percent 5, 10
+  percent 4, 20 percent 3, 35 percent 2, 50 percent 1, and the closest guess 2 more; a rank question counts places off
+  instead (exact 5, one place 4, three 3, six 2, ten 1); trivia can run 15 rounds; a big room's reveal, rail and final
+  table show the top ten and you. Works with teams and with health system games. Proof: 369 tests, the real relay
+  identical for trivia alone and trivia in teams.
+
+- **2026-10-01** VITAL STATS TEAM PLAY, BUILT on David's pick ("Teams", for company-sized games). In a room the host picks
+  Play as: Each person or Teams, and 2 to 8 teams. Up to 48 people; everyone lands on the smallest team and can switch in the
+  lobby. Claude's calls, veto by playing: anyone on a team can type the team's guess and place its chips, and the first lock
+  counts ("Locked in by Dana" shows to the team); teams are named Day Shift, Night Shift, Swing Shift, Float Pool, Rapid
+  Response, Code Team, Charge Desk and Weekend Crew; bots can still sit in, as their own entries, in the places teams leave;
+  no home turf in team play; a team with nobody on it sits the game out. Under it, a change to the shared table kit every
+  multiplayer game uses, opt-in so the others are untouched: the relay (Supabase, free plan, checked live today) counts each
+  message once per receiver and allows 100 a second, so guests now send to the host alone and a big room's updates are spaced
+  out. Proof: 365 tests, three-browser real-relay checks for team play, a normal game and a health system game, and the
+  hospital game and Device Assembly relay checks still identical.
+
+- **2026-10-01** VITAL STATS QUESTIONS, ONE WORDING EACH, on David's read after playing: "there is some variation but I
+  think it also leads to misinterpretation... make it so it can't be misinterpreted even if there needs to be subtext".
+  Every kind of question now has ONE wording that names what is counted, where and when, and a line under it where a
+  definition decides the number ("Medicare Advantage plans included. Counted in days spent in a bed, not in people.").
+  The retired sayings ("Half the households earned more than...", "Out of every 100 adults, how many...") are gone and a
+  test keeps them gone; another test fails if the same fact is ever asked two ways. Claude's calls, veto by playing: the
+  9/24 variety rule loosened from a quarter of openings to a third, because "What percent of" now opens 28 percent of the
+  everyday mix and that sameness is the point; the line under the question shows while guessing, betting and at the
+  reveal. His other question, answered: 8 players a table (bots take seats), everyone past 8 watches; the relay's free
+  plan allows about 200 connections across all the games. What a company-sized table should be is his next call.
+
+- **2026-10-01** VITAL STATS HEALTH SYSTEM GAMES, BUILT on David's ask ("stats about specific hospital systems... a fun game
+  that you can play with people within your company"). Claude's calls, veto by playing: every system that can fill a game is
+  in the picker (250), his four first; Northwell Health is the East Coast pick; public numbers only, nothing from inside
+  Intermountain; Medicare and Medicaid shares count managed care (without it Primary Children's reads 13 percent Medicaid
+  instead of 44); the federal list's hospital count (31 for Intermountain) and the system's own (34, one virtual) are both
+  asked, never in one game; home turf is off in a system game; burn beds and the federal staff counts are left out because
+  they failed a spot check against hospitals David knows (McKay-Dee with 58 nurses). Open, and it is his to do, not a
+  decision: read docs/HU-VITAL-STATS-INTERMOUNTAIN-CHECK-2026-10-01.md and flag any wrong row. Same day, his call: no staging
+  branch, everything stays on main; the test server is the dev server on the home wifi.
 
 - **2026-09-24** PRE-PUSH QA, GREEN (David: "I will do a commit after you do a full scan QA run and test"). npm run qa on a
   clean build: build, types and tests ok, the viewport sweep clean on all 51 pages at nine viewports (54 minutes); Tier 2 held

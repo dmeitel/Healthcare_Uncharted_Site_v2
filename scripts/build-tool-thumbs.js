@@ -253,8 +253,8 @@ return {
        `<circle cx="${x}" cy="${y}" r="8" fill="${GGREEN}"/>`).join('')}
      <circle cx="1120" cy="120" r="18" fill="none" stroke="${GGREEN}" stroke-width="3" opacity=".5"/>`),
   // vital stats: the guesses laid out low to high, odds tabs on each, chips on the ones people trust, and the
-  // answer's marker landing just past the winning guess (closest without going over)
-  'sm-vital-stats': frame(
+  // answer's marker landing just past the winning guess (closest without going over). On the Fun shelf since 2026-10-01.
+  'fun-vital-stats': frame(
     `${[0, 1, 2, 3, 4, 5].map(i => { const x = 120 + i * 178, win = i === 3;
        return `<rect x="${x}" y="150" width="150" height="200" rx="14" fill="${win ? GGREEN : PANEL}" opacity="${win ? 0.35 : 1}" stroke="${win ? GGREEN : LINE}" stroke-width="${win ? 5 : 3}"/>
         <rect x="${x + 16}" y="168" width="62" height="26" rx="6" fill="${AMBER}"/>

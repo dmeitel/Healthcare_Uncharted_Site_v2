@@ -29,6 +29,11 @@ findings table.
 - dvh-only heights on map shells match the multi-lens precedent. Only hu-global carries the
   vh fallback pair.
 
+- Vital Stats (ruled deliberate in the 2026-10-01 brief): the big-screen room code at
+  clamp(48px, 8vw, 112px) for projector legibility; the local `#vs, .vs-picker{ --felt… }` palette
+  (tool and game pages carry deliberate local palettes); engine and page in one file, since the
+  `<script id="vs-engine">` block is already separate.
+
 ## Accepted or queued, not defects
 
 - The 768px media block awaiting the 699/1099 migration. Queued.

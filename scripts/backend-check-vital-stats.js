@@ -5,19 +5,30 @@
    laptop joins by typing the code, and a phone opens the invite link, all
    over the REAL relay (the Supabase project the page names, not the fake
    bus the unit tests use). The table auto-seats all three, the host deals,
-   everyone guesses and bets through the page's own buttons for two rounds,
+   everyone guesses (and with --bet, bets) through the page's own buttons for two rounds,
    and the script asserts that both guests' copies of the game are byte for
    byte the host's. Screenshots of the host and the phone land in tmp/.
 
    It talks to the internet, so it is NOT part of `npm test`. Default
    target is the local dev server; pass the live URL to check prod.
+   --sys plays a health system game instead (2026-10-01): the host picks
+   Intermountain Health in the picker, which loads that system's file on
+   the host only, and the guests must still see every question.
 ================================================================ */
 'use strict';
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
-const URL = process.argv[2] || 'http://localhost:8080/secret-menu/vital-stats/';
+const ARGS = process.argv.slice(2);
+const SYS = ARGS.includes('--sys');
+/* --teams (2026-10-01): two teams, the host and the phone on one, so a teammate's lock and chips land for both */
+const TEAMS = ARGS.includes('--teams');
+/* trivia (2026-10-01): no betting; the guesses go straight to the answer and the points. A new table plays trivia, so it
+   is the default; --bet plays the betting game instead (--trivia is still accepted and changes nothing) */
+const BET = ARGS.includes('--bet');
+const TRIVIA = !BET;
+const URL = ARGS.find(a => !a.startsWith('--')) || 'http://localhost:8080/fun/vital-stats/';
 const OUT = path.join(__dirname, '..', 'tmp');
 const T = 25000;
 /** @param {string} msg */
@@ -67,14 +78,44 @@ setTimeout(() => fail('the whole check took longer than three minutes'), 180000)
   console.log('the laptop guest set a home state; the host has it');
 
   await host.click('[data-set="rounds"][data-val="5"]');
+  if (SYS) {
+    await host.click('[data-set="where"][data-val="sys"]');
+    await host.click('dialog.vs-picker[open] [data-sys="intermountain-health"]').catch(() => fail('the host\'s system picker never offered Intermountain'));
+    await host.waitForFunction(() => window.__vs.G.settings.sys === 'intermountain-health' && !!document.querySelector('[data-go="start"]:not([disabled])'), null, { timeout: T }).catch(() => fail('the host never loaded the system'));
+    for (const g of [laptop, phone]) await g.waitForFunction(() => window.__vs.G && window.__vs.G.settings.sysName === 'Intermountain Health', null, { timeout: T }).catch(() => fail('a guest never heard which system was picked'));
+    console.log('the host picked Intermountain Health; both guests see it');
+  }
+  if (BET) {
+    await host.click('[data-set="style"][data-val="bet"]');
+    for (const g of [laptop, phone]) await g.waitForFunction(() => window.__vs.G && window.__vs.G.settings.style === 'bet', null, { timeout: T }).catch(() => fail('a guest never heard the table turn to Guess and bet'));
+    console.log('the host picked Guess and bet; both guests see it');
+  } else {
+    for (const g of [laptop, phone]) await g.waitForFunction(() => window.__vs.G && window.__vs.G.settings.style === 'trivia', null, { timeout: T }).catch(() => fail('a guest\'s new table is not trivia'));
+    console.log('a new table plays trivia; both guests see it');
+  }
+  if (TEAMS) {
+    await host.click('[data-set="teams"][data-val="4"]');
+    await host.click('[data-set="teams"][data-val="2"]');
+    for (const g of [laptop, phone]) await g.waitForFunction(() => window.__vs.G && window.__vs.G.settings.teams === 2, null, { timeout: T }).catch(() => fail('a guest never heard the table turn to teams'));
+    const teams = await host.evaluate(() => Object.fromEntries(Object.entries(window.__vs.G.people).map(([s, p]) => [p.name, p.team])));
+    if (teams.Dana !== teams.Kim || teams.Dana === teams.Sam) fail('the teams did not split as expected: ' + JSON.stringify(teams));
+    console.log('two teams: Dana and Kim on ' + teams.Dana + ', Sam on ' + teams.Sam);
+  }
   await host.locator('[data-go="start"]:visible').first().click();
   for (let round = 1; round <= 2; round++) {
     for (const [p, v] of /** @type {[import('playwright').Page, string][]} */ ([[host, '100'], [laptop, '120'], [phone, '90']])) {
+      if (TEAMS && p === phone) {
+        // the phone's teammate (the host) already locked: the phone must see the team's guess locked, with no box to type in
+        await p.waitForFunction(() => /Locked in by Dana/.test((document.getElementById('vsAnsZone') || {}).textContent || ''), null, { timeout: T })
+          .catch(() => fail('round ' + round + ': the phone never saw its teammate\'s lock'));
+        continue;
+      }
       await p.waitForSelector('#vsAns', { timeout: T }).catch(() => fail('round ' + round + ': no question arrived'));
       await p.fill('#vsAns', v);
       await p.locator('[data-go="lockans"]:visible').first().click();
     }
-    for (const p of [host, laptop, phone]) {
+    for (const p of TRIVIA ? [] : [host, laptop, phone]) {   // trivia has no board
+      if (TEAMS && p === host) continue;                     // the phone places the team's chips this time
       await p.waitForSelector('.vs-slot:not([disabled])', { timeout: T }).catch(() => fail('round ' + round + ': the board never opened for betting'));
       await p.locator('.vs-slot:not([disabled])').last().click();
       await p.waitForTimeout(300);
@@ -82,7 +123,12 @@ setTimeout(() => fail('the whole check took longer than three minutes'), 180000)
     }
     await host.waitForSelector('#vsTruth', { timeout: T }).catch(() => fail('round ' + round + ': no reveal on the host'));
     await phone.waitForSelector('#vsTruth', { timeout: T }).catch(() => fail('round ' + round + ': no reveal on the phone'));
-    if (round === 1) { await host.screenshot({ path: path.join(OUT, 'vital-stats-host.png') }); await phone.screenshot({ path: path.join(OUT, 'vital-stats-phone.png') }); }
+    if (SYS) {
+      const seen = await phone.evaluate(() => ({ sys: window.__vs.G.q && window.__vs.G.q.sys, src: (document.querySelector('.vs-src') || {}).textContent || '' }));
+      if (seen.sys !== 'intermountain-health') fail('round ' + round + ': the phone was asked a question from outside the system');
+      if (!/Source: \S/.test(seen.src)) fail('round ' + round + ': the phone\'s reveal has no source line');
+    }
+    if (round === 1) { const tag = SYS ? '-sys' : TEAMS ? '-teams' : BET ? '-bet' : '';await host.screenshot({ path: path.join(OUT, 'vital-stats-host' + tag + '.png') }); await phone.screenshot({ path: path.join(OUT, 'vital-stats-phone' + tag + '.png') }); }
     await host.waitForTimeout(600);
     await host.locator('[data-go="next"]:visible').first().click();
     console.log('round ' + round + ' played');
