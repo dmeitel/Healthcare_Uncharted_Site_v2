@@ -125,7 +125,7 @@ const METRIC_SOURCE_META = {
   'cms.gov/cciio/resources/data-resources/marketplace-puf':  { name: 'CMS Marketplace Public Use Files', tag: 'CMS', org: 'government', desc: 'ACA Marketplace enrollment and premium files.' },
   'meric.mo.gov/data/cost-living-data-series':               { name: 'MERIC Cost of Living Data Series', tag: 'MERIC', org: 'government', desc: 'State cost of living index relative to the U.S. average.' },
   'aha.org/statistics/fast-facts-us-hospitals':              { name: 'AHA Fast Facts on U.S. Hospitals', tag: 'AHA', org: 'clinical', desc: 'Bed counts, hospital counts, and ownership mix from the AHA Annual Survey.' },
-  'aha.org/telehealth': { name: 'AHA · Telehealth', tag: 'AHA', org: 'clinical', desc: 'Hospital telehealth adoption figures.' },
+  'data.cms.gov/summary-statistics-on-use-and-payments/medicare-medicaid-service-type-reports/medicare-telehealth-trends': { name: 'CMS · Medicare Telehealth Trends', tag: 'CMS', org: 'government', desc: 'Medicare telehealth use by state from Original Medicare claims, updated quarterly.' },
   'acgme.org/about/publications-and-resources/graduate-medical-education-data-resource-book': { name: 'ACGME Data Resource Book', tag: 'ACGME', org: 'clinical', desc: 'Residency program and filled-position counts.' },
   'aanp.org/advocacy/state/state-practice-environment':      { name: 'AANP State Practice Environment', tag: 'AANP', org: 'clinical', desc: 'Full, reduced, or restricted NP practice authority by state.' },
   'kff.org/medicaid/issue-brief/status-of-state-medicaid-expansion-decisions-interactive-map': { name: 'KFF Medicaid Expansion Tracker', tag: 'KFF', org: 'policy', desc: 'Which states adopted ACA Medicaid expansion, updated continuously.' },

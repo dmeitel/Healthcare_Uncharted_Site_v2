@@ -252,6 +252,15 @@ dialog.hu-dlg.vs-big{ width:min(1400px, calc(100vw - 32px)); }
 .vs-why{ margin-top:10px; font-size:var(--t-body); line-height:1.55; }
 .vs-src{ margin-top:8px; font-size:var(--t-fine); color:var(--mut); }
 .vs-src a{ color:var(--acc); }
+/* the link to where the number lives on the site: a full touch target, in the page's button family */
+.vs-seep{ margin-top:10px; }
+.vs-see{ display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:8px 14px; border-radius:10px; border:1px solid var(--edge);
+  background:var(--card2); color:var(--acc); font:600 var(--t-fine)/1.35 var(--font); text-decoration:none; transition:border-color .12s, transform .12s; }
+.vs-see::after{ content:'\2197'; content:'\2197' / ''; font-size:1.1em; }   /* the arrow is drawn, not read: the hidden words say it */
+.vs-see:hover{ border-color:var(--acc); }
+.vs-see:active{ transform:translateY(1px); }
+.vs-see:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; }
+.vs-see-new{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .vs-pay{ display:grid; gap:6px; margin-top:14px; }
 .vs-pay div{ display:flex; justify-content:space-between; gap:10px; padding:8px 12px; border-radius:10px; background:var(--card2); font-size:var(--t-fine); }
 .vs-pay div > span{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0; }
@@ -316,7 +325,7 @@ dialog.hu-dlg.vs-big{ width:min(1400px, calc(100vw - 32px)); }
 }
 @media (max-width:420px){ .vs-spread figcaption{ flex-wrap:wrap; } .vs-spread-rank{ order:-1; flex-basis:100%; text-align:left; } }
 @media (prefers-reduced-motion: reduce){
-  .vs-btn, .vs-slot, .vs-timer .fg, .vs-toast{ transition:none; }
+  .vs-btn, .vs-slot, .vs-timer .fg, .vs-toast, .vs-see{ transition:none; }
   .vs-bets .ch{ animation:none; }
   .vs-slot.win{ transform:none; }
 }
@@ -859,7 +868,7 @@ function parseNum(str){
 /* some answers are already counted in a unit (556.6 billion dollars): a typed "556b" means 556 of THOSE */
 function scaleOf(q){ const t = ((q && q.suf) || '') + ' ' + ((q && q.unit) || ''); return /trillion/i.test(t) ? 1e12 : /billion/i.test(t) ? 1e9 : /million/i.test(t) ? 1e6 : /thousand/i.test(t) ? 1e3 : 1; }
 function readGuess(q, str){ const v = parseNum(str); if (!isFinite(v)) return NaN; const sc = scaleOf(q); return sc > 1 && /[a-z]/i.test(String(str)) ? v / sc : v; }
-function hintFor(q){ if (q && q.pre === '1 in ') return 'Type the N in one in N, like 8.'; if (q && q.pre === '#') return 'Type a place, like 12. Number 1 is the top.'; if (q && q.pre === '$' && q.dp === 2) return 'Type dollars and cents, like 38.50.'; const sc = scaleOf(q); if (sc === 1e12) return 'Type the number of trillions, like 4.5.'; if (sc === 1e9) return 'Type the number of billions, like 450.'; if (sc === 1e6) return 'Type the number of millions, like 12.5.'; if (sc === 1e3) return 'Type the number of thousands, like 85.'; if (q && q.suf === '%') return 'Type a percent, like 12.5.'; if (touch()) return 'Type a number, like 82000.'; if (q && q.pre === '$') return 'Type a number. 82k, 1.2M and 4.9 trillion all work.'; return 'Type a number. 82k and 1.2M both work.'; }
+function hintFor(q){ if (q && q.pre === '1 in ') return 'Type the N in one in N, like 8.'; if (q && q.pre === '#') return 'Type a place, like 12. Number 1 is the top.'; if (q && q.pre === '$' && q.dp === 2) return 'Type dollars and cents, like 38.50.'; const sc = scaleOf(q); if (sc === 1e12) return 'Type the number of trillions, like 4.5.'; if (sc === 1e9) return 'Type the number of billions, like 450.'; if (sc === 1e6) return 'Type the number of millions, like 12.5.'; if (sc === 1e3) return 'Type the number of thousands, like 85.'; if (q && q.suf === '%') return 'Type a percent, like 12.5.'; if (touch()) return 'Type a number. Big ones go in full, since the keypad has no k or M.'; if (q && q.pre === '$') return 'Type a number. 82k, 1.2M and 4.9 trillion all work.'; return 'Type a number. 82k and 1.2M both work.'; }
 /* a phone's number pad has no k or M, so a touch screen is never told to type them */
 function touch(){ return !!(window.matchMedia && matchMedia('(hover: none)').matches); }
 function big(v, dp){
@@ -958,10 +967,11 @@ function loadSystem(id){
     if (!res.ok) throw new Error('system ' + res.status);
     return res.json();
   }).then(data=>{
-    const src = data.src || {}, subs = data.subs || [];
+    const src = data.src || {}, subs = data.subs || [], sees = data.sees || [];
     (data.questions || []).forEach(q=>{
       if (q.s && src[q.s]){ Object.assign(q, src[q.s]); delete q.s; }
       if (q.u != null){ if (subs[q.u]) q.sub = subs[q.u]; delete q.u; }
+      if (q.v != null){ if (sees[q.v]) q.see = sees[q.v]; delete q.v; }
       BANK[q.id] = q;
     });
     if (G) G.bank = BANK;
@@ -1455,7 +1465,7 @@ function drawAnswer(redraw){
     z.innerHTML = `<form id="vsAnsForm" autocomplete="off">
       <label class="vs-lbl" for="vsAns">${teamPlay() ? esc(p.name) + '\'s guess' : 'Your guess'}${q.pre === '1 in ' ? ': one in how many' : q.pre === '#' ? ': a place' : q.unit ? ', in ' + esc(q.unit) : ''}</label>
       <div class="vs-ans">${q.pre ? `<span class="fx" aria-hidden="true">${esc(q.pre)}</span>` : ''}
-        <input id="vsAns" inputmode="decimal" enterkeyhint="done" placeholder="${q.pre === '1 in ' ? '8' : q.pre === '#' ? '12' : q.pre === '$' && q.dp === 2 ? '38.50' : q.suf === '%' ? '12.5' : scaleOf(q) > 1 ? '450' : touch() ? '82000' : '82k'}" aria-describedby="vsEcho">
+        <input id="vsAns" inputmode="decimal" enterkeyhint="done" aria-describedby="vsEcho">
         ${q.suf ? `<span class="fx" aria-hidden="true">${esc(q.suf.trim())}</span>` : ''}</div>
       <div class="vs-echo" id="vsEcho">${esc(hintFor(q))}</div>
       ${teamPlay() ? `<p class="vs-note vs-note--top">Anyone on ${esc(p.name)} can lock it in. The first lock counts for the team.</p>` : ''}
@@ -1569,6 +1579,7 @@ function drawRevealTrivia(redraw){
     <p class="vs-why">${esc(winners)}${esc(turfLine(L))} ${esc(q.why || '')}</p>
     ${spreadHtml(q)}
     <p class="vs-src">Source: ${q.url ? `<a href="${esc(q.url)}" target="_blank" rel="noopener">${esc(q.src)}</a>` : esc(q.src)}${q.year ? ', ' + esc(q.year) : ''}${q.checked ? ' &middot; checked ' + esc(q.checked) : ''}</p>
+    ${seeHtml(q)}
     <div class="vs-pay" role="group" aria-label="Points this round">${rows}</div>
     <div class="vs-act">${nextHtml()}</div></section>`;
   countUp(q); markSeen(q.id);
@@ -1590,12 +1601,27 @@ function drawReveal(redraw){
       <p class="vs-why">${esc(winners)}${esc(turfLine(L))} ${esc(q.why || '')}</p>
       ${spreadHtml(q)}
       <p class="vs-src">Source: ${q.url ? `<a href="${esc(q.url)}" target="_blank" rel="noopener">${esc(q.src)}</a>` : esc(q.src)}${q.year ? ', ' + esc(q.year) : ''}${q.checked ? ' &middot; checked ' + esc(q.checked) : ''}</p>
+      ${seeHtml(q)}
       <div class="vs-board" role="group" aria-label="The guesses, with the winner marked">${G.slots.map((s,i)=>slotCard(s, i, { play:false, win:w })).join('')}</div>
       <div class="vs-pay" role="group" aria-label="Chips this round">${rows}</div>
       <div class="vs-act">${nextHtml()}</div></section>`;
     countUp(q); markSeen(q.id);
     say('The answer is ' + fmtVal(q, q.a) + '. ' + winners + turfLine(L));
   }
+}
+/* WHERE TO SEE IT (2026-10-02, David: questions should link "to our different maps or data sets"). The bank names a
+   view of a site tool as "tool|address|what you will see" (scripts/build-vital-stats.js, section 6). It shows on the
+   answer screen only, since the view would give the answer away, and opens a new tab so the game keeps its seat. */
+const SEE_TOOLS = {
+  plm: { url:'/tools/multi-lens-map/', name:'U.S. Population Health Map' },
+  ops: { url:'/tools/operators-map/', name:'U.S. Hospital Operations Map' },
+  ct:  { url:'/tools/career-tree/', name:'Healthcare Career Tree' }
+};
+function seeHtml(q){
+  if (!q || !q.see) return '';
+  const [t, addr, label] = String(q.see).split('|'), tool = SEE_TOOLS[t];
+  if (!tool || !label) return '';
+  return `<p class="vs-seep"><a class="vs-see" href="${esc(tool.url + (addr ? '?' + addr : ''))}" target="_blank" rel="noopener">See ${esc(label)} on the ${esc(tool.name)}<span class="vs-see-new"> (opens a new tab)</span></a></p>`;
 }
 /* the reveal's one action: the host moves on (a game with bots waits for it); a guest waits for the host or the clock */
 function nextHtml(){

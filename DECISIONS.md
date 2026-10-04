@@ -85,12 +85,25 @@ which is the point: a passing check now means the project is actually being kept
 shade, which fix for a label on the hospital map's painted sky) and Claude made it; the screenshots
 are the veto. Two defects it found run as their own tasks, not here.
 
+**2026-10-02, a new Rounds piece: the broken arm week.** David asked for it in the conversation, which Claude reads
+as lifting the 2026-09-21 content hold for this one piece (CLAUDE.md precedence 1 over SPRINT.md). Plan and interview
+notes: private/broken-arm-status.md (the raw notes moved to an archive outside the repo on 2026-10-03), in a folder git ignores, because this repo is public on GitHub and
+the notes hold his medical details. R1 and R2 are live now; T3 waits its turn by rule 3.
+
 | # | The question | Why it matters | Claude recommends | Open since |
 |---|---|---|---|---|
+| R1 | **Does the broken arm piece name the places and the people?** | It decides whether the piece reads as a patient's week or as a review of named facilities. Your telling (2026-10-02) puts both EDs and the ortho clinic inside your employer's medical group, so this is your employer's care and billing, written from inside. | No clinician names. Places described by what they are and how far apart: a small community ED ten minutes away, the trauma center down the road, an ortho clinic two towns south. Whether to run it past your employer's policy on public writing first is yours. | 2026-10-02 |
+| R4 | ANSWERED 2026-10-02, David: "yes go wide". Built as the default: up to 1120px on a desktop, this figure only, phones unchanged; checked at 700, 1024, 1280 and 1920 with no sideways overflow. Original question: **Can the broken arm swim lane run wider than the text column on a desktop?** Up to 1120px instead of the 760px column; phones are unchanged. Screenshots 1 and 4 in the chat, 2026-10-02. | It is a new layout move for the site (CLAUDE.md: no new layout concepts without asking). In the column each lane is about 95px and most rows wrap to four lines; wide, they read in one or two, and the closed week is 1,696px instead of 1,962px. | Yes, for this figure only, on desktop only. The text around it stays in the column. | 2026-10-02 |
+| R3 | ANSWERED 2026-10-02 (later superseded by the swim lane he described the same day): the grid, with the iceberg's best parts folded in. David: "the previous version I think did look this overall is a little bit more confusing so I think there's some middle ground." Built: the step card names the tool's own boxes, any box can be followed across the week, and the whole week shows the most-hit boxes. The iceberg version stays in private/ for reference only. Original question: **Which map carries the broken arm piece: the iceberg bands or the grid?** Both are built as private previews (private/broken-arm-map/preview-berg.html and preview.html), screenshots in the chat 2026-10-02. | You asked why the grid was chosen; it was Claude's call, made without showing you an alternative. The iceberg version is your own System Layers tool with the week lit through it and a tap on any card to see every step that hit it; the grid shows the week's order and shape in one picture. | The iceberg version: it is the map you meant, it teaches a reader your tool, and its counts (Billing 9 times, Registration 6) make the point on their own. The order in time lives in the prose. | 2026-10-02 |
+| R2 | ANSWERED 2026-10-03, David: hold it. His manager reads it first, and it waits until after his next follow-up visit. Later the same day David moved it to the secret menu for review ("I don't think my website gets that much traffic I think hiding it in the secret menu is fine"), under the name "A Routine Fracture", accepting that the site and this repo are public: /secret-menu/a-routine-fracture/, noindex, out of the sitemap and site search, listed on the secret menu's "In the Back" shelf. The files in src/ are the working copy from here on. Original question: **Ship the broken arm piece now, or hold it until the bills come?** | The money is mostly underneath the waterline still. It surfaced once: a payment at the surgery center when you believed you had already met your out-of-pocket maximum (amount in the private notes, kept out of this public file). | Write it now while the week is fresh. That payment is the money node, and whether it comes back is the open question; add a dated update when the explanations of benefits land. | 2026-10-02 |
+| R5 | **Does the broken arm piece stay in your own voice, or become a hypothetical case?** | Your manager is reviewing your first-person account. A hypothetical case puts distance between the piece and your employer, but it rewrites all twenty steps in the third person and loses the reason you wanted to share it ("this is what I used to keep my mind busy"). | Keep it first person for your manager's read, and convert only if your manager or the policy asks for distance. If it does, the honest version is a teaching case "based on the author's own week", not a made-up patient. | 2026-10-03 |
+| S1 | ANSWERED 2026-10-03, David: "go with both, show new programs and campus marks". BUILT the same day (log). Original question: **Should the Schools layer show accredited programs that have not graduated anyone yet?** Noorda College of Osteopathic Medicine and Weber State's PA program are the local examples; nationally that is 52 PA, 9 DO, 7 MD and 56 RT programs, plus a handful of schools too new for the federal data at all. | The map draws a program only when it graduated people in 2023-24, so a student looking for schools today does not see the newest ones. The cross-check (docs/HU-SCHOOLS-CROSSCHECK.md) has the full list from the accreditors themselves. | Yes, marked as new with no graduate count, kept out of every count and rank so the numbers stay the federal year's. | 2026-10-03 |
+| S2 | ANSWERED 2026-10-03 with S1, BUILT (log). Original question: **Should a program's other campuses get their own marks?** Rocky Vista University teaches DOs in Ivins, Utah, but IPEDS counts them in Parker, Colorado, so Utah shows no Rocky Vista mark. Today the Parker card says "Also taught at Billings, MT · Ivins, UT". | 42 DO, 29 RT, 11 PA and 7 MD campuses sit away from where the federal data counts them. A mark is where someone looking in Utah would look. | Yes: a campus mark that opens the main school's card and says its graduates are counted there. | 2026-10-03 |
 | T1 | **Should the cost of living tool become the standard for every tool?** That means closing its design phase and writing its ten rules into DESIGN.md: answer first, explanations behind an "i", one fold, views, plain words, a source and date on every number, links that restore, the chart rules, little chrome, the phone as the shorter side. | You asked to take its lessons to the other tools. Until the rules are written down, nothing holds a tool to them and each rebuild argues from scratch. The full list with every tool measured against it is docs/HU-TOOL-REVIEW-2026-09-23.md. | Yes. What is left on the tool (about 546 words to sort) becomes ordinary maintenance under the written rules. | 2026-09-23 |
-| T2 | **System Layers shows 113 numbers with no source.** Cut them, or have Claude hunt a source for each and cut what has none? | 301 "By the numbers" tiles; 188 name a source, 113 do not, and some read as invented ("8m 42s" average time, "98.2%" eligibility accuracy). The tool has no source line or date at all. | Cut them now. The 188 sourced tiles stay, and any that matter come back later with a source. | 2026-09-23 |
+| T2 | ANSWERED 2026-10-03, David picked "cut them now and keep the ones that cite a source". BUILT the same night (log). Original question: **System Layers shows 113 numbers with no source.** Cut them, or have Claude hunt a source for each and cut what has none? | 301 "By the numbers" tiles; 188 name a source, 113 do not, and some read as invented ("8m 42s" average time, "98.2%" eligibility accuracy). The tool has no source line or date at all. | Cut them now. The 188 sourced tiles stay, and any that matter come back later with a source. | 2026-09-23 |
 | T3 | **Which tool gets the cost of living treatment next?** Naming it opens its design phase. | Every tool not named stays under the change budget, so defects get fixed but nothing is redesigned. | The Vendor Directory (70 screens tall on a phone, the list starts below the first screen), then the Career Tree. | 2026-09-23 |
 | G1 | **Uncharted Regional's staff strain never builds. Make it real?** | A playtest ran 28,571 quarters: strain peaked at 7 and no nurse ever quit, because it recovers 12 a quarter and can rise at most 9. So the strain warning never shows and the $45k a quarter Float Pool buys nothing. | Yes: strain recovers a little slower than the fastest it can build, so a hospital run flat out for a few quarters starts losing nurses and the Float Pool earns its price. | 2026-09-23 |
+| M1 | ANSWERED 2026-10-03, David: "go, fix the telehealth measure next". BUILT the same night (log): replaced with Medicare telehealth use from CMS. Original question: **The Population Health Map's "Telehealth adoption" measure has no traceable source.** Keep it, or take it off the map until one is found? | Its source reads "Mixed: AHA, payer reports" and its method "various sources"; the one link was AHA's telehealth page, which moved (fixed 2026-10-03), and nothing on it gives state numbers. It is one of the older hand-entered measures the Vital Stats builder already leaves out because spot checks found some that no longer match. | Take it off until a state-level source is found, the way T2 recommends for the System Layers tiles. The other 71 measures keep their sources. | 2026-10-03 |
 | 16 | WAITING (rule 3). **The rest of the clinical flags in the game review.** Alarm Fatigue's and three of Device Assembly's are ANSWERED (log, 2026-09-23). Left: Level 3's dry-gas line (Level 3 was rebuilt without it 2026-09-23, keeping the game's own dry side; log), the capnography connector and Level 2's title in Device Assembly; ED flow in ER Charge; the payer spread in both hospital games. Section 4 of docs/HU-GAME-REVIEW-2026-09-23.md. | They are RT and clinical calls a reviewer cannot make, and a respiratory audience will screenshot any that are wrong. | The dry-gas line first: the one piece of Level 3 still the game's guess. The payer spread is verified: RAND puts private plans at 254 percent of Medicare in 2022; the games use about 120. | 2026-09-23 |
 | 17 | WAITING (rule 3). **The other four expansions.** Alarm Fatigue's is ANSWERED and BUILT 2026-09-24 (real or nuisance; play it before the push, log). Left: Device Assembly, the order changes mid-shift; Uncharted General, payer contract offers; ER Charge, triage at the door plus EMS calling ahead; Regional, a board that forgives one miss. docs/HU-GAME-EXPANSION-2026-09-23.md, with two alternatives for each. | An expansion changes a game's rules, so choosing one opens that game's design phase. | Yes to all four, each after that game's fixes. ER Charge waits until you choose to open it. | 2026-09-23 |
 
@@ -129,6 +142,310 @@ No decision needed. Listed so you can veto any of them.
 ---
 
 ## LOG
+
+- **2026-10-03, very late, after the cut** SYSTEM LAYERS GETS ITS SOURCE LINE (David: "go, add the source line next"). The
+  last tool without one. Its strip (behind the ⓘ, like every tool) now reads: "An editorial map of how care moves, not
+  a dataset · each number on a card names its publisher in brackets; numbers with no source removed Oct. 3, 2026." The
+  date says only what was done that day: every number was checked for a named publisher, not each figure re-verified.
+  A test now holds every public tool page to having a source line (all ten do; the secret menu's Data Observatory is
+  exempt as an internal page). 412 tests; phone gate clean.
+
+- **2026-10-03, very late** SYSTEM LAYERS KEEPS ONLY SOURCED NUMBERS (T2, David: cut the unsourced ones, keep
+  the ones that cite a source). Of 301 "By the numbers" tiles, 113 named no source, and 12 more had brackets that said
+  what, not who ("(Avg.)", "(US)", "(individual)", "(STEMI)"). All 125 are gone from the file itself, not hidden, since
+  the repo is public: among them "8m 42s" average registration time, "98.2%" eligibility accuracy, "#1 Market Share"
+  and "99.9% Uptime SLA" on the EHR card. Two real figures had their source in their words and were kept with a proper
+  tag after a check against IRS Revenue Procedure 2023-23: the 2024 HDHP minimum deductible ($1,600) and HSA limit
+  ($4,150), self-only. 176 numbers remain, every one naming its source; 35 cards now show no numbers and read cleanly
+  without the section (what happens, who, which systems, the pain points). A test fails if an unsourced number comes
+  back. Found on the way and fixed: at 700 to 768 wide the breadcrumb bar clipped a deep trail, so on Registration it
+  showed "Healthy Patient → Minor Illness" and hid the card you were on; it now scrolls and opens on its end. Still open
+  from the tool review for this tool: a source line and date for the page. 410 tests; phone gate clean.
+
+- **2026-10-03, last of the night** NEUTRAL MEASURES SHOWN AS NEUTRAL (David: "go, fix the neutral measures next").
+  The Population Health Map drew its 15 measures with no better or worse (median age, the population shares, hospital
+  and critical access counts, Medicare enrollment share, Certificate of Need scope, household size, Medicare
+  telehealth use) on the red-to-teal "worse → better" scale, so a young state read red, and its card said
+  "#51 of 51, 1 = best" (Utah's median age). They now shade slate to amber under "lower → higher", the Career Tree's
+  pay ramp, so no color is new; rank "1 = highest" with no good or bad tint; the rankings list reads "Highest first";
+  and a comparison says "FL higher", not "better". Measures with a better end are unchanged (the uninsured rate still
+  reads worse → better, "UT better"). The Hospital Operations Map's county shading only offers measures with a
+  better end, so it needed nothing. DESIGN.md Tier 3: "Only a measure with a better end says better". Checked at 360 and
+  1280, light and dark. 408 tests; phone gate clean.
+
+- **2026-10-03, later** THE TELEHEALTH MEASURE FIXED (M1, David: "go, fix the telehealth measure next"). The Population
+  Health Map's "Telehealth adoption" claimed the share of outpatient visits by telehealth, from "mixed: AHA, payer
+  reports", with numbers nothing could trace (every one a round quarter point, and North Dakota the highest). No public
+  source gives that for every state and payer, so the measure is now what one does: Medicare telehealth use, from
+  CMS's Medicare Telehealth Trends (release of 2026-09-16, the full year 2025): the share of people in Original
+  Medicare who had a telehealth visit, out of those with any service Medicare allows by telehealth. National 23.3%;
+  California 40.3% highest, Iowa 10.1% lowest, Utah 17.6% (checked against the live CMS API). North Dakota, the old
+  top, is 10.4%. Its card says whose visits it counts (Original Medicare only, not Medicare Advantage or private
+  plans). New pull, `node scripts/pull/telehealth.js --write`, which finds CMS's current file each quarter. The map
+  also stopped drawing an invented history for it: a fixed 8% a year growth made a smooth climb, while CMS's claims
+  show 47.9% in 2020 falling since, so the measure shows its real year only. Old links to "telehealth-adoption" still
+  open it, and the Atlas's two telehealth tiles still point to it. On the way: the accreditor pull wrote its file on a
+  dry run (pull/all.js runs every pull), now fixed and tested for every pull. Seen, not fixed here (its own task): the
+  map draws its 15 neutral measures as if higher were better ("worse → better", "1 = best"). 405 tests; phone clean.
+
+- **2026-10-03, late** SUPPLIER DATA REFRESHED (David: "go, refresh the supplier data next"). The map's equipment
+  supplier, optical, orthotics and pharmacy layers now come from CMS's Medical Equipment Suppliers release of
+  2026-09-27, fetched 2026-10-03. They had been built from a June 6 copy: the build reused its cached download forever
+  and nothing printed its age, so even this morning's supply-type work ran on June data. Now `npm run build:suppliers --
+  --refresh` downloads the current release, and every file and the supplier card say which release it is ("released
+  Sept. 27, 2026, checked Oct. 3, 2026"; the card used to say "June 2026 pull" by hand). What changed: pharmacies
+  40,606 to 40,617 (766 new, 755 gone), home equipment 6,367 to 6,263, optical 5,023 to 4,922, orthotics 4,566 to
+  4,462. The per-state pharmacy files the map loads were rebuilt to match, and 573 hospital cards' same-ZIP pharmacy
+  counts moved with them (nothing else on those cards changed). Two defects found on the way: rebuilding the pharmacy
+  files also rewrote the map's state outlines from an older source missing Puerto Rico (put back from the commit;
+  the builder now has a pharmacy-only mode and refuses to drop a state), and the search pill read "Search 0
+  pharmacies" after picking a state until its pharmacies loaded (now it recounts). One more seen in the screenshots: on
+  a phone, a long value squeezed a one-word label under itself ("SPECIALTY" on a supplier card); labels now keep their
+  longest word whole, and the program, campus and hospital cards were rechecked after. Tests hold the release date, one
+  release across all four files, and the pharmacy files matching the list. 402 tests; phone gate clean.
+
+- **2026-10-03, night** NEW PROGRAMS AND CAMPUS MARKS (David: "go with both, show new programs and campus marks",
+  S1 and S2). The Schools layer now draws, as hollow mortarboards and hollow program buttons, what the accreditors list
+  and the federal year does not count: 76 accredited programs with no graduates yet at schools already on the map
+  (Weber State's PA program shows as a hollow button in its pop-out and a "New, no graduates yet" row on its card), 17
+  new schools, 7 schools outside the federal data (Noorda, Meritus, Orlando's osteopathic college, Alice L. Walton,
+  Kaiser Permanente's school, USUHS, and the military programs at Fort Sam Houston as one mark), and 64 campuses whose
+  graduates count under their main school (Rocky Vista in Ivins, Utah and Billings, Montana; LECOM's four campuses;
+  Penn State in Hershey). Each mark's card says why it is hollow, where it was placed (the school's federal location,
+  CoARC's street address through the Census geocoder, an address checked on the school's own site, or the center of the
+  city the accreditor names) and who accredits it; a campus card opens its main school. They live in their own map
+  source, so no count, rank, ring or list changes: Utah still shows 3 PA programs. Only strong name matches become
+  marks (weaker calls stay in the report), schools outside the federal data come only from the hand-checked table, and
+  the four hollow marks that would sit on a filled school step a few pixels aside (Noorda beside Rocky Mountain
+  University). Search finds them ("noorda", "rocky vista utah"). Reading the first list by hand caught five wrong
+  matches before any reached the map (St. Mary's Medical Center in West Virginia matched to a college in Indiana, among
+  them); the rules and eight more hand pairs fixed them. DESIGN.md Tier 3: "Hollow means on the map, outside the counts".
+  401 tests; phone gate clean on the three new card kinds.
+
+- **2026-10-03, evening** THE ACCREDITOR CROSS-CHECK (David: "go, start the accreditor cross-check", after asking how we
+  know the school data is solid). Every program the Schools layer draws from IPEDS is now held against the accreditor's
+  own list: LCME (MD), AACOM (DO), ARC-PA (PA), CoARC (RT), CCNE and ACEN (nursing), all public pages read 2026-10-03.
+  `npm run pull:accred` saves names, places, statuses and dates (never a director's email or phone; a test holds that);
+  `npm run check:schools` matches each program to a federal school and writes docs/HU-SCHOOLS-CROSSCHECK.md. Results:
+  every MD and DO program on the map is on its accreditor's list, and every accredited one is accounted for. Not in the
+  federal data: Noorda, Meritus, Orlando COM, Alice L. Walton, Kaiser Permanente's school, and the military schools.
+  Three schools were renamed in 2026 after the federal year (Mississippi College, the MGH Institute, SHSU's osteopathic
+  college; checked against their own announcements). One real defect, fixed: 18 respiratory therapy programs
+  (Salt Lake Community College, Carrington College's campuses, Mandl, Kettering, Highline) file their degrees under the
+  old "Respiratory Therapy Technician" code, which the map did not count. It now does, at associate and bachelor's: RT
+  went from 375 schools to 393 and 6,495 graduates to 6,880; Utah now has four RT programs, not three. Vital Stats
+  rebuilt (3,675 questions). Program cards for MD, DO, PA and RT now say who accredits them and any other campus
+  ("Rocky Vista University ... Also taught at Billings, MT · Ivins, UT"). Nursing stays in the report: accreditation is
+  voluntary there, and DNP doctorates are filed under too many codes to call. A test fails if the school file changes
+  without a fresh check, or if a hand-checked pair outlives its accreditor row. 400 tests; phone gate clean.
+
+- **2026-10-03, last** THE SCHOOLS MAP FOLDED INTO THE HOSPITAL OPERATIONS MAP (David: "take it and absorb it into the
+  healthcare operations map", with a school icon that pops out into the program icons when selected, and good search
+  for schools and programs). Schools is now a layer on the hospital map (Layers, or ?layers=school), with a Programs
+  pill beside Types. A school is ONE mark, a mortarboard, however many programs it lists: the three Rocky Mountain
+  marks in south Provo were its PA, NP and DNP programs fanned around one address, which read as three schools. Tap a
+  school and its programs pop out around it on spokes, one button each in the program's shape and color; a button
+  opens that program's card (graduates, place in the state, share of the state's graduates, nearest other program),
+  and Back returns to the school. The school card lists its programs and its three nearest hospitals, which open
+  their own cards. Search finds schools and programs with the layer off ("respiratory therapy utah" gives Weber State,
+  Utah Valley and Utah Tech; picking one turns the layer on and opens its RT card). Rings count schools as their own
+  slice. The /tools/healthcare-schools-map/ page, its Tools card, thumbnails and share card are gone; the operations
+  map's card and share card now say healthcare schools. All 344 Vital Stats school questions now open the operations
+  map with the Schools layer on, and their answers recompute from the same file in the tests. Noorda College of
+  Osteopathic Medicine (Provo) is NOT in the federal college data at all: it only became eligible for federal student
+  aid after its first class graduated in 2025, and the IPEDS year on the map is 2023-24. Phone gate clean on four
+  views; checked in a browser at 360 and 1280, light and dark.
+
+- **2026-10-03, later still** C1 ANSWERED: RINGS (David: "go with B, rings"). Both facility maps now draw a cluster as a
+  ring sliced by what is in it, in the icons' colors, with the count in the middle, and break into the real icons a zoom
+  level sooner (clusterMaxZoom 7, was 10; a 30px catch radius, was 46). The ?look= switch and the spread-only path are
+  deleted; DESIGN.md Tier 3 (the instrument grammar) now says "a cluster shows its mix". Checked in a browser on both
+  maps, dark and light, phone and desktop: a tap on a ring zooms in, and a filter rebuilds the rings (critical access
+  only gives all-gold rings). The phone gate's floating-over-a-control check measured overlap only, so it flagged the
+  rings where they pass UNDER the drawer and the map's credit button; it now asks the browser what is painted on top at
+  the overlap, and a temporary test page proved it still flags a caption painted over a button (clickable or not) and
+  skips one hidden under a panel. 394 tests; phone gate clean on both maps, the Population Health Map and Vital Stats.
+
+- **2026-10-03, late night** HOSPITALS UNDER THE SCHOOLS, AND THREE CLUSTER LOOKS TO PICK FROM (David: "overlay the
+  nearest healthcare systems or hospitals next to Med schools or nursing schools... a toggleable", and the blue bubbles
+  could be "a better way... help with granularity"). Built: the schools map has a Hospitals layer (Layers, or
+  ?hospitals=on), muted grey crosses under the school icons, never counted with the programs; a tap opens a short
+  hospital card (type, beds, stars, system, ER) that links to its full card on the hospital map; a state or county card
+  counts the hospitals there while the layer is on; and every school card lists its three nearest hospitals with miles,
+  beds and system (Utah Valley University: Orem Community 1.6 mi, Timpanogos Regional 2.3, Aspen Grove Behavioral 3.4).
+  RN programs became circles so the cross means only a hospital on that map. For the clusters, two looks are built
+  behind a temporary ?look= switch: A, spread (icons from zoom 8 instead of 11, a smaller catch radius), and B, rings
+  (spread plus a ring around each cluster sliced by what is inside, in the icons' colors). Comparison pictures went to
+  David; question C1 below. Proof: 394 tests, phone gate clean on both maps, with the hospital layer on and on a school
+  card.
+
+- **2026-10-03, night** STEP 5, MAP POLISH (David: "go, start step 5 map polish"). Six fixes, each a defect:
+  (1) On a phone, a scoped view squeezed the search box ("Search 3,596 equipment suppliers" showed a sixth of itself):
+  the back chip now reads short on a phone ("◀ U.S.", "◀ UT", "◀ Exit"; the full sentence stays its spoken label), and
+  with a place open the box drops its count (the List button and the card carry it). Both facility maps.
+  (2) The phone gate counted a card that a link opened (?fac=, ?state=, ?sys=) as 120px of chrome on both U.S. maps; it
+  now treats an open detail sheet the address asked for as content, the way it already treated a dialog. Checked first
+  that the sheet is closed at rest on all five pages that have one, so a sheet open on a bare address still counts.
+  (3) The Population Health Map's year control faded whole to 50% on a one-year measure, so the map showed through and
+  the year went dim; now only its disabled arrows are faint. (4) Vital Stats' answer box showed a big grey 82000 (82k on
+  a desktop) on every question, which anchors a guess and read as nonsense on "how many schools in Utah" (answer: 3); the
+  box is empty now and the hint underneath says how to type big numbers without naming one. (5) Source links on the
+  Population Health Map: the RN and RT staffing measures pointed at BLS pages that no longer exist (now the May 2022
+  state estimates, their vintage), AHA's telehealth page moved, and six more redirected after agency site moves; all
+  point at the live page now (17 measures), and the PLACES pull writes the new address too. Census table links answer a
+  script with 403 but open in a browser, so they stay. (6) The data observatory now lists the cost report file and the
+  school file, their sources, pull scripts and the schools map (77 nodes, 101 links). Looked into and left: the "found
+  null" console warning on zoom comes from OpenFreeMap's light basemap itself (it shows with none of our code loaded,
+  and not on the dark style). Proof: 394 tests, phone gate clean on both facility maps, the Population Health Map and
+  Vital Stats, including the scoped views that failed before; the schools map's national counts still read off the
+  search box.
+
+- **2026-10-03, evening** STEP 4, EQUIPMENT SUPPLIER TYPES ON THE HOSPITAL OPERATIONS MAP (David: "go, start step 4
+  equipment supplier types"). CMS's supplier file lists what each location carries, 86 categories in CMS's own words; the
+  map had never read that column. Now the home equipment, orthotics and optical layers can be filtered by what a supplier
+  carries, in 13 plain groups: oxygen; CPAP and BiPAP; ventilators and airway care; nebulizers; wheelchairs, scooters and
+  walkers; hospital beds, lifts and commodes; diabetes supplies; feeding and infusion; wound, ostomy and urology; braces
+  and prostheses; glasses and contacts; stimulators and other devices; Part B drugs. Utah has 77 home equipment
+  suppliers and 48 carry oxygen. Claude's calls, veto by looking: the groups (every CMS category sits in exactly one;
+  the build names any new category CMS adds so it is not lost); a supplier shows when it carries ANY chosen group, the
+  way hospital types work; a "Supplies" readout pill beside Layers and Types while an equipment layer is on; the filter
+  rides the link (?supplies=oxygen); pharmacies are left out, since their lists are drugs and glucose meters. A
+  supplier's card now has a kicker that says what it is, its CMS specialty in plain case ("medical supply company with
+  respiratory therapist"), whether it accepts Medicare assignment (Medicare.gov: agreeing to charge only the deductible
+  and coinsurance; about a third of home equipment suppliers do), its supply groups as chips and every CMS category
+  behind a disclosure. Dropped: the competitive bidding flag, which is zero for every supplier. Fixed in passing: the
+  orthotics layer's suppliers drew with the long-term acute hospital icon and showed no count on their layer chip,
+  because the file names that kind "orthotics-prosthetics". Data: the same June 2026 pull, rebuilt; pharmacy and state
+  count files came out byte-identical. CMS updated the supplier file 2026-09-27; refreshing it is one command and also
+  refreshes the pharmacies. Proof: Utah's oxygen count on the map equals the file's (48 of 77); a new test holds every
+  category to one group and every supplier's mask to its categories; 394 tests; the hospital map's 290 and the schools
+  map's 339 answer checks re-run after the engine change; phone gate clean on both maps. A filtered state view on a
+  phone still trips the two step 5 items (the squeezed search box, a card counted as chrome).
+
+- **2026-10-03, later** STEP 3, VITAL STATS SCHOOL QUESTIONS (David: "go, add the Vital Stats school questions"). 344 new
+  questions in the Workforce category, built from the same school file the Healthcare Schools Map draws, so every
+  answer is on the map: how many U.S. schools awarded each of the seven programs; how many RN, RT, PA, MD and DO degrees
+  the country awarded; the most one school awarded (Chamberlain's 7,843 RN degrees, with the online note; Boise State's
+  190 RT, mostly bachelor's; Indiana's 349 MDs; Lake Erie's 640 DOs; Lynchburg's 440 PAs); each state's count of RN, RT,
+  PA and MD schools; each state's place by RT schools and its RT and PA degrees; and two Utah programs (Weber State's
+  67 RT degrees, the University of Utah's 111 MDs). 26 are in the everyday mix, the rest deal in state games. Claude's
+  calls, veto by playing: one wording per question naming the degree and the school year, with a line under it saying
+  what counts (RN to BSN finishers included; DNP apart from NP); the answer line says when a school is mostly online
+  and when one degree level dominates. Each answer screen links to its view: the program filter (the search box now
+  says how many programs are on under a filter, on both maps), a state's card under that filter, or the school's own
+  card. Links: 3,505 of 3,669 everyday and state questions open on their exact number (was 3,166 of 3,325); the 5
+  national degree totals are near, since the map shows them by state and school, not added up. Proof: all 339 exact
+  answers read off the live map in a browser (200 views), a new test recomputes every one from the file, 391 tests,
+  phone gate clean on the game, the schools map and the hospital map.
+
+- **2026-10-03** STEP 3, THE HEALTHCARE SCHOOLS MAP (David: "go, start step 3 schools map"). New page,
+  /tools/healthcare-schools-map/, with its own card on the Tools page (Careers & Pay shelf), a share card and a
+  thumbnail. Every U.S. school that graduated at least one student in 2023-24 in seven programs: registered nursing
+  (2,016 schools), nurse practitioner (373), doctor of nursing practice (313), MD (149), DO (36), physician assistant
+  (259), respiratory therapy (375); 2,187 schools, 3,521 programs. Source: IPEDS, the federal college survey (NCES), by
+  a new pull, scripts/pull/ipeds.js. It runs on the Hospital Operations Map's own engine and shell (same camera,
+  drill, search, draw, locate, links), so a fix to one map is a fix to both; the hospital page's built HTML was proved
+  byte-identical before the two pages diverged on purpose. Claude's calls, veto by looking:
+  (1) One dot per program, so the chips and counts count programs; a school's programs fan out around its point so
+  each can be tapped. (2) A program's card: graduates that year by degree level, its place in the state, its share of
+  the state's graduates in that program, the nearest other school with it, the school's other programs, its website.
+  (3) DNP is its own program. The University of Utah files its nurse practitioner doctorate under registered nursing
+  at the doctorate level, and the DNP code mixes NP doctorates with DNPs for nurse leaders, so neither can be counted
+  as NP honestly. (4) Online schools are flagged. Western Governors puts 5,750 graduates in Salt Lake City, Chamberlain
+  11,392 in Illinois, Capella 8,000 in Minnesota; a card shows the share of students studying only online, and a state
+  card says how many of its graduates come from mostly online schools (Utah: 6,662 of 10,736). (5) The label says
+  provisional. NCES's schedule page lists the final 2023-24 data for 2026-09-08, but on 2026-10-03 the file was still
+  the provisional one posted 2025-09-21, so the pull reads each file's own dictionary for its release line and the
+  label will correct itself on a re-run. Also fixed on both maps: at tablet widths the loading message sat on the List,
+  Draw and Locate buttons whenever a card was open, and a shared link no longer says "tap a state to zoom in"; search
+  now matches every word in any order, and state names. Proof: 5 new tests (390 in all), phone gate clean on the new
+  page at all nine sizes, and the hospital map's 290 type and 548 state checks re-run after the engine change, all
+  matching (14 of the state ones read empty while other checks loaded the server, and matched on a second run alone). Left
+  open: on a phone, a card opened by a link counts as chrome over the budget (the same on hospital links; the
+  landscape problem in docs/HU-BUILD-HARDENING-2026-08-22.md); the data observatory map (scripts/build-datamap.js)
+  lists neither this file nor the cost report file.
+
+- **2026-10-02, late night** STEP 2, SYSTEM CARDS GAINED A BY TYPE BREAKDOWN (David: "go, add the by type line"). A
+  health system's card on the Hospital Operations Map now opens with "By type": its hospitals by kind, most first, then
+  how many sit outside a metro area by the county CMS records. Intermountain reads Acute care 23, Critical access 7,
+  Children's 1, Outside a metro area 11 of 31. Claude's calls, veto by looking: By type sits above By state because it is
+  short; the metro row says "outside a metro area" so it is never confused with the map's "Rural emergency" hospital
+  type; that row appears a moment after the card, when the Provider of Services file lands. Links: 23,606 of 23,641
+  health system questions now open on their exact number (was 23,316); the 35 left are the systems' own published
+  figures, which the map does not carry by design. Across both games 26,772 of 26,966. Also fixed in passing, a defect:
+  the search box's clear X showed all the time, even with nothing to clear, and at 360 on a system or state view it sat
+  on the placeholder text; it now shows only after a search pick. Proof: all 290 critical access and metro questions
+  across 174 systems matched the card in a browser, 385 tests, phone gate clean on the map page. Still open for step 5
+  (older than this work, same on a state view): at 360 a scoped view squeezes the search box to "Search…", and the load
+  message says "tap a state to zoom in" even when a link opened a system or a state.
+
+- **2026-10-02, late night** STEP 2, SYSTEM CARDS GAINED A BY STATE BREAKDOWN (David: "go, add the by state breakdown to
+  the system card"). A health system's card on the Hospital Operations Map now lists each state it is in, with its
+  hospitals there out of every hospital the map shows in that state and its share: Intermountain reads Utah 22 of 52
+  (42%), Colorado 5 of 97, Montana 3 of 63, Idaho 1 of 48. Claude's calls, veto by looking: biggest state first; the
+  state's total counts whatever hospital types are showing, like the rest of the card; the new sections are spaced like
+  the card's Services block. Links: 23,316 of 23,641 health system questions now open on their exact number (was
+  22,768); across both games 26,482 of 26,966. Left: a system's rural and critical access counts (290), the systems' own
+  published figures, and the everyday list's 137 near and 22 with no page. Proof: all 548 state and share questions across
+  148 systems matched the card in a browser, 385 tests, phone gate clean.
+
+- **2026-10-02, late night** STEP 2, HOSPITAL CARDS GAINED THEIR MEDICARE COST REPORTS (David: "go, put the cost report
+  numbers on the hospital cards"). On the Hospital Operations Map, a hospital's card now has a "Medicare cost report"
+  section: beds on its cost report, ICU beds, inpatient discharges, average stay, beds in use on an average day, Medicare
+  and Medicaid share of inpatient days, employees (FTE) and resident physicians (FTE), with the fiscal year and source. A
+  health system's card adds the same totals across its hospitals. Claude's calls, veto by looking: the numbers come from
+  a file the Vital Stats builder writes with the questions' own formulas, so a card and a question can never disagree
+  (a refactor proved it: all 251 game files came out byte for byte the same); where the cost report gives residents, the
+  card drops the older Provider of Services resident count (Intermountain Medical Center: 75 FTE on the cost report, 19 in
+  the old file); VA hospitals, which file no cost report, show no section. Links: 22,768 of 23,641 health system questions
+  now open on their exact number (was 349). Left: a system's hospitals in one state, its rural and critical access counts,
+  its share of a state, and the systems' own published figures. Proof: a new test checks every cost report question's
+  answer against the card its link opens (22,000+), the cards read right in a browser at phone and desktop, 385 tests,
+  phone gate clean.
+
+- **2026-10-02, late night** STEP 2, RANKINGS CLOSED (David: "go, do the rankings next"). Claude's calls, veto by playing:
+  the Population Health Map numbers places "1 = best", so the four rank questions where lower is better (adult obesity,
+  smoking, uninsured, high blood pressure) now ask "lowest first" and their answer is the place the map shows; income and
+  age were already "highest first", the map's way; a build check stops the two from drifting apart. The Hospital
+  Operations Map's state card gained one row, "Rank among the 50 states: #37 by count, most first", counting whatever
+  layers and hospital types are showing, the way a hospital's card already places it by beds; DC and the territories
+  get no rank. Links: 3,166 of 3,325 questions now open on their exact number (was 2,814). Proof: all 302 health ranks
+  match the map's own ranking rule, all 50 hospital ranks match the state card in a browser, 384 tests, phone gate clean
+  on both maps and the game. The work list is one living file now, docs/HU-VITAL-STATS-LINKS.md. Left there: the health
+  system cards (cost report numbers, most system questions), hospital counts the map cannot filter (96: five-star,
+  for-profit, no emergency room), 22 U.S. totals, 22 facts with no page, and a handful of counts and gaps.
+
+- **2026-10-02, late night** STEP 2, FIRST GAP CLOSED: PAY BY STATE IS ON THE POPULATION HEALTH MAP (David: "go, put pay
+  by state on the population health map"). The Clinical lens has ten new measures, one per job (registered nurse,
+  respiratory therapist, LPN, nurse practitioner, physician assistant, pharmacist, radiologic technologist, nursing
+  assistant, medical assistant, health services manager): BLS OEWS May 2025 state medians for all 50 states and DC, from
+  the same pull that feeds the game (scripts/pull/oews-states.js now writes both), source page checked live 2026-10-02.
+  Claude's calls, veto by looking: they sit in the Clinical lens next to the nurse and therapist staffing measures, as
+  "<job> median pay"; higher pay colors as better; the state card adds a "Per hour" row (the yearly median over BLS's
+  2,080-hour year), so the game's hourly questions land on their own number too; the card's national average now rounds
+  to whole dollars. The site says 72 metrics now (it said 62) in the tool card, the map's page description, its welcome
+  line and its share image. Links: 2,814 of 3,325 questions now open on their exact number (was 1,794); the next biggest
+  gap is the 352 state ranks. Proof: 384 tests, every pay measure opened on Utah with BLS's figure, the 45 distinct map
+  views the game links to all hold, phone gate clean on the map and the game.
+
+- **2026-10-02, night** VITAL STATS STEP 1 BUILT: EVERY ANSWER LINKS TO WHERE ITS NUMBER LIVES (David approved the
+  five-step order: links first, then the gaps they show, then schools, then equipment types, then map polish). The
+  answer screen now has one link, for example "See Utah on the U.S. Population Health Map", that opens a new tab on the
+  exact view: the measure and state (or county) on the Population Health Map; the hospital type, dialysis or surgery
+  layer, health system or single hospital on the Hospital Operations Map; the job or exam on the Career Tree. Claude's
+  calls, veto by playing: the link shows only after the reveal, so nobody can look an answer up mid-round; a new tab,
+  so the game keeps your seat. Coverage: 3,303 of 3,325 everyday and state questions and all 23,641 health system
+  questions link somewhere; 1,794 and 349 of them open on a view that shows the exact number. The rest open on the right
+  place without the number yet, and docs/HU-VITAL-STATS-LINKS.md lists them biggest first: pay by state for a
+  job (1,026, on no map), state ranks (352), hospital card numbers from the cost reports (most system questions), and 22
+  national facts with no page. That list is step 2. Proof: a test checks every link against the tool's own data, and in
+  a browser every distinct map view (35) and every linked Career Tree card (33) opened on the right thing.
+
+- **2026-10-02, evening** PUSHED (29b2430, "vital stats game") AND CHECKED LIVE. GitHub's check passed. On
+  healthcareuncharted.com: the game at /fun/vital-stats/; the old address answers 301 with its room code kept; the Tools
+  page's Fun shelf with both games; no games left on Learn; Vital Stats first in "New on the site"; sitemap, feed and
+  search carry it; every file it loads answers. Over the real relay on the live site: three browsers played trivia and
+  an Intermountain game identically, and a phone joined a room from the QR code read off the live big screen.
 
 - **2026-10-02, evening** KEEPALIVE TABLE DONE. David ran the five lines; the daily check's exact request now answers
   200 with the one row, so it is a real database read that counts toward keeping the free project awake. The pause

@@ -35,7 +35,8 @@ const P = (...p) => path.join(ROOT, ...p);
 const CACHE = P('scripts', '.cache');
 
 const DATASET = 'swc5-untb';                 // PLACES County Data, 2025 release
-const SOURCE_URL = 'https://data.cdc.gov/d/swc5-untb';
+// the dataset's own page (the short /d/swc5-untb form redirects here; checked 2026-10-03)
+const SOURCE_URL = 'https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-County-Data-20/swc5-untb';
 const VALUE_TYPE = 'Crude prevalence';
 const CACHE_VER = 'v2';                       // bump when the $select changes (invalidates old cache)
 

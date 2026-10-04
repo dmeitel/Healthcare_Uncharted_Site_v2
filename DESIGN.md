@@ -549,6 +549,26 @@ docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md.)
 - **Encode once.** When every feature prints its own value, the legend or ramp
   retires at rest and lives in the sheet. Nothing on screen encodes what the reader
   can already read.
+- **Only a measure with a better end says better** (David, 2026-10-03: "go, fix the neutral
+  measures next"). Red to teal means worse to better, so it is kept for measures where one end
+  is better. A measure with neither (age, population shares, counts, telehealth use) shades
+  slate to amber, the Career Tree's pay ramp, under a "lower → higher" legend; it ranks
+  "1 = highest", with no good or bad tint, and a comparison names the higher state.
+- **A cluster shows its mix** (David's pick over plain bubbles, 2026-10-03). On the facility
+  maps a cluster is a ring sliced by what is in it, in the icons' own colors, with the count
+  on the surface in the middle. Clusters break into the real icons a zoom level sooner than
+  the bubbles did (from zoom 8, a 30px catch radius), so a county shows its places.
+- **One place, one mark; its parts pop out** (David, 2026-10-03, when three program icons at
+  one Provo address read as three schools). A place that holds several things is a single
+  icon. Selected, its parts open around it on spokes as buttons in their own shapes and
+  colors (44px on touch, the open one ringed), and its own map label steps aside while
+  they are out. The card says the same list in words.
+- **Hollow means on the map, outside the counts** (David, 2026-10-03: "show new programs and
+  campus marks"). A thing the map should show but must not count (a program too new to have
+  graduates, a school outside the federal data, a campus counted under its main school) is
+  drawn as its icon's outline: a dark stroke under a light one, so it reads on both basemaps.
+  It lives in its own map source, so no count, rank, ring or list can reach it. A hollow mark
+  that would sit on a filled one steps a few pixels aside, and its card says why it is hollow.
 - **Comparison tables stand on rules, not in boxes** (the Ruled Figure, applied).
 - **Views are navigation, not controls** (David's call, career-tree phone QA
   2026-08-23). A tool with multiple SCREENS puts them in a bottom app-tab bar on

@@ -91,7 +91,7 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
    is item 10. Shots in tmp/tool-review-batch1/.
 4. **DECISIONS T1 to T3 (David).**
    - Make the ten rules the standard (DESIGN.md Tier 3).
-   - Cut System Layers' 113 unsourced numbers.
+   - Cut System Layers' 113 unsourced numbers. DONE 2026-10-03 (125 cut, 176 sourced kept; DECISIONS LOG).
    - Name the next tool. Recommended: Vendor Directory, then Career Tree.
 5. **A standing link check (Claude).** Turn the one-off outbound check into
    `scripts/link-check.js`. Run it monthly, NOT in the gate, because outside sites fail for
@@ -437,6 +437,21 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
     netlify.toml forwards the old one), on the Learn page's Fun shelf and in site search; thumbnails renamed fun-vital-stats.
     The auditor's and the polish reviewer's tables are tmp/vs-polish/audit.md and polish.md; what was fixed and what was
     left is in DECISIONS (LOG, 2026-10-01 late). hu-table.js warns a host once when the relay never answers. 380/380.
+    **Then the five-step data plan, David's yes 2026-10-02:** (1) links from every answer to the tool view that shows it,
+    BUILT 2026-10-02 (DECISIONS LOG); (2) fill the gaps the link report lists, docs/HU-VITAL-STATS-LINKS.md,
+    biggest first: pay by state for a job, state ranks, hospital card numbers from the cost reports, system cards by
+    state and by type, ALL BUILT 2026-10-02; (3) schools on the operations map's engine with their own Tools card (RN,
+    MD, DO, PA, NP, RT first), BUILT 2026-10-03 as /tools/healthcare-schools-map/ with DNP as a seventh program
+    (DECISIONS LOG), and its 344 Vital Stats school questions, BUILT the same day; then FOLDED INTO the operations
+    map as its Schools layer on David's call the same evening (one mark per school, programs pop out, search finds programs); (4) equipment supplier types,
+    BUILT 2026-10-03 (13 supply groups as a filter on the home equipment, orthotics and optical layers, and supplier
+    cards); (5) map polish from what people trip on, BUILT 2026-10-03 (six fixes, DECISIONS LOG). THE FIVE-STEP PLAN IS
+    DONE. M1, the telehealth measure with no source, FIXED 2026-10-03 (Medicare telehealth use from CMS; DECISIONS LOG). The supplier file refresh (CMS release of 2026-09-27) is
+    DONE 2026-10-03 (DECISIONS LOG). School data reliability, the accreditor cross-check: BUILT 2026-10-03 (npm run pull:accred, npm run
+    check:schools, docs/HU-SCHOOLS-CROSSCHECK.md, DECISIONS LOG); it found and fixed 18 RT programs filed under the old
+    technician code. S1 (show new programs) and S2 (campus marks) answered "go with both" and BUILT the same night: hollow marks
+    outside every count (DECISIONS LOG).
+    394/394, phone gate clean.
 
 ---
 
@@ -1219,6 +1234,16 @@ elements under the type floor at 360 and 23 at 699, all of them the board's pain
 DECISIONS question 1, David's call, and nothing here touched it.
 
 ## CHANGES
+
+- 2026-10-02 · **A new Rounds piece, inserted by David in conversation.** His own broken-arm week,
+  mapped onto the System Layers tool's eight layers. Read as lifting the content hold for this one
+  piece only; nothing else displaced. The working notes and the map preview live in private/, which
+  git ignores, because this repo is public and they hold his medical details (DECISIONS R1, R2).
+- 2026-10-03 · **The broken-arm piece is held for review.** David's manager reads a private copy first, and it
+  waits until after his next follow-up visit (DECISIONS R2 answered, R5 open). Same day, his call: it
+  moved to the secret menu as a review draft (/secret-menu/a-routine-fracture/, noindex), and src/ is
+  now the working copy. Not listed in Rounds until he says it ships. Renamed "A Routine Fracture" the same
+  day; the raw material moved to an archive outside the repo, to delete after it publishes.
 
 - 2026-09-23 · **Theme pass, inserted inside Sprint 0.** David: "the Dark and light themes on
   the website need to be reviewed and updated... every page needs to be able to do both." Every

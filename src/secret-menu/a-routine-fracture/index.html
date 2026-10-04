@@ -1,0 +1,853 @@
+---
+layout: base.njk
+title: "Tracing My Broken Arm Through the Healthcare System"
+description: "Draft case study: one patient's elbow fracture followed through two EDs, a surgery center and three EHRs, with the records, paperwork and costs each step set off."
+navPage: secret
+noindex: true
+eleventyExcludeFromCollections: true
+status: draft
+---
+{% block extraHead %}<link rel="stylesheet" href="/assets/css/rounds.css">{% raw %}<style>
+
+/* Layer inks: the System Layers tool's own hues; on a light page each is mixed half with black,
+   the same rule the swim lane used. */
+.L-med { --lc:#FF6B9D; } .L-ppr { --lc:#A78BFA; } .L-rec { --lc:#3FC98A; } .L-mon { --lc:#F6C358; } .L-ask, .L-me { --lc:#4ECDC4; }
+[class*="L-"] { --lk:var(--lc); }
+[data-theme="light"] [class*="L-"] { --lk:color-mix(in srgb,var(--lc) 50%,#000); }
+
+/* ── The week at a glance ─────────────────────────────────────────────── */
+.wk { margin:40px 0 44px; }
+.rounds-post .wk-title { font-family:var(--mono); font-size:var(--t-label); letter-spacing:.14em; text-transform:uppercase; color:var(--t3); margin:0 0 10px; }
+.wk-plot { position:relative; height:132px; margin-left:22px; }
+.wk-plot svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.wk-plot .seg { stroke:var(--t3); stroke-width:1; vector-effect:non-scaling-stroke; }
+.wk-plot .ahead { fill:var(--surface); }
+.wk-plot .ln { fill:none; stroke-width:2.5; vector-effect:non-scaling-stroke; stroke-linejoin:round; stroke-linecap:round; }
+.wk-plot .ln.p { stroke:var(--red); } .wk-plot .ln.a { stroke:var(--purple); }
+.wk-dot { position:absolute; width:7px; height:7px; border-radius:50%; transform:translate(-50%,-50%); }
+.wk-dot.p { background:var(--red); } .wk-dot.a { background:var(--purple); }
+.wk-y { position:absolute; left:-22px; transform:translateY(-50%); font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+.wk-ahead { position:absolute; top:50%; transform:translate(-50%,-50%); font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
+.wk-stops { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); margin:0 0 0 22px; border-top:1px solid var(--border); }
+.rounds-post a.wk-stop { display:block; min-height:44px; padding:10px 8px 8px; border:0; border-left:1px solid var(--border);
+  color:var(--t2); font-size:var(--t-fine); line-height:1.3; text-decoration:none; }
+.rounds-post a.wk-stop:hover { color:var(--t1); background:var(--surface); }
+.rounds-post a.wk-stop:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; }
+.wk-stop b { display:block; font-family:var(--mono); font-size:var(--t-label); font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--t3); margin-bottom:3px; }
+.wk-key { display:flex; flex-wrap:wrap; gap:6px 18px; margin:12px 0 0 22px; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+.wk-key i { display:inline-block; width:16px; height:3px; border-radius:2px; vertical-align:middle; margin-right:6px; }
+
+/* ── The story: sticky layer bar, then scene cards on a spine ─────────── */
+.st { position:relative; }
+.st-bar { position:sticky; top:calc(var(--art-top,0px) + var(--vw-h,0px)); z-index:20; margin:8px 0 0; padding:10px 0; display:flex; align-items:center; gap:12px;
+  background:var(--dark); border-bottom:1px solid var(--border); }
+.st-bar-l { flex:none; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
+.st-bar .hu-chiprail { flex:1 1 auto; min-width:0; }
+.st-chip .dot { width:9px; height:9px; border-radius:50%; background:var(--lk); flex:none; }
+.st-chip[aria-pressed="true"] { background:var(--lk); border-color:var(--lk); color:#0a1418; font-weight:700; }
+.st-chip[aria-pressed="true"] .dot { background:currentColor; }
+[data-theme="light"] .st-chip[aria-pressed="true"] { color:#fff; }
+.st-all[aria-pressed="true"] { background:var(--teal); border-color:var(--teal); color:#062024; }
+
+.rounds-post .st-list { list-style:none; padding:0; margin:24px 0 8px; }
+.rounds-post .st-list > li { display:grid; grid-template-columns:84px 28px minmax(0,1fr); padding:0; margin:0; counter-increment:none; position:relative; }
+.rounds-post .st-list > li::before { content:none; }
+/* rounds.css numbers every li under an ol, nested lists included: undo it inside the story */
+.rounds-post .st-list li li { counter-increment:none; }
+.rounds-post .st-list li li::before { content:none; }
+.st-when { padding-top:16px; text-align:right; font-family:var(--mono); font-size:var(--t-label); line-height:1.35; color:var(--t3); text-transform:uppercase; letter-spacing:.05em; }
+.st-when b { display:block; font-weight:500; color:var(--t2); }
+.st-rail { position:relative; }
+.st-rail::before { content:''; position:absolute; left:50%; top:0; bottom:0; width:2px; margin-left:-1px; background:var(--border); transition:background-color .3s; }
+.st-list > li:first-child .st-rail::before { top:24px; }
+.st-list > li:last-child .st-rail::before { bottom:auto; height:24px; }
+.st-rail::after { content:''; position:absolute; left:50%; top:18px; width:12px; height:12px; margin-left:-6px; border-radius:50%;
+  background:var(--dark); border:2px solid var(--border2); transition:background-color .3s, border-color .3s; }
+.st-list > li.seen .st-rail::before { background:color-mix(in srgb,var(--teal) 55%,transparent); }
+.st-list > li.seen .st-rail::after { background:var(--teal); border-color:var(--teal); }
+.st-list > li.ahead .st-rail::before { background:none; border-left:2px dashed var(--border2); width:0; }
+.st-list > li.ahead .st-rail::after { background:var(--dark); border:2px dashed var(--border2); }
+@media (prefers-reduced-motion: reduce) { .st-rail::before, .st-rail::after { transition:none; } }
+
+.st-box { margin:0 0 18px; padding:16px 18px 8px; background:var(--surface); border:1px solid var(--border); border-radius:10px; min-width:0; }
+.ahead .st-box { background:transparent; border-style:dashed; }
+.st-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:8px 18px; margin-bottom:10px; }
+.st-wh { display:none; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+.rounds-post .st-head h3 { font-family:var(--display); font-size:21px; font-weight:700; line-height:1.2; color:var(--t1); margin:0; }
+.st-pa { display:grid; grid-template-columns:auto auto auto; align-items:center; gap:3px 8px; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+.st-pa .bar { display:flex; gap:2px; }
+.st-pa .bar i { width:7px; height:10px; border-radius:1px; background:var(--raised); }
+.st-pa .p i.on { background:var(--red); } .st-pa .a i.on { background:var(--purple); }
+.st-pa .n { color:var(--t1); font-weight:600; min-width:1.4em; }
+.st-pa .note { grid-column:1 / -1; width:0; min-width:100%; color:var(--t3); }
+.st-cnt { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; padding:0; list-style:none; }
+.rounds-post .st-cnt li { font-family:var(--font); font-size:var(--t-fine); line-height:1.4; color:var(--t2); border:1px solid var(--border2); border-radius:4px; padding:2px 7px; margin:0; }
+.rounds-post .st-box p { font-size:var(--t-lede); margin:0 0 12px; }
+.st-chart { margin:0 0 14px; padding:2px 0 2px 12px; border-left:2px solid var(--border2); font-size:var(--t-sub); color:var(--t2); }
+.st-chart b { display:block; font-family:var(--mono); font-size:var(--t-label); font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--t3); margin-bottom:2px; }
+
+.st-under { display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; width:100%; min-height:44px; margin:2px 0 0; padding:8px 0;
+  background:none; border:0; border-top:1px solid var(--border); color:var(--t2); font-family:var(--font); font-size:var(--t-ui); text-align:left; cursor:pointer; }
+.st-under:hover { color:var(--t1); }
+.st-under:focus-visible { outline:2px solid var(--teal); outline-offset:2px; border-radius:4px; }
+.st-under .chev { width:8px; height:8px; flex:none; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(-45deg); margin:0 2px; transition:transform .15s; }
+.st-under[aria-expanded="true"] .chev { transform:rotate(45deg); }
+@media (prefers-reduced-motion: reduce) { .st-under .chev { transition:none; } }
+.st-dots { display:flex; flex-wrap:wrap; align-items:center; gap:3px; }
+.st-dots i { width:8px; height:8px; border-radius:50%; background:var(--lk); }
+.st-dots i.q { background:transparent; box-shadow:inset 0 0 0 1.5px var(--lk); }
+.st-dots .gap { width:4px; background:none; }
+
+.st-layers { display:grid; gap:14px; padding:6px 0 14px; }
+.st-layers[hidden], .st-L[hidden] { display:none; }
+.st-L { border-left:3px solid var(--lk); padding:1px 0 1px 12px; min-width:0; }
+.rounds-post .st-L h4 { font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--lk); margin:0 0 6px; }
+.rounds-post .st-L p { font-size:var(--t-sub); color:var(--t2); margin:0 0 8px; }
+.st-tags { display:flex; flex-wrap:wrap; gap:6px; list-style:none; padding:0; margin:0; }
+.rounds-post .st-tags li { font-size:var(--t-fine); line-height:1.35; color:var(--t2); border:1px solid color-mix(in srgb,var(--lk) 65%,transparent); border-radius:999px; padding:3px 10px; margin:0; }
+.rounds-post .st-tags li.q { border-style:dashed; }
+.st-asks { list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+.rounds-post .st-asks li { font-size:var(--t-sub); color:var(--t1); margin:0; padding-left:18px; position:relative; }
+.rounds-post .st-list .st-asks li::before { content:'?'; position:absolute; left:0; top:0; width:auto; height:auto; display:block; background:none; border:0; border-radius:0; font-family:var(--mono); font-size:inherit; font-weight:600; color:var(--lk); }
+
+.rounds-post .st h2, .st-scene { scroll-margin-top:calc(130px + var(--art-top,0px)); }
+
+/* ── His images inside the cards ──────────────────────────────────────── */
+.st-fig { margin:2px 0 14px; }
+.st-imgs { display:grid; grid-template-columns:repeat(var(--n,1),minmax(0,1fr)); gap:8px; }
+.st-zb { display:block; width:100%; padding:0; border:0; border-radius:6px; overflow:hidden; background:#050505; cursor:zoom-in; aspect-ratio:var(--ar,auto); }
+.st-zb img { display:block; width:100%; height:100%; object-fit:contain; }
+.st-zb:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+.rounds-post .st-fig figcaption { margin-top:8px; font-size:var(--t-fine); line-height:1.5; color:var(--t3); }
+.st-zoom { position:fixed; inset:0; margin:auto; width:fit-content; height:fit-content; max-width:min(96vw, 1400px); max-height:94vh; padding:0; border:0; border-radius:8px; background:#050505; overflow:visible; }
+.st-zoom::backdrop { background:rgba(0,0,0,.86); }
+.st-zoom img { display:block; max-width:min(96vw, 1400px); max-height:90vh; object-fit:contain; }
+.st-zoom-x { position:absolute; top:8px; right:8px; width:44px; height:44px; border:1px solid var(--border2); border-radius:50%;
+  background:rgba(0,0,0,.6); color:#fff; font-size:22px; line-height:1; cursor:pointer; }
+.st-zoom-x:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+.st-zoom p { margin:0; padding:8px 12px 10px; font-size:var(--t-fine); color:#c8d0d8; }
+
+/* ── Where the records stopped ────────────────────────────────────────── */
+.rx { margin:28px 0 36px; }
+.rx table { width:100%; border-collapse:collapse; font-size:var(--t-sub); }
+.rx th { text-align:left; font-family:var(--mono); font-size:var(--t-label); font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--t3); padding:0 10px 8px; border-bottom:1px solid var(--border2); }
+.rx td { padding:12px 10px; vertical-align:top; border-bottom:1px solid var(--border); color:var(--t2); }
+.rx td:first-child { border-left:3px dashed var(--border2); }
+.rx tr.in td:first-child { border-left:3px solid var(--lk); }
+.rx td b { display:block; color:var(--t1); font-weight:600; }
+.rx td small { display:block; font-size:var(--t-fine); line-height:1.4; color:var(--t3); margin-top:2px; }
+.rx .sys { font-size:var(--t-fine); }
+.rx .mk { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; margin-right:8px; font-family:var(--mono); font-size:var(--t-label); font-weight:700; vertical-align:1px; }
+.rx .mk.ok { background:var(--green); color:#fff; }
+.rx .mk.unk { border:1.5px dashed var(--amber); color:var(--amber); }
+.rx .mk.no { background:var(--red); color:#fff; }
+.rx .mk.start { border:1.5px solid var(--border2); color:var(--t3); }
+[data-theme="light"] .rx .mk.unk { color:var(--amber-dk); border-color:var(--amber-dk); }
+.rx figcaption, .tl figcaption { margin-top:12px; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); line-height:1.5; }
+
+/* ── What happened more than once ─────────────────────────────────────── */
+.tl { margin:28px 0 36px; display:grid; gap:16px; }
+.tl-row { display:grid; grid-template-columns:200px minmax(0,1fr); gap:4px 16px; align-items:center; }
+.tl-what { color:var(--t1); font-weight:600; font-size:var(--t-sub); }
+.tl-ticks { display:flex; align-items:center; gap:4px; }
+.tl-ticks i { width:18px; height:18px; border-radius:3px; background:var(--lk); }
+.tl-ticks b { margin-left:8px; font-family:var(--mono); font-size:var(--t-ui); color:var(--t1); }
+.rounds-post .tl-why { grid-column:2; margin:0; font-size:var(--t-fine); color:var(--t3); }
+
+
+/* ── Three views: the tabs ────────────────────────────────────────────── */
+.vw { margin-top:36px; }
+.vw-tabs { display:flex; position:sticky; top:var(--art-top,0px); z-index:22; overflow-x:auto; scrollbar-width:none; background:var(--dark); border-bottom:1px solid var(--border2);
+  box-shadow:0 0 0 100vmax var(--dark); clip-path:inset(0 -100vmax); }
+.vw-tabs::-webkit-scrollbar { display:none; }
+.vw-tab { display:inline-flex; align-items:center; gap:9px; flex:none; min-height:48px; padding:12px 18px; margin-bottom:-1px; background:none; border:0;
+  border-bottom:3px solid transparent; font-family:var(--display); font-size:var(--t-body); font-weight:500; color:var(--t3); white-space:nowrap; cursor:pointer; }
+.vw-tab .n { font-family:var(--mono); font-size:var(--t-micro); letter-spacing:.14em; color:var(--teal); }
+.vw-tab .sm { display:none; }
+.vw-tab:hover { color:var(--t1); }
+.vw-tab[aria-selected="true"] { color:var(--t1); border-bottom-color:var(--teal); font-weight:600; }
+.vw-tab:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; }
+[data-theme="light"] .vw-tab .n { color:var(--teal-ink); }
+[data-theme="light"] .vw-tab[aria-selected="true"] { border-bottom-color:var(--teal-dk); }
+.vw-panel[hidden] { display:none; }
+.rounds-post .vw-intro { margin:22px 0 0; }
+.rounds-post .vw-title { font-family:var(--display); font-size:22px; font-weight:700; line-height:1.2; color:var(--t1); margin:40px 0 8px; }
+.rounds-post .vw-explain { font-size:var(--t-sub); color:var(--t2); margin:0 0 14px; }
+@media (min-width:700px) and (min-height:501px) {
+  .vw-wide { width:min(1120px, calc(100vw - 48px)); margin-left:calc((100% - min(1120px, calc(100vw - 48px))) / 2); }
+}
+
+/* ── The paper trail: one order, then every record across the week ───── */
+.rounds-post .pt-flow { margin:18px 0 8px; }
+.rounds-post .pt-flow li { font-size:var(--t-sub); line-height:1.55; color:var(--t2); margin-bottom:16px; }
+.rounds-post .pt-flow li::before { color:var(--lk); border-color:color-mix(in srgb,var(--lk) 65%,transparent); }
+.rounds-post .pt-flow li.q::before { border-style:dashed; }
+.rounds-post .pt-flow li b { font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--lk); }
+.rounds-post .pt-flow li.q b::after { content:'  probably, or not yet'; white-space:pre; font-weight:500; letter-spacing:.04em; text-transform:none; color:var(--t3); }
+
+.pt-chart { margin-top:10px; }
+.pt-axis, .pt-sys, .pt-g { display:grid; grid-template-columns:200px minmax(0,1fr); column-gap:14px; }
+.pt-axis .ticks, .pt-sys .ticks, .pt-g .track { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); position:relative; }
+.pt-axis .ticks span { padding:0 2px 6px; font-family:var(--mono); font-size:var(--t-label); line-height:1.3; color:var(--t3); text-align:center; }
+.pt-sys { margin-bottom:6px; }
+.pt-sys > span:first-child { align-self:center; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+.pt-sys .ticks span { margin:0 8px; padding:4px; border-radius:4px; background:var(--raised); font-size:var(--t-label); line-height:1.3; color:var(--t2); text-align:center; }
+.pt-sysnote { display:none; margin:10px 0 0; font-size:var(--t-fine); line-height:1.5; color:var(--t3); }
+.pt-ph { display:none; }
+.pt-wall { position:absolute; top:-6px; bottom:-6px; width:0; margin-left:-1px; border-left:2px dashed var(--amber); pointer-events:none; }
+[data-theme="light"] .pt-wall { border-left-color:var(--amber-dk); }
+.pt-g { width:100%; min-height:48px; padding:8px 0; align-items:center; text-align:left; background:transparent; border:0; border-top:1px solid var(--border);
+  color:var(--t1); font-family:var(--font); cursor:pointer; }
+.pt-g:hover .name span { text-decoration:underline; text-underline-offset:3px; }
+.pt-g:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+.pt-g[aria-expanded="true"] { background:color-mix(in srgb,var(--lk) 9%,transparent); }
+.pt-g .name { display:flex; align-items:center; gap:8px; font-size:var(--t-ui); font-weight:600; line-height:1.35; }
+.pt-g .name i { width:10px; height:10px; border-radius:50%; background:var(--lk); flex:none; }
+.pt-g .track { height:28px; align-items:center; }
+.pt-g .bar { position:absolute; top:50%; height:4px; margin-top:-2px; border-radius:2px; background:color-mix(in srgb,var(--lk) 70%,transparent); }
+.pt-g .tail { position:absolute; top:50%; height:0; margin-top:-1px; border-top:2px dashed color-mix(in srgb,var(--lk) 70%,transparent); }
+.pt-g .dot { grid-row:1; justify-self:center; position:relative; z-index:1; min-width:22px; height:22px; padding:0 6px; border-radius:11px; background:var(--lk);
+  font-family:var(--mono); font-size:var(--t-label); font-weight:700; line-height:22px; text-align:center; color:#0a1418; }
+.pt-g .dot.q { background:var(--dark); box-shadow:inset 0 0 0 2px var(--lk); color:var(--t2); }
+[data-theme="light"] .pt-g .dot { color:#fff; }
+[data-theme="light"] .pt-g .dot.q { color:var(--t2); }
+.pt-panel { padding:4px 0 16px 214px; }
+.pt-panel[hidden] { display:none; }
+.rounds-post .pt-chain { list-style:none; margin:0; padding:0; }
+.rounds-post .pt-chain li { margin:0; padding:0; counter-increment:none; }
+.rounds-post .pt-chain li::before { content:none; }
+.pt-go { display:block; width:100%; min-height:44px; padding:6px 0 6px 18px; position:relative; background:none; border:0; text-align:left; cursor:pointer;
+  font-family:var(--font); font-size:var(--t-fine); line-height:1.5; color:var(--t2); }
+.pt-go::before { content:''; position:absolute; left:2px; top:14px; width:8px; height:8px; border-radius:50%; background:var(--lk); }
+.pt-go.q::before { background:transparent; box-shadow:inset 0 0 0 1.5px var(--lk); }
+.pt-go .wh { display:block; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.04em; color:var(--t3); }
+@media (hover:hover) {
+  .pt-go .wh::after { content:'  Read it in the story \2192'; white-space:pre; opacity:0; color:var(--teal); transition:opacity .15s; }
+  .pt-go:hover .wh::after, .pt-go:focus-visible .wh::after { opacity:1; }
+}
+.pt-go:hover .ev { color:var(--t1); }
+.pt-go:focus-visible { outline:2px solid var(--teal); outline-offset:2px; border-radius:4px; }
+.pt-later { padding:6px 0 6px 18px; font-size:var(--t-fine); color:var(--t3); }
+.pt-later b { font-family:var(--mono); font-weight:600; margin-right:6px; }
+.pt-panel .btn-ghost-v2 { min-height:44px; margin-top:8px; }
+@media (prefers-reduced-motion: reduce) { .pt-go .wh::after { transition:none; } }
+
+/* ── The whole map: the swim lane on the same 20 steps ────────────────── */
+.mm-follow { display:flex; align-items:center; gap:12px; margin:16px 0 4px; }
+.mm-follow > span { flex:none; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
+.mm-follow .hu-chiprail { flex:1 1 auto; min-width:0; }
+.mm-chip .dot { width:9px; height:9px; border-radius:50%; background:var(--lk); flex:none; }
+.mm-chip[aria-pressed="true"] { background:var(--lk); border-color:var(--lk); color:#0a1418; font-weight:700; }
+.mm-chip[aria-pressed="true"] .dot { background:currentColor; }
+[data-theme="light"] .mm-chip[aria-pressed="true"] { color:#fff; }
+.mm-lanes { display:grid; grid-template-columns:78px 46px minmax(0,1.4fr) repeat(4,minmax(0,1fr)); column-gap:12px; margin-top:14px; }
+.mm-wl { padding:0 0 6px; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
+.mm-wl.up { grid-column:3; border-bottom:2px solid var(--teal); }
+.mm-wl.down { grid-column:4 / -1; border-bottom:2px dashed var(--blue-hi, var(--blue)); }
+.mm-h { padding:8px 0; align-self:end; border-bottom:2px solid var(--lk, var(--border2)); position:sticky; top:calc(var(--art-top,0px) + var(--vw-h,0px)); z-index:5; background:var(--dark);
+  box-shadow:6px 0 0 var(--dark), -6px 0 0 var(--dark); }
+.mm-h b { display:block; font-size:var(--t-ui); font-weight:600; line-height:1.3; color:var(--t1); }
+.mm-h span { display:block; margin-top:2px; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+.mm-h.min b { font-family:var(--mono); font-size:var(--t-label); font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--t3); }
+.mm-band { grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; margin-top:18px; padding:8px 10px; border-radius:6px; background:var(--raised); }
+.mm-band b { font-family:var(--display); font-size:var(--t-lede); color:var(--t1); }
+.mm-band span { font-size:var(--t-fine); color:var(--t3); }
+.mm-band.ahead { background:transparent; border:1px dashed var(--border2); }
+.mm-row { display:contents; }
+.mm-c { min-width:0; padding:8px 0; border-top:1px solid var(--border); font-size:var(--t-fine); line-height:1.5; color:var(--t2); transition:opacity .15s; }
+.mm-t { font-family:var(--mono); font-size:var(--t-label); line-height:1.35; color:var(--t3); }
+.mm-t b { display:block; font-weight:500; color:var(--t2); }
+.mm-pa .pa { display:flex; flex-direction:column; gap:3px; padding-top:5px; }
+.mm-pa .tr { display:block; height:5px; border-radius:2px; background:var(--raised); }
+.mm-pa .tr i { display:block; height:100%; min-width:2px; width:calc(var(--v) * 100%); border-radius:2px; }
+.mm-pa .p { background:var(--red); } .mm-pa .a { background:var(--purple); }
+.mm-pa .pa-t { display:none; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+.mm-me { padding-left:10px; padding-right:6px; box-shadow:inset 3px 0 0 color-mix(in srgb,var(--teal) 55%,transparent); background:color-mix(in srgb,var(--teal) 6%,transparent); }
+.mm-me b { display:block; font-size:var(--t-sub); font-weight:600; line-height:1.35; color:var(--t1); }
+.mm-me .l { display:block; margin-top:2px; color:var(--t2); }
+.mm-row.ahead .mm-me { box-shadow:inset 3px 0 0 var(--border2); background:transparent; }
+.mm-it { display:inline; }
+.mm-it + .mm-it::before { content:' \00b7  '; color:var(--t3); }
+.mm-it.q { color:var(--t3); text-decoration:underline dashed var(--border2); text-underline-offset:3px; }
+.mm-ev { display:block; margin-top:6px; padding:3px 8px; border-left:3px solid var(--lk); border-radius:0 4px 4px 0; background:color-mix(in srgb,var(--lk) 14%,transparent); color:var(--t1); }
+.mm-ev[hidden] { display:none; }
+.mm.fl .mm-c.dim { opacity:.4; }
+@media (prefers-reduced-motion: reduce) { .mm-c { transition:none; } }
+
+/* ── Phone: the shorter side ──────────────────────────────────────────── */
+@media (max-width:699px), (max-height:500px) {
+  .wk-stops { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .rounds-post a.wk-stop:nth-child(n+4) { border-top:1px solid var(--border); }
+  /* a phone gets one top bar, the site nav: the layer buttons ride with the story here */
+  .st-bar { position:static; margin:8px 0 0; padding:8px 0; }
+  .st-bar-l { display:none; }
+  .rounds-post .st-list > li { grid-template-columns:20px minmax(0,1fr); }
+  .st-when { display:none; }
+  .st-wh { display:block; }
+  .st-box { padding:14px 14px 6px; }
+  .rounds-post .st-head h3 { font-size:20px; }
+  .rx thead { display:none; }
+  .rx table, .rx tbody, .rx tr, .rx td { display:block; }
+  .vw-tabs { position:static; }
+  .vw-tab { padding:10px 12px; font-size:var(--t-ui); }
+  .vw-tab .n, .vw-tab .lg { display:none; }
+  .vw-tab .sm { display:inline; }
+  .pt-axis, .pt-sys, .pt-g { grid-template-columns:minmax(0,1fr); row-gap:4px; }
+  .pt-axis > span:first-child { display:none; }
+  .pt-sys { display:none; }
+  .pt-sysnote { display:block; }
+  .pt-axis .ticks span { font-size:var(--t-micro); padding:0 0 6px; }
+  .pt-dt { display:none; }
+  .pt-ph { display:inline; }
+  .pt-panel { padding-left:0; }
+  .mm-follow { flex-direction:column; align-items:stretch; gap:6px; }
+  .mm-lanes { display:block; }
+  .mm-wl, .mm-h { display:none; }
+  .mm-band { margin-top:16px; }
+  .mm-row { display:block; margin-top:10px; padding:8px 12px 10px; border:1px solid var(--border); border-radius:8px; }
+  .mm-row.ahead { border-style:dashed; }
+  .mm-c { display:block; padding:3px 0; border:0; }
+  .mm-c.empty { display:none; }
+  .mm-t, .mm-pa { display:inline-block; vertical-align:middle; }
+  .mm-pa { margin-left:12px; }
+  .mm-pa .pa { display:none; }
+  .mm-pa .pa-t { display:inline; }
+  .mm-me { padding:4px 0; box-shadow:none; background:none; }
+  .mm-row.ahead .mm-me { box-shadow:none; }
+  .mm-c[data-lane]::before { content:attr(data-lane); display:block; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.08em; text-transform:uppercase; color:var(--lk); }
+  .rx tr { padding:10px 0 10px 12px; border-bottom:1px solid var(--border); border-left:3px dashed var(--border2); }
+  .rx tr.in { border-left:3px solid var(--lk); }
+  .rx td, .rx td:first-child, .rx tr.in td:first-child { border:0; padding:2px 0; }
+  .tl-row { grid-template-columns:minmax(0,1fr); }
+  .rounds-post .tl-why { grid-column:1; }
+}
+
+.rounds-post [data-open-view] { min-height:44px; }
+
+/* The draft line at the top of the page. */
+.pv-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:24px; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+
+.rounds-post { --art-top: var(--nav-h); }
+</style>{% endraw %}{% endblock %}
+{# A draft Rounds piece, held in the secret menu for review since 2026-10-03: noindex, out of the sitemap,
+   collections and site search, not listed in Rounds. The scenes, records, figures and images load from
+   /assets/js/rounds/routine-fracture.js and /assets/images/rounds/routine-fracture/.
+
+   TO PUBLISH IT AS A ROUNDS ARTICLE (on the author's yes):
+   1. Move this file to src/rounds/a-routine-fracture/index.html. Frontmatter: navPage rounds, section rounds,
+      slug a-routine-fracture, posted and date (the ship day), readMinutes 15, status published, tags
+      [patient-experience, care-coordination, clinical-informatics, interoperability, price-transparency],
+      fourPs [patient, provider-p2a, payer]. Drop noindex and eleventyExcludeFromCollections.
+   2. Add the entry to src/_data/rounds.js; give it an og_image.
+   3. The eyebrow becomes "Rounds 06"; drop the "Draft for review" line (.pv-bar) and its style.
+   4. Redirect /secret-menu/a-routine-fracture/ to the new address, and take the card off the secret menu.
+   5. npm run verify, npm run phone -- /rounds/a-routine-fracture/.
+   Before then: the "What comes next" cards update after the follow-up visit, and the cost section gets a
+   dated update when the explanations of benefits arrive. #}
+{% raw %}
+<article class="rounds-post">
+<div class="pv-bar">Draft for review &middot; not yet published</div>
+
+<div class="eyebrow">Rounds draft &middot; Patient Experience &middot; Clinical Informatics</div>
+<h1>Tracing My Broken Arm Through the Healthcare System</h1>
+<div class="rounds-sub">A week under the waterline</div>
+<div class="tldr">
+  <div class="tldr-label">TL;DR</div>
+  <p class="tldr-thesis">I broke my left arm playing flag football on a Thursday night. Over the next eight days the healthcare system did what it is designed to do and put my elbow back together. Getting there took two EDs, a pharmacy, an orthopedic clinic, a surgery center and my PCP's office, and far more coordination than I could see as the patient.</p>
+  <ul class="tldr-points">
+    <li>Five registrations at five places, four imaging studies of the same elbow before surgery read by three radiologists, two sedations, and three separate EHRs.</li>
+    <li>The trauma center's plan was an orthopedic visit early the next week and surgery after that, a normal timeline once a fracture is reduced and splinted. I called four or five clinics myself and was seen Monday. Surgery was on day five.</li>
+    <li>The one large payment so far was $1,840.52 at the surgery center, toward its own share of the surgery. My insurer has processed nothing yet.</li>
+  </ul>
+</div>
+<div class="rounds-meta">
+  <span><b>POSTED</b> Draft</span>
+  <span class="rounds-fp"><a class="fp fp-patient" href="/tools/iceberg-map/">System Layers map</a></span>
+  <span><b>READ</b> 15 min</span>
+</div>
+
+<p>At about 6:30 on a Thursday evening, I landed on my left elbow playing flag football at the park and got up holding an arm that looked wrong. Eight days later I sat in my PCP's office and was told I was doing fine. In between, I had been through two EDs, a pharmacy, an orthopedic clinic and a surgery center.</p>
+<p>I worked as a respiratory therapist in an ICU for years before moving into informatics, and I now manage a clinical informatics team. I know what a registration sets in motion downstream, and what an order does once it is signed. I had never watched all of it happen to me, from the bed, with one arm in a splint. So I documented the week and mapped it. It kept my mind busy while I was in pain and resting.</p>
+
+<div class="section-eyebrow">Purpose</div>
+<h2>Why I wrote this</h2>
+<p>Most of my work, on this site and in my day job, is evaluating healthcare processes: how work moves through a system, and where it stalls. In informatics we test that work constantly. We build test patients and walk new workflows through quality assurance before a real patient ever touches them. None of those test patients has ever been in pain, or had to find a surgeon on a Friday.</p>
+<p>This time I went through it as the patient. I could trace an order to the image it produced and on to the decision it drove, which sent me to another registration somewhere else. It reminded me how much complexity is already built into the system.</p>
+<p>Even when I worked at the bedside, I rarely thought about how all of these systems fit together. I also had very little exposure to how other specialties, like orthopedics or cardiology, run their own parts of it. This week put several of those parts in front of me at once.</p>
+<p>A patient moves through healthcare the way a customer moves through a restaurant, or at least that is how it feels from the table. In healthcare, though, you agree to pay later for a meal nobody has chosen yet, and partway through you may be sent to a different kitchen. What happens around the patient is far more complicated than the dining room suggests, and a lot of it depends on the systems each organization happens to use. Most of my care happened inside a single health system, and much of what I saw matched workflows I know from my own work. Other parts I could not follow at all, because they belonged to a separate organization or sat outside my own clinical training.</p>
+
+<div class="section-eyebrow">The Week</div>
+<h2>How to read the week</h2>
+
+<figure class="wk" id="wk" aria-labelledby="wk-cap">
+  <p class="wk-title" id="wk-cap">The week at a glance</p>
+  <div class="wk-plot" id="wk-plot" aria-hidden="true"></div>
+  <nav class="wk-stops" id="wk-stops" aria-label="Jump to a part of the week"></nav>
+  <div class="wk-key" aria-hidden="true"><span><i style="background:var(--red)"></i>Pain</span><span><i style="background:var(--purple)"></i>Anxiety</span><span>At each step, 0 to 10, my own rough numbers</span></div>
+</figure>
+
+<p>The week is presented below in three views. Start with the story, the patient's view: what I went through, one step at a time, with my pain and anxiety on a rough 0 to 10 scale. Each step set off more than I could see at the time, and the dots on each card count it. Select the dots to open a single step, or use the buttons that stay at the top of the page to show a layer across the whole week. The last layer, Questions to ask, lists what I would suggest any patient in my position ask at that point.</p>
+<p>The paper trail is the technical view. It follows the records, from where each one started to the last place it reached. The whole map places every layer side by side. Anywhere you see a dashed outline, the step probably happened, but I cannot confirm it from my own records.</p>
+
+<div class="disclosure"><b>About this case:</b> This is one patient's week, written up after the fact. Times are approximate, from memory, checked against my record where it had them. The pain and anxiety scores are my own recall on a 0 to 10 scale. I read my record through the patient portal, the same access any patient has. Items drawn with a dashed outline are inferences about what probably happened. The questions to ask are general prompts for a conversation with your care team, and nothing here is medical advice. These views are my own and do not represent my employer.</div>
+
+<div class="vw" id="vw">
+<div class="vw-tabs" role="tablist" aria-label="Three ways to read the week">
+  <button type="button" class="vw-tab" role="tab" id="tab-story" aria-controls="story" aria-selected="true"><span class="n">01</span><span class="lg">The story</span><span class="sm">Story</span></button>
+  <button type="button" class="vw-tab" role="tab" id="tab-trail" aria-controls="paper-trail" aria-selected="false" tabindex="-1"><span class="n">02</span><span class="lg">The paper trail</span><span class="sm">Paper trail</span></button>
+  <button type="button" class="vw-tab" role="tab" id="tab-map" aria-controls="whole-map" aria-selected="false" tabindex="-1"><span class="n">03</span><span class="lg">The whole map</span><span class="sm">Whole map</span></button>
+</div>
+
+<section class="st vw-panel" id="story" role="tabpanel" aria-labelledby="tab-story">
+  <div class="st-bar" role="group" aria-label="Layers to show under every step">
+    <span class="st-bar-l">Show</span>
+    <div class="hu-chiprail" id="st-chips"></div>
+  </div>
+
+  <div class="section-eyebrow">Thursday, 6:30 PM</div>
+  <h2 id="part-1">The community hospital</h2>
+  <ol class="st-list" data-part="1"></ol>
+
+  <div class="section-eyebrow">Thursday, 10:45 PM</div>
+  <h2 id="part-2">The trauma center</h2>
+  <ol class="st-list" data-part="2"></ol>
+  <p>When I put numbers on the night, one pattern stood out. My pain peaked in the first ED, at a 10, while the team worked to set the joint. My anxiety stayed low through that stretch, because the plan was still to fix it in that building.</p>
+  <p>Anxiety climbed to a 7 when the transfer was decided and an 8 on arrival at the trauma center, came back to a 7 on the Friday I was looking for a surgeon, and reached a 9 in pre-op. The first two were handoffs, points where I did not know who was responsible for my care next. The third was pre-operative anxiety, which is common.</p>
+
+  <div class="section-eyebrow">Friday to Monday</div>
+  <h2 id="part-3">Finding a surgeon</h2>
+  <ol class="st-list" data-part="3"></ol>
+  <p>Calling around got me seen sooner. I do not know whether it changed anything clinically: a clinic visit early the next week and surgery soon after is a normal timeline for a fracture that has been reduced and splinted, and if the ED placed a referral order, a scheduler may have called me before Tuesday. I did not wait long enough to find out. How many patients go home unsure whether they are supposed to call or wait to be called?</p>
+
+  <div class="section-eyebrow">Tuesday</div>
+  <h2 id="part-4">Surgery day</h2>
+  <ol class="st-list" data-part="4"></ol>
+  <p>Surgery centers have a formal name for the person who comes with you: the responsible adult. Medicare's conditions for surgery centers require that patients be discharged in the company of one, unless the attending physician exempts them. My care partner appears in two records all week: the clinic note that says he came with me and, presumably, the surgery center's discharge. Everything else he did, from the driving to serving as a second set of ears during the consent process, happened outside every system I can see.</p>
+  <p>The surgery center is a separately certified facility. It runs its own pre-surgical assessment on admission and uses its own consents, on an EHR separate from the health system's. My history and physical had to be in its record before surgery, and the surgery went ahead, so it was. Whether it arrived by fax, by an upload from the surgeon's office or through access to the health system's chart, I do not know.</p>
+
+  <div class="section-eyebrow">Wednesday to Friday</div>
+  <h2 id="part-5">The week after</h2>
+  <ol class="st-list" data-part="5"></ol>
+
+  <div class="section-eyebrow">From here</div>
+  <h2 id="part-6">What comes next</h2>
+  <p>The week was the short part. My surgeon's note outlines the rest of the recovery, and none of it has happened yet, so these cards are dashed.</p>
+  <ol class="st-list" data-part="6"></ol>
+</section>
+
+<section class="vw-panel" id="paper-trail" role="tabpanel" aria-labelledby="tab-trail" hidden>
+  <p class="vw-intro">Every step generated records, and some of them traveled to the next place I went. Many of them begin with an order, so this view starts with one: the first X-ray, followed from the moment it was ordered to the bill it has not yet become.</p>
+  <h3 class="vw-title">One X-ray, start to finish</h3>
+  <ol class="pt-flow" id="pt-flow"></ol>
+  <h3 class="vw-title">Every record I can trace</h3>
+  <p class="vw-explain">Each bar is one record, from the part of the week that created it to the last place it reached. The number in each dot is how many times the record changed there. The dashed orange lines mark the boundaries between EHRs. Select a record to follow it.</p>
+  <div class="pt-chart" id="pt-chart"></div>
+</section>
+
+<section class="vw-panel vw-wide" id="whole-map" role="tabpanel" aria-labelledby="tab-map" hidden>
+  <p class="vw-intro">Every layer at once. My experience is in the left column, above the waterline. The four columns to its right show what each step set in motion beneath it, named for the layers of the System Layers map on this site. Select a record to highlight every place it appears.</p>
+  <div class="mm" id="mm">
+    <div class="mm-follow" role="group" aria-label="Follow a record"><span>Follow a record</span><div class="hu-chiprail" id="mm-chips"></div></div>
+    <div class="mm-lanes" id="mm-lanes"></div>
+  </div>
+</section>
+</div>
+
+<div class="section-eyebrow">Records</div>
+<h2>Where the records stopped</h2>
+<p>Within the health system, nothing had to move. The first ED, the trauma center and the clinic chart in one EHR and, as far as I can tell, keep images in one archive: the trauma center's CT was read against "the previous study," and the surgeon had reviewed all four studies before our visit. The gaps were at the edges, at the two places that chart on separate systems.</p>
+<figure class="rx" aria-labelledby="rx-cap">
+  <table>
+    <thead><tr><th scope="col">Where</th><th scope="col">Charts in</th><th scope="col">What I can tell reached it</th></tr></thead>
+    <tbody id="rx-body"></tbody>
+  </table>
+  <figcaption id="rx-cap">A solid bar is the health system's EHR. A dashed bar is somewhere else.</figcaption>
+</figure>
+<p>Medicare's hospital rules require hospitals with qualifying electronic systems to make a reasonable effort to notify a patient's established primary care practitioner when the patient registers in the ED, directly or through a health information exchange. That is the likely origin of the message my PCP received. It may have gone through a health information exchange, or as a secure message or fax. I do not know which.</p>
+<p>The patient portal shows me every report and none of the images. That is a portal setting, not a limit on access: under HIPAA I can request copies of my images, and the provider has 30 days to act on the request.</p>
+<p><button type="button" class="btn-ghost-v2" data-open-view="1">Follow each record in the paper trail</button></p>
+
+<div class="section-eyebrow">Repetition</div>
+<h2>What happened more than once</h2>
+<figure class="tl" id="tl" aria-label="Counts of what happened more than once"></figure>
+<p>Some of that repetition is medicine working as intended. The first reduction did not get the radius back in place, so a second reduction and a second CT were the right call, and each imaging study answered a different question. More than one clinician told me I had been "very successful in breaking my arm," which I have chosen to take as a compliment.</p>
+<p>Some of it is structural. Each facility is licensed and bills on its own, so each one confirms my coverage and opens its own account, even though my name and birth date did not change between the first front desk and the last, and neither did my insurance. Inside the health system, those were new encounters on one chart. With my chart in hand, I can sort most of the repeats into those two groups. I am not sure a patient without that background could.</p>
+
+<div class="section-eyebrow">Cost</div>
+<h2>What it cost, so far</h2>
+<p>The cost surfaced above the waterline once, as a payment. At check-in on surgery day I paid $1,840.52, believing I had already met my out-of-pocket maximum for the year, because some of my providers had stopped collecting copays at the desk. That inference was wrong. A copay that stops at the front desk and an out-of-pocket maximum that has been met are different things, and only the second means the plan pays 100% of covered in-network costs for the rest of the plan year.</p>
+<p>The surgery center's number most likely came from an eligibility check against my insurer's running totals. Those totals move only as claims process, and five days after the injury the ED claims probably had not. The maximum fills in whatever order the claims happen to process, so if the ED claims finish it, the surgery center may owe me a refund.</p>
+<p>Counting the way these places usually bill, with separate facility, physician, radiologist, surgeon and anesthesia claims, I expect a dozen or more claims from this week. Was the $1,840.52 owed? I do not know yet. Nothing from my insurer has arrived, which is not unusual eight days out, and I will add a dated update to this piece when the explanations of benefits arrive.</p>
+
+<div class="section-eyebrow">Day 8</div>
+<h2>Where I am now</h2>
+<p>I see the surgeon again on Thursday. Eight days out, my pain is about a 1 and the anxiety has mostly resolved. For the most part, the healthcare system is designed to help us, and that week it did: everyone I met was skilled, and my elbow is back together. Most of the friction sat at the handoffs between places, and most of the open questions are about money.</p>
+
+<div class="section-eyebrow">Scale</div>
+<h2>How common this is</h2>
+<p>In 2022, US emergency departments handled an estimated 39.6 million visits for injuries, about a quarter of all ED visits and roughly 108,000 a day, according to the CDC's National Hospital Ambulatory Medical Care Survey. About 482,000 of those visits listed a forearm fracture as the primary diagnosis, roughly 1,300 a day.</p>
+<p>Surgery is harder to count, because much of it happens outside hospitals. In 2023, hospital-owned outpatient facilities alone handled about 485,000 surgical visits whose main procedure treated a fracture or dislocation, around 1,330 a day, and about 129,000 of them involved the radius and ulna, according to AHRQ's Nationwide Ambulatory Surgery Sample. That count leaves out independent surgery centers, which may include the one I used. In the most recent federal survey that counted them, from 2010, nearly half of all ambulatory procedures took place in surgery centers.</p>
+<p>By those numbers my week was routine, and I think it was. More than a thousand people a day start some version of it, and the system handles each of them with the same registrations, orders, images and handoffs I counted here. This was the first time I watched it from the bed.</p>
+
+<details class="refs">
+<summary>References</summary>
+<div class="refs-content">
+
+<h3>Government</h3>
+<div class="ref-item">Code of Federal Regulations. 42 CFR &sect; 416.52, Condition for coverage: Patient admission, assessment and discharge, paragraph (c). Read via the Legal Information Institute, Cornell Law School, October 3, 2026. <a href="https://www.law.cornell.edu/cfr/text/42/416.52" target="_blank" rel="noopener">https://www.law.cornell.edu/cfr/text/42/416.52</a></div>
+<div class="ref-item">Code of Federal Regulations. 42 CFR &sect; 416.52(a), Patient assessment and admission (ambulatory surgical centers). Read via the Legal Information Institute, October 3, 2026. <a href="https://www.law.cornell.edu/cfr/text/42/416.52" target="_blank" rel="noopener">https://www.law.cornell.edu/cfr/text/42/416.52</a></div>
+<div class="ref-item">Code of Federal Regulations. 42 CFR &sect; 482.24(d), Electronic notifications (hospital conditions of participation). Read via the Legal Information Institute, October 3, 2026. <a href="https://www.law.cornell.edu/cfr/text/42/482.24" target="_blank" rel="noopener">https://www.law.cornell.edu/cfr/text/42/482.24</a></div>
+<div class="ref-item">Code of Federal Regulations. 42 CFR &sect; 489.24, Special responsibilities of Medicare hospitals in emergency cases (EMTALA), paragraphs (d)(4) and (e)(2). Read via the Legal Information Institute, October 3, 2026. <a href="https://www.law.cornell.edu/cfr/text/42/489.24" target="_blank" rel="noopener">https://www.law.cornell.edu/cfr/text/42/489.24</a></div>
+<div class="ref-item">Code of Federal Regulations. 45 CFR &sect; 164.524, Access of individuals to protected health information (HIPAA). Read via the Legal Information Institute, October 3, 2026. <a href="https://www.law.cornell.edu/cfr/text/45/164.524" target="_blank" rel="noopener">https://www.law.cornell.edu/cfr/text/45/164.524</a></div>
+<div class="ref-item">Centers for Medicare &amp; Medicaid Services. What are the new protections? (No Surprises Act). Read October 3, 2026. <a href="https://www.cms.gov/nosurprises/consumer-protections/what-are-the-new-protections" target="_blank" rel="noopener">https://www.cms.gov/nosurprises/consumer-protections/what-are-the-new-protections</a></div>
+<div class="ref-item">HealthCare.gov. Out-of-pocket maximum/limit (glossary). Read October 3, 2026. <a href="https://www.healthcare.gov/glossary/out-of-pocket-maximum-limit/" target="_blank" rel="noopener">https://www.healthcare.gov/glossary/out-of-pocket-maximum-limit/</a></div>
+
+<h3>Data</h3>
+<div class="ref-item">CDC National Center for Health Statistics. National Hospital Ambulatory Medical Care Survey: 2022 Emergency Department Summary Tables, Tables 11 and 13. Posted October 30, 2024; read October 3, 2026. <a href="https://www.cdc.gov/nchs/data/nhamcs/web_tables/2022-nhamcs-ed-web-tables.pdf" target="_blank" rel="noopener">https://www.cdc.gov/nchs/data/nhamcs/web_tables/2022-nhamcs-ed-web-tables.pdf</a></div>
+<div class="ref-item">Agency for Healthcare Research and Quality, Healthcare Cost and Utilization Project. Nationwide Ambulatory Surgery Sample (NASS) Summary Statistics, 2023, weighted encounter file (procedure categories 144 to 148). Read October 3, 2026. <a href="https://hcup-us.ahrq.gov/db/nation/nass/stats/NASS_Summary_Stats_Encounter_Weighted_2023.pdf" target="_blank" rel="noopener">https://hcup-us.ahrq.gov/db/nation/nass/stats/NASS_Summary_Stats_Encounter_Weighted_2023.pdf</a></div>
+<div class="ref-item">Hall MJ, et al. Ambulatory Surgery Data From Hospitals and Ambulatory Surgery Centers: United States, 2010. National Health Statistics Reports No. 102, CDC National Center for Health Statistics, 2017. Read October 3, 2026. <a href="https://www.cdc.gov/nchs/data/nhsr/nhsr102.pdf" target="_blank" rel="noopener">https://www.cdc.gov/nchs/data/nhsr/nhsr102.pdf</a></div>
+<div class="ref-item">The per-day figures are my arithmetic on the annual counts above (divided by 365), rounded.</div>
+
+<h3>On This Site</h3>
+<div class="ref-item">Healthcare System Layers, the map the layers on each step come from. <a href="/tools/iceberg-map/">/tools/iceberg-map/</a></div>
+
+<h3>A Note on Sources</h3>
+<div class="ref-item">Lines marked "From my chart" are from my own medical record, read through the patient portal, the same access any patient has. Everything else is my memory of the week. The pain and anxiety numbers are my own rough estimates, and the times are approximate.</div>
+
+</div>
+</details>
+
+</article>
+
+<dialog class="st-zoom" id="st-zoom" aria-label="Image, full size"><button type="button" class="st-zoom-x" aria-label="Close">&times;</button><img alt=""><p></p></dialog>
+
+<script src="/assets/js/rounds/routine-fracture.js"></script>
+<script>
+(function () {
+  var S = window.HU_STORY;
+  var LK = S.layers.map(function (l) { return l.key; });
+  var on = {}; LK.forEach(function (k) { on[k] = false; });
+  var over = {};   /* per scene: true = show every layer, false = none, absent = follow the buttons */
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function items(v) { return !v ? [] : Array.isArray(v) ? v : v.items || []; }
+  function unsure(s, it) { return s.ahead || /\?$/.test(it); }
+  function when(s) { return s.t ? s.d + ', ' + s.t : s.d; }
+
+  /* The week at a glance: six equal segments, the scenes spread inside each. */
+  (function () {
+    var parts = S.parts, W = 600, H = 100, seg = W / parts.length, pts = [];
+    parts.forEach(function (p, i) {
+      p.scenes.forEach(function (s, j) {
+        if (s.pa) pts.push({ x: seg * i + seg * (j + 0.5) / p.scenes.length, p: s.pa[0], a: s.pa[1] });
+      });
+    });
+    function y(v) { return 92 - v * 8.4; }
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">';
+    parts.forEach(function (p, i) { if (p.ahead) svg += '<rect class="ahead" x="' + seg * i + '" y="0" width="' + seg + '" height="' + H + '"/>'; });
+    for (var i = 0; i <= parts.length; i++) svg += '<line class="seg" x1="' + seg * i + '" x2="' + seg * i + '" y1="0" y2="' + H + '"/>';
+    svg += '<line class="seg" x1="0" x2="' + W + '" y1="' + y(10) + '" y2="' + y(10) + '" stroke-dasharray="3 4"/>';
+    ['p', 'a'].forEach(function (k) {
+      svg += '<polyline class="ln ' + k + '" points="' + pts.map(function (q) { return q.x.toFixed(1) + ',' + y(q[k]).toFixed(1); }).join(' ') + '"/>';
+    });
+    svg += '</svg>';
+    var html = svg;
+    pts.forEach(function (q) {
+      ['p', 'a'].forEach(function (k) { html += '<span class="wk-dot ' + k + '" style="left:' + (q.x / W * 100).toFixed(2) + '%;top:' + (y(q[k]) / H * 100).toFixed(2) + '%"></span>'; });
+    });
+    html += '<span class="wk-y" style="top:' + (y(10) / H * 100) + '%">10</span><span class="wk-y" style="top:' + (y(0) / H * 100) + '%">0</span>';
+    parts.forEach(function (p, i) { if (p.ahead) html += '<span class="wk-ahead" style="left:' + ((i + 0.5) / parts.length * 100) + '%">Ahead</span>'; });
+    document.getElementById('wk-plot').innerHTML = html;
+    document.getElementById('wk-stops').innerHTML = parts.map(function (p) {
+      return '<a class="wk-stop" href="#part-' + p.n + '"><b>' + esc(p.short) + '</b>' + esc(p.title) + '</a>';
+    }).join('');
+  })();
+
+  /* The scene cards. */
+  function meter(s) {
+    if (!s.pa) return '';
+    function bar(k, label, v) {
+      var cells = ''; for (var i = 1; i <= 10; i++) cells += '<i' + (i <= v ? ' class="on"' : '') + '></i>';
+      return '<span>' + label + '</span><span class="bar ' + k + '">' + cells + '</span><span class="n">' + v + '</span>';
+    }
+    return '<div class="st-pa" role="img" aria-label="Pain ' + s.pa[0] + ' of 10, anxiety ' + s.pa[1] + ' of 10' + (s.paNote ? '. ' + esc(s.paNote) : '') + '">' +
+      bar('p', 'Pain', s.pa[0]) + bar('a', 'Anxiety', s.pa[1]) + (s.paNote ? '<span class="note">' + esc(s.paNote) + '</span>' : '') + '</div>';
+  }
+  function scene(s) {
+    var L = s.L || {}, dots = '', total = 0, layers = '';
+    LK.forEach(function (k) {
+      var v = L[k]; if (!v || (Array.isArray(v) && !v.length)) return;
+      if (k !== 'ask') {
+        var its = items(v); if (dots) dots += '<i class="gap"></i>';
+        its.forEach(function (it) { total++; dots += '<i class="L-' + k + (unsure(s, it) ? ' q' : '') + '"></i>'; });
+      }
+      var name = S.layerByKey[k].name, body;
+      if (k === 'ask') body = '<ul class="st-asks">' + v.map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ul>';
+      else body = (v.note ? '<p>' + esc(v.note) + '</p>' : '') + '<ul class="st-tags">' +
+        items(v).map(function (it) { return '<li' + (unsure(s, it) ? ' class="q"' : '') + '>' + esc(it) + '</li>'; }).join('') + '</ul>';
+      layers += '<div class="st-L L-' + k + '" data-l="' + k + '" hidden><h4>' + esc(name) + '</h4>' + body + '</div>';
+    });
+    var cnt = s.count ? '<ul class="st-cnt" aria-label="Running count">' + s.count.map(function (c) {
+      return '<li>' + esc(c[0]) + ' ' + esc(c[1]) + ' of ' + c[2] + '</li>'; }).join('') + '</ul>' : '';
+    var chart = s.chart ? '<div class="st-chart"><b>' + (s.ahead ? 'From the surgeon’s note' : 'From my chart') + '</b>' + esc(s.chart) + '</div>' : '';
+    var under = layers ? '<button class="st-under" type="button" aria-expanded="false" aria-controls="ly-' + s.id + '"><span class="chev" aria-hidden="true"></span>' +
+      '<span class="lbl">' + (total ? total + (s.ahead ? ' things still to come' : ' things happened underneath') : 'Questions to ask') + '</span><span class="st-dots" aria-hidden="true">' + dots + '</span></button>' +
+      '<div class="st-layers" id="ly-' + s.id + '" hidden>' + layers + '</div>' : '';
+    return '<li class="st-scene' + (s.ahead ? ' ahead' : '') + '" id="' + s.id + '">' +
+      '<div class="st-when"><b>' + esc(s.d) + '</b>' + esc(s.t) + '</div><div class="st-rail" aria-hidden="true"></div>' +
+      '<article class="st-box"><div class="st-head"><div><div class="st-wh">' + esc(when(s)) + '</div><h3>' + esc(s.title) + '</h3></div>' + meter(s) + '</div>' +
+      cnt + s.story.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + fig(s) + chart + under + '</article></li>';
+  }
+  function fig(s) {
+    var f = s.fig; if (!f) return '';
+    return '<figure class="st-fig"><div class="st-imgs" style="--n:' + f.imgs.length + '">' + f.imgs.map(function (im) {
+      return '<button type="button" class="st-zb" style="--ar:' + (f.imgs.length > 1 ? f.ar : im[1] + ' / ' + im[2]) + '" aria-label="See it larger: ' + esc(im[3]) + '">' +
+        '<img src="' + im[0] + '" width="' + im[1] + '" height="' + im[2] + '" alt="' + esc(im[3]) + '" loading="lazy" decoding="async"></button>';
+    }).join('') + '</div><figcaption>' + esc(f.cap) + '</figcaption></figure>';
+  }
+  S.parts.forEach(function (p) {
+    document.querySelector('.st-list[data-part="' + p.n + '"]').innerHTML = p.scenes.map(scene).join('');
+  });
+
+  /* One picture full size: the native dialog closes on Esc, the X, or a tap outside it. */
+  var zoom = document.getElementById('st-zoom'), zimg = zoom.querySelector('img'), zcap = zoom.querySelector('p');
+  document.getElementById('story').addEventListener('click', function (e) {
+    var b = e.target.closest('.st-zb'); if (!b) return;
+    var im = b.querySelector('img');
+    zimg.src = im.src; zimg.alt = im.alt;
+    zcap.textContent = b.closest('figure').querySelector('figcaption').textContent;
+    zoom.showModal();
+  });
+  zoom.addEventListener('click', function (e) { if (e.target === zoom || e.target.closest('.st-zoom-x')) zoom.close(); });
+
+  /* The layer buttons. */
+  var chips = document.getElementById('st-chips');
+  chips.innerHTML = '<button class="hu-chip st-all" type="button" aria-pressed="false" data-all>All</button>' +
+    S.layers.map(function (l) { return '<button class="hu-chip st-chip L-' + l.key + '" type="button" aria-pressed="false" data-l="' + l.key + '"><span class="dot" aria-hidden="true"></span>' + esc(l.name) + '</button>'; }).join('');
+
+  function apply() {
+    chips.querySelectorAll('[data-l]').forEach(function (b) { b.setAttribute('aria-pressed', on[b.dataset.l] ? 'true' : 'false'); });
+    chips.querySelector('[data-all]').setAttribute('aria-pressed', LK.every(function (k) { return on[k]; }) ? 'true' : 'false');
+    document.querySelectorAll('.st-scene').forEach(function (li) {
+      var box = li.querySelector('.st-layers'); if (!box) return;
+      var o = over[li.id], shown = 0, all = 0;
+      box.querySelectorAll('.st-L').forEach(function (L) {
+        var vis = o === true ? true : o === false ? false : on[L.dataset.l];
+        L.hidden = !vis; all++; if (vis) shown++;
+      });
+      box.hidden = !shown;
+      li.querySelector('.st-under').setAttribute('aria-expanded', shown === all ? 'true' : 'false');
+    });
+  }
+  function setLayer(k, v) { on[k] = v; over = {}; apply(); }
+  chips.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-all')) { var to = !LK.every(function (k) { return on[k]; }); LK.forEach(function (k) { on[k] = to; }); over = {}; apply(); }
+    else setLayer(b.dataset.l, !on[b.dataset.l]);
+  });
+  document.getElementById('story').addEventListener('click', function (e) {
+    var b = e.target.closest('.st-under'); if (!b) return;
+    var li = b.closest('.st-scene');
+    over[li.id] = b.getAttribute('aria-expanded') !== 'true';
+    apply();
+  });
+  apply();
+
+  /* The spine fills in as you read down it. */
+  var scenes = document.querySelectorAll('.st-scene');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('seen'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -45% 0px' });
+    scenes.forEach(function (li) { if (!li.classList.contains('ahead')) io.observe(li); });
+  } else scenes.forEach(function (li) { li.classList.add('seen'); });
+
+  /* Where the records stopped, and the repeats. */
+  var MK = { ok: ['✓', 'Got there'], unk: ['?', 'Got there, I don’t know how'], no: ['✕', 'Not shown in the portal'], start: ['1', 'Where it started'] };
+  document.getElementById('rx-body').innerHTML = S.places.map(function (p) {
+    return '<tr class="' + (p.group ? 'in L-rec' : '') + '"><td><b>' + esc(p.name) + '</b><small>' + esc(p.sub) + '</small></td><td class="sys">' + esc(p.sys) + '</td>' +
+      '<td><span class="mk ' + p.mark + '" role="img" aria-label="' + MK[p.mark][1] + '">' + MK[p.mark][0] + '</span>' + esc(p.got) + '</td></tr>';
+  }).join('');
+  document.getElementById('tl').innerHTML = S.tally.map(function (t) {
+    var ticks = ''; for (var i = 0; i < t.n; i++) ticks += '<i></i>';
+    return '<div class="tl-row L-' + t.L + '"><div class="tl-what">' + esc(t.what) + '</div><div class="tl-ticks" role="img" aria-label="' + t.n + '">' + ticks + '<b>' + t.n + '</b></div><p class="tl-why">' + esc(t.why) + '</p></div>';
+  }).join('');
+
+
+  /* ---- The three views ---- */
+  var vw = document.getElementById('vw');
+  var tabs = Array.prototype.slice.call(vw.querySelectorAll('.vw-tab'));
+  var tabBar = vw.querySelector('.vw-tabs');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function artTop() { return parseFloat(getComputedStyle(vw).getPropertyValue('--art-top')) || 0; }
+  function setVwH() {
+    var h = getComputedStyle(tabBar).position === 'sticky' ? tabBar.offsetHeight : 0;
+    vw.style.setProperty('--vw-h', h + 'px');
+    return h;
+  }
+  function goTo(el, extra) {
+    var top = el.getBoundingClientRect().top + window.scrollY - setVwH() - artTop() - (extra || 0);
+    window.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
+  }
+  function selectTab(i, scroll) {
+    tabs.forEach(function (t, k) {
+      t.setAttribute('aria-selected', k === i ? 'true' : 'false');
+      t.tabIndex = k === i ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = k !== i;
+    });
+    try { history.replaceState(null, '', '#' + tabs[i].getAttribute('aria-controls')); } catch (e) {}
+    setVwH();
+    if (scroll) { var top = vw.getBoundingClientRect().top + window.scrollY - artTop(); if (window.scrollY > top - 8) window.scrollTo({ top: top, behavior: reduce ? 'auto' : 'smooth' }); }
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { selectTab(i, true); });
+    t.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var j = (i + d + tabs.length) % tabs.length;
+      tabs[j].focus(); selectTab(j, false);
+    });
+  });
+  window.addEventListener('resize', setVwH);
+  setVwH();
+  (function () {
+    var h = (location.hash || '').slice(1);
+    var k = ['story', 'paper-trail', 'whole-map'].indexOf(h);
+    if (k > 0) selectTab(k, false);
+  })();
+  document.getElementById('wk-stops').addEventListener('click', function (e) { if (e.target.closest('a')) selectTab(0, false); });
+
+  /* ---- The paper trail: one order ---- */
+  document.getElementById('pt-flow').innerHTML = S.orderFlow.map(function (o) {
+    return '<li class="L-' + o.L + (o.q ? ' q' : '') + '"><b>' + esc(o.t) + '</b>' + esc(o.d) + '</li>';
+  }).join('');
+
+  /* ---- The paper trail: every record across the six parts, with the EHR walls ---- */
+  var NP = S.parts.length, PM = S.partMeta;
+  var walls = [];
+  for (var w = 2; w <= NP; w++) if (PM[w].sys && PM[w - 1].sys && PM[w].sys !== PM[w - 1].sys) walls.push(w);
+  function wallHtml() { return walls.map(function (n) { return '<span class="pt-wall" style="left:' + ((n - 1) / NP * 100).toFixed(3) + '%"></span>'; }).join(''); }
+  var SHORT = { grp: 'Health system EHR', asc: 'Its own EHR', pcp: 'Another EHR' };
+  var sysCells = '', run = null;
+  for (var q = 1; q <= NP + 1; q++) {
+    var sy = q <= NP ? PM[q].sys : '#end';
+    if (!run || sy !== run.sys) {
+      if (run && run.sys) sysCells += '<span style="grid-column:' + run.from + '/' + q + '" title="' + esc(S.sysNames[run.sys]) + '">' + esc(SHORT[run.sys]) + '</span>';
+      run = { sys: sy, from: q };
+    }
+  }
+  var chart = '<div class="pt-axis" aria-hidden="true"><span></span><span class="ticks">' +
+    S.parts.map(function (p) { return '<span><span class="pt-dt">' + esc(PM[p.n].tick) + '</span><span class="pt-ph">' + esc(PM[p.n].ph) + '</span></span>'; }).join('') + wallHtml() + '</span></div>' +
+    '<div class="pt-sys" aria-hidden="true"><span>Charted in</span><span class="ticks">' + sysCells + wallHtml() + '</span></div>';
+  chart += S.records.map(function (rec) {
+    var per = {};
+    rec.events.forEach(function (e) {
+      var pn = S.sceneById[e[0]].part;
+      per[pn] = per[pn] || { n: 0, sure: false };
+      per[pn].n++; if (!e[3] && !S.sceneById[e[0]].ahead) per[pn].sure = true;
+    });
+    var ps = Object.keys(per).map(Number).sort(function (a, b) { return a - b; });
+    var a = ps[0], b = ps[ps.length - 1], tail = rec.after.some(function (x) { return x[1] === 'not yet'; });
+    var pct = function (x) { return (x / NP * 100).toFixed(3) + '%'; };
+    var track = (b > a ? '<span class="bar" style="left:' + pct(a - 0.5) + ';width:' + pct(b - a) + '"></span>' : '') +
+      (tail && b < NP ? '<span class="tail" style="left:' + pct(b - 0.5) + ';right:0"></span>' : '') +
+      ps.map(function (pn) { return '<span class="dot' + (per[pn].sure ? '' : ' q') + '" style="grid-column:' + pn + '">' + per[pn].n + '</span>'; }).join('') + wallHtml();
+    var chain = rec.events.map(function (e) {
+      var sc = S.sceneById[e[0]], part = S.parts[sc.part - 1];
+      var unsureEv = e[3] || sc.ahead;
+      return '<li><button type="button" class="pt-go L-' + (e[1] || 'me') + (unsureEv ? ' q' : '') + '" data-go="' + sc.id + '"><span class="wh">' + esc(part.short) + ' · ' + esc(sc.title) + '</span>' +
+        '<span class="ev">' + esc(e[2]) + (unsureEv && !/\?$/.test(e[2]) ? (sc.ahead ? ' (not yet)' : ' (probably)') : '') + '</span></button></li>';
+    }).join('') + rec.after.map(function (x) { return '<li class="pt-later"><b>' + (x[1] === 'now' ? 'As of now' : 'Not yet') + '</b>' + esc(x[0]) + '</li>'; }).join('');
+    return '<button type="button" class="pt-g L-' + rec.L + '" data-rec="' + rec.id + '" aria-expanded="false" aria-controls="pt-p-' + rec.id + '">' +
+      '<span class="name"><i aria-hidden="true"></i><span>' + esc(rec.title) + '</span></span><span class="track" aria-hidden="true">' + track + '</span></button>' +
+      '<div class="pt-panel L-' + rec.L + '" id="pt-p-' + rec.id + '" hidden><ol class="pt-chain">' + chain + '</ol>' +
+      '<button type="button" class="btn-ghost-v2" data-map="' + rec.id + '">Show it on the whole map</button></div>';
+  }).join('');
+  var ptChart = document.getElementById('pt-chart');
+  chart += '<p class="pt-sysnote">The first ED, the trauma center and the surgeon’s clinic chart in the health system’s EHR. The surgery center has its own, and my PCP is on another. The dashed lines are those walls.</p>';
+  ptChart.innerHTML = chart;
+  ptChart.addEventListener('click', function (e) {
+    var g = e.target.closest('.pt-g');
+    if (g) { var open = g.getAttribute('aria-expanded') !== 'true'; g.setAttribute('aria-expanded', String(open)); document.getElementById('pt-p-' + g.dataset.rec).hidden = !open; return; }
+    var go = e.target.closest('.pt-go');
+    if (go) {
+      selectTab(0, false);
+      over[go.dataset.go] = true; apply();
+      goTo(document.getElementById(go.dataset.go), 70);
+      return;
+    }
+    var m = e.target.closest('[data-map]');
+    if (m) {
+      selectTab(2, false);
+      follow(m.dataset.map, true);
+      var hit = document.querySelector('#mm .mm-c.hit');
+      goTo(hit || document.getElementById('mm'), 120);
+    }
+  });
+
+  /* ---- The whole map ---- */
+  var MML = S.layers.filter(function (l) { return l.key !== 'ask'; });
+  var evAt = {};
+  S.records.forEach(function (rec) { rec.events.forEach(function (e) { var k = e[0] + '|' + e[1]; (evAt[k] = evAt[k] || []).push([rec, e]); }); });
+  function evs(sid, k) {
+    return (evAt[sid + '|' + k] || []).map(function (x) { return '<span class="mm-ev L-' + x[0].L + '" data-rec="' + x[0].id + '" hidden>' + esc(x[1][2]) + '</span>'; }).join('');
+  }
+  function paBars(pa) {
+    if (!pa) return '';
+    return '<span class="pa" role="img" aria-label="Pain ' + pa[0] + ', anxiety ' + pa[1] + ', out of 10"><span class="tr"><i class="p" style="--v:' + pa[0] / 10 + '"></i></span><span class="tr"><i class="a" style="--v:' + pa[1] / 10 + '"></i></span></span>' +
+      '<span class="pa-t" aria-hidden="true">Pain ' + pa[0] + ' · anxiety ' + pa[1] + '</span>';
+  }
+  var g = '<div class="mm-wl up" aria-hidden="true">Above the waterline</div><div class="mm-wl down" aria-hidden="true">Under it</div>' +
+    '<div class="mm-h min"><b>When</b></div><div class="mm-h min" title="Pain and anxiety, 0 to 10"><b>Pain, anx.</b></div>' +
+    '<div class="mm-h L-me"><b>What I went through</b><span>Patient experience</span></div>' +
+    MML.map(function (l) { return '<div class="mm-h L-' + l.key + '"><b>' + esc(l.name) + '</b><span>' + esc(l.sys) + '</span></div>'; }).join('');
+  S.parts.forEach(function (p) {
+    g += '<div class="mm-band' + (p.ahead ? ' ahead' : '') + '"><b>' + esc(p.title) + '</b><span>' + esc(p.short) + '</span></div>';
+    p.scenes.forEach(function (sc) {
+      g += '<div class="mm-row' + (sc.ahead ? ' ahead' : '') + '" data-s="' + sc.id + '">' +
+        '<div class="mm-c mm-t"><b>' + esc(sc.d) + '</b>' + esc(sc.t) + '</div><div class="mm-c mm-pa">' + paBars(sc.pa) + '</div>' +
+        '<div class="mm-c mm-me L-me"><b>' + esc(sc.title) + '</b><span class="l">' + esc(sc.line) + '</span>' + evs(sc.id, '') + '</div>' +
+        MML.map(function (l) {
+          var its = items((sc.L || {})[l.key]);
+          return '<div class="mm-c L-' + l.key + (its.length ? '' : ' empty') + '" data-lane="' + esc(l.name) + '">' +
+            its.map(function (it) { return '<span class="mm-it' + (unsure(sc, it) ? ' q' : '') + '">' + esc(it) + '</span>'; }).join('') + evs(sc.id, l.key) + '</div>';
+        }).join('') + '</div>';
+    });
+  });
+  var mm = document.getElementById('mm');
+  document.getElementById('mm-lanes').innerHTML = g;
+  var mmChips = document.getElementById('mm-chips');
+  mmChips.innerHTML = S.records.map(function (r) {
+    return '<button type="button" class="hu-chip mm-chip L-' + r.L + '" aria-pressed="false" data-rec="' + r.id + '"><span class="dot" aria-hidden="true"></span>' + esc(r.title) + '</button>';
+  }).join('');
+  var active = null;
+  function follow(id, force) {
+    active = force ? id : (active === id ? null : id);
+    mm.classList.toggle('fl', !!active);
+    mmChips.querySelectorAll('.mm-chip').forEach(function (c) { c.setAttribute('aria-pressed', c.dataset.rec === active ? 'true' : 'false'); });
+    mm.querySelectorAll('.mm-ev').forEach(function (ev) { ev.hidden = ev.dataset.rec !== active; });
+    mm.querySelectorAll('.mm-row').forEach(function (row) {
+      var any = false;
+      row.querySelectorAll('.mm-c').forEach(function (c) {
+        var hit = !!active && !!c.querySelector('.mm-ev[data-rec="' + active + '"]');
+        c.classList.toggle('hit', hit); if (hit) any = true;
+      });
+      row.querySelectorAll('.mm-c').forEach(function (c) {
+        var keep = c.classList.contains('hit') || (any && (c.classList.contains('mm-me') || c.classList.contains('mm-t') || c.classList.contains('mm-pa')));
+        c.classList.toggle('dim', !!active && !keep);
+      });
+    });
+  }
+  mmChips.addEventListener('click', function (e) { var c = e.target.closest('.mm-chip'); if (c) follow(c.dataset.rec); });
+
+  document.querySelectorAll('[data-open-view]').forEach(function (b) {
+    b.addEventListener('click', function () { selectTab(+b.dataset.openView, false); goTo(vw, 0); });
+  });
+
+
+  window.__story = { setLayer: setLayer, on: on, over: over, apply: apply, S: S, selectTab: selectTab, follow: follow,
+    all: function (v) { LK.forEach(function (k) { on[k] = v; }); over = {}; apply(); } };
+})();
+</script>
+{% endraw %}

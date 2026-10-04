@@ -15,8 +15,8 @@
 //   2. FROM THE SITE'S OWN DATA: state and county metrics (stateData.json,
 //      countyData.json, metricsConfig.json), BLS pay and projections
 //      (career-tree-bls.json), credential exam stats (career-tree-creds.json), and
-//      counts from the CMS facility files (hospitals, dialysis, ASCs) and the Utah
-//      price pull. `src` says where each number came from and that it is a count or
+//      counts from the CMS facility files (hospitals, dialysis, ASCs), the school file
+//      from the federal college survey (us-health-schools.json) and the Utah price pull. `src` says where each number came from and that it is a count or
 //      a median when the builder computed it.
 //
 // Choosing states: the everyday mix asks at most six states per metric, picked by
@@ -271,13 +271,15 @@ const ONE_IN = {
 };
 // RANK: where a state places among all of them. top: which end is #1. Answers print as #7.
 /** @type {Record<string, {top:'highest'|'lowest', one:string, q:(S:string, y:number, n:string) => string}>} */
+/* Each counts from the end the Population Health Map calls place 1 (its card reads "#N of 51, 1 = best", or "1 = highest" on a neutral measure), so the
+   answer is the place its link shows: lowest first where lower is better (2026-10-02). stateQuestions checks it. */
 const RANKS = {
-  obesity: { top: 'highest', one: 'the highest adult obesity rate', q: (S, y, n) => `Rank the ${n} by adult obesity rate in ${y}, highest first. What place is ${S}?` },
-  smoking: { top: 'highest', one: 'the highest adult smoking rate', q: (S, y, n) => `Rank the ${n} by adult smoking rate in ${y}, highest first. What place is ${S}?` },
-  uninsured: { top: 'highest', one: 'the highest uninsured rate', q: (S, y, n) => `Rank the ${n} by the percent of people under 65 with no health insurance in ${y}, highest first. What place is ${S}?` },
+  obesity: { top: 'lowest', one: 'the lowest adult obesity rate', q: (S, y, n) => `Rank the ${n} by adult obesity rate in ${y}, lowest first. What place is ${S}?` },
+  smoking: { top: 'lowest', one: 'the lowest adult smoking rate', q: (S, y, n) => `Rank the ${n} by adult smoking rate in ${y}, lowest first. What place is ${S}?` },
+  uninsured: { top: 'lowest', one: 'the lowest uninsured rate', q: (S, y, n) => `Rank the ${n} by the percent of people under 65 with no health insurance in ${y}, lowest first. What place is ${S}?` },
   income: { top: 'highest', one: 'the highest median household income', q: (S, y, n) => `Rank the ${n} by median household income in ${y}, highest first. What place is ${S}?` },
   'age-65-plus': { top: 'highest', one: 'the highest percent of people 65 or older', q: (S, y, n) => `Rank the ${n} by the percent of people 65 or older (Census ${y - 4} to ${y}), highest first. What place is ${S}?` },
-  'high-bp': { top: 'highest', one: 'the highest rate of diagnosed high blood pressure', q: (S, y, n) => `Rank the ${n} by the percent of adults with diagnosed high blood pressure in ${y}, highest first. What place is ${S}?` }
+  'high-bp': { top: 'lowest', one: 'the lowest rate of diagnosed high blood pressure', q: (S, y, n) => `Rank the ${n} by the percent of adults with diagnosed high blood pressure in ${y}, lowest first. What place is ${S}?` }
 };
 /** "the 50 states and DC", or "the 49 states and DC with data" @param {number} n @param {boolean} dc */
 function field(n, dc) { return dc ? (n === 51 ? 'fifty states and DC' : (n - 1) + ' states and DC with data') : (n === 50 ? 'fifty states' : n + ' states with data'); }
@@ -347,6 +349,8 @@ function stateQuestions(cfg, stateData, years) {
       // where the state places. The last core state gets it in the everyday mix.
       if (RANKS[m.slug]) {
         const R = RANKS[m.slug];
+        // the map's place 1 is the lowest where the measure says lower is better (dir -1), else the highest
+        if (R.top !== (item.dir === -1 ? 'lowest' : 'highest')) throw new Error(`[vital-stats] ${m.slug} ranks ${R.top} first but the Population Health Map ranks it the other way`);
         const among = Object.keys(STATE_NAMES).filter((x) => typeof vals[x] === 'number');
         const place = placeOf(vals, st, R.top, among);
         const first = among.slice().sort((a, b) => (R.top === 'highest' ? Number(vals[b]) - Number(vals[a]) : Number(vals[a]) - Number(vals[b])) || a.localeCompare(b))[0];
@@ -919,6 +923,151 @@ function facilityQuestions() {
   return out;
 }
 
+// ─── 6b. healthcare schools (us-health-schools.json, scripts/pull/ipeds.js) ─────
+//
+// 2026-10-03, David: "go, add the Vital Stats school questions". Counted from the same file the Healthcare Schools
+// Map draws, so every answer is on the map: a program's count and its state's place on the state card under that
+// program's filter, a state's graduates on the same card, a school's graduates on its own card. What a program
+// counts (which federal codes, which degree levels) is written once, in the pull; the `sub` lines say the part a
+// player needs to read the number right. The year is the school year of the awards, July to June.
+
+/** what each program's degree is called in a question, and the line that says what it counts */
+const SCHOOL_PROGRAM = {
+  rn: { deg: 'registered nursing degree or diploma', degs: 'registered nursing degrees and diplomas', short: 'RN',
+    sub: 'Associate, bachelor\'s and diploma programs in registered nursing. Bachelor\'s counts include RN to BSN finishers.' },
+  rt: { deg: 'respiratory therapy degree', degs: 'respiratory therapy degrees', short: 'RT',
+    sub: 'Associate, bachelor\'s and master\'s degrees in respiratory care.' },
+  pa: { deg: 'physician assistant degree', degs: 'physician assistant degrees', short: 'PA',
+    sub: 'Master\'s and doctoral physician assistant degrees.' },
+  md: { deg: 'MD degree', degs: 'MD degrees', short: 'MD', sub: 'The doctor of medicine degree. DO degrees are counted separately.' },
+  do: { deg: 'DO degree', degs: 'DO degrees', short: 'DO', sub: 'The doctor of osteopathic medicine degree. MD degrees are counted separately.' },
+  np: { deg: 'nurse practitioner degree or certificate', degs: 'nurse practitioner degrees and certificates', short: 'NP',
+    sub: 'Graduate degrees and certificates in a nurse practitioner specialty, like family or psychiatric. DNP degrees count separately.' },
+  dnp: { deg: 'doctor of nursing practice (DNP) degree', degs: 'DNP degrees', short: 'DNP',
+    sub: 'The doctor of nursing practice, which holds many nurse practitioner doctorates and degrees for nurse leaders.' }
+};
+/** id -> [see, exact, gap]: the schools map view each school question opens on, read by linkAll */
+const SCHOOL_SEE = {};
+
+function schoolQuestions() {
+  const D = readJson(path.join(ASSETS, 'us-health-schools.json'));
+  const M = D._meta;
+  const S = new Map(D.schools.map((/** @type {any[]} */ s) => [s[0], s]));
+  const grads = (/** @type {string} */ lv) => lv.split('|').reduce((a, x) => a + Number(x.split(':')[1]), 0);
+  /** every program, with its school and graduates @type {{u:string,k:string,lv:string,g:number,s:any[]}[]} */
+  const P = D.programs.map((/** @type {any[]} */ p) => ({ u: p[0], k: p[1], lv: p[2], g: grads(p[2]), s: S.get(p[0]) }));
+  const yr = M.year;                                     // "2023-24"
+  const when = 'in the ' + yr + ' school year';
+  const year = Number('20' + yr.slice(-2));              // the awards run July to June, so they belong to the later year
+  const src = 'IPEDS Completions ' + yr + ', ' + String(M.release.completions).toLowerCase() + ' (National Center for Education Statistics), counted from the site\'s school file';
+  const base = { cat: 'Workforce', pre: '', suf: '', dp: 0, src, url: M.url, year, checked: M.pulled };
+  const out = [];
+  /** @param {any} o @param {string} see @param {boolean} exact @param {string} [gap] */
+  const add = (o, see, exact, gap) => { out.push(Q(Object.assign({}, base, o))); SCHOOL_SEE[o.id] = [see, exact, gap || '']; };
+  const online = (/** @type {any[]} */ s) => s[9] >= M.onlineAt;
+  /** " Most were bachelor's degrees." when one level holds most of a mixed program's awards */
+  const LEVEL_WORD = { 3: 'associate degrees', 5: 'bachelor\'s degrees', 7: 'master\'s degrees' };
+  const levelNote = (/** @type {string} */ lv) => {
+    const parts = lv.split('|').map((x) => x.split(':').map(Number)).sort((a, b) => b[1] - a[1]);
+    const total = parts.reduce((a, x) => a + x[1], 0);
+    return parts.length > 1 && LEVEL_WORD[parts[0][0]] && parts[0][1] / total > 0.5 ? ' Most were ' + LEVEL_WORD[parts[0][0]] + '.' : '';
+  };
+  const onlineNote = (/** @type {any[]} */ s) => online(s) ? ` Most of its students study only online (${M.onlineTerm}), so they all count at its home campus.` : '';
+  /** a school and its state, without saying the state twice ("Chamberlain University-Illinois") @param {any[]} s */
+  const schoolIn = (s) => { const name = STATE_NAMES[s[3]] || s[3]; return s[1].includes(name) ? s[1] : s[1] + ' in ' + name; };
+
+  for (const k of Object.keys(SCHOOL_PROGRAM)) {
+    const W = SCHOOL_PROGRAM[k];
+    const of = P.filter((p) => p.k === k);
+    const byState = tally(of, (p) => p.s[3]);
+    const top = STATES_50.slice().sort((a, b) => (byState[b] || 0) - (byState[a] || 0) || a.localeCompare(b))[0];
+    const view = 'ops|layers=school&programs=' + k + '|every ' + W.short + ' program';
+    // the national count, on the map as the search box's count under the program's filter
+    add({ id: 'sch-schools-' + k, unit: 'schools', a: of.length, sub: W.sub,
+      q: `How many U.S. schools awarded at least one ${W.deg} ${when}?`,
+      why: `${STATE_NAMES[top]} has the most, ${commas(byState[top])}.` }, view, true);
+    // the national total of degrees: the map has it by state and by school, not added up
+    if (k === 'rn' || k === 'rt' || k === 'pa' || k === 'md' || k === 'do') {
+      const all = of.reduce((a, p) => a + p.g, 0), ol = of.filter((p) => online(p.s)).reduce((a, p) => a + p.g, 0);
+      add({ id: 'sch-grads-' + k, unit: 'degrees', a: all, sub: W.sub,
+        q: `How many ${W.degs} did U.S. schools award ${when}?`,
+        why: `From ${commas(of.length)} schools.` + (ol / all >= 0.05 ? ` ${commas(ol / all * 100, 0)} percent came from schools where most students study only online.` : '') }, view, false, 'national');
+      // the biggest program, on its own card
+      const big = of.slice().sort((a, b) => b.g - a.g || (a.u < b.u ? -1 : 1))[0];
+      add({ id: 'sch-top-' + k, unit: 'degrees', a: big.g, sub: W.sub,
+        q: `What was the most ${W.degs} one U.S. school awarded ${when}?`,
+        why: schoolIn(big.s) + '.' + levelNote(big.lv) + onlineNote(big.s) },
+      'ops|layers=school&fac=u' + big.u + '&prog=' + k + '|' + big.s[1], true);
+    }
+  }
+
+  // by state. A state with none gets no question (a zero is not a guess worth betting on), and a template reads the same
+  // for every state.
+  /** @param {string} k @param {string[]} core */
+  const perState = (k, core) => {
+    const W = SCHOOL_PROGRAM[k];
+    const of = P.filter((p) => p.k === k);
+    const byState = tally(of, (p) => p.s[3]);
+    const counts = Object.fromEntries(STATES_50.map((s) => [s, byState[s] || 0]));
+    const top = STATES_50.slice().sort((a, b) => counts[b] - counts[a] || a.localeCompare(b))[0];
+    for (const st of STATES_50) {
+      const n = counts[st], isCore = core.includes(st), S2 = STATE_NAMES[st];
+      if (!n) { if (isCore) throw new Error('[vital-stats] no ' + k + ' programs in ' + st); continue; }
+      const see = 'ops|layers=school&programs=' + k + '&state=' + st + '|' + W.short + ' programs in ' + S2;
+      add({ id: 'sch-' + k + '-' + st.toLowerCase(), unit: 'schools', a: n, st, k: 'sch-' + k, more: !isCore, sub: W.sub,
+        q: `How many schools in ${S2} awarded at least one ${W.deg} ${when}?`, why: rankWhy(counts, st) }, see, true);
+    }
+    return { counts, top, of };
+  };
+  const rt = perState('rt', ['UT', 'CA']);
+  perState('rn', ['TX']);
+  perState('pa', ['NY']);
+  perState('md', ['NY']);
+
+  // respiratory therapy, the site's own field: each state's place, and each state's degrees
+  for (const st of STATES_50) {
+    if (!rt.counts[st]) continue;
+    const S2 = STATE_NAMES[st], place = placeOf(rt.counts, st, 'highest', STATES_50);
+    const see = 'ops|layers=school&programs=rt&state=' + st + '|RT programs in ' + S2;
+    add({ id: 'rank-sch-rt-' + st.toLowerCase(), unit: 'place', pre: '#', f: 'rank', st, k: 'sch-rt', more: st !== 'UT',
+      q: `Rank the fifty states by how many schools awarded at least one respiratory therapy degree ${when}, most first. What place is ${S2}?`,
+      sub: 'Place 1 has the most schools. Tied states share the better place. Answer a place from 1 to 50.',
+      a: place, why: place === 1 ? `${S2} has ${commas(rt.counts[st])}, the most.` : `${S2} has ${commas(rt.counts[st])}; ${STATE_NAMES[rt.top]} has the most, ${commas(rt.counts[rt.top])}.` }, see, true);
+  }
+  /** @param {string} k @param {string[]} core */
+  const gradsByState = (k, core) => {
+    const W = SCHOOL_PROGRAM[k];
+    const of = P.filter((p) => p.k === k);
+    /** @type {Record<string, number>} */
+    const by = {};
+    for (const p of of) by[p.s[3]] = (by[p.s[3]] || 0) + p.g;
+    for (const st of STATES_50) {
+      if (!by[st]) continue;
+      const S2 = STATE_NAMES[st];
+      add({ id: 'sch-grads-' + k + '-' + st.toLowerCase(), unit: 'degrees', a: by[st], st, k: 'sch-grads-' + k, more: !core.includes(st), sub: W.sub,
+        q: `How many ${W.degs} did schools in ${S2} award ${when}?`, why: rankWhy(by, st) },
+      'ops|layers=school&programs=' + k + '&state=' + st + '|' + W.short + ' programs in ' + S2, true);
+    }
+  };
+  gradsByState('rt', ['UT']);
+  gradsByState('pa', []);
+
+  // two Utah programs, on their own cards
+  const one = (/** @type {string} */ u, /** @type {string} */ k) => { const p = P.find((x) => x.u === u && x.k === k); if (!p) throw new Error('[vital-stats] no ' + k + ' program at ' + u); return p; };
+  const weber = one('230782', 'rt'), utRt = P.filter((p) => p.k === 'rt' && p.s[3] === 'UT');
+  add({ id: 'sch-weber-rt', unit: 'degrees', a: weber.g, st: 'UT', sub: SCHOOL_PROGRAM.rt.sub,
+    q: `How many respiratory therapy degrees did Weber State University award ${when}?`,
+    why: `That is ${commas(weber.g / utRt.reduce((a, p) => a + p.g, 0) * 100, 0)} percent of the ${commas(utRt.reduce((a, p) => a + p.g, 0))} awarded in Utah.` + levelNote(weber.lv) },
+  'ops|layers=school&fac=u230782&prog=rt|Weber State University', true);
+  const uofu = one('230764', 'md'), utMd = P.filter((p) => p.k === 'md' && p.s[3] === 'UT');
+  if (utMd.length !== 1) throw new Error('[vital-stats] Utah has ' + utMd.length + ' MD schools now; reword sch-uofu-md');
+  add({ id: 'sch-uofu-md', unit: 'degrees', a: uofu.g, st: 'UT', sub: SCHOOL_PROGRAM.md.sub,
+    q: `How many MD degrees did the University of Utah award ${when}?`,
+    why: 'No other school in Utah awarded an MD that year.' },
+  'ops|layers=school&fac=u230764&prog=md|University of Utah', true);
+  return out;
+}
+
 // ─── 7. Utah hospital prices (hospital-prices.json) ─────────────────────────
 
 function priceQuestions() {
@@ -977,6 +1126,145 @@ function priceQuestions() {
   return out;
 }
 
+// ─── 6. where to see it on the site (2026-10-02) ─────────────────────────────
+//
+// David: "there should be links from those questions to parts of our website [where] that information would be
+// viable or foundable... our different maps or data sets". A question names one view of a site tool in `see`, as
+// "tool|address|what you will see there". The page turns it into a link on the answer screen, never before: the
+// view would hand over the answer. Tools: plm, the U.S. Population Health Map; ops, the U.S. Hospital Operations
+// Map, whose Schools layer the school questions open (2026-10-03); ct, the Healthcare Career Tree. A view is EXACT when it shows the question's own number and NEAR when it shows
+// what the question is about but not that number yet. The NEAR views and the questions with none are the work list
+// for the next step, written by scripts/report-vital-stats-links.js. tests/vital-stats-links.test.js checks every
+// address against the tool's own data.
+
+/** id -> { exact, gap }: for the report only, never shipped */
+const LINKS = {};
+/** the Population Health Map's slug for a measure, exactly as multi-lens-map.js writes it */
+const mapSlug = (/** @type {string} */ n) => String(n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+/** the Career Tree card a BLS job opens on, where the job's slug is not itself a card */
+const ROLE_OF = { aprn: 'np', physician: 'attending', rt: 'rrt', radtech: 'rad-tech', sonographer: 'sono', 'med-records': 'rhit',
+  pt: 'dpt', 'health-manager': 'practice-mgr', hygienist: 'dental-hygienist' };
+/** the career card whose "Educational requirement" shows an exam's pass rate and fee. The Education Matrix files
+ *  exams under degree faces (NCLEX-RN sits on ADN and BSN), so the career is the one place each exam has its own card. */
+const EXAM_ROLE = { 'nclex-rn': 'rn', 'nclex-pn': 'lpn', 'nbrc-tmc': 'crt', 'nccpa-pance': 'pa', naplex: 'pharmacist', 'aanp-fnp': 'np',
+  ccrn: 'icu-rn', 'nbcot-otr': 'ot', bcba: 'bcba', 'nbcrna-nce': 'crna', 'iblce-ibclc': 'lactation', 'amcb-cnm': 'cnm', 'arrt-r': 'rad-tech' };
+/** an exam whose numbers sit on its own specialty card in the Education Matrix, not on a career (checked in a browser 2026-10-02) */
+const EXAM_FACE = { 'nbrc-accs': 'ACCS' };
+/** a count across the fifty states names the measure it counts */
+const COUNT_OF = { 'count-obesity-third': 'patient/obesity', 'count-smoking-15': 'patient/current-smoking', 'count-diabetes-eighth': 'patient/diabetes',
+  'count-uninsured-10': 'payer/uninsured', 'count-65-plus-fifth': 'baseline/pop-65-plus', 'count-income-80k': 'economics/median-household-income' };
+/** the hospital types a facility question counts, by the operations map's own type keys */
+const HOSP_TYPE = { 'hosp-cah': ['cah', 'critical access hospitals'], 'hosp-psych': ['psych', 'psychiatric hospitals'],
+  'hosp-reh': ['rural', 'rural emergency hospitals'], 'hosp-childrens': ['child', "children's hospitals"], 'hosp-va': ['va', 'VA hospitals'] };
+const GAP = {
+  spread: 'The map shows every state\'s median; the gap between the top and bottom state is left to the reader.',
+  national: 'The map is by state; this U.S. total is not written on it.',
+  count: 'The map colors every state, but counting the states over the line is left to the reader.',
+  filter: 'The map shows these hospitals but has no filter for this count.',
+  price: 'The map\'s price view was taken down 2026-07-29 (the price project is parked).',
+  none: 'Nothing on the site shows this yet.'
+};
+/** curated national facts and their nearest view: [tool, target, exact, gap]. A fact not listed has none yet. */
+const CURATED_SEE = {
+  'medicare-enrollment-2026': ['plm', 'payer/medicare-enrollment', false, 'national'],
+  'medicaid-chip-2026': ['plm', 'payer/medicaid-enrollment', false, 'national'],
+  'marketplace-2026': ['plm', 'payer/marketplace-enrollment', false, 'national'],
+  'medicaid-expansion-2026': ['plm', 'policy/medicaid-expansion', false, 'count'],
+  'census-uninsured-pct-2025': ['plm', 'payer/uninsured', false, 'national'],
+  'census-uninsured-count-2025': ['plm', 'payer/uninsured', false, 'national'],
+  'census-employer-2025': ['plm', 'payer/employer-coverage', false, 'national'],
+  'life-expectancy-2024': ['plm', 'patient/life-expectancy', false, 'national'],
+  'obesity-nhanes-2023': ['plm', 'patient/obesity', false, 'national'],
+  'smoking-adults-2025': ['plm', 'patient/current-smoking', false, 'national'],
+  'diabetes-total-2023': ['plm', 'patient/diabetes', false, 'national'],
+  'aha-hospitals-2024': ['ops', {}, false, 'national'],
+  'aha-community-2024': ['ops', {}, false, 'national'],
+  'aha-rural-2024': ['ops', {}, false, 'national'],
+  'aha-beds-2024': ['ops', {}, false, 'national'],
+  'aha-admissions-2024': ['ops', {}, false, 'national'],
+  'oews-rn-2025': ['ct', 'rn', false, 'national'],
+  'oews-rt-2025': ['ct', 'rrt', false, 'national'],
+  'oews-np-2025': ['ct', 'np', false, 'national'],
+  'oews-hha-2025': ['ct', 'home-health-aide', false, 'national'],
+  'aamc-physicians-2024': ['ct', 'attending', false, 'national'],
+  'aamc-shortage-2036': ['ct', 'attending', false, 'national'],
+  'ncsbn-rn-age-2024': ['ct', 'rn', false, 'national']
+};
+
+/** @param {any[]} questions @param {any} cfg */
+function linkAll(questions, cfg) {
+  const creds = readJson(path.join(ASSETS, 'career-tree-creds.json'));
+  const tree = readJson(path.join(ASSETS, 'career-tree.json'));
+  /** @type {Record<string, string>} card id -> its name */
+  const card = {};
+  (function walk(/** @type {any} */ o) {
+    if (Array.isArray(o)) { o.forEach(walk); return; }
+    if (o && typeof o === 'object') { if (typeof o.id === 'string' && o.label) card[o.id] = String(o.label).replace(/\s+/g, ' '); Object.values(o).forEach(walk); }
+  })(tree.classes.roles);
+  const cnames = countyNames();
+  const bySlug = Object.fromEntries(STATE_METRICS.map((m) => [m.slug, m.id]));
+  const enc = encodeURIComponent;
+  const S = (/** @type {string} */ st) => STATE_NAMES[st];
+  /** @param {string} id @param {string} [st] @param {string} [county] @param {string} [label] */
+  const plm = (id, st, county, label) => {
+    const { lens, index } = metricIndexById(cfg, id);
+    return 'plm|lens=' + lens + '&metric=' + mapSlug(cfg[lens].items[Number(index)].name) + (st ? '&state=' + st : '') + (county ? '&county=' + county : '') + '|' + (label || (st ? S(st) : 'every state'));
+  };
+  /** @param {Record<string, string>} p @param {string} label */
+  const ops = (p, label) => 'ops|' + Object.entries(p).map(([k, v]) => k + '=' + enc(v)).join('&') + '|' + label;
+  /** @param {string} slug */
+  const role = (slug) => { const r = ROLE_OF[slug] || slug; if (!card[r]) throw new Error('[vital-stats] no Career Tree card for ' + slug); return 'ct|role=' + r + '|the ' + card[r] + ' card'; };
+  /** @param {string} key */
+  const exam = (key) => {
+    if (!creds.credentials[key] || !(EXAM_ROLE[key] || EXAM_FACE[key])) throw new Error('[vital-stats] no Career Tree card for the exam ' + key);
+    return EXAM_FACE[key] ? 'ct|cred=' + enc(EXAM_FACE[key]) + '|the ' + EXAM_FACE[key] + ' card' : role(EXAM_ROLE[key]);
+  };
+  /** @param {any} q @param {string} see @param {boolean} exact @param {string} [gap] */
+  const set = (q, see, exact, gap) => { q.see = see; LINKS[q.id] = { exact, gap: gap ? GAP[gap] : '' }; };
+
+  for (const q of questions) {
+    const id = q.id, st = q.st, m = id.match(/^(pay|growth|openings|pay-top10|pay-bottom10)-([a-z-]+)$/);
+    if (SCHOOL_SEE[id]) { const [see, exact, gap] = SCHOOL_SEE[id]; set(q, see, exact, gap || undefined); continue; }   // chosen where the question is made
+    if (q.k && bySlug[q.k]) { set(q, plm(bySlug[q.k], st), true); continue; }   // a number, a one-in-N, or a place: the card has all three
+    if (q.k === 'uninsured-county') {
+      const fips = id.slice(-5);
+      set(q, plm('payer/uninsured', st, fips, countyLabel(fips, cnames[fips], st) + ', ' + S(st)), true); continue;
+    }
+    if (COUNT_OF[id]) { set(q, plm(COUNT_OF[id]), false, 'count'); continue; }
+    // pay by state: the map's Clinical lens carries the same BLS figures since 2026-10-02 (scripts/pull/oews-states.js)
+    if (q.k && /^pay-/.test(q.k)) { set(q, plm('clinical/' + q.k, st), true); continue; }   // the card shows the year and the hour
+    if (/^pay-gap-/.test(id)) { set(q, plm('clinical/pay-' + id.slice(8)), false, 'spread'); continue; }
+    if (id === 'count-rn-100k' || id === 'count-rt-80k') { set(q, plm(id === 'count-rn-100k' ? 'clinical/pay-rn' : 'clinical/pay-rt'), false, 'count'); continue; }
+    if (m && card[ROLE_OF[m[2]] || m[2]]) { set(q, role(m[2]), true); continue; }   // the job's national pay, range, growth and openings
+    if (/^(pass|fee)-/.test(id)) { set(q, exam(id.replace(/^(pass|fee)-/, '')), true); continue; }
+    // the hospital list, the same file the operations map draws
+    if (q.k === 'hosp-count') { set(q, ops({ state: st }, S(st)), true); continue; }   // the state card counts them and places the state among the fifty
+    if (HOSP_TYPE[q.k || id]) {
+      const [t, words] = HOSP_TYPE[q.k || id];
+      set(q, st ? ops({ types: t, state: st }, words + ' in ' + S(st)) : ops({ types: t }, words), true); continue;
+    }
+    if (q.k === 'hosp-for-profit' || q.k === 'hosp-five-star') { set(q, ops({ state: st }, S(st)), false, 'filter'); continue; }
+    if (id === 'hosp-for-profit' || id === 'hosp-five-star' || id === 'hosp-no-er') { set(q, ops({}, 'every hospital'), false, 'filter'); continue; }
+    if (id === 'hosp-cms-total') { set(q, ops({}, 'every hospital'), true); continue; }
+    if (id === 'hosp-system-hca') { set(q, ops({ sys: 'HCA Healthcare' }, 'HCA Healthcare'), true); continue; }
+    if (id === 'hosp-system-uhs') { set(q, ops({ sys: 'Universal Health Services' }, 'Universal Health Services'), true); continue; }
+    if (q.k === 'dialysis') { set(q, ops({ layers: 'dial', state: st }, 'dialysis centers in ' + S(st)), true); continue; }
+    if (id === 'dialysis-total' || id === 'dialysis-big-two') { set(q, ops({ layers: 'dial' }, 'every dialysis center'), id === 'dialysis-total', id === 'dialysis-total' ? '' : 'filter'); continue; }
+    if (q.k === 'asc') { set(q, ops({ layers: 'asc', state: st }, 'surgery centers in ' + S(st)), true); continue; }
+    if (id === 'asc-total') { set(q, ops({ layers: 'asc' }, 'every surgery center'), true); continue; }
+    if (/^price-/.test(id)) {
+      const fac = /-imc$/.test(id) ? ['460010', 'Intermountain Medical Center'] : /-uofu$/.test(id) ? ['460009', 'University of Utah Hospital'] : null;
+      set(q, fac ? ops({ fac: fac[0] }, fac[1]) : ops({ state: 'UT' }, 'Utah'), false, 'price'); continue;
+    }
+    const c = CURATED_SEE[id];
+    if (c) {
+      const see = c[0] === 'plm' ? plm(/** @type {string} */ (c[1])) : c[0] === 'ct' ? role(/** @type {string} */ (c[1])) : ops(/** @type {any} */ (c[1]), 'every hospital');
+      set(q, see, c[2], c[3]); continue;
+    }
+    LINKS[id] = { exact: false, gap: GAP.none };
+  }
+}
+
 // ─── assemble, check, write ──────────────────────────────────────────────────
 
 function validate(bank) {
@@ -993,6 +1281,7 @@ function validate(bank) {
     if ('st' in q && !STATE_NAMES[q.st]) throw new Error(tag + 'unknown state ' + q.st);
     if (q.more && !q.st) throw new Error(tag + 'a state-game-only question must name its state');
     if ('sub' in q && !(typeof q.sub === 'string' && /\.$/.test(q.sub) && !/\?/.test(q.sub) && q.sub.length <= 140)) throw new Error(tag + 'a sub line is one or two plain sentences, 140 characters at most');
+    if ('see' in q && !/^(plm|ops|ct)\|[^|]*\|[^|]+$/.test(q.see)) throw new Error(tag + 'a see link is "tool|address|label"');
   }
   const text = JSON.stringify(bank);
   if (text.includes('\u2014')) throw new Error('[vital-stats] an em dash got into the bank');
@@ -1014,8 +1303,10 @@ function build() {
     ...countQuestions(cfg, stateData, years),
     ...credQuestions(),
     ...facilityQuestions(),
+    ...schoolQuestions(),
     ...priceQuestions()
   ];
+  linkAll(all, cfg);
   // grouped by category, source order kept inside each group
   const questions = CATS.flatMap((c) => all.filter((q) => q.cat === c));
   const bank = { v: 1, built: String(curated.checked), questions };
@@ -1039,4 +1330,4 @@ if (require.main === module) {
     ' (' + Object.keys(perSt).length + ' states, ' + Math.min(...counts) + ' to ' + Math.max(...counts) + ' each)');
 }
 
-module.exports = { build, OUT, STATE_NAMES, CATS, Q, commas, round, joinNames, ordinal, median, titleCase, pickSaying, tally };
+module.exports = { build, OUT, STATE_NAMES, CATS, Q, commas, round, joinNames, ordinal, median, titleCase, pickSaying, tally, LINKS, mapSlug };

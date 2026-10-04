@@ -21,8 +21,14 @@
  * simply absent, never guessed.
  *
  *   node scripts/pull/oews-states.js            dry run: pull (or read the cache), summarize. Writes nothing.
- *   node scripts/pull/oews-states.js --write    also write src/assets/data/state-pay.json
+ *   node scripts/pull/oews-states.js --write    also write src/assets/data/state-pay.json, and the same figures into
+ *                                               the Population Health Map (stateData.json, dataYears.json and each
+ *                                               measure's retrievedDate in metricsConfig.json)
  *   node scripts/pull/oews-states.js --refresh  ignore the cache
+ *
+ * THE MAP (2026-10-02, David: "put pay by state on the population health map"). Each job is a measure in the map's
+ * Clinical lens, addressed by its stable id (MAP_ID below, scripts/lib/metric-id.js), so the map and Vital Stats show
+ * one number from one pull.
  *
  * Source: https://www.bls.gov/oes/  (the figures are the May 2025 estimates)
  */
@@ -30,6 +36,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { FIPS_ABBR } = require('../lib/fips');
+const { metricIndexById } = require('../lib/metric-id');
 
 const ROOT = path.join(__dirname, '..', '..');
 const CACHE = path.join(ROOT, 'scripts', '.cache', 'oews-states');
@@ -51,6 +58,13 @@ const JOBS = {
   '31-1131': 'Nursing Assistants',
   '31-9092': 'Medical Assistants',
   '11-9111': 'Medical and Health Services Managers'
+};
+
+/** each job's measure on the Population Health Map */
+const MAP_ID = {
+  '29-1141': 'clinical/pay-rn', '29-1126': 'clinical/pay-rt', '29-2061': 'clinical/pay-lpn', '29-1171': 'clinical/pay-np',
+  '29-1071': 'clinical/pay-pa', '29-1051': 'clinical/pay-pharmacist', '29-2034': 'clinical/pay-radtech', '31-1131': 'clinical/pay-cna',
+  '31-9092': 'clinical/pay-med-assistant', '11-9111': 'clinical/pay-health-manager'
 };
 
 /** @param {string} fips @param {string} soc */
@@ -126,7 +140,22 @@ async function main() {
     if (prev && JSON.stringify(Object.assign({}, prev, { checked: '' })) === JSON.stringify(Object.assign({}, out, { checked: '' }))) out.checked = prev.checked;
     fs.writeFileSync(OUT, JSON.stringify(out) + '\n');
     console.log('  wrote ' + path.relative(ROOT, OUT));
-  } else console.log('  dry run: add --write to write ' + path.relative(ROOT, OUT));
+    // the same figures on the Population Health Map: a state BLS suppressed is null there, as the other measures do
+    const D = path.join(ROOT, 'src', '_data');
+    const readD = (/** @type {string} */ f) => JSON.parse(fs.readFileSync(path.join(D, f), 'utf8'));
+    const cfg = readD('metricsConfig.json'), stateData = readD('stateData.json'), dataYears = readD('dataYears.json');
+    for (const [soc, id] of Object.entries(MAP_ID)) {
+      const { lens, index } = metricIndexById(cfg, id);
+      const pay = occupations[soc].pay;
+      stateData[lens][index] = Object.fromEntries(Object.values(FIPS_ABBR).slice().sort().map((st) => [st, typeof pay[st] === 'number' ? pay[st] : null]));
+      dataYears[lens][index] = year;
+      cfg[lens].items[Number(index)].retrievedDate = out.checked.slice(0, 7);
+    }
+    fs.writeFileSync(path.join(D, 'stateData.json'), JSON.stringify(stateData, null, 2) + '\n');
+    fs.writeFileSync(path.join(D, 'dataYears.json'), JSON.stringify(dataYears, null, 2) + '\n');
+    fs.writeFileSync(path.join(D, 'metricsConfig.json'), JSON.stringify(cfg, null, 2) + '\n');
+    console.log('  wrote ' + Object.keys(MAP_ID).length + ' measures into the Population Health Map (stateData.json, dataYears.json, metricsConfig.json)');
+  } else console.log('  dry run: add --write to write ' + path.relative(ROOT, OUT) + ' and the map\'s ' + Object.keys(MAP_ID).length + ' pay measures');
 }
 
 main().catch((e) => { console.error('oews-states: ' + (e && e.message || e)); process.exit(1); });

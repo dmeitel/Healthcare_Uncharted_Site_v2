@@ -35,7 +35,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { STATE_NAMES, CATS, Q, commas, joinNames, ordinal, tally } = require('./build-vital-stats.js');
+const { STATE_NAMES, CATS, Q, commas, joinNames, ordinal, tally, round } = require('./build-vital-stats.js');
 
 const ROOT = path.join(__dirname, '..');
 const ASSETS = path.join(ROOT, 'src', 'assets', 'data');
@@ -51,6 +51,9 @@ const FEATURED = ['Intermountain Health', 'Kaiser Permanente', 'HCA Healthcare',
 const RENAMED = { 'Intermountain Healthcare': 'Intermountain Health' };
 /** federal hospitals file no Medicare cost report, so these systems cannot fill a game */
 const FEDERAL = new Set(['Veterans Health Administration (VA)', 'U.S. Military Health System (DoD)']);
+/** template -> how many questions, and whether the map shows their number: for the link report only, never shipped
+ *  @type {Record<string, {n:number, exact:boolean, gap:string}>} */
+const SYS_LINKS = {};
 const PER_TEMPLATE = 60;    // hospitals asked about per template; a game asks one, the strip draws them all
 const MIN_HOSPITALS = 3, MIN_TEMPLATES = 8, MIN_QUESTIONS = 12;
 
@@ -206,6 +209,28 @@ const HT = [
 /** national figures the notes compare against, filled in by build() */
 const NAT = { los: 0, mcr: 0, mcd: 0 };
 
+/* THE MAP'S CARDS (2026-10-02, David: "put the cost report numbers on the hospital cards"). The operations map shows a
+   hospital's cost report numbers, and a system's totals, from a file this builder writes with the same templates and
+   the same totals the questions use, so a card and a question can never disagree. */
+const CARD_OUT = path.join(ASSETS, 'us-hospital-cost-reports.json');
+/** a hospital's card numbers, in HT order, each rounded as its question rounds it, null where the question would not ask
+ *  @param {Report} o */
+const hospitalCard = (o) => HT.map((T) => (T.ok(o) ? round(T.a(o), T.dp) : null));
+/**
+ * A system's totals across its hospitals with a full year on file, each null below the line its question needs.
+ * @param {Report[]} reps
+ */
+function totalsOf(reps) {
+  const sum = (/** @type {(o:Report)=>number} */ f) => reps.reduce((s, o) => s + f(o), 0);
+  const years = tally(reps, (o) => String(periodOf(o).y));
+  const yr = Number(Object.keys(years).sort((a, b) => years[b] - years[a] || b.localeCompare(a))[0]);
+  const beds = sum((o) => o.b), icu = sum((o) => o.icu), dc = sum((o) => o.dc), fte = sum((o) => o.fte), days = sum((o) => o.d);
+  const m = days >= 10000 ? sum((o) => o.mcr + o.mcrh) / days * 100 : 0, d = days >= 10000 ? sum((o) => o.mcd + o.mcdh) / days * 100 : 0;
+  const res = sum((o) => o.res), teach = reps.filter((o) => o.res >= 5).length;
+  return { yr, beds, icu: icu >= 10 ? icu : null, dc: dc >= 1000 ? dc : null, fte: fte >= 100 ? fte : null,
+    mcr: m >= 1 ? m : null, mcd: d >= 1 ? d : null, res: res >= 20 && teach ? Math.round(res) : null };
+}
+
 /**
  * @param {[string, number][]} list [hospital id, value]
  * @param {string} id @param {(id:string)=>string} nameOf @param {(v:number)=>string} fmt
@@ -238,6 +263,11 @@ function systemQuestions(name, hosp, hc, ctx) {
   /** the lines under the questions, the same way: each written once, a question names its line by `u`
    *  @type {string[]} */
   const subs = [];
+  /** where to see it (2026-10-02): the system, or one of its hospitals, on the operations map, which names systems by
+   *  AHRQ's spelling. Written once each, a question names its view by `v`, as build-vital-stats.js explains `see`.
+   *  @type {string[]} */
+  const sees = [];
+  const mapName = ctx.ahrqName[name];
   const HC = {
     s: 'hc', src: `Medicare hospital cost reports (CMS HCRIS, Worksheet S-3), fiscal year ${hc._meta.fiscalYearFile} file`,
     url: 'https://www.cms.gov/data-research/statistics-trends-and-reports/cost-reports/cost-reports-fiscal-year',
@@ -259,6 +289,10 @@ function systemQuestions(name, hosp, hc, ctx) {
     }
     rec.sys = slug;
     if (o.h) rec.h = o.h;
+    const see = 'ops|sys=' + encodeURIComponent(mapName) + (o.hid ? '&fac=' + o.hid : '') + '|' + (o.hid ? o.h : name);
+    let v = sees.indexOf(see);
+    if (v < 0) { v = sees.length; sees.push(see); }
+    rec.v = v;
     out.push(rec);
   };
 
@@ -286,7 +320,7 @@ function systemQuestions(name, hosp, hc, ctx) {
       const a = T.a(o);
       const why = [rankLine(vals, h.id, nameOf, T.w, SN, T.rank), T.note(o)].filter(Boolean).join(' ');
       add(Object.assign({}, HC, { id, k: T.k, cat: T.cat, unit: T.unit, suf: T.suf || '', dp: T.dp, a, year: P.y,
-        q: T.q(nameOf(h.id), P.label), sub: T.sub, why: why || T.sub, h: nameOf(h.id) }));
+        q: T.q(nameOf(h.id), P.label), sub: T.sub, why: why || T.sub, h: nameOf(h.id), hid: h.id }));
     }
   }
 
@@ -351,51 +385,42 @@ function systemQuestions(name, hosp, hc, ctx) {
 
   // totals from the cost reports
   if (rep.length >= 2) {
-    const years = tally(rep, (x) => String(periodOf(x.o).y));
-    const yr = Number(Object.keys(years).sort((a, b) => years[b] - years[a] || b.localeCompare(a))[0]);
+    const tt = totalsOf(rep.map((x) => x.o)), yr = tt.yr, beds = tt.beds;   // the same totals the map's system card shows
     const from = rep.length === n ? `From all ${n} hospitals' latest cost reports, mostly ${yr}.`
       : `From ${rep.length} of the ${n} hospitals' latest cost reports, mostly ${yr}; the others had no full year on file.`;
-    const sum = (/** @type {(o:Report)=>number} */ f) => rep.reduce((s, x) => s + f(x.o), 0);
     const T = Object.assign({}, HC, { year: yr });
-    const beds = sum((o) => o.b);
     add(Object.assign({}, T, { id: cid + '-beds-all', k: 'beds-all', cat: 'Hospitals', unit: 'beds', a: beds,
       q: `How many beds do ${SN}'s hospitals report to Medicare, added together?`,
       sub: 'Every one of its hospitals\' latest Medicare cost report, added up.', why: from }));
     const big = rep.slice().sort((a, b) => b.o.b - a.o.b || (a.h.id < b.h.id ? -1 : 1));
     if (big.length >= 3 && big[0].o.b >= 5) {
       add(Object.assign({}, T, { id: cid + '-biggest', k: 'beds', cat: 'Hospitals', unit: 'beds', a: big[0].o.b, year: periodOf(big[0].o).y,
-        q: `How many beds does ${SN}'s biggest hospital report to Medicare?`, h: nameOf(big[0].h.id),
+        q: `How many beds does ${SN}'s biggest hospital report to Medicare?`, h: nameOf(big[0].h.id), hid: big[0].h.id,
         sub: 'Biggest by beds on its cost report. The answer names the hospital.',
         why: `It is ${nameOf(big[0].h.id)}. ${nameOf(big[1].h.id)} is next, with ${commas(big[1].o.b)}.` }));
     }
-    const icu = sum((o) => o.icu);
-    if (icu >= 10) add(Object.assign({}, T, { id: cid + '-icu-all', k: 'icu-all', cat: 'Hospitals', unit: 'beds', a: icu,
+    const icu = tt.icu;
+    if (icu != null) add(Object.assign({}, T, { id: cid + '-icu-all', k: 'icu-all', cat: 'Hospitals', unit: 'beds', a: icu,
       q: `How many intensive care beds do ${SN}'s hospitals report to Medicare, added together?`, sub: ICU_SUB,
       why: `That is ${pctOf(icu, beds)} of their ${commas(beds)} beds. ${from}` }));
-    const dc = sum((o) => o.dc);
-    if (dc >= 1000) add(Object.assign({}, T, { id: cid + '-dc-all', k: 'dc-all', cat: 'Hospitals', unit: 'discharges', a: dc,
+    const dc = tt.dc;
+    if (dc != null) add(Object.assign({}, T, { id: cid + '-dc-all', k: 'dc-all', cat: 'Hospitals', unit: 'discharges', a: dc,
       q: `How many inpatient discharges did ${SN}'s hospitals report in a year, added together?`, sub: DC_SUB,
       why: `About ${commas(dc / 365, 0)} a day. ${from}` }));
-    const fte = sum((o) => o.fte);
-    if (fte >= 100) add(Object.assign({}, T, { id: cid + '-fte-all', k: 'fte-all', cat: 'Workforce', unit: 'employees (full-time equivalent)', a: fte,
+    if (tt.fte != null) add(Object.assign({}, T, { id: cid + '-fte-all', k: 'fte-all', cat: 'Workforce', unit: 'employees (full-time equivalent)', a: tt.fte,
       q: `How many full-time-equivalent employees do ${SN}'s hospitals have on payroll, added together?`,
       sub: 'Two half-time employees count as one. Hospital payrolls only: clinics, offices and any health plan are left out.',
       why: from }));
-    const days = sum((o) => o.d);
-    if (days >= 10000) {
-      const m = sum((o) => o.mcr + o.mcrh) / days * 100, d = sum((o) => o.mcd + o.mcdh) / days * 100;
-      if (m >= 1) add(Object.assign({}, T, { id: cid + '-mcr-all', k: 'mcr-all', cat: 'Coverage', unit: 'percent', suf: '%', a: m,
-        q: `Across all of ${SN}'s hospitals, what percent of inpatient days were for Medicare patients?`, sub: MCR_SUB,
-        why: `Across every U.S. hospital's cost report it is ${commas(NAT.mcr, 0)} percent.` }));
-      if (d >= 1) add(Object.assign({}, T, { id: cid + '-mcd-all', k: 'mcd-all', cat: 'Coverage', unit: 'percent', suf: '%', a: d,
-        q: `Across all of ${SN}'s hospitals, what percent of inpatient days were for Medicaid patients?`, sub: MCD_SUB,
-        why: `Across every U.S. hospital's cost report it is ${commas(NAT.mcd, 0)} percent.` }));
-    }
+    if (tt.mcr != null) add(Object.assign({}, T, { id: cid + '-mcr-all', k: 'mcr-all', cat: 'Coverage', unit: 'percent', suf: '%', a: tt.mcr,
+      q: `Across all of ${SN}'s hospitals, what percent of inpatient days were for Medicare patients?`, sub: MCR_SUB,
+      why: `Across every U.S. hospital's cost report it is ${commas(NAT.mcr, 0)} percent.` }));
+    if (tt.mcd != null) add(Object.assign({}, T, { id: cid + '-mcd-all', k: 'mcd-all', cat: 'Coverage', unit: 'percent', suf: '%', a: tt.mcd,
+      q: `Across all of ${SN}'s hospitals, what percent of inpatient days were for Medicaid patients?`, sub: MCD_SUB,
+      why: `Across every U.S. hospital's cost report it is ${commas(NAT.mcd, 0)} percent.` }));
     const teach = rep.filter((x) => x.o.res >= 5);
-    const res = sum((o) => o.res);
-    if (res >= 20 && teach.length) {
+    if (tt.res != null) {
       const t0 = teach.slice().sort((a, b) => b.o.res - a.o.res)[0];
-      add(Object.assign({}, T, { id: cid + '-res-all', k: 'res-all', cat: 'Workforce', unit: 'residents (full-time equivalent)', a: Math.round(res),
+      add(Object.assign({}, T, { id: cid + '-res-all', k: 'res-all', cat: 'Workforce', unit: 'residents (full-time equivalent)', a: tt.res,
         q: `How many full-time-equivalent resident physicians train in ${SN}'s hospitals, added together?`, sub: RES_SUB,
         why: `${teach.length === 1 ? 'One of its hospitals reports' : teach.length + ' of its hospitals report'} residents; ${nameOf(t0.h.id)} trains the most, ${commas(t0.o.res, 0)}.` }));
     }
@@ -406,7 +431,7 @@ function systemQuestions(name, hosp, hc, ctx) {
     add({ id: `${cid}-own-${c.id}`, k: c.k || 'cur-' + c.id, cat: c.cat, q: c.q, sub: c.sub, a: c.a, unit: c.unit, pre: c.pre, suf: c.suf, dp: c.dp,
       src: c.src, url: c.url, year: c.year, checked: c.checked, why: c.why });
   }
-  return { slug, out, srcs, subs };
+  return { slug, out, srcs, subs, sees };
 }
 
 // ─── check, assemble ──────────────────────────────────────────────────────────────────────
@@ -476,7 +501,7 @@ function build() {
   for (const name of names) {
     const hosp = bySys[ahrqName[name]].slice().sort((a, b) => (a.id < b.id ? -1 : 1));
     if (hosp.length < MIN_HOSPITALS) continue;
-    const { slug, out, srcs, subs } = systemQuestions(name, hosp, hc, ctx);
+    const { slug, out, srcs, subs, sees } = systemQuestions(name, hosp, hc, ctx);
     const ks = new Set(out.map((q) => q.k));
     if (ks.size < MIN_TEMPLATES || out.length < MIN_QUESTIONS) {
       if (FEATURED.includes(name)) throw new Error('[vital-stats-systems] featured system cannot fill a game: ' + name);
@@ -485,12 +510,27 @@ function build() {
     if (slugs.has(slug)) throw new Error('[vital-stats-systems] two systems share the id ' + slug);
     slugs.add(slug);
     validate(out, seen, srcs);
+    /* for the link report: the system card counts its hospitals and states, and since 2026-10-02 the hospital and
+       system cards carry the cost report numbers from buildCard(), made by the same templates and totals */
+    for (const q of out) {
+      /* a system's own published figure (an "-own-" fact) shares its template's key so a game never deals both, but it
+         is the system's number, not the cost report's, so it is never exact */
+      const own = /-own-/.test(q.id), key = own ? q.k + ' (the system\'s own figure)' : q.k;
+      /* the system card's "By state" rows (2026-10-02) carry each state's count and the system's share of it; its
+         "By type" rows carry the critical access count and the hospitals outside a metro area */
+      const exact = !own && (q.k === 'sy-count' || q.k === 'sy-states' || q.k === 'sy-state' || q.k === 'sy-share' ||
+        q.k === 'sy-cah' || q.k === 'sy-rural' ||
+        HT.some((T) => q.k === 'sy-' + T.k) || /^sy-(beds|icu|dc|fte|mcr|mcd|res)-all$/.test(q.k));
+      const L = SYS_LINKS[key] || (SYS_LINKS[key] = { n: 0, exact, gap: exact ? '' : own ? 'The system publishes this itself; the map shows the cost report figures beside it.'
+        : 'The system\'s card on the map shows its hospitals, states and cost report totals, not this.' });
+      L.n++;
+    }
     const qs = CATS.flatMap((c) => out.filter((q) => q.cat === c));
     const src = Object.fromEntries(Object.keys(srcs).sort().map((k) => [k, srcs[k]]));
     /** the shipped row names its line by `u`; the page puts the text back on load @param {any} q */
     const ship = (q) => { const r = Object.assign({}, q); delete r.sub; return r; };
     files[slug + '.json'] = '{"v":1,"id":' + JSON.stringify(slug) + ',"name":' + JSON.stringify(name) + ',"built":' + JSON.stringify(String(hc._meta.pulled)) +
-      ',"src":' + JSON.stringify(src) + ',"subs":' + JSON.stringify(subs) + ',"questions":[\n' + qs.map((q) => JSON.stringify(ship(q))).join(',\n') + '\n]}\n';
+      ',"src":' + JSON.stringify(src) + ',"subs":' + JSON.stringify(subs) + ',"sees":' + JSON.stringify(sees) + ',"questions":[\n' + qs.map((q) => JSON.stringify(ship(q))).join(',\n') + '\n]}\n';
     const byState = tally(hosp, (h) => h.s);
     /** @type {any} */
     const row = { id: slug, name, n: hosp.length, st: Object.keys(byState).sort((a, b) => byState[b] - byState[a] || a.localeCompare(b)), q: qs.length };
@@ -501,7 +541,38 @@ function build() {
   return files;
 }
 
+/**
+ * The operations map's cost report file: every hospital with a full year on file (the same line the questions use)
+ * and every system with two or more, one line each so a refresh diffs small.
+ *   h:   CCN -> [period label, ...one value per template in `fields`]
+ *   sys: the map's system name -> [hospitals with a full year, hospitals on the list, the most common year, beds, icu, dc, fte, mcr, mcd, res]
+ */
+function buildCard() {
+  const H = readJson(path.join(ASSETS, 'us-hospitals.json')).hospitals;
+  const hc = readJson(HCRIS);
+  const full = (/** @type {Report|undefined} */ o) => !!o && o.pd >= 300;
+  const onMap = new Set(H.map((h) => h.id));   // a cost report for a hospital the map does not draw has no card to sit on
+  const ids = Object.keys(hc.byCcn).filter((id) => onMap.has(id) && full(hc.byCcn[id])).sort();
+  /** @type {Record<string, any[]>} */
+  const bySys = {};
+  for (const h of H) if (h.sys) (bySys[h.sys] = bySys[h.sys] || []).push(h);
+  const sysRows = Object.keys(bySys).sort().map((s) => {
+    const reps = bySys[s].map((h) => hc.byCcn[h.id]).filter(full);
+    if (reps.length < 2) return null;
+    const t = totalsOf(reps), r0 = (/** @type {number|null} */ v) => (v == null ? null : round(v, 0));
+    return JSON.stringify(s) + ':' + JSON.stringify([reps.length, bySys[s].length, t.yr, r0(t.beds), r0(t.icu), r0(t.dc), r0(t.fte), r0(t.mcr), r0(t.mcd), t.res]);
+  }).filter(Boolean);
+  const meta = { source: `Medicare hospital cost reports (CMS HCRIS, Worksheet S-3), fiscal year ${hc._meta.fiscalYearFile} file`,
+    url: 'https://www.cms.gov/data-research/statistics-trends-and-reports/cost-reports/cost-reports-fiscal-year',
+    pulled: String(hc._meta.pulled), built_by: 'scripts/build-vital-stats-systems.js (the same numbers Vital Stats asks)' };
+  return '{"_meta":' + JSON.stringify(meta) + ',"fields":' + JSON.stringify(HT.map((T) => T.k)) + ',"h":{\n' +
+    ids.map((id) => JSON.stringify(id) + ':' + JSON.stringify([periodOf(hc.byCcn[id]).label, ...hospitalCard(hc.byCcn[id])])).join(',\n') +
+    '\n},"sys":{\n' + sysRows.join(',\n') + '\n}}\n';
+}
+
 if (require.main === module) {
+  fs.writeFileSync(CARD_OUT, buildCard());
+  console.log(`vital-stats systems: the operations map's cost report cards -> ${path.relative(ROOT, CARD_OUT)} (${(fs.statSync(CARD_OUT).size / 1024).toFixed(0)} KB)`);
   const files = build();
   fs.mkdirSync(OUT_DIR, { recursive: true });
   for (const f of fs.readdirSync(OUT_DIR)) if (!files[f]) fs.unlinkSync(path.join(OUT_DIR, f));   // a system that left the list
@@ -513,4 +584,4 @@ if (require.main === module) {
   for (const r of index.filter((x) => x.f)) console.log(`  ${r.name}: ${r.n} hospitals in ${r.st.join(' ')}, ${r.q} questions`);
 }
 
-module.exports = { build, OUT_DIR, shortName };
+module.exports = { build, buildCard, CARD_OUT, OUT_DIR, shortName, SYS_LINKS };

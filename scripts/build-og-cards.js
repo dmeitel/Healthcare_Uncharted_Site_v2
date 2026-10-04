@@ -50,15 +50,15 @@ const CARDS = [
     out: 'og-operators-map.jpg',
     kicker: 'Interactive · CMS data',
     title: 'U.S. Hospital Operations Map',
-    lines: ['Hospitals, dialysis, surgery centers, pharmacies and suppliers', 'as stackable layers. Drill from states to a single facility.'],
+    lines: ['Hospitals, healthcare schools, dialysis, surgery centers, pharmacies', 'and suppliers as stackable layers. Drill from states to one place.'],
     tags: ['34,000+ facilities', 'County drill-down', 'Draw your own search'],
   },
   {
     out: 'og-multi-lens-map.jpg',
     kicker: 'Interactive · Seven lenses',
     title: 'U.S. Population Health Map',
-    lines: ['Every state through Patient, Clinical, Operations, Payer,', 'Policy, Economics and baseline lenses. 62 metrics, county grain.'],
-    tags: ['50 states compared', '62 metrics', 'Real county boundaries'],
+    lines: ['Every state through Patient, Clinical, Operations, Payer,', 'Policy, Economics and baseline lenses. 72 metrics, county grain.'],
+    tags: ['50 states compared', '72 metrics', 'Real county boundaries'],
   },
   {
     out: 'og-career-tree.jpg',

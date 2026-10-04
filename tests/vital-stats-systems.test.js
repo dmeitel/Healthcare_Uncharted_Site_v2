@@ -36,6 +36,28 @@ test('the folder is exactly what the builder makes, byte for byte, with no stray
   }
 });
 
+test('the operations map\'s cost report file is what the builder makes, and every cost report question\'s answer is on its card', () => {
+  const { buildCard, CARD_OUT } = require('../scripts/build-vital-stats-systems.js');
+  assert.equal(buildCard(), fs.readFileSync(CARD_OUT, 'utf8').replace(/\r\n/g, '\n'), 'us-hospital-cost-reports.json is stale. Run: npm run build:vital-stats');
+  const C = JSON.parse(fs.readFileSync(CARD_OUT, 'utf8'));
+  const TOT = ['beds', 'icu', 'dc', 'fte', 'mcr', 'mcd', 'res'];
+  let n = 0;
+  for (const f of Object.values(files)) {
+    for (const q of f.questions) {
+      if (/-own-/.test(q.id)) continue;                           // a system's own figure, not the cost report's
+      const p = new URLSearchParams(f.sees[q.v].split('|')[1]);
+      const one = q.k.match(/^sy-(\w+)$/), all = q.k.match(/^sy-(\w+)-all$/);
+      let v;
+      if (q.h && one && C.fields.includes(one[1])) v = (C.h[p.get('fac')] || [])[1 + C.fields.indexOf(one[1])];
+      else if (all && TOT.includes(all[1])) v = (C.sys[p.get('sys')] || [])[3 + TOT.indexOf(all[1])];
+      else continue;
+      assert.equal(v, q.a, q.id + ': the card the link opens shows ' + v + ', the question answers ' + q.a);
+      n++;
+    }
+  }
+  assert.ok(n > 20000, n + ' cost report questions checked against their cards');
+});
+
 test('the picker lists the four David named first, and every row matches its file', () => {
   const feat = index.systems.filter((/** @type {any} */ r) => r.f).sort((/** @type {any} */ a, /** @type {any} */ b) => a.f - b.f).map((/** @type {any} */ r) => r.name);
   assert.deepEqual(feat, FEATURED);

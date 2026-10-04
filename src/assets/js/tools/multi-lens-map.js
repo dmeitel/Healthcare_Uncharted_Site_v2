@@ -35,6 +35,13 @@ window.DATA_YEARS = mlmData('mlm-data-years');
 
   const LENSES = { patient:'Patient', clinical:'Clinical', operations:'Operations', payer:'Payer', policy:'Policy', baseline:'Baseline', economics:'Economics' };
   const SCALE = ['#FF6B6B','#F2A65A','#E8C547','#7FD2C8','#4ECDC4'];   // worse → better
+  /* NEUTRAL MEASURES (2026-10-03, David: "go, fix the neutral measures next"). A measure with no better or worse
+     (metricsConfig dir 0: median age, population shares, hospital counts, Medicare telehealth use) ran on the scale
+     above, so a young state read red and an old one teal, and its card said "1 = best". It runs lower → higher instead,
+     on the slate-to-amber ramp the Career Tree's pay heatmap already uses (career-tree.js heatColor, #3a5a7a to #E8A838,
+     in quarters), so no color is new; its rank says "1 = highest", and nothing calls a state better or worse. */
+  const LEVEL = ['#3a5a7a','#666e6a','#918159','#bd9549','#e8a838'];   // lower → higher
+  const neutral = it => !!it && it.dir === 0;
   // county-grain availability: boot value mirrors countyData.json TODAY, then
   // gets re-derived from the live file the moment it loads — new pulled layers
   // light up with no code change here
@@ -69,7 +76,9 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   let yearIdx = 6;   // last of the seven = the real data year
   const TREND_CONFIG = {
     patient: { 0:{type:'pct',rate:-0.008}, 1:{type:'pct',rate:0.003}, 2:{type:'pct',rate:-0.006}, 3:{type:'pct',rate:0.010}, 4:{type:'abs',rate:0.20}, 5:{type:'abs',rate:-1.5}, 6:{type:'lifeExp'}, 7:{type:'pct',rate:0.003} },
-    clinical: { 0:{type:'abs',rate:0.5}, 1:{type:'abs',rate:1.5}, 2:{type:'abs',rate:2.5}, 4:{type:'abs',rate:0.15}, 5:{type:'pct',rate:0.08}, 6:{type:'abs',rate:0.15}, 7:{type:'abs',rate:12}, 8:{type:'abs',rate:0.8} },
+    // clinical 5 has no drift (2026-10-03): it is Medicare telehealth use now, and a steady 8% a year invented a climb
+    // when CMS's own claims show it peaked in 2020 (47.9% nationally) and fell to 23.3% in 2025
+    clinical: { 0:{type:'abs',rate:0.5}, 1:{type:'abs',rate:1.5}, 2:{type:'abs',rate:2.5}, 4:{type:'abs',rate:0.15}, 6:{type:'abs',rate:0.15}, 7:{type:'abs',rate:12}, 8:{type:'abs',rate:0.8} },
     operations: { 0:{type:'abs',rate:-0.03}, 1:{type:'abs',rate:-2.0}, 3:{type:'pct',rate:0.005}, 4:{type:'abs',rate:1.0}, 5:{type:'abs',rate:0.02}, 6:{type:'abs',rate:-0.08} },
     payer: { 0:{type:'pct',rate:-0.04}, 1:{type:'pct',rate:0.015}, 2:{type:'pct',rate:0.012}, 3:{type:'pct',rate:0.08}, 4:{type:'pct',rate:-0.005}, 5:{type:'pct',rate:0.040} },
     economics: { 0:{type:'abs',rate:2.5}, 1:{type:'abs',rate:-0.08}, 2:{type:'abs',rate:0.4}, 3:{type:'abs',rate:-0.15}, 4:{type:'abs',rate:1.2} },
@@ -101,6 +110,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   }
   const cVal = fips => { const l = CDATA && CDATA[lens]; const m = l && l[String(mIdx)]; const v = m ? m[fips] : null; return v == null ? null : +v; };
   const hasCounty = () => !!(COUNTY_IDX[lens] && COUNTY_IDX[lens].includes(String(mIdx)));
+  const perHr = v => '$' + (v / item().perHour).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
   const fmtVFor = (it, v) => { const u = it.unit || ''; return u === '$' ? '$' + v.toLocaleString('en-US') : u === '$k' ? '$' + v + 'k' : v.toLocaleString('en-US') + (u === '%' ? '%' : u ? ' ' + u : ''); };
   const fmtV = v => fmtVFor(item(), v);
 
@@ -278,7 +288,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     const q = p => v[Math.min(v.length - 1, Math.floor(p * v.length))];
     return [q(0.2), q(0.4), q(0.6), q(0.8)];
   }
-  const colorFor = (v, breaks) => { let i = 0; while (i < 4 && v >= breaks[i]) i++; return item().dir === -1 ? SCALE[4 - i] : SCALE[i]; };
+  const colorFor = (v, breaks) => { let i = 0; while (i < 4 && v >= breaks[i]) i++; return neutral(item()) ? LEVEL[i] : item().dir === -1 ? SCALE[4 - i] : SCALE[i]; };
 
   function paintStates(){
     if (!map.getLayer('lv-state-fill') || !STATES) return;
@@ -408,7 +418,8 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   }
   function legend(){
     const leg = $('lvCleg'); if (!leg) return;
-    leg.innerHTML = '<span></span>' + SCALE.map(c => '<i style="background:' + c + '"></i>').join('') + '<span>worse → better</span>';
+    const neu = neutral(item());
+    leg.innerHTML = '<span></span>' + (neu ? LEVEL : SCALE).map(c => '<i style="background:' + c + '"></i>').join('') + '<span>' + (neu ? 'lower → higher' : 'worse → better') + '</span>';
     leg.firstChild.textContent = item().name.length > 26 ? item().name.slice(0, 24) + '…' : item().name;
     if (ovItem()){
       const s = document.createElement('span');
@@ -656,6 +667,9 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   // ── URL state, v1-compatible: the old page's ?lens=&metric=<name-slug>&state=
   //    links keep resolving; ?year= and ?county= are new. replaceState only. ──
   const metricSlug = n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // a link written under a measure's old name still lands on it (2026-10-03: Telehealth adoption became Medicare telehealth use)
+  const RENAMED = { 'telehealth-adoption': 'medicare-telehealth-use' };
+  const linkSlug = s => RENAMED[s] || s;
   // scope changes PUSH (back unwinds county → state → US before leaving the
   // page — the phone back contract); lens/metric/year tweaks replace
   const urlCtl = HUKit.urlState({ url: () => urlFor(), scope: () => scopeKey(), seeded: true });   // arrival replaces once, then scope changes push
@@ -701,13 +715,13 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       const L = p.get('lens');
       if (L && LENSES[L]){ lens = L; mIdx = 0; }
       const mk = p.get('metric');
-      if (mk){ const idx = CFG[lens].items.findIndex(it => metricSlug(it.name) === mk); if (idx >= 0) mIdx = idx; }
+      if (mk){ const idx = CFG[lens].items.findIndex(it => metricSlug(it.name) === linkSlug(mk)); if (idx >= 0) mIdx = idx; }
       const ov = p.get('ov');
       if (ov){
         const ci = ov.indexOf(':');
         const ol = ov.slice(0, ci), oslug = ov.slice(ci + 1);
         if (LENSES[ol]){
-          const oi = CFG[ol].items.findIndex(it => metricSlug(it.name) === oslug);
+          const oi = CFG[ol].items.findIndex(it => metricSlug(it.name) === linkSlug(oslug));
           if (oi >= 0 && !(ol === lens && oi === mIdx)){ ovLens = ol; ovIdx = oi; }
         }
       }
@@ -716,7 +730,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
         const pc = tok.indexOf(':');
         const pl = tok.slice(0, pc), ps = tok.slice(pc + 1);
         if (!LENSES[pl]) return;
-        const pi = CFG[pl].items.findIndex(it => metricSlug(it.name) === ps);
+        const pi = CFG[pl].items.findIndex(it => metricSlug(it.name) === linkSlug(ps));
         if (pi >= 0 && !isPinned(pl, pi)) PINS.push({ l: pl, i: pi });
       });
       metricFace(); yearFace();
@@ -759,7 +773,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     const b = $('lvSheetBody');
     b.innerHTML = '<div class="lv-kicker">Rankings · ' + yearTag() + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-rows"></div>';
     b.querySelector('.lv-name').textContent = item().name;
-    b.querySelector('.lv-sub').textContent = 'Best first · tap a state to open it';
+    b.querySelector('.lv-sub').textContent = (neutral(item()) ? 'Highest first' : 'Best first') + ' · tap a state to open it';
     const host = b.querySelector('.lv-rows');
     host.innerHTML = rows.map((r,i) =>
       '<button class="pop-opt lv-rank-row" type="button" data-ab="' + r.abbr + '" aria-selected="' + (selState && selState.abbr === r.abbr) + '"><b>#' + (i+1) + '</b><span class="rn"></span><span class="lv-rank-v">' + fmtV(r.v) + '</span></button>').join('');
@@ -899,10 +913,12 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       cell('', 'th') + cell(selState.abbr + ' state', 'th') + cell('Nation', 'th') +
       cell('Value · ' + yearTag(), 'rl') +
       cell(v == null ? 'no data' : fmtV(v), 'val') +
-      cell(avg == null ? '—' : fmtV(Math.round(avg * 10) / 10) + '<span>avg</span>', 'val sm') +
+      cell(avg == null ? '—' : fmtV(item().unit === '$' ? Math.round(avg) : Math.round(avg * 10) / 10) + '<span>avg</span>', 'val sm') +   /* whole dollars stay whole */
+      /* a yearly wage also reads per hour (metricsConfig perHour: the hours in BLS's full-time year, 2,080) */
+      (item().perHour ? cell('Per hour', 'rl') + cell(v == null ? 'no data' : perHr(v), 'val sm') + cell(avg == null ? '—' : perHr(avg) + '<span>avg</span>', 'val sm') : '') +
       cell('Rank', 'rl') +
-      cell(rank ? '#' + rank + '<span>of ' + vals.length + '</span>' : '—', 'val sm' + (rank && rank <= 10 ? ' hi' : rank && rank > vals.length - 10 ? ' lo' : '')) +
-      cell('<span>1 = best on this metric</span>', 'val sm') +
+      cell(rank ? '#' + rank + '<span>of ' + vals.length + '</span>' : '—', 'val sm' + (neutral(item()) ? '' : rank && rank <= 10 ? ' hi' : rank && rank > vals.length - 10 ? ' lo' : '')) +
+      cell('<span>' + (neutral(item()) ? '1 = highest on this metric' : '1 = best on this metric') + '</span>', 'val sm') +
       cell('Population', 'rl') +
       cell(spop ? fmtPop(spop) : (CPOP ? '—' : 'loading…'), 'val sm') +
       cell(NPOP ? fmtPop(NPOP) : '—', 'val sm');
@@ -954,7 +970,10 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     if (va != null && vb != null){
       const d = Math.round((va - vb) * 10) / 10;
       const better = item().dir === -1 ? (va < vb ? selState.abbr : cmpState.abbr) : (va > vb ? selState.abbr : cmpState.abbr);
-      tiles.push({ v:(d >= 0 ? '+' : '') + fmtV(d).replace('%','') + (item().unit === '%' ? 'pp' : ''), k:'Δ · ' + better + ' better', cls:' hi' });
+      const higher = va > vb ? selState.abbr : cmpState.abbr;
+      tiles.push(neutral(item())
+        ? { v:(d >= 0 ? '+' : '') + fmtV(d).replace('%','') + (item().unit === '%' ? 'pp' : ''), k:'Δ · ' + higher + ' higher' }
+        : { v:(d >= 0 ? '+' : '') + fmtV(d).replace('%','') + (item().unit === '%' ? 'pp' : ''), k:'Δ · ' + better + ' better', cls:' hi' });
     }
     b.querySelector('.hu-stats').innerHTML = tiles.map(s => '<div class="hu-stat"><div class="v' + (s.cls||'') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
     const act = b.querySelector('.lv-actions');
@@ -1012,8 +1031,8 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       cell(v == null ? 'no data' : fmtV(v), 'val') +
       cell(sv == null ? '—' : fmtV(sv), 'val') +
       cell('Rank', 'rl') +
-      cell(rank ? '#' + rank + '<span>of ' + vals.length + ' in ' + selState.abbr + '</span>' : '—', 'val sm' + (rank && rank <= 5 ? ' hi' : '')) +
-      cell(sRank ? '#' + sRank + '<span>of ' + nVals.length + ' US</span>' : '—', 'val sm' + (sRank && sRank <= 10 ? ' hi' : sRank && sRank > nVals.length - 10 ? ' lo' : '')) +
+      cell(rank ? '#' + rank + '<span>of ' + vals.length + ' in ' + selState.abbr + '</span>' : '—', 'val sm' + (!neutral(item()) && rank && rank <= 5 ? ' hi' : '')) +
+      cell(sRank ? '#' + sRank + '<span>of ' + nVals.length + ' US</span>' : '—', 'val sm' + (neutral(item()) ? '' : sRank && sRank <= 10 ? ' hi' : sRank && sRank > nVals.length - 10 ? ' lo' : '')) +
       cell('Population', 'rl') +
       cell(cpop ? fmtPop(cpop) : '—', 'val sm') +
       cell(spop ? fmtPop(spop) : (CPOP ? '—' : 'loading…'), 'val sm');
@@ -1186,7 +1205,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       '<div class="lv-tgl">State names <span class="hu-sw' + (p.state ? ' on' : '') + '" id="lvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
       '<div class="lv-tgl">City names <span class="hu-sw' + (p.city ? ' on' : '') + '" id="lvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>' +
       '<div class="lv-dsec"><h5>Reading the map</h5>' +
-      '<div class="lv-src" style="margin-top:0">Colors are quintiles of the current metric, red = worse end, teal = better. Metrics marked "county grain" drill to county detail inside a state. Years before the data year are drift-model estimates, labeled est.</div></div>';
+      '<div class="lv-src" style="margin-top:0">Colors are quintiles of the current metric, red = worse end, teal = better. A measure with no better or worse (age, population shares, counts) runs slate to amber, lower to higher, and ranks highest first. Metrics marked "county grain" drill to county detail inside a state. Years before the data year are drift-model estimates, labeled est.</div></div>';
     buildMetricList();
     const find = $('lvMetricFind');
     find.addEventListener('input', () => buildMetricList(find.value));
@@ -1488,7 +1507,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     syncInsets();
     await applyURLState();   // old v1 links land exactly where they pointed
     urlCtl.mark(scopeKey());  // the first drill after load must PUSH, not replace
-    signal('✓ Seven lens groups, 62 metrics · tap a state');
+    signal('✓ Seven lens groups, 72 metrics · tap a state');
     signalDone(3000);
     maybeCoach();   // first-ever visit: one bubble, one lesson, then gone
   });

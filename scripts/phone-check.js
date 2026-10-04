@@ -345,6 +345,11 @@ function inspect({ phone, deviceWidth }) {
       // how-to is a bottom sheet on a phone, bar-shaped enough to pass the size test below, and it put Device
       // Assembly at 35% on the run that caught it (2026-09-23).
       if (el.closest && el.closest('dialog[open], [aria-modal="true"]')) continue;
+      // Nor is a detail sheet the address asked for (2026-10-03). The kit's .shell-sheet is closed at rest on every
+      // page that has one (checked that day on all five, portrait and sideways), so when a link like ?fac= or ?state=
+      // opens it, it is the card the reader came for, and it closes by its X, a swipe and back. It was counting that
+      // card as 120px of chrome on both U.S. maps. A sheet open on a bare address still counts: that would be chrome.
+      if (location.search && el.closest && el.closest('.shell-sheet.open, .shell-dock--sheet.open')) continue;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) continue;
       const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
@@ -719,6 +724,19 @@ function inspect({ phone, deviceWidth }) {
           if (ox > 3 && oy > 3) { hit = Math.round(Math.min(ox, oy)); break; }
         }
         if (!hit) continue;
+        // Overlap is not enough: the float has to be PAINTED over the control (2026-10-03). A map's cluster ring moves
+        // with the map and sits under the drawer and the map's own buttons, the way its icons do, and a loading message
+        // under an open sheet is hidden with the buttons it overlaps. Ask the browser what is on top at the middle of the
+        // overlap, with the float made hit-testable for that one look (elementFromPoint skips pointer-events: none).
+        {
+          const r0 = boxes.find((r) => Math.min(r.right, b.right) - Math.max(r.left, b.left) > 3 && Math.min(r.bottom, b.bottom) - Math.max(r.top, b.top) > 3) || boxes[0];
+          const mx = (Math.max(r0.left, b.left) + Math.min(r0.right, b.right)) / 2, my = (Math.max(r0.top, b.top) + Math.min(r0.bottom, b.bottom)) / 2;
+          const he = /** @type {HTMLElement} */ (el), pe = he.style.pointerEvents;
+          he.style.pointerEvents = 'auto';
+          const topEl = document.elementFromPoint(mx, my);
+          he.style.pointerEvents = pe;
+          if (!topEl || !el.contains(topEl)) continue;   // something else, often the control itself, is painted over it
+        }
         const who = (c.getAttribute('aria-label') || c.innerText || c.value || c.placeholder || '').trim().replace(/\s+/g, ' ').slice(0, 30);
         const key = who + '|' + text.slice(0, 30);
         if (seenKey.has(key)) continue;

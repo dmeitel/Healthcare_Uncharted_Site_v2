@@ -28,15 +28,11 @@
  */
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
-const zlib = require('zlib');
-const readline = require('readline');
 
 const ROOT = path.join(__dirname, '..', '..');
 const P = (...p) => path.join(ROOT, ...p);
 const CACHE = P('scripts', '.cache');
 const OUT = P('scripts', 'data', 'hospital-cost-reports.json');
-const UA = 'HealthcareUncharted/1.0 (david.eitel.pcpal@gmail.com)';
 
 const FY = 2024;
 const ZIP_URL = `https://downloads.cms.gov/files/hcris/hosp10fy${FY}.zip`;
@@ -44,52 +40,7 @@ const SOURCE_URL = 'https://www.cms.gov/data-research/statistics-trends-and-repo
 
 const WRITE = process.argv.includes('--write'), REFRESH = process.argv.includes('--refresh');
 
-/** @param {string} url @param {string} file */
-function download(url, file) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': UA } }, (res) => {
-      if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode + ' ' + url)); }
-      fs.mkdirSync(path.dirname(file), { recursive: true });
-      const tmp = file + '.part', out = fs.createWriteStream(tmp);
-      res.pipe(out);
-      res.on('error', reject); out.on('error', reject);
-      out.on('finish', () => out.close(() => { fs.renameSync(tmp, file); resolve(undefined); }));
-    }).on('error', reject);
-  });
-}
-
-/* the zip's table of contents, read from the central directory at the end of the file */
-function zipEntries(file) {
-  const fd = fs.openSync(file, 'r');
-  const size = fs.fstatSync(fd).size;
-  const tailLen = Math.min(size, 65557), tail = Buffer.alloc(tailLen);
-  fs.readSync(fd, tail, 0, tailLen, size - tailLen);
-  let i = tailLen - 22;
-  while (i >= 0 && tail.readUInt32LE(i) !== 0x06054b50) i--;
-  if (i < 0) throw new Error('not a zip (no end of central directory)');
-  const count = tail.readUInt16LE(i + 10), cdSize = tail.readUInt32LE(i + 12), cdOff = tail.readUInt32LE(i + 16);
-  const cd = Buffer.alloc(cdSize); fs.readSync(fd, cd, 0, cdSize, cdOff);
-  const out = [];
-  for (let p = 0, n = 0; n < count; n++) {
-    if (cd.readUInt32LE(p) !== 0x02014b50) throw new Error('bad central directory entry');
-    const method = cd.readUInt16LE(p + 10), csize = cd.readUInt32LE(p + 20), usize = cd.readUInt32LE(p + 24);
-    const nl = cd.readUInt16LE(p + 28), xl = cd.readUInt16LE(p + 30), cl = cd.readUInt16LE(p + 32), lho = cd.readUInt32LE(p + 42);
-    const name = cd.toString('utf8', p + 46, p + 46 + nl);
-    const lh = Buffer.alloc(30); fs.readSync(fd, lh, 0, 30, lho);
-    const start = lho + 30 + lh.readUInt16LE(26) + lh.readUInt16LE(28);
-    out.push({ name, method, csize, usize, start });
-    p += 46 + nl + xl + cl;
-  }
-  fs.closeSync(fd);
-  return out;
-}
-
-/* one zip entry as a stream of text lines, inflated as it is read */
-function entryLines(file, e) {
-  const raw = fs.createReadStream(file, { start: e.start, end: e.start + e.csize - 1 });
-  const body = e.method === 0 ? raw : raw.pipe(zlib.createInflateRaw());
-  return readline.createInterface({ input: body, crlfDelay: Infinity });
-}
+const { download, zipEntries, entryLines } = require('../lib/zip');   // moved to scripts/lib/zip.js 2026-10-03
 
 const num = (s) => { const v = parseFloat(String(s).replace(/"/g, '')); return isFinite(v) ? v : 0; };
 const cell = (s) => String(s || '').replace(/"/g, '').trim();

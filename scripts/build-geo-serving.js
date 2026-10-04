@@ -71,7 +71,18 @@ const ACRO = new Set(['VA','LLC','USA','LDS','IHC','UPMC','CVS','II','III','IV']
 const tcase = s => String(s || '').toLowerCase().replace(/[\w']+/g, w => {
   const u = w.toUpperCase(); return ACRO.has(u) ? u : w.charAt(0).toUpperCase() + w.slice(1); });
 
+/* --pharmacy rebuilds only the pharmacy shards, which is what a supplier refresh needs (build-suppliers.js). A full run
+   also rewrites the boundaries, and the shipped us-states.json carries a state this source lacks (52 against 51,
+   found 2026-10-03 when a supplier refresh ran this whole and clobbered it), so the states file is only replaced when
+   the new one keeps every state the old one has. */
+const PHARMACY_ONLY = process.argv.includes('--pharmacy');
+
 (async () => {
+  if (!PHARMACY_ONLY) await boundaries();
+  await pharmacy();
+})().catch(e => { console.error(e); process.exit(1); });
+
+async function boundaries() {
   // ── states ──
   const statesRaw = await cached('us-states-publicamundi.json');
   const sOut = {
@@ -83,8 +94,14 @@ const tcase = s => String(s || '').toLowerCase().replace(/[\w']+/g, w => {
         geometry };
     })
   };
-  fs.writeFileSync(path.join(OUT, 'us-states.json'), JSON.stringify(sOut));
-  console.log('states:', sOut.features.length, Math.round(fs.statSync(path.join(OUT, 'us-states.json')).size / 1024) + 'KB');
+  const statesFile = path.join(OUT, 'us-states.json');
+  const had = fs.existsSync(statesFile) ? JSON.parse(fs.readFileSync(statesFile, 'utf8')).features.map((/** @type {any} */ f) => f.properties.abbr) : [];
+  const lost = had.filter((a) => !sOut.features.some((f) => f.properties.abbr === a));
+  if (lost.length) console.warn('states: KEPT the current us-states.json; this source lacks ' + lost.join(', '));
+  else {
+    fs.writeFileSync(statesFile, JSON.stringify(sOut));
+    console.log('states:', sOut.features.length, Math.round(fs.statSync(statesFile).size / 1024) + 'KB');
+  }
 
   // ── counties, split per state ──
   const countiesRaw = await cached('geojson-counties-fips.json');
@@ -105,7 +122,9 @@ const tcase = s => String(s || '').toLowerCase().replace(/[\w']+/g, w => {
     ckb += fs.statSync(p).size / 1024;
   });
   console.log('county files:', Object.keys(byState).length, '· total', Math.round(ckb) + 'KB');
+}
 
+async function pharmacy() {
   // ── pharmacy shards (ready-to-serve GeoJSON, title-cased) ──
   const sup = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/assets/data/us-suppliers-pharmacy.json'), 'utf8'));
   const byAbbr = {};
@@ -127,4 +146,4 @@ const tcase = s => String(s || '').toLowerCase().replace(/[\w']+/g, w => {
     if (kb > pmax[1]) pmax = [ab, kb];
   });
   console.log('pharmacy shards:', Object.keys(byAbbr).length, '·', pn, 'points · total', Math.round(pkb) + 'KB · biggest', pmax[0], Math.round(pmax[1]) + 'KB');
-})().catch(e => { console.error(e); process.exit(1); });
+}

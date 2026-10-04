@@ -57,7 +57,7 @@ const LINKS = [
   // Patient — coverage, access, chronic
   { from: 'concept:insurance',    rel: 'measured-by', to: 'metric:payer:0' },    // uninsured rate
   { from: 'concept:insurance',    rel: 'measured-by', to: 'metric:payer:4' },    // employer coverage
-  { from: 'concept:telehealth',   rel: 'measured-by', to: 'metric:clinical:5' }, // telehealth adoption
+  { from: 'concept:telehealth',   rel: 'measured-by', to: 'metric:clinical:5' }, // Medicare telehealth use (was telehealth adoption, 2026-10-03)
   { from: 'concept:telehealth',   rel: 'measured-by', to: 'metric:policy:4' },   // telehealth parity laws
   { from: 'concept:chronic',      rel: 'measured-by', to: 'metric:patient:1' },  // diabetes
   { from: 'concept:chronic',      rel: 'measured-by', to: 'metric:patient:2' },  // coronary heart disease
@@ -92,7 +92,7 @@ const LINKS = [
   { from: 'concept:scope', rel: 'measured-by', to: 'metric:policy:2' },          // NP scope of practice
 
   // Health Tech
-  { from: 'concept:telehealth-plat', rel: 'measured-by', to: 'metric:clinical:5' }, // telehealth adoption
+  { from: 'concept:telehealth-plat', rel: 'measured-by', to: 'metric:clinical:5' }, // Medicare telehealth use
 ];
 
 // ── positional-index guard ────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ const METRIC_EXPECT = {
   'metric:clinical:2': /nurse practitioners/i,
   'metric:clinical:3': /shortage areas/i,
   'metric:clinical:4': /population in hpsas/i,
-  'metric:clinical:5': /telehealth adoption/i,
+  'metric:clinical:5': /medicare telehealth use/i,
   'metric:clinical:7': /registered nurses/i,
   'metric:clinical:8': /respiratory therapists/i,
   'metric:operations:0': /beds per/i,

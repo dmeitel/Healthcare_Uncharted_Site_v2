@@ -247,6 +247,9 @@ interface Window {
   /** analytics beacon, absent on localhost */
   goatcounter?: { count?: (opts: Record<string, unknown>) => void; no_onload?: boolean };
 
+  /** the broken-arm case's scenes, records and figures (src/assets/js/rounds/routine-fracture.js) */
+  HU_STORY?: any;
+
   /* Build-time datasets. Nunjucks writes them into the page as application/json and
      the tool module republishes them here, under the names its logic already uses. */
   LENS_CONFIG?: any;
