@@ -102,6 +102,37 @@ Current state only. The history of every round (what shipped, when, on which rul
 reverted) lives in docs/HU-DESIGN-PHASE-LOG.md. Append there when a round ships; keep this block
 to what a session needs before it touches the surface.
 
+**Device Assembly expansion · REOPENED 2026-10-03** (DECISIONS 17 and N1 to N3; plan docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md).
+Three stages in order: replayable on today's parts (today's wall, generated walls, the shift), then rehab and home,
+then ventilators from David's marks on the plan's rule sheet. Generated walls run "from realistic to completely
+insane" (no oxygen, no air, only suction, bring in a bottle). Stage A1 to A4 BUILT 2026-10-03: every wall change goes
+through `dispatchAct` and the wall saves after each one (`packSave`/`applySave`, localStorage hu-da-wall); dealt walls
+come from `genWall(seed)` (RECIPES x TWISTS, solution first, the engine must pass it; any change to them re-deals every
+wall, old links and past daily walls included, so bump GEN_V and say so); the daily wall is `day:YYYY-MM-DD` in Mountain time, #1 on
+2026-10-03; a wall link is `?wall=day:...` or `?wall=gen:CODE`. Tests: tests/device-assembly-gen.test.js and
+-save.test.js. A5 THE SHIFT built 2026-10-04: section "3c" (`shiftPlan(code)` searches the complications so every
+wall solves; a complication must break the wall before's build, `compBites`; `shiftAdvance` is the verb between walls
+and tops up the cart; wall 5's fault comes from YOUR build via `FAULT_DO`); ids `shift:CODE:k`, link `?wall=shift:CODE`;
+tests/device-assembly-shift.test.js. A6 built 2026-10-04: made walls `my:` (`makeWall` through the same `dealWall` as
+the generator; a `mirror` flag on made walls only, so dealt walls never change), sandbox build links (`?build=`, the
+HUDA1. save string), and THE RACE replacing the two-wall race (hu-table autoSeat p1..p8, verbs progress/submit '*',
+host judges with `raceJudge`, bots via `raceTick`, `racePack` drops walls past four builders; tests
+device-assembly-table and -make; live check `npm run backend:check:da`). Stage A is done. STAGE B built 2026-10-04:
+section "3c2" (`genPlaceWall` / `dealPlace`, `rehabRoom`, `homeRoom`, `placeSource`, `homeLink`; ids `rehab:CODE` and
+`home:CODE`; the hospital dealer untouched and `dayPlace` only from wall #4, so no dealt wall changes); a room's
+`noRail` sets GRID.rail to -1 and `withGrid` restores it; `isSource` parts from the cart; tests
+device-assembly-place. The maker and the shift visit the places too (2026-10-04): `placeOfTwist` reads the place from
+a made wall's twist; a shift wall carries its whole `room` (`compRoom`, `applyRoom`, `shiftWallBuild`), SHIFT_V 2.
+STAGE C BUILT 2026-10-04 (David: "lets move onto stage c", then "go ahead and build the rest of stage c"; the rule
+sheet read "looks right, no changes" the same night): ten authored vent walls (`v1`..`v7`, `vf1`..`vf3`, group Ventilators, open from the start) and
+two home oxygen faults (`f4`, `f5`, `ownRoom`), in `ICU_ROOM()`, `ICU_BOOM()` (a vacuum outlet at bed height) and
+`LIVING()` (screens on the left); the ICU as a fourth dealt place, section "3c3" (`dealIcu`, `VENT_RECIPES`,
+`recipeOf`, `ICU_SPOTS` from searches, `ICU_TWISTS`, `underScreen`; ids `icu:CODE`; the daily wall from #5, `ICU_DAY`;
+the shift's "A night on the ventilator", SHIFT_V 3). Parts flagged `vc` stay off the hospital bench; side ports are
+`term` (`ev.termHits`); a `battery` device runs unplugged with a note; the sheet's rules are switches in `VENT_RULES`,
+so David's marks flip lines, not code; `level.after` builds a wall after the room is up; tests device-assembly-vent and
+-vent2. The rulings below still hold.
+
 **Device Assembly game feel · OPEN since 2026-09-16, PARKED AT ALPHA 2026-09-19** ("any last clean up before
 I call this an alpha and work on something else"). Surface: src/secret-menu/device-assembly/index.html only.
 Fifteen rounds shipped 2026-09-16 to 2026-09-19 on David's reads; every one is recorded in
@@ -170,6 +201,7 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
   22 of 54 pages in landscape on 2026-09-21. Method: docs/HU-VIEWPORT-METHOD-2026-09-21.md.
 - Never edit the build output directory (_site/). It is generated.
 - David commits and pushes himself. Never commit, push, or branch unless he explicitly asks in the moment.
+  When work is ready to commit, draft the message for him in the shape in docs/HU-COMMIT-MESSAGES.md (2026-10-04).
 - Every open question for David lives in DECISIONS.md at the repo root. Read it at the start
   of a session, update it at the end. Ask three at a time maximum, each with a recommendation,
   and name what a thing IS before naming the file it lives in. Nothing goes on the list unless
@@ -264,6 +296,8 @@ Rounds carry the demoted evocative line in `.rounds-sub`. Learn pages already op
 - Direct without being cold. Has opinions, states them, backs them with reasoning or experience. Never sounds like a committee, a chatbot, or a LinkedIn ghostwriter.
 
 **Before committing prose**
+- Run the writing checker on it (`npm run writing:check -- <file or /page/>`, or David's screen,
+  `npm run writing`): zero must-fix, and every "fix" fixed or explained. Skill: hu-writing-review.
 - Count the aphorisms. More than one, cut.
 - Is there a quoted human?
 - Is there a question with no answer in the piece?
@@ -360,5 +394,7 @@ If any of these appear in output, rewrite before delivering:
 - Do NOT use passthrough copy on directories that contain processed Nunjucks templates
 - Layout chain: src/_includes/base.njk + src/_includes/components/. Global CSS: src/assets/css/hu-global.css. Kit: src/assets/js/hu-kit.js.
 - Scoped rules: .claude/rules/{templates,css,tools}.md. Prose standard: .claude/skills/hu-voice. Agent crew: .claude/agents/hu-{auditor,voice-editor,mobile-tester,a11y-fixer,polish}.md.
+- THE CONSISTENCY TOOLKIT (2026-10-03, plan docs/HU-CONSISTENCY-TOOLKIT-2026-10-03.md). Every check, skill and rule, mapped: docs/HU-QA-TOOLKIT.md. The page ledger, `npm run ledger`: every live page, its kind, the checks for that kind, and its PHASE (Phase 2 meets today's standard, Phase 1 names what holds it, computed and never typed). David's page-by-page review is the Board and the Report in `npm run review`; his "Reviewed" marks live in data-build/page-reviews.json and are his alone. `npm run phone` records each page's verdict in tmp/ledger/phone.json. Games: the one game bar (src/_includes/components/game-bar.njk), tests/game-shell.test.js, skill hu-game-shell.
+- Writing checker (2026-10-03): patient information, professional tone and the voice, for site pages and pasted drafts. Rules: scripts/lib/writing-rules.js. David's screen: `npm run writing` (/__writing). Gates: tests/writing-phi.test.js, tests/writing-voice.test.js (ratchet, tests/writing-baseline.json). Panel and how to run it: .claude/skills/hu-writing-review.
 - Tool interaction law: docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md. Layout shell: docs/HU-TOOL-SHELL.md.
 - Dev server gotcha: the long-running Eleventy serve caches _data; if a data change looks ignored, run a one-off `npx @11ty/eleventy`.

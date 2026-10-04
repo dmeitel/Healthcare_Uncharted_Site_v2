@@ -1,0 +1,39 @@
+{#-
+  THE GAME BAR (2026-10-03). One top bar for every game, built here and nowhere else.
+
+  David, 2026-10-03: "a consistent menuing system... for anything from the vital stats games to the
+  nurse clicking games, and it's really just like the starting off menus or the top bar." Measured
+  the same night: three games drew their own bar (50 or 58px tall, the name at 14, 16 or 17px on a
+  phone) and three showed the whole site menu instead. This is Vital Stats' bar, the one he named as
+  the best, made into the only one. Plan: docs/HU-CONSISTENCY-TOOLKIT-2026-10-03.md, 2.6.
+
+  The order is fixed: the HU mark, the game's name, an optional tagline (desktop only), then on the
+  right the game's own status and action (the caller block: a room chip, a clock, Silence, Walls),
+  then the kit's "?" and Menu, mounted by the game's script into the span named by kitId. The site
+  menu lives inside Menu (the merged band, so the page sets nav_merged: true); the summon button
+  below is kept for the menu's Site menu row to press and is never shown.
+
+  Usage, outside the page's raw block:
+    {% from "components/game-bar.njk" import gameBar %}
+    {% call gameBar({ name: 'Vital', accent: 'Stats', tagline: 'The healthcare numbers game', kitId: 'vsKit' }) %}
+      <span class="vs-roomchip" id="vsRoom" hidden></span>
+    {% endcall %}
+
+  Held by tests/game-shell.test.js. Skill: .claude/skills/hu-game-shell.
+-#}
+{% macro gameBar(g) %}
+<header class="tool-bar game-bar">
+  <a class="tb-brand" href="/" aria-label="Healthcare Uncharted, home">
+    <img src="/brand/hu-mark-dark.svg" alt="" class="hu-logo-ondark">
+    <img src="/brand/hu-mark.svg" alt="" class="hu-logo-onlight">
+  </a>
+  <h1 class="tool-bar-title">{{ g.name }}{% if g.accent %} <span>{{ g.accent }}</span>{% endif %}</h1>
+  {% if g.tagline %}<span class="tool-bar-crumb">{{ g.tagline }}</span>{% endif %}
+  <span class="tool-bar-spacer"></span>
+  <div class="tool-bar-actions">
+    {% if caller %}{{ caller() }}{% endif %}
+    <span class="game-kit" id="{{ g.kitId }}"></span>
+    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu" tabindex="-1"><i data-lucide="menu" aria-hidden="true"></i></button>
+  </div>
+</header>
+{% endmacro %}

@@ -37,9 +37,11 @@ navPage: home
 /* search box + hub cards are global hub components now; home adds placement */
 .hv-search { margin:24px auto 0; }
 .hv-chips { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
-.hv-chip { font-family:var(--font); font-size:var(--t-fine); font-weight:600; color:var(--t2); background:var(--raised);
-  border:1px solid var(--border); border-radius:999px; padding:8px 15px; text-decoration:none; transition:color .15s, border-color .15s; }
-.hv-chip:hover { color:var(--t1); border-color:var(--teal); }
+.hv-chip { display:inline-flex; align-items:center; gap:6px; font-family:var(--font); font-size:var(--t-fine); font-weight:600; color:var(--t2); background:var(--raised);
+  border:1px solid var(--border); border-radius:999px; padding:8px 15px; text-decoration:none; cursor:pointer; transition:color .15s, border-color .15s; }
+.hv-chip svg { flex:none; color:var(--t3); }
+.hv-chip:hover, .hv-chip:active { color:var(--t1); border-color:var(--teal); }
+.hv-chip:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
 
 /* ── CATALOG · T2 tabs fed from tools.js clusters ── */
 .hv-cat { max-width:1100px; margin:0 auto; padding:36px clamp(20px,5vw,80px) 8px; }
@@ -129,13 +131,16 @@ navPage: home
     <p class="hv-sub">Interactive tools and honest writing on the machinery behind American healthcare.</p>
     <button class="hv-search" type="button" data-hu-search aria-label="Search the site">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
-      <b>Try: travel pay in Sacramento &middot; FHIR &middot; hospital prices</b>
+      <b>What are you trying to figure out?</b>
       <span class="k">/</span>
     </button>
-    <div class="hv-chips">
-      <a class="hv-chip" href="#hv-cat" data-tab-jump="careers-pay">Careers &amp; Pay</a>
-      <a class="hv-chip" href="#hv-cat" data-tab-jump="maps-systems">Maps &amp; Systems</a>
-      <a class="hv-chip" href="#hv-cat" data-tab-jump="learn-play">Learn &amp; Play</a>
+    <!-- example searches: each one opens the search with its words typed in, and each must find a
+         page (tests/hu-search.test.js holds them to that) -->
+    <div class="hv-chips" role="group" aria-label="Example searches">
+      <button class="hv-chip" type="button" data-hu-search data-q="Travel pay"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Travel pay</button>
+      <button class="hv-chip" type="button" data-hu-search data-q="Hospitals near me"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Hospitals near me</button>
+      <button class="hv-chip" type="button" data-hu-search data-q="Respiratory therapist"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Respiratory therapist</button>
+      <button class="hv-chip" type="button" data-hu-search data-q="Prior auth"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Prior auth</button>
     </div>
   </div>
 </div>
@@ -265,13 +270,6 @@ navPage: home
     t.addEventListener('keydown', function (ev) {
       if (ev.key === 'ArrowRight') { show(tabs[(i + 1) % tabs.length]); tabs[(i + 1) % tabs.length].focus(); }
       if (ev.key === 'ArrowLeft') { show(tabs[(i - 1 + tabs.length) % tabs.length]); tabs[(i - 1 + tabs.length) % tabs.length].focus(); }
-    });
-  });
-  // hero cluster chips jump to the catalog with the right tab lit
-  document.querySelectorAll('[data-tab-jump]').forEach(function (chip) {
-    chip.addEventListener('click', function () {
-      var tab = document.getElementById('tab-' + chip.getAttribute('data-tab-jump'));
-      if (tab) show(tab);
     });
   });
   // measurement: tool entries from the home catalog

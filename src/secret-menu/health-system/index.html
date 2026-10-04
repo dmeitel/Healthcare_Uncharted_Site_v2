@@ -1,11 +1,13 @@
 ---
 layout: base.njk
+nav_merged: true
 title: "Uncharted Regional"
 description: "A health system strategy game. One region, three hospitals, every tradeoff. The sequel lens to Uncharted General: the hospital becomes a card."
 noindex: true
 no_footer: true
 eleventyExcludeFromCollections: true
 ---
+{% from "components/game-bar.njk" import gameBar %}
 {% raw %}
 <style>
 #hs{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; --acc:#6aadff; }
@@ -22,12 +24,7 @@ eleventyExcludeFromCollections: true
 [data-theme="light"] #hs .hs-report{background:var(--raised)}
 #hs .hs-panel,#hs .hs-kpi{box-shadow:0 3px 14px rgba(0,0,0,.45)}
 .hs-wrap{max-width:1280px;margin:0 auto;padding:28px 24px 80px;font-family:var(--font)}
-.hs-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none;margin-bottom:6px}
-.hs-back:hover{color:var(--acc)}
 .hs-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
-.hs-titles h1{font-family:var(--display);font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1.04}
-.hs-titles h1 em{font-style:normal;color:var(--acc)}
-.hs-titles p{font-size:var(--t-ui);color:var(--t3);margin-top:6px;font-family:var(--mono)}
 .hs-kpis{display:flex;gap:10px;flex-wrap:wrap}
 .hs-kpi{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:10px 16px;min-width:104px}
 .hs-kpi .k-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
@@ -169,12 +166,11 @@ eleventyExcludeFromCollections: true
 .hs-deftip[hidden]{display:none}
 .hs-deftip b{color:var(--lt-tipink,#fff);display:block;margin-bottom:4px;font-size:var(--t-fine)}
 
-/* 2026-09-23, the games track (docs/HU-GAME-REVIEW-2026-09-23.md 3.5), the hospital game's shape.
-   The "?" and Menu are the kit's (HUKit.howTo, HUKit.gameMenu); the back link keeps the left. */
-.hs-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
-.hs-topbar .hs-back{margin-bottom:0}
-.hs-kit{display:flex;gap:8px;align-items:center}
-@media (max-width:699px), (max-height:500px){.hs-back-long{display:none}}
+/* THE GAME BAR (2026-10-03, .claude/skills/hu-game-shell): the site's one game bar carries the
+   name, the "?" and Menu; leaving is Menu's Leave row. It sits above #hs, so it reads the site's
+   tokens, and this page sets only its accent word, in the blue the old title wore (--acc). */
+.game-bar .tool-bar-title span{color:#6aadff}
+[data-theme="light"] .game-bar .tool-bar-title span{color:#1B5FA8}
 /* the goal, read off the projection with the goal's own test, the same call Run makes */
 .hs-track{margin:0 0 10px;font-family:var(--mono);font-size:var(--t-fine);font-weight:700;letter-spacing:.02em;text-align:center;line-height:1.45}
 .hs-track:empty{display:none}
@@ -194,7 +190,7 @@ eleventyExcludeFromCollections: true
 @media (max-width:699px) and (min-height:501px){
   .hs-wrap{display:flex;flex-direction:column;gap:14px;padding-bottom:100px}
   .hs-mission,.hs-main,.hs-board{display:contents}
-  .hs-topbar{order:0;margin-bottom:0}.hs-head{order:1;margin-bottom:0}.hs-obj{order:2}.hs-facs{order:3}
+  .hs-head{order:1;margin-bottom:0}.hs-obj{order:2}.hs-facs{order:3}
   .hs-zones{order:4;margin-bottom:0}.hs-brief{order:5}.hs-side{order:6}
   .hs-rundock{position:fixed;left:0;right:0;bottom:0;z-index:110;display:flex;align-items:center;gap:10px;
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border2)}
@@ -204,16 +200,9 @@ eleventyExcludeFromCollections: true
 }
 </style>
 
+{% endraw %}{% call gameBar({ name: 'Uncharted', accent: 'Regional', tagline: 'One region, three hospitals', kitId: 'hsKit' }) %}{% endcall %}{% raw %}
 <div class="hs-wrap" id="hs">
-  <div class="hs-topbar">
-    <a class="hs-back" href="/secret-menu/">&larr; <span class="hs-back-long">Back to the </span>Secret Menu</a>
-    <span class="hs-kit" id="hs-kitbtns"></span>
-  </div>
   <div class="hs-head">
-    <div class="hs-titles">
-      <h1>Uncharted <em>Regional</em></h1>
-      <p>// one region. three hospitals. every tradeoff.</p>
-    </div>
     <div class="hs-kpis" id="hs-kpis"></div>
   </div>
   <div class="hs-mission" id="hs-mission"></div>
@@ -997,7 +986,7 @@ eleventyExcludeFromCollections: true
      board (auto:false): on a first visit the start card is already a card. The three rules are
      the engine's own: goals sized off the opening projection, DIST and the pool's wage floor,
      and the three ways runQuarter ends a term. The example is Normal's quarter-two lean goal. */
-  if (window.HUKit && window.HUKit.gameMenu && $('hs-kitbtns') && document.createElement){
+  if (window.HUKit && window.HUKit.gameMenu && $('hsKit') && document.createElement){
     const K=window.HUKit, ex=document.createElement('div');
     ex.innerHTML='<p>The goal says <b>run the system under $4.91M spend</b>. Beside Run it reads <b>Over the cap by $75k</b>: switch on Group Purchasing or release staff first. When the line turns green, run it.</p>';
     hsHelp = K.howTo({ id:'hs', auto:false,
@@ -1011,8 +1000,9 @@ eleventyExcludeFromCollections: true
         run:()=>{ forgetRun(); termLive=false; const rb=$('hs-reopen'); if (rb) rb.hidden=true; closeOverlay(); renderTrack(); openStartMenu(); } },
       leave:{ href:'/secret-menu/' },
       escOpens:()=>true });   // a card with its own way out has already taken this Escape (focusKeeper, above)
-    $('hs-kitbtns').appendChild(hsHelp.button());
-    $('hs-kitbtns').appendChild(hsMenu.button());
+    $('hsKit').appendChild(hsHelp.button());   // into the game bar's kit span (components/game-bar.njk)
+    const hsMenuBtn=hsMenu.button(); hsMenuBtn.setAttribute('aria-label','Menu');   // the word hides on a phone; the name stays
+    $('hsKit').appendChild(hsMenuBtn);
   }
 
   cleanSettings(); initSys(); startQuarter(); openStartMenu();

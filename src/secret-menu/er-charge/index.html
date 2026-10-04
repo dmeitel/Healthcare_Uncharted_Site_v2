@@ -1,11 +1,13 @@
 ---
 layout: base.njk
+nav_merged: true
 title: "ER Charge Nurse"
 description: "A 12-minute emergency department in your hands. Place patients, watch the queues, spend your escalations well. The smallest lens in the Healthcare Uncharted game ladder."
 noindex: true
 no_footer: true
 eleventyExcludeFromCollections: true
 ---
+{% from "components/game-bar.njk" import gameBar %}
 {% raw %}
 <style>
 #er{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; --acc:#E8A838; }
@@ -22,15 +24,12 @@ eleventyExcludeFromCollections: true
 [data-theme="light"] #er .er-deftip{background:var(--surface);border-color:var(--border2);box-shadow:0 12px 32px rgba(13,32,54,.18)}
 [data-theme="light"] .er-ghost{box-shadow:0 10px 28px rgba(13,32,54,.2)}
 .er-wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px;font-family:var(--font)}
-.er-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none}
-.er-back:hover{color:var(--acc)}
-/* the back link keeps the left and the kit's "?" and Menu take the right (HUKit.howTo, HUKit.gameMenu),
-   the same row Uncharted Regional puts them in (.hs-topbar) */
-.er-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.er-kit{display:flex;gap:8px;align-items:center}
+/* THE GAME BAR (2026-10-03, .claude/skills/hu-game-shell): the site's one game bar carries the
+   name, the "?" and Menu; leaving is Menu's Leave row. It sits above #er, so it reads the site's
+   tokens, and this page sets only its accent word, in the amber the old title wore (--acc). */
+.game-bar .tool-bar-title span{color:#E8A838}
+[data-theme="light"] .game-bar .tool-bar-title span{color:#7A5700}
 .er-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.er-titles h1{font-family:var(--display);font-size:clamp(22px,3.4vw,32px);font-weight:800;letter-spacing:-.03em}
-.er-titles h1 em{font-style:normal;color:var(--acc)}
 .er-hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .er-clock{font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.06em;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px}
 .er-clock.late{color:var(--acc);border-color:rgba(232,168,56,.5)}
@@ -122,15 +121,9 @@ eleventyExcludeFromCollections: true
 .er-grade{float:right;font-family:var(--display);font-weight:800;font-size:38px}
 </style>
 
+{% endraw %}{% call gameBar({ name: 'ER', accent: 'Charge Nurse', tagline: 'A 12-minute emergency department', kitId: 'erKit' }) %}{% endcall %}{% raw %}
 <div class="er-wrap" id="er">
-  <div class="er-topbar">
-    <a class="er-back" href="/secret-menu/">&larr; Secret Menu</a>
-    <span class="er-kit" id="er-kit"></span>
-  </div>
   <div class="er-top">
-    <div class="er-titles">
-      <h1>ER <em>Charge Nurse</em></h1>
-    </div>
     <div class="er-hud">
       <div class="er-clock" id="er-clock">07:00</div>
       <div class="er-score" id="er-scorebox">Score <b id="er-score">0</b></div>
@@ -664,7 +657,7 @@ eleventyExcludeFromCollections: true
   // menu's Resume clears that toggle too, so Resume always starts the clock.
   (function kit(){
     const K=window.HUKit;
-    if (!K || !K.gameMenu || !$('er-kit') || !document.createElement) return;
+    if (!K || !K.gameMenu || !$('erKit') || !document.createElement) return;
     erSet=K.settings({ id:'er', rows:[K.settings.assist.moreTime] });
     const ex=document.createElement('div');
     ex.innerHTML='<p><b>Lab &middot; 3 waiting</b>, and the chest pain in bed 4 is one of them. STAT Labs runs that patient&rsquo;s labs at four times speed.</p>';
@@ -683,7 +676,8 @@ eleventyExcludeFromCollections: true
       leave:{ href:'/secret-menu/' },
       onResume:()=>{ if (G && !G.over && G.paused){ G.paused=false; render(); } },
       escOpens:true });
-    $('er-kit').append(erHelp.button(), erMenu.button());
+    const menuBtn=erMenu.button(); menuBtn.setAttribute('aria-label','Menu');   // the word hides on a phone; the name stays
+    $('erKit').append(erHelp.button(), menuBtn);   // into the game bar's kit span (components/game-bar.njk)
   })();
   if (!(erHelp && erHelp.firstVisit())) openStartMenu();   // a first visit gets the how-to in place of the start card
 

@@ -134,7 +134,7 @@ test('the sandbox carries the whole catalog and unlocks on its own', () => {
   assert.ok(sb && sb.kind === 'sandbox');
   const ids = sb.cart.map(c => c[0]);
   for (const d of Object.values(da.DB)) {
-    if (!['device', 'tubing', 'adapter', 'interface'].includes(d.cat) || d.id === 'src-t1') continue;
+    if (!['device', 'tubing', 'adapter', 'interface'].includes(d.cat) || d.id === 'src-t1' || d.fixedOnly) continue;   // a tube already in the patient is never on a cart (Stage C)
     assert.ok(ids.includes(d.id), d.id + ' is on the sandbox cart');
   }
   for (const id of ['xmas-air', 'tube-o2-14', 'venturi', 'lvn', 'aeromask', 'trach-collar', 'tpiece', 'suction-canister', 'tube-suct', 'yankauer']) assert.ok(da.DB[id], id + ' exists');

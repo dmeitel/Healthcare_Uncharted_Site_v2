@@ -1,11 +1,13 @@
 ---
 layout: base.njk
+nav_merged: true
 title: "Uncharted General"
 description: "A healthcare systems roguelite. Run the network. Don't let it run you."
 noindex: true
 no_footer: true
 eleventyExcludeFromCollections: true
 ---
+{% from "components/game-bar.njk" import gameBar %}
 {% raw %}
 <style>
 #ug{ --surface:#17273f; --raised:#21344f; --border:#33527a; --border2:#4a6f9e; --t3:#8fabcc; }
@@ -32,12 +34,7 @@ eleventyExcludeFromCollections: true
 [data-theme="light"] #ug .ug-start-foot{box-shadow:0 -14px 24px -8px rgba(13,32,54,.14)}
 #ug .ug-panel,#ug .ug-kpi,#ug .ug-chartwrap{box-shadow:0 3px 14px rgba(0,0,0,.45)}
 .ug-wrap{max-width:1280px;margin:0 auto;padding:28px 24px 80px;font-family:var(--font)}
-.ug-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--mono);font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none;margin-bottom:6px}
-.ug-back:hover{color:var(--lt-green,#4ecb8d)}
 .ug-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
-.ug-titles h1{font-family:var(--display);font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1.04}
-.ug-titles h1 em{font-style:normal;color:var(--lt-green,#4ecb8d)}
-.ug-titles p{font-size:var(--t-ui);color:var(--t3);margin-top:6px;font-family:var(--mono)}
 
 .ug-kpis{display:flex;gap:10px;flex-wrap:wrap}
 .ug-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;min-width:108px}
@@ -528,12 +525,11 @@ eleventyExcludeFromCollections: true
 .ug-reopen[hidden]{display:none}
 .ug-reopen.win{background:linear-gradient(135deg,#4ecb8d,#2D9B6F);color:#04140b;box-shadow:0 8px 24px rgba(45,155,111,.45)}
 
-/* 2026-09-23, the games track (docs/HU-GAME-REVIEW-2026-09-23.md 3.2). The "?" and Menu are the
-   kit's (HUKit.howTo, HUKit.gameMenu); the back link keeps its place on the left. */
-.ug-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.ug-kit{display:flex;gap:8px;align-items:center}
-/* on a phone the link says what Device Assembly's says, so it fits one line beside the menu */
-@media (max-width:699px), (max-height:500px){.ug-back-long{display:none}}
+/* THE GAME BAR (2026-10-03, .claude/skills/hu-game-shell): the site's one game bar carries the
+   name, the "?" and Menu; leaving is Menu's Leave row. It sits above #ug, so it reads the site's
+   tokens, and this page sets only its accent word, in the green the old title wore. */
+.game-bar .tool-bar-title span{color:#4ecb8d}
+[data-theme="light"] .game-bar .tool-bar-title span{color:#1B6B4C}
 /* the goal, read off the projection: the same arithmetic Run uses, so it is the answer, not a guess */
 .ug-track{margin:0 0 10px;font-family:var(--mono);font-size:var(--t-fine);font-weight:700;letter-spacing:.02em;text-align:center;line-height:1.45}
 .ug-track:empty{display:none}
@@ -564,16 +560,9 @@ eleventyExcludeFromCollections: true
 }
 </style>
 
+{% endraw %}{% call gameBar({ name: 'Uncharted', accent: 'General', tagline: 'A healthcare systems roguelite', kitId: 'ugKit' }) %}{% endcall %}{% raw %}
 <div class="ug-wrap" id="ug">
-  <div class="ug-topbar">
-    <a class="ug-back" href="/secret-menu/">&larr; <span class="ug-back-long">Back to the </span>Secret Menu</a>
-    <span class="ug-kit" id="ug-kitbtns"></span>
-  </div>
   <div class="ug-head">
-    <div class="ug-titles">
-      <h1>Uncharted <em>General</em></h1>
-      <p>// run the network. don't let it run you.</p>
-    </div>
     <div class="ug-kpis" id="ug-kpis"></div>
   </div>
 
@@ -3399,7 +3388,7 @@ eleventyExcludeFromCollections: true
      nothing to caption, and its run settings live on the start screen. The how-to waits for the
      board (auto:false): on a first visit the start screen is already a card. */
   let ugHelp = null;
-  if (typeof window!=='undefined' && window.HUKit && HUKit.gameMenu && $('ug-kitbtns')){
+  if (typeof window!=='undefined' && window.HUKit && HUKit.gameMenu && $('ugKit')){
     const ex = document.createElement('div');
     ex.innerHTML = '<p>The goal says <b>finish $316k in the black</b>. Beside Run it reads <b>Short by $307k</b>: hire, trim or borrow first. When the line turns green, run it.</p>';
     ugHelp = HUKit.howTo({ id:'ug', auto:false,
@@ -3413,8 +3402,9 @@ eleventyExcludeFromCollections: true
         run:()=>{ if (NET.mode==='guest'){ flashHint('The host sets the table.'); return; } forgetRun(); closeOverlay(); openStartMenu(); } },
       leave:{ href:'/secret-menu/' },
       escOpens:()=> !overlayOpen });
-    $('ug-kitbtns').appendChild(ugHelp.button());
-    $('ug-kitbtns').appendChild(ugMenu.button());
+    $('ugKit').appendChild(ugHelp.button());   // into the game bar's kit span (components/game-bar.njk)
+    const ugMenuBtn = ugMenu.button(); ugMenuBtn.setAttribute('aria-label', 'Menu');   // the word hides on a phone; the name stays
+    $('ugKit').appendChild(ugMenuBtn);
   }
   openStartMenu();                       // the run opens on the start menu (settings), then the CEO pick
 

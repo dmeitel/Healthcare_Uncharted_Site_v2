@@ -11,6 +11,7 @@ featured: true
 status: published
 date: 2026-09-10
 ---
+{% from "components/game-bar.njk" import gameBar %}
 {% raw %}
 <style>
   /* ALARM FATIGUE · the floor is a lit med-surg unit, deliberately light in
@@ -48,24 +49,12 @@ date: 2026-09-10
   /* ---------- toolbar ---------- */
   .af-stat{font-family:var(--mono); font-size:var(--t-fine); color:var(--t2); white-space:nowrap;}
   /* the bar is static inside the shell and nothing scrolls beneath it, so the
-     global backdrop blur is pure GPU cost here; solid surface instead */
-  .af .tool-bar{backdrop-filter:none; background:var(--surface); padding-top:2px; padding-bottom:2px;}
-  /* THE BAND CARRIED EIGHT THINGS and wrapped the site menu onto a row of its
-     own. Three of them repeat something already on screen: the kicker repeats
-     the shelf the title sits on, the crumb repeats the nurse brain header, and
-     the Learn chip repeats the site menu. They step back as the window tightens
-     rather than pushing the menu off the end of the row. */
-  .af .tool-bar-kicker{display:none;}
-  @media (max-width:1200px){ .af .tool-bar-crumb{display:none;} }
-  /* (the "Learn" back chip moved into the game menu as its Leave row, 2026-09-23) */
-  /* one pill for sound: the label toggles the floor quiet, the fader opens the
-     mixer. Two chips for one subject was the widest thing up there. */
-  .af .chip-split{display:inline-flex; align-items:stretch;}
-  .af .chip-split .toggle-chip{border-radius:999px 0 0 999px; padding-right:10px;}
-  .af .chip-split .toggle-chip + .toggle-chip{
-    border-radius:0 999px 999px 0; border-left:1px solid var(--border);
-    padding-left:9px; padding-right:11px; margin-left:-1px;
-  }
+     global backdrop blur is pure GPU cost here; solid surface instead. The bar
+     itself is the site's game bar (2026-10-03): its height, gaps, name and kit
+     buttons belong to hu-global.css, and the game sets only this surface. */
+  .af .tool-bar{backdrop-filter:none; background:var(--surface);}
+  /* (the "Learn" back chip moved into the game menu as its Leave row, 2026-09-23;
+     the sound fader moved into Settings as its Sound mix row, 2026-10-03) */
 
   /* ---------- floor ---------- */
   #floor{position:relative; overflow:hidden; background:var(--wall); color:var(--ink);
@@ -268,8 +257,9 @@ date: 2026-09-10
     background:linear-gradient(180deg,#5a9fd4,#3f83c2); color:#fff; border-left:none;}
   /* ---------- EHR tab panel (Chart Themes / Achievements) ---------- */
   /* opens BELOW the tab row so the tabs stay clickable (switch views live) */
+  /* z 21: over the reward floats (.float is 20), which drew "+1" on top of the open Task List */
   #ehrPanel{
-    position:absolute; top:50px; left:0; right:0; bottom:0; z-index:11; display:none;
+    position:absolute; top:50px; left:0; right:0; bottom:0; z-index:21; display:none;
     align-items:flex-start; justify-content:center; padding:8px 16px 16px; pointer-events:auto;
   }
   #ehrPanel.show{display:flex;}
@@ -851,7 +841,7 @@ date: 2026-09-10
   .dash-src .bar{grid-column:1 / -1; height:6px; background:var(--af-track,#e3e9e5); border-radius:3px; overflow:hidden;}
   .dash-src .bar i{display:block; height:100%; background:#2c6e4f;}
 
-  /* sound settings: a mixer that drops from the Sound chip in the bar */
+  /* sound settings: a mixer that opens from the Sound mix row in Settings */
   .soundmenu{
     position:absolute; top:8px; right:12px; z-index:60; width:min(300px,92vw);
     background:var(--af-card,#fff); color:var(--af-cardf,#22302a); border:1px solid var(--line); border-radius:10px;
@@ -872,12 +862,7 @@ date: 2026-09-10
     color:var(--af-qf,#1f4d3a); background:var(--af-qb,#eef5f1); border:1px solid var(--af-qbd,#cfe0d6); border-radius:6px;}
   .sm-quiet[hidden]{display:none;}
 
-  /* the "?" and the game menu are the kit's (HUKit.howTo, HUKit.gameMenu); the bar only
-     makes room. The merged band's site-menu button stays in the markup and never shows,
-     because the menu's last row presses it. */
-  .af .af-kit{display:flex; gap:6px; align-items:center;}
-  .af [data-nav-summon]{display:none;}
-  /* the shift clock beside the task count, on a phone only: the bar has no room for it */
+  /* the shift clock beside the task count, on a narrow phone only: the bar has no room for it */
   .af .af-pclock{display:none;}
   /* Show sounds as text (Settings): the last few sounds as words, top centre of the floor,
      gone in under three seconds, never in the way of a tap */
@@ -889,11 +874,6 @@ date: 2026-09-10
      upright phone only */
   .af-rot{display:none; margin-top:10px; color:var(--t3);}
   @media (max-width:699px) and (orientation:portrait){ .af-rot{display:block;} }
-  /* Under 380 the bar cannot hold hex, title, Silence, "?" and Menu in one row (measured at
-     360: it wrapped to two, 48px of floor gone). Silence keeps its word (the 2026-09-21 rule),
-     so the "?" is the one that yields: Help is the menu's second row, and the card still opens
-     by itself on a first visit. 390 and up keep all five. */
-  @media (max-width:379px){ .af .af-kit .hu-gm-q{display:none;} }
 
   /* the family member is a talking head: a small face beside a speech bubble.
      The mouth flaps and the head bobs while a question types itself out; the
@@ -1150,6 +1130,8 @@ date: 2026-09-10
     background:var(--af-card,#fff); color:var(--af-cardf,#22302a); width:min(480px, 92vw); border-radius:10px; overflow:hidden;
     box-shadow:0 24px 70px rgba(0,0,0,.5); border:3px solid var(--af-alarm); font-family:var(--font);
   }
+  /* the card itself holds focus when it opens (so Enter picks nothing); it is not a control, so no ring */
+  .codebox:focus, .bpa:focus, .af .report:focus{outline:none;}
   .codebox .head{
     background:var(--af-alarm); color:#fff; padding:12px 16px; font-weight:800;
     font-size:17px; letter-spacing:.05em; animation:afblink .5s step-end infinite;
@@ -1310,58 +1292,27 @@ date: 2026-09-10
 
   /* ---------- phone: keep the app grid, floor over dock ---------- */
   @media (max-width:699px), (max-height:500px){
-    /* the bar earns its rows back: kicker and back-chip retire (the title
-       and the summon menu carry both), so the bar wraps to two rows max */
-    .af .tool-bar-kicker{display:none;}
-    /* the fader half of the sound pill is an icon: it still owes a thumb 44px
-       in BOTH directions, and the row gets its width back from the gap */
-    .af .tool-bar-actions{gap:6px;}
     /* the shift clock is a button (tap it for time played), so it owes a thumb
        the same 44px the chips beside it already give */
     .af .af-stat{min-height:44px; padding:0 9px; font-size:var(--t-fine);}
-    /* ONE ROW. Two rows cost 96px because both are pinned to the 44px touch
-       floor, so the only way to buy the height back is to stop wrapping. The
-       title steps down, and the fader, Restart and the site menu fold into a
-       single menu control. */
-    /* the bar's own 12px gap was the last thing pushing the actions onto a
-       second row, so it tightens with everything else */
-    .af .tool-bar{gap:8px;}
-    .af .tool-bar-title{font-size:var(--t-fine);}
-    .af .chip-split .toggle-chip{padding-left:10px;}
-    /* The hex stays. It used to yield the lane here on the grounds that the menu already
-       carried two ways off the page, but David's call 2026-09-21 outranks that: "if we are
-       doing a title at the top bar we also need to have our icon in front of it." It is the
-       one thing that says whose game this is. The room comes from the title instead. */
-    .af .tb-brand{display:flex; flex:0 0 auto;}
-    .af .tb-brand img{width:26px; height:26px;}
-    /* and the chip is sized for its LONGER state, because Silence becoming
-       Silenced mid-shift was bouncing the whole bar onto a second row */
-    /* 84, not 104. Putting the hex back (David, 2026-09-21) costs 44px of a 360px bar, and
-       something had to give it back or the row wrapped to 102px of chrome. The chip keeps
-       its WORD, because the word is what says what the button does; it gives up the padding
-       it was carrying to stop Sound/Silenced bouncing. 84 still fits the longer state. */
-    .af .chip-split .toggle-chip{min-width:84px; justify-content:center; padding-left:8px; padding-right:8px;}
-    /* The row needs 350px of a 336px lane once the hex is back. The 14px comes out of the
-       gaps and the outer padding, so every LABEL survives: brand, title, clock, Sound, menu.
-       Measured, not guessed: 44 + 94 + 182 + 18 = 338 in 340. */
-    .af .tool-bar{gap:6px; padding-left:10px; padding-right:10px;}
-    .af .tool-bar-actions{gap:6px;}
-    /* The bar cannot hold five things at 360 and the hex is not optional any more, so the
-       duplicate goes. The shift clock already reads in the console sub-line, under the big
-       button where the thumb is ("0600. One patient..."), so on a phone the bar copy was
-       saying it twice. That is the 48px the hex needed. Desktop keeps both. 2026-09-21.
-       2026-09-23: the sub-line stops naming the hour after the first purchase, so the clock
-       now rides beside the task count instead (.af-pclock). */
-    .af #clockV{display:none;}
-    .af #clockV{padding-left:4px; padding-right:4px;}
-    .af #mixBtn{display:none;}
-    .af .af-pclock{display:inline; margin-left:8px; font-size:.6em; font-weight:600; color:var(--af-mute,#4a5a52);}
-    /* hex, title, Silence, the "?" and the menu: the menu drops to its icon (its name stays
-       for a screen reader). Silence keeps its word, for the reason above. */
-    .af .af-kit .hu-gm-btn{width:44px; padding:0; justify-content:center;}
-    .af .af-kit .hu-gm-btn span{display:none;}
-    .af .chip-split .toggle-chip{border-radius:999px; padding-right:12px;}
-    .af .chip-split .toggle-chip + .toggle-chip{min-width:44px; justify-content:center;}
+    .af #clockV{min-width:44px; padding-left:4px; padding-right:4px; text-align:center;}
+    /* Silence keeps its WORD on a phone, because the word is what says what the button
+       does (2026-09-21), and it is sized for its LONGER state, because Silence becoming
+       Silenced mid-shift was bouncing the whole row. Measured: Silenced (pressed, so bold)
+       is 102px with its bell, 77px without. */
+    .af #muteBtn{min-width:102px; justify-content:center; padding-left:8px; padding-right:8px;}
+    /* THE CLOCK YIELDS ON A NARROW PHONE. The bar is the site's game bar (2026-10-03), with the
+       name at the bar's own 17px, and hex, name, clock, Silenced, "?" and Menu measure 454px in
+       one row. Below 480 the clock rides beside the task count instead (.af-pclock, 2026-09-23)
+       and Silence drops its bell, so the row is hex, name, Silence, "?" and Menu: 375px at its
+       longest, one row from 380 up, and under 380 the "?" yields as in every game. Sideways
+       (740x360) it all fits. */
+    @media (max-width:479px){
+      .af #clockV{display:none;}
+      .af #muteBtn{min-width:77px;}
+      .af #muteBtn .af-mute-i{display:none;}
+      .af .af-pclock{display:inline; margin-left:8px; font-size:.6em; font-weight:600; color:var(--af-mute,#4a5a52);}
+    }
     .af.hu-shell{height:calc(100vh - var(--nav-h)); height:calc(100dvh - var(--nav-h));
       overflow:hidden; min-height:0;}
     .af .shell-main{display:flex; flex-direction:column;}
@@ -1477,7 +1428,9 @@ date: 2026-09-10
     /* 2026-09-23: at 360 the middle column was 9px and the heart rate read "♥ 1" for 104; the rate and
        the rhythm get their own row, so both read whole (the hand-off report asks for both) */
     .bank-tile{grid-template-areas:"rm rm clr" "box box clr" "hr rhy rhy" "cv cv cv";}
-    .bank-tile .hr{justify-self:start; white-space:nowrap;}
+    /* with the call wall up the rate's column is 36px and "♥ 152" is 45, so it read "♥ 1…" beside
+       NSVT. The rhythm sits right, so the rate may run into the empty middle. 2026-10-03. */
+    .bank-tile .hr, #bank.wide .bank-tile .hr{justify-self:start; white-space:nowrap; overflow:visible;}
     /* and if the lane is still too narrow to hold them, the console pans
        sideways rather than clipping a monitor off the edge */
     #bank{min-width:228px;}
@@ -1561,28 +1514,13 @@ date: 2026-09-10
 
 <div class="af hu-shell" id="afShell">
 
-<header class="tool-bar">
-  <a class="tb-brand" href="/" aria-label="Healthcare Uncharted, home">
-    <img src="/brand/hu-mark-dark.svg" alt="" class="hu-logo-ondark">
-    <img src="/brand/hu-mark.svg" alt="" class="hu-logo-onlight">
-  </a>
-  <span class="tool-bar-kicker">Fun</span>
-  <h1 class="tool-bar-title">Alarm <span>Fatigue</span></h1>
-  <span class="tool-bar-crumb">4 West &middot; Med/Surg</span>
-  <span class="tool-bar-spacer"></span>
-  <div class="tool-bar-actions">
+<!-- the site's game bar (components/game-bar.njk): one status (the shift clock) and one action
+     (Silence). The "?" and the game menu mount into #afKitBtns; the sound mixer is Settings'
+     Sound mix row; Restart, Leave and the site menu are rows inside the menu. -->
+{% endraw %}{% call gameBar({ name: 'Alarm', accent: 'Fatigue', tagline: '4 West · Med/Surg', kitId: 'afKitBtns' }) %}
     <button class="hit af-stat mono" id="clockV" type="button" title="Shift clock. Tap for time played." aria-pressed="false">0600</button>
-    <span class="chip-split">
-      <button class="toggle-chip" id="muteBtn" type="button" aria-pressed="false">&#128266; Sound</button>
-      <button class="toggle-chip" id="mixBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Sound settings" title="Sound settings">&#127898;</button>
-    </span>
-    <!-- the "?" and the game menu (HUKit.howTo, HUKit.gameMenu) go in here. Restart, Learn and
-         the site menu are rows inside the menu now, so the bar holds one menu at every width. -->
-    <span class="af-kit" id="afKitBtns"></span>
-    <!-- kept, never shown: the menu's Site menu row presses it (the merged band's summon) -->
-    <button class="icon-btn" data-nav-summon type="button" aria-expanded="false" aria-label="Site menu" title="Site menu" tabindex="-1"><i data-lucide="menu" aria-hidden="true"></i></button>
-  </div>
-</header>
+    <button class="toggle-chip" id="muteBtn" type="button" aria-pressed="false">&#128266; Sound</button>
+{% endcall %}{% raw %}
 
 <div class="shell-main">
 <div id="floor" class="shell-canvas">
@@ -1705,7 +1643,7 @@ date: 2026-09-10
       <div class="ehrp-body" id="ehrpBody"></div>
     </div>
   </div>
-  <!-- sound settings: a mixer that drops from the Sound chip in the bar -->
+  <!-- sound settings: a mixer that opens from the Sound mix row in Settings -->
   <div id="soundMenu" class="soundmenu" role="dialog" aria-label="Sound settings" hidden>
     <div class="sm-hd"><span>SOUND</span><button type="button" class="hit sm-x" aria-label="Close sound settings">&#10005;</button></div>
     <p class="sm-note">Silence lasts until you buy the next thing. There is no master. Every alarm is its own conversation, and these levels are the only ones that stay where you put them.</p>
@@ -2274,7 +2212,7 @@ const UPG=[
  {id:'dash', nm:'Reporting dashboard', cost:1500, tps:0, tier:1,
   ds:'Management built a dashboard about you. Now you get to look at it too. It opens as a tab in the chart.'},
  {id:'tech', nm:'Hire a tech', cost:2500, tps:10, repeat:4, tier:1,
-  ds:'Bounces around the unit and clears whatever they bump into: call lights, bed alarms, pumps, sats, meds, the huddle, your texts. Not a code. Occasionally discovers their phone.'},
+  ds:'Bounces around the unit and clears whatever they bump into: call lights, bed alarms, sats, the huddle, your texts. Pumps, meds and codes are out of their scope. Occasionally discovers their phone.'},
  {id:'workflow', nm:'Workflow optimization', cost:3000, tps:0, mult:0.10, repeat:10, esc:1.6, tier:1,
   ds:'Informatics rebuilt your click path. Every level is ten percent more out of the same shift, on everything you do.'},
  {id:'inbasket', nm:'The EHR inbox', cost:5000, tps:20, tier:2,
@@ -2999,7 +2937,11 @@ function startCode(onResolved, room, silencedAt){
   klaxonIv=every(()=>snd.klaxon(), 1400);
   const box=layer.querySelector('.codebox');
   const opts=[...layer.querySelectorAll('.opt')];
-  later(()=>{ if(opts[0]) opts[0].focus(); }, 50);
+  /* focus goes to the card, not to a dose: an Enter meant for the big button must not pick
+     one, and focusing the first dose scrolled a sideways phone past the card's header. Tab
+     reaches the doses, 1 to 4 picks one. 2026-10-03. */
+  box.tabIndex=-1; layer.scrollTop=0;
+  later(()=>box.focus({preventScroll:true}), 50);
   let fails=0, takenOver=false;
   /* the line across the top is the clock: thirty seconds (forty-five with More time) before Dr. Patel stops waiting */
   let left=CODE_SECS; const tl=box.querySelector('.tline i');
@@ -3068,7 +3010,7 @@ function startCode(onResolved, room, silencedAt){
                 'That would be a lot of epi. Or not enough. It is not right.',
                 'Try again. '+P.Heis+' not going anywhere. That is the problem.',
                 'Someone whispers the answer. You do not hear it.']);
-        const nxt=opts.find(o=>!o.disabled); if(nxt) nxt.focus();
+        box.focus({preventScroll:true});   /* back to the card: a second Enter must not land on the next dose */
       }
     }
   }
@@ -3874,7 +3816,9 @@ ELEM.bpa=function(){
       '<div class="foot"><button id="bpaDefer" type="button">Defer</button><button id="bpaAcc" type="button" class="primary">Acknowledge</button></div></div>';
     layer.classList.add('show'); snd.ding();
     const hadFocus=document.activeElement;
-    document.getElementById('bpaAcc').focus();
+    /* the card takes focus, not Acknowledge: an Enter meant for the big button must not
+       answer a pop-up nobody read. Tab reaches both buttons, Esc defers. 2026-10-03. */
+    const card=layer.querySelector('.bpa'); card.tabIndex=-1; card.focus({preventScroll:true});
     /* the line across the top is the clock: twelve seconds, then it defers
        itself and comes back, which is what deferring means here */
     const BPA_SECS=12; let left=BPA_SECS; const tl=layer.querySelector('.tline i');
@@ -4632,7 +4576,9 @@ function startReport(who, onDone){
       later(()=>inp.focus(), 50);
     } else {
       w.querySelectorAll('.opt').forEach(b=>b.addEventListener('click', ()=>answer(b.textContent)));
-      later(()=>{ const f=w.querySelector('.opt'); if(f) f.focus(); }, 50);
+      /* the card, not its first answer: report starts on the clock, and an Enter meant for the
+         big button must not answer for you. Tab reaches the answers. 2026-10-03. */
+      w.tabIndex=-1; later(()=>w.focus({preventScroll:true}), 50);
     }
   }
   ask();
@@ -4775,7 +4721,9 @@ function spawnMed(){
       if(step===seq.length){ if(seq.length===5) S.stats.fiveScan=(S.stats.fiveScan||0)+1; give('you'); }
     } else wrong();
   }));
-  later(()=>btns[0].focus(), 40);
+  /* no focus grab: the card arrives on its own, and pulling focus into it turned the next Enter
+     meant for the big button into a scan nobody chose (WRONG PATIENT, 3 runs in 3). Tab reaches
+     it like everything else on the floor. 2026-10-03. */
   /* the due clock only runs while the shift does */
   const iv=every(()=>{
     if(done){ clearInterval(iv); return; }
@@ -5783,15 +5731,17 @@ ELEM.brk=function(){
 };
 
 /* ================= header controls ================= */
-/* one split pill: SILENCE quiets the floor the way the button on a monitor does,
-   which is to say until the next thing arrives; the fader half opens the mixer,
-   where a level per alarm family is the only setting that holds. Levels persist
-   on this device (MEM.vol). */
+/* SILENCE quiets the floor the way the button on a monitor does, which is to say
+   until the next thing arrives. The mixer, where a level per alarm family is the
+   only setting that holds, opens from Settings' Sound mix row (it was the fader
+   half of this pill until the bar became the site's game bar, 2026-10-03). Levels
+   persist on this device (MEM.vol). */
 const muteBtn=document.getElementById('muteBtn');
-const mixBtn=document.getElementById('mixBtn');
 const soundMenu=document.getElementById('soundMenu');
+let soundBack=null;   /* where focus goes when the mixer closes: whatever had it when it opened */
 function paintMute(){
-  muteBtn.innerHTML = S.muted ? '🔕 Silenced' : '🔔 Silence';
+  /* the bell is its own span so a narrow phone can drop it and keep the word (the bar's CSS) */
+  muteBtn.innerHTML = S.muted ? '<span class="af-mute-i" aria-hidden="true">🔕</span>Silenced' : '<span class="af-mute-i" aria-hidden="true">🔔</span>Silence';
   muteBtn.setAttribute('aria-label', S.muted ? 'Silenced. The next thing you buy clears it.' : 'Silence the alarms');
   muteBtn.title = S.muted ? 'Silenced. The next thing you buy clears it.' : 'Silence the alarms. It does not last.';
   muteBtn.setAttribute('aria-pressed', String(S.muted));
@@ -5818,14 +5768,17 @@ function paintQuiet(){
   q.hidden = !ins.length || ins.some(i=>Number(i.value)>0);
 }
 function openSound(){
-  soundMenu.hidden=false; mixBtn.setAttribute('aria-expanded','true');
+  soundBack=document.activeElement;
+  soundMenu.hidden=false;
   soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{ inp.value=Math.round(vol(inp.dataset.vol)*100); });
   paintQuiet();
   const x=soundMenu.querySelector('.sm-x'); if(x) x.focus();
 }
-function closeSound(){ if(soundMenu.hidden) return; soundMenu.hidden=true; mixBtn.setAttribute('aria-expanded','false'); mixBtn.focus(); }
+function closeSound(){
+  if(soundMenu.hidden) return; soundMenu.hidden=true;
+  const b=soundBack; soundBack=null; if(b && b!==document.body && b.isConnected && b.focus) b.focus();
+}
 muteBtn.addEventListener('click', ()=>{ S.muted=!S.muted; audio(); paintMute(); });
-mixBtn.addEventListener('click', ()=>{ if(soundMenu.hidden) openSound(); else closeSound(); });
 soundMenu.querySelector('.sm-x').addEventListener('click', closeSound);
 soundMenu.querySelectorAll('input[data-vol]').forEach(inp=>{
   inp.addEventListener('input', ()=>{
@@ -5839,7 +5792,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !soundMenu.hidd
 document.addEventListener('click', e=>{
   /* Settings' Sound mix row opens this panel a beat after its own click, so that click
      never reaches here with the panel open (see mixRow below) */
-  if(soundMenu.hidden || soundMenu.contains(e.target) || mixBtn.contains(e.target)) return;
+  if(soundMenu.hidden || soundMenu.contains(e.target)) return;
   closeSound();
 });
 if(MEM.vol && MEM.vol.master!=null){ delete MEM.vol.master; saveMem(); }   /* an older build's master, now unreachable */
@@ -5877,7 +5830,8 @@ const afMenu=HUKit.gameMenu({
   onOpen:()=>closeSound(),
   /* Esc opens the menu only when nothing of the floor's own is up to close first */
   escOpens:()=> soundMenu.hidden && !ehrPanel.classList.contains('show') && !codeActive && !reportActive && !breakActive &&
-    !document.getElementById('lunch').classList.contains('show')
+    !document.getElementById('lunch').classList.contains('show') &&
+    !document.getElementById('bpaLayer').classList.contains('show')   /* Esc on a pop-up defers it, and only that */
 });
 const kitSlot=document.getElementById('afKitBtns');
 const menuBtn=afMenu.button(); menuBtn.setAttribute('aria-label','Menu');   /* the word hides on a phone; the name stays */
@@ -5968,8 +5922,17 @@ function placeStage(){
      stand down for is gone (2026-09-21). */
   /* the console clears the tab row, but a short floor (a phone turned sideways)
      has no 92px to spare: it clears the tabs and nothing more */
-  const minTop = H<420 ? 56 : 92;
-  stage.style.top=Math.round(Math.max(minTop, H*0.53 - h/2))+'px';
+  /* measured, not assumed (2026-10-03): on a touch screen the tabs are 44px tall and a fixed 56
+     put the console over them. The console then ends 8px above the floor's bottom, as before. */
+  let minTop=92;
+  if(H<420){
+    const tabs=document.querySelector('.ehrTabs');
+    const tb = tabs && tabs.offsetHeight ? tabs.getBoundingClientRect().bottom-floor.getBoundingClientRect().top : 0;
+    minTop=Math.max(56, Math.ceil(tb)+4);
+  }
+  const top=Math.round(Math.max(minTop, H*0.53 - h/2));
+  stage.style.top=top+'px';
+  stage.style.maxHeight = H<420 ? (H-top-8)+'px' : '';
   btnBox=null; issues.forEach(o=>{ o.rect=null; });   /* everything inside it just moved */
 }
 if(window.ResizeObserver) new ResizeObserver(placeStage).observe(stage);

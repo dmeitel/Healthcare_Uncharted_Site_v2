@@ -2,7 +2,7 @@
 
 Three skeletons, copied from pages that shipped. Each session used to re-read base.njk, a sibling page, and the shell doc before writing one page; start here instead. The law behind these lives in docs/HU-TOOL-SHELL.md (chrome), docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md (interaction), DESIGN.md (tiers), and CLAUDE.md (voice). When a recipe and the law disagree, the law wins and this file is wrong.
 
-Before any of them ships: `npm run verify` green, `npm run phone -- <path>` clean at 360 and 699, both themes looked at, no em dashes, every claim sourced.
+Before any of them ships: `npm run verify` green, `npm run phone -- <path>` clean at its nine default viewports (portrait, landscape and both sides of the 699 line), `npm run writing:check -- <path>` with nothing to fix, both themes looked at, no em dashes, every claim sourced.
 
 ---
 

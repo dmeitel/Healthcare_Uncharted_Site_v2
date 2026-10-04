@@ -38,7 +38,8 @@ test('the ladder: the non-rebreather level sits after the timed level, the fault
   const da = load();
   const seq = ids(da);
   assert.ok(seq.indexOf('lnrb') === seq.indexOf('l1t') + 1, 'NRB right after the timed level: ' + seq.join(','));
-  assert.ok(seq.indexOf('f1') > seq.indexOf('l5') && seq.indexOf('f3') === seq.indexOf('sb') - 1, 'fault walls between capnography and the sandbox');
+  assert.ok(seq.indexOf('f1') > seq.indexOf('l5') && seq.indexOf('f3') < seq.indexOf('sb'), 'fault walls between capnography and the sandbox');
+  assert.ok(seq.indexOf('v1') === seq.indexOf('f5') + 1 && seq.indexOf('vf3') === seq.indexOf('sb') - 1, 'the ventilator walls (Stage C) after the fault walls');
   const k = id => da.LEVELS.find(L => L.id === id).kicker;
   assert.deepStrictEqual([k('lnrb'), k('l2'), k('l3'), k('l5')], ['Level 2', 'Level 3', 'Level 4', 'Level 5']);
   // bubble CPAP is parked (David, 2026-09-23): kept for the engine tests, out of every list a player sees

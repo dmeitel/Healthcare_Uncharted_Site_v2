@@ -146,8 +146,11 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
    entry and the growth legend say 2025. Verify 229/229, Career Tree clean at nine viewports.
 8. **Cost of living, what is left.** The ~546 words (explanation behind an "i", warnings David
    rules on one by one, live output that stays), and the From side's "Rate there" label.
+   **DONE 2026-10-03 except the warnings,** which wait on David's ruling one by one (DECISIONS LOG).
 9. **The tool-chrome shell.** Five pages hand-roll a bar that two share, and a tool's name
    renders at 14, 15 or 17px on a phone depending on the tool.
+   **DONE 2026-10-03:** one row on a portrait phone for every page on the shared bar, one name size.
+   Left: System Layers' three-row bar and the Career Tree's missing phone title (DECISIONS LOG).
 10. **Device Assembly on a portrait phone (David's call).** 28 labels drawn on the game art (HR,
     SpO2, SHARPS, GLOVES, and the wall screen's "HINT 1/4") render at 2.5 to 3.7px at 360 and 430,
     so the sweep fails the page. Nothing in this batch caused it: the page's only changes were a
@@ -452,6 +455,38 @@ commit and push"). The full `npm run qa`, plus four information checks that no g
     technician code. S1 (show new programs) and S2 (campus marks) answered "go with both" and BUILT the same night: hollow marks
     outside every count (DECISIONS LOG).
     394/394, phone gate clean.
+19. **The writing checker, 2026-10-03 (David's order for the week: push the "new rounds and maps" commit, then this,
+    then the Device Assembly expansions).** BUILT: rules in scripts/lib/writing-rules.js (patient information,
+    professional tone, the HU voice; six registers; every finding cites its ruling), the screen (`npm run writing`,
+    /__writing: paste a draft or pick a page), the command line (`npm run writing:check`), two gates in `npm test`
+    (writing-phi, the voice ratchet against tests/writing-baseline.json), and the reviewer panel skill
+    (.claude/skills/hu-writing-review). Record: DECISIONS LOG 2026-10-03 night. Open for David: W1 (clean up the 46
+    findings already on the site). NEXT: Device Assembly, with David's list of expansions.
+20. **The frame, 2026-10-03 (DECISIONS N1: "frame first").** DONE: the toolkit map (docs/HU-QA-TOOLKIT.md), the page
+    ledger with computed phases (`npm run ledger`), the Board and Report in `npm run review`, and the one game bar on all
+    six games (tests/game-shell.test.js, skill hu-game-shell). Record: DECISIONS LOG "THE FRAME".
+21. **Device Assembly stage A, A1 to A4, 2026-10-03** (docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md). BUILT: the
+    engine contract (one dispatcher, a saved wall that continues after a reload), dealt walls from realistic to absurd
+    (DECISIONS N3), the daily wall with its share line, streak and countdown, beating par counted, the par build as a
+    ghost. Record: DECISIONS LOG "DEVICE ASSEMBLY STAGE A".
+22. **Device Assembly A5, the shift, 2026-10-04.** BUILT: five walls, one patient, five stories, complications that
+    bite, three bonuses, a fault wall made from your own build, the shift score and share line, Continue mid-shift.
+    Record: DECISIONS LOG "THE SHIFT".
+23. **Device Assembly A6, 2026-10-04.** BUILT: Make a wall and its links, sandbox build links, the race on the Vital
+    Stats portal (bots, room code, invite link, QR, big screen, up to eight builders, ghosts, host-judged places).
+    Stage A is done. Record: DECISIONS LOG "A6".
+24. **Device Assembly Stage B, 2026-10-04.** BUILT: a rehab room and someone's home, dealt at random and solved first;
+    placeable concentrators and cylinders; the daily wall visits both from #4. Record: DECISIONS LOG "STAGE B".
+25. **The new places in the maker and the shift, 2026-10-04.** BUILT. Record: DECISIONS LOG "THE NEW PLACES IN THE MAKER
+    AND THE SHIFT".
+26. **Device Assembly Stage C, first walls, 2026-10-04.** BUILT: Set up a ventilator, An inline treatment, and the
+    HME fault wall, in an ICU bed space, judged by the rule sheet as written. Record: DECISIONS LOG "STAGE C".
+27. **The rest of Stage C, 2026-10-04.** BUILT: seven more vent walls, two home oxygen faults, the ICU as a dealt place
+    (Puzzles, the maker, the daily wall from #5, an ICU shift). Record: DECISIONS LOG "STAGE C, THE REST".
+28. **NEXT: David's phone play** of the daily wall, a shift, a race, a home and a vent wall, then the commit and the
+    push (David, 2026-10-04: "once i finish the other tasks we can commit and push"). The sedation-line fix is DONE:
+    amended into the unpushed commit, now e3120a2. The rule sheet is read: "looks right, no changes" (2026-10-04). Stage C
+    is the last stage in the plan.
 
 ---
 

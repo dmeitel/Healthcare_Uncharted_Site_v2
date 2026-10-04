@@ -60,6 +60,38 @@
   #phoneWrap.land { width:740px; height:360px; }
 
   .hint { padding:10px 14px; font-size:12px; color:var(--ink3); border-top:1px solid var(--line); background:var(--panel); flex:0 0 auto; }
+
+  /* THE BOARD AND THE REPORT (2026-10-03): the page ledger beside the two views. */
+  [hidden] { display:none !important; }
+  #reportPane { flex:0 0 380px; min-width:0; }
+  .report { flex:1 1 auto; overflow:auto; border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:12px 14px 30px; font-size:13px; line-height:1.45; }
+  .report h2 { font-size:15px; margin:0 0 6px; }
+  .report .sub { color:var(--ink3); font-family:var(--mono); font-size:11px; margin:0 0 12px; word-break:break-all; }
+  .report h3 { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink3); margin:16px 0 6px; font-weight:600; }
+  .ck { display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-top:1px solid var(--line); }
+  .ck:first-of-type { border-top:0; }
+  .ck .st { font-family:var(--mono); font-size:11px; font-weight:700; min-width:56px; text-transform:uppercase; }
+  .ck .d { color:var(--ink2); font-size:12.5px; }
+  .ck .r { color:var(--ink3); font-size:11.5px; }
+  .s-pass { color:#2D9B6F; } .s-fail { color:#DF5752; } .s-unknown { color:var(--ink3); } .s-judge { color:#7FA9DA; } .s-na { color:var(--ink3); }
+  .phase { display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; border:1px solid var(--line2); }
+  .phase.p1 { color:#E8A838; border-color:#E8A838; } .phase.p2 { color:#2D9B6F; border-color:#2D9B6F; } .phase.pq { color:var(--ink3); }
+  .finding { padding:5px 0 5px 8px; border-left:3px solid var(--line2); margin:5px 0; }
+  .finding.lv-block { border-left-color:#DF5752; } .finding.lv-warn { border-left-color:#E8A838; } .finding.lv-check { border-left-color:#7FA9DA; }
+  .finding q { display:block; color:var(--ink2); quotes:'“' '”'; overflow-wrap:anywhere; }
+  .report textarea { width:100%; min-height:80px; background:#0f151d; color:var(--ink); border:1px solid var(--line2); border-radius:7px; padding:8px; font:inherit; resize:vertical; }
+  .report .row { display:flex; gap:8px; margin-top:8px; align-items:center; flex-wrap:wrap; }
+  .muted { color:var(--ink3); }
+  #board { position:fixed; inset:52px 0 0 0; background:var(--bg); z-index:50; overflow:auto; padding:14px 16px 40px; }
+  #board .bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 12px; }
+  #board .sum { color:var(--ink2); font-size:13px; margin:0 0 12px; }
+  #board table { width:100%; border-collapse:collapse; font-size:13px; }
+  #board th { text-align:left; font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink3); padding:6px 8px; border-bottom:1px solid var(--line2); position:sticky; top:-14px; background:var(--bg); }
+  #board td { padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  #board tr.pg { cursor:pointer; }
+  #board tr.pg:hover td, #board tr.pg:focus-visible td { background:var(--panel); }
+  #board .t { color:var(--ink); } #board .u { color:var(--ink3); font-family:var(--mono); font-size:11px; }
+  .chip2 { display:inline-block; font-size:11.5px; color:var(--ink2); border:1px solid var(--line2); border-radius:999px; padding:1px 8px; margin:2px 4px 2px 0; }
   kbd { font-family:var(--mono); font-size:11px; background:#0f151d; border:1px solid var(--line2); border-radius:4px; padding:1px 5px; }
 </style>
 </head>
@@ -87,10 +119,22 @@
   <button id="theme">Light</button>
   <button id="sync" class="on" title="Both frames follow each other: same page, and roughly the same place on it">Linked</button>
 
+  <button id="boardBtn" title="Every page, its phase and what holds it there">Board</button>
+  <button id="reportBtn" title="This page's checks, writing findings and your review">Report</button>
+
   <span class="spacer"></span>
   <span class="count" id="count"></span>
   <span class="path" id="path"></span>
 </header>
+
+<div id="board" hidden aria-label="The board">
+  <div class="bar" id="boardFilters"></div>
+  <p class="sum" id="boardSum"></p>
+  <table>
+    <thead><tr><th>Phase</th><th>Kind</th><th>Page</th><th>What holds it</th><th>Reviewed</th></tr></thead>
+    <tbody id="boardRows"></tbody>
+  </table>
+</div>
 
 <main>
   <section class="pane" id="deskPane">
@@ -104,7 +148,13 @@
       <div class="frame-wrap w390" id="phoneWrap"><iframe id="phone" title="Phone view"></iframe></div>
     </div>
   </section>
+
+  <section class="pane" id="reportPane" hidden aria-label="Report">
+    <div class="pane-h">Report</div>
+    <div class="report" id="report"><p class="muted">Loading the ledger…</p></div>
+  </section>
 </main>
+<script src="/__review/rules.js"></script>
 
 <div class="hint">
   With <b>Linked</b> on, either frame pulls the other to the same page and the same place on it. <kbd>&#8592;</kbd> <kbd>&#8594;</kbd> step through pages,
@@ -288,7 +338,8 @@
     phoneWrap.style.transform = 'none';
     w = phoneWrap.offsetWidth; h = phoneWrap.offsetHeight;
     var availH = phoneStage.clientHeight;
-    var availW = Math.max(240, Math.min(w, window.innerWidth - 480));
+    var rp = document.getElementById('reportPane');
+    var availW = Math.max(240, Math.min(w, window.innerWidth - 480 - (rp && !rp.hidden ? 392 : 0)));
     var s = Math.min(1, availH / h, availW / w);
     phoneWrap._scale = s;
     phoneWrap.style.transform = s < 1 ? 'scale(' + s + ')' : 'none';
@@ -314,6 +365,126 @@
     go(start);
     sizeReadout();
   });
+})();
+</script>
+<script>
+/* THE BOARD AND THE REPORT (2026-10-03). The page ledger (scripts/ledger.js) beside the two
+   views: every page's phase and what holds it there, and for the page on screen, its checks, its
+   writing findings read off the desktop frame, and David's review note. Plan:
+   docs/HU-CONSISTENCY-TOOLKIT-2026-10-03.md. */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var desk = $('desk'), board = $('board'), reportPane = $('reportPane'), report = $('report');
+  var ledger = null, filter = 'all';
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function phaseBadge(p) { return '<span class="phase ' + (p === 1 ? 'p1' : p === 2 ? 'p2' : 'pq') + '">Phase ' + p + '</span>'; }
+  var STATE = { pass: 'yes', fail: 'no', unknown: 'not yet', judge: 'yours', na: 'n/a' };
+  var KIND = { reading: 'Reading', hub: 'Hub', tool: 'Tool', game: 'Game' };
+
+  function load(fresh) {
+    return fetch('/__review/ledger.json' + (fresh ? '?fresh=1' : ''), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (L) { ledger = L; drawBoard(); drawReport(); });
+  }
+  function current() { try { return desk.contentWindow.location.pathname; } catch (e) { return ''; } }
+  function rowFor(p) { return ledger && ledger.rows.filter(function (r) { return r.url === p; })[0]; }
+  function open(p) {
+    var picker = $('picker');
+    if (![].some.call(picker.options, function (o) { return o.value === p; })) { var o = document.createElement('option'); o.value = p; o.textContent = p; picker.appendChild(o); }
+    picker.value = p; picker.dispatchEvent(new Event('change'));
+  }
+
+  function drawBoard() {
+    if (!ledger) return;
+    var rows = ledger.rows, n = { 1: 0, 2: 0, '?': 0 }, kinds = {};
+    rows.forEach(function (r) { n[r.phase]++; kinds[r.kind] = (kinds[r.kind] || 0) + 1; });
+    var f = [['all', 'All ' + rows.length], ['1', 'Phase 1 · ' + n[1]], ['2', 'Phase 2 · ' + n[2]], ['?', 'Not measured · ' + n['?']]];
+    Object.keys(kinds).forEach(function (k) { f.push(['k:' + k, KIND[k] + ' · ' + kinds[k]]); });
+    f.push(['rev', 'Reviewed by you']);
+    $('boardFilters').innerHTML = f.map(function (x) { return '<button data-f="' + x[0] + '"' + (filter === x[0] ? ' class="on"' : '') + '>' + esc(x[1]) + '</button>'; }).join('') + '<button id="boardFresh" title="Work the ledger out again">Refresh</button>';
+    $('boardSum').textContent = n[2] + ' of ' + rows.length + ' pages meet today\'s standard for their kind (Phase 2). ' + n[1] + ' were built before it and name what holds them (Phase 1)' + (n['?'] ? '; ' + n['?'] + ' wait on the phone sweep' : '') + '. Worked out ' + new Date(ledger.at).toLocaleString() + '.';
+    var shown = rows.filter(function (r) {
+      if (filter === 'all') return true;
+      if (filter === 'rev') return !!r.review;
+      if (filter.indexOf('k:') === 0) return r.kind === filter.slice(2);
+      return String(r.phase) === filter;
+    });
+    $('boardRows').innerHTML = shown.map(function (r) {
+      return '<tr class="pg" tabindex="0" data-p="' + esc(r.url) + '"><td>' + phaseBadge(r.phase) + '</td><td>' + KIND[r.kind] + '</td><td><div class="t">' + esc(r.title || r.url) + '</div><div class="u">' + esc(r.url) + '</div></td><td>' +
+        (r.holds.length ? r.holds.map(function (h) { return '<span class="chip2">' + esc(h) + '</span>'; }).join('') : r.phase === '?' ? '<span class="muted">phone sweep not run</span>' : '<span class="s-pass">nothing</span>') +
+        '</td><td>' + (r.review ? esc(r.review.date) : '<span class="muted">not yet</span>') + '</td></tr>';
+    }).join('');
+  }
+
+  function drawReport() {
+    if (reportPane.hidden || !ledger) return;
+    var p = current(), r = rowFor(p);
+    if (!r) { report.innerHTML = '<p class="muted">' + esc(p) + ' is not in the ledger (a forwarding page, or a page with no source any more).</p>'; return; }
+    var h = '<h2>' + esc(r.title || r.url) + '</h2><p class="sub">' + phaseBadge(r.phase) + ' &nbsp;' + KIND[r.kind] + ' · ' + esc(r.url) + '</p><h3>Checks</h3>';
+    r.checks.forEach(function (c) {
+      h += '<div class="ck"><span class="st s-' + c.state + '">' + STATE[c.state] + '</span><span><b>' + esc(c.label) + '</b>' + (c.detail ? '<br><span class="d">' + esc(c.detail) + '</span>' : '') + (c.rule ? '<br><span class="r">' + esc(c.rule) + '</span>' : '') + '</span></div>';
+    });
+    h += '<h3>Writing, as drawn</h3><div id="wfind"><p class="muted">Reading the page…</p></div>';
+    h += '<h3>Your review</h3><textarea id="rvNote" placeholder="What you saw on the phone and the laptop">' + esc(r.review ? r.review.note : '') + '</textarea>' +
+      '<div class="row"><button id="rvMark">' + (r.review ? 'Update review' : 'Mark reviewed') + '</button>' + (r.review ? '<button id="rvClear">Clear</button><span class="muted">Reviewed ' + esc(r.review.date) + '</span>' : '') + '</div>';
+    report.innerHTML = h;
+    setTimeout(writingFindings, 700);
+  }
+
+  function writingFindings() {
+    var box = $('wfind'); if (!box || !window.HUWriting) return;
+    try {
+      var x = HUWriting.extractBlocks(desk.contentDocument);
+      var p = current(), html = desk.contentDocument.documentElement.outerHTML;
+      var res = HUWriting.check(x.blocks, { register: HUWriting.registerForPath(p, html), guest: x.guest, links: x.links });
+      var list = res.flags.filter(function (f) { return f.level !== 'check'; }).concat(res.flags.filter(function (f) { return f.level === 'check'; }));
+      var h = '<p class="muted">' + res.counts.block + ' must fix · ' + res.counts.warn + ' fix · ' + res.counts.check + ' read again, from the text as the page draws it.</p>';
+      list.slice(0, 14).forEach(function (f) {
+        var rule = HUWriting.RULES[f.rule];
+        h += '<div class="finding lv-' + f.level + '"><b>' + esc(HUWriting.LEVELS[f.level].name) + ':</b> ' + esc(rule.name) + '<q>' + esc(f.text.slice(0, 140)) + '</q></div>';
+      });
+      if (list.length > 14) h += '<p class="muted">and ' + (list.length - 14) + ' more; the writing screen (npm run writing) has them all.</p>';
+      box.innerHTML = h;
+    } catch (e) { box.innerHTML = '<p class="muted">Could not read this page: ' + esc(e.message) + '</p>'; }
+  }
+
+  function save(reviewed) {
+    var p = current();
+    fetch('/__review/review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: p, note: ($('rvNote') || {}).value || '', reviewed: reviewed }) })
+      .then(function (r) { return r.json(); }).then(function () { return load(true); });
+  }
+
+  $('boardBtn').addEventListener('click', function () {
+    board.hidden = !board.hidden;
+    this.classList.toggle('on', !board.hidden);
+    if (!board.hidden && !ledger) load();
+  });
+  $('reportBtn').addEventListener('click', function () {
+    reportPane.hidden = !reportPane.hidden;
+    this.classList.toggle('on', !reportPane.hidden);
+    window.dispatchEvent(new Event('resize'));
+    if (!reportPane.hidden) { if (ledger) drawReport(); else load(); }
+  });
+  board.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-f]');
+    if (b) { filter = b.getAttribute('data-f'); drawBoard(); return; }
+    if (e.target.id === 'boardFresh') { load(true); return; }
+    var tr = e.target.closest('tr.pg');
+    if (tr) {
+      open(tr.getAttribute('data-p'));
+      board.hidden = true; $('boardBtn').classList.remove('on');
+      reportPane.hidden = false; $('reportBtn').classList.add('on');
+      window.dispatchEvent(new Event('resize'));
+    }
+  });
+  board.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.closest('tr.pg')) e.target.click(); });
+  report.addEventListener('click', function (e) {
+    if (e.target.id === 'rvMark') save(true);
+    if (e.target.id === 'rvClear') save(false);
+  });
+  desk.addEventListener('load', function () { drawReport(); });
+  // open straight onto the board with ?board=1, or a page's report with ?report=1
+  var q = new URLSearchParams(location.search);
+  if (q.get('board')) $('boardBtn').click();
+  if (q.get('report')) $('reportBtn').click();
 })();
 </script>
 </body>

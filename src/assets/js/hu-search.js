@@ -57,16 +57,133 @@ function scoreEntry(e, q) {
   if (!best && S.indexOf(q) > -1) best = 40;
   return best ? { score: best, why: why } : null;
 }
-function search(q) {
+
+/* The word pass (2026-10-04). The phrase pass above needs the whole query inside one label or
+   key, so "rt pay" and "travel pay in Sacramento" found nothing. This pass takes a question the
+   way people type it: drop the filler words, fold plurals, swap in everyday synonyms, then score
+   each word where it lands (label 3, key 2.5, description 1). A state name only nudges (half
+   weight), and a label or key holding every matched word earns a bonus, so "travel pay in
+   Sacramento" lands on the tool whose key IS "travel pay". Capped below a phrase hit on a key. */
+var STOP = {};
+('a an the and or of in on at to for from with by about into is are was be do does did can could should would ' +
+ 'how what which who why where when me my i im you your near best good find get show tell need want vs versus ' +
+ 'much many some any this that it its healthcare').split(' ').forEach(function (w) { STOP[w] = 1; });
+var SYN = {
+  rt: ['respiratory'], rrt: ['respiratory'], crt: ['respiratory'], resp: ['respiratory'],
+  vent: ['ventilator', 'respiratory'], ventilator: ['respiratory'], o2: ['oxygen'],
+  rn: ['nurse'], lpn: ['nurse'], cna: ['nurse'], nursing: ['nurse'],
+  md: ['physician', 'doctor'], doctor: ['physician'], physician: ['doctor'],
+  salary: ['pay'], wage: ['pay'], income: ['pay'], earn: ['pay'], earning: ['pay'], paid: ['pay'], paycheck: ['pay'], compensation: ['pay'],
+  price: ['cost', 'charge'], cost: ['price'], charge: ['price', 'cost'], chargemaster: ['price', 'charge'], expensive: ['cost', 'price'],
+  job: ['career'], career: ['job'], profession: ['career'],
+  school: ['program', 'education'], college: ['school', 'education'], program: ['school'], degree: ['education', 'school'], training: ['education'],
+  insurance: ['payer', 'insurer'], insurer: ['payer', 'insurance'], payer: ['insurance', 'insurer'],
+  billing: ['bill', 'claim'], bill: ['billing', 'claim'], claim: ['billing'], coding: ['code'], code: ['coding'], denial: ['claim'],
+  authorization: ['auth'], preauth: ['auth'], preauthorization: ['auth'], auth: ['authorization'],
+  emr: ['ehr'], ehr: ['emr'], chart: ['ehr', 'record'], charting: ['ehr', 'record'], record: ['ehr'],
+  artificial: ['ai'], intelligence: ['ai'], llm: ['ai'], chatgpt: ['ai'], ml: ['ai'],
+  game: ['play'], play: ['game'], quiz: ['trivia', 'game'], trivia: ['quiz', 'game'], fun: ['game'],
+  atlas: ['map'], map: ['atlas'],
+  traveler: ['travel'], traveling: ['travel'], travelling: ['travel'],
+  relocate: ['relocation', 'moving'], move: ['moving', 'relocation'], moving: ['relocation'],
+  burned: ['burnout'], burnt: ['burnout'],
+  database: ['sql', 'data'], query: ['sql'], sql: ['database'],
+  law: ['policy', 'regulation'], legislation: ['law', 'policy'], regulation: ['law', 'policy'], rule: ['law', 'policy'], policy: ['law'],
+  hack: ['cyberattack'], hacked: ['cyberattack'], ransomware: ['cyberattack'], breach: ['cyberattack'], cyber: ['cyberattack'],
+  fhir: ['interoperability'], hl7: ['interoperability'], interop: ['interoperability']
+};
+var STATES = ('alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois ' +
+  'indiana iowa kansas kentucky louisiana maine maryland massachusetts michigan minnesota mississippi missouri montana ' +
+  'nebraska nevada ohio oklahoma oregon pennsylvania tennessee texas utah vermont virginia washington wisconsin wyoming')
+  .split(' ').concat(['new hampshire', 'new jersey', 'new mexico', 'new york', 'north carolina', 'north dakota',
+    'rhode island', 'south carolina', 'south dakota', 'west virginia', 'district of columbia'])
+  .sort(function (a, b) { return b.length - a.length; });
+
+function stem(w) {
+  if (w.length > 4 && /ies$/.test(w)) return w.slice(0, -3) + 'y';
+  if (w.length > 4 && /(xes|ses|ches|shes|zes)$/.test(w)) return w.slice(0, -2);
+  if (w.length > 3 && /s$/.test(w) && !/(ss|us|is|as)$/.test(w)) return w.slice(0, -1);
+  return w;
+}
+function tokens(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(' ')
+    .filter(function (t) { return t.length > 1; }).map(stem);
+}
+/** the query as words to look for: [{ alts: [stem, ...synonyms], imp: 1, or 0.5 for a place }] */
+function queryWords(q) {
+  var W = [], seen = {}, place = false;
+  STATES.forEach(function (s) {
+    var re = new RegExp('\\b' + s + '\\b');
+    if (re.test(q)) { q = q.replace(re, ' '); place = true; }
+  });
+  if (place) W.push({ alts: ['state', 'county'], imp: 0.5 });
+  q.replace(/[^a-z0-9]+/g, ' ').split(' ').forEach(function (raw) {
+    if (raw.length < 2 || STOP[raw]) return;
+    var s = stem(raw);
+    if (seen[s]) return;
+    seen[s] = 1;
+    W.push({ alts: [s].concat(SYN[s] || SYN[raw] || []), imp: 1 });
+  });
+  return W;
+}
+function prep(e) {
+  if (!e._p) {
+    var keys = (e.keys || []).map(tokens);
+    e._p = { label: tokens(e.label), keys: keys, keyAll: [].concat.apply([], keys), text: tokens((e.sub || '') + ' ' + (e.text || '')) };
+  }
+  return e._p;
+}
+/* What was typed (alts[0]) matches whole when short ("pay" is not "payer") and the front of a word
+   from four letters up ("hosp", "cardio"). A synonym always matches whole: "auth" must not find
+   "author". */
+function hits(list, alts) {
+  for (var i = 0; i < list.length; i++) {
+    for (var j = 0; j < alts.length; j++) {
+      var a = alts[j];
+      if (list[i] === a || (j === 0 && a.length >= 4 && list[i].indexOf(a) === 0)) return true;
+    }
+  }
+  return false;
+}
+function wordScore(e, W) {
+  var P = prep(e), sum = 0, tot = 0, got = [];
+  W.forEach(function (w) {
+    tot += w.imp;
+    var s = hits(P.label, w.alts) ? 3 : hits(P.keyAll, w.alts) ? 2.5 : hits(P.text, w.alts) ? 1 : 0;
+    if (s) { sum += s * w.imp; got.push(w); }
+  });
+  var core = got.filter(function (w) { return w.imp === 1; });
+  if (!core.length && W.some(function (w) { return w.imp === 1; })) return null;   // only the place matched
+  if (!got.length) return null;
+  var score = sum / tot * 25, why = null, k;
+  if (core.length >= 2) {
+    if (core.every(function (w) { return hits(P.label, w.alts); })) score += 12;
+    else for (k = 0; k < P.keys.length; k++) {
+      if (core.every(function (w) { return hits(P.keys[k], w.alts); })) { score += 12; why = e.keys[k]; break; }
+    }
+  }
+  if (!why && !core.every(function (w) { return hits(P.label, w.alts); })) {
+    var most = 0;
+    P.keys.forEach(function (kt, i) {
+      var n = got.filter(function (w) { return hits(kt, w.alts); }).length;
+      if (n > most) { most = n; why = e.keys[i]; }
+    });
+  }
+  return score >= 15 ? { score: Math.min(score, 85), why: why } : null;
+}
+
+function searchIn(list, q) {
   q = q.trim().toLowerCase();
-  var out = [];
-  for (var i = 0; i < IDX.length; i++) {
-    var m = scoreEntry(IDX[i], q);
-    if (m) out.push({ e: IDX[i], score: m.score, why: m.why });
+  var W = queryWords(q), out = [];
+  for (var i = 0; i < list.length; i++) {
+    var m = scoreEntry(list[i], q), w = W.length ? wordScore(list[i], W) : null;
+    var best = !m ? w : !w ? m : (w.score > m.score ? w : m);
+    if (best) out.push({ e: list[i], score: best.score, why: best.why });
   }
   out.sort(function (a, b) { return b.score - a.score; });
   return out.slice(0, 10);
 }
+function search(q) { return searchIn(IDX, q); }
 
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
@@ -139,7 +256,7 @@ function build() {
     '<div class="hu-sr-back"></div>' +
     '<div class="hu-sr-panel" role="dialog" aria-modal="true" aria-label="Site search">' +
       '<div class="hu-sr-in">' + MAG +
-        '<input id="huSearchInput" type="text" autocomplete="off" spellcheck="false" placeholder="Where do you want to go?" aria-label="Search the site">' +
+        '<input id="huSearchInput" type="text" autocomplete="off" spellcheck="false" placeholder="What are you trying to figure out?" aria-label="Search the site">' +
         '<button type="button" class="hu-sr-cancel" aria-label="Close search">Cancel</button>' +
       '</div>' +
       '<div class="hu-sr-body" id="huSearchBody"></div>' +
@@ -150,6 +267,7 @@ function build() {
   body = document.getElementById('huSearchBody');
 
   input.addEventListener('input', function () {
+    if (!IDX) return;   // still loading: open() paints whatever is typed once it lands
     var q = input.value.trim();
     if (!q) { renderEmpty(); return; }
     renderResults(q);
@@ -173,15 +291,18 @@ function build() {
   wrap.querySelector('.hu-sr-cancel').addEventListener('click', close);
 }
 
-function open(from) {
+/* q, when given, arrives typed in: an example chip opens straight onto its results */
+function open(from, q) {
   if (!wrap) build();
   opener = from || document.activeElement;
   wrap.hidden = false;
   document.documentElement.classList.add('hu-search-open');
-  input.value = '';
+  input.value = q || '';
   input.focus();
-  loadIndex(function () { if (!wrap.hidden && !input.value.trim()) renderEmpty(); });
-  if (IDX) renderEmpty(); else body.innerHTML = '<div class="hu-sr-none">Loading the map&hellip;</div>';
+  if (q) { try { input.setSelectionRange(q.length, q.length); } catch (e) { /* older engines */ } }
+  function paint() { if (wrap.hidden) return; var v = input.value.trim(); if (v) renderResults(v); else renderEmpty(); }
+  if (IDX) paint();
+  else { body.innerHTML = '<div class="hu-sr-none">Loading the map&hellip;</div>'; loadIndex(paint); }
 }
 function close() {
   if (!wrap || wrap.hidden) return;
@@ -204,8 +325,14 @@ document.addEventListener('keydown', function (ev) {
 document.addEventListener('click', function (ev) {
   var target = /** @type {Element} */ (ev.target);
   var btn = target.closest && target.closest('[data-hu-search]');
-  if (btn) { ev.preventDefault(); open(btn); }
+  if (btn) {
+    ev.preventDefault();
+    var q = btn.getAttribute('data-q') || '';
+    if (q) gc('search/chip', q);
+    open(btn, q);
+  }
 });
 
-window.HUSearch = { open: open, close: close };
+/* rank is the matcher alone, for tests: rank(index, query) -> [{ e, score, why }] */
+window.HUSearch = { open: open, close: close, rank: searchIn };
 })();

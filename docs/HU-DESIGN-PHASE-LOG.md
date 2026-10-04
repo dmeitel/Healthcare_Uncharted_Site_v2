@@ -341,3 +341,44 @@ The approved expansion (DECISIONS 17), so a rules change on this surface by Davi
 ## 2026-09-24 · The kit · the how-to opens at its first rule
 
 Found on ER Charge at 740x360: focusing the how-to's action button scrolled the card past rules 1 and 2 in every game. The card's body now starts at the top and the action keeps focus. One line in hu-kit.js.
+
+## 2026-10-03 · Device Assembly expansion · Stage A, dealt walls and the daily wall
+
+The reopened phase (DECISIONS 17, N1 to N3), on David's "go ahead and start device assembly stage A". New on the surface: a Puzzles group at the top of Walls (the daily wall, a random wall, the three days before today); four new things a room can hold (a capped outlet drawn as a crossed-out outlet, a Chemetron oxygen outlet labeled CHEM O2, an oxygen bottle on a cart, a home concentrator with a cord); the twist named in red capitals under the order on the bedside screen and in the phone readout; a compact result card for dealt walls (score, the line against par, the share line, the streak, the six score rows folded under "Score breakdown") so Share is on the first screen of a 360 phone; a par build drawn as the race's ghost. Nothing new in the palette: the red is the readout's existing fail red (#b3261e). Proof: tests/device-assembly-gen.test.js and tests/device-assembly-save.test.js, the phone gate clean at nine sizes on the default wall and on two dealt walls, Playwright shots in tmp/da-stage-a/.
+
+## 2026-10-04 · Device Assembly expansion · A5, the shift
+
+The reopened phase, on David's "go ahead and start the shift". New on the surface: "The shift" in the Puzzles group; a card between walls (the score on one line, the next wall's order and complication under a teal rule, three bonus buttons as full-width choice rows on the existing raised surface and border tokens, 44 px and up, a teal focus ring); a dead white outlet drawn as the white outlet dimmed with the red slash the capped outlet already uses; the end card leads with the score, the share line and the buttons, with the five walls folded under "Each wall" so a 360 phone sees Share without scrolling. The cart's part pictures now carry the wall's `data-drawing` mark (a nebulizer's dial label is art at that size). Nothing new in the palette. Proof: tests/device-assembly-shift.test.js, the phone gate clean at nine sizes on a shift, Playwright runs at 1280x800, 360x740 and 740x360 in tmp/da-shift/.
+
+## 2026-10-04 · Device Assembly expansion · A6, your own walls and the race
+
+The reopened phase, on David's "go ahead and start A6". New on the surface, all as cards over the wall in the game's own tokens: the race portal in Vital Stats' order (three steps, a name, Race bots as the primary, Create a room, a code box); the room card (the code in mono at 34 to 48 px, Copy invite link, a white-backed QR code on a laptop, Show QR code on a phone, Big screen, the room's list, the wall and bots settings as 44 px segmented buttons and a stepper, Start pinned to the card's foot on a phone); a big screen that stacks the code, the QR and the list; the finish card; the race list (place, name, a bot tag, parts and failed tests or a time, a Ghost toggle); the wall maker (six rows of segmented choices with anything that cannot be built greyed out, the order line and its buttons pinned to the card's foot). The bar's status chip shows the race clock and then your place; on a phone it is just the clock, and the Walls button steps aside while any clock shows so the bar keeps one row (this also mended the timed wall at 360). Nothing new in the palette. Proof: the phone gate clean at nine sizes on the wall, an invite link and a made wall; Playwright runs at 1280x800 and 360x740 in tmp/da-a6/; the live relay check.
+
+## 2026-10-04 · Device Assembly expansion · Stage B, a rehab room and someone's home
+
+The reopened phase, on David's "go ahead and start stage B". New on the surface: a wall colour per place (the hospital's blue unchanged; a rehab room's green, #27504f to #183736; a living room's warm brown, #5a4636 to #3a2c21, each with its own dot colour); no rail band in a home; a rehab headwall with empty stretches between its plates; furniture drawn in the part style (a floor lamp with a soft glow, a potted plant, a side table with a glass and the remote, a curtained window, a bookcase with photos); the patient in a plum recliner with a headrest cushion and two arms, in a blue-grey sweater under a terracotta throw, at home only; the bedside screen without its wall arm at home. Nothing changes for a hospital wall. Proof: tests/device-assembly-place.test.js, the phone gate clean at nine sizes on a home and a rehab room, Playwright shots in tmp/da-b/.
+
+## 2026-10-04 · Device Assembly expansion · the new places in the maker and the shift
+
+On David's "go ahead and add the new places to the maker and shift". New on the surface: a first row in the wall maker, The place (Hospital, A rehab room, Someone's home), in the maker's existing segmented buttons; the order and twist rows change with it. The shift's cards carry each place's problems in its own words (a storm coming, the outlet by the chair, the oxygen outlet over the bed). Nothing new in the palette. Proof: the maker and a home shift in Playwright at 1280 and 360 (tmp/da-b2/), the phone gate clean on a home shift and a made rehab wall.
+
+## 2026-10-04 · Device Assembly expansion · Stage C, the first ventilator walls
+
+On David's "lets move onto stage c". New on the surface: a Ventilators group on the wall list; an ICU bed space (the
+usual headwall gases, the red outlets on the ventilator's side, the monitor, and the bedside screen on the empty left of
+the wall, its arm mounted on its right when it sits on the left edge); art for the ventilator (its screen shows the
+FiO2), the endotracheal tube on the patient, the Y, the HME, the filter and the mesh neb; the oxygen hose in the
+oxygen tubing's green, thicker. A wall that passes with a rule's note reads "System complete, with a note" and the
+note rides the test and the result. Record: DECISIONS LOG "STAGE C".
+
+## 2026-10-04 · Device Assembly expansion · Stage C, the rest
+
+On David's "go ahead and build the rest of stage c". New on the surface: art for nineteen parts in the same vocabulary
+(the portable ventilator, the trach at the neck, a full face mask with the blue non-vented elbow, the exhalation port
+with its slots, the bleed-in with a green barb, the pressure valve, a one-square spacer with its inhaler, the MDI
+elbow, the jet neb's cup, the closed suction elbow with its catheter dashed red, the CO2 adapter's yellow line, the
+water trap, the flex tube, the bag, battery suction, the conserving cylinder marked PULSE, the humidifier bottle with a
+barb each side); a boom outlet at bed height on the suction wall; a living room whose bedside screen sits on the left;
+An ICU bed in Puzzles and in the maker; the ICU wall in the hospital's colour. The vent's screen shows its own FiO2 and
+the number opens the setting. Record: DECISIONS LOG "STAGE C, THE REST".
+

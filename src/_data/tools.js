@@ -153,7 +153,7 @@ module.exports = [
   {
     id:          'career-tree',
     cluster:     'careers-pay',
-    keys:        ['careers', 'credentials', 'certifications', 'become a nurse', 'respiratory therapist', 'pay ladder', 'travel roles', 'education paths'],
+    keys:        ['careers', 'credentials', 'certifications', 'become a nurse', 'nurse', 'nursing', 'respiratory therapist', 'pay ladder', 'travel roles', 'education paths'],
     status:      'live',
     featured:    true,
     title:       'Healthcare Career Tree',

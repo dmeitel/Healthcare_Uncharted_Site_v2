@@ -77,7 +77,9 @@ docs/HU-GAME-REVIEW-2026-09-23.md. A game's menus are built from the kit, never 
 - A multiplayer game has a fake-bus test (two sandboxes, JSON-cloned messages, the guest's
   packed run byte-identical to the host's after every intent) and appears in
   `scripts/backend-check.js` so the real relay is checked before a deploy.
-- `npm run verify` green and `npm run phone -- <path>` clean across its eight default viewports
+- The top bar is the shared game bar (src/_includes/components/game-bar.njk), held by
+  tests/game-shell.test.js; the skill hu-game-shell has the standard (2026-10-03).
+- `npm run verify` green and `npm run phone -- <path>` clean across its nine default viewports
   (portrait, landscape and both sides of the 699 line) before a game ships.
   The pane's screenshots can time out; Playwright shots into tmp/ are the reliable proof.
 

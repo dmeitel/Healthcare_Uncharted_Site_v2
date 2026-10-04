@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HU Writing</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1b222c; --line:#25303d; --line2:#33404f;
+    --ink:#E6EDF3; --ink2:#A9BCD0; --ink3:#7C8FA3; --teal:#4ECDC4; --blue:#1B5FA8;
+    --red:#DF5752; --amber:#E8A838; --sky:#7FA9DA; --green:#2D9B6F;
+    --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+    --serif:Georgia,'Times New Roman',serif;
+  }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  html,body { height:100%; margin:0; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--sans); display:flex; flex-direction:column; overflow:hidden; font-variant-numeric:lining-nums; }
+  button, select, input { font:inherit; }
+  :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+
+  header { display:flex; align-items:center; gap:8px 10px; flex-wrap:wrap; padding:9px 14px; background:var(--panel); border-bottom:1px solid var(--line); flex:0 0 auto; }
+  .brand { font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); font-weight:700; margin-right:4px; }
+  select, .btn, input[type=text] { background:#0f151d; color:var(--ink); border:1px solid var(--line2); border-radius:7px; font-size:13px; padding:7px 10px; min-height:36px; }
+  select { max-width:min(46vw,380px); }
+  .btn { cursor:pointer; }
+  .btn:hover { border-color:var(--teal); }
+  .btn.on { background:var(--teal); color:#062024; border-color:var(--teal); font-weight:700; }
+  .btn:disabled { opacity:.45; cursor:default; }
+  .seg { display:flex; }
+  .seg .btn { border-radius:0; border-right-width:0; }
+  .seg .btn:first-child { border-radius:7px 0 0 7px; }
+  .seg .btn:last-child { border-radius:0 7px 7px 0; border-right-width:1px; }
+  .spacer { flex:1 1 auto; }
+  .chips { display:flex; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line2); border-radius:999px; padding:5px 11px; min-height:36px; font-size:12.5px; background:#0f151d; color:var(--ink2); cursor:pointer; }
+  .chip b { font-family:var(--mono); font-size:13px; color:var(--ink); }
+  .chip i { width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .chip.off { opacity:.4; }
+  .lv-block i, i.lv-block { background:var(--red); }
+  .lv-warn i, i.lv-warn { background:var(--amber); }
+  .lv-check i, i.lv-check { background:var(--sky); }
+
+  main { flex:1 1 auto; display:flex; gap:12px; padding:12px; min-height:0; }
+  .pane { display:flex; flex-direction:column; min-width:0; min-height:0; }
+  #left { flex:1 1 58%; }
+  #right { flex:1 1 42%; max-width:620px; }
+  .pane-h { display:flex; align-items:center; gap:8px; padding:0 2px 7px; font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink3); min-height:36px; }
+  .pane-h .grow { flex:1 1 auto; }
+  .pane-h input[type=text] { font-family:var(--sans); letter-spacing:0; text-transform:none; font-size:13px; width:min(320px,48vw); }
+  .pane-h a { color:var(--ink2); font-family:var(--sans); letter-spacing:0; text-transform:none; font-size:12.5px; }
+  .box { flex:1 1 auto; border:1px solid var(--line); border-radius:10px; background:var(--panel); min-height:0; overflow:auto; }
+
+  /* The editor: a transparent textarea over a backdrop that paints the marks. Both carry the
+     exact same type metrics, or the paint drifts off the words. */
+  .ed { position:relative; flex:1 1 auto; min-height:0; border:1px solid var(--line); border-radius:10px; background:var(--panel); overflow:hidden; }
+  .ed textarea, .ed .hl { position:absolute; inset:0; margin:0; border:0; padding:18px 20px 60px; font-family:var(--serif); font-size:17px; line-height:1.62; letter-spacing:0; white-space:pre-wrap; overflow-wrap:break-word; word-break:normal; tab-size:4; }
+  .ed .hl { color:transparent; overflow:hidden; pointer-events:none; }
+  .ed textarea { width:100%; height:100%; resize:none; background:transparent; color:var(--ink); caret-color:var(--teal); overflow:auto; outline:none; }
+  .ed textarea::placeholder { color:var(--ink3); }
+  mark { color:inherit; border-radius:2px; padding:0; }
+  mark.lv-block { background:rgba(223,87,82,.28); box-shadow:inset 0 -2px 0 var(--red); }
+  mark.lv-warn { background:rgba(232,168,56,.22); box-shadow:inset 0 -2px 0 var(--amber); }
+  mark.lv-check { background:rgba(127,169,218,.16); box-shadow:inset 0 -2px 0 var(--sky); }
+  mark.flash { background:rgba(78,205,196,.45) !important; }
+  .hide-block mark.lv-block, .hide-warn mark.lv-warn, .hide-check mark.lv-check { background:none; box-shadow:none; }
+
+  /* The page reading view */
+  .read { padding:18px 22px 40px; font-family:var(--serif); font-size:16.5px; line-height:1.6; }
+  .read .blk { margin:0 0 12px; position:relative; }
+  .read .k { position:absolute; left:-2px; top:-14px; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; color:var(--ink3); text-transform:uppercase; }
+  .read .b-title { font-family:var(--sans); font-size:26px; font-weight:700; line-height:1.25; margin:18px 0 14px; }
+  .read .b-h { font-family:var(--sans); font-size:19px; font-weight:700; margin:24px 0 10px; }
+  .read .b-sub { font-family:var(--sans); font-size:16px; color:var(--ink2); font-style:italic; }
+  .read .b-li { padding-left:18px; }
+  .read .b-li::before { content:'•'; position:absolute; left:2px; color:var(--ink3); }
+  .read .b-quote { border-left:3px solid var(--line2); padding-left:14px; color:var(--ink2); }
+  .read .b-cap { font-size:14px; color:var(--ink2); }
+  .read .b-cell { font-family:var(--sans); font-size:13px; color:var(--ink3); margin-bottom:4px; }
+  .read .b-note { font-family:var(--sans); font-size:13px; color:var(--ink3); margin-bottom:6px; }
+  .read .b-src { font-family:var(--sans); font-size:14px; color:var(--ink2); }
+  .read .b-meta { font-family:var(--sans); font-size:14px; color:var(--ink2); background:var(--panel2); border-radius:8px; padding:8px 12px; margin-top:16px; }
+  .read mark { cursor:pointer; }
+  .read .note { font-family:var(--sans); font-size:14px; color:var(--ink3); padding:24px 0; }
+  iframe#probe { position:absolute; left:-12000px; top:0; width:1280px; height:900px; border:0; visibility:hidden; }
+
+  /* Findings */
+  .find { padding:12px 14px 40px; font-size:14px; }
+  .sec { margin:0 0 18px; }
+  .sec > h2 { font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink3); margin:0 0 8px; display:flex; gap:8px; align-items:baseline; }
+  .sec > h2 span { color:var(--ink2); }
+  .reg-note { color:var(--ink2); font-size:13px; line-height:1.5; margin:0 0 14px; }
+  .reg-note b { color:var(--ink); }
+  .stats { font-family:var(--mono); font-size:12px; color:var(--ink3); margin:0 0 16px; line-height:1.6; }
+  .item { display:block; width:100%; text-align:left; background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--line2); border-radius:8px; padding:9px 11px; margin:0 0 7px; color:var(--ink); cursor:pointer; font:inherit; line-height:1.45; min-height:44px; }
+  .item:hover { border-color:var(--line2); }
+  .item.flash { border-color:var(--teal); box-shadow:0 0 0 1px var(--teal); }
+  .item.lv-block { border-left-color:var(--red); }
+  .item.lv-warn { border-left-color:var(--amber); }
+  .item.lv-check { border-left-color:var(--sky); }
+  .item .top { display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+  .item .lvl { font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+  .item.lv-block .lvl { color:var(--red); } .item.lv-warn .lvl { color:var(--amber); } .item.lv-check .lvl { color:var(--sky); }
+  .item .name { font-weight:650; }
+  .item q { display:block; font-family:var(--serif); color:var(--ink2); margin:4px 0 2px; quotes:'“' '”'; overflow-wrap:anywhere; }
+  .item .msg { color:var(--ink2); font-size:13px; }
+  .item .fix { color:var(--teal); font-size:13px; }
+  .item .src { color:var(--ink3); font-size:12px; margin-top:3px; }
+  .hide-block .item.lv-block, .hide-warn .item.lv-warn, .hide-check .item.lv-check { display:none; }
+  .ck { display:flex; gap:10px; align-items:flex-start; }
+  .ck .st { font-family:var(--mono); font-size:12px; font-weight:700; min-width:44px; }
+  .st-pass { color:var(--green); } .st-miss { color:var(--red); } .st-judge { color:var(--sky); }
+  .ck .ev { color:var(--ink2); font-size:13px; font-family:var(--serif); overflow-wrap:anywhere; }
+  .empty { color:var(--ink3); font-size:13px; padding:4px 0 8px; }
+  .clean { color:var(--green); font-size:13.5px; padding:4px 0 8px; }
+  .pn h3 { font-size:14px; margin:12px 0 4px; }
+  .pn .verdict { color:var(--ink2); font-size:13px; margin:0 0 6px; }
+  .pn .kind { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink3); }
+  code { font-family:var(--mono); font-size:12px; background:#0f151d; border:1px solid var(--line2); border-radius:4px; padding:1px 5px; }
+  .toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--teal); color:#062024; font-weight:700; padding:9px 16px; border-radius:8px; font-size:13px; opacity:0; transition:opacity .2s; pointer-events:none; }
+  .toast.on { opacity:1; }
+  @media (prefers-reduced-motion: reduce) { .toast { transition:none; } }
+
+  /* A phone is the shorter side of the screen (CLAUDE.md): stack the panes. */
+  @media (max-width:699px), (max-height:500px) {
+    body { overflow:auto; height:auto; }
+    html { height:auto; }
+    main { flex-direction:column; padding:10px; }
+    #right { max-width:none; }
+    .ed { min-height:56vh; flex:0 0 auto; }
+    #left .box { min-height:56vh; flex:0 0 auto; }
+    .box { overflow:visible; }
+    select { max-width:100%; flex:1 1 100%; }
+    .btn, select, .chip, input[type=text] { min-height:44px; }
+    .ed textarea, .ed .hl { font-size:16px; padding:14px 14px 40px; }
+    .read { padding:14px; }
+    .pane-h input[type=text] { width:100%; }
+    .pane-h a { display:inline-flex; align-items:center; min-height:44px; padding:0 4px; }
+    /* reading a page on a phone: what to fix first, the page's text after */
+    body.mode-page #right { order:-1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="brand">HU Writing</span>
+  <div class="seg" role="group" aria-label="What to check">
+    <button class="btn on" id="m-draft" type="button">Paste a draft</button>
+    <button class="btn" id="m-page" type="button">Site page</button>
+  </div>
+  <select id="drafts" aria-label="Saved drafts"></select>
+  <select id="pages" aria-label="Site page" hidden></select>
+  <select id="register" aria-label="Which voice to judge against"></select>
+  <span class="spacer"></span>
+  <div class="chips" id="chips" role="group" aria-label="Show or hide each level"></div>
+</header>
+
+<main id="main">
+  <section class="pane" id="left" aria-label="The text">
+    <div class="pane-h" id="lh-draft">
+      <span>Draft</span>
+      <input type="text" id="name" placeholder="Name it to save it" aria-label="Draft name">
+      <button class="btn" id="save" type="button">Save draft</button>
+      <span class="grow"></span>
+    </div>
+    <div class="pane-h" id="lh-page" hidden>
+      <span>Page text</span><span class="grow"></span><a id="open" href="#" target="_blank" rel="noopener">Open the page</a>
+    </div>
+    <div class="ed" id="ed">
+      <div class="hl" id="hl" aria-hidden="true"></div>
+      <textarea id="ta" spellcheck="true" aria-label="Your draft" placeholder="Paste or type a draft.
+
+The first line is the title. # makes a heading, - makes a list item, a blank line ends a paragraph.
+
+Pick the voice to judge it against at the top: Rounds, Learn, Tools and games, Other site pages, Work writing, or Advocacy."></textarea>
+    </div>
+    <div class="box" id="readbox" hidden><div class="read" id="read"></div></div>
+  </section>
+
+  <section class="pane" id="right" aria-label="Findings">
+    <div class="pane-h"><span>Findings</span></div>
+    <div class="box"><div class="find" id="find"></div></div>
+  </section>
+</main>
+<iframe id="probe" title="Page being read" aria-hidden="true" tabindex="-1"></iframe>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/__writing/rules.js"></script>
+<script>
+(function () {
+  'use strict';
+  var HW = window.HUWriting;
+  var $ = function (id) { return document.getElementById(id); };
+  var ta = $('ta'), hl = $('hl'), find = $('find'), read = $('read');
+  var state = { mode: 'draft', draft: '', page: '', register: 'rounds', hidden: {}, result: null, blocks: [], images: [], links: [], guest: false, pages: [] };
+  var LV = ['block', 'warn', 'check'];
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 1800); }
+  function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+  function srcLine(id) {
+    var s = HW.SOURCES[id]; if (!s) return '';
+    return s.label + (s.words ? ': “' + s.words + '”' : s.ref ? ' (' + s.ref + ')' : '');
+  }
+
+  /* ── Header ── */
+  HW.REGISTERS.forEach(function (r) { var o = document.createElement('option'); o.value = r.id; o.textContent = 'Voice: ' + r.name; $('register').appendChild(o); });
+  LV.forEach(function (lv) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip lv-' + lv; b.id = 'chip-' + lv;
+    b.setAttribute('aria-pressed', 'true'); b.title = HW.LEVELS[lv].blurb;
+    b.innerHTML = '<i></i><b>0</b> ' + HW.LEVELS[lv].name;
+    b.onclick = function () { state.hidden[lv] = !state.hidden[lv]; b.classList.toggle('off', state.hidden[lv]); b.setAttribute('aria-pressed', String(!state.hidden[lv])); applyHidden(); };
+    $('chips').appendChild(b);
+  });
+  function applyHidden() { LV.forEach(function (lv) { $('main').classList.toggle('hide-' + lv, !!state.hidden[lv]); }); }
+
+  function setMode(m) {
+    state.mode = m;
+    document.body.classList.toggle('mode-page', m === 'page');
+    $('m-draft').classList.toggle('on', m === 'draft'); $('m-page').classList.toggle('on', m === 'page');
+    $('m-draft').setAttribute('aria-pressed', String(m === 'draft')); $('m-page').setAttribute('aria-pressed', String(m === 'page'));
+    $('drafts').hidden = m !== 'draft'; $('pages').hidden = m !== 'page';
+    $('lh-draft').hidden = m !== 'draft'; $('lh-page').hidden = m !== 'page';
+    $('ed').hidden = m !== 'draft'; $('readbox').hidden = m !== 'page';
+    if (m === 'draft') runDraft(); else loadPage(state.page || ($('pages').value));
+    hash();
+  }
+  $('m-draft').onclick = function () { setMode('draft'); };
+  $('m-page').onclick = function () { setMode('page'); };
+  $('register').onchange = function () { state.register = this.value; if (state.mode === 'draft') { runDraft(); keep(); } else runPage(); hash(); };
+
+  function hash() {
+    var h = state.mode === 'page' ? 'page=' + encodeURIComponent(state.page) : 'draft=' + encodeURIComponent(state.draft);
+    h += '&voice=' + state.register;
+    history.replaceState(null, '', '#' + h);
+  }
+
+  /* ── Drafts ── */
+  function listDrafts(select) {
+    return fetch('/__writing/drafts.json').then(function (r) { return r.json(); }).then(function (list) {
+      var s = $('drafts'); s.innerHTML = '';
+      var o = document.createElement('option'); o.value = ''; o.textContent = 'New draft (not saved)'; s.appendChild(o);
+      list.forEach(function (d) { var o = document.createElement('option'); o.value = d.slug; o.textContent = d.title + ' · ' + d.words + ' words' + (d.panel ? ' · panel' : ''); s.appendChild(o); });
+      s.value = select || '';
+    });
+  }
+  $('drafts').onchange = function () {
+    var slug = this.value; state.draft = slug;
+    if (!slug) { ta.value = ''; $('name').value = ''; runDraft(); hash(); return; }
+    fetch('/__writing/draft?slug=' + encodeURIComponent(slug)).then(function (r) { return r.json(); }).then(function (d) {
+      ta.value = d.text || ''; $('name').value = d.title || ''; state.register = d.register || 'rounds'; $('register').value = state.register; runDraft(); hash();
+    });
+  };
+  $('save').onclick = function () {
+    if (!ta.value.trim()) { toast('Nothing to save yet'); return; }
+    var title = $('name').value.trim() || ta.value.trim().split('\n')[0].slice(0, 80);
+    fetch('/__writing/draft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title, register: state.register, text: ta.value, slug: state.draft }) })
+      .then(function (r) { return r.json(); }).then(function (d) {
+        if (d.error) { toast(d.error); return; }
+        state.draft = d.slug; $('name').value = title; listDrafts(d.slug); hash(); loadPanel(); toast('Saved: ' + title);
+      });
+  };
+  function keep() { if (state.mode === 'draft' && !state.draft) store('huw-draft', { text: ta.value, register: state.register, name: $('name').value }); }
+
+  var timer = 0;
+  ta.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { runDraft(); keep(); }, 220); });
+  ta.addEventListener('scroll', function () { hl.scrollTop = ta.scrollTop; });
+  ['click', 'keyup'].forEach(function (ev) { ta.addEventListener(ev, function () { caretFinding(); }); });
+
+  function runDraft() {
+    var r = HW.checkText(ta.value, { register: state.register });
+    state.result = r; state.blocks = r.blocks; state.links = []; state.images = [];
+    paintEditor(r);
+    renderFindings();
+  }
+
+  /* Paint the backdrop: cut the text at every flag edge and colour each piece by the most severe
+     flag covering it. */
+  function paintEditor(r) {
+    var text = ta.value, cuts = [0, text.length], spans = [];
+    r.flags.forEach(function (f, i) {
+      var b = r.blocks[f.b]; if (!b || b.base == null) return;
+      var s = b.base + f.s, e = b.base + f.e; if (e <= s) return;
+      spans.push({ s: s, e: e, lv: f.level, i: i }); cuts.push(s, e);
+    });
+    cuts = cuts.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+    var out = '';
+    for (var k = 0; k + 1 < cuts.length; k++) {
+      var a = cuts[k], z = cuts[k + 1], seg = esc(text.slice(a, z)), top = null, ids = [];
+      spans.forEach(function (sp) { if (sp.s <= a && sp.e >= z) { ids.push(sp.i); if (!top || LV.indexOf(sp.lv) < LV.indexOf(top)) top = sp.lv; } });
+      out += top ? '<mark class="lv-' + top + '" data-f="' + ids.join(',') + '">' + seg + '</mark>' : seg;
+    }
+    hl.innerHTML = out + '\n ';
+    hl.scrollTop = ta.scrollTop;
+  }
+
+  function caretFinding() {
+    if (!state.result) return;
+    var at = ta.selectionStart;
+    state.result.flags.some(function (f, i) {
+      var b = state.blocks[f.b]; if (!b || b.base == null) return false;
+      if (at >= b.base + f.s && at <= b.base + f.e) { flashItem(i, false); return true; }
+      return false;
+    });
+  }
+
+  /* ── Site pages ── */
+  function loadPages() {
+    return fetch('/__writing/pages.json').then(function (r) { return r.json(); }).then(function (list) {
+      state.pages = list;
+      var s = $('pages'); s.innerHTML = '';
+      list.forEach(function (p) { var o = document.createElement('option'); o.value = p.path; o.textContent = p.title + '  ·  ' + p.path; s.appendChild(o); });
+    });
+  }
+  $('pages').onchange = function () { loadPage(this.value, true); };
+
+  function loadPage(p, fresh) {
+    if (!p) return;
+    state.page = p; $('pages').value = p; $('open').href = p;
+    var meta = state.pages.filter(function (x) { return x.path === p; })[0];
+    if (fresh || !state.registerSet) { state.register = meta ? meta.register : 'site'; $('register').value = state.register; }
+    state.registerSet = false;
+    read.innerHTML = '<p class="note">Reading ' + esc(p) + '… the page’s own scripts get a moment to draw first.</p>';
+    find.innerHTML = '';
+    var fr = $('probe');
+    fr.onload = function () {
+      setTimeout(function () {
+        try {
+          var x = HW.extractBlocks(fr.contentDocument);
+          state.blocks = x.blocks; state.links = x.links; state.images = x.images; state.guest = x.guest;
+          runPage();
+        } catch (e) { read.innerHTML = '<p class="note">Could not read this page: ' + esc(e.message) + '</p>'; }
+      }, 900);
+    };
+    fr.src = p;
+    hash();
+  }
+
+  function runPage() {
+    var r = HW.check(state.blocks, { register: state.register, guest: state.guest, links: state.links });
+    r.blocks = state.blocks; state.result = r;
+    paintRead(r);
+    renderFindings();
+  }
+
+  function paintRead(r) {
+    var byBlock = {};
+    r.flags.forEach(function (f, i) { (byBlock[f.b] = byBlock[f.b] || []).push({ f: f, i: i }); });
+    var html = '', metaN = 0;
+    r.blocks.forEach(function (b, bi) {
+      var text = b.text, cuts = [0, text.length], spans = [];
+      (byBlock[bi] || []).forEach(function (x) { spans.push({ s: x.f.s, e: x.f.e, lv: x.f.level, i: x.i }); cuts.push(x.f.s, x.f.e); });
+      cuts = cuts.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+      var inner = '';
+      for (var k = 0; k + 1 < cuts.length; k++) {
+        var a = cuts[k], z = cuts[k + 1], seg = esc(text.slice(a, z)), top = null, ids = [];
+        spans.forEach(function (sp) { if (sp.s <= a && sp.e >= z) { ids.push(sp.i); if (!top || LV.indexOf(sp.lv) < LV.indexOf(top)) top = sp.lv; } });
+        inner += top ? '<mark class="lv-' + top + '" data-f="' + ids.join(',') + '" tabindex="0">' + seg + '</mark>' : seg;
+      }
+      var label = b.kind === 'meta' ? '<span class="k">' + (metaN++ === 0 ? 'Page title' : 'Description') + '</span>' : '';
+      html += '<div class="blk b-' + b.kind + '" id="blk-' + bi + '">' + label + inner + '</div>';
+    });
+    read.innerHTML = html || '<p class="note">No text found on this page.</p>';
+  }
+  read.addEventListener('click', function (e) { var m = e.target.closest('mark'); if (m) flashItem(+m.getAttribute('data-f').split(',')[0], true); });
+  read.addEventListener('keydown', function (e) { if (e.key === 'Enter') { var m = e.target.closest('mark'); if (m) flashItem(+m.getAttribute('data-f').split(',')[0], true); } });
+
+  /* ── Findings ── */
+  function renderFindings() {
+    var r = state.result; if (!r) return;
+    LV.forEach(function (lv) { $('chip-' + lv).querySelector('b').textContent = r.counts[lv]; });
+    var reg = HW.REGISTERS.filter(function (x) { return x.id === r.register; })[0];
+    var h = '<p class="reg-note"><b>' + esc(reg.name) + '.</b> ' + esc(reg.blurb) + (r.guest ? ' <b>Guest byline:</b> left alone by David’s ruling, so only patient information and em dashes are read.' : '') + '</p>';
+    h += '<p class="stats">' + r.stats.words + ' words · ' + r.stats.sentences + ' sentences · ' + r.stats.avg + ' words a sentence on average, longest ' + r.stats.longest + ' · reading grade about ' + r.stats.grade + '</p>';
+
+    var groups = { phi: [], pro: [], voice: [] };
+    r.flags.forEach(function (f, i) { groups[f.layer].push(i); });
+    ['phi', 'pro', 'voice'].forEach(function (layer) {
+      var ids = groups[layer];
+      h += '<div class="sec"><h2>' + esc(HW.LAYERS[layer].name) + ' <span>' + ids.length + '</span></h2>';
+      if (!ids.length) h += '<p class="clean">Nothing found.</p>';
+      ids.forEach(function (i) {
+        var f = r.flags[i], rule = HW.RULES[f.rule];
+        h += '<button class="item lv-' + f.level + '" type="button" data-i="' + i + '" id="item-' + i + '">' +
+          '<span class="top"><span class="lvl">' + esc(HW.LEVELS[f.level].name) + '</span><span class="name">' + esc(rule.name) + '</span></span>' +
+          '<q>' + esc(f.text.length > 160 ? f.text.slice(0, 157) + '…' : f.text) + '</q>' +
+          '<span class="msg">' + esc(f.msg ? f.msg + ' ' + rule.why : rule.why) + '</span>' +
+          (f.fix ? '<br><span class="fix">Try: ' + esc(f.fix) + '</span>' : '') +
+          '<br><span class="src">From ' + esc(srcLine(rule.src)) + '</span></button>';
+      });
+      h += '</div>';
+    });
+
+    // The Rounds checklist comes after the findings: the findings are what to fix, the checklist
+    // is how the whole piece stands.
+    if (r.piece && r.piece.length) {
+      h += '<div class="sec"><h2>The piece <span>Rounds checklist</span></h2>';
+      r.piece.forEach(function (p, i) {
+        var word = p.state === 'pass' ? 'yes' : p.state === 'miss' ? 'no' : 'judge';
+        var note = String(p.note || ''); if (note.length > 170) note = note.slice(0, 167) + '…';
+        h += '<button class="item ck" type="button" data-p="' + i + '"><span class="st st-' + p.state + '">' + word + '</span><span><span class="name">' + esc(p.label) + '</span><span class="ev"><br>' + esc(note) + '</span><span class="src"><br>' + esc(srcLine(p.src)) + '</span></span></button>';
+      });
+      h += '</div>';
+    }
+
+    if (state.mode === 'page') h += '<div class="sec" id="photos"><h2>Photos <span>' + state.images.length + '</span></h2>' + (state.images.length ? '<p class="empty">Reading each image’s hidden data…</p>' : '<p class="empty">No images in the page text.</p>') + '</div>';
+    h += '<div class="sec pn" id="panel"><h2>Reviewer panel</h2><p class="empty">Loading…</p></div>';
+    find.innerHTML = h;
+    applyHidden();
+    if (state.mode === 'page' && state.images.length) loadPhotos();
+    loadPanel();
+  }
+
+  find.addEventListener('click', function (e) {
+    var it = e.target.closest('.item'); if (!it) return;
+    var r = state.result;
+    if (it.hasAttribute('data-i')) showFlag(r.flags[+it.getAttribute('data-i')], +it.getAttribute('data-i'));
+    else if (it.hasAttribute('data-p')) { var p = r.piece[+it.getAttribute('data-p')]; if (p && p.b != null) showFlag({ b: p.b, s: p.s, e: p.e }, -1); }
+  });
+
+  function showFlag(f, i) {
+    if (state.mode === 'draft') {
+      var b = state.blocks[f.b]; if (!b) return;
+      var s = b.base + f.s, e = b.base + f.e;
+      ta.focus(); ta.setSelectionRange(s, e);
+      var m = i >= 0 ? hl.querySelector('mark[data-f~="' + i + '"], mark[data-f^="' + i + ',"], mark[data-f$=",' + i + '"]') : null;
+      if (!m) m = Array.prototype.filter.call(hl.querySelectorAll('mark'), function (x) { return ('' + x.getAttribute('data-f')).split(',').indexOf(String(i)) >= 0; })[0];
+      if (m) { ta.scrollTop = Math.max(0, m.offsetTop - 80); hl.scrollTop = ta.scrollTop; }
+    } else {
+      var el = $('blk-' + f.b); if (!el) return;
+      var mk = Array.prototype.filter.call(el.querySelectorAll('mark'), function (x) { return ('' + x.getAttribute('data-f')).split(',').indexOf(String(i)) >= 0; })[0] || el;
+      mk.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      mk.classList.add('flash'); setTimeout(function () { mk.classList.remove('flash'); }, 1200);
+    }
+  }
+  function flashItem(i, scroll) {
+    var it = $('item-' + i); if (!it) return;
+    if (scroll || true) it.scrollIntoView({ block: 'nearest' });
+    it.classList.add('flash'); setTimeout(function () { it.classList.remove('flash'); }, 1200);
+  }
+
+  function loadPhotos() {
+    var sec = $('photos');
+    Promise.all(state.images.map(function (src) {
+      return fetch('/__writing/imgmeta?src=' + encodeURIComponent(src)).then(function (r) { return r.ok ? r.json() : { note: 'Not in the build (an outside image?).' }; }).then(function (m) { return { src: src, m: m }; });
+    })).then(function (rows) {
+      var bad = rows.filter(function (x) { return x.m.gps || x.m.exif || x.m.xmp || x.m.iptc; }).length;
+      var h = '<h2>Photos <span>' + rows.length + '</span></h2>' + (bad ? '' : '<p class="clean">All ' + rows.length + ' clean: no camera, date or location data.</p>');
+      rows.forEach(function (x) {
+        if (!(x.m.gps || x.m.exif || x.m.xmp || x.m.iptc)) return;
+        h += '<div class="item ' + (x.m.gps ? 'lv-block' : 'lv-warn') + '"><span class="top"><span class="lvl">' + (x.m.gps ? 'Must fix' : 'Fix') + '</span><span class="name">' + esc(x.src.split('/').pop()) + '</span></span><span class="msg"><br>' + esc(x.m.note) + ' Strip it before it ships.</span></div>';
+      });
+      sec.innerHTML = h;
+    });
+  }
+
+  function panelId() { return state.mode === 'page' ? 'page:' + state.page : (state.draft ? 'draft:' + state.draft : ''); }
+  function loadPanel() {
+    var box = $('panel'); if (!box) return;
+    var id = panelId();
+    if (!id) { box.innerHTML = '<h2>Reviewer panel</h2><p class="empty">Save the draft first. Then ask Claude in the chat: <code>run the reviewer panel on</code> and the draft’s name. A medical director, an administrator, a technologist and the voice editor each read it, and their notes land here.</p>'; return; }
+    fetch('/__writing/panel?id=' + encodeURIComponent(id)).then(function (r) { return r.json(); }).then(function (p) {
+      if (p.none) { box.innerHTML = '<h2>Reviewer panel</h2><p class="empty">Not run yet. Ask Claude in the chat: <code>run the reviewer panel on ' + esc(state.mode === 'page' ? state.page : $('name').value || state.draft) + '</code>. A medical director, an administrator, a technologist and the voice editor each read it, and their notes land here.</p>'; return; }
+      var h = '<h2>Reviewer panel <span>' + esc(p.ran || '') + '</span></h2>';
+      var now = HW.hashText((state.blocks || []).map(function (b) { return b.text; }).join('\n'));
+      if (p.fingerprint && p.fingerprint !== now) h += '<p class="empty">Read on an earlier version of this text. Ask Claude to run it again once the edits settle.</p>';
+      (p.reviewers || []).forEach(function (rv) {
+        h += '<h3>' + esc(rv.role) + '</h3><p class="verdict">' + esc(rv.verdict || '') + '</p>';
+        (rv.notes || []).forEach(function (n) {
+          h += '<div class="item ' + (n.kind === 'fix' ? 'lv-warn' : n.kind === 'question' ? 'lv-check' : '') + '"><span class="kind">' + esc(n.kind || 'note') + '</span>' + (n.quote ? '<q>' + esc(n.quote) + '</q>' : '<br>') + '<span class="msg">' + esc(n.note) + '</span></div>';
+        });
+      });
+      box.innerHTML = h;
+    });
+  }
+
+  /* ── Start ── a pasted link (#page=… or #draft=…) opens straight onto that page or draft. The
+     screen's own updates use replaceState, which fires no hashchange, so this only sees links. */
+  window.addEventListener('hashchange', function () { location.reload(); });
+  var q = {};
+  location.hash.slice(1).split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) q[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1)); });
+  Promise.all([loadPages(), listDrafts(q.draft || '')]).then(function () {
+    if (q.voice) { state.register = q.voice; $('register').value = q.voice; state.registerSet = true; }
+    if (q.page) { state.page = q.page; setMode('page'); return; }
+    if (q.draft) { state.draft = q.draft; $('drafts').value = q.draft; $('drafts').onchange.call($('drafts')); setMode('draft'); return; }
+    var kept = store('huw-draft');
+    if (kept && kept.text) { ta.value = kept.text; $('name').value = kept.name || ''; state.register = kept.register || state.register; $('register').value = state.register; }
+    if (!q.voice) $('register').value = state.register;
+    setMode('draft');
+  });
+})();
+</script>
+</body>
+</html>

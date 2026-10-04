@@ -54,6 +54,16 @@ comprehensive, seamless, leverage (verb), navigate (figurative), underscore
 "in conclusion", "furthermore", "moreover", "dive into", "unlock", "empower",
 "at the end of the day".
 
+## Check it before handing it over
+
+Every rule above that a script can see is in the writing checker,
+scripts/lib/writing-rules.js, with David's 2026-10-03 rulings on top
+(clipped note-like sentences, coined labels, loaded emotion words,
+vendor names in a patient story, plain words in titles, personal health
+detail). Run `npm run writing:check -- <file or /page/>` on what you wrote;
+zero must-fix and zero fix is the bar, or name each remaining fix and why.
+The skill hu-writing-review has the details and the reviewer panel.
+
 ## Substance test
 
 Every claim is specific or it is filler. "Real experience" is a category

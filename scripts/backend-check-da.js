@@ -1,11 +1,13 @@
 /* ================================================================
-   TWO WALLS, THE REAL ROUND TRIP — node scripts/backend-check-da.js [url]
+   THE RACE, THE REAL ROUND TRIP: node scripts/backend-check-da.js [url]
 
-   Two headless browsers open Device Assembly. One hosts a table, the
-   other joins by code over the REAL relay, the host's wall arrives on
-   the guest, the guest builds the first tutorial and its snapshot lands
-   on the host byte for byte, the guest submits, and the host declares
-   the winner on both screens. Screenshots of both boards land in tmp/.
+   Two headless browsers open Device Assembly. One opens a race room, the
+   other joins by code over the REAL relay and is seated, the host starts
+   the race with two bots, the wall opens on the guest, the guest builds
+   the first tutorial and its wall lands on the host byte for byte, the
+   guest's finished build is judged by the host, and both screens show
+   the same places. Screenshots (the room card, the guest racing) land in
+   tmp/. (Stage A6, 2026-10-04; before it, the two-wall race.)
 
    It talks to the internet, so it is NOT part of `npm test`. Default
    target is the local dev server; pass the live URL to check prod.
@@ -39,20 +41,24 @@ setTimeout(() => fail('the whole check took longer than three minutes'), 180000)
   const host = await open('Dave');
   const guest = await open('Sam');
 
-  const table = await host.evaluate(() => { const ok = window.__da.T.host(); const N = window.__da.NET; return { ok, room: N.room, kind: N.chan && N.chan.kind, level: window.__da.S && window.__da.S.level.id }; });
+  const table = await host.evaluate(() => { const ok = window.__da.raceHostRoom(); const N = window.__da.NET; window.__da.race().prefs = { wall: 't1', bots: 2 }; return { ok, room: N.room, kind: N.chan && N.chan.kind }; });
   if (!table.ok || table.kind !== 'internet') fail('the host did not get the internet relay');
-  await host.evaluate(() => { window.__da.raceStart(window.__da.S.level.id); });
-  console.log(`table ${table.room} over the ${table.kind} transport, racing ${table.level}`);
+  console.log(`room ${table.room} over the ${table.kind} transport`);
 
   await guest.evaluate(code => { window.__da.T.join(code, 'Sam'); }, table.room);
-  await host.waitForFunction(() => window.__da.NET.seats.b === 'Sam', null, { timeout: T }).catch(() => fail('the host never seated the guest'));
-  await guest.waitForFunction(lv => window.__da.race().level === lv && window.__da.S && window.__da.S.level.id === lv, table.level, { timeout: T })
-    .catch(() => fail('the guest never opened the host\'s wall'));
-  console.log('guest seated at Wall B and opened the same wall');
+  await host.waitForFunction(() => window.__da.NET.seats.p2 === 'Sam', null, { timeout: T }).catch(() => fail('the host never seated the guest'));
+  await guest.waitForFunction(() => window.__da.NET.seat === 'p2' && window.__da.race() && Object.values(window.__da.race().runners).some(u => u.name === 'Sam'), null, { timeout: T })
+    .catch(() => fail('the guest never saw itself in the lobby'));
+  console.log('guest seated as builder 2 and in the lobby');
+  await host.screenshot({ path: path.join(OUT, 'da-room.png') });
+
+  await host.evaluate(() => { window.__da.raceStart('t1'); });
+  await guest.waitForFunction(() => window.__da.S && window.__da.S.level.id === 't1' && window.__da.race().started > 0, null, { timeout: T }).catch(() => fail('the race never opened on the guest'));
+  const runners = await guest.evaluate(() => Object.keys(window.__da.race().runners).sort().join(','));
+  if (runners !== 'bot1,bot2,p1,p2') fail('the guest sees the wrong runners: ' + runners);
+  console.log('race started on both screens: ' + runners);
 
   // the guest builds the first tutorial through the real engine, on its own local wall
-  await host.evaluate(() => { window.__da.raceStart('t1'); });
-  await guest.waitForFunction(() => window.__da.S && window.__da.S.level.id === 't1', null, { timeout: T }).catch(() => fail('the guest did not follow the pick to t1'));
   const built = await guest.evaluate(() => {
     const da = window.__da, S = da.S, nose = da.GRID.nose;
     const can = da.place(S, 'cannula', nose[0], nose[1], 0).item; da.autoOrient(S, can.uid);
@@ -62,20 +68,17 @@ setTimeout(() => fail('the whole check took longer than three minutes'), 180000)
     return { ok: r.ok, snap: da.snapshot(S) };
   });
   if (!built.ok) fail('the guest could not build the wall');
-  await host.waitForFunction(snap => window.__da.otherWall() === snap, built.snap, { timeout: T }).catch(() => fail('the guest wall never reached the host byte for byte'));
+  await host.waitForFunction(snap => window.__da.race().walls.p2 === snap, built.snap, { timeout: T }).catch(() => fail('the guest wall never reached the host byte for byte'));
   console.log('guest wall on the host, identical');
+  await guest.screenshot({ path: path.join(OUT, 'da-guest.png') });
 
   await guest.evaluate(() => { const da = window.__da; da.raceSubmit(da.functionTest(da.S)); });
-  await host.waitForFunction(() => window.__da.race().winner === 'Sam', null, { timeout: T }).catch(() => fail('the host did not declare the guest the winner'));
-  await guest.waitForFunction(() => window.__da.race().winner === 'Sam', null, { timeout: T }).catch(() => fail('the guest never heard who won'));
+  await host.waitForFunction(() => window.__da.race().places[0] === 'p2', null, { timeout: T }).catch(() => fail('the host did not place the guest first'));
+  await guest.waitForFunction(() => window.__da.race().places[0] === 'p2', null, { timeout: T }).catch(() => fail('the guest never heard its place'));
   console.log('Sam finished first, on both screens');
-
-  await host.evaluate(() => { const o = document.getElementById('overlay'); if (o) o.hidden = true; });
-  await guest.evaluate(() => { const o = document.getElementById('overlay'); if (o) o.hidden = true; });
   await host.screenshot({ path: path.join(OUT, 'da-host.png') });
-  await guest.screenshot({ path: path.join(OUT, 'da-guest.png') });
   await browser.close();
   if (errors.length) console.log('console errors:\n  ' + errors.join('\n  '));
-  console.log(`room ${table.room} · guest built and won · identical`);
-  console.log(`screenshots: ${OUT}/da-host.png ${OUT}/da-guest.png`);
+  console.log(`room ${table.room} · guest seated, raced, judged by the host, placed first · identical`);
+  console.log(`screenshots: ${OUT}/da-room.png ${OUT}/da-guest.png ${OUT}/da-host.png`);
 })().catch(e => { console.error(e); process.exit(1); });

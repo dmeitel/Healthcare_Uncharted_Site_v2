@@ -17,7 +17,7 @@ const HTML = fs.readFileSync(PAGE, 'utf8');
 /** a stand-in for the kit: records every call, and `open` is what HUKit.dialog.anyOpen() answers */
 function fakeKit({ seen = true } = {}) {
   const k = { open: false, seen, calls: {}, slot: [] };
-  const card = kind => ({ kind, open() { k.open = true; }, close() { k.open = false; }, isOpen() { return k.open; }, button() { return { kind }; } });
+  const card = kind => ({ kind, open() { k.open = true; }, close() { k.open = false; }, isOpen() { return k.open; }, button() { return { kind, setAttribute() {} }; } });
   const settings = opts => {
     k.calls.settings = opts;
     const vals = {}; opts.rows.forEach(r => { vals[r.key] = r.value; });
@@ -44,6 +44,8 @@ function loadER(kit) {
   });
   const ids = {};
   for (const m of HTML.slice(0, open).matchAll(/id="([^"]+)"/g)) ids[m[1]] = el(m[1]);
+  // the kit span is drawn by the shared game bar (components/game-bar.njk), named by the call's kitId
+  for (const m of HTML.slice(0, open).matchAll(/call gameBar\(\{[^}]*kitId:\s*'([^']+)'/g)) ids[m[1]] = el(m[1]);
   ids['er-overlay'].hidden = true;                       // as the markup ships it
   const ctx = {
     document: { getElementById: i => ids[i] || null, addEventListener() {}, querySelector() { return null; }, createElement: () => el(''), activeElement: null, body: {} },

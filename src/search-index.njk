@@ -4,16 +4,16 @@ eleventyExcludeFromCollections: true
 ---
 [
 {%- for t in tools %}{%- if t.status == 'live' %}
-  { "label": {{ t.title | dump | safe }}, "sub": {{ (t.searchSub or (t.desc | truncate(90))) | dump | safe }}, "type": {{ (t.searchType or 'tool') | dump | safe }}, "url": {{ t.url | dump | safe }}, "cluster": {{ (t.cluster or '') | dump | safe }}, "keys": {{ (t.keys or []) | dump | safe }} },
+  { "label": {{ t.title | dump | safe }}, "sub": {{ (t.searchSub or (t.desc | truncate(90))) | dump | safe }}, "type": {{ (t.searchType or 'tool') | dump | safe }}, "url": {{ t.url | dump | safe }}, "cluster": {{ (t.cluster or '') | dump | safe }}, "keys": {{ (t.keys or []) | dump | safe }}, "text": {{ (t.desc or '') | replace("—", "·") | dump | safe }} },
 {%- endif %}{%- endfor %}
-{%- for item in collections.learnModules %}
-  { "label": {{ item.data.title | replace("—", "·") | dump | safe }}, "sub": {{ (item.data.description or '') | truncate(90) | replace("—", "·") | dump | safe }}, "type": "learn", "url": {{ item.url | dump | safe }}, "cluster": "learn-play", "date": {{ item.date.toISOString() | dump | safe }} },
-{%- endfor %}
+{%- for item in collections.learnModules %}{%- if not item.data.noindex %}
+  { "label": {{ item.data.title | replace("—", "·") | dump | safe }}, "sub": {{ (item.data.description or '') | truncate(90) | replace("—", "·") | dump | safe }}, "type": "learn", "url": {{ item.url | dump | safe }}, "cluster": "learn-play", "date": {{ item.date.toISOString() | dump | safe }}, "text": {{ (item.data.description or '') | replace("—", "·") | dump | safe }} },
+{%- endif %}{%- endfor %}
 {%- for item in collections.talkPages %}
-  { "label": {{ item.data.title | replace("—", "·") | dump | safe }}, "sub": {{ (item.data.description or '') | truncate(90) | replace("—", "·") | dump | safe }}, "type": "talk", "url": {{ item.url | dump | safe }}, "date": {{ item.date.toISOString() | dump | safe }} },
+  { "label": {{ item.data.title | replace("—", "·") | dump | safe }}, "sub": {{ (item.data.description or '') | truncate(90) | replace("—", "·") | dump | safe }}, "type": "talk", "url": {{ item.url | dump | safe }}, "date": {{ item.date.toISOString() | dump | safe }}, "text": {{ (item.data.description or '') | replace("—", "·") | dump | safe }} },
 {%- endfor %}
 {%- for entry in rounds.entries %}{%- if entry.status == 'published' %}
-  { "label": {{ entry.title | dump | safe }}, "sub": {{ (entry.summary or '') | truncate(90) | dump | safe }}, "type": "rounds", "url": {{ ("/rounds/" + entry.slug + "/") | dump | safe }}, "date": {{ (entry.posted or '') | dump | safe }} },
+  { "label": {{ entry.title | dump | safe }}, "sub": {{ (entry.summary or '') | truncate(90) | dump | safe }}, "type": "rounds", "url": {{ ("/rounds/" + entry.slug + "/") | dump | safe }}, "date": {{ (entry.posted or '') | dump | safe }}, "text": {{ (entry.summary or '') | replace("—", "·") | dump | safe }} },
 {%- endif %}{%- endfor %}
   { "label": "Healthcare Atlas", "sub": "The hex territory map of the U.S. healthcare system", "type": "tool", "url": "/atlas/", "cluster": "maps-systems", "keys": ["map", "territory", "system map", "explore"] },
   { "label": "Rounds", "sub": "News, commentary, and guest takes on what is happening now", "type": "rounds", "url": "/rounds/", "keys": ["news", "blog", "commentary"] },

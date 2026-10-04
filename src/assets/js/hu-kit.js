@@ -1204,6 +1204,9 @@
         var b = make('button', 'hu-gm-btn');
         b.setAttribute('aria-haspopup', 'dialog');
         b.setAttribute('aria-expanded', card.isOpen() ? 'true' : 'false');
+        // the game bar hides the word on a phone (hu-global.css, THE GAME BAR); the name stays here,
+        // once, instead of in every game's script (2026-10-03)
+        b.setAttribute('aria-label', 'Menu');
         b.innerHTML = ICON_MENU + '<span>Menu</span>';
         opens(b, function () { card.open(); });
         btns.push(b);

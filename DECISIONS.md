@@ -90,13 +90,24 @@ as lifting the 2026-09-21 content hold for this one piece (CLAUDE.md precedence 
 notes: private/broken-arm-status.md (the raw notes moved to an archive outside the repo on 2026-10-03), in a folder git ignores, because this repo is public on GitHub and
 the notes hold his medical details. R1 and R2 are live now; T3 waits its turn by rule 3.
 
+**2026-10-03, the next build: three live questions, and one read.** Plans: docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md
+and docs/HU-CONSISTENCY-TOOLKIT-2026-10-03.md. Yours to read whenever, no deadline: the ventilator, home and rehab rule
+sheet (section 5 of the Device Assembly plan), fifteen rules with sources. ANSWERED 2026-10-04, David: "the rule sheet
+looks right, no changes". Stage C (ventilators) is BUILT and judges the sheet as written (log, "STAGE C" and "STAGE C,
+THE REST").
+
 | # | The question | Why it matters | Claude recommends | Open since |
 |---|---|---|---|---|
+| N1 | ANSWERED 2026-10-03, David: "I like the first decision... I think that's fine." Frame first, then Device Assembly stages 1 to 3. Original question: **What gets built first?** The frame first (the consistency board and the game shell), then Device Assembly in three stages: replayable on today's parts (Today's wall, random walls, the shift), then rehab and home, then ventilators after your read of the rule sheet. | Every Device Assembly screen is then built on the shell; ventilators need your rule read and the biggest engine change, so they come last. | Yes, in that order. | 2026-10-03 |
+| N2 | ANSWERED 2026-10-03, David: "I don't think that's always going to be necessary so it shouldn't be a hard or fast rule." So the Vital Stats start is the DEFAULT a new game reaches for, not a rule, and menus rule 4 stands. What IS firm, from his message the same night: one consistent top bar and menu in every game, and any multiplayer game as clean and easy to set up as Vital Stats. Original question: **Should every game open the way Vital Stats does?** A start screen that says what the game is in a sentence and three short steps, one big button, no how-to card popping up on a first visit ("?" still has it). Pictures: the six games' first screens at phone and desktop width, in the chat 2026-10-03. | It replaces menus rule 4 (adopted 2026-09-23), and five games' first screens change. | Yes. | 2026-10-03 |
+| N3 | ANSWERED 2026-10-03, David: "they should vary from realistic to completely insane because there can also be some jokes involved, like ones where there's no oxygen or no air, I can't blend gas, or ones where it's only oxygen or only air or only suction, and then in case they have to maybe bring in a bottle of oxygen or pump too... get creative with it and see how it goes." The generator runs from realistic to absurd, and absurd walls are part of the fun, not an error. Original question: **Should random and daily walls always be realistic?** The puzzle comes from things that happen (what is on the cart, distance, a capped outlet, a different facility), never from setups that could not exist. | It decides what the wall generator is allowed to do. | Yes; anything playful is a named twist, announced ahead. | 2026-10-03 |
 | R1 | **Does the broken arm piece name the places and the people?** | It decides whether the piece reads as a patient's week or as a review of named facilities. Your telling (2026-10-02) puts both EDs and the ortho clinic inside your employer's medical group, so this is your employer's care and billing, written from inside. | No clinician names. Places described by what they are and how far apart: a small community ED ten minutes away, the trauma center down the road, an ortho clinic two towns south. Whether to run it past your employer's policy on public writing first is yours. | 2026-10-02 |
 | R4 | ANSWERED 2026-10-02, David: "yes go wide". Built as the default: up to 1120px on a desktop, this figure only, phones unchanged; checked at 700, 1024, 1280 and 1920 with no sideways overflow. Original question: **Can the broken arm swim lane run wider than the text column on a desktop?** Up to 1120px instead of the 760px column; phones are unchanged. Screenshots 1 and 4 in the chat, 2026-10-02. | It is a new layout move for the site (CLAUDE.md: no new layout concepts without asking). In the column each lane is about 95px and most rows wrap to four lines; wide, they read in one or two, and the closed week is 1,696px instead of 1,962px. | Yes, for this figure only, on desktop only. The text around it stays in the column. | 2026-10-02 |
 | R3 | ANSWERED 2026-10-02 (later superseded by the swim lane he described the same day): the grid, with the iceberg's best parts folded in. David: "the previous version I think did look this overall is a little bit more confusing so I think there's some middle ground." Built: the step card names the tool's own boxes, any box can be followed across the week, and the whole week shows the most-hit boxes. The iceberg version stays in private/ for reference only. Original question: **Which map carries the broken arm piece: the iceberg bands or the grid?** Both are built as private previews (private/broken-arm-map/preview-berg.html and preview.html), screenshots in the chat 2026-10-02. | You asked why the grid was chosen; it was Claude's call, made without showing you an alternative. The iceberg version is your own System Layers tool with the week lit through it and a tap on any card to see every step that hit it; the grid shows the week's order and shape in one picture. | The iceberg version: it is the map you meant, it teaches a reader your tool, and its counts (Billing 9 times, Registration 6) make the point on their own. The order in time lives in the prose. | 2026-10-02 |
 | R2 | ANSWERED 2026-10-03, David: hold it. His manager reads it first, and it waits until after his next follow-up visit. Later the same day David moved it to the secret menu for review ("I don't think my website gets that much traffic I think hiding it in the secret menu is fine"), under the name "A Routine Fracture", accepting that the site and this repo are public: /secret-menu/a-routine-fracture/, noindex, out of the sitemap and site search, listed on the secret menu's "In the Back" shelf. The files in src/ are the working copy from here on. Original question: **Ship the broken arm piece now, or hold it until the bills come?** | The money is mostly underneath the waterline still. It surfaced once: a payment at the surgery center when you believed you had already met your out-of-pocket maximum (amount in the private notes, kept out of this public file). | Write it now while the week is fresh. That payment is the money node, and whether it comes back is the open question; add a dated update when the explanations of benefits land. | 2026-10-02 |
-| R5 | **Does the broken arm piece stay in your own voice, or become a hypothetical case?** | Your manager is reviewing your first-person account. A hypothetical case puts distance between the piece and your employer, but it rewrites all twenty steps in the third person and loses the reason you wanted to share it ("this is what I used to keep my mind busy"). | Keep it first person for your manager's read, and convert only if your manager or the policy asks for distance. If it does, the honest version is a teaching case "based on the author's own week", not a made-up patient. | 2026-10-03 |
+| R5 | ANSWERED 2026-10-04, David: "can we write it in the third person instead of first person. 'pt dave doe' or something to that nature". BUILT the same day: the patient is Dave Doe throughout (page, 20 scene cards, records, table, captions), title "Tracing a Broken Arm Through the Healthcare System", "Why I wrote this" became "Why this case", and the About this case box says Dave Doe is a stand-in name for the author. The patient-prompt questions stay first person, since they are lines for any patient to say. Dave gets no pronoun (name, "the patient", "the arm"); the care partner keeps "he". Original question: **Does the broken arm piece stay in your own voice, or become a hypothetical case?** | Your manager is reviewing your first-person account. A hypothetical case puts distance between the piece and your employer, but it rewrites all twenty steps in the third person and loses the reason you wanted to share it ("this is what I used to keep my mind busy"). | Keep it first person for your manager's read, and convert only if your manager or the policy asks for distance. If it does, the honest version is a teaching case "based on the author's own week", not a made-up patient. | 2026-10-03 |
+| R6 | **Three things only you know, for the broken arm piece.** PARTLY ANSWERED 2026-10-04, later, in the round-3 fix session: pain medicine did go in before the transfer drive, an ambulance was offered and Dave chose the car and signed a form for it, and the operative report is in the portal (the recovery cards quote it). All BUILT on the page, with the other answers from that session (all in network, the 6 came as the block wore off, no copay at either ED or the clinic, public scheduling lines, new prescriptions from the surgeon, the PCP heard the week from Dave, the care partner is the emergency contact, pain medicine as needed on day 8). After the fourth panel, also answered and BUILT: the check-in 8 was mostly the payment; Dave was already near the yearly maximum; the health plan is the employer's own (now in the About box); a clinician showed the CT and the surgeon showed the surgery X-rays at the surgery center; no copay at the PCP either; the surgery center had Dave sign its own surgical consent (counted in the tally); the operative report's route and whether the joint held before surgery stay unknown. Still open below: a real quote, the RT detail, and whether the plate-removal cause and timing come from the operative report. (1) ANSWERED 2026-10-04, David: "the pain hit 10 before sedation, not during". BUILT: the page says "peaked in the first ED at a 10, before the first sedation", and the first-sedation card reads "Going in, before the sedation" under its meter. (2) Optional, from memory, whenever: what the ED physician said when surgery was ruled out for the night, or what the surgeon said about the plate (a real quote); what you noticed as an RT while respiratory therapy watched your airway under ketamine; and why anxiety went from 3 on Monday to 8 at surgery check-in. The second panel (2026-10-04) asked for all three; each would be one sentence. If the chart shows them: who gave the etomidate, whether pain medicine went in before the transfer drive, and whether the splint comes off at Thursday's visit. Two more from the third panel (2026-10-04), both quick: is the surgery center's operative report in your patient portal now (it decides whether that record crossed back to the health system, a solid step or a "not yet"); and does "removed because they cause irritation, usually around a year out" come from the surgeon's note (if not, the card should say "a year or more out, once the bone has healed"). (3) ANSWERED 2026-10-04, David: "the surgery x-rays were photos I took of the screen". BUILT: the caption now ends "photographed from a screen", matching the ED X-ray caption. | The 2026-10-04 reviewer panel raised all three; the rest of its fixes were BUILT the same day. A 10 during sedation reads to an ED physician as sedation that failed, in your own system. | Answer (1) before your manager reads it. (2) and (3) whenever. | 2026-10-04 |
+| R7 | ANSWERED 2026-10-04, David: "yes add the employer line without naming the system". BUILT: the box now says "The two EDs and the orthopedic clinic belong to the health system the author works for; the author was there as a patient. These views are the author's own and do not represent that employer." Original question: **Should the About this case box say the care was at your employer?** One sentence: "The two EDs and the orthopedic clinic belong to the health system the author works for; the author was there as a patient." It does not name the system. | The second reviewer panel (2026-10-04, administrator): your bio names your employer, so a reader can join the dots, and the praise for the health system reads better disclosed than discovered. It is close to R1 (naming places) and to whether your employer's public-writing policy applies. | Yes, without naming the system; let your manager's read decide whether to name it. | 2026-10-04 |
 | S1 | ANSWERED 2026-10-03, David: "go with both, show new programs and campus marks". BUILT the same day (log). Original question: **Should the Schools layer show accredited programs that have not graduated anyone yet?** Noorda College of Osteopathic Medicine and Weber State's PA program are the local examples; nationally that is 52 PA, 9 DO, 7 MD and 56 RT programs, plus a handful of schools too new for the federal data at all. | The map draws a program only when it graduated people in 2023-24, so a student looking for schools today does not see the newest ones. The cross-check (docs/HU-SCHOOLS-CROSSCHECK.md) has the full list from the accreditors themselves. | Yes, marked as new with no graduate count, kept out of every count and rank so the numbers stay the federal year's. | 2026-10-03 |
 | S2 | ANSWERED 2026-10-03 with S1, BUILT (log). Original question: **Should a program's other campuses get their own marks?** Rocky Vista University teaches DOs in Ivins, Utah, but IPEDS counts them in Parker, Colorado, so Utah shows no Rocky Vista mark. Today the Parker card says "Also taught at Billings, MT · Ivins, UT". | 42 DO, 29 RT, 11 PA and 7 MD campuses sit away from where the federal data counts them. A mark is where someone looking in Utah would look. | Yes: a campus mark that opens the main school's card and says its graduates are counted there. | 2026-10-03 |
 | T1 | **Should the cost of living tool become the standard for every tool?** That means closing its design phase and writing its ten rules into DESIGN.md: answer first, explanations behind an "i", one fold, views, plain words, a source and date on every number, links that restore, the chart rules, little chrome, the phone as the shorter side. | You asked to take its lessons to the other tools. Until the rules are written down, nothing holds a tool to them and each rebuild argues from scratch. The full list with every tool measured against it is docs/HU-TOOL-REVIEW-2026-09-23.md. | Yes. What is left on the tool (about 546 words to sort) becomes ordinary maintenance under the written rules. | 2026-09-23 |
@@ -105,7 +116,9 @@ the notes hold his medical details. R1 and R2 are live now; T3 waits its turn by
 | G1 | **Uncharted Regional's staff strain never builds. Make it real?** | A playtest ran 28,571 quarters: strain peaked at 7 and no nurse ever quit, because it recovers 12 a quarter and can rise at most 9. So the strain warning never shows and the $45k a quarter Float Pool buys nothing. | Yes: strain recovers a little slower than the fastest it can build, so a hospital run flat out for a few quarters starts losing nurses and the Float Pool earns its price. | 2026-09-23 |
 | M1 | ANSWERED 2026-10-03, David: "go, fix the telehealth measure next". BUILT the same night (log): replaced with Medicare telehealth use from CMS. Original question: **The Population Health Map's "Telehealth adoption" measure has no traceable source.** Keep it, or take it off the map until one is found? | Its source reads "Mixed: AHA, payer reports" and its method "various sources"; the one link was AHA's telehealth page, which moved (fixed 2026-10-03), and nothing on it gives state numbers. It is one of the older hand-entered measures the Vital Stats builder already leaves out because spot checks found some that no longer match. | Take it off until a state-level source is found, the way T2 recommends for the System Layers tiles. The other 71 measures keep their sources. | 2026-10-03 |
 | 16 | WAITING (rule 3). **The rest of the clinical flags in the game review.** Alarm Fatigue's and three of Device Assembly's are ANSWERED (log, 2026-09-23). Left: Level 3's dry-gas line (Level 3 was rebuilt without it 2026-09-23, keeping the game's own dry side; log), the capnography connector and Level 2's title in Device Assembly; ED flow in ER Charge; the payer spread in both hospital games. Section 4 of docs/HU-GAME-REVIEW-2026-09-23.md. | They are RT and clinical calls a reviewer cannot make, and a respiratory audience will screenshot any that are wrong. | The dry-gas line first: the one piece of Level 3 still the game's guess. The payer spread is verified: RAND puts private plans at 254 percent of Medicare in 2022; the games use about 120. | 2026-09-23 |
-| 17 | WAITING (rule 3). **The other four expansions.** Alarm Fatigue's is ANSWERED and BUILT 2026-09-24 (real or nuisance; play it before the push, log). Left: Device Assembly, the order changes mid-shift; Uncharted General, payer contract offers; ER Charge, triage at the door plus EMS calling ahead; Regional, a board that forgives one miss. docs/HU-GAME-EXPANSION-2026-09-23.md, with two alternatives for each. | An expansion changes a game's rules, so choosing one opens that game's design phase. | Yes to all four, each after that game's fixes. ER Charge waits until you choose to open it. | 2026-09-23 |
+| W1 | ANSWERED 2026-10-03, David: "let's just do all of our cleanup tasks", taken as yes to the recommendation. DONE the same night (log): 46 findings to 24. Original question: **Clean up the 46 voice findings already on the site, or leave them held where they are?** The writing checker found them on 15 pages; the gate now stops any page gaining more. | The change budget says do not rewrite prose that works, and most of these are in working pages. But some are the kernel's own banned examples ("Doubt is our product." on Laws and Paradoxes) and headings that sell ("One shelf. No islands."). | Fix the clear kernel breaks (the aphorism, the selling headings, the announced hedge, "here is the") in one pass with before-and-after for you to veto; leave the rest held by the gate. | 2026-10-03 |
+| 17 | DEVICE ASSEMBLY CHOSEN 2026-10-03 by David, his own list (ventilators and filters, rehab and home, a daily and random puzzle): docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md, order in N1. The rest still WAITING (rule 3). **The other four expansions.** Alarm Fatigue's is ANSWERED and BUILT 2026-09-24 (real or nuisance; play it before the push, log). Left: Device Assembly, the order changes mid-shift; Uncharted General, payer contract offers; ER Charge, triage at the door plus EMS calling ahead; Regional, a board that forgives one miss. docs/HU-GAME-EXPANSION-2026-09-23.md, with two alternatives for each. | An expansion changes a game's rules, so choosing one opens that game's design phase. | Yes to all four, each after that game's fixes. ER Charge waits until you choose to open it. | 2026-09-23 |
+| H1 | ANSWERED 2026-10-04, David: "go with A and the smarter search". BUILT the same day: the box asks "What are you trying to figure out?", four example chips open the search already typed (Travel pay, Hospitals near me, Respiratory therapist, Prior auth), the "/" hint hides on touch screens, and the search gained a word-by-word pass with everyday synonyms and a state-name nudge (src/assets/js/hu-search.js). Also fixed: the redirect page left the index, and the Learn and Rounds hubs dropped examples that found nothing useful ("FHIR", "wound care", "AI promise"). tests/hu-search.test.js holds every example on every hub to finding a real page. Original question: **Which home page search box?** A: a question in the box ("What are you trying to figure out?") with four working example searches under it in place of the category chips. B: one working example at a time, changing every few seconds. C: quiet, "Search 40 tools, maps and articles", no examples. Picture: tmp/search-options.png, phone and desktop, in the chat 2026-10-04. | Two of the three examples in the box today ("travel pay in Sacramento", "hospital prices") find nothing, and the search only matches a whole phrase, so "rt pay" or "nurse pay" come back empty too. | A, plus a smarter search behind it: match word by word with everyday synonyms (RT, salary, wage) so plain questions land on the right tool. | 2026-10-04 |
 
 ---
 
@@ -142,6 +155,279 @@ No decision needed. Listed so you can veto any of them.
 ---
 
 ## LOG
+
+- **2026-10-04, night** THE RULE SHEET, READ. David: "the rule sheet looks right, no changes". Every switch in
+  VENT_RULES stays on, so the game keeps judging the sheet as written; nothing in the game changed. Read as no change
+  too, stated: the two items the research could not verify stay unjudged (the order of the parts at the patient end;
+  whether long-term care rooms pipe medical air, so rehab rooms stay without air), and Claude's five additions stand
+  (the exhaled gas comes back; no neb on the expiratory side; a water trap in an unheated limb off a heater; the
+  exhalation port at the patient end; an HME order means an HME).
+
+- **2026-10-04, night** DEVICE ASSEMBLY STAGE C, THE REST ("go ahead and build the rest of stage c"). Seven more
+  ventilator walls, ten in the group now: Ventilator 3, An inhaler on the ventilator (a spacer before the Y; the elbow
+  adapter on the cart fails rule 7); 4, Suction and EtCO2 on the circuit (the closed suction catheter and the CO2
+  adapter at the tube, suction from a boom outlet, the sampling line in the monitor); 5, Swap the HME for heated
+  humidity (thick secretions); 6, Noninvasive ventilation (a full face mask, the exhalation port, one plain limb, the
+  pressure valve and the bleed-in at the portable vent, oxygen from a flowmeter); 7, A ventilator at home (the trach, an
+  HME, the portable vent, a concentrator bled in, and the backups: a second vent, a bag, battery suction); fault 2, A
+  nebulizer behind an HME; fault 3, The filter on the wrong limb. Two home oxygen faults joined Find the fault, in one
+  living room: 4, A humidifier on the pulse-dose cylinder; 5, The humidifier bottle on backwards.
+  The ICU is now a fourth dealt place: An ICU bed in Puzzles (a fresh deal each time), in the maker (seven ventilator
+  orders, the FiO2 or the oxygen bled in, three twists: An ICU bed, A power cut, An oxygen outlet capped), in the daily
+  wall from #5 (carved out of the hospital days: 2026-10-14 and 2026-10-21 became ICU days, nothing before #5 moved),
+  and in the shift ("A night on the ventilator": set up, a treatment, thick secretions, EtCO2; the shift moved to version
+  3, so every shift code deals a different shift than this afternoon; there were no links out).
+  New parts: the portable ventilator, the trach tube (on the patient), the full face mask, the exhalation port, the
+  oxygen bleed-in, the pressure valve, the inline MDI spacer, the MDI elbow, the jet neb, the closed suction catheter
+  (an elbow, like the real ones), the CO2 airway adapter, the water trap, the flex tube, the resuscitation bag, battery
+  suction, a plain circuit limb, 10 ft suction tubing, a cylinder with a conserving device, and a concentrator's
+  humidifier bottle.
+  The rule sheet, still as written: 1 to 10, 12, 14 and 15 are judged (3 now covers a big leak and a cold patient too;
+  4, 5, 6, 8, 10 and 15 pass with a note; the rest fail). Not judged, and why: 11, because height on the wall is not
+  height in the room; 13 has been judged since Stage A as the concentrator's ceiling; 15's 50 ft half, because no run on
+  a wall this size comes near it. Claude's additions, stated: the exhaled gas has to come back, a neb on the expiratory
+  side fails, an unheated limb off a heated humidifier needs a water trap, an exhalation port at the machine end fails
+  (part of 9), and an order for an HME means an HME.
+  Claude's calls, stated: the suction wall's bed has a boom (a vacuum outlet at bed height), because a search found no
+  circuit with in-line suction that fit with the vacuum only on the headwall; the spacer is one square, where a square is
+  about a foot; the ICU and the living room keep their bedside screen on the left, and a dealt build is refused if
+  anything runs under the screen; an ICU wall uses the hospital's wall colour. Fixed on the way: moving a group of parts
+  (the Y with its neb) re-laid each run around the other's old path, the same defect fixed in single moves this
+  morning; a dealt ICU wall crashed the board until the ICU had a wall colour.
+  Proof: 485 tests green (13 new: every new wall arrives the way its order says, every fix builds at par, each rule
+  fires, 40 dealt ICU walls solve and stay clear of the screen, the daily rotation, the maker, and four ICU shifts played
+  through to the fault), the phone gate clean at nine viewports, screenshots in the chat. Dealt walls fingerprinted
+  before and after: only the two future ICU days and the shift plans changed.
+
+- **2026-10-04, evening** DEVICE ASSEMBLY STAGE C, THE FIRST VENTILATOR WALLS ("lets move onto stage c"; plan C2 to
+  C4). Three walls under a new Ventilators group on the wall list, open from the start. Ventilator 1, Set up a
+  ventilator: an intubated patient, the vent on a red outlet with its oxygen hose in, the heated humidifier in the
+  inspiratory limb, the Y at the tube, the expiratory limb back to the vent, FiO2 40% on the vent. Ventilator 2, An
+  inline treatment: it arrives running, and the mesh neb goes on the inspiratory side with a filter where the
+  expiratory limb meets the vent. Ventilator fault 1, Heated, and an HME: night shift left an HME on a heated circuit;
+  take it out and seat the Y back on the tube. New parts: the ICU ventilator, the endotracheal tube (on the patient,
+  never on the cart), the Y, the HME, a bacterial and viral filter, an inline mesh nebulizer, and 8 ft heated
+  inspiratory and expiratory limbs. They stay off the daily and random walls; the sandbox has them. The walls play in an
+  ICU bed space: the usual headwall gases, the two red outlets on the vent's side, the monitor, and the bedside screen
+  moved to the empty left so no limb runs behind it.
+  The rules, off the rule sheet AS WRITTEN (David has not marked it; each rule is a switch, so a mark changes one
+  line): 1, an HME on a heated circuit fails; 2, a neb with the HME still in fails; 3 in part, an HME on a patient with
+  thick secretions fails (no wall uses it yet); 5, aerosol with no expiratory filter passes "with a note". Claude's
+  additions, stated: the exhaled gas has to come back from the Y to the vent's expiratory port, and a neb on the
+  expiratory side fails. Claude's calls, stated: the limbs are 8 ft on the wall's scale (a square is about a foot; at
+  6 or 7 ft no layout let a vent stand beside the bed with its cord on red); the walls are authored, not dealt, because
+  a search found only three spots on the wall where the treatment fits.
+  Two engine fixes found on the way, for every wall: moving a part with two runs on it re-laid each run around the
+  other's old path (the Y with both limbs came up a foot short); and the cart's automatic pick handed the sandbox's
+  expiratory limb to a trach collar, so a vent limb is now a deliberate pick, like the heated circuit. 250 dealt walls
+  fingerprinted before and after: none changed.
+  Not built yet, the rest of Stage C: rules 4 and 6 to 15, the single-limb and noninvasive circuits, the home
+  ventilator, MDI and jet nebs, closed suction, the capnography adapter on the circuit, the water trap, the flex tube,
+  the swap-to-heated wall, and vent walls in the daily and random deals. Proof: 472 tests green (6 new in
+  tests/device-assembly-vent.test.js: the reference build at par, the treatment fixed, each rule firing, the fault fixed
+  by pulling the HME, a save restoring), the writing checker clean on the new copy apart from the game's own system
+  words ("Press Complete.", "Fix it."), the phone gate clean at all nine viewports, browser shots at 1280, 360, 699 and
+  740x360 in the chat.
+
+- **2026-10-04, later** DEVICE ASSEMBLY, THE NEW PLACES IN THE MAKER AND THE SHIFT ("go ahead and add the new places
+  to the maker and shift"). MAKE A WALL has a first row, The place: Hospital, A rehab room, Someone's home. The place
+  decides the orders (a rehab room: cannulas, masks, Venturi, trach collar, aerosol; a home: a cannula at 1 to 5 L/min)
+  and the twists (a rehab room: piped or no piped oxygen; a home: the concentrator, the power out, a cylinder only),
+  and anything that cannot be built is greyed out as before. A made wall's link carries its place in its twist, so the
+  link format did not change. THE SHIFT can now happen in a rehab room or at home: three rehab stories (a cough that got
+  worse, coming off the mask, a trach patient) and two at home (a day at home, home after a flare), about one shift in
+  three. Each place has its own problems, announced on the card before they land: in a rehab room the oxygen outlet
+  over the bed gets capped (supply sends a cylinder up if it was the only one); at home a storm takes the power out
+  (the concentrator dies and the backup cylinder comes onto the cart) or the outlet by the chair dies (move the
+  concentrator to one that works). The last wall's "unplugged" fault names the concentrator at home. Under the hood a
+  shift wall now carries its whole room, not just the rail, so a problem can change a wall outlet as well as a headwall
+  outlet; every shift code deals a different shift than it did this morning (the shift's version moved to 2; nobody
+  had a link to keep). Claude's calls, stated: a power cut is offered in a rehab room too but never lands there, since
+  nothing in those orders has a cord; about half of rehab shifts get no problem at all, because capping the only
+  outlet would leave a humidifier or a trach order with nothing to hang on. Proof: 466 tests and both type checks
+  green, 200 shifts planned and every wall solved, full playthroughs of six rehab and six home shifts by a test player
+  who clears the wall each time (the cart always held enough), the phone gate clean, browser runs of the maker and a
+  home shift through the real cards, pictures in the chat.
+
+- **2026-10-04, morning** DEVICE ASSEMBLY STAGE B, NEW PLACES ("go ahead and start stage B"; plan B1 to B3). Two
+  places beside the hospital room, each dealt at random and each wall solved through the engine before anyone sees it.
+  A REHAB ROOM (green wall): a short headwall with gaps, one or two oxygen outlets and a suction outlet over the bed,
+  no medical air and no bedside monitor, so its orders are cannula, humidified cannula, masks, Venturi, trach collar
+  and aerosol mask (no high flow, no capnography). Some beds have no piped oxygen or suction at all ("No piped
+  oxygen"): a concentrator or a cylinder comes up from supply, and you set it down where it reaches (and plug the
+  concentrator in). SOMEONE'S HOME (warm brown wall): no headwall at all, a window, a lamp, a side table, sometimes a
+  plant, a bookcase or a clock, one or two wall outlets, and the patient in his recliner in a sweater under a throw.
+  The oxygen is a part you set down: the concentrator (it needs a live outlet within its 6 ft cord, and tops out at 5
+  L/min), or the backup cylinder when the power is out (the dead concentrator stands there, every outlet struck
+  through), or a cylinder when the concentrator went back for service. Home orders are a cannula at 1 to 5 L/min, and
+  the cannula is the 7 ft one, so about half of homes need the connector and supply tubing back to the machine, the
+  way homes are set up. Where to find them: Walls, then Puzzles: "A rehab room" and "Someone's home" (each deals a new
+  one); the earlier daily walls moved to their own group. The daily wall starts visiting these places at #4
+  (2026-10-06), about six days in ten still a hospital; walls #1 to #3 and every wall dealt before are unchanged
+  (checked). Claude's calls, stated: the rehab blurbs make no claim about any state's rules; the 10 L concentrator and
+  the conserving device in the plan are not in, because neither fact was checked for this build; the maker, the
+  shift and the race's random wall stay in the hospital for now. Engine work: a room can have no rail, a rail can have
+  gaps, a concentrator or cylinder from the cart is a source, and a source with no power reads "not plugged in" (the
+  hospital wording unchanged). Found on the way: the generator restored the room after a trial but not the rail
+  setting, which would have let a part hang on the real wall's rail after a home was dealt; fixed and tested. Proof:
+  465 tests and both type checks green (new: tests/device-assembly-place.test.js), 200 rehab rooms and 200 homes dealt
+  and solved in a sweep, the phone gate clean at nine sizes on a home and a rehab room, browser runs at 1280 and 360,
+  pictures in the chat. Next: Stage C (ventilators) waits on David's marks on the rule sheet (the plan, section 5).
+
+- **2026-10-04, early** DEVICE ASSEMBLY A6, YOUR OWN WALLS AND THE RACE ("go ahead and start A6"). Stage A is done.
+  MAKE A WALL (Walls, then Puzzles): pick the order and its flow and FiO2, the twist, the room and the clock; the
+  engine builds it as you pick, anything it cannot build is greyed out, and the wall goes out as a link that carries
+  all of it plus the decoys (?wall=my:...). A SANDBOX BUILD goes out as a link too ("Copy build link" in the sandbox
+  panel, about 800 characters) and opens as the same build on the other person's sandbox wall. THE RACE (Walls, then
+  Puzzles, then Race; or the Race fold in the panel; or an invite link) now opens on Vital Stats' portal: a name,
+  Race bots as the primary, Create a room, a code box. The room card has the code, Copy invite link, a QR code on a
+  laptop (Show QR code on a phone), Big screen, the people in the room, the wall (today's, a random one, the one you
+  are on, or a shared one) and the bots, all with defaults, and Start. Up to eight builders, everyone past eight
+  watches; the bar shows your clock and then your place; the panel lists everyone with their parts, failed tests and
+  finish times, with a Ghost button to watch any one of them under your wall (a bot's ghost is the par build filling
+  in). The host judges every finished build with the real engine; places go in the order builds pass. Claude's calls,
+  stated: five bots with names a floor would have (Charge RT, Travel RT, Night shift, Float pool, New grad), each
+  building at a pace drawn from the wall's par time; walls travel for ghosts only in rooms of four builders or fewer
+  (counts always travel), because the relay counts every byte for every receiver; a race has no share line yet (the
+  finish card is your place and time); timed walls cannot be raced, since their clock is the sat; on a made wall,
+  high flow and capnography have no build for a patient facing the other way, so that room is greyed out for them.
+  Also fixed: on a phone the Walls button now steps aside whenever a clock shows in the bar, which ends the timed
+  wall's two-row bar on a 360 phone (left over from THE FRAME). Proof: 459 tests and both type checks green (new:
+  tests/device-assembly-make.test.js, the race tests rewritten for a room of three plus bots), the live relay check
+  (`npm run backend:check:da`: a real room, a guest seated and racing, the guest's wall on the host byte for byte,
+  the host's judgment on both screens), the phone gate clean at nine sizes on the wall, an invite link and a made wall,
+  real-browser runs of every card at 1280 and 360, pictures in the chat. Every dealt wall and daily wall is unchanged
+  (checked against the list taken before). Next: Stage B (rehab and home rooms, which need walls without a rail) and
+  Stage C (ventilators, after David marks the rule sheet in the plan, section 5).
+
+- **2026-10-04, after midnight** DEVICE ASSEMBLY, THE SHIFT (A5; "go ahead and start the shift"). Five walls, one
+  patient. Walls 1 to 4 follow a story with the order changing between them: weaning off high flow, a patient getting
+  worse (cannula up to a non-rebreather at 15, then high flow), back from the OR (non-rebreather, Venturi down to a
+  cannula), a procedure at the bedside (EtCO2 on through recovery), a trach patient (FiO2 weaned 50 to 28). Your build
+  stays on the wall between walls, so each new order is a rework. Before each wall the card between walls says what
+  is coming: the new order, and the complication about to land (the right-hand oxygen outlet capped, the air off, or
+  a power cut where only the red outlets stay live). You pick one of three bonuses (spare tubing, an adapter kit, or
+  thirty more seconds on the clock). Wall 5 is your own finished build handed back with one thing wrong, picked from
+  the faults RTs named in the research: the humidifier unplugged, the sampling line out of the monitor, the FiO2
+  bumped, an air flowmeter swapped in, the tubing off. Show me points at it for 20 points. The end card gives the
+  shift score, a share line (one square per wall: green if it worked on the first test) and a shift link that
+  replays the same five walls. Claude's calls, stated: a complication only lands if it actually breaks the build from
+  the wall before, each at most once a shift, so a shift gets one to three; "a patient getting worse" deals with none,
+  because the one that bites its early walls (the capped outlet) would leave its high-flow wall impossible; shift
+  walls use the 14 ft cannula so the patient's tubing still reaches when an outlet moves; before each wall the cart is
+  topped up with whatever that wall's own build needs, so clearing the wall and starting fresh always works (which
+  also means the spare tubing and the adapter kit are comfort, and the thirty seconds is the bonus that moves the
+  score); Reset on a shift wall puts it back how it arrived, not empty; the shift score is the walls' average less 2
+  for every failed test; a reload anywhere in a shift continues it, the card between walls included. Found and fixed
+  on the way: the fault picker kept editing parts that its own undo had replaced, so two of the five faults silently
+  did nothing; and the cart's small part pictures now carry the same drawing mark as the wall, since a nebulizer's
+  dial label printed at 3.5 px failed the phone gate the first time a wall put one on the cart. Proof: 451 tests and
+  both type checks green, 40 shifts planned and solved wall by wall in the tests and 20 played start to finish by a
+  test player who clears the wall each time, every fault proven to break a real build and to be fixed by the one fix
+  its card names, the phone gate clean at nine sizes on a shift, a real-browser shift at 1280, 360 and 740x360 (Esc
+  and Complete bring the card back, a reload mid-shift continues it, the save clears at the end). Left: A6, wall codes
+  and the race on the Vital Stats portal.
+
+- **2026-10-03, late night** DEVICE ASSEMBLY STAGE A, the first four steps ("go ahead and start device assembly stage
+  A"; plan docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md, A1 to A4). DEALT WALLS: the game deals its own walls from a
+  seed, and the same seed is the same wall on every device. Nine kinds of order (cannula, humidified cannula, simple
+  mask, non-rebreather, Venturi, trach collar, aerosol mask, heated high flow, capnography) and nine twists from plain
+  to David's jokes in N3: a crowded wall, the patient slid down the bed, a Chemetron wing, no air on this wall, no
+  oxygen, only air, only suction (the last three bring a bottle to the bedside), and bring the pump (no gas at all, a
+  home concentrator to plug in, 5 L/min at most). The game builds a working setup on each wall first and the rules
+  engine has to pass it before anyone sees the wall, so every dealt wall can be solved; its cart is that build's parts
+  plus two or three decoys, and par is that build's own numbers. THE DAILY WALL: one a day for everyone, turning over at
+  midnight Mountain time, #1 is today; finishing it writes a share line with one square per test (green passed, red
+  failed), where the build sat against par and a link, and moves a streak; the three days before stay open to
+  practice. A random wall deals a fresh one. Beating par is now counted in parts and feet; "See par build" draws the
+  build the wall was dealt with under yours. THE SAVE: every change to the wall now goes through one dispatcher, and the
+  wall in progress is saved after each one, so a reload or a dropped phone tab continues it (Device Assembly passes the
+  ledger's engine contract check now). Claude's calls, stated: no letter grade (the stars already grade, and the card
+  had to get shorter for a phone); random walls leave nothing in saved progress; only the day's own wall counts for
+  the streak; masks never get the "slid down the bed" twist because they ship with 7 ft of tubing; timed walls are not
+  continued; on a phone Share opens the share sheet, on a laptop it copies. Proof: 445 tests and both type checks
+  green, 160 seeds dealt and solved in the tests (300 in a sweep, every one solvable), the phone gate clean at nine
+  sizes, a real-browser play of the daily wall by mouse (drag, tubing, reload continues it, Complete, share line,
+  save cleared), pictures in the chat. Left: A5 the shift and A6 wall links as copyable codes and races on the Vital
+  Stats portal. The page's meta description (243 characters, the gate wants 165) is the one thing keeping it at Phase 1
+  on the Board; it is David's copy, so it waits for him.
+
+- **2026-10-03, last** THE FRAME (N1, David: frame first, then Device Assembly). Four pieces, all built, all checked.
+  THE TOOLKIT MAP, docs/HU-QA-TOOLKIT.md: every check, skill, agent and rule file, what it checks, who decides, how it
+  runs, and the gaps nothing covers (whether a page is understood; keyboard reach and visible focus site-wide; the
+  touch floor only warns). THE PAGE LEDGER, `npm run ledger`: every live page, its kind (reading, hub, tool, game), the
+  checks for that kind, and its phase, worked out from the checks and never typed: Phase 2 meets today's standard,
+  Phase 1 names what holds it. The phone sweep now writes each page's verdict down with its date, so the ledger never
+  re-runs it. THE BOARD, in the side-by-side review screen (`npm run review`, Board and Report): every page grouped by
+  phase; pick one and its phone and desktop views open beside its checks, its writing findings read off the page as
+  drawn, and a note box that saves your "Reviewed" mark (data-build/page-reviews.json, yours alone; Claude never writes
+  one for you). THE GAME BAR: one shared top bar (src/_includes/components/game-bar.njk, its rules in hu-global.css),
+  Vital Stats' bar made into the only one. All six games wear it: 58px, the name at 17px on a phone and 15px on a
+  laptop, the HU mark, then the game's one status and one action, the "?" and Menu, the site menu inside Menu. Before:
+  three bars (50 or 58px, the name at 14, 16 or 17px) and three games under the whole site menu. Alarm Fatigue's sound
+  control moved into its Settings (the Sound mix row it already had); its clock sits beside the task count under 480px
+  wide, since the bar cannot hold it at 360 with the name at full size. The three hospital games lost their back link
+  (Menu's Leave row does that) and their second title. tests/game-shell.test.js holds every game to it; the skill
+  hu-game-shell tells a session how to start any new game from it; the kit's Menu button now names itself for a
+  screen reader. Left: Device Assembly's timed wall puts a second chip in the bar and goes to two rows on a phone (its
+  own work starts next). Proof: the tests and both type checks green, the phone gate clean on all six games and every
+  page the sweep reached, pictures in the chat.
+
+- **2026-10-03, late night** THE CLEANUP BATCH (David: "let's just do all of our cleanup tasks and then we can get on to
+  new stuff"). Everything on the no-decision list, plus W1 on its recommendation. VOICE (W1): 46 findings to 24. Thirteen
+  headings that sold or paired now label ("One shelf. No islands." is "Every dataset filed by place."; "Honest beats clean." is
+  "How far to trust the numbers."; "Five years, three readings" is "Three readings of the last five years", the form the
+  other three Rounds pieces use; the full list is in the chat of 2026-10-03), "Doubt is our product." is in quote marks
+  as the 1969 memo's words it always was, the announced "I want to be honest that" is gone, "deep dive" is
+  "walkthrough". Left on purpose: the home page's two brand lines, the over-budget negation lines (held by the gate,
+  not rewritten), "There is a form. There is a committee..." and the alarm-list fragments in the alarm fatigue Rounds
+  piece (deliberate), and "infuriating" in the burnout piece (his argumentative voice). Three checker rules were wrong
+  and were fixed first ("here is the" inside "every map here is the method", "We called it burnout", a colon that
+  introduces a list). TOOL BARS: on a portrait phone SQL Mystery's and the Data Observatory's bars are one row, 58px
+  instead of 106; the kicker retires on a phone the way the crumb already did (hu-global.css), and every tool name is
+  17px on a phone, 15px on a desktop. SQL Mystery's "Your mission" and "currently" are CAPS, not bold and italic. Left:
+  System Layers' bar (121px, three rows of controls that need a call on which ones move) and the Career Tree showing no
+  tool name on a phone. COST OF LIVING: the From side reads "Your rate here" ("Your pay here" annually); 182 words of
+  explanation moved behind an "i" in seven places, warnings untouched for David's ruling (listed in the chat); the
+  methodology sheet's "52 weeks times weekly hours" now says the hours a year you set. ALARM FATIGUE: a card no longer
+  steals keyboard focus (Enter gave WRONG PATIENT 2 of 3 runs; three other cards had the same fault), the sideways
+  console no longer covers the chart tabs, "+1" numbers no longer draw over the Task List, a 360 heart rate no longer
+  clips, Esc on the decision pop-up no longer also opens the menu, and Hire a tech says what techs can do (pumps, meds
+  and codes are out of their scope). NSVT and the overtime lunch were already fixed. tests/alarm-fatigue-cleanup.test.js
+  (7). Proof: 431 tests, both type checks, the phone gate clean on every changed page. Not in this batch: the reading
+  shell's last 144 declarations (each one changes how a page looks, so each is David's look, not cleanup) and the
+  monthly link check (due late October).
+
+- **2026-10-03, night, after the panel** THE SEDATION-TEMPLATE LINE CAME OUT of the broken arm piece (David: "yes take
+  the sedation line out before I push"). The reviewer panel's administrator and medical director both named it the
+  riskiest line for his employer: an informatics manager publishing a sedation documentation finding about his own
+  hospital. The second sedation's records list keeps its three items; only the note about the template went. If it
+  comes back, it comes back after he has raised it at work. It was already in the unpushed commit 175b073, so keeping
+  it out of the public history means folding this fix into that commit before the push.
+
+- **2026-10-03, night** THE WRITING CHECKER (David: "go, start the writing checker, include pasted drafts", after asking
+  for a QA tool for "writing, PHI standards... good professional standing... and our vernacular tone", built from the
+  site's own guidance and his recent edits). One set of rules (scripts/lib/writing-rules.js) in three layers: PATIENT
+  INFORMATION (the HIPAA Safe Harbor identifiers a text can carry, clinician and family names, named facilities in a
+  patient story, personal health detail, text pasted from a chart, and photos' hidden camera, date and location data),
+  PROFESSIONAL TONE (his 2026-10-03 rulings: frustrated or disappointed, never angry; analytical, not an emotional
+  appeal; vendor-neutral names in a patient story; the lay word in a title; no coined labels; dictation slips like a
+  doubled word or a dropped period), and the HU VOICE (the kernel, the hu-voice skill and the voice profile, including
+  the clipped note-like lines he called AI-written). Three levels: must fix, fix, read again; every finding quotes the
+  ruling it comes from. Six voices to judge against: Rounds, Learn, Tools and games, other site pages, work writing,
+  advocacy. Where he sees it: a review screen like the side-by-side one (`npm run writing`, /__writing), with a paste
+  box that highlights as he types and saves drafts to private/writing/ (git ignores it, since a draft can hold exactly
+  what this catches), or any built page read after its scripts draw. Gates in `npm test`: no patient identifier on any
+  page, in the Rounds story files or in any image (a planted record number and phone number fail it), and a ratchet on
+  voice findings per page (46 on 15 pages today, tests/writing-baseline.json; a page may lose them, never gain them).
+  Calibrated against his own writing: the voice profile's four pre-AI passages come back with nothing to fix, and two
+  rules that flagged them (flat rhythm at three sentences, triad endings) were loosened until they did not. Rules cut
+  from 158 site findings to 46 by removing false alarms, not by hiding real ones; what is left includes the kernel's own
+  example "Doubt is our product." still live on the Laws and Paradoxes page, "One shelf. No islands." and "Honest beats
+  clean." as headings, and an announced "to be honest" in a Rounds piece. Patient information on the live site: zero.
+  The reviewer panel (a medical director, an administrator, a technologist and the voice editor, read-only) runs when
+  he asks, by the new skill hu-writing-review; its notes show on the screen. First run: the broken arm piece. 424 tests,
+  both type checks clean.
 
 - **2026-10-03, very late, after the cut** SYSTEM LAYERS GETS ITS SOURCE LINE (David: "go, add the source line next"). The
   last tool without one. Its strip (behind the ⓘ, like every tool) now reads: "An editorial map of how care moves, not

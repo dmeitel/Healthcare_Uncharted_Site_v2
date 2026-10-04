@@ -493,6 +493,7 @@ function renderTiles(s, cur, asg, delta) {
   if (s.gross <= 0) {
     $('acTiles').innerHTML = '';
     $('acTileNote').textContent = 'Enter pay above and the comparison computes from there.';
+    $('acTileHow').hidden = true;
     return;
   }
   var cls = delta > 5 ? 'good' : delta < -5 ? 'bad' : '';
@@ -505,24 +506,32 @@ function renderTiles(s, cur, asg, delta) {
     (twoPay ? 'Each column uses its own gross with its own tax math.' : 'Same gross pay applied to both columns.');
   if (s.cs === s.as) note += ' You are comparing ' + STATES[s.cs] + ' to itself: cost ratios are flat by definition, so any delta comes from pay alone.';
   /* the example state now announces itself via the chip on the answer card */
-  $('acTileNote').textContent = note;
+  /* How "left over" is figured is explanation, not answer, so it rides the peek behind a short
+     label (2026-10-03, the 546-word pass). The note line itself is kept for status only. */
+  $('acTileNote').textContent = '';
+  $('acTileInfo').setAttribute('data-def', note);
+  $('acTileHow').hidden = false;
 }
 function tile(v, k, cls) {
   return '<div class="hu-stat"><div class="v ' + (cls || '') + '">' + v + '</div><div class="k">' + k + '</div></div>';
 }
 
 function renderBreakeven(s, cur, proj, be) {
-  if (be == null || s.gross <= 0) { $('acBeNum').textContent = '...'; $('acBePer').textContent = ''; $('acBeSub').textContent = s.gross <= 0 ? 'Waiting on pay.' : ''; return; }
+  if (be == null || s.gross <= 0) { $('acBeNum').textContent = '...'; $('acBePer').textContent = ''; $('acBeSub').textContent = s.gross <= 0 ? 'Waiting on pay.' : ''; $('acBeInfo').hidden = true; return; }
   var hrs = num('acHours') || 1872;
   $('acBeNum').textContent = fmt(be);
   $('acBePer').textContent = '≈ ' + fmt(be / hrs) + '/hr at ' + hrs + ' hrs a year';
-  var sub = 'Pay in ' + STATES[s.as] + ' needs to be at least this much before it matches what ' +
-    fmt(s.gross) + ' leaves you in ' + STATES[s.cs] + '. Below that number you are paying to work there.';
+  /* What the number MEANS is explanation, so it rides the "i" on the card's heading. What the
+     offer does against it is the live answer, so that stays printed. 2026-10-03. */
+  $('acBeInfo').setAttribute('data-def', 'Pay in ' + STATES[s.as] + ' needs to be at least this much before it matches what ' +
+    fmt(s.gross) + ' leaves you in ' + STATES[s.cs] + '. Below that number you are paying to work there.');
+  $('acBeInfo').hidden = false;
+  var sub = '';
   if (s.gross2 != null) {
     var gap = s.gross2 - be;
-    sub += gap >= 0
-      ? ' The offer grosses ' + fmt(s.gross2) + ': it clears the bar by ' + fmt(gap) + ' a year.'
-      : ' The offer grosses ' + fmt(s.gross2) + ': it falls ' + fmt(-gap) + ' a year short of breaking even.';
+    sub = gap >= 0
+      ? 'The offer grosses ' + fmt(s.gross2) + ': it clears the bar by ' + fmt(gap) + ' a year.'
+      : 'The offer grosses ' + fmt(s.gross2) + ': it falls ' + fmt(-gap) + ' a year short of breaking even.';
   }
   $('acBeSub').textContent = sub;
 }

@@ -66,6 +66,8 @@ if (!fs.existsSync(SITE)) {
   console.error('No _site/ directory. Run `npm run build` first.');
   process.exit(1);
 }
+/** @type {{t:number, body:string}|null} */
+let ledgerCache = null;
 
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
@@ -78,6 +80,46 @@ const server = http.createServer((req, res) => {
   if (url === '/__review/pages.json') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify(pages()));
+  }
+  /* THE BOARD (2026-10-03, docs/HU-CONSISTENCY-TOOLKIT-2026-10-03.md). The page ledger, worked
+     out fresh (a few seconds, so held for 20), the writing rules so a page's findings can be read
+     off the desktop frame, and David's "Reviewed" mark saved where git keeps it. */
+  if (url === '/__review/ledger.json') {
+    const now = Date.now();
+    if (!ledgerCache || now - ledgerCache.t > 20000 || req.url.includes('fresh=1')) ledgerCache = { t: now, body: JSON.stringify(require('./ledger').compute()) };
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end(ledgerCache.body);
+  }
+  if (url === '/__review/rules.js') {
+    res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end(fs.readFileSync(path.join(__dirname, 'lib', 'writing-rules.js')));
+  }
+  if (url === '/__review/review' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; if (body.length > 1e5) req.destroy(); });
+    req.on('end', () => {
+      try {
+        const { page, note, reviewed } = JSON.parse(body || '{}');
+        if (typeof page !== 'string' || !page.startsWith('/')) throw new Error('no page');
+        const file = path.join(ROOT, 'data-build', 'page-reviews.json');
+        const all = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+        if (reviewed === false) delete all[page];
+        else {
+          const d = new Date();
+          const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          all[page] = { date, note: String(note || '').slice(0, 2000) };
+        }
+        const sorted = Object.fromEntries(Object.keys(all).sort().map((k) => [k, all[k]]));
+        fs.writeFileSync(file, JSON.stringify(sorted, null, 2) + '\n');
+        ledgerCache = null;
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: true, review: all[page] || null }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: String(e && e.message || e) }));
+      }
+    });
+    return;
   }
   /* LIVE (2026-09-23, David: "let me see in real time the changes"). The review screen polls this
      and reloads both frames when it moves: the newest time among the page as the dev server last

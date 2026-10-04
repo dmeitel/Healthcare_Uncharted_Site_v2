@@ -906,8 +906,14 @@ function inspect({ phone, deviceWidth }) {
   };
 
   let failed = false;
+  /* THE PAGE LEDGER (2026-10-03). Every run also keeps its verdict per page and viewport, with the
+     date, in tmp/ledger/phone.json, so the review board can show a page's sweep without re-running
+     a sweep that takes minutes. What fails here is unchanged; this only writes it down. */
+  /** @type {Object<string, {at:string, viewports:Object<string,{ok:boolean, why:string[]}>, slow?:{ok:boolean, why:string[]}}>} */
+  const LEDGER = {};
   for (const p of paths) {
     const slug = p.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'home';
+    LEDGER[p] = { at: new Date().toISOString(), viewports: {} };
     console.log('\n== ' + p);
     for (const { w, h } of viewports) {
       // The SHORTER side decides. A phone on its side is 740x360: still a phone, still
@@ -984,6 +990,14 @@ function inspect({ phone, deviceWidth }) {
       const overBudget = phone && (r.chromePct > 20 || r.topBars > 1);
       const bad = realErrors > 0 || r.overflow || r.collideCount > 0 || r.spillCount > 0 || r.unhiddenCount > 0 || r.burstCount > 0 || r.floatsCount > 0 || r.cutCount > 0 || (phone && r.tinyCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget;
       if (bad) failed = true;
+      LEDGER[p].viewports[label] = { ok: !bad, why: [
+        realErrors && realErrors + ' console error' + (realErrors > 1 ? 's' : ''), r.overflow && 'sideways scroll',
+        r.collideCount && r.collideCount + ' colliding labels', r.spillCount && r.spillCount + ' spilling boxes',
+        r.unhiddenCount && r.unhiddenCount + ' hidden but shown', r.burstCount && r.burstCount + ' labels past their box',
+        r.floatsCount && r.floatsCount + ' floating over a control', r.cutCount && r.cutCount + ' cut by a container',
+        phone && r.tinyCount && r.tinyCount + ' under the type floor', phone && r.faintCount && r.faintCount + ' faint lines',
+        phone && r.dimCount && r.dimCount + ' dim labels', overBudget && 'chrome ' + r.chromePct + '%' + (r.topBars > 1 ? ', ' + r.topBars + ' top bars' : ''),
+      ].filter(Boolean).map(String) };
       console.log(`  ${label.padStart(8)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
       for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
       for (const u of [...new Set(offOrigin)]) console.log('         (not a defect) third-party origin the harness may not call: ' + u);
@@ -1060,6 +1074,7 @@ function inspect({ phone, deviceWidth }) {
         || (offOrigin.length > 0 && /Access to fetch at|blocked by CORS|Cross-Origin/i.test(e))));
       const bad = realErrors.length > 0 || early.floatsCount > 0;
       if (bad) failed = true;
+      LEDGER[p].slow = { ok: !bad, why: [realErrors.length && realErrors.length + ' console errors while data loads', early.floatsCount && early.floatsCount + ' floating over a control while loading'].filter(Boolean).map(String) };
       console.log(`  ${'slow-data'.padStart(9)} ${bad ? 'FAIL' : 'ok  '}  ${sw}x${sh}, ${held.length} data file${held.length === 1 ? '' : 's'} held ${SLOW_MS / 1000}s  console errors: ${realErrors.length}  floating over a control while loading: ${early.floatsCount}`);
       for (const e of realErrors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
       for (const [px, who, txt, ctl, name] of (early.floats || [])) console.log('         FLOATING OVER A CONTROL WHILE LOADING by ' + px + 'px: ' + who + ' "' + txt + '" sits on ' + ctl + (name ? ' "' + name + '"' : ''));
@@ -1069,6 +1084,13 @@ function inspect({ phone, deviceWidth }) {
   }
   await browser.close();
   if (local) local.srv.close();
+  // a run against another server (--base) still measured these pages, so it counts too
+  try {
+    const file = path.join(ROOT, 'tmp', 'ledger', 'phone.json');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const prev = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+    fs.writeFileSync(file, JSON.stringify(Object.assign(prev, LEDGER), null, 1));
+  } catch (e) { console.log('  (could not write the ledger record: ' + e.message + ')'); }
   console.log('\n' + (failed ? 'FAILED: see console errors, overflow, type floor or chrome budget above.' : 'CLEAN: no console errors, no overflow, no text under the type floor, chrome inside budget.') + ' Screenshots in ' + path.relative(ROOT, OUT) + '/');
   process.exit(failed ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });

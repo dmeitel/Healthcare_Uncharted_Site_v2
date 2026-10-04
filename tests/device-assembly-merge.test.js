@@ -36,9 +36,9 @@ const NOSE = [3, 9];
 const joinLead = (da, S, it, target, pred) => da.connectPorts(S, port(it.uid, 'lead'), port(target.uid, portOf(da, target, pred).pi), null);
 const rowsOf = t => Object.fromEntries(t.rows.map(r => [r.k, r.ok]));
 
-test('the level ladder: five tutorials, the puzzle, the timed run, the non-rebreather, the four bigger walls, the three fault walls, the sandbox', () => {
+test('the level ladder: five tutorials, the puzzle, the timed run, the non-rebreather, the four bigger walls, the three fault walls, the ventilator walls, the sandbox', () => {
   const da = load();
-  assert.strictEqual(JSON.stringify(da.LEVELS.map(l => l.id)), JSON.stringify(['t1', 't2', 't3', 't4', 't5', 'l1', 'l1t', 'lnrb', 'l2', 'l3', 'l4', 'l5', 'f1', 'f2', 'f3', 'sb']));
+  assert.strictEqual(JSON.stringify(da.LEVELS.map(l => l.id)), JSON.stringify(['t1', 't2', 't3', 't4', 't5', 'l1', 'l1t', 'lnrb', 'l2', 'l3', 'l4', 'l5', 'f1', 'f2', 'f3', 'f4', 'f5', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'vf1', 'vf2', 'vf3', 'sb']));
   assert.ok(da.DB['deco-shelf'] && da.DB['deco-ivpole'], 'the Place tutorial has its fixtures');
   const S = da.start('t4', 'left');
   assert.ok(S.items.some(i => i.def.id === 'deco-shelf' && i.x === 2 && i.y === 5), 'shelf under the left outlets');
