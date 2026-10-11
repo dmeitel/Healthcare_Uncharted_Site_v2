@@ -1340,6 +1340,82 @@ nav.nav-yield:focus-within { transform: none; }
 .hu-chip:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
 @media (hover:none) { .hu-chip { min-height:44px; } }
 
+/* ── THE VIEW SWITCH (DECISIONS L1 and L2, 2026-10-06) ─────────────────
+   A page with views keeps its own switch at the top of them: boxed choices, the one on screen filled. On a phone,
+   once that switch has scrolled away, a dock at the foot of the screen carries the same views (hu-views.js); a phone
+   gets one top bar, and the foot is where a thumb is. Also: a view slides in from the side you went, a card at the end
+   of a view hands you to the next, and the next view glows once the first time the switch follows you down. */
+.hu-seg { display:flex; min-width:0; }
+.hu-seg > button { flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-width:0; min-height:48px; margin:0; padding:8px 12px; text-align:center; line-height:1.2;
+  border:1px solid var(--border2); border-left-width:0; border-radius:0; background:var(--surface); color:var(--t2);
+  font-family:var(--display); font-size:var(--t-ui); font-weight:600; white-space:nowrap; cursor:pointer; transition:background-color .15s, color .15s, border-color .15s; }
+.hu-seg > button:first-child { border-left-width:1px; border-radius:12px 0 0 12px; }
+.hu-seg > button:last-child { border-radius:0 12px 12px 0; }
+.hu-seg > button:hover { background:var(--raised); color:var(--t1); }
+.hu-seg > button[aria-selected="true"], .hu-seg > button[aria-current="true"], .hu-seg > button[aria-checked="true"] { background:var(--teal); border-color:var(--teal); color:#062024; }
+.hu-seg > button:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
+.hu-seg .sm { display:none; }   /* a choice with a long name and a short one: the short one is the phone's */
+/* ON A DESK the switch is as wide as its names, not as wide as the page (2026-10-08, David: "centering issues and
+   font scaling issues"). Stretched across a 1,000px column, 13px names sat in boxes 250px wide. Every box takes the
+   width of the longest name, and the names step up to the body size. */
+@media (min-width:700px) and (min-height:501px) {
+  .hu-seg { display:inline-grid; grid-auto-flow:column; grid-auto-columns:1fr; max-width:100%; vertical-align:top; }
+  .hu-seg > button { font-size:var(--t-body); padding:10px 24px; white-space:normal; }
+}
+.hu-v-nudge { animation:hu-v-nudge .48s ease-in-out 2; }
+@keyframes hu-v-nudge { 0%, 100% { box-shadow:0 0 0 0 transparent; } 50% { box-shadow:0 0 0 5px color-mix(in srgb,var(--teal) 45%,transparent); background:color-mix(in srgb,var(--teal) 22%,var(--surface)); } }
+.hu-v-in-r { animation:hu-v-in-r .25s cubic-bezier(.2,.8,.2,1); }
+.hu-v-in-l { animation:hu-v-in-l .25s cubic-bezier(.2,.8,.2,1); }
+@keyframes hu-v-in-r { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:none; } }
+@keyframes hu-v-in-l { from { opacity:0; transform:translateX(-18px); } to { opacity:1; transform:none; } }
+.hu-vnext { display:grid; gap:4px; justify-items:start; margin:40px 0 8px; padding:18px 20px; border:1px solid var(--border2); border-radius:14px; background:var(--surface); }
+.hu-vnext .k { font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
+.hu-vnext b { font-family:var(--display); font-size:var(--t-lede); line-height:1.25; color:var(--t1); }
+.hu-vnext p { margin:0 0 10px; font-size:var(--t-sub); line-height:1.5; color:var(--t2); }
+.hu-vnext .btn-primary-v2 { min-height:44px; }
+.hu-vdock, .hu-vpanel { display:none; }
+@media (max-width:699px), (max-height:500px) {
+  /* a switch whose names do not fit one phone row: two by two, each choice its own box */
+  .hu-seg > button { padding:8px 6px; white-space:normal; }
+  .hu-seg .lg { display:none; } .hu-seg .sm { display:inline; }
+  .hu-seg.wrap-phone { flex-wrap:wrap; gap:6px; }
+  .hu-seg.wrap-phone > button { flex:1 1 calc(50% - 6px); border-left-width:1px; border-radius:10px; }
+  .hu-vdock { display:flex; position:fixed; left:50%; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:160; align-items:center; gap:6px;
+    width:min(460px, calc(100vw - 24px)); padding:6px; border:1px solid var(--border2); border-radius:18px;
+    background:color-mix(in srgb,var(--surface) 92%,transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 10px 30px rgba(0,0,0,.35);
+    transform:translate(-50%, calc(100% + 30px)); visibility:hidden; transition:transform .25s cubic-bezier(.2,.8,.2,1), visibility 0s linear .25s; }
+  .hu-vdock.show { transform:translate(-50%, 0); visibility:visible; transition:transform .25s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  .hu-vdock button { min-height:44px; border-radius:12px; cursor:pointer; font-family:var(--display); font-size:var(--t-ui); font-weight:600; }
+  .hu-vdock .seg { flex:1 1 auto; display:flex; gap:2px; min-width:0; }
+  .hu-vdock .seg button { flex:1 1 0; min-width:0; padding:0 4px; border:0; background:none; color:var(--t2); white-space:nowrap; transition:background-color .15s, color .15s; }
+  .hu-vdock .seg button[aria-current="true"] { background:var(--teal); color:#062024; }
+  .hu-vdock .step, .hu-vdock .lay { flex:none; display:inline-flex; align-items:center; justify-content:center; width:44px; padding:0;
+    border:1px solid var(--border2); background:var(--raised); color:var(--t1); }
+  .hu-vdock .step:disabled { opacity:.4; cursor:default; }
+  .hu-vdock .lay[hidden] { display:none; }
+  .hu-vdock .lay[aria-expanded="true"] { border-color:var(--teal); }
+  .hu-vdock svg { width:18px; height:18px; }
+  .hu-vdock .name { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2px 6px; border:0; background:none; color:var(--t1); line-height:1.15; }
+  .hu-vdock .name b { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+  .hu-vdock .name span { font-family:var(--mono); font-size:var(--t-micro); font-weight:500; color:var(--t3); }
+  .hu-vdock button:focus-visible { outline:2px solid var(--t1); outline-offset:-2px; }
+  .hu-vpanel.open { display:block; position:fixed; left:50%; bottom:calc(76px + env(safe-area-inset-bottom)); z-index:161; width:min(460px, calc(100vw - 24px));
+    max-height:min(60vh, 440px); overflow-y:auto; overscroll-behavior:contain; transform:translateX(-50%); padding:12px 12px 14px;
+    border:1px solid var(--border2); border-radius:16px; background:var(--surface); box-shadow:0 10px 30px rgba(0,0,0,.35); }
+  .hu-vpanel .k { display:block; margin:0 0 10px; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
+  .hu-vpanel .hu-chiprail { flex-wrap:wrap; overflow:visible; }
+  .hu-vpanel .list { display:grid; gap:4px; }
+  .hu-vpanel .list button { display:flex; align-items:center; gap:10px; min-height:44px; padding:6px 10px; border:1px solid transparent; border-radius:10px;
+    background:none; color:var(--t1); font-family:var(--font); font-size:var(--t-ui); text-align:left; cursor:pointer; }
+  .hu-vpanel .list button span { flex:none; width:22px; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+  .hu-vpanel .list button.on { border-color:var(--teal); font-weight:600; }
+  .hu-vpanel .list button:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hu-v-nudge, .hu-v-in-r, .hu-v-in-l { animation:none; }
+  .hu-seg > button, .hu-vdock, .hu-vdock.show, .hu-vdock .seg button { transition:none; }
+}
+
 /* Touch-verb copy swap. Write both variants inline and let the medium pick which
    one shows. Gated on POINTER TYPE, not width: a touch laptop or a tablet at 900px
    taps rather than clicks, and a width query cannot tell you that.
@@ -1645,6 +1721,14 @@ nav.nav-yield:focus-within { transform: none; }
   line-height:1.55; box-shadow:0 12px 32px rgba(0,0,0,.45); pointer-events:none;
 }
 .hu-peek[hidden] { display:none; }
+
+/* FLAVOR TEXT IS FOR A DESK (2026-10-08, David: "overall its fine in web page but should not appear on
+   phones"). A tagline beside a heading ("for the move you are weighing", "newest first") says nothing a
+   reader needs to use the page, and on a phone it wraps and pushes its heading onto two lines. Mark it
+   .hu-flavor and a phone drops it. tests/flavor-text.test.js holds every shelf heading to it. */
+@media (max-width:699px), (max-height:500px) {
+  .hu-flavor { display:none; }
+}
 .hu-peek b { display:block; margin-bottom:4px; color:var(--t1); font-size:var(--t-fine); font-weight:600; }
 .hu-peek p { margin:6px 0 0; }
 

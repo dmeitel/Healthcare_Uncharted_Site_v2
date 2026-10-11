@@ -8,7 +8,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'secret-menu', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);
@@ -33,7 +33,7 @@ const jointBetween = (S, a, b) => da.computeLinks(S).find(l => l.kind === 'adj' 
 
 /* seat the O2 flowmeter under an O2 quick-connect outlet on the rail */
 function seatFlowmeter(S) {
-  const src = S.items.find(i => i.fixed && i.def.cat === 'source' && da.portsOf(i).some(p => p.std === 'qc-o2'));
+  const src = S.items.find(i => i.y === da.GRID.rail && i.def.cat === 'source' && da.portsOf(i).some(p => p.std === 'qc-o2'));   // on the sandbox the rail's outlets are loose parts (2026-10-07)
   assert.ok(src, 'an O2 outlet on the rail');
   const r = da.place(S, 'flowmeter', src.x, src.y + 1, 0);
   assert.ok(r.ok, 'flowmeter seats under the outlet: ' + r.why);
@@ -62,7 +62,7 @@ test('a nipple adapter seated on the flowmeter is in its cluster; the wall outle
   const ad = seatOn(S, fm, p => p.std === 'diss-1240' && p.g === 'm', 'xmas');
   same(da.clusterOf(S, fm.uid), [fm.uid, ad.uid]);
   same(da.clusterOf(S, ad.uid), [fm.uid, ad.uid]);
-  same(da.clusterOf(S, src.uid), []);
+  same(da.clusterOf(S, src.uid), [src.uid]);   // on the sandbox the outlet is a loose part that moves alone, never with what is seated in it (2026-10-07)
 });
 
 test('moveGroup carries the cluster together and the joint stays green', () => {

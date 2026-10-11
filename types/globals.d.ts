@@ -135,9 +135,13 @@ interface HUKitApi {
   }): void;
   backGuard(opts: {
     watch: HTMLElement;
+    /** the class that means open, when it is not 'open' */
+    cls?: string;
     active: () => boolean;
     step: () => void;
   }): HUKitBackGuard;
+  /** true while a guard owns the back press now landing (for a page handler built before any guard) */
+  backConsumed(): boolean;
   innerPoint(geom: unknown): [number, number] | null;
   /** Home camera for a U.S. map, fitted to the container. Desktop returns the
    *  shipped frame (zoom 3.6 / minZoom 2.8); narrower viewports get a zoom that
@@ -238,8 +242,19 @@ interface CompassEngineApi {
   COL_IDX: Record<string, number>;
 }
 
+/** The view switch (src/assets/js/hu-views.js, DECISIONS L1 and L2, 2026-10-06): the dock a phone gets once a
+    page's own switch has scrolled away, the slide a view arrives with, and the card that hands you to the next view. */
+interface HUViewsDock { sync(): void; place(): void; close(fromBack?: boolean): void; el: HTMLElement; }
+interface HUViewsApi {
+  dock(o: { row: HTMLElement; region: HTMLElement | (() => HTMLElement); names: string[]; tabs?: HTMLElement[]; label?: string; key?: string; many?: boolean;
+    current(): number; select(i: number): void; layers?: { el: HTMLElement; label?: string; on(i: number): boolean } }): HUViewsDock;
+  slide(panel: HTMLElement, forward: boolean): void;
+  next(panel: HTMLElement, o: { kicker: string; title: string; text?: string; button: string; go(): void }): HTMLElement;
+  PHONE: MediaQueryList;
+}
 interface Window {
   HUKit?: HUKitApi;
+  HUViews?: HUViewsApi;
   HUSearch?: unknown;
   CompassEngine?: CompassEngineApi;
   /** icon renderer, loaded site-wide from the CDN by base.njk */

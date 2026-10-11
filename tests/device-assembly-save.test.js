@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const PAGE = path.join(__dirname, '..', 'src', 'secret-menu', 'device-assembly', 'index.html');
+const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
 function load() {
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
@@ -48,7 +48,7 @@ test('an act goes through the dispatcher: it changes the wall and leaves one und
 
 test('every verb the UI uses is in the table, and nothing in the page changes the live wall except through it', () => {
   const da = load();
-  assert.deepStrictEqual(Object.keys(da.VERBS).sort(), ['arrive', 'connect', 'cpap', 'fio2', 'flip', 'group', 'hang', 'move', 'place', 'remove', 'rotate', 'shiftNext', 'unplug']);
+  assert.deepStrictEqual(Object.keys(da.VERBS).sort(), ['arrive', 'connect', 'cpap', 'fio2', 'flip', 'group', 'hang', 'inline', 'kit', 'move', 'place', 'remove', 'rotate', 'shiftNext', 'swap', 'unplug']);
   const html = fs.readFileSync(PAGE, 'utf8');
   const verbsAt = html.indexOf('const VERBS = {'), verbsEnd = html.indexOf('function dispatchAct(', verbsAt);
   const outside = html.slice(0, verbsAt) + html.slice(verbsEnd);

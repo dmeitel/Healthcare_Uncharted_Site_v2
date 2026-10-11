@@ -101,7 +101,16 @@ if (!FAST) {
       }
       return o;
     };
-    sweepPaths = walk(site).map((p) => p.replace('//', '/'));
+    /* ONLY PAGES THAT STILL HAVE A SOURCE (2026-10-04). The build folder never deletes, so a page
+       that was renamed or removed stays in _site for good. The walk above swept those ghosts too:
+       four of them by now, and two more the day the hub's pages left the site, each one unstyled
+       because its stylesheet had moved on, and each able to fail the gate for a page no visitor
+       can reach. The ledger already knows which addresses a source file produces. */
+    const live = require('./ledger').liveUrls();
+    const built = walk(site).map((p) => p.replace('//', '/'));
+    sweepPaths = built.filter((p) => live.has(p));
+    const ghosts = built.filter((p) => !live.has(p));
+    if (ghosts.length) console.log('  (left out, built pages with no source any more: ' + ghosts.join(', ') + ')');
   }
   const out = run('viewport sweep (' + sweepPaths.length + ' pages x 9)', 'node',
     ['scripts/phone-check.js', ...sweepPaths], { timeout: 3600000 });
@@ -150,5 +159,16 @@ if (failed) {
     console.log('--- ' + r.label + ' ---');
     console.log(r.out.split('\n').slice(-25).join('\n'));
   }
+}
+/* THE WHOLE GATE GOES ON THE RUN SHEET (2026-10-04). A milestone's QA is the machine first, then
+   David, and his QA list shows whether the machine has been. Only a full run counts: one page, or
+   --fast, proves less than the list says. */
+if (!FAST && !paths.length) {
+  const bad = results.filter((x) => !x.ok).map((x) => x.label.trim());
+  require('./hub/run').gate({
+    ok: !failed,
+    minutes: Math.max(1, Math.round((Date.now() - t0) / 60000)),
+    summary: failed ? 'Failed: ' + (bad.join(', ') || 'a number that may only go down went up') + '.' : results.length + ' checks over the whole site, every page at nine screen sizes.',
+  });
 }
 process.exit(failed ? 1 : 0);

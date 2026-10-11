@@ -277,6 +277,7 @@ function applyURLState() {
 }
 // popstate = reset to defaults, re-apply from the URL, render — one path
 window.addEventListener('popstate', () => {
+  if (window.HUKit && HUKit.backConsumed && HUKit.backConsumed()) return;   // a guard's press (the info card), not a URL walk
   urlCtl.suspend(() => {
     activeSector = 'all'; activeState = 'all'; activeOwn = 'all'; activeShare = 'all';
     activeSort = 'az'; byIdValue('searchInput').value = ''; openVendor = null;

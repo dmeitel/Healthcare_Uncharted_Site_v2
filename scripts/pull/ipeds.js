@@ -52,6 +52,7 @@
 const fs = require('fs');
 const path = require('path');
 const { download, zipEntries, entryBuffer, xlsxSheets, csvRows } = require('../lib/zip');
+const { today } = require('../lib/session');
 
 const ROOT = path.join(__dirname, '..', '..');
 const CACHE = path.join(ROOT, 'scripts', '.cache', 'ipeds');
@@ -171,7 +172,7 @@ async function releaseOf(name) {
   const file = { _meta: {
     source: `IPEDS Completions ${YR - 1}-${String(YR).slice(2)} (C${YR}_A), the IPEDS directory (HD${YR}) and ${ONLINE_TERM} enrollment by distance education (EF${YR - 1}A_DIST), National Center for Education Statistics`,
     url: SOURCE_URL, release, provisional: /provisional/i.test(release.completions),
-    awards: AWARDS, year: `${YR - 1}-${String(YR).slice(2)}`, onlineTerm: ONLINE_TERM, onlineAt: ONLINE_AT, pulled: new Date().toISOString().slice(0, 10),
+    awards: AWARDS, year: `${YR - 1}-${String(YR).slice(2)}`, onlineTerm: ONLINE_TERM, onlineAt: ONLINE_AT, pulled: today(),
     rule: 'A program shows when the school awarded at least one first-major award in it at the listed levels during the year.',
     programs: Object.fromEntries(Object.entries(PROGRAMS).map(([k, p]) => [k, { label: p.label, codes: p.codes }])),
     levels: LEVELS, control: CONTROL,

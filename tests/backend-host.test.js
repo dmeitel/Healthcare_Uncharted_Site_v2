@@ -14,7 +14,7 @@ const ROOT = path.join(__dirname, '..');
 // every game on the table kit names the backend in a SUPA constant; add a page here when it joins
 const PAGES = {
   'the hospital game': path.join(ROOT, 'src', 'secret-menu', 'uncharted-general', 'index.html'),
-  'device assembly': path.join(ROOT, 'src', 'secret-menu', 'device-assembly', 'index.html'),
+  'device assembly': path.join(ROOT, 'src', 'fun', 'device-assembly', 'index.html'),
   'vital-stats': path.join(ROOT, 'src', 'fun', 'vital-stats', 'index.html'),
 };
 const TOML = path.join(ROOT, 'netlify.toml');

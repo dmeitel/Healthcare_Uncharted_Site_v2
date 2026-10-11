@@ -45,12 +45,11 @@ navPage: home
 
 /* ── CATALOG · T2 tabs fed from tools.js clusters ── */
 .hv-cat { max-width:1100px; margin:0 auto; padding:36px clamp(20px,5vw,80px) 8px; }
-.hv-tabs { display:flex; align-items:center; border-bottom:1px solid var(--border); }
-.hv-tab { font-family:var(--font); font-size:var(--t-sub); font-weight:600; color:var(--t3); background:none; border:none;
-  padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
-.hv-tab[aria-selected="true"] { color:var(--teal); border-bottom-color:var(--teal); font-weight:700; }
-[data-theme="light"] .hv-tab[aria-selected="true"] { color:var(--teal-ink); border-bottom-color:var(--teal-dk); }
-.hv-tab:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; }
+/* the view switch's look (DECISIONS L1 and L2, 2026-10-06; .hu-seg): the tool groups as boxed choices, the one on
+   screen filled. They hold about a screen of cards, so they need no dock. */
+.hv-tabs { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; padding:0 0 12px; border-bottom:1px solid var(--border); }
+.hv-seg { flex:0 1 auto; }
+@media (max-width:699px), (max-height:500px) { .hv-seg { flex:1 1 100%; } }
 .hv-alltools { margin-left:auto; font-size:var(--t-ui); color:var(--teal); text-decoration:none; white-space:nowrap; }
 @media (hover:none) { .hv-alltools { min-height:44px; display:inline-flex; align-items:center; } }   /* was 22px tall */
 .hv-alltools:hover { color:var(--t1); }
@@ -76,14 +75,6 @@ navPage: home
 .hv-row .ty { margin-left:auto; flex:none; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.1em; text-transform:uppercase; color:var(--teal); }
 [data-theme="light"] .hv-row .ty { color:var(--teal-ink); }
 
-/* ── THREE WAYS IN · the role doors, one compact row ── */
-.hv-doors { max-width:1100px; margin:0 auto; padding:26px clamp(20px,5vw,80px) 8px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-.hv-door { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; text-decoration:none; transition:border-color .15s; }
-.hv-door:hover { border-color:var(--teal); }
-.hv-door .dl { font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); }
-.hv-door .dt { font-family:var(--display); font-size:var(--t-body); font-weight:700; color:var(--t1); margin-top:3px; }
-.hv-door .da { font-size:var(--t-fine); color:var(--teal); margin-top:5px; }
-[data-theme="light"] .hv-door .da { color:var(--teal-ink); }
 
 /* ── THE MISSION · M2, the one place the author appears ── */
 .hv-mission { max-width:1100px; margin:0 auto; padding:30px clamp(20px,5vw,80px) 56px; }
@@ -109,9 +100,7 @@ navPage: home
   .hv-chips { flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; scrollbar-width:none; padding-bottom:4px; }
   .hv-chips::-webkit-scrollbar { display:none; }
   .hv-chip { flex:none; min-height:44px; display:inline-flex; align-items:center; }
-  .hv-tab { padding:12px 12px; min-height:44px; }
-  .hv-doors { grid-template-columns:1fr; }
-  .hv-door { min-height:44px; }
+  .hv-tab { padding:8px 6px; min-height:44px; white-space:normal; line-height:1.2; }
   .hv-row .sub { display:none; }
   .hv-pulse { display:none; }
 }
@@ -147,10 +136,10 @@ navPage: home
 
 <!-- CATALOG -->
 <section class="hv-cat" id="hv-cat" aria-label="The tool catalog">
-  <div class="hv-tabs" role="tablist" aria-label="Tool clusters">
-    <button class="hv-tab" role="tab" id="tab-careers-pay" aria-controls="pane-careers-pay" aria-selected="true">Careers &amp; Pay</button>
-    <button class="hv-tab" role="tab" id="tab-maps-systems" aria-controls="pane-maps-systems" aria-selected="false">Maps &amp; Systems</button>
-    <button class="hv-tab" role="tab" id="tab-learn-play" aria-controls="pane-learn-play" aria-selected="false">Learn &amp; Play</button>
+  <div class="hv-tabs"><div class="hu-seg hv-seg" role="tablist" aria-label="Tool clusters">
+    <button class="hv-tab" role="tab" id="tab-careers-pay" aria-controls="pane-careers-pay" aria-selected="true"><span class="lg">Careers &amp; Pay</span><span class="sm">Careers</span></button>
+    <button class="hv-tab" role="tab" id="tab-maps-systems" aria-controls="pane-maps-systems" aria-selected="false"><span class="lg">Maps &amp; Systems</span><span class="sm">Maps</span></button>
+    <button class="hv-tab" role="tab" id="tab-learn-play" aria-controls="pane-learn-play" aria-selected="false"><span class="lg">Learn &amp; Play</span><span class="sm">Learn</span></button></div>
     <a class="hv-alltools" href="/tools/">All tools &rarr;</a>
   </div>
 
@@ -219,25 +208,6 @@ navPage: home
     <span class="ty">{% if item.data.section == 'tool' %}Tool{% elif item.data.section == 'rounds' %}Rounds{% elif item.data.section == 'talk' %}Talk{% elif item.data.section == 'fun' %}Game{% else %}Module{% endif %}</span>
   </a>
   {% endif %}{%- endfor %}
-</section>
-
-<!-- THREE WAYS IN -->
-<section class="hv-doors" aria-label="Three ways in">
-  <a class="hv-door" href="/learn/ai-in-healthcare/">
-    <div class="dl">For the clinician</div>
-    <div class="dt">I work in healthcare</div>
-    <div class="da">Start with the AI reality check &rarr;</div>
-  </a>
-  <a class="hv-door" href="/tools/sql-mystery/">
-    <div class="dl">For the analyst</div>
-    <div class="dt">I work with the data</div>
-    <div class="da">Try the SQL Mystery &rarr;</div>
-  </a>
-  <a class="hv-door" href="/learn/leading-the-ai-transition/">
-    <div class="dl">For the leader</div>
-    <div class="dt">I make the calls</div>
-    <div class="da">Start with the leadership playbook &rarr;</div>
-  </a>
 </section>
 
 <!-- THE MISSION -->

@@ -30,6 +30,14 @@ Goes live with this push
 - any page that becomes public, or changes what visitors see, and any open question about it
 ```
 
+## Save points and ships (2026-10-04, DECISIONS HUB2)
+
+- **A close is a save point.** At the end of a window David commits ("Commit to main" in GitHub Desktop) and does
+  not push. The message is this shape; its last block says "Goes live with this push: nothing yet, a save point".
+- **The push is a milestone's Ship.** After his QA list is clear, `npm run ship` writes the release note
+  (docs/releases/) and the message into tmp/commit-message.txt. He commits anything left and presses "Push origin".
+  Every save point since the last push goes live together, and the "Goes live" block lists the pages.
+
 ## Habits
 
 - Smaller commits read better: one commit per finished sprint item where it can be done.

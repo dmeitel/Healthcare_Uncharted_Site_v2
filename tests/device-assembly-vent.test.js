@@ -12,7 +12,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'secret-menu', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);
@@ -36,6 +36,10 @@ const item = (S, id) => S.items.find(i => i.def.id === id);
 const text = ev => ev.lines.map(l => l.t).join(' ');
 const linked = (S, a, b) => da.computeLinks(S).some(l => l.s === 'ok' && ((l.a.uid === a.uid && l.a.pi === a.pi && l.b.uid === b.uid && l.b.pi === b.pi) || (l.b.uid === a.uid && l.b.pi === a.pi && l.a.uid === b.uid && l.a.pi === b.pi)));
 /* set a part down so the named port of it seats on the named port of another, trying every spot and turn near it */
+const ventOf = S => S.items.find(i => i.def.vent && !i.def.isSource);
+/* the square where a run meets a port: a part dropped there goes in at that joint (BETA V5) */
+const jointAt = (S, it, label) => { const p = da.portsOf(it).find(q => q.label === label), t = S.tubes.find(t => t.to && [t.from, t.to].some(r => r.uid === it.uid && r.pi === p.pi)); return t.from.uid === it.uid ? t.path[0] : t.path[t.path.length - 1]; };
+const dropAt = (S, defId, c) => da.insertInline(S, { def: defId, x: c[0], y: c[1] });
 function seatOn(S, defId, myLabel, target) {
   const t = S.items.find(i => i.uid === target.uid);
   for (let y = Math.max(1, t.y - 3); y <= t.y + 4; y++) for (let x = Math.max(0, t.x - 3); x <= t.x + 4; x++) for (const r of [0, 1, 2, 3]) for (const f of [false, true]) {
@@ -49,7 +53,7 @@ const run = r => r && r.ok && !r.short && r.state === 'ok';
 
 test('the ventilator walls are on the wall list, play in the ICU bed space, and never in the levels or the dealt walls', () => {
   const vent = da.LEVELS.filter(l => l.vent).map(l => l.id);
-  assert.deepStrictEqual(plain(vent), ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'vf1', 'vf2', 'vf3']);
+  assert.deepStrictEqual(plain(vent), ['v1', 'v8', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'vf1', 'vf2', 'vf3']);   // v8, the other side of the bed (2026-10-07)
   for (const id of vent.filter(id => level(id).extras.some(e => e.def === 'pt-ett'))) {
     const S = da.newState(level(id));
     assert.ok(S.items.some(i => i.fixed && i.def.id === 'pt-ett'), id + ': the patient is intubated');
@@ -67,7 +71,7 @@ test('Set up a ventilator: the reference build passes at par, and the walls that
   assert.ok(ev.ok, text(ev)); assert.strictEqual(ev.title, 'System complete');
   const f = da.score(S, ev, 0).facts;
   for (const k of ['comp', 'cells', 'conn', 'len', 'bends']) assert.ok(f[k === 'comp' ? 'comps' : k === 'conn' ? 'conns' : k] <= L.par[k], k + ' within par');
-  const vent = item(S, 'vent');
+  const vent = ventOf(S);
   assert.ok(S.tubes.some(t => t.lead === vent.uid && t.to && S.items.find(i => i.uid === t.to.uid).def.id === 'deco-elec-red'), 'the vent is on a red outlet');
   // the expiratory limb has to come back
   const exp = S.tubes.find(t => t.def.id === 'limb-exp'); da.removeThing(S, exp.uid);
@@ -79,14 +83,10 @@ test('An inline treatment: arrives working but short of the order, and the mesh 
   assert.strictEqual(S.moves, 0); assert.strictEqual(S.history.length, 0);
   const ev0 = da.evaluate(S);
   assert.ok(!ev0.ok); assert.match(text(ev0), /filter on the expiratory limb/); assert.match(text(ev0), /inline treatment/);
-  const vent = item(S, 'vent'), y = item(S, 'y-piece'), heat = item(S, 'heated');
-  for (const t of S.tubes.filter(t => /^limb-/.test(t.def.id))) da.removeThing(S, t.uid);
-  const neb = seatOn(S, 'neb-mesh', '22 mm socket', port(y, 'Inspiratory arm')) || (() => { throw new Error('the neb seats on the Y'); })();
-  const nebIn = da.portsOf(neb).find(p => p.label === '22 mm cone');
-  const filt = seatOn(S, 'filter-bv', '22 mm socket', port(vent, 'Expiratory port')) || (() => { throw new Error('the filter seats on the vent'); })();
-  const filtIn = da.portsOf(filt).find(p => p.label === '22 mm cone');
-  assert.ok(run(da.connectPorts(S, port(heat, 'Chamber outlet'), { uid: neb.uid, pi: nebIn.pi }, 'limb-insp')), 'the heated limb to the neb');
-  assert.ok(run(da.connectPorts(S, port(y, 'Expiratory arm'), { uid: filt.uid, pi: filtIn.pi }, 'limb-exp')), 'the expiratory limb to the filter');
+  assert.strictEqual(ventOf(S).def.id, 'vent-cart-split', 'it arrives on the vent cart with a port on each side (2026-10-07)');
+  // BETA V5: each is dropped on its limb and goes in at that joint
+  assert.ok(dropAt(S, 'neb-mesh', jointAt(S, item(S, 'y-piece'), 'Inspiratory arm')).ok, 'the neb goes in at the Y');
+  assert.ok(dropAt(S, 'filter-bv', jointAt(S, ventOf(S), 'Expiratory port')).ok, 'the filter goes in at the ventilator');
   const ev = da.evaluate(S);
   assert.ok(ev.ok, text(ev)); assert.strictEqual(ev.warns.length, 0);
 });
@@ -95,28 +95,17 @@ test('the rules: aerosol with no expiratory filter is a note, a neb on the expir
   // the same treatment on the first wall, where the order does not ask for the filter: it passes, with a note
   const S = da.newState(level('v1')); S.cart['neb-mesh'] = 1; S.cart['filter-bv'] = 1;
   da.ventSetup(S); da.ventPlug(S);
-  const y = item(S, 'y-piece'), heat = item(S, 'heated');
-  da.removeThing(S, S.tubes.find(t => t.def.id === 'limb-insp').uid);
-  const neb = seatOn(S, 'neb-mesh', '22 mm socket', port(y, 'Inspiratory arm'));
-  assert.ok(run(da.connectPorts(S, port(heat, 'Chamber outlet'), { uid: neb.uid, pi: da.portsOf(neb).find(p => p.label === '22 mm cone').pi }, 'limb-insp')));
+  assert.ok(dropAt(S, 'neb-mesh', jointAt(S, item(S, 'y-piece'), 'Inspiratory arm')).ok);
   const ev = da.evaluate(S);
   assert.ok(ev.ok, text(ev)); assert.strictEqual(ev.title, 'System complete, with a note'); assert.match(ev.warns[0], /no filter on the expiratory limb/);
-  // an HME at the tube with the neb in the limb (and the heater on) is wrong twice over
+  // an HME at the tube with the neb in the limb (and the cart's heater on) is wrong twice over
   const S2 = da.newState(level('vf1')); S2.cart['neb-mesh'] = 1;
-  const y2 = item(S2, 'y-piece'), heat2 = item(S2, 'heated');
-  da.removeThing(S2, S2.tubes.find(t => t.def.id === 'limb-insp').uid);
-  const neb2 = seatOn(S2, 'neb-mesh', '22 mm socket', port(y2, 'Inspiratory arm'));
-  if (neb2 && run(da.connectPorts(S2, port(heat2, 'Chamber outlet'), { uid: neb2.uid, pi: da.portsOf(neb2).find(p => p.label === '22 mm cone').pi }, 'limb-insp'))) {
-    const t = text(da.evaluate(S2)); assert.match(t, /HME is still in place/); assert.match(t, /HME and a heated humidifier/);
-  }
-  // a neb on the expiratory side
+  assert.ok(dropAt(S2, 'neb-mesh', jointAt(S2, item(S2, 'y-piece'), 'Inspiratory arm')).ok);
+  const t2 = text(da.evaluate(S2)); assert.match(t2, /HME is still in place/); assert.match(t2, /HME and a heated humidifier/);
+  // a neb on the expiratory side, in at the ventilator
   const S3 = da.newState(level('v1')); S3.cart['neb-mesh'] = 1;
-  da.ventSetup(S3, { v: [10, 3], h: [7, 3] }); da.ventPlug(S3);   // the treatment wall's spot, where the expiratory port has room
-  const vent3 = item(S3, 'vent'), y3 = item(S3, 'y-piece');
-  da.removeThing(S3, S3.tubes.find(t => t.def.id === 'limb-exp').uid);
-  const neb3 = seatOn(S3, 'neb-mesh', '22 mm socket', port(vent3, 'Expiratory port'));
-  assert.ok(neb3, 'the neb seats on the expiratory port');
-  assert.ok(run(da.connectPorts(S3, port(y3, 'Expiratory arm'), { uid: neb3.uid, pi: da.portsOf(neb3).find(p => p.label === '22 mm cone').pi }, 'limb-exp')));
+  da.ventSetup(S3); da.ventPlug(S3);
+  assert.ok(dropAt(S3, 'neb-mesh', jointAt(S3, ventOf(S3), 'Expiratory port')).ok, 'the neb goes in at the expiratory port');
   assert.match(text(da.evaluate(S3)), /nebulizer is on the expiratory limb/);
 });
 

@@ -43,6 +43,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync, spawn } = require('child_process');
+const { today } = require('./lib/session');
 
 const ROOT = path.join(__dirname, '..');
 const CACHE = path.join(__dirname, '.cache', 'mrf');
@@ -555,7 +556,7 @@ async function main() {
   BASKET.forEach((b) => { basket[b.k] = { code: b.code, type: b.type, set: b.set, label: b.label }; });
   const out = {
     _meta: {
-      built: new Date().toISOString().slice(0, 10),
+      built: today(),
       pilot: 'UT',
       source: 'Hospital-posted price transparency machine-readable files (45 CFR 180.50), discovered via each domain\'s cms-hpt.txt',
       script: 'scripts/build-hospital-prices.js',
@@ -589,7 +590,7 @@ async function main() {
   }));
   const cdmOut = {
     _meta: {
-      built: new Date().toISOString().slice(0, 10),
+      built: today(),
       pilot: 'UT',
       source: 'Hospital-posted price transparency machine-readable files (45 CFR 180.50), discovered via each domain\'s cms-hpt.txt',
       script: 'scripts/build-hospital-prices.js',

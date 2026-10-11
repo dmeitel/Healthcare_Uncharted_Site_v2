@@ -13,9 +13,10 @@ const fs = require('fs');
 const path = require('path');
 const main = require('./build-vital-stats');
 const systems = require('./build-vital-stats-systems');
+const { today } = require('./lib/session');
 
 const ROOT = path.join(__dirname, '..');
-const day = new Date().toISOString().slice(0, 10);
+const day = today();
 const OUT = path.join(ROOT, 'docs', 'HU-VITAL-STATS-LINKS.md');
 const n = (/** @type {number} */ v) => v.toLocaleString('en-US');
 

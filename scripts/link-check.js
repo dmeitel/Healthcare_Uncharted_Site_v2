@@ -25,6 +25,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { today } = require('./lib/session');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = path.join(ROOT, '_site');
@@ -168,7 +169,7 @@ function classify(url, r) {
     console.log('\nMOVED to another host (works, but the source relocated; update the link when convenient):');
     for (const r of moved) console.log(`  ${r.url}\n    -> ${r.final}`);
   }
-  const date = new Date().toISOString().slice(0, 10);
+  const date = today();   /* the one clock, Mountain time: a UTC date named the file tomorrow every evening */
   fs.mkdirSync(OUT, { recursive: true });
   const file = path.join(OUT, date + '.json');
   fs.writeFileSync(file, JSON.stringify({ date, checked: results.length, dead: count('dead'), unsure: count('unsure'), ok: count('ok'), moved: moved.length, results }, null, 1));

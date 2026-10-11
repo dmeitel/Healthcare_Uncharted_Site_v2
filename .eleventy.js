@@ -1,11 +1,19 @@
 module.exports = function(eleventyConfig) {
 
-  eleventyConfig.addPassthroughCopy("src/assets");
-  eleventyConfig.addPassthroughCopy("src/downloads");
-  eleventyConfig.addPassthroughCopy("src/robots.txt");
-  eleventyConfig.addPassthroughCopy("src/site.webmanifest");
-  eleventyConfig.addPassthroughCopy("src/brand");                                  // brand kit -> /brand/
-  eleventyConfig.addPassthroughCopy({ "src/brand/favicon.ico": "favicon.ico" });   // root /favicon.ico for auto-discovery
+  /* What is copied into the site as it is: [source, where it lands]. One list, read twice: by the copy, and by the
+     prune after a full build, which keeps a copied file only while its source is still in src. */
+  const PASSTHROUGH = [
+    ["src/assets", "assets"],
+    ["src/downloads", "downloads"],
+    ["src/robots.txt", "robots.txt"],
+    ["src/site.webmanifest", "site.webmanifest"],
+    ["src/brand", "brand"],                     // brand kit -> /brand/
+    ["src/brand/favicon.ico", "favicon.ico"],   // root /favicon.ico for auto-discovery
+  ];
+  for (const [src, out] of PASSTHROUGH) {
+    if (src === "src/" + out) eleventyConfig.addPassthroughCopy(src);
+    else eleventyConfig.addPassthroughCopy({ [src]: out });
+  }
 
   /* Data files under src/assets/data that no page ever fetches. All of src/assets
      is passed through, so without this they ship: 6.7MB of dead weight per deploy.
@@ -20,6 +28,21 @@ module.exports = function(eleventyConfig) {
     for (const name of NOT_SHIPPED) {
       const f = path.join(dir.output, "assets", "data", name);
       if (fs.existsSync(f)) fs.rmSync(f);
+    }
+  });
+
+  /* A full build leaves nothing behind it did not make (David, 2026-10-07: "make sure we delete old pages ... so they
+     don't get found"). Eleventy never deletes, so a page that moved stayed in _site on this computer, where the hub and
+     the checks read it. Not on the live-reload server's partial rebuilds, which write only what changed.
+     scripts/lib/prune-site.js; tests/prune-site.test.js. */
+  eleventyConfig.on("eleventy.after", ({ dir, results, runMode, incremental, outputMode }) => {
+    if (runMode !== "build" || incremental || (outputMode && outputMode !== "fs") || !Array.isArray(results)) return;
+    const { pruneSite, pageOf } = require("./scripts/lib/prune-site.js");
+    const r = pruneSite({ out: dir.output, root: __dirname, written: results.map(t => t.outputPath), passthrough: PASSTHROUGH });
+    if (r.refused) console.log("[11ty] Prune skipped: " + r.refused + ".");
+    else if (r.removed.length) {
+      const pages = r.removed.filter(f => /(^|\/)index\.html$/.test(f)).map(pageOf);
+      console.log("[11ty] Pruned " + r.removed.length + " file(s) no source makes any more" + (pages.length ? ", " + pages.length + " of them pages: " + pages.join(" ") : "") + ".");
     }
   });
 

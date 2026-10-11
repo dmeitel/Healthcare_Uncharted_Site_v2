@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
-const URL = process.argv[2] || 'http://localhost:8080/secret-menu/device-assembly/';
+const URL = process.argv[2] || 'http://localhost:8080/fun/device-assembly/';
 const OUT = path.join(__dirname, '..', 'tmp');
 const T = 25000;
 function fail(msg) { console.error('FAIL: ' + msg); process.exit(1); }

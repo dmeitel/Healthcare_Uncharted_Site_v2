@@ -37,6 +37,7 @@ const path = require('path');
 const https = require('https');
 const { FIPS_ABBR } = require('../lib/fips');
 const { metricIndexById } = require('../lib/metric-id');
+const { today } = require('../lib/session');
 
 const ROOT = path.join(__dirname, '..', '..');
 const CACHE = path.join(ROOT, 'scripts', '.cache', 'oews-states');
@@ -127,7 +128,7 @@ async function main() {
     source: 'U.S. Bureau of Labor Statistics, Occupational Employment and Wage Statistics (OEWS), state estimates, annual median wage',
     url: 'https://www.bls.gov/oes/',
     period: 'May ' + year, year,
-    checked: new Date().toISOString().slice(0, 10),
+    checked: today(),
     occupations
   };
   const n = Object.values(occupations).reduce((s, o) => s + Object.keys(o.pay).length, 0);

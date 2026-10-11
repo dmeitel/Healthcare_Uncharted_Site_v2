@@ -75,7 +75,7 @@ If a session cannot tell whether a surface is in a phase, it is not.
 ### OPEN PHASES
 
 **Reading load on all three games · OPEN 2026-09-20.** Surfaces: src/fun/alarm-fatigue/,
-src/secret-menu/device-assembly/, src/secret-menu/uncharted-general/. David, after playing both
+src/fun/device-assembly/ (on the Fun shelf since 2026-10-06), src/secret-menu/uncharted-general/. David, after playing both
 multiplayer games: "both games seem to have the functionality but the screens feel crowded with
 text and extra information, i think we need to simplify the views to a basic level but then have
 the information be hoverable to understand more to find more detail. Think web games, it needs to
@@ -102,7 +102,7 @@ Current state only. The history of every round (what shipped, when, on which rul
 reverted) lives in docs/HU-DESIGN-PHASE-LOG.md. Append there when a round ships; keep this block
 to what a session needs before it touches the surface.
 
-**Device Assembly expansion · REOPENED 2026-10-03** (DECISIONS 17 and N1 to N3; plan docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md).
+**Device Assembly expansion · REOPENED 2026-10-03** (DECISIONS 17 and N1 to N3; plan docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md). Surface: src/fun/device-assembly/.
 Three stages in order: replayable on today's parts (today's wall, generated walls, the shift), then rehab and home,
 then ventilators from David's marks on the plan's rule sheet. Generated walls run "from realistic to completely
 insane" (no oxygen, no air, only suction, bring in a bottle). Stage A1 to A4 BUILT 2026-10-03: every wall change goes
@@ -133,8 +133,54 @@ the shift's "A night on the ventilator", SHIFT_V 3). Parts flagged `vc` stay off
 so David's marks flip lines, not code; `level.after` builds a wall after the room is up; tests device-assembly-vent and
 -vent2. The rulings below still hold.
 
-**Device Assembly game feel · OPEN since 2026-09-16, PARKED AT ALPHA 2026-09-19** ("any last clean up before
-I call this an alpha and work on something else"). Surface: src/secret-menu/device-assembly/index.html only.
+**Device Assembly game feel · OPEN since 2026-09-16, PARKED AT ALPHA 2026-09-19, REOPENED 2026-10-04** for the
+cleanup before the playtest (David: "Yes complete that build in full order"; the list is K1 to K8 in
+docs/HU-DEVICE-ASSEMBLY-DEEP-DIVE-2026-10-04.md section 6, built 2026-10-04 to 05, at his QA). What it left on the
+surface: THE STOP (`whereItStops`: a failed test names the one place the gas stops, rings it, and the miss card sits
+low with no dim); PROBLEMS ON THE WALL (`problemsSVG`: a wrong joint is ringed and tagged in a few words, the tag opens
+the reason through HUKit.peek; a run a move pulled off leaves a mark, `st.lost`; the adapter a joint needs is lit on the
+cart); LIVE GAS (parts the outlets do not reach dim); THE SHAPES (one plain shape per connector kind, male a tab, female
+the same shape as a slot, the outlets are slots, the bore written upright); WHERE IT GOES (`fitTargets`, `landingAt`:
+a held part rings the ports it fits and the drop preview says Seats here, Needs an adapter or Won't fit here); WILL IT
+REACH (`planRun`: the route before you let go); ONE PLACE PER JOB (one walls card, one Help card holding the old panel
+folds, the screen's tabs Order, Hint, Test and Note); THE PHONE (one screen, the dock only when it has something to do,
+touch words through `touchText`, the part above the thumb, a sideways swipe scrolls the cart, a second finger turns);
+ZOOM (`VIEW`: pinch, buttons, Ctrl and the wheel, keys, a double tap; nothing is re-laid); a Settings row, Show problems
+as I build, that turns the live help off. Find-the-fault walls keep all of it quiet until their first Complete.
+After his QA (2026-10-05, "a better standard or a more approachable model for these menus"): THE TRAY (the cart is kind
+tabs over tiles, `cartTab`; a tile is the picture, the name, the connector shapes and the count, the small print on the
+spec sheet); NO BIN (the Back to cart strip, `#trash.show`, appears only while a wall part is held, and the cart lights
+as a drop target, `#cartDock.drop-ok`); the dock's verbs carry their words (Turn, Flip, Details, Put back, Undo); the
+complexity stars are off the result card (`score()` still works them out). THE SCREEN (his next note, "the phone view
+for it does not fit well within the windows"): a phone held upright is one screen, `100dvh`, nothing scrolls; the wall
+fits what is left (`onePhoneScreen()`, contain-fit in `fitBoard`, no floor: a floor made the SE flip between two sizes);
+Complete and Reset are a row of their own at the foot, under the parts (`placeBar()` moves `#submitBar` into `#cartDock`;
+his next note: beside the tabs it crowded them); the zoom buttons and the verbs sit on the wall's corners (`--wall-x`,
+`--wall-y`) and step apart where they would meet (`placeVerbs`, `.zoom-up`; beside a small wall the zoom stands in the
+margin, `.zoom-side`); the hint's step is in its tab. On a phone, a card that opens as another closes waits for the
+closing one's history step (`afterBack`), or it hears the step as a back press and shuts. His Puzzles-sheet notes
+(2026-10-05, window d): POWER has its own shapes (`nema-m` a plug, `nema-f` an outlet's face; `plugAt`, `bootAt`; a
+seated cord end carries no dot); a wall part let go off the wall goes back on the cart; outside the tutorials the screen
+never turns to Hint by itself (`hintLeads`); the timed wall's SpO2 chip stacks on a phone (`satChip`); the saved card has
+a footer band and keeps the wall's shape (`wallCard`); an interface on the face turns its lead toward its run
+(`faceLead`); a vent order reads on the screen (`screenOrderLines`).
+BETA SESSION ONE (his yes to B1 to B3, 2026-10-05; plan docs/HU-DEVICE-ASSEMBLY-BETA-1-PLAN-2026-10-05.md), built: IN LINE
+(`inlinePlan`/`insertInline`, verb `inline`: a part with ports on opposite sides dropped on a run goes in at the nearer
+joint; on a part seated straight onto another, the outer side slides out a square, `jointPlan`/`sideOf`; out again, the
+joint closes, `inlineRejoins`/`jointCloses`); cords, vent hoses and sampling lines lie over things (`isCord`, free routing,
+a second draw pass); runs cross at straight squares (`crossAxes`, a gap drawn under the top run); SWAP (verb `swap`,
+`twinsOf`: same connectors, cycles; a tap picks a run, a pull still unplugs); the ICU vent takes oxygen AND air
+(`twoGas`, both hoses checked); THE VENT CART (`vent-cart`, `vent-cart-low` with ports underneath, the humidifier on its
+pole, one cord); THE CIRCUIT IN ITS BAG (`circuit-heated`, `circuit-plain`, verb `kit`, `layCircuit`/`outerPort`/`layFrom`;
+Ventilator 1 keeps the loose pieces); dead space (VENT_RULES.deadSpace: two flex tubes fail); PATHS (`PATHS`, `pathOf`,
+`pathNext`, `kickerOf`, `crumbOf`; five paths, written and made walls mixed; More walls holds home and rehab for beta two);
+a stored ANSWER for every authored wall (`answerOf`, `ANSWER_BY_HAND`, lazy `L.solution`; the puzzle sheet tries every
+break); the extension cord decoy (`ext-cord`, `onExtension`). ICU deals are on the cart (`icuCart`, `ICU_CART_SPOTS`,
+ICU_V 2). THE FRONT DOOR (B7, BUILT 2026-10-06, at his QA): the game opens on a home screen (`doorA`, `openDoor`; the Home button and the result cards' Home come back to it): a first visit leads with Start the training; a visit after with today's wall, then your path with Continue, then tiles (Training, Paths, Random wall in four places, The shift, Race, Make a wall); Paths is B4's map as a card (`menuTracks`). A link to a wall, a room, a race or a build opens what it names; the wall loaded behind the door counts nothing (`bootQuiet`). THE MOVE (B6): the game is on the Fun shelf at src/fun/device-assembly/, marked beta; /secret-menu/device-assembly/* 301s there (netlify.toml); every part has a plain address (src/fun/device-assembly/parts.11ty.js: /today/, /training/, /paths/ and each path, /random/, /shift/, /race/, /make/), and the address follows the wall on screen (`addressOf`, `setAddress`, `gameRoot`); tests/device-assembly-door.test.js. The standard behind it is in the hu-game-shell skill, "a phone is one screen"; `npm run da:qa`
+checks five real phone screens.
+HIS PUZZLES-SHEET NOTES (2026-10-07, window b; log in docs/HU-DESIGN-PHASE-LOG.md): FOUR VENT BUILDS (`VENT_BUILDS`: `vent-cart` one side, `-low` underneath, `-split` a port each side, `-stack` top and bottom; each flips, eight configurations; `ICU_CART_SPOTS` rows are [x,y,flipped,build]; `icuTryBuild` tries the wall's own build first; ICU_V 3; a setup wall per configuration on the sheet, icu:VB29 VB72 VB50 VB86 VB0 VB34 VB8 VB66, tests/device-assembly-vent-builds.test.js); Ventilator 8 (`v8`, `ICU_LEFT()`, the cart on the patient's left); cords, hoses and sampling lines go ROUND parts and cross runs (`occupancy` holds item cells, `cordsClear` re-routes one a part lands on); Swap on a tap (a twin picked on the cart, then a run); the sandbox headwall is loose pieces (`it.wall`, each moves alone); the screen never turns by itself (a message is `S.screen.flash`, a strip at its foot); the shift has no bonus pick; Levels 1 timed, 3 and 5 in rooms of their own; Find the fault 2 on an extension cord; Find the fault 6 (`f6`, a non-rebreather at 6); ONE FINISH CARD (`finishBtns`: Next, Share, Build it again, Home; Share leads on the daily and made walls; See par build in the breakdown). The hub's Puzzles sheet takes `?group=`. THE DOOR'S SENTENCES ARE BEHIND THE "i" (2026-10-08, his note: flavor text never face up): a tile or card is its name and one number; `peekDef`, `PEEK_I`, `peekBadge`, `notPeek` (a tap on the badge never plays), `HUKit.peek` on `.da-peek[data-def]`.
+The puzzle QA system: tests/device-assembly-puzzles.test.js in verify, `npm run da:qa`, the hub's Puzzles screen.
+Surface: src/fun/device-assembly/ (index.html, and parts.11ty.js, the plain addresses) only.
 Fifteen rounds shipped 2026-09-16 to 2026-09-19 on David's reads; every one is recorded in
 docs/HU-DESIGN-PHASE-LOG.md and in docs/HU-DEVICE-ASSEMBLY-FEEL-2026-09-16.md section 3. What a session
 needs before touching the surface:
@@ -147,21 +193,21 @@ needs before touching the surface:
   without a smaller cell, David's call); THE PATIENT (Round 17: he is his three pieces, a level's `face`
   places him, `movePatient` lets the sandbox drag him, Level 1 on lie a row lower with the 14 ft cannula);
   THE MIRROR (it.f, Flip F, auto-orient tries it first, a room's
-  patient can face the other way); THE WALL SCREEN (the bedside computer: ORDER / HINT / ALERTS / TEST /
-  NOTE / WALLS pages, tappable, text sized to the box; where the screen is under 150 px it reads out under
-  the wall as real text with 44 px tabs, Round 16, and the wall svg is `data-drawing` for the phone gate); NOTHING FLOATS otherwise (no title card, no brief card, no tooltip, no marks on seated joints, the
-  status line reads, the touch verbs in a dock beside the trash, the mouse verbs on the spec sheet); the art
+  patient can face the other way); THE WALL SCREEN (the bedside computer: ORDER / HINT / TEST / NOTE pages since
+  the cleanup, an alert showing for a moment with no tab, tappable, text sized to the box; where the screen is under 150 px it reads out under
+  the wall as real text with 44 px tabs, Round 16, and the wall svg is `data-drawing` for the phone gate); NOTHING FLOATS otherwise, except what the cleanup put there on David's word, the problem tags and the stop (no title card, no brief card, no tooltip, no marks on seated joints, the
+  status line reads, the touch verbs in a dock at the foot of the wall with their words, the mouse verbs on the spec sheet); the art
   system (one soft ink, edges from the fill, glints, one soft shadow per part, the patient and the bed at
   scale). Tester hatches: ?unlock=1 opens every wall, ?room=mirror|left picks the room.
-- Gates: `npm run verify` (149 tests incl. tests/device-assembly-*.test.js) and the phone harness at 360
-  and 699. Visual checks: a Playwright one-off with NODE_PATH=node_modules screenshotting #board into tmp/
+- Gates: `npm run verify` (tests/device-assembly-*.test.js, the puzzle checks among them), `npm run da:qa` before a
+  new wall ships, and the phone harness at its nine sizes. Visual checks: a Playwright one-off with NODE_PATH=node_modules screenshotting #board into tmp/
   (the pane's own screenshots render tiny when the pane is narrow).
 - Closing the phase later means writing the wall grammar into DESIGN.md Tier 3. Still David's: the launch
   post, his phone play at 360, and the commit (everything is uncommitted). The alpha backlog table is
 docs/HU-RT-REDDIT-RESEARCH-2026-09-16.md section 11. Reference: NandGame
 (docs/HU-DEVICE-ASSEMBLY-FEEL-2026-09-16.md).
 
-**Cost of Living Comparison (the compass) · OPEN since 2026-08-30.** Archetype: SmartAsset, one
+**Cost of Living Comparison (the compass) · OPEN since 2026-08-30.** Surface: src/tools/cost-of-living/. Archetype: SmartAsset, one
 plain-sentence answer first, progressive disclosure. Round 1 shipped (THE ANSWER card, the example
 chip, jargon stripped). Round 2, the phone restructure (a compact question band up top, detail
 folded behind it), awaits David's read. Closing = the answer-first grammar into DESIGN.md Tier 3.
@@ -175,6 +221,49 @@ Closing = the merged band into DESIGN.md Tier 3.
 **Learn + Rounds reading surface · PARKED 2026-08-24 by David** ("complete rewrites and tooling in
 the future"). Rounds 1 and 2 shipped and stand (keep-reading handoff, progress hairline, nav yield,
 reading memory, continue card, share, finish-ticks). No reading-surface work until he reopens it.
+
+**The hub and the Data Observatory · OPEN 2026-10-04.** Two surfaces. ON THE SITE: src/secret-menu/data-observatory/,
+two tabs, Data map and Traffic (the Goat Tracker, moved in; the old address 301s), observatory.css, the obs-*.njk
+partials. ON DAVID'S COMPUTER ONLY (DECISIONS HUB1, "yes"): THE HUB, scripts/hub/, served under /__hub by
+scripts/review.js (`npm run hub`, preview entry `hu-hub`). It never ships: nothing under /__ is in _site, and
+tests/hub.test.js fails if src/ links to it. Screens: the BOARD (home; data-build/board.json, the sprint), the RUN
+SHEET (the milestone's stage, this window's open, work and close steps with what each found; tmp/hub/run.json), the
+PUZZLES sheet (Device Assembly's every wall from `npm run da:qa`, pictured, checked, markable; a wall mark never holds
+up a Ship), the QA LIST (the card's written checks plus every page touched since the last push, from git; Good or Needs a tweak with
+a note; marks in data-build/qa/<card>.json), SITE (every live page as a brick, from the ledger; a LOCK is David's
+alone), LIBRARY (every tool as a block; scripts/hub/kit.js). The hub reads files and draws them; it writes only a QA
+mark, an Inbox idea and a promotion, and it runs NO commands (it listens on the home network for his phone).
+Plan and build calls: docs/HU-ADMIN-HUB-PLAN-2026-10-04.md. Built 2026-10-04, awaiting his milestone QA.
+Closing = the back-office grammar into DESIGN.md Tier 3.
+
+**Pages with views: the switch · OPEN 2026-10-06** (DECISIONS L1 and L2; David: "yes to all three, go ahead with the
+pictures", then "dock and A, go ahead and build both"). His note that opened it, on the fracture post in production: the
+buttons between the story, the paper trail and the whole map "are not really easy to see or are easy to lose as things
+scroll", and pages with layers give no sign there is more behind them. Surface: the control that moves between a page's
+views or layers, and only that, on src/secret-menu/a-routine-fracture/, src/learn/laws-and-paradoxes/,
+src/learn/process-engineering/, src/learn/request-routing/ and the home page's tool groups (src/index.html). The rest of
+the parked Learn and Rounds reading surface stays parked. BUILT 2026-10-06, at his QA: the boxed switch (`.hu-seg`,
+`wrap-phone` two by two), never pinned on a phone; where views run long (the fracture post, Laws and Paradoxes, Request
+Routing) the dock at the foot of a phone once the switch scrolls away, stepping past three views, with Layers where the
+page has layer buttons (src/assets/js/hu-views.js, `HUViews.dock`, `.slide`, `.next`); a card at the end of each view
+that hands you to the next; one glow the first time the switch follows you down. The standard: the hu-view-switch skill;
+the test: tests/view-switch.test.js (every page with a tablist says which kind it is). His QA (2026-10-08): on a desk
+the switch is as wide as its names at the body size, never stretched; a phone gets short names (`.lg`/`.sm`). Closing =
+the switch grammar into DESIGN.md Tier 3.
+
+**The two maps' menus · OPEN 2026-10-08** (DECISIONS M1; David: "based on our game building experince i think we need to go
+look back at the map menuing and see if we can apply skills for it", then "yes do A now and B."). Surface: the panels, cards,
+drawers, search and help of the U.S. Population Health Map (src/tools/multi-lens-map/, src/assets/js/tools/multi-lens-map.js) and
+the U.S. Hospital Operations Map (src/tools/operators-map/, src/_includes/components/facility-map.njk,
+src/assets/js/tools/operators-map.js); and, for Esc and the back gesture only, the info card every tool shares
+(components/tool-attribution.njk). The map itself (layers, zones, routes, nodes, the canvas) is load-bearing and not in it.
+The plan is docs/HU-MAP-MENUS-REVIEW-2026-10-08.md: A, defect fixes; B, the game menu rules (games.md Menus, rule 9: a
+name and one number, the sentence behind HUKit.peek; DESIGN.md Two Surfaces rule 8, flavor off phones; one ? per map);
+C, one map shell, is NOT in this phase. Twins: every fix lands on both maps. A AND B BUILT 2026-10-08, at his QA
+(log in docs/HU-DESIGN-PHASE-LOG.md): the peek shows the answer; `pickMode` (Color, Size, Pin) and `gvPick` (Add, Only)
+replace the row buttons; `peekI` puts explainers behind an i; one "?" per map (`HUKit.howTo`, auto:false); List and
+Share; the kit's back guards share one listener (`HUKit.backConsumed()`); tests/map-menus.test.js. Closing = the map menu grammar into
+DESIGN.md Tier 3, beside the map instrument grammar.
 
 CLOSED, details in the log: the Atlas (2026-08-23; phone browse flow REVERTED; the hex grid is
 Tier 4 identity, pinch and zoom are the phone answer), My Path's status card (shipped), the two
@@ -200,17 +289,41 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
   A width-only 699 query serves the desktop layout to a phone held sideways, which is what broke
   22 of 54 pages in landscape on 2026-09-21. Method: docs/HU-VIEWPORT-METHOD-2026-09-21.md.
 - Never edit the build output directory (_site/). It is generated.
+- OLD PAGES DO NOT LINGER (2026-10-07, David: "make sure we delete old pages or archive them so they don't get found").
+  A full build removes from _site whatever no source makes any more (scripts/lib/prune-site.js, run from .eleventy.js;
+  not on the live-reload server). A page that leaves the live site forwards (a redirect in netlify.toml) or is listed in
+  data-build/gone-pages.json as let go on purpose, with why; `npm run close`, `npm run ship` and tests/old-pages.test.js
+  hold every page the last push carried to one or the other (scripts/lib/old-pages.js). Git history is the archive.
 - David commits and pushes himself. Never commit, push, or branch unless he explicitly asks in the moment.
   When work is ready to commit, draft the message for him in the shape in docs/HU-COMMIT-MESSAGES.md (2026-10-04).
+- WORK RUNS AS MILESTONES: Plan, Build, QA, Tweaks, Ship (2026-10-04). David's hands are on Plan (his yes),
+  QA (his list on the hub) and Ship (his push). Build and Tweaks are windows, and nobody asks him to look.
+  A WINDOW: the SessionStart hook prints the short open card, read it first; then `npm run open -- --baseline`
+  (the tests first, so the window starts green) and bring the hub up (preview `hu-hub`). Say which step is next
+  and why, and wait for his go or his redirect. As steps finish: `npm run board -- step N done`, and
+  `npm run shots -- "What changed" /page/` to file the pictures. At the end: `npm run close`, and the close note
+  named for the window (docs/sessions/<id>.md; shape in docs/sessions/README.md). A close is a SAVE POINT: he
+  commits and does not push (DECISIONS HUB2). The push is the milestone's Ship: `npm run qa` first, his QA list
+  clear, then `npm run ship`, his push, and `npm run ship -- --live`.
+- A LOCKED page (data-build/page-locks.json, David's alone, shown on the hub's Site tab) is
+  finished as of its date. It gets defect fixes and the small standard fixes the page ledger names (a meta
+  description, the shared reading layout, a checker finding fixed in place), and nothing new: no new design,
+  no new content, no rewrites, until David lifts the lock. `npm run close` warns when one changes; the close
+  note says which kind of fix it was. (DECISIONS O1 and O2, 2026-10-04.)
 - Every open question for David lives in DECISIONS.md at the repo root. Read it at the start
-  of a session, update it at the end. Ask three at a time maximum, each with a recommendation,
+  of a session, update it at the end. Answered rows leave it in the session they are answered, for
+  docs/HU-DECISIONS-LOG.md, with what got built on them; the file holds only what is open (2026-10-04). Ask three at a time maximum, each with a recommendation,
   and name what a thing IS before naming the file it lives in. Nothing goes on the list unless
   the answer changes what gets built.
 - Questions to David are about what he wants, never how to build it. Anything that needs a
   technical term to ask is Claude's call: decide, state it in one plain sentence, and let him veto
   by looking at the result. A question about look or feel arrives with a screenshot of each option
-  at phone and desktop width. Every task ends with something he can see; he never runs a command
-  to test. (2026-09-20: he cannot answer engineering questions and should not have to.) His reply "not my question" means Claude decides and says what it decided.
+  at phone and desktop width. He never runs a command to test. QA IS AT MILESTONES (his ruling,
+  2026-10-04: "I really don't want to do QA on anything until we have made major milestones at which
+  point we'll do QA and tweaks"): every step still takes its phone and desktop pictures, but they are
+  FILED (`npm run shots`; the hub's run sheet and QA list show them), not sent to him as a request to
+  look. He is asked to look at a milestone's QA stage, and when a look decision blocks the build. This
+  replaces "every task ends with something he can see". (2026-09-20: he cannot answer engineering questions and should not have to.) His reply "not my question" means Claude decides and says what it decided.
 - Every external claim in new copy (a count, a star count, a product's existence, a price) is
   verified live before it ships, and data-driven content carries its check date. A hand-off
   arrived with a star count stale by a factor of three (2026-09-18).
@@ -220,10 +333,13 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
   both are portrait phones, and the faults of 2026-09-21 were at 740x360 and in the 700 to 860 band.
   Give an outside session docs/HU-HANDOFF-BRIEF.md before it builds anything for this site;
   start a new page from docs/HU-PAGE-RECIPES.md.
-- The current week of work lives in SPRINT.md at the repo root, under the quarter plan at
-  docs/HU-DEV-PLAN-2026-Q4.md. Read it after DECISIONS.md. Take the next open task; when David
-  re-aims the week, rewrite the sprint and move displaced work back to its month in the plan.
-  Nothing is dropped without a line in the sprint's CHANGES saying so.
+- THE SPRINT IS THE BOARD: data-build/board.json, drawn by the hub and printed into SPRINT.md's NOW
+  section by `npm run board` (2026-10-04). Change it with the board's verbs (`npm run board -- step 3 done`,
+  `stage`, `lane`, `inbox`, `promote`, `drop`), never by editing the printed block. FOCUS HOLDS TWO AT MOST,
+  one primary and one secondary; anything new goes to the INBOX and is worked only after David promotes it.
+  Read SPRINT.md after DECISIONS.md; the quarter plan is docs/HU-DEV-PLAN-2026-Q4.md. When David re-aims,
+  move the cards and write one line under CHANGES; nothing is dropped without one. Finished cards leave for
+  docs/HU-SPRINT-LOG.md at Ship.
 
 ---
 
@@ -394,6 +510,7 @@ If any of these appear in output, rewrite before delivering:
 - Do NOT use passthrough copy on directories that contain processed Nunjucks templates
 - Layout chain: src/_includes/base.njk + src/_includes/components/. Global CSS: src/assets/css/hu-global.css. Kit: src/assets/js/hu-kit.js.
 - Scoped rules: .claude/rules/{templates,css,tools}.md. Prose standard: .claude/skills/hu-voice. Agent crew: .claude/agents/hu-{auditor,voice-editor,mobile-tester,a11y-fixer,polish}.md.
+- THE HUB (2026-10-04): scripts/hub/ (board.js, run.js, qa.js, shots.js, pages.js, index.js, kit.js, devlog.js), scripts/ship.js, scripts/session-open.js and session-close.js, scripts/lib/session.js (ONE CLOCK: `today()` and `stamp()` in Mountain time; never a bare date string). tests/hub.test.js. Restart the hub's server after changing its code (data and hub.css are read fresh; the modules are not). The "before" picture of any page is the live site.
 - THE CONSISTENCY TOOLKIT (2026-10-03, plan docs/HU-CONSISTENCY-TOOLKIT-2026-10-03.md). Every check, skill and rule, mapped: docs/HU-QA-TOOLKIT.md. The page ledger, `npm run ledger`: every live page, its kind, the checks for that kind, and its PHASE (Phase 2 meets today's standard, Phase 1 names what holds it, computed and never typed). David's page-by-page review is the Board and the Report in `npm run review`; his "Reviewed" marks live in data-build/page-reviews.json and are his alone. `npm run phone` records each page's verdict in tmp/ledger/phone.json. Games: the one game bar (src/_includes/components/game-bar.njk), tests/game-shell.test.js, skill hu-game-shell.
 - Writing checker (2026-10-03): patient information, professional tone and the voice, for site pages and pasted drafts. Rules: scripts/lib/writing-rules.js. David's screen: `npm run writing` (/__writing). Gates: tests/writing-phi.test.js, tests/writing-voice.test.js (ratchet, tests/writing-baseline.json). Panel and how to run it: .claude/skills/hu-writing-review.
 - Tool interaction law: docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md. Layout shell: docs/HU-TOOL-SHELL.md.

@@ -37,7 +37,7 @@ const OUT = path.join(ROOT, 'tmp', 'ledger', 'ledger.json');
 // Hubs list other pages; they are read like reading pages but are not articles.
 const HUBS = new Set(['/', '/tools/', '/learn/', '/rounds/', '/secret-menu/', '/learn/talks/']);
 // Internal pages in the secret menu that work like tools but are not public tools.
-const INTERNAL_TOOLS = new Set(['/secret-menu/data-observatory/', '/secret-menu/goat-tracker/', '/secret-menu/hospital-price-finder/']);
+const INTERNAL_TOOLS = new Set(['/secret-menu/data-observatory/', '/secret-menu/data-observatory/traffic/', '/secret-menu/hospital-price-finder/']);
 
 /** @param {string} dir @returns {string[]} */
 const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));

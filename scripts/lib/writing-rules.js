@@ -1100,10 +1100,12 @@
       if ((twoThe || bare || comma) && !LABEL_PAIRS.test(t)) add('voice.pair', bi, 0, b.text.length, b.text);
       // A heading that sells: a numbered antithesis ("Three eras, one move", "One dataset, many
       // windows"), two beats ("One shelf. No islands."), or a verdict ("Honest beats clean.").
-      // A label that ends in a period is a house style on the Learn pages, not a sale.
-      if (/^(?:one|two|three|four|five|six|seven|eight|nine|ten|many|\d+)\s+[a-z]+,\s+(?:one|two|three|many|no|zero|\d+)\s+[a-z]+\.?$/i.test(t)) add('voice.sells', bi, 0, b.text.length, b.text, 'A numbered antithesis.');
-      else if (b.kind !== 'meta' && /^[^.?!]{2,40}[.?!]\s+[A-Z][^.?!]{1,40}[.!]?$/.test(t) && nWords(t) <= 12 && !/\b(?:vs|Dr|St|Mr|Ms|No)\.\s/.test(t)) add('voice.sells', bi, 0, b.text.length, b.text, 'A heading in two beats is a slogan. Say what is underneath.');
-      else if (/^[\w'-]+(?:\s[\w'-]+)?\s+(?:beats|trumps|over)\s+[\w'-]+(?:\s[\w'-]+)?\.?$/i.test(t) || /^[^,]{3,40},\s+not (?:just )?[^,]{3,40}\.?$/i.test(t)) add('voice.sells', bi, 0, b.text.length, b.text, 'A verdict, not a label.');
+      // A label that ends in a period is a house style on the Learn pages, not a sale. A section
+      // number ("10. What the score counts") is not a first beat, so it comes off before the tests.
+      const h = t.replace(/^\d+(?:\.\d+)*\.\s+/, '');
+      if (/^(?:one|two|three|four|five|six|seven|eight|nine|ten|many|\d+)\s+[a-z]+,\s+(?:one|two|three|many|no|zero|\d+)\s+[a-z]+\.?$/i.test(h)) add('voice.sells', bi, 0, b.text.length, b.text, 'A numbered antithesis.');
+      else if (b.kind !== 'meta' && /^[^.?!]{2,40}[.?!]\s+[A-Z][^.?!]{1,40}[.!]?$/.test(h) && nWords(h) <= 12 && !/\b(?:vs|Dr|St|Mr|Ms|No)\.\s/.test(h)) add('voice.sells', bi, 0, b.text.length, b.text, 'A heading in two beats is a slogan. Say what is underneath.');
+      else if (/^[\w'-]+(?:\s[\w'-]+)?\s+(?:beats|trumps|over)\s+[\w'-]+(?:\s[\w'-]+)?\.?$/i.test(h) || /^[^,]{3,40},\s+not (?:just )?[^,]{3,40}\.?$/i.test(h)) add('voice.sells', bi, 0, b.text.length, b.text, 'A verdict, not a label.');
     });
 
     /* 6 · Parallel-block runs: "Label: sentence" three or more times in a row. */

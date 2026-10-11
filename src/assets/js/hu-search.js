@@ -16,13 +16,11 @@ var CLUSTERS = [
   { key: 'learn-play',   label: 'Learn & Play' },
   { key: 'fun',          label: 'Fun' }   // the games' shelf on the Tools page (2026-10-02)
 ];
-var TYPE_ORDER = ['tool', 'learn', 'talk', 'rounds', 'fun', 'path'];
-var TYPE_LABEL = { tool: 'Tools', learn: 'Learn', talk: 'Talks', rounds: 'Rounds', fun: 'Fun', path: 'Paths' };
-var DOORS = [
-  { label: 'I work in healthcare', sub: 'Start with the AI reality check', type: 'path', url: '/learn/ai-in-healthcare/' },
-  { label: 'I work with the data', sub: 'Try the Clinical SQL Mystery', type: 'path', url: '/tools/sql-mystery/' },
-  { label: 'I make the calls', sub: 'Start with the leadership playbook', type: 'path', url: '/learn/leading-the-ai-transition/' }
-];
+var TYPE_ORDER = ['tool', 'learn', 'talk', 'rounds', 'fun'];
+var TYPE_LABEL = { tool: 'Tools', learn: 'Learn', talk: 'Talks', rounds: 'Rounds', fun: 'Fun' };
+/* The three role doors ("Three ways in": I work in healthcare, I work with the data, I make the calls) came out
+   2026-10-08, David: "this feels redundant at this point. maybe we move away from these Three Ways in paths or
+   archetypes." Jump in already gets a reader to every shelf. */
 var MAG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>';
 
 function gc(path, title) {
@@ -201,9 +199,8 @@ function chipsHtml() {
 }
 
 function renderEmpty() {
-  var h = sectionHtml('Jump in') + chipsHtml() + sectionHtml('Three ways in');
+  var h = sectionHtml('Jump in') + chipsHtml();
   flat = [];
-  DOORS.forEach(function (d) { h += rowHtml(d, null, flat.length); flat.push(d); });
   var dated = IDX.filter(function (e) { return e.date; })
     .sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 3);
   if (dated.length) {

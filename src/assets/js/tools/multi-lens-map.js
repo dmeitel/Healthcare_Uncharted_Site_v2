@@ -26,6 +26,10 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   const status = $('lvStatus');
   const signal = m => { status.textContent = m; status.classList.remove('done'); };
   const signalDone = ms => setTimeout(() => status.classList.add('done'), ms || 1600);
+  /* the maps' menus (2026-10-08, DECISIONS M1): a sentence that explains rides behind an "i" (HUKit.peek: a mouse
+     hovers, a thumb taps the i, a keyboard focuses), the game menus' rule 9; the screen keeps the name and the number */
+  const escA = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const peekI = (name, html) => '<button type="button" class="hu-i lv-peek" data-def="' + escA('<b>' + name + '</b>' + html) + '" aria-label="About ' + escA(name) + '">i</button>';
   // one polite live region: committed changes only, never hover (the V1 rule)
   function announce(msg){
     const el = $('lvLive'); if (!el) return;
@@ -197,6 +201,15 @@ window.DATA_YEARS = mlmData('mlm-data-years');
 
   // ── sheet ──
   const sheetEl = $('lvSheet');
+  HUKit.peek({ root: sheetEl, sel: '.lv-peek[data-def]' });
+  /* HOW TO READ THE MAP is the "?" at the top of Display (2026-10-08, DECISIONS M1). It replaced the first-visit coach
+     bubble and the 55-word "Reading the map" paragraph at the foot of the panel. It never opens by itself. */
+  const reading = HUKit.howTo({ id: 'lv-reading', auto: false, title: 'Reading the map', rules: [
+    'Colors split the states into five even groups on the metric showing: red is the worse end, teal the better. A measure with no better or worse (age, a share, a count) runs slate to amber, lower to higher.',
+    'Metrics marked county open into county detail when you pick a state.',
+    'Years before a metric\'s data year are estimates from its trend, marked est.'] });
+  const helpBtn = reading.button();
+  helpBtn.setAttribute('aria-label', 'How to read the map'); helpBtn.title = 'How to read the map';
   // the camera follows the sheet DOWN, never up: drag to peek and the fitted
   // scope re-frames above the smaller card; drag the sheet away and the scope
   // expands. The moment the user pans or pinches, the camera is THEIRS —
@@ -475,7 +488,6 @@ window.DATA_YEARS = mlmData('mlm-data-years');
 
   // ‹ › shuffle: one metric per tap, wraps at the ends of the lens
   function stepMetric(d){
-    coachDone();   // they've found the metric machinery — the coach's job is over
     const n = CFG[lens].items.length;
     mIdx = (mIdx + d + n) % n;
     metricChanged();
@@ -484,14 +496,20 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   $('lvMetricNext').addEventListener('click', () => stepMetric(1));
   // metric picker: lives IN the drawer's Display tab (David's round-two call —
   // the pill is the readout, the drawer is the editor, all view work on ONE side)
+  /* A row is the metric's name. What a tap does is set once, above the list (pickMode: Color, Size or Pin), instead of
+     a Size and a Pin button on all 72 rows (2026-10-08; they were 144 of the panel's 593 words, and a keyboard could
+     not reach them). The marks say what a row is doing now: circles, pinned. */
+  let pickMode = 'color';
   function metricOptHTML(l, i, it, foreign){
     const isOv = ovLens === l && ovIdx === i;
     const pin = isPinned(l, i);
-    return '<button class="pop-opt" type="button" role="option" data-lens="' + l + '" data-mi="' + i + '" aria-selected="' + (l === lens && i === mIdx) + '"><span class="mn">' + it.name +
+    const county = COUNTY_IDX[l] && COUNTY_IDX[l].includes(String(i));
+    const label = it.name + (foreign ? ', ' + LENSES[l] : '') + (county ? ', county detail' : '') + (isOv ? ', shown as circles' : '') + (pin ? ', pinned to cards' : '');
+    return '<button class="pop-opt" type="button" role="option" data-lens="' + l + '" data-mi="' + i + '" aria-selected="' + (l === lens && i === mIdx) + '" aria-label="' + escA(label) + '"><span class="mn">' + it.name +
       (foreign ? '<span class="lns">' + LENSES[l] + '</span>' : '') +
-      (COUNTY_IDX[l] && COUNTY_IDX[l].includes(String(i)) ? '<span class="grain">· county grain</span>' : '') + '</span>' +
-      '<span class="ovbtn' + (isOv ? ' on' : '') + '" data-ovpick="1" title="' + (isOv ? 'Remove circle overlay' : 'Layer as sized circles over the colors') + '">' + (isOv ? '⬤ Size' : '◯ Size') + '</span>' +
-      '<span class="pinbtn' + (pin ? ' on' : '') + '" data-pinpick="1" title="' + (pin ? 'Unpin from cards' : 'Pin to every state and county card') + '">' + (pin ? '★ Pin' : '☆ Pin') + '</span></button>';
+      (county ? '<span class="grain">county</span>' : '') + '</span>' +
+      (isOv ? '<span class="mk ov" aria-hidden="true">⬤</span>' : '') +
+      (pin ? '<span class="mk pin" aria-hidden="true">★</span>' : '') + '</button>';
   }
   function buildMetricList(q){
     const list = $('lvMetricList'); if (!list) return;
@@ -512,9 +530,9 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     }
     list.querySelectorAll('[data-mi]').forEach(el => el.addEventListener('click', e => {
       const l = el.dataset.lens, i = +el.dataset.mi;
-      // the ☆ pins this metric to every card; the ◯ makes it the circle overlay
-      if (e.target.closest('[data-pinpick]')){ togglePin(l, i); return; }
-      if (e.target.closest('[data-ovpick]')){
+      // Pin adds the metric to every card; Size makes it the circle overlay; Color (the rest) recolors the map
+      if (pickMode === 'pin'){ togglePin(l, i); return; }
+      if (pickMode === 'size'){
         (ovLens === l && ovIdx === i) ? clearOverlay() : setOverlay(l, i);
         return;
       }
@@ -771,9 +789,9 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       .filter(r => r.v != null)
       .sort((a,b) => item().dir === -1 ? a.v - b.v : b.v - a.v);
     const b = $('lvSheetBody');
-    b.innerHTML = '<div class="lv-kicker">Rankings · ' + yearTag() + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-rows"></div>';
+    b.innerHTML = '<div class="lv-kicker">List · ' + yearTag() + '</div><div class="lv-name"></div><div class="lv-sub"></div><div class="lv-rows"></div>';
     b.querySelector('.lv-name').textContent = item().name;
-    b.querySelector('.lv-sub').textContent = (neutral(item()) ? 'Highest first' : 'Best first') + ' · tap a state to open it';
+    b.querySelector('.lv-sub').textContent = neutral(item()) ? 'Highest first' : 'Best first';
     const host = b.querySelector('.lv-rows');
     host.innerHTML = rows.map((r,i) =>
       '<button class="pop-opt lv-rank-row" type="button" data-ab="' + r.abbr + '" aria-selected="' + (selState && selState.abbr === r.abbr) + '"><b>#' + (i+1) + '</b><span class="rn"></span><span class="lv-rank-v">' + fmtV(r.v) + '</span></button>').join('');
@@ -904,6 +922,14 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       pr.className = 'pr'; pr.textContent = '#' + rank + ' of ' + vals.length + ' · ';
       const sub = b.querySelector('.lv-sub');
       sub.insertBefore(pr, sub.firstChild);
+      /* below 1100 the head carries the value and the rank and the table drops its own copies (2026-10-08: "79.5 yrs"
+         and "#3 of 51" each said twice), so the nation's number moves up beside them */
+      if (avg != null){
+        const pn = document.createElement('span');
+        pn.className = 'pn'; pn.textContent = ' · Nation ' + fmtV(item().unit === '$' ? Math.round(avg) : Math.round(avg * 10) / 10);
+        sub.appendChild(pn);
+      }
+      pr.innerHTML = '#' + rank + ' of ' + vals.length + peekI('Rank', neutral(item()) ? '1 is the highest on this metric, among the states with data.' : '1 is the best on this metric, among the states with data.') + ' · ';
     }
     // primary table: STATE vs NATION × value / rank / population
     popOf();
@@ -911,14 +937,14 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     const spop = SPOP && SPOP[selState.fips];
     b.querySelector('.lv-ptable').innerHTML =
       cell('', 'th') + cell(selState.abbr + ' state', 'th') + cell('Nation', 'th') +
-      cell('Value · ' + yearTag(), 'rl') +
-      cell(v == null ? 'no data' : fmtV(v), 'val') +
-      cell(avg == null ? '—' : fmtV(item().unit === '$' ? Math.round(avg) : Math.round(avg * 10) / 10) + '<span>avg</span>', 'val sm') +   /* whole dollars stay whole */
+      cell('Value · ' + yearTag(), 'rl r-dup') +
+      cell(v == null ? 'no data' : fmtV(v), 'val r-dup') +
+      cell(avg == null ? '—' : fmtV(item().unit === '$' ? Math.round(avg) : Math.round(avg * 10) / 10) + '<span>avg</span>', 'val sm r-dup') +   /* whole dollars stay whole */
       /* a yearly wage also reads per hour (metricsConfig perHour: the hours in BLS's full-time year, 2,080) */
       (item().perHour ? cell('Per hour', 'rl') + cell(v == null ? 'no data' : perHr(v), 'val sm') + cell(avg == null ? '—' : perHr(avg) + '<span>avg</span>', 'val sm') : '') +
-      cell('Rank', 'rl') +
-      cell(rank ? '#' + rank + '<span>of ' + vals.length + '</span>' : '—', 'val sm' + (neutral(item()) ? '' : rank && rank <= 10 ? ' hi' : rank && rank > vals.length - 10 ? ' lo' : '')) +
-      cell('<span>' + (neutral(item()) ? '1 = highest on this metric' : '1 = best on this metric') + '</span>', 'val sm') +
+      cell('Rank', 'rl r-dup') +
+      cell(rank ? '#' + rank + '<span>of ' + vals.length + '</span>' : '—', 'val sm r-dup' + (neutral(item()) ? '' : rank && rank <= 10 ? ' hi' : rank && rank > vals.length - 10 ? ' lo' : '')) +
+      cell('<span>' + (neutral(item()) ? '1 = highest on this metric' : '1 = best on this metric') + '</span>', 'val sm r-dup') +
       cell('Population', 'rl') +
       cell(spop ? fmtPop(spop) : (CPOP ? '—' : 'loading…'), 'val sm') +
       cell(NPOP ? fmtPop(NPOP) : '—', 'val sm');
@@ -926,7 +952,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     if (hasTrend()){
       const tr = b.querySelector('.lv-trend');
       const yrs = YRS();
-      tr.innerHTML = sparkSVG(trendPoints(selState.abbr)) + '<div class="lv-trend-lbl">' + yrs[0] + '–' + yrs[yrs.length - 1] + ' · solid dot = real data year, rest estimated from trend rates</div>';
+      tr.innerHTML = sparkSVG(trendPoints(selState.abbr)) + '<div class="lv-trend-lbl">' + yrs[0] + '–' + yrs[yrs.length - 1] + peekI('The trend', 'The solid dot is a year with real data; the rest are estimated from the trend.') + '</div>';
     }
     const act = b.querySelector('.lv-actions');
     const cbtn = document.createElement('button');
@@ -943,12 +969,13 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   // every view is already in the URL (syncURL) — this just hands it over
   function linkChip(){
     const b = document.createElement('button');
-    b.className = 'hu-chip'; b.type = 'button'; b.textContent = 'Copy link to this view';
+    b.className = 'hu-chip'; b.type = 'button'; b.textContent = 'Share';   // the games' word (2026-10-08); it shares this view's link
     b.addEventListener('click', () => {
+      if (navigator.share && HUKit.phone()){ navigator.share({ title: document.title, url: location.href }).catch(() => {}); return; }
       const done = ok => {
         b.textContent = ok ? '✓ Link copied' : 'Copy blocked. The address bar has it';
         announce(ok ? 'Link copied to the clipboard.' : 'Copy was blocked. The address bar holds the same link.');
-        setTimeout(() => { b.textContent = 'Copy link to this view'; }, 2000);
+        setTimeout(() => { b.textContent = 'Share'; }, 2000);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(() => done(true), () => done(false));
       else done(false);
@@ -1024,15 +1051,21 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     popOf();
     const cpop = CPOP && CPOP[selCounty.fips] && CPOP[selCounty.fips].p;
     const spop = SPOP && SPOP[selState.fips];
+    // below 1100 the table drops the rows the head already says; the state's own number moves up beside the county's
+    if (sv != null){
+      const pn = document.createElement('span');
+      pn.className = 'pn'; pn.textContent = ' · ' + selState.abbr + ' ' + fmtV(sv) + (sRank ? ', #' + sRank + ' US' : '');
+      b.querySelector('.lv-sub').appendChild(pn);
+    }
     const cell = (html, cls) => '<div class="' + (cls || '') + '">' + html + '</div>';
     b.querySelector('.lv-ptable').innerHTML =
       cell('', 'th') + cell('County', 'th') + cell(selState.abbr + ' state', 'th') +
-      cell('Value · ' + dataYr, 'rl') +
-      cell(v == null ? 'no data' : fmtV(v), 'val') +
-      cell(sv == null ? '—' : fmtV(sv), 'val') +
-      cell('Rank', 'rl') +
-      cell(rank ? '#' + rank + '<span>of ' + vals.length + ' in ' + selState.abbr + '</span>' : '—', 'val sm' + (!neutral(item()) && rank && rank <= 5 ? ' hi' : '')) +
-      cell(sRank ? '#' + sRank + '<span>of ' + nVals.length + ' US</span>' : '—', 'val sm' + (neutral(item()) ? '' : sRank && sRank <= 10 ? ' hi' : sRank && sRank > nVals.length - 10 ? ' lo' : '')) +
+      cell('Value · ' + dataYr, 'rl r-dup') +
+      cell(v == null ? 'no data' : fmtV(v), 'val r-dup') +
+      cell(sv == null ? '—' : fmtV(sv), 'val r-dup') +
+      cell('Rank', 'rl r-dup') +
+      cell(rank ? '#' + rank + '<span>of ' + vals.length + ' in ' + selState.abbr + '</span>' : '—', 'val sm r-dup' + (!neutral(item()) && rank && rank <= 5 ? ' hi' : '')) +
+      cell(sRank ? '#' + sRank + '<span>of ' + nVals.length + ' US</span>' : '—', 'val sm r-dup' + (neutral(item()) ? '' : sRank && sRank <= 10 ? ' hi' : sRank && sRank > nVals.length - 10 ? ' lo' : '')) +
       cell('Population', 'rl') +
       cell(cpop ? fmtPop(cpop) : '—', 'val sm') +
       cell(spop ? fmtPop(spop) : (CPOP ? '—' : 'loading…'), 'val sm');
@@ -1136,7 +1169,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     try { localStorage.setItem(LABEL_PREFS_KEY, JSON.stringify(p)); } catch(e){}
     [['lvLabState','state'],['lvLabCity','city']].forEach(([id, key]) => {
       const el = $(id); if (!el) return;
-      el.classList.toggle('on', p[key]);
+      (el.querySelector('.hu-sw') || el).classList.toggle('on', p[key]);   // the row is the switch; its knob lights
       el.setAttribute('aria-checked', String(p[key]));
     });
     applyLabelPrefs();
@@ -1170,45 +1203,42 @@ window.DATA_YEARS = mlmData('mlm-data-years');
       inTabSwitch = false;
     }
     if (t === 'details' && !det.innerHTML.trim())
-      det.innerHTML = '<div class="lv-sub" style="margin-top:8px">Tap a state for its card, or Rankings for the field.</div>';
+      det.innerHTML = '<p class="lv-hint">Tap a state for its card, or List for every state.</p>';
   }
   // the whole composition in words: what's color, what's circles, what's
   // pinned — with the fill metric's actual definition, read as one piece
   function viewBlockHTML(){
     const it = item();
     const y = DY[lens] && DY[lens][String(mIdx)];
-    let h = '<div class="lv-vrow"><span class="role">Color</span><b>' + it.name + '</b></div>' +
-      '<div class="lv-vdefn">' + (it.defn || it.sub || '') +
-      (it.source ? '<span class="src">' + it.source + (y ? ' · ' + y : '') + '</span>' : '') + '</div>';
-    if (ovItem()) h += '<div class="lv-vrow"><span class="role">◯ Size</span><b>' + ovItem().name + '</b></div>';
-    PINS.forEach(pn => { h += '<div class="lv-vrow"><span class="role">★ Card</span><b>' + CFG[pn.l].items[pn.i].name + '</b></div>'; });
+    const x = (attr, name) => '<button type="button" class="lv-vx" ' + attr + ' aria-label="Take ' + escA(name) + ' off">✕</button>';
+    let h = '<div class="lv-vrow"><span class="role">Color</span><b>' + it.name + '</b>' +
+      peekI(it.name, escA(it.defn || it.sub || '') + (it.source ? '<p>' + escA(it.source + (y ? ' · ' + y : '')) + '</p>' : '')) + '</div>';
+    if (ovItem()) h += '<div class="lv-vrow"><span class="role">Size</span><b>' + ovItem().name + '</b>' + x('data-ovclear="1"', ovItem().name) + '</div>';
+    PINS.forEach((pn, k) => { const nm = CFG[pn.l].items[pn.i].name; h += '<div class="lv-vrow"><span class="role">Pin</span><b>' + nm + '</b>' + x('data-unpin="' + k + '"', nm) + '</div>'; });
     return h;
   }
   function buildDisplayPanel(){
     const p = labelPrefs();
+    const mode = m => '<button type="button" role="radio" data-pickmode="' + m + '" aria-checked="' + (pickMode === m) + '">' + ({ color:'Color', size:'Size', pin:'Pin' })[m] + '</button>';
+    const sw = (id, on, name) => '<button type="button" class="lv-tgl" id="' + id + '" role="switch" aria-checked="' + on + '">' + name + '<span class="hu-sw' + (on ? ' on' : '') + '" aria-hidden="true"></span></button>';
     $('lvDisplayBody').innerHTML =
-      '<div class="lv-dsec"><h5>This view</h5><div class="lv-view" id="lvViewBlock">' + viewBlockHTML() + '</div></div>' +
-      '<div class="lv-dsec"><h5>Metric catalog <span class="sub" id="lvMetricSecH">' + LENSES[lens] + ' · ' + (mIdx + 1) + '/' + CFG[lens].items.length + '</span></h5>' +
-      '<div class="lv-src" style="margin:0 0 8px">Every lens, every metric lives here. Tap one and the map repaints.</div>' +
+      '<div class="lv-dsec"><h5>This view <span class="lv-help" id="lvHelpSlot"></span></h5><div class="lv-view" id="lvViewBlock">' + viewBlockHTML() + '</div></div>' +
+      '<div class="lv-dsec"><h5>Metrics' + peekI('A tap on a metric', '<p><b>Color</b> paints the map by it.</p><p><b>Size</b> lays it over the colors as circles, heart disease as color and nurses per 100k as size. Tap it again to take it off.</p><p><b>Pin</b> adds its value to every state and county card, up to four.</p>') +
+      ' <span class="sub" id="lvMetricSecH">' + LENSES[lens] + ' · ' + (mIdx + 1) + '/' + CFG[lens].items.length + '</span></h5>' +
+      '<div class="lv-mode hu-seg" role="radiogroup" aria-label="A tap on a metric">' + mode('color') + mode('size') + mode('pin') + '</div>' +
       '<div class="lv-find"><input id="lvMetricFind" type="text" placeholder="Search all lenses…" autocomplete="off" aria-label="Search metrics across every lens"></div>' +
       '<div id="lvMetricList" role="listbox" aria-label="Metrics"></div></div>' +
-      '<div class="lv-dsec"><h5>Overlay <span class="sub">sized circles</span></h5>' + (ovItem()
-        ? '<div class="lv-tgl"><span>⬤ ' + ovItem().name + '</span><button class="hu-chip" id="lvOvClear" type="button">✕ Clear</button></div>'
-        : '<div class="lv-src" style="margin-top:0">Tap ◯ Size on any metric above to layer it as SIZED CIRCLES over the colors. Heart disease as color, nurses per 100k as size.</div>') +
-      '</div>' +
-      '<div class="lv-dsec"><h5>Pinned to cards <span class="sub">' + PINS.length + '/4</span></h5>' + (PINS.length
-        ? '<div class="lv-drow">' + PINS.map((pn, k) =>
-            '<button class="hu-chip on" type="button" data-unpin="' + k + '">★ ' + CFG[pn.l].items[pn.i].name + ' ✕</button>').join('') + '</div>'
-        : '<div class="lv-src" style="margin-top:0">Tap the ☆ on any metric to add its value to every state and county card. The card holds what the map can\'t.</div>') +
-      '</div>' +
-      '<div class="lv-dsec"><h5>Map labels <span class="sub">basemap text</span></h5>' +
-      '<div class="lv-tgl">State names <span class="hu-sw' + (p.state ? ' on' : '') + '" id="lvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
-      '<div class="lv-tgl">City names <span class="hu-sw' + (p.city ? ' on' : '') + '" id="lvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>' +
-      '<div class="lv-dsec"><h5>Reading the map</h5>' +
-      '<div class="lv-src" style="margin-top:0">Colors are quintiles of the current metric, red = worse end, teal = better. A measure with no better or worse (age, population shares, counts) runs slate to amber, lower to higher, and ranks highest first. Metrics marked "county grain" drill to county detail inside a state. Years before the data year are drift-model estimates, labeled est.</div></div>';
+      '<div class="lv-dsec"><h5>Map labels</h5>' + sw('lvLabState', p.state, 'State names') + sw('lvLabCity', p.city, 'City names') + '</div>';
+    const slot = $('lvHelpSlot'); if (slot) slot.appendChild(helpBtn);
     buildMetricList();
     const find = $('lvMetricFind');
     find.addEventListener('input', () => buildMetricList(find.value));
+    // on a phone the search takes the whole sheet, so its results land on screen instead of under the keyboard
+    find.addEventListener('focus', () => {
+      if (!HUKit.phone()) return;
+      if (!sheetEl.classList.contains('dt-full')) setDetQuiet('dt-full');
+      setTimeout(() => find.scrollIntoView({ block:'start' }), 300);
+    });
     find.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown'){ e.preventDefault(); e.stopPropagation(); const f = $('lvMetricList').querySelector('.pop-opt'); if (f) f.focus(); }
       // Esc with a query clears it; the sheet handler only closes when it's empty
@@ -1220,9 +1250,16 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     if (e.target.getAttribute && e.target.getAttribute('role') === 'switch'){ e.preventDefault(); e.target.click(); }
   });
   $('lvDisplayBody').addEventListener('click', e => {
-    if (e.target.id === 'lvLabState'){ toggleLabelPref('state'); return; }
-    if (e.target.id === 'lvLabCity'){ toggleLabelPref('city'); return; }
-    if (e.target.id === 'lvOvClear' || e.target.closest('#lvOvClear')){ clearOverlay(); return; }
+    if (e.target.closest('#lvLabState')){ toggleLabelPref('state'); return; }
+    if (e.target.closest('#lvLabCity')){ toggleLabelPref('city'); return; }
+    if (e.target.closest('[data-ovclear]')){ clearOverlay(); return; }
+    const pm = e.target.closest('[data-pickmode]');
+    if (pm){
+      pickMode = pm.dataset.pickmode;
+      document.querySelectorAll('#lvDisplayBody [data-pickmode]').forEach(b => b.setAttribute('aria-checked', String(b === pm)));
+      announce(pickMode === 'color' ? 'A tap on a metric colors the map.' : pickMode === 'size' ? 'A tap on a metric shows it as circles.' : 'A tap on a metric pins it to the cards.');
+      return;
+    }
     const un = e.target.closest('[data-unpin]');
     if (un){
       PINS.splice(+un.dataset.unpin, 1);
@@ -1243,43 +1280,14 @@ window.DATA_YEARS = mlmData('mlm-data-years');
   });
   $('lvTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
   function openDisplayTab(){
-    coachDone();   // the catalog opened — the coach's one lesson is learned
     showTab('display');   // builds the panel on entry
-    const det = revealDetent();
+    /* a phone held sideways is about 360px tall: half of it held the tabs and one heading, so Display takes the whole
+       sheet there (2026-10-08, the maps' menus) */
+    const det = window.innerHeight <= 500 ? 'dt-full' : revealDetent();
     sheetEl.classList.add('open');
     setDetQuiet(det);
   }
 
-  // ── one-time coach: the pill IS the door to the catalog. It teaches that
-  //    once, then leaves forever (budget rule: guidance leaves after use).
-  //    Auto-fade does NOT count as learned — only an interaction does, so a
-  //    user who missed it gets one more chance next visit. ?coach re-arms. ──
-  const COACH_KEY = 'hu-lens-pill-coach';
-  if (new URLSearchParams(location.search).has('coach')){ try { localStorage.removeItem(COACH_KEY); } catch(e){} }
-  let coachEl = null;
-  function coachHide(){
-    if (!coachEl) return;
-    const el = coachEl; coachEl = null;
-    el.classList.add('gone');
-    $('lvMetricBtn').classList.remove('coaching');
-    setTimeout(() => el.remove(), 350);
-  }
-  function coachDone(){
-    try { if (!localStorage.getItem(COACH_KEY)) localStorage.setItem(COACH_KEY, '1'); } catch(e){}
-    coachHide();
-  }
-  function maybeCoach(){
-    let seen = null; try { seen = localStorage.getItem(COACH_KEY); } catch(e){}
-    if (seen) return;
-    coachEl = document.createElement('button');
-    coachEl.type = 'button';
-    coachEl.className = 'lv-coach';
-    coachEl.textContent = 'Tap to change what the map shows';
-    coachEl.addEventListener('click', () => openDisplayTab());   // the bubble is a shortcut, not a chore
-    document.querySelector('.lv-top').appendChild(coachEl);
-    $('lvMetricBtn').classList.add('coaching');
-    setTimeout(coachHide, 14000);
-  }
 
   // ── drawer resize: drag the LEFT edge on a monitor; phones keep the sheet.
   //    Width is shared with the operations map (one preference). ──
@@ -1509,7 +1517,6 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     urlCtl.mark(scopeKey());  // the first drill after load must PUSH, not replace
     signal('✓ Seven lens groups, 72 metrics · tap a state');
     signalDone(3000);
-    maybeCoach();   // first-ever visit: one bubble, one lesson, then gone
   });
   map.on('error', ev => { if (!map.loaded()) signal('Basemap failed to load. Check the connection'); if (ev && ev.error) console.warn('maplibre', ev.error); });
 })();

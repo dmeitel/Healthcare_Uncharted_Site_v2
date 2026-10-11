@@ -13,6 +13,8 @@
                            that speaks dt-peek / dt-half / dt-full)
    HUKit.locate(btn,opts)-> locate-me FAB wiring. Permission is asked
                            ON TAP, never on load. County-grain accuracy.
+   HUKit.backConsumed() -> true while a guard owns the back press now
+                           landing; for a page handler built before any guard.
    HUKit.backGuard(opts) -> phone hardware-back interceptor: transient
                            drawer views consume back one X-step at a
                            time; scope entries stay history-native.
@@ -364,41 +366,78 @@
        if (guard.consumed()) return;
      or the guard pop would trigger a full scope rebuild.
      opts: watch  = the sheet element ('open' class drives arm/disarm)
+           cls      = the class that means open, when it is not 'open'
            active() -> true when a transient (non-scope) view is up
            step()   -> unwind exactly one step (usually: click the X)
+
+     MORE THAN ONE GUARD (2026-10-08, the info card on the maps). Every guard
+     hears a press through ONE listener, and only one guard takes it: the one
+     eating its own sentinel, else the one armed last, whose sentinel is the
+     entry the press just popped. A guard armed under it stays armed for the
+     next press, so one press is one step back. A page handler that runs
+     before any guard was built asks HUKit.backConsumed() instead.
   */
+  var GUARDS = null, popUsed = false, armSeq = 0;
+  function guardHub(g) {
+    if (!GUARDS) {
+      GUARDS = [];
+      window.addEventListener('popstate', function () {
+        var mine = null, i;
+        for (i = 0; i < GUARDS.length && !mine; i++) if (GUARDS[i].eating()) mine = GUARDS[i];
+        for (i = 0; i < GUARDS.length && !mine; i++) if (GUARDS[i].armedAt()) mine = GUARDS[i];
+        for (i = 0; i < GUARDS.length; i++) if (mine && !mine.eating() && GUARDS[i].armedAt() > mine.armedAt()) mine = GUARDS[i];
+        for (i = 0; i < GUARDS.length; i++) if (GUARDS[i] !== mine) GUARDS[i].pass();
+        if (!mine) return;
+        mine.take();
+        popUsed = true;
+        setTimeout(function () { popUsed = false; }, 0);   // every handler of THIS press has run by then
+      });
+    }
+    GUARDS.push(g);
+  }
+  function backConsumed() {
+    if (popUsed) return true;
+    for (var i = 0; GUARDS && i < GUARDS.length; i++) if (GUARDS[i].eating() || GUARDS[i].armedAt()) return true;
+    return false;
+  }
   function backGuard(opts) {
-    var armed = false, eating = false, consumedFlag = false;
+    var cls = opts.cls || 'open';
+    var armed = 0, eating = false, consumedFlag = false;   // armed: the order it armed in, 0 when it is not
+    function isOpen() { return opts.watch.classList.contains(cls); }
     function arm() {
       if (!phone() || armed || eating) return;
-      try { history.pushState({ huBack: 1 }, '', location.href); armed = true; } catch (e) {}
+      try { history.pushState({ huBack: 1 }, '', location.href); armed = ++armSeq; } catch (e) {}
     }
     function disarmEat() {
       if (!armed || eating) return;
       eating = true;
       history.back();
     }
-    window.addEventListener('popstate', function () {
-      if (eating) { eating = false; armed = false; consumedFlag = true; return; }
-      if (!armed) { consumedFlag = false; return; }
-      armed = false; consumedFlag = true;
-      if (phone() && opts.active()) {
-        opts.step();
-        setTimeout(function () { if (opts.watch.classList.contains('open')) arm(); }, 0);
-      } else {
-        history.back();   // sentinel was stale for this view: pass the press along
+    guardHub({
+      eating: function () { return eating; },
+      armedAt: function () { return armed; },
+      pass: function () { consumedFlag = false; },
+      take: function () {
+        if (eating) { eating = false; armed = 0; consumedFlag = true; return; }
+        armed = 0; consumedFlag = true;
+        if (phone() && opts.active()) {
+          opts.step();
+          setTimeout(function () { if (isOpen()) arm(); }, 0);
+        } else {
+          history.back();   // sentinel was stale for this view: pass the press along
+        }
       }
     });
     var MO = window.MutationObserver;
     if (opts.watch && MO) {
-      var was = opts.watch.classList.contains('open');
+      var was = isOpen();
       new MO(function () {
-        var is = opts.watch.classList.contains('open');
+        var is = isOpen();
         if (is !== was) { was = is; if (is) arm(); else disarmEat(); }
       }).observe(opts.watch, { attributes: true, attributeFilter: ['class'] });
       if (was) arm();
     }
-    return { consumed: function () { return consumedFlag; }, arm: arm };
+    return { consumed: function () { return consumedFlag || popUsed; }, arm: arm };
   }
 
   /* ── Selector popover ─────────────────────────────────────────
@@ -1215,6 +1254,6 @@
     };
   }
 
-  window.HUKit = { phone: phone, dcap: dcap, peek: peek, sheet: sheet, locate: locate, backGuard: backGuard, innerPoint: innerPoint, pop: pop, urlState: urlState, conusView: conusView, CONUS: CONUS, PHONE_MQ: PHONE_MQ,
+  window.HUKit = { phone: phone, dcap: dcap, peek: peek, sheet: sheet, locate: locate, backGuard: backGuard, backConsumed: backConsumed, innerPoint: innerPoint, pop: pop, urlState: urlState, conusView: conusView, CONUS: CONUS, PHONE_MQ: PHONE_MQ,
     dialog: dialog, gameMenu: gameMenu, settings: settings, howTo: howTo, confirm: confirm };
 })();

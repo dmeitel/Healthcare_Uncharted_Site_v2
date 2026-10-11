@@ -353,16 +353,19 @@ editorial_reason: "Editorial palette + DM Serif Display: a tabbed field guide of
     .lp-layout{ flex-direction:column; gap:0; padding:0; align-items:stretch; }
     /* width comes from .lp-layout's align-items:stretch above; min-width:0 keeps
        the ten nowrap tabs from forcing it open again. */
-    .lp-tabs{ position:sticky; top:var(--nav-h); width:auto; min-width:0; margin-top:0;
+    /* the view switch (DECISIONS L1 and L2, 2026-10-06): the ten laws as boxed choices, the one on screen filled */
+    .lp-tabs{ position:sticky; top:var(--nav-h); width:auto; min-width:0; margin-top:0; gap:6px; padding:8px 12px;
               flex-direction:row; overflow-x:auto; scrollbar-width:none;
               -webkit-overflow-scrolling:touch;
-              border-left:none; border-right:none; }
+              border-left:none; border-right:none; border-top:none; }
     .lp-tabs::-webkit-scrollbar{ display:none; }
-    .lp-tab{ flex-shrink:0; width:auto; white-space:nowrap; min-height:44px;
-             border-left:none; border-bottom:2px solid transparent; }   /* 13px pad on 11px mono lands at 42 */
-    .lp-tab:last-child{ border-bottom:2px solid transparent; }
-    .lp-tab.active{ border-left-color:transparent; border-bottom-color:var(--jp-accent); }
+    .lp-tab{ flex-shrink:0; width:auto; white-space:nowrap; min-height:44px; padding:10px 14px;
+             border:1px solid var(--jp-line); border-radius:999px; }
+    .lp-tab:last-child{ border-bottom:1px solid var(--jp-line); }
+    .lp-tab.active{ background:var(--jp-accent); border-color:var(--jp-accent); color:#062024; }
   }
+  /* a phone gets one top bar: the strip stays with the page and the dock at the foot carries the laws (hu-views.js) */
+  @media (max-width:699px), (max-height:500px){ .lp-tabs{ position:static; } }
 
   /* ── Hype Cycle curve ── */
   .hc-curve{ width:100%; height:auto; display:block; margin:8px 0 18px; overflow:visible; }
@@ -1866,16 +1869,21 @@ editorial_reason: "Editorial palette + DM Serif Display: a tabbed field guide of
   </div><!-- /lp-layout -->
 </article>
 
+<script src="/assets/js/hu-views.js?v=20261006"></script>
 <script>
 (function(){
   // ── TAB SWITCHING ──
   const tabs   = Array.from(document.querySelectorAll('.lp-tab'));
   const panels = Array.from(document.querySelectorAll('.lp-panel'));
   const layoutEl = document.querySelector('.lp-layout');
+  let vdock = null;   // the dock (hu-views.js), set below
   function showTab(name, scroll){
     const tab = tabs.find(t => t.dataset.tab === name);
     if (!tab) return;
     tabs.forEach(t => t.classList.toggle('active', t === tab));
+    const strip = tab.parentElement;   // where the strip scrolls sideways, the law on screen is in view in it
+    if (strip.scrollWidth > strip.clientWidth) strip.scrollLeft = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2;
+    if (vdock) vdock.sync();
     panels.forEach(p => p.classList.toggle('active', p.dataset.panel === name));
     if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
     if (scroll && layoutEl){
@@ -1887,6 +1895,20 @@ editorial_reason: "Editorial palette + DM Serif Display: a tabbed field guide of
   window.addEventListener('hashchange', () => showTab(location.hash.slice(1), false));
   const fromHash = location.hash.slice(1);
   if (fromHash && tabs.some(t => t.dataset.tab === fromHash)) showTab(fromHash, false);
+
+  // ── THE VIEW SWITCH (DECISIONS L1 and L2, 2026-10-06): on a phone the dock steps through the laws once the strip
+  //    has scrolled away; each law ends by handing you to the next ──
+  if (window.HUViews){
+    const names = tabs.map(t => t.textContent.trim());
+    vdock = HUViews.dock({ row: document.querySelector('.lp-tabs'), region: layoutEl, names, tabs, label: 'Laws and paradoxes', key: 'laws-and-paradoxes',
+      current: () => tabs.findIndex(t => t.classList.contains('active')), select: i => showTab(tabs[i].dataset.tab, true) });
+    tabs.forEach((t, i) => {
+      const p = panels.find(x => x.dataset.panel === t.dataset.tab); if (!p) return;
+      const n = (i + 1) % tabs.length;
+      HUViews.next(p, { kicker: n ? 'Next \u00b7 ' + (n + 1) + ' of ' + tabs.length : 'That was the last one', title: names[n],
+        button: (n ? 'Read ' : 'Back to ') + names[n], go: () => showTab(tabs[n].dataset.tab, true) });
+    });
+  }
 
   // ── DOT EXPLOSION ──
   const dots1980 = document.getElementById('jpDots1980');

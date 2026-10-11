@@ -91,6 +91,9 @@ const FIND_OVERLAPS = () => {
     const ctx = await browser.newContext({ colorScheme: 'dark',
       viewport: { width: w, height: 820 }, deviceScaleFactor: 2, isMobile: w <= 699, hasTouch: w <= 699
     });
+    // a returning player: the how-to card opens by itself on a first visit only (the menus contract, 2026-09-23), and
+    // left open it sat over the floor in every picture, so the overlaps were read through it
+    await ctx.addInitScript(() => { try { localStorage.setItem('hu-howto-af', '1'); } catch (e) {} });
     const page = await ctx.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message.split('\n')[0]));

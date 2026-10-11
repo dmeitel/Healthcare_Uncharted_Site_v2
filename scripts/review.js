@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * review.js — the side-by-side review screen.
+ * review.js — the server for the screens that never ship: the hub and the side-by-side review.
  *
- *   npm run review           then open http://localhost:8081/__review
+ *   npm run hub              then open http://localhost:8081/__hub      (the board, the run sheet, QA)
+ *   npm run review           the same server; http://localhost:8081/__review
+ *
+ * THE HUB (2026-10-04, DECISIONS HUB1) lives here too: scripts/hub/index.js answers everything
+ * under /__hub before the rest of this file sees the request. One server, one address, so David
+ * has one thing to open on his computer and on his phone.
  *
  * WHY THIS EXISTS. David reviews the site by opening pages on a phone and a laptop and holding
  * them next to each other, which is slow and means the two views are never on the same page at
@@ -21,11 +26,18 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const MIRROR = require('./mirror-snippet');
+const hub = require('./hub');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = path.join(ROOT, '_site');
 const ASSETS = path.join(ROOT, 'src', 'assets');
 const PORT = Number(process.env.REVIEW_PORT || 8081);
+const PORT_FILE = path.join(ROOT, 'tmp', 'hub', 'server.json');
+/* The two Data Observatory pages on the site carry an empty marker in their tab row. Served from
+   here, it becomes the way back to the hub; on the live site it stays a comment. */
+const HUB_LINK = '<a class="toggle-chip" href="/__hub">Hub</a>';
+/** @param {Buffer} data */
+const page = (data) => data.toString('utf8').replace('<!--hub-link-->', HUB_LINK).replace('</body>', MIRROR + '</body>');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -62,14 +74,12 @@ function pages() {
   });
 }
 
-if (!fs.existsSync(SITE)) {
-  console.error('No _site/ directory. Run `npm run build` first.');
-  process.exit(1);
-}
 /** @type {{t:number, body:string}|null} */
 let ledgerCache = null;
+let bound = PORT;
 
 const server = http.createServer((req, res) => {
+  if (hub.handle(req, res, { port: bound })) return;
   const url = req.url.split('?')[0];
 
   if (url === '/__review' || url === '/__review/') {
@@ -160,7 +170,7 @@ const server = http.createServer((req, res) => {
       return fs.readFile(alt, (e2, d2) => {
         if (!e2) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          return res.end(d2.toString('utf8').replace('</body>', MIRROR + '</body>'));
+          return res.end(page(d2));
         }
         res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end('<h1>404</h1><p>' + url + ' is not in _site. Rebuild?</p>');
@@ -168,20 +178,52 @@ const server = http.createServer((req, res) => {
     }
     const type = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
     if (type.startsWith('text/html')) {
-      const body = data.toString('utf8').replace('</body>', MIRROR + '</body>');
       res.writeHead(200, { 'Content-Type': type });
-      return res.end(body);
+      return res.end(page(data));
     }
     res.writeHead(200, { 'Content-Type': type });
     res.end(data);
   });
 });
 
-server.listen(PORT, () => {
-  const n = pages().length;
-  console.log('');
-  console.log('  Review screen:  http://localhost:' + PORT + '/__review');
-  console.log('  Serving _site with ' + n + ' pages. Rebuild with `npm run build` to refresh.');
-  console.log('  Ctrl+C to stop.');
-  console.log('');
-});
+/** Start the server. Port 0 takes any free port (the picture script and the tests use that).
+ *  @param {number} [port] @param {{quiet?:boolean}} [opt] @returns {Promise<{port:number, close:() => Promise<void>}>} */
+function start(port = PORT, opt = {}) {
+  if (!fs.existsSync(SITE)) throw new Error('No _site/ directory. Run `npm run build` first.');
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, () => {
+      bound = /** @type {import('net').AddressInfo} */ (server.address()).port;
+      const named = port !== 0;   // only the server someone opened on purpose is "the hub"
+      if (named) {
+        fs.mkdirSync(path.dirname(PORT_FILE), { recursive: true });
+        fs.writeFileSync(PORT_FILE, JSON.stringify({ port: bound, pid: process.pid }) + '\n');
+        const gone = () => { try { fs.rmSync(PORT_FILE); } catch (e) { /* already gone */ } };
+        process.on('exit', gone);
+        for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { gone(); process.exit(0); });
+      }
+      if (!opt.quiet) {
+        const addr = hub.lan()[0];
+        console.log('');
+        console.log('  The hub:        http://localhost:' + bound + '/__hub');
+        if (addr) console.log('  On your phone:  http://' + addr + ':' + bound + '/__hub   (home wifi)');
+        console.log('  Review screen:  http://localhost:' + bound + '/__review');
+        console.log('  Serving _site with ' + pages().length + ' pages. Rebuild with `npm run build` to refresh.');
+        console.log('  Ctrl+C to stop.');
+        console.log('');
+      }
+      resolve({ port: bound, close: () => new Promise((done) => server.close(() => done())) });
+    });
+  });
+}
+
+// run directly, or required by a launcher that has named the port (.claude/launch.json does)
+if (require.main === module || process.env.REVIEW_PORT) {
+  start().catch((e) => {
+    if (e && e.code === 'EADDRINUSE') { console.log('The hub is already running: http://localhost:' + PORT + '/__hub'); process.exit(0); }
+    console.error(String(e && e.message || e));
+    process.exit(1);
+  });
+}
+
+module.exports = { start, PORT_FILE };

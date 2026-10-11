@@ -5,9 +5,9 @@
    (360 x 740, touch) and a laptop (1280 x 800) open the site and do what he
    would do:
 
-     THE RACE     the phone hosts an assembly table, the laptop joins by code,
-                  both build the first wall, the laptop finishes first and both
-                  screens say so.
+     THE RACE     the phone creates a race room from Home, the laptop opens
+                  the invite link and joins, both build the first wall, the
+                  laptop taps Complete first and both screens place it first.
      THE TABLE    the phone hosts a hospital table, the laptop takes the Finance
                   seat, the phone (GM) puts the state's offer on the table, the
                   CEO accepts on the phone, Finance countersigns on the laptop,
@@ -81,60 +81,52 @@ async function tap(page, sel) {
     catch (e) { if (i >= 3 || !/detached|not attached|stable/i.test(e.message)) throw e; await pause(300); }
   }
 }
-// on a phone the assembly spec sheet is a bottom sheet: the Levels chip opens it on the level's own page,
-// which is where the Two walls fold lives; on a laptop the sheet is always beside the board
-async function openSheet(page) { if (page.__touch && !(await page.locator('details.da-table').first().isVisible().catch(() => false))) { await tap(page, '#menuBtnI'); await pause(600); } }
 async function fill(page, sel, v) { const l = page.locator(sel).first(); await l.waitFor({ timeout: T }); await l.fill(v, { timeout: T }); }
 async function seeText(page, sel, text) { const l = page.locator(sel).first(); await l.waitFor({ timeout: T }); return ((await l.textContent()) || '').includes(text); }
 
 /* ── THE RACE ─────────────────────────────────────────────────── */
+// THE RACE as a player meets it (stage A6, 2026-10-04; the door since 2026-10-06): Home, then Race, a name, Create a room; the room card's code
+// and invite link; a guest who opens the link and joins; the host starts; first build through the test wins.
 async function theRace(browser) {
   const S = 'race';
-  const url = BASE + '/secret-menu/device-assembly/';
+  const wall = BASE + '/fun/device-assembly/?wall=t1';
   const ready = () => !!(window.__da && window.__da.T && window.supabase);
   const init = () => { window.__DA_HOOK = true; };
-  const phone = await open(browser, PHONE, url, init, ready, 'race phone');
-  const laptop = await open(browser, LAPTOP, url, init, ready, 'race laptop');
+  const phone = await open(browser, PHONE, wall, init, ready, 'race phone');
+  let laptop = null;
   try {
-    // the phone opens the spec sheet, then the Two walls fold, types a name, hosts
-    await openSheet(phone);
-    const fold = phone.locator('details.da-table').first();
-    await fold.waitFor({ timeout: T });
-    if (!(await fold.evaluate(el => el.open))) await tap(phone, 'details.da-table > summary');
+    // the phone, on Tutorial 1, opens the front door (Home) and its Race tile, types a name, creates a room
+    await tap(phone, '#menuBtnI');
+    await tap(phone, '#daDoor [data-level="race:new"]');
     await fill(phone, '#daName', 'Dave');
-    await tap(phone, '#daHost');
+    await tap(phone, '#rHost');
     const hosted = await until(phone, () => window.__da.NET.mode === 'host' && window.__da.NET.chan && window.__da.NET.chan.kind === 'internet');
     const code = hosted ? await phone.evaluate(() => window.__da.NET.room) : null;
-    const codeShown = hosted && await seeText(phone, 'details.da-table > summary', code);
-    await shot(phone, 'race-1-phone-hosted');
-    if (!step(S, 'phone hosted a table over the internet relay, code on screen', hosted && codeShown, code ? 'table ' + code : '')) return;
+    const codeShown = hosted && await seeText(phone, '.da-roomcode', code);
+    await shot(phone, 'race-1-phone-room');
+    if (!step(S, 'phone created a room over the internet relay, code on the room card', hosted && codeShown, code ? 'room ' + code : '')) return;
 
-    // the host makes sure the race is the first tutorial wall
-    const level = await phone.evaluate(() => window.__da.S && window.__da.S.level.id);
-    if (level !== 't1') {
-      await openSheet(phone);
-      const walls = phone.locator('details.da-walls').first();
-      if (!(await walls.evaluate(el => el.open))) await tap(phone, 'details.da-walls > summary');
-      await tap(phone, 'button.da-lv[data-level="t1"]');
-    }
-    const onT1 = await until(phone, () => window.__da.race().level === 't1' && window.__da.S.level.id === 't1');
-    if (!step(S, 'the phone picked Tutorial 1 for the race', onT1)) return;
+    // the race is on this wall, with no bots, so the two people decide it
+    await tap(phone, '[data-rwall="this"]');
+    for (let i = 0; i < 8 && await phone.evaluate(() => ((window.__da.race().prefs || {}).bots | 0) > 0); i++) await tap(phone, '[data-rbot="-1"]');
+    const set = await phone.evaluate(() => { const p = window.__da.race().prefs || {}; return p.wall === 'this' && (p.bots | 0) === 0; });
+    if (!step(S, 'the phone set the race to this wall, no bots', set)) return;
 
-    // the laptop joins by code
-    await openSheet(laptop);
-    const lfold = laptop.locator('details.da-table').first();
-    await lfold.waitFor({ timeout: T });
-    if (!(await lfold.evaluate(el => el.open))) await tap(laptop, 'details.da-table > summary');
+    // the laptop opens the invite link, types a name, joins
+    laptop = await open(browser, LAPTOP, BASE + '/fun/device-assembly/?room=' + code, init, ready, 'race laptop');
     await fill(laptop, '#daName', 'Sam');
-    await tap(laptop, '#daJoin');
-    await fill(laptop, '#daCode', code);
-    await tap(laptop, '#daJoinGo');
-    const seated = await until(phone, () => window.__da.NET.seats.b === 'Sam');
-    const followed = await until(laptop, () => window.__da.race().level === 't1' && window.__da.S && window.__da.S.level.id === 't1');
-    await shot(phone, 'race-2-phone-roster');
-    await shot(laptop, 'race-2-laptop-joined');
-    const netOf = p => p.evaluate(() => { const N = window.__da.NET; return `${N.mode} ${N.room} roster=${N.roster.join('+')} seats=${JSON.stringify(N.seats)} seat=${N.seat} level=${window.__da.race().level}`; });
-    if (!step(S, 'laptop joined by code, took Wall B, opened the same wall', seated && followed, (seated && followed) ? '' : `phone: ${await netOf(phone)} · laptop: ${await netOf(laptop)}`)) return;
+    await tap(laptop, '#rJoinInv');
+    const seated = await until(phone, () => window.__da.NET.seats.p2 === 'Sam');
+    const lobby = await until(laptop, () => window.__da.NET.seat === 'p2' && !!document.querySelector('#rLeave'));
+    await shot(phone, 'race-2-phone-room');
+    await shot(laptop, 'race-2-laptop-lobby');
+    if (!step(S, 'laptop opened the invite link and joined; the phone seated it', seated && lobby)) return;
+
+    // the phone starts the race; Tutorial 1 opens on both screens
+    await tap(phone, '#rDeal');
+    const onT1 = (p) => until(p, () => window.__da.S && window.__da.S.level.id === 't1' && window.__da.race().started > 0);
+    const opened = await onT1(phone) && await onT1(laptop);
+    if (!step(S, 'the race opened on Tutorial 1 on both screens', opened)) return;
 
     // both build the wall through the engine (a scripted thumb cannot drag on the SVG reliably)
     const build = () => {
@@ -147,24 +139,23 @@ async function theRace(browser) {
     };
     const pb = await phone.evaluate(build);
     const lb = await laptop.evaluate(build);
-    const phoneSees = await until(phone, snap => window.__da.otherWall() === snap, lb.snap);
-    const laptopSees = await until(laptop, snap => window.__da.otherWall() === snap, pb.snap);
+    const hostSees = await until(phone, snap => window.__da.race().walls.p2 === snap, lb.snap);
     await shot(phone, 'race-3-phone-building');
     await shot(laptop, 'race-3-laptop-building');
-    if (!step(S, 'both walls built, each mirrored on the other screen byte for byte', pb.ok && lb.ok && phoneSees && laptopSees)) return;
+    if (!step(S, 'both walls built; the laptop\'s reached the phone byte for byte', pb.ok && lb.ok && hostSees)) return;
 
-    // the laptop submits first
-    await laptop.evaluate(() => { const da = window.__da; da.raceSubmit(da.functionTest(da.S)); });
-    const wonHost = await until(phone, () => window.__da.race().winner === 'Sam');
-    const wonGuest = await until(laptop, () => window.__da.race().winner === 'Sam');
+    // the laptop taps Complete first
+    await tap(laptop, '#submitBtn');
+    const first = (p) => until(p, () => window.__da.race().places[0] === 'p2');
+    const won = await first(phone) && await first(laptop);
     await pause(600);
     await shot(phone, 'race-4-phone-result');
     await shot(laptop, 'race-4-laptop-result');
-    step(S, 'laptop finished first, both screens say so', wonHost && wonGuest);
+    step(S, 'laptop tapped Complete first, both screens place it first', won);
   } catch (e) {
     step(S, 'threw', false, e.message.split('\n')[0]);
-    await shot(phone, 'race-FAIL-phone').catch(() => {}); await shot(laptop, 'race-FAIL-laptop').catch(() => {});
-  } finally { await phone.context().close(); await laptop.context().close(); }
+    await shot(phone, 'race-FAIL-phone').catch(() => {}); if (laptop) await shot(laptop, 'race-FAIL-laptop').catch(() => {});
+  } finally { await phone.context().close(); if (laptop) await laptop.context().close(); }
 }
 
 /* ── THE TABLE ────────────────────────────────────────────────── */

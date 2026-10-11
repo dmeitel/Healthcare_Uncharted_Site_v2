@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const PAGE = path.join(__dirname, '..', 'src', 'secret-menu', 'device-assembly', 'index.html');
+const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
 
 function load(search) {
   const html = fs.readFileSync(PAGE, 'utf8');
@@ -45,8 +45,8 @@ test('an event goes out on the game\'s own path, counted as an event', () => {
   da.track('first-wall');
   da.track('table-host');
   assert.deepStrictEqual(hits.map(h => h.path), [
-    '/secret-menu/device-assembly/first-wall',
-    '/secret-menu/device-assembly/table-host',
+    '/fun/device-assembly/first-wall',
+    '/fun/device-assembly/table-host',
   ]);
   assert.ok(hits.every(h => h.event === true), 'events, not pageviews');
   assert.ok(hits.every(h => /^Device Assembly/.test(h.title)), 'named for the game');

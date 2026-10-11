@@ -369,7 +369,7 @@ usual headwall gases, the red outlets on the ventilator's side, the monitor, and
 the wall, its arm mounted on its right when it sits on the left edge); art for the ventilator (its screen shows the
 FiO2), the endotracheal tube on the patient, the Y, the HME, the filter and the mesh neb; the oxygen hose in the
 oxygen tubing's green, thicker. A wall that passes with a rule's note reads "System complete, with a note" and the
-note rides the test and the result. Record: DECISIONS LOG "STAGE C".
+note rides the test and the result. Record: docs/HU-DECISIONS-LOG.md, LOG, "STAGE C".
 
 ## 2026-10-04 · Device Assembly expansion · Stage C, the rest
 
@@ -380,5 +380,197 @@ elbow, the jet neb's cup, the closed suction elbow with its catheter dashed red,
 water trap, the flex tube, the bag, battery suction, the conserving cylinder marked PULSE, the humidifier bottle with a
 barb each side); a boom outlet at bed height on the suction wall; a living room whose bedside screen sits on the left;
 An ICU bed in Puzzles and in the maker; the ICU wall in the hospital's colour. The vent's screen shows its own FiO2 and
-the number opens the setting. Record: DECISIONS LOG "STAGE C, THE REST".
+the number opens the setting. Record: docs/HU-DECISIONS-LOG.md, LOG, "STAGE C, THE REST".
 
+
+## 2026-10-04 · The Data Observatory as the back office · OPENED and round 1
+
+David: "the Data Observatory tab is going to be the best place for us to build in website infrastructure... start working on just like a admin menu that eventually we privatize". New on the surface: a row of four tabs inside the Observatory's one top bar (the site's toggle chips, the current one filled; on a phone they take the bar's second row and slide sideways), and three new pages under it. Process: where the last window left off, the open, work and close steps with the blocks each uses as small colored chips, every instrument as a brick with two studs on top colored by who decides (blue the machine fails it, amber the machine measures, teal David decides, green makes or fetches, grey keeps the record), and the push history with the areas each push touched. Site: every live page as a brick on its area's baseplate, green at Phase 2, amber at Phase 1, dashed when unmeasured, with marks for locked, reviewed, changes not pushed and an open design phase; a picked brick opens its detail beside the plates, or under its own plate below 1100px. Traffic: the Goat Tracker unchanged under the shared bar, its h1 now "Site traffic". The one new literal color is the Data map's own validated blue, #3f87e8, used in dark only. Styles: src/assets/css/observatory.css. Proof: verify green (502 tests), tests/admin-hub.test.js, the phone gate on the four tabs and the secret menu, Playwright shots at 1440 and 390 in both themes in tmp/obs-hub/.
+
+## 2026-10-04 · The hub and the Data Observatory · round 2, the hub moves to David's computer
+
+On David's "yes to both, go ahead and build the hub" (DECISIONS HUB1 and HUB2). The Process and Site pages of round 1 left the site before they were pushed; the Data Observatory's tab row is two tabs, Data map and Traffic. The hub is five screens under /__hub in the site's own tokens and tool bar: the board (a focus card ringed in teal with its five stage pills, done ones checked and the current one filled; three lanes under it, Up next, Waiting on you, Inbox; a dashed box per Inbox idea and a form to add one; a QR code for his phone), the run sheet (five stage boxes with the current one ringed and tagged "here", then Open, Work and Close as three columns of checks with a green tick, a red cross or a plain ring, and picture thumbnails under a work step), the QA list (three counts and the machine's line, then items grouped as Back for another look, To look at, With Claude, Good; each with its link, a before and now pair, and two outline buttons that fill green or amber once chosen; his note on an amber wash, the fix on a teal one), Site and Library (round 1's bricks and blocks, unchanged). Round 1's stylesheet split: the site keeps the tab row (src/assets/css/observatory.css), the rest is scripts/hub/hub.css. Nothing new in the palette. Proof: tests/hub.test.js, an end-to-end run at phone size through every save in both themes, the phone gate on the five screens, pictures in tmp/hub/shots/hub/.
+
+## 2026-10-04 to 05 · Device Assembly game feel · REOPENED, the cleanup before the playtest (K1 to K8)
+
+On David's first playtest ("I can never tell what I'm doing wrong or why it's not working") and his yes ("Yes complete
+that build in full order"). New on the surface: a miss card that sits low with no dim and names one place; a pulsing red
+ring where the gas stops and a dashed one where it has to get to; rings and tags on wrong joints (amber #f2b32b with dark
+ink, a darker red #c23b35 with white so the tag text clears contrast, teal for a run that came off, green #3fb27a for a
+run that fits) that open their reason on a tap; parts the outlets do not reach at 42% opacity; every connector redrawn
+as one plain shape per kind (diamond, square, hexagon, triangle, wide triangle, big and small circle, plug, pentagon),
+the outlets' rings replaced by their slots; green and amber halos round the ports a held part fits; a dashed route with
+its verdict while tubing is pulled; one walls card and one Help card; a compact phone cart (count on the corner, names
+on two lines); zoom buttons stacked over the trash. No new color outside those named, all of which were already the
+game's state colors except #c23b35. Proof: verify green, the puzzle checks, `npm run da:qa` (38 walls clean, Tutorial 1
+by touch), the phone gate clean at nine sizes, pictures in tmp/hub/shots/device-assembly/05 and 06 and tmp/da-look/k/.
+
+## 2026-10-05 · Device Assembly game feel · the complexity stars come off
+
+David, starting his full QA: the assembly complexity stars on the System functional card, "I don't think we want to
+include that all the time so maybe just remove that from in general right now". Gone from every result card; `score()`
+still works them out. Proof: the pass card at 390 and 1440 (tmp/da-look/pass-*.png).
+
+## 2026-10-05 · The hub · the QA list folds what is marked good
+
+David: "Can we create like some folders or some sub tabs for different things that have been marked good or just like
+make them smaller or collapsible". New on the hub: a row of folder chips over the list (the site's toggle chips, one per
+group, each with what is left in it); the Good section one closed fold of one-line rows with a green edge, each opening
+to the whole item. The Puzzles sheet folds its good walls the same way. Nothing new in the palette.
+
+## 2026-10-05 · Device Assembly game feel · the cart, the bin and the verbs (his QA note)
+
+David, after his QA: "The device assembly game mechanics now feel really good I think the drag and drop and the way
+everything looks and holds together is solid let's take a little closer look at the menuing for the cart all the
+devices as well as like the trash bin... there's got to be maybe a better standard or a more approachable model for
+these menus". The build-game model, three ways. The cart is a tray: kind tabs (the site's toggle chips, a count each,
+an amber dot on the tab holding an adapter a joint waits on) over tiles, two to a row at a desk and one row on a phone;
+a tile is the part's picture, its name, its connector shapes and its count in the corner; the mono line naming each
+connector standard left the tile for the spec sheet. The bin left the wall: a dashed teal strip, Back to cart, rises
+along the foot of the wall only while a part is held from it, and the cart takes a teal ring as the other place to drop
+it; the zoom buttons took the corner (the right side on a phone, where the verbs sit left). The verbs' icons carry
+their words. Nothing new in the palette. Proof: the phone gate clean at nine sizes, pictures in tmp/da-look/k/tray-*.png
+and tmp/hub/shots/device-assembly/07.
+
+## 2026-10-05 · Device Assembly game feel · THE SCREEN (his second note)
+
+David: "the phone view for it does not fit well within the windows or within the borders that we have pretty set".
+The cause: the phone checks emulated a whole 390 x 844 screen, and a phone's browser leaves far less (Safari on an
+iPhone 15 about 393 x 659 with its bars up, an SE about 375 x 548), so the cart and Complete fell off the bottom. Now a
+phone held upright is one screen at 100dvh and nothing scrolls; the wall takes what is left and fits it (323 px on the
+iPhone 15 with bars, 212 on the SE, 410 on a Pro Max); Complete and Reset (its icon) sit at the bottom right in the
+tray's tab row; the zoom buttons lie flat on the wall's corner; the hint's step moved into its tab. The bedside screen
+stays under the wall, his Round 16 pick. Nothing new in the palette. The standard is written into the hu-game-shell
+skill. Proof: five real screens fit in `npm run da:qa`, the phone gate clean at nine sizes, tmp/da-look/screen-*.png.
+
+## 2026-10-05 · Device Assembly game feel · Complete gets its own row (his third note)
+
+David: "flipping between the different devices on the phone is not going to be easy because of the way the complete
+button overrides it maybe we give the complete and reset button their own row". On an upright phone the bar left the
+tray's tab row and became the last row of the screen, under the parts: Complete first and wide, Reset (and Show me and
+Cancel when they show) with the word under the icon, like the part's verbs. The tabs got the whole width back (All,
+Devices, Tubing and Adapters show at 393). The cost is the wall: 266 px on the iPhone 15 with bars (was 323), 155 on
+the SE (was 212); the puzzle sheet now calls a wall under 180 small, play it zoomed, rather than failing it.
+Found in the same window and fixed: (1) the fit had a 160 px floor, and at the SE's new size the wall flipped between
+fitted and full width forever, so it showed cut off; the floor is gone on an upright phone. (2) Since THE SCREEN the
+zoom buttons sat on top of the part's buttons whenever a part was picked, hiding Put back and Undo, at every phone
+size; the dock was also measured before Undo was set, so it ran off a small screen. Now the dock keeps the wall's
+bottom-left corner and slides into the margin rather than off the screen, the zoom buttons step up where the two would
+meet, and beside a small wall they stand in the margin (`placeVerbs`, `.zoom-up`, `.zoom-side`). The puzzle sheet's
+real-screen check now picks a part and fails if the two meet. Nothing new in the palette.
+Also found by the same window's full QA, through the phone QA's race step (which still drove the old two-wall race
+and was rewritten for THE RACE): on a phone, Race and Make a wall in the walls list did nothing, and the walls button
+on a result card opened the list and shut it at once, since the walls became one kit card on 2026-10-04. Every card,
+the walls list and the spec sheet arm the phone's back gesture with a history entry and step history back when they
+close; the step landed after the next card had opened, and that card read it as a back press. `afterBack(fn)` opens
+the next one once the step has landed (the walls rows, showLevels from a result card, the panel's Race button). The
+phone QA now plays the race the way a player reaches it, from Walls on the phone and the invite link on the laptop.
+
+## 2026-10-05 · Device Assembly game feel · his Puzzles-sheet notes (window d)
+
+David marked 19 walls on the Puzzles sheet (8 good, 11 notes) and sent: "if something's going to be a power outlet I
+think we need to have a unique icon for that... both male and female... just seeing circles as connectors isn't always
+good". Built: the plug is a plug (blades on a body, the cord below) and the receptacle an outlet's face (slots over the
+ground hole); a seated cord end drops its green dot, a cord leaves its device through a boot, a coiled cord shows its plug
+on the device, a hanging cord shows it on its end, and a powered device's cart tile shows the plug. From the notes: a wall
+part let go off the wall goes back on the cart (l2); the screen stays on Order outside the tutorials (lnrb); the timed
+wall's SpO2 chip stacks on a phone so the bar is one row (l1t); the saved card has a footer band and keeps the wall's
+shape (l5); an interface on the face turns its lead toward its run, in the plan too, and only where that side has a way
+(f5). Found on the way: every vent wall's screen read "undefined L/min"; a puzzle test now holds every wall's screen. No
+dealt wall changed (60 compared with the last commit). The ventilator notes (v1 to v3), the headwall space (l3), decoys
+(f3) and the picture standard are the beta plan, docs/HU-DEVICE-ASSEMBLY-BETA-1-PLAN-2026-10-05.md.
+
+## 2026-10-05 · Device Assembly · beta session one, built (window e)
+
+David: "yes to all three, go ahead and build the beta plan" (DECISIONS B1 to B3). Built in order, every step tested:
+the mechanics (a part dropped on a run goes in at the nearer joint, and at a direct joint the outer side slides out a
+square; out again, the joint closes; cords, hoses and sampling lines lie over things; runs cross; Swap for a part's or a
+run's twin); the ventilators (oxygen and air; the vent cart with its humidifier on the pole and a build with its ports
+underneath; the circuit in its bag, laid in one piece, Ventilator 1 keeping the loose pieces; the dead space rule; the
+air hose yellow); the paths (five, four to six walls each, written and made walls mixed; Next walks the path; the bar
+says where you are on it); a stored answer for every authored wall, so the puzzle sheet tries every break; the extension
+cord, a decoy that works and fails for a named reason. Every vent wall's par was recomputed from its new reference
+finish. Dealt walls: the ICU deals changed (on the cart, ICU_V 2); freeing the cords changed a few hospital codes' par
+and five codes' deals (two home, three future days or shifts); no daily wall through 2026-10-06 changed; GEN_V was not
+bumped, because bumping it re-deals every wall. The level menu is two mockups, cards and a map, for his pick (B4).
+
+## 2026-10-06 · Device Assembly · the front door, and the move to the Fun shelf
+
+On David's picks (DECISIONS B5, B6 and B7: "yes to all three", then "dock and A, go ahead and build both"). The game
+opens on a home screen: a first visit leads with Start the training; a visit after leads with today's wall, then your
+path with Continue, then every other way to play as tiles (Training, Paths, Random wall in four places, The shift, Race,
+Make a wall); Paths is B4's map, kept as a card. The bar's action is Home (was Walls). Links still open what they name.
+The game moved to /fun/device-assembly/, marked beta, with a Fun shelf card; the old address forwards; every part has
+a plain address and the address follows the wall on screen. A defect found on the way: the daily streak was saved and
+never read back. Doors B and C and the walls-card mockups came out. The rounds before this, and the reasoning, are in
+the beta plan and the decisions log.
+
+## 2026-10-06 · Pages with views: the switch · opened and built
+
+Opened on DECISIONS L1 (David, on the fracture post: the view buttons "are not really easy to see or are easy to lose
+as things scroll"), built on L2 ("dock and A, go ahead and build both") after two mockups, docked at the foot of a
+phone or pinned at the top; the pinned one failed the phone check's one-top-bar rule. Shipped to the build: the boxed
+switch (.hu-seg) on the fracture post, Laws and Paradoxes, Request Routing, Process Engineering and the home page's tool
+groups; the dock (hu-views.js) on the three whose views run long, stepping past three views and carrying the fracture
+post's layer buttons; a card at the end of each view handing you to the next; a slide from the side you went; one glow
+the first time the switch follows you down. Laws and Paradoxes keeps its desk sidebar, which already worked. The
+standard: the hu-view-switch skill and tests/view-switch.test.js. Awaiting his QA.
+
+## 2026-10-07 · Device Assembly · his Puzzles-sheet notes, ventilators first (window b)
+
+David, after marking the whole sheet: the vent QA "is dependent on a larger fix where we have different ventilator types
+or different ventilator options with the ports on different sides ... consider every configuration". Built: four vent
+cart builds (both ports on one side, both underneath, one each side, one top and one underneath), each flipping, so
+eight configurations; every one sets up and passes on the ICU wall, has a setup wall on the puzzle sheet (icu:VB29,
+VB72, VB50, VB86, VB0, VB34, VB8, VB66) and is dealt (ICU_V 3); Ventilator 8, the same bed space laid out the other way,
+the cart on the patient's left (ICU_LEFT); Ventilators 2, 3 and V3 on the new builds. Cords, hoses and sampling lines
+go round parts and still cross other runs (Level 2); a part set down on one re-routes it. Swap on a tap: a twin picked on
+the cart and a tapped run swap in place. The sandbox's headwall is loose pieces. The rest of the notes: the screen never
+turns pages by itself (a message is a strip at its foot); the shift's bonus pick is gone (Next wall); Levels 1 timed, 3
+and 5 stand in rooms of their own; Find the fault 2 runs off an extension cord; Find the fault 6, a non-rebreather at
+6 L/min; one finish card for every wall (Next, Share, Build it again, Home; See par build in the breakdown; no raw link
+on the card; a dealt place reads "Someone's home · wall QA1"). The hub's Puzzles sheet filters by group (?group=). No
+daily wall already dealt changed; the ICU deals did (no daily ICU wall before 2026-10-14).
+
+## 2026-10-08 · Device Assembly · the door's flavor lines go behind the "i"
+
+David's QA note on the beta list (the Fun shelf check): "flavor text shouldn't be something that's always face up".
+The door had a sentence under every tile and card, which games.md menu rule 9 already rules out (an item shows its name
+and one number). Now each tile and card is its name and, where it has one, its number (Training 5 of 5, your path, the
+streak); the sentence is behind a small "i" through HUKit.peek: a mouse hovers, a keyboard focuses, a thumb taps the
+"i" and nothing starts. The Random wall card's four places the same. The door went from 76 words to 49.
+
+## 2026-10-08 · Flavor text off phones; the switch sized to its names; the three role doors out
+
+David, on the Tools page's shelf lines ("for the move you are weighing", "practice on real data models"): "there is
+still to much Flavor Text like this. over all its fine in web page but should not appear on phones." A tagline beside a
+shelf heading is now `.hu-flavor`, dropped at the phone query by hu-global.css: 11 of them on Tools, Learn, Rounds and
+the Secret Menu (DESIGN.md, The Two Surfaces, rule 8; tests/flavor-text.test.js). The game door's sentences went behind
+the "i" earlier the same night, which reads the same note more strictly for a game menu (games.md rule 9).
+Then, on the home page's tool groups: "the main menu and button changes do not look good on web or phone, there are
+centering issues and font scaling issues." Measured: on a desk the boxed switch stretched across the column, 13px names
+in boxes up to 258px wide; on a phone "Maps & Systems" had 3px on each side. Now `.hu-seg` on a desk is as wide as its
+names, every box the width of the longest, names at the body size (15px); on a phone it fills the row with short names
+(`.lg`/`.sm`: Careers, Maps, Learn on the home page) and long ones may wrap, centered. The fracture post, Process
+Engineering and Request Routing take the same switch.
+And, on the search panel: "this feels redundant at this point. maybe we move away from these Three Ways in paths or
+archetypes." The three role doors (I work in healthcare, I work with the data, I make the calls) came out of the search
+panel and the home page; the pages they pointed to stay. Search opens on Jump in, then New on the site.
+
+## 2026-10-08 · The two maps' menus · A and B built (DECISIONS M1)
+
+Opened and built the same night on David's "yes do A now and B." after the review (docs/HU-MAP-MENUS-REVIEW-2026-10-08.md).
+Both maps, the twins rule held. A, the defect fixes: a card at the peek shows its name and its number (the Details and
+Display tabs and the kicker step out there); the phone's back gesture closes the hospital map's search, and Esc and back
+close the info card every tool shares (the kit now hands a back press to the guard opened last, and any page can ask
+`HUKit.backConsumed()`); the hospital map's desk drawer keeps its top padding; tabs and map-label rows are 44px targets;
+12px labels are 13px on a phone; each number is said once on a card; the catalog search takes the whole sheet on a phone
+with no scroll inside a scroll; List, Share and one locate label on both maps; place names in the same caps. B, the game
+menu rules: the metric definition, the rank and the trend explainers behind an "i"; one Color, Size, Pin switch over the
+Population Health Map's catalog instead of a Size and a Pin button on all 72 rows; one Add, Only switch over the hospital
+map's chips instead of an "only" inside each; one "?" per map ("Reading the map", HUKit.howTo, never opening by itself)
+in place of the first-visit coach and the 55-word paragraph; three search examples instead of a sentence repeating the
+placeholder; on a short screen Display opens full height. Measured with the review's own driver (tmp/map-menu-after/):
+the Display panel on a phone opens on 24 words with metrics showing (it was 48, 30 of them prose, and none); the whole
+panel is 289 words (593); a parked state card shows UTAH 79.5 yrs. Held by tests/map-menus.test.js and a two-guard test
+in tests/hu-kit.menu.test.js. Not in this pass: one hospital in three row layouts, the school program rows, and part C.

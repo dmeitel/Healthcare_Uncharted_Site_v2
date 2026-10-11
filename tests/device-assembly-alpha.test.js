@@ -12,7 +12,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'secret-menu', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);
@@ -88,24 +88,25 @@ test('find the fault 1: both flowmeters up, the cannula tubing on the air tree; 
   assert.strictEqual(da.faultMatches(S, itemOf(S, 'cannula-14').uid), false, 'so is the cannula');
 });
 
-test('find the fault 2: the heated humidifier is in the path and unplugged; plugging it in makes the wall work', () => {
+test('find the fault 2: the heated humidifier runs off an extension cord; straight into the wall, the wall works', () => {
+  // 2026-10-07 (David: "it's power only that's the problem maybe there's some way to complicate it"): it has power, from
+  // a household extension cord, which looks fine and is wrong for a reason the test names
   const da = load();
   const S = da.start('f2', 'left');
-  const heated = itemOf(S, 'heated');
-  assert.ok(heated, 'the humidifier is on the wall');
+  const heated = itemOf(S, 'heated'), ext = itemOf(S, 'ext-cord');
+  assert.ok(heated && ext, 'the humidifier and an extension cord are on the wall');
   let ev = da.evaluate(S);
   assert.strictEqual(ev.kind, 'invalid');
-  assert.match(ev.lines.map(l => l.t).join(' '), /not plugged in/);
-  assert.strictEqual(da.faultMatches(S, heated.uid), true);
-  const cord = S.tubes.find(t => t.lead === heated.uid && t.def.kind === 'cord');
-  assert.ok(cord, 'the cord hangs off the base');
-  assert.strictEqual(da.faultMatches(S, cord.uid), true, 'the hanging cord answers too');
+  assert.match(ev.lines.map(l => l.t).join(' '), /plugged into an extension cord/);
+  assert.strictEqual(da.faultMatches(S, ext.uid), true, 'the extension cord is the fault');
   assert.strictEqual(da.faultMatches(S, itemOf(S, 'cannula-14').uid), false);
+  const cord = S.tubes.find(t => t.lead === heated.uid && t.def.kind === 'cord');
+  Object.assign(cord, { to: null, path: [], short: 0, direct: false });   // pulled off the extension cord
   const outlet = S.items.find(i => i.def.id === 'deco-elec');
   const plug = da.connectPorts(S, port(heated.uid, 'cord'), port(outlet.uid, da.portsOf(outlet)[0].pi), null);
   assert.ok(plug.ok, plug.why);
   ev = da.evaluate(S);
-  assert.ok(ev.ok, 'plugged in, the order is met: ' + JSON.stringify(ev.lines));
+  assert.ok(ev.ok, 'straight into the wall, the order is met: ' + JSON.stringify(ev.lines));
 });
 
 test('find the fault is a repair: each wall can be fixed with what is on it, and submit then passes', () => {

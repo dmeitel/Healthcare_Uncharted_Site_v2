@@ -28,14 +28,30 @@
 {% if ta_fixed %}
 <script>
 (function(){
+  /* Esc and the phone's back gesture close the card too (2026-10-08, the maps' menus review: on a phone the back
+     gesture left the tool instead). Esc is heard first and goes no further, so one press is one step back. */
   document.querySelectorAll('.tool-attribution--fixed .ta-toggle:not([data-wired])').forEach(function(b){
     b.setAttribute('data-wired', '1');
-    b.addEventListener('click', function(){
-      var box = b.closest('.tool-attribution');
-      var open = box.classList.toggle('ta-open');
+    var box = b.closest('.tool-attribution');
+    function set(open){
+      box.classList.toggle('ta-open', open);
       b.setAttribute('aria-expanded', open ? 'true' : 'false');
       b.textContent = open ? '✕' : 'ⓘ';
-    });
+    }
+    b.addEventListener('click', function(){ set(!box.classList.contains('ta-open')); });
+    window.addEventListener('keydown', function(e){
+      if (e.key !== 'Escape' || !box.classList.contains('ta-open')) return;
+      e.stopPropagation(); set(false); b.focus();
+    }, true);
+    /* this card rides on pages that load the kit later or not at all, so it reaches the kit through window, and only
+       once the kit is there (the page's load event at the latest) */
+    function guard(){
+      var kit = window.HUKit;
+      if (!kit || !kit.backGuard) return false;
+      kit.backGuard({ watch: box, cls: 'ta-open', active: function(){ return box.classList.contains('ta-open'); }, step: function(){ set(false); } });
+      return true;
+    }
+    if (!guard()) window.addEventListener('load', guard, { once: true });
   });
 })();
 </script>

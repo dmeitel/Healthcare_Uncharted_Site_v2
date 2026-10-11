@@ -1040,6 +1040,7 @@ function applyURLState(){
   urlCtl.mark(sel);
 }
 window.addEventListener('popstate',()=>{
+  if(window.HUKit&&HUKit.backConsumed&&HUKit.backConsumed())return;   // a guard's press (the info card), not a URL walk
   urlCtl.begin();
   sel='H';subSel=null;activeFilter='all';hiddenLayers=new Set();
   applyURLState();

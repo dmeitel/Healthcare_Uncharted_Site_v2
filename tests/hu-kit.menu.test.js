@@ -59,12 +59,12 @@ function phoneKit() {
   const watched = [];
   win.MutationObserver = class {
     constructor(cb) { this.cb = cb; }
-    observe(target) { watched.push({ mo: this, target, was: target.classList.contains('open') }); }
+    observe(target) { watched.push({ mo: this, target, was: target.className }); }   // any class change, as a real observer reports
   };
   /** deliver observer records, then any history.back() the kit asked for */
   function settle() {
     for (let i = 0; i < 8; i++) {
-      watched.forEach(w => { const is = w.target.classList.contains('open'); if (is !== w.was) { w.was = is; w.mo.cb([]); } });
+      watched.forEach(w => { const is = w.target.className; if (is !== w.was) { w.was = is; w.mo.cb([]); } });
       if (!hist.pending) return;
       hist.pending--; hist.depth--; pop.forEach(fn => fn({}));
     }
@@ -195,6 +195,27 @@ test('the phone back gesture closes the top card, one card per press', () => {
   assert.equal(p.hist.depth, 0, 'the history is where it started');
   assert.equal(p.hist.backs, 0, 'and the kit never had to walk it back itself');
   assert.equal(p.kit.HUKit.dialog.consumed(), true, 'a page popstate handler can tell it was ours');
+});
+
+test('two guards on one page: one press closes the one on top, and a page handler can tell (2026-10-08)', () => {
+  // the maps' sheet and the info card every tool shares: both arm on a phone, and one back press is one step back
+  const p = phoneKit();
+  const H = p.kit.HUKit;
+  const sheet = p.kit.el('div'), info = p.kit.el('div'), steps = [];
+  H.backGuard({ watch: sheet, active: () => sheet.classList.contains('open'), step: () => { steps.push('sheet'); sheet.classList.remove('open'); } });
+  H.backGuard({ watch: info, cls: 'ta-open', active: () => info.classList.contains('ta-open'), step: () => { steps.push('info'); info.classList.remove('ta-open'); } });
+  assert.equal(H.backConsumed(), false, 'nothing open: a press belongs to the page');
+  sheet.classList.add('open'); p.settle();
+  info.classList.add('ta-open'); p.settle();
+  assert.equal(p.hist.depth, 2, 'one spare entry each');
+  assert.equal(H.backConsumed(), true, 'a press now belongs to a guard, even to a handler that runs before the guards');
+  p.back();
+  assert.deepEqual(steps, ['info'], 'the card on top closed, and only it');
+  assert.equal(sheet.classList.contains('open'), true);
+  p.back();
+  assert.deepEqual(steps, ['info', 'sheet']);
+  assert.equal(p.hist.depth, 0, 'the history is where it started');
+  assert.equal(p.hist.backs, 0);
 });
 
 test('a card closed by its X eats the spare history entry, so back still leaves the page', () => {

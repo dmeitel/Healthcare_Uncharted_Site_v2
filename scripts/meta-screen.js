@@ -30,13 +30,21 @@ function walk(dir, out = []) {
   return out;
 }
 
+const urlOf = (p) => '/' + path.relative(SITE, p).split(path.sep).slice(0, -1).join('/') + '/';
+
+/* ONLY PAGES THAT STILL HAVE A SOURCE (2026-10-04). The build folder never deletes, so a renamed
+   page stays in _site beside its replacement, and the two share a title and a description: the
+   broken arm piece under its old address was this screen's one "duplicate", and it was counted
+   as over-long too. The ledger knows which addresses a source file produces. */
+const live = require('./ledger').liveUrls();
 const pages = walk(SITE).filter((f) => {
   const h = fs.readFileSync(f, 'utf8');
-  return /<html/i.test(h) && !/http-equiv="refresh"|location\.replace\(/i.test(h);
+  return /<html/i.test(h) && !/http-equiv="refresh"|location\.replace\(/i.test(h) && live.has(urlOf(f).replace('//', '/'));
 });
 
-const urlOf = (p) => '/' + path.relative(SITE, p).split(path.sep).slice(0, -1).join('/') + '/';
-const textLen = (s) => s.replace(/&[a-z]+;/gi, 'x').length;
+/* An entity is one character on the page however it is spelled in the source. `&#39;` (an
+   apostrophe) was counted as five until 2026-10-04, which put a 162-character description at 166. */
+const textLen = (s) => s.replace(/&(?:#\d+|#x[0-9a-f]+|[a-z]+);/gi, 'x').length;
 
 const flagged = [];
 const byDesc = new Map();

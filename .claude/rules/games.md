@@ -79,6 +79,9 @@ docs/HU-GAME-REVIEW-2026-09-23.md. A game's menus are built from the kit, never 
   `scripts/backend-check.js` so the real relay is checked before a deploy.
 - The top bar is the shared game bar (src/_includes/components/game-bar.njk), held by
   tests/game-shell.test.js; the skill hu-game-shell has the standard (2026-10-03).
+- A puzzle game holds its puzzles to a sheet: every dealt one solves, every break of a solved one says where it broke,
+  every hint reads on a phone (tests/device-assembly-puzzles.test.js), and a browser run pictures every one at a phone
+  and a desk (`npm run da:qa`, drawn on the hub's Puzzles screen). A new puzzle is on the sheet before it ships.
 - `npm run verify` green and `npm run phone -- <path>` clean across its nine default viewports
   (portrait, landscape and both sides of the 699 line) before a game ships.
   The pane's screenshots can time out; Playwright shots into tmp/ are the reliable proof.

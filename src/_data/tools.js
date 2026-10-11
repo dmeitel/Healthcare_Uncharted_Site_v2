@@ -208,4 +208,20 @@ module.exports = [
     tags:        ['Game', 'Multiplayer', '2 to 48 players']
   },
 
+  {
+    id:          'fun-device-assembly',
+    cluster:     'fun',
+    searchType:  'fun',
+    searchSub:   'A respiratory equipment setup game: build oxygen, high flow and ventilator setups on the wall behind the bed',
+    keys:        ['game', 'puzzle', 'respiratory', 'rt', 'oxygen', 'ventilator', 'high flow', 'equipment', 'setup', 'daily', 'play', 'fun'],
+    status:      'live',
+    featured:    false,
+    title:       'Device Assembly',
+    desc:        'Set up oxygen, high flow and ventilators on the wall behind the bed, with real connectors, and get a therapist\'s read on why a build fails. A new wall every day, and paths from easy to hard.',
+    url:         '/fun/device-assembly/',
+    type:        'game',
+    badge:       'Game',
+    tags:        ['Game', 'Beta', 'A new wall every day']
+  },
+
   ];

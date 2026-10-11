@@ -210,7 +210,7 @@ return {
   // the goat tracker: the traffic sparkline
   // the assembly tray: a grid, a flowmeter on the wall, a humidifier under it, a
   // tubing run to the patient, and the three connector states along the way
-  'sm-device-assembly': frame(
+  'fun-device-assembly': frame(   // on the Fun shelf since 2026-10-06 (DECISIONS B6); it was sm-device-assembly
     `${Array.from({length: 11}, (_, i) => `<line x1="${180 + i * 92}" y1="60" x2="${180 + i * 92}" y2="380" stroke="${LINE}" stroke-width="2"/>`).join('')}
      ${Array.from({length: 5}, (_, i) => `<line x1="180" y1="${60 + i * 80}" x2="1100" y2="${60 + i * 80}" stroke="${LINE}" stroke-width="2"/>`).join('')}
      <rect x="180" y="60" width="92" height="320" fill="${AMBER}" opacity=".12"/>

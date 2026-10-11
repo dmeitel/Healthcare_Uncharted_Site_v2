@@ -28,6 +28,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { today } = require('../lib/session');
 
 const ROOT = path.join(__dirname, '..', '..');
 const CACHE = path.join(ROOT, 'scripts', '.cache', 'accred');
@@ -192,7 +193,7 @@ async function acen() {
 }
 
 (async () => {
-  const checked = new Date().toISOString().slice(0, 10);
+  const checked = today();
   /** @type {Record<string, Row[]>} */
   const by = {};
   for (const [k, fn] of /** @type {[string, () => Promise<Row[]>][]} */ ([['lcme', lcme], ['aacom', aacom], ['arcpa', arcpa], ['coarc', coarc], ['ccne', ccne], ['acen', acen]])) {

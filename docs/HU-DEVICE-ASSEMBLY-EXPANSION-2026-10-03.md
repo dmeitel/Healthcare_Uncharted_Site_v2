@@ -1,6 +1,6 @@
 # Device Assembly: from a learning wall to a daily puzzle
 
-### 2026-10-03 · PLAN · STAGE A BUILT 2026-10-03 to 2026-10-04 (A1 to A6) · STAGE B BUILT 2026-10-04 (without the 10 L concentrator and the conserving device) · STAGE C BUILT 2026-10-04 (ten vent walls, two home oxygen faults, the ICU as a dealt place; section 5 judged as written) · the record is DECISIONS.md LOG · section 5 READ by David 2026-10-04: "looks right, no changes"
+### 2026-10-03 · PLAN · STAGE A BUILT 2026-10-03 to 2026-10-04 (A1 to A6) · STAGE B BUILT 2026-10-04 (without the 10 L concentrator and the conserving device) · STAGE C BUILT 2026-10-04 (ten vent walls, two home oxygen faults, the ICU as a dealt place; section 5 judged as written) · the record is docs/HU-DECISIONS-LOG.md, LOG · section 5 READ by David 2026-10-04: "looks right, no changes"
 
 David, 2026-10-03: "we have a solid starting build point but we need to consider expansion stuff
 like ventilators instead of oxygen and air, we need to consider the filters that are placed

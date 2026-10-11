@@ -25,6 +25,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { today } = require('./lib/session');
 
 // The CSV lives behind a rotating content hash, so the pinned URL 404s whenever CMS
 // republishes. Resolve the CURRENT distribution URL from the dataset metastore first;
@@ -137,7 +138,7 @@ function parseCSV(text) {
 async function getCSV() {
   const cache = P('scripts/.cache/dme-suppliers.csv'), note = cache.replace(/\.csv$/, '.meta.json');
   if (!REFRESH && fs.existsSync(cache)) {
-    const m = fs.existsSync(note) ? JSON.parse(fs.readFileSync(note, 'utf8')) : { released: '', pulled: fs.statSync(cache).mtime.toISOString().slice(0, 10) };
+    const m = fs.existsSync(note) ? JSON.parse(fs.readFileSync(note, 'utf8')) : { released: '', pulled: today(fs.statSync(cache).mtime) };   // the file's date in Mountain time, like every date we stamp
     console.log('  using cached CSV (released ' + (m.released || 'unknown') + ', fetched ' + m.pulled + '); --refresh downloads the current one');
     return { text: fs.readFileSync(cache, 'utf8'), released: m.released, pulled: m.pulled };
   }
@@ -146,7 +147,7 @@ async function getCSV() {
   const res = await fetch(url);
   if (!res.ok) throw new Error('fetch failed: ' + res.status);
   const text = await res.text();
-  const pulled = new Date().toISOString().slice(0, 10);
+  const pulled = today();
   fs.mkdirSync(P('scripts/.cache'), { recursive: true });
   fs.writeFileSync(cache, text);
   fs.writeFileSync(note, JSON.stringify({ released, pulled, url }) + '\n');

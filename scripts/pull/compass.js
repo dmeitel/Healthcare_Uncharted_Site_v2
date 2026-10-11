@@ -55,6 +55,7 @@ const UA = 'HealthcareUncharted/1.0 (david.eitel.pcpal@gmail.com)';
 const OUT = 'src/assets/data/assignment-compass-counties.json';
 
 const STFIPS = require('../lib/fips').FIPS_ABBR;
+const { today } = require('../lib/session');
 const WRITE = process.argv.includes('--write');
 const REFRESH = process.argv.includes('--refresh');
 
@@ -354,7 +355,7 @@ async function pullNri() {
       zoriMonth: zori.month, zhviMonth: zhvi.month,
       nriSource: 'FEMA National Risk Index county layer (FEMA_NationalRiskIndex FeatureServer), flags = Very High or Relatively High rating',
       salesTaxSource: 'Tax Foundation 2025 combined state + avg local',
-      retrieved: new Date().toISOString().slice(0, 10)
+      retrieved: today()
     },
     national, states, counties
   };

@@ -12,7 +12,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'secret-menu', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);
@@ -131,6 +131,7 @@ test('the fault walls arrive built in the right room, broken the same way, and t
   const heated = itemOf(S, 'heated');
   const outlet = S.items.filter(i => i.def.id === 'deco-elec').sort((a, b) => b.x - a.x)[0];   // the plain receptacle east of the zone; the west ones sit behind the flowmeter column
   assert.ok(outlet.x > heated.x, 'a plain receptacle stays east of the zone');
+  { const cord = S.tubes.find(t => t.lead === heated.uid && t.def.kind === 'cord'); Object.assign(cord, { to: null, path: [], short: 0, direct: false }); }   // off the extension cord first (2026-10-07)
   const plug = da.connectPorts(S, port(heated.uid, 'cord'), port(outlet.uid, da.portsOf(outlet)[0].pi), null);
   assert.ok(plug.ok && plug.short === 0, 'the ten foot cord reaches it: ' + JSON.stringify(plug.ends && plug.ends[0] && plug.ends[0].why));
   assert.ok(da.evaluate(S).ok, 'f2 repaired');

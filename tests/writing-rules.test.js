@@ -66,6 +66,11 @@ test('the voice kernel: em dashes, banned words, aphorisms, headings', () => {
   const ap = run('We spent two years and four analysts on the build, and the budget never covered it. Doubt is our product. So is certainty.\n\n## Three eras, one move\n\nThe vendor pitched it twice and the board bought it twice. Price it accordingly.');
   assert.equal(has(ap, 'voice.aphorism').length, 2, 'an antithesis flip and an imperative closer');
   assert.equal(has(ap, 'voice.sells').length, 1);
+  assert.equal(has(run('## One shelf. No islands.\n\nEvery tool sits in one place.'), 'voice.sells').length, 1, 'two beats');
+  assert.equal(has(run('## 3. One shelf. No islands.\n\nEvery tool sits in one place.'), 'voice.sells').length, 1, 'two beats under a section number');
+  for (const head of ['10. What the score counts', '11. Days tied to a story or the calendar', '2.1. Where the walls come from']) {
+    assert.equal(has(run('## ' + head + '\n\nThe wall moves once a day.'), 'voice.sells').length, 0, 'a section number is not a first beat: ' + head);
+  }
   assert.equal(has(run('# The Wound and the Workload\n\nIt started on a night shift.'), 'voice.pair').length, 1);
   assert.equal(has(run('## Hospice and home health\n\nBoth were rolled up.'), 'voice.pair').length, 0, 'a plain label with an "and" is fine');
   const neg = run('It is not just a tool, it is a habit. The fix is a process, not a product.');

@@ -421,6 +421,11 @@ The consequences are all measurable, which is the point. Each is checked by
    text counter-scales to hold its floor, or the scene reflows for the narrow width.
 7. **Density is a decision, not a consequence.** A table on a desktop is a stack of cards
    on a phone. Reflowing a dense grid into a narrow one produces neither.
+8. **Flavor text stays on the desk.** A tagline beside a heading ("for the move you are
+   weighing", "newest first") is fine on a desktop and absent on a phone, where it wraps and
+   pushes its heading onto two lines. Mark it `.hu-flavor`. David, 2026-10-08: "overall its fine
+   in web page but should not appear on phones." A game menu goes further and keeps its sentences
+   behind the "i" at every size (games.md, menu rule 9).
 
 ### The type scale
 

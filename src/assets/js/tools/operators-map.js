@@ -16,6 +16,10 @@
   function signal(msg){ status.textContent = msg; status.classList.remove('done'); }
   function signalDone(msg, ms){ if (msg) status.textContent = msg; setTimeout(() => status.classList.add('done'), ms || 1400); }
   // one polite live region: committed scope changes only, never hover (the V1 rule)
+  /* the maps' menus (2026-10-08, DECISIONS M1): a sentence that explains rides behind an "i" (HUKit.peek), the game
+     menus' rule 9; the screen keeps the name and the number */
+  const escA = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const peekI = (name, html) => '<button type="button" class="hu-i gv-peek" data-def="' + escA('<b>' + name + '</b>' + html) + '" aria-label="About ' + escA(name) + '">i</button>';
   function announce(msg){
     const el = $('gvLive'); if (!el) return;
     el.textContent = '';
@@ -933,6 +937,16 @@
     active: () => sheetEl.classList.contains('open') && (tab === 'display' || mode === 'list' || !!selectedId),
     step: () => $('gvSheetX').click()
   }) : null;
+  // the search panel too: the phone's back closes it instead of leaving the map (2026-10-08, the maps' menus review)
+  if (HUKit.backGuard) HUKit.backGuard({ watch: $('gvSearch'), active: () => $('gvSearch').classList.contains('open'), step: () => closeSearch() });
+  HUKit.peek({ root: document.body, sel: '.gv-peek[data-def]' });
+  /* HOW TO READ THE MAP is the "?" at the top of Display, as on the Population Health Map. It never opens by itself. */
+  const reading = HUKit.howTo({ id: 'gv-reading', auto: false, title: 'Reading the map', rules: [
+    'Every dot is one place: a hospital, a dialysis or surgery center, a school, a pharmacy or a supplier, from CMS and federal college data. A state or a county shows how many.',
+    'Tap a state or a county for its count and its biggest places, a dot for its card. The pencil draws an area to search inside.',
+    'Display holds the layers and the filters. Add puts a type on the map with the others; Only shows it alone.'] });
+  const helpBtn = reading.button();
+  helpBtn.setAttribute('aria-label', 'How to read the map'); helpBtn.title = 'How to read the map';
   function clearPin(){
     selectedId = null; progFocus = null;
     hidePop();
@@ -953,12 +967,13 @@
   // every view is already in the URL (syncURL) — this just hands it over
   function linkChip(){
     const b = document.createElement('button');
-    b.className = 'hu-chip gv-copylink'; b.type = 'button'; b.textContent = '🔗 Copy link to this view';
+    b.className = 'hu-chip gv-copylink'; b.type = 'button'; b.textContent = 'Share';   // the games' word (2026-10-08); it shares this view's link
     b.addEventListener('click', () => {
+      if (navigator.share && HUKit.phone()){ navigator.share({ title: document.title, url: location.href }).catch(() => {}); return; }
       const done = ok => {
         b.textContent = ok ? '✓ Link copied' : 'Copy blocked. The address bar has it';
         announce(ok ? 'Link copied to the clipboard.' : 'Copy was blocked. The address bar holds the same link.');
-        setTimeout(() => { b.textContent = '🔗 Copy link to this view'; }, 2000);
+        setTimeout(() => { b.textContent = 'Share'; }, 2000);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(() => done(true), () => done(false));
       else done(false);
@@ -967,7 +982,7 @@
   }
   function statTiles(el, stats){
     el.querySelector('.hu-stats').innerHTML = stats.map(s =>
-      '<div class="hu-stat"><div class="v' + (s.cls||'') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
+      '<div class="hu-stat' + (s.tile ? ' ' + s.tile : '') + '"><div class="v' + (s.cls||'') + '">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
   }
   function hospRows(host, list, limit, back){
     const cap = list.slice(0, limit);
@@ -1422,11 +1437,13 @@
     tile stays for desktop, where the headline value is hidden. */
     const b = cardScaffold(NOUN() + filteredTag(),
       selState.name, 'tap a county for its profile');
+    b.querySelector('.gv-card-name').classList.add('place');   // a place's name in the cartographic caps both maps use
     // phone: the peek sheet must carry the answer — the count rides the name row
     const pv = document.createElement('span');
     pv.className = 'pv'; pv.textContent = hs.length.toLocaleString('en-US');
     b.querySelector('.gv-card-name').appendChild(pv);
-    const stats = [{ v:hs.length.toLocaleString('en-US'), k: LAYER_ON.size === 1 ? DATASETS[[...LAYER_ON][0]].label : 'Facilities' }];
+    // gv-dup: below 1100 the name row already says the count, so its tile steps out (2026-10-08: "52" said twice)
+    const stats = /** @type {{ v:string, k:string, cls?:string, tile?:string }[]} */ ([{ v:hs.length.toLocaleString('en-US'), k: LAYER_ON.size === 1 ? DATASETS[[...LAYER_ON][0]].label : 'Facilities', tile:'gv-dup' }]);
     // schools alone: the count is schools, then their graduates and programs (the chosen ones, under a filter)
     const sch = hs.filter(f => f.properties.t === 'school');
     if (LAYER_ON.size === 1 && LAYER_ON.has('school')) stats.push(...schoolTiles(sch));
@@ -1513,11 +1530,12 @@
     const cpop = (CPOP && CPOP[selCounty.fips]) ? CPOP[selCounty.fips].p : null;
     const b = cardScaffold(NOUN() + filteredTag(),
       selCounty.name + ' County', selState.name);
+    b.querySelector('.gv-card-name').classList.add('place');
     /* the count rides the name row here too, same as the state card */
     { const pv = document.createElement('span');
       pv.className = 'pv'; pv.textContent = hs.length.toLocaleString('en-US');
       b.querySelector('.gv-card-name').appendChild(pv); }
-    const stats = [{ v:hs.length.toLocaleString('en-US'), k: LAYER_ON.size === 1 ? DATASETS[[...LAYER_ON][0]].label : 'Facilities' }];
+    const stats = /** @type {{ v:string, k:string, cls?:string, tile?:string }[]} */ ([{ v:hs.length.toLocaleString('en-US'), k: LAYER_ON.size === 1 ? DATASETS[[...LAYER_ON][0]].label : 'Facilities', tile:'gv-dup' }]);
     // schools alone: the count is schools, then their graduates and programs (the chosen ones, under a filter)
     const sch = hs.filter(f => f.properties.t === 'school');
     if (LAYER_ON.size === 1 && LAYER_ON.has('school')) stats.push(...schoolTiles(sch));
@@ -1856,35 +1874,43 @@
   });
 
   // ── chips ──
+  let gvPick = 'add';   // what a tap on a type, supply or program chip does: add it, or show it alone
   function buildDisplayPanel(){
     // the drawer's Display tab: every filter, one home (chrome grammar A).
     // Rebuilt on every open/change — ~25 small nodes, cheap and always true.
     const host = $('gvDisplayBody');
     const p = labelPrefs();
-    let h = '<div class="gv-dsec"><h5>Layers</h5><div class="gv-drow">' +
+    const filtering = LAYER_ON.has('hosp') || LAYER_ON.has('school') || (SUPPLY_META && [...LAYER_ON].some(k => SUPPLY_LAYERS.has(k)));
+    const mode = (m, w) => '<button type="button" role="radio" data-pickmode="' + m + '" aria-checked="' + (gvPick === m) + '">' + w + '</button>';
+    let h = '<div class="gv-dsec"><h5>Layers <span class="gv-help" id="gvHelpSlot"></span></h5><div class="gv-drow">' +
       Object.entries(DATASETS).map(([k,d]) =>
         '<button class="hu-chip ds-chip' + (LAYER_ON.has(k) ? ' on' : '') + '" type="button" data-ds="' + k + '" aria-pressed="' + LAYER_ON.has(k) + '">' +
         (LAYER_COLORS[k] ? '<i style="background:' + LAYER_COLORS[k] + '"></i>' : '') + d.label + '<b class="cnt"></b></button>').join('') + '</div></div>';
+    /* ONE SWITCH FOR WHAT A TAP DOES (2026-10-08, DECISIONS M1): every type, supply and program chip carried a 29x15
+       "only" a keyboard could not reach, and a header line to explain it ("only = solo"). Now Add or Only is set once,
+       here, the way the Population Health Map sets Color, Size or Pin. */
+    if (filtering) h += '<div class="gv-dsec gv-pick"><div class="gv-mode hu-seg" role="radiogroup" aria-label="A tap on a type, supply or program">' + mode('add', 'Add') + mode('only', 'Only') + '</div>' +
+      peekI('Add or Only', '<p><b>Add</b> puts a type on the map with the ones already showing, or takes it off.</p><p><b>Only</b> shows that one alone.</p>') + '</div>';
     if (LAYER_ON.has('hosp')){
-      h += '<div class="gv-dsec"><h5>' + 'Hospital types' + ' <span class="sub">only = solo</span></h5><div class="gv-drow">' +
+      h += '<div class="gv-dsec"><h5>' + 'Hospital types' + '</h5><div class="gv-drow">' +
         '<button class="hu-chip tchip' + (!activeTypes ? ' on' : '') + '" type="button" data-t="__all">' + 'All types' + '</button>' +
         Object.entries(TYPES).map(([k,v]) =>
-          '<button class="hu-chip tchip' + (activeTypes && activeTypes.has(k) ? ' on' : '') + '" type="button" data-t="' + k + '"><i style="background:' + v.color + '"></i>' + v.label + '<b class="cnt"></b><span class="gv-only" data-only="' + k + '">only</span></button>').join('') + '</div></div>';
+          '<button class="hu-chip tchip' + (activeTypes && activeTypes.has(k) ? ' on' : '') + '" type="button" data-t="' + k + '"><i style="background:' + v.color + '"></i>' + v.label + '<b class="cnt"></b></button>').join('') + '</div></div>';
     }
     // what equipment suppliers carry: shown while a home equipment, orthotics or optical layer is on
     if (SUPPLY_META && [...LAYER_ON].some(k => SUPPLY_LAYERS.has(k))){
-      h += '<div class="gv-dsec"><h5>Supplies <span class="sub">equipment suppliers · only = solo</span></h5><div class="gv-drow">' +
+      h += '<div class="gv-dsec"><h5>Supplies <span class="sub">equipment suppliers</span></h5><div class="gv-drow">' +
         '<button class="hu-chip schip' + (!activeSupplies ? ' on' : '') + '" type="button" data-sg="__all">All supplies</button>' +
         SUPPLY_META.groups.map(g =>
           '<button class="hu-chip schip' + (activeSupplies && activeSupplies.has(g.key) ? ' on' : '') + '" type="button" data-sg="' + g.key + '">' + g.label +
-          '<b class="cnt"></b><span class="gv-only" data-sonly="' + g.key + '">only</span></button>').join('') + '</div></div>';
+          '<b class="cnt"></b></button>').join('') + '</div></div>';
     }
     // what schools teach: shown while the Schools layer is on; a school shows when it offers ANY chosen program
     if (LAYER_ON.has('school')){
-      h += '<div class="gv-dsec"><h5>School programs <span class="sub">only = solo</span></h5><div class="gv-drow">' +
+      h += '<div class="gv-dsec"><h5>School programs</h5><div class="gv-drow">' +
         '<button class="hu-chip pchip' + (!activePrograms ? ' on' : '') + '" type="button" data-pg="__all">All programs</button>' +
         PROGRAM_KEYS.map(k => '<button class="hu-chip pchip' + (activePrograms && activePrograms.has(k) ? ' on' : '') + '" type="button" data-pg="' + k + '">' +
-          '<i style="background:' + PROGRAMS[k].color + '"></i>' + PROGRAMS[k].label + '<b class="cnt"></b><span class="gv-only" data-ponly="' + k + '">only</span></button>').join('') + '</div></div>';
+          '<i style="background:' + PROGRAMS[k].color + '"></i>' + PROGRAMS[k].label + '<b class="cnt"></b></button>').join('') + '</div></div>';
     }
     if (CDATA){
       h += '<div class="gv-dsec"><h5>Shade counties by <span class="sub">county tint</span></h5><div class="gv-drow">' +
@@ -1892,10 +1918,10 @@
         Object.entries(CMETRICS).map(([k,m]) =>
           '<button class="hu-chip' + (countyMetric === k ? ' on' : '') + '" type="button" data-m="' + k + '">' + m.label + '</button>').join('') + '</div></div>';
     }
-    h += '<div class="gv-dsec"><h5>Map labels <span class="sub">basemap text</span></h5>' +
-      '<div class="gv-tgl">State names <span class="hu-sw' + (p.state ? ' on' : '') + '" id="gvLabState" role="switch" aria-checked="' + p.state + '" tabindex="0"></span></div>' +
-      '<div class="gv-tgl">City names <span class="hu-sw' + (p.city ? ' on' : '') + '" id="gvLabCity" role="switch" aria-checked="' + p.city + '" tabindex="0"></span></div></div>';
+    const sw = (id, on, name) => '<button type="button" class="gv-tgl" id="' + id + '" role="switch" aria-checked="' + on + '">' + name + '<span class="hu-sw' + (on ? ' on' : '') + '" aria-hidden="true"></span></button>';
+    h += '<div class="gv-dsec"><h5>Map labels</h5>' + sw('gvLabState', p.state, 'State names') + sw('gvLabCity', p.city, 'City names') + '</div>';
     host.innerHTML = h;
+    const slot = $('gvHelpSlot'); if (slot) slot.appendChild(helpBtn);
     updateCount();   // fill the live per-chip tallies
   }
   // one delegated listener survives every rebuild
@@ -1904,17 +1930,18 @@
     if (e.target.getAttribute && e.target.getAttribute('role') === 'switch'){ e.preventDefault(); e.target.click(); }
   });
   $('gvDisplayBody').addEventListener('click', /** @param {MouseEvent & {target: HTMLElement}} e */ e => {
-    const only = /** @type {HTMLElement | null} */ (e.target.closest('[data-only]'));
-    if (only){
-      activeTypes = new Set([only.dataset.only]);   // "only" = solo in one tap
-      dropFilterCache(); buildDisplayPanel(); pillFaces(); applyFilters(); return;
+    const pm = /** @type {HTMLElement | null} */ (e.target.closest('[data-pickmode]'));
+    if (pm){
+      gvPick = pm.dataset.pickmode;
+      $('gvDisplayBody').querySelectorAll('[data-pickmode]').forEach(b => b.setAttribute('aria-checked', String(b === pm)));
+      announce(gvPick === 'only' ? 'A tap shows that one alone.' : 'A tap adds or removes it.');
+      return;
     }
-    const pOnly = /** @type {HTMLElement | null} */ (e.target.closest('[data-ponly]'));
-    if (pOnly){ activePrograms = new Set([pOnly.dataset.ponly]); buildDisplayPanel(); pillFaces(); applyFilters(); return; }
     const pgc = /** @type {HTMLElement | null} */ (e.target.closest('[data-pg]'));
     if (pgc){
       const k = pgc.dataset.pg;
       if (k === '__all') activePrograms = null;
+      else if (gvPick === 'only') activePrograms = new Set([k]);
       else {
         activePrograms = activePrograms || new Set();
         activePrograms.has(k) ? activePrograms.delete(k) : activePrograms.add(k);
@@ -1922,12 +1949,11 @@
       }
       buildDisplayPanel(); pillFaces(); applyFilters(); return;
     }
-    const sOnly = /** @type {HTMLElement | null} */ (e.target.closest('[data-sonly]'));
-    if (sOnly){ activeSupplies = new Set([sOnly.dataset.sonly]); buildDisplayPanel(); pillFaces(); applyFilters(); return; }
     const sg = /** @type {HTMLElement | null} */ (e.target.closest('[data-sg]'));
     if (sg){
       const k = sg.dataset.sg;
       if (k === '__all') activeSupplies = null;
+      else if (gvPick === 'only') activeSupplies = new Set([k]);
       else {
         activeSupplies = activeSupplies || new Set();
         activeSupplies.has(k) ? activeSupplies.delete(k) : activeSupplies.add(k);
@@ -1941,6 +1967,7 @@
     if (tb){
       const t = tb.dataset.t;
       if (t === '__all') activeTypes = null;
+      else if (gvPick === 'only') activeTypes = new Set([t]);
       else {
         activeTypes = activeTypes || new Set();
         activeTypes.has(t) ? activeTypes.delete(t) : activeTypes.add(t);
@@ -1950,8 +1977,8 @@
     }
     const mc = /** @type {HTMLElement | null} */ (e.target.closest('[data-m]'));
     if (mc){ countyMetric = mc.dataset.m || null; applyCountyTint(); buildDisplayPanel(); return; }
-    if (e.target.id === 'gvLabState'){ toggleLabelPref('state'); return; }
-    if (e.target.id === 'gvLabCity'){ toggleLabelPref('city'); return; }
+    if (e.target.closest('#gvLabState')){ toggleLabelPref('state'); return; }
+    if (e.target.closest('#gvLabCity')){ toggleLabelPref('city'); return; }
   });
   // the bar's readout pills: they SAY the filter state, and open its home
   function pillFaces(){
@@ -2005,7 +2032,9 @@
   $('gvTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
   function openDisplayTab(){
     showTab('display');   // builds the panel on entry
-    const det = revealDetent();
+    /* a phone held sideways is about 360px tall: half of it held the tabs and one heading, so Display takes the whole
+       sheet there (2026-10-08, the maps' menus) */
+    const det = window.innerHeight <= 500 ? 'dt-full' : revealDetent();
     sheetEl.classList.add('open');
     setDetQuiet(det);
   }
@@ -2173,7 +2202,7 @@
     // the switches live in the Display tab — repaint them in place
     [['gvLabState','state'],['gvLabCity','city']].forEach(([id, key]) => {
       const el = $(id); if (!el) return;
-      el.classList.toggle('on', p[key]);
+      (el.querySelector('.hu-sw') || el).classList.toggle('on', p[key]);   // the row is the switch; its knob lights
       el.setAttribute('aria-checked', String(p[key]));
     });
     applyLabelPrefs();
@@ -2198,9 +2227,10 @@
     const host = $('gvSearchList');
     if (!q){
       const shardOnly = ![...LAYER_ON].some(k => !DATASETS[k].shard);
-      host.innerHTML = '<div class="gv-none">' + (shardOnly && !selState
-        ? 'Tap a state first. Pharmacies load per state.'
-        : 'Name, city, state, system, school or program. "intermountain", "respiratory therapy utah", "santa fe"…') + '</div>';
+      host.innerHTML = shardOnly && !selState ? '<div class="gv-none">Tap a state first. Pharmacies load per state.</div>' : ('<div class="gv-ex">' +
+        [['intermountain', 'Intermountain'], ['respiratory therapy utah', 'Respiratory therapy Utah'], ['santa fe', 'Santa Fe']]
+          .map(([q, w]) => '<button type="button" class="hu-chip" data-exq="' + q + '">' + w + '</button>').join('') + '</div>');
+      host.querySelectorAll('[data-exq]').forEach(x => x.addEventListener('click', () => { $('gvSearchIn').value = x.dataset.exq; buildResults(); $('gvSearchIn').focus(); }));
       return;
     }
     /* every word has to appear somewhere, in any order (2026-10-03). It was one substring, so the hint's own

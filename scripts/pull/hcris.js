@@ -41,6 +41,7 @@ const SOURCE_URL = 'https://www.cms.gov/data-research/statistics-trends-and-repo
 const WRITE = process.argv.includes('--write'), REFRESH = process.argv.includes('--refresh');
 
 const { download, zipEntries, entryLines } = require('../lib/zip');   // moved to scripts/lib/zip.js 2026-10-03
+const { today } = require('../lib/session');
 
 const num = (s) => { const v = parseFloat(String(s).replace(/"/g, '')); return isFinite(v) ? v : 0; };
 const cell = (s) => String(s || '').replace(/"/g, '').trim();
@@ -150,7 +151,7 @@ const isoDate = (s) => { s = cell(s); const m = s.match(/^(\d{1,2})\/(\d{1,2})\/
   const out = {
     _meta: {
       source: 'CMS Healthcare Cost Report Information System (HCRIS), hospital form 2552-10, Worksheet S-3 Part I',
-      file: ZIP_URL, page: SOURCE_URL, fiscalYearFile: FY, pulled: new Date().toISOString().slice(0, 10),
+      file: ZIP_URL, page: SOURCE_URL, fiscalYearFile: FY, pulled: today(),
       fields: 'b beds (line 14 col 2), ba bed days available, icu ICU and special care beds (lines 8-12 col 2), burn burn ICU beds, nur nursery beds, d all patient days, icud ICU days, mcr Medicare days, mcd Medicaid days, dc discharges (col 15), res interns and residents FTE, fte employees on payroll FTE, fyb/fye the report period, pd days in it',
     },
     byCcn,
