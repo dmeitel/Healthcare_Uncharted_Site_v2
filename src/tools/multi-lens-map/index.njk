@@ -7,13 +7,13 @@ section: tool
 status: published
 order: 1
 title: U.S. Population Health Map
-description: "Explore U.S. state healthcare through 72 metrics in seven lens groups: Patient, Clinical, Operations, Payer, Policy, Economics, and baseline context. Tap a state, drill to real county boundaries."
+description: U.S. state healthcare through 72 metrics in seven lens groups, from patient and clinical to payer and policy. Tap a state, then drill down to real county boundaries.
 tags: [interactive, maps, policy, data-viz]
 has_interactive: true
-og_image: /brand/og-multi-lens-map.jpg
+og_image: /assets/images/og/card-multi-lens-map.png
 ---
 <!-- ════════════════════════════════════════════════════════════════
-     U.S. POPULATION HEALTH MAP (slug multi-lens-map) — v2, on the HU full-map standard
+     U.S. POPULATION HEALTH MAP (slug multi-lens-map), v2, on the HU full-map standard
      (docs/HU-UI-GRAMMAR.md §5b). Promoted from the lens-v2 pilot
      2026-07-19; the D3 v1 lives in archive/multi-lens-map-2026-07-19-d3-v1.html.
      Identity preserved: metricsConfig + stateData + dataYears inlined at
@@ -29,7 +29,7 @@ og_image: /brand/og-multi-lens-map.jpg
 <script type="application/json" id="mlm-state-data">{{ stateData | dump | safe }}</script>
 <script type="application/json" id="mlm-data-years">{{ dataYears | dump | safe }}</script>
 {% raw %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.css" integrity="sha256-eSrJl9z2rm9kPrTi3uRjDIXnBWUmvY+4X/6Dxn1sQbQ=" crossorigin="anonymous">
 <style>
 .vh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .lv-shell { position:relative; height:calc(100dvh - var(--nav-h)); overflow:hidden; }
@@ -37,9 +37,12 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-top { position:absolute; top:10px; left:10px; right:10px; z-index:20; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
 .lv-top > * { pointer-events:auto; }
 .lv-srow { display:flex; gap:8px; align-items:center; }
+/* THE BRASS LOOK (2026-10-11, the site-wide refresh): the chrome over the map wears the recipes in hu-global.css. The ident
+   and the legend are faces, the pills you press are keys, the year and the loading line are glass readouts, the drawer is
+   a face with a brass hairline. The map, its colors and its legend swatches are untouched. */
 .lv-ident { flex:none; display:flex; align-items:center; height:38px; padding:0 13px; border-radius:10px;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
-  font-family:var(--display); font-size:var(--t-fine); font-weight:700; color:var(--t2); backdrop-filter:blur(8px); white-space:nowrap; }
+  background:var(--face-bg); border:1px solid var(--border); box-shadow:0 6px 14px var(--depth);
+  font-family:var(--display); font-size:var(--t-fine); font-weight:700; color:var(--t2); white-space:nowrap; }
 .lv-ident b { color:var(--teal); margin-left:4px; }
 [data-theme="light"] .lv-ident b { color:var(--teal-ink); }
 /* The ident was switched off entirely, leaving a 1px visually-hidden h1 as the only
@@ -49,18 +52,16 @@ og_image: /brand/og-multi-lens-map.jpg
   .lv-ident .lv-ident-long { display:none; }
 }
 .lv-metric { flex:1; max-width:460px; display:flex; align-items:center; gap:9px; height:38px; padding:0 14px; border-radius:999px;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--teal);
-  color:var(--t1); font-family:var(--font); font-size:var(--t-fine); font-weight:600; cursor:pointer; backdrop-filter:blur(8px);
-  box-shadow:0 4px 16px rgba(0,0,0,.35); text-align:left; overflow:hidden; }
-/* teal border = tappable, same control language as the scope chip. The pill
-   is the tool's PRIMARY selector; it must not dress like the inert ident pill */
-[data-theme="light"] .lv-metric { border-color:var(--teal-dk); }
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim);
+  color:var(--key-ink); font-family:var(--font); font-size:var(--t-fine); font-weight:600; cursor:pointer;
+  box-shadow:var(--key-lift); text-align:left; overflow:hidden; }
+/* a raised key = tappable, the same language as the scope chip and every key on the site. The pill
+   is the tool's PRIMARY selector; it must not dress like the inert ident, which is a flat face */
 .lv-metric svg { width:14px; height:14px; stroke-width:1.75; color:var(--teal); flex:none; }   /* the Lucide metric icon sizes like the site selector grammar (was the 📊 emoji) */
 [data-theme="light"] .lv-metric svg { color:var(--teal-dk); }
-.lv-metric:hover { border-color:var(--teal); box-shadow:0 4px 16px rgba(0,0,0,.35); }
 .lv-metric:active { transform:scale(.985); }
 .lv-metric .mq { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.lv-metric .yr { margin-left:auto; flex:none; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
+.lv-metric .yr { margin-left:auto; flex:none; font-family:var(--mono); font-size:var(--t-label); color:var(--key-sub); }
 /* the caret says "this opens the drawer": the pill is the READOUT, the
    drawer's Display tab is the editor (nav lives left, view lives right).
    It sits in a teal well now so it reads as the pill's handle, not decor */
@@ -74,14 +75,14 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-viewgrp { margin-left:auto; display:flex; gap:8px; align-items:center; flex:1; max-width:860px; justify-content:flex-end; }
 /* ‹ › steppers flank the pill: shuffle one metric per tap, no drawer round-trip */
 .lv-mstep { flex:none; width:34px; height:38px; border-radius:999px; cursor:pointer; padding:0;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
-  color:var(--t2); font-size:var(--t-lede); line-height:1; backdrop-filter:blur(8px); box-shadow:0 4px 16px rgba(0,0,0,.35); }
-.lv-mstep:hover { color:var(--teal); border-color:var(--teal); }
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim);
+  color:var(--key-ink); font-size:var(--t-lede); line-height:1; box-shadow:var(--key-lift); }
 /* the metric browser lives IN the Display tab now (grammar A, round two:
    David's call, no filter on one side and display on the other) */
 #lvDisplayBody .lv-find { padding:0 0 8px; }
-#lvDisplayBody .lv-find input { width:100%; height:34px; border-radius:8px; border:1px solid var(--border2);
-  background:var(--raised); color:var(--t1); font-family:var(--font); font-size:var(--t-ui); padding:0 10px; }
+#lvDisplayBody .lv-find input { width:100%; height:34px; border-radius:8px; border:1px solid transparent;
+  background:var(--field-bg); box-shadow:var(--field-well); color:var(--field-ink); font-family:var(--font); font-size:var(--t-ui); padding:0 10px; }
+#lvDisplayBody .lv-find input::placeholder { color:var(--field-sub); }
 #lvDisplayBody .lv-find input:focus { outline:none; border-color:var(--teal); }
 #lvMetricList { max-height:44vh; overflow-y:auto; }
 #lvMetricList .pop-opt { width:100%; display:flex; align-items:center; gap:8px; text-align:left; }
@@ -98,8 +99,11 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-mode { margin:0 0 10px; }
 /* This view: a name per row, the definition behind its "i", an X for what can come off */
 .lv-vx { flex:none; margin-left:auto; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;
-  border:1px solid var(--border2); border-radius:8px; background:none; color:var(--t2); cursor:pointer; position:relative; }
-.lv-vx:hover { color:var(--t1); border-color:var(--teal); }
+  border:1px solid transparent; border-top-color:var(--brass-rim); border-radius:8px; background:var(--key-bg); color:var(--key-ink);
+  box-shadow:0 2px 0 var(--key-floor); cursor:pointer; position:relative; }
+.lv-vx:hover { color:var(--key-ink); border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] .lv-vx:hover { border-top-color:var(--brass-lo); filter:brightness(.97); }
+.lv-vx:active { transform:translateY(2px); box-shadow:none; }
 .lv-vx:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
 .lv-vx::after { content:''; position:absolute; inset:-6px; }   /* a 44px target around a 32px box */
 .lv-help { margin-left:auto; }
@@ -120,10 +124,19 @@ og_image: /brand/og-multi-lens-map.jpg
 #lvMetricList .pop-opt[aria-selected="true"] .mn { font-weight:700; color:var(--t1); }
 [data-theme="light"] #lvMetricList .pop-opt[aria-selected="true"] .mn::before { color:var(--teal-dk); }
 /* chrome grammar A: one bar, one drawer (Details|Display), one cluster. */
-.lv-tabs { display:flex; gap:4px; background:var(--raised); border-radius:9px; padding:3px; margin:4px 0 10px; flex:none; }
-.lv-tabs button { flex:1; border:1px solid transparent; background:none; border-radius:7px; padding:6px 0;
-  font-family:var(--font); font-size:var(--t-label); font-weight:700; color:var(--t3); cursor:pointer; }
-.lv-tabs button.on { background:var(--surface); border-color:var(--border2); color:var(--t1); }
+/* the Details|Display switch is the site's view switch (.hu-seg in hu-global.css): keys in a recessed track, the tab
+   on screen in brass */
+.lv-tabs { display:flex; gap:4px; background:var(--track-bg); box-shadow:var(--track-well);
+  border-radius:9px; padding:3px; margin:4px 0 10px; flex:none; }
+[data-theme="light"] .lv-tabs { background:var(--raised); box-shadow:inset 0 2px 6px var(--depth); }
+.lv-tabs button { flex:1; border:1px solid transparent; border-top-color:var(--brass-rim); background:var(--key-bg); border-radius:7px; padding:6px 0;
+  box-shadow:0 2px 0 var(--key-floor); font-family:var(--font); font-size:var(--t-label); font-weight:700; color:var(--key-ink); cursor:pointer; }
+.lv-tabs button:hover { filter:brightness(1.08); }
+[data-theme="light"] .lv-tabs button:hover { filter:brightness(.97); }
+.lv-tabs button:active { transform:translateY(2px); box-shadow:none; }
+.lv-tabs button.on { background:var(--brass-bg); border-color:transparent; color:var(--brass-ink); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 var(--brass-deep); }
+.lv-tabs button:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+[data-theme="light"] .lv-tabs button:focus-visible { outline-color:var(--teal-dk); }
 /* ── Fixed header, scrolling body (David's phone QA 2026-08-23). The sheet is a flex
    column, and at a short detent its children SQUISHED: the tabs crushed toward zero
    and the card title compressed into the sheet edge, which is the half-swallowed
@@ -135,7 +148,7 @@ og_image: /brand/og-multi-lens-map.jpg
 .hu-sheet-x.lv-x { position:sticky; top:6px; align-self:flex-end;
   margin:0 4px -44px 0; z-index:7; flex:none; }
 .lv-tabs { flex:none; margin-right:52px; }
-.lv-name { position:sticky; top:0; z-index:4; background:var(--surface); flex:none; }
+.lv-name { position:sticky; top:0; z-index:4; background:var(--face-a); flex:none; }   /* the top of the drawer's face */
 /* the body's children hold their natural height; the BODY is what scrolls. Without
    this the card content flex-shrank inside the body and nothing ever overflowed, so
    the "scrolling body" was scrolling three pixels. */
@@ -160,13 +173,13 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-view .lv-vdefn .src { display:block; font-family:var(--mono); font-size:var(--t-label); color:var(--t2); margin-top:3px; }
 .lv-tgl { display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:var(--t-fine); color:var(--t2); }
 .lv-status { position:absolute; bottom:88px; left:50%; transform:translateX(-50%); z-index:20; white-space:nowrap;
-  font-family:var(--mono); font-size:var(--t-label); color:var(--t2); padding:6px 12px; border-radius:999px;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
-  backdrop-filter:blur(8px); transition:opacity .3s; }
+  font-family:var(--mono); font-size:var(--t-label); color:var(--field-sub); padding:6px 12px; border-radius:999px;
+  background:var(--field-bg); border:1px solid transparent; box-shadow:var(--field-well), 0 6px 14px var(--depth); }
+@media (prefers-reduced-motion: no-preference){ .lv-status { transition:opacity .3s; } }
 .lv-status.done { opacity:0; pointer-events:none; }
 .lv-cleg { position:absolute; bottom:34px; left:10px; z-index:20; display:flex; align-items:center; gap:3px;
-  padding:5px 9px; border-radius:999px; background:color-mix(in srgb, var(--surface) 94%, transparent);
-  border:1px solid var(--border2); backdrop-filter:blur(8px); }
+  padding:5px 9px; border-radius:999px; background:var(--face-bg);
+  border:1px solid var(--border); box-shadow:0 6px 14px var(--depth); }
 .lv-cleg i { width:14px; height:8px; border-radius:2px; }
 .lv-cleg span { font-family:var(--mono); font-size:var(--t-label); color:var(--t2); margin:0 4px; }
 /* MapLibre's attribution chip ships light-only from the CDN css. Theme it */
@@ -179,8 +192,9 @@ og_image: /brand/og-multi-lens-map.jpg
 .lv-insets { position:absolute; left:10px; bottom:64px; z-index:20; display:flex; gap:8px; transition:opacity .2s; }
 .lv-insets.hide { opacity:0; pointer-events:none; }
 .lv-inset { position:relative; width:120px; height:92px; padding:0; border-radius:10px; overflow:hidden; cursor:pointer;
-  border:1px solid var(--border2); background:var(--surface); box-shadow:0 4px 16px rgba(0,0,0,.35); }
-.lv-inset:hover { border-color:var(--teal); }
+  border:1px solid var(--border); border-top-color:var(--brass-rim); background:var(--face-b); box-shadow:0 3px 0 var(--key-floor), 0 8px 14px var(--depth); }
+.lv-inset:hover { border-color:var(--border); border-top-color:var(--brass); }
+[data-theme="light"] .lv-inset:hover { border-top-color:var(--brass-lo); }
 .lv-inset .lv-inset-map { position:absolute; inset:0; display:block; pointer-events:none; }
 .lv-inset b { position:absolute; top:5px; left:7px; z-index:2; font-family:var(--mono); font-size:var(--t-label); font-weight:600;
   color:var(--t1); background:color-mix(in srgb, var(--surface) 88%, transparent); border:1px solid var(--border);
@@ -202,7 +216,7 @@ og_image: /brand/og-multi-lens-map.jpg
    call 2026-07-26: the GPS button lives with its siblings, not in a corner).
    The FAB drops its corner-float positioning and rides the row in-flow. */
 .lv-bottombar { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); z-index:110; display:flex; gap:8px; }
-.lv-bottombar .hu-fab { position:static; width:42px; height:42px; flex:none; box-shadow:0 6px 20px rgba(0,0,0,.45); }
+.lv-bottombar .hu-fab { position:static; width:42px; height:42px; flex:none; }   /* the key's own lift, from hu-global.css */
 /* TABLET (700-1099, the tool shell's second line), 2026-09-23. Three faults the sweep's new checks
    found in this band, where the desktop layout was served to a screen too narrow for it:
    - the ident and the view group shared one row that needed about 1,060px, so at 700 Rankings sat
@@ -221,10 +235,12 @@ og_image: /brand/og-multi-lens-map.jpg
    inside that dock over the year and Rankings (tool review 2026-09-23). The top of the map is
    empty on a phone, so it reads there. */
 @media (max-width:699px), (max-height:500px){ .lv-status { top:10px; bottom:auto; } }
+/* the year is a readout, so the pill is glass (dark in both themes) with its two arrows on it; on a phone it is plain
+   content inside the dock, and the phone block below gives it the dock's inks back */
 .lv-yearpill { display:flex; align-items:center; height:42px; padding:0 6px; border-radius:999px;
-  background:var(--surface); border:1px solid var(--border2); box-shadow:0 6px 20px rgba(0,0,0,.45); }
-.lv-yearpill button { width:34px; height:34px; border:none; background:none; color:var(--t2); font-size:17px; cursor:pointer; border-radius:50%; }
-.lv-yearpill button:hover { color:var(--teal); background:var(--raised); }
+  background:var(--glass); border:1px solid transparent; box-shadow:var(--glass-well), 0 6px 14px var(--depth); }
+.lv-yearpill button { width:34px; height:34px; border:none; background:none; color:var(--glass-sub); font-size:17px; cursor:pointer; border-radius:50%; }
+.lv-yearpill button:hover { color:var(--glass-teal); background:var(--glass-line); }
 .lv-yearpill button:disabled { opacity:.3; cursor:default; }
 /* Touch floor rides POINTER TYPE, the pattern assignment-compass already uses: a
    touch laptop taps too, and a width query cannot see that. The pill drew at 42px
@@ -260,16 +276,14 @@ og_image: /brand/og-multi-lens-map.jpg
   .lv-shell:has(#lvSheet.open) ~ .tool-attribution--fixed,
   main:has(#lvSheet.open) .tool-attribution--fixed { display:none; }
 }
-.lv-yearpill span { font-family:var(--mono); font-size:var(--t-label); font-weight:600; color:var(--t1); min-width:74px; text-align:center; }
-.lv-yearpill span i { font-style:normal; color:var(--amber); }
-[data-theme="light"] .lv-yearpill span i { color:var(--amber-dk); }
+.lv-yearpill span { font-family:var(--mono); font-size:var(--t-label); font-weight:600; color:var(--glass-ink); min-width:74px; text-align:center; }
+.lv-yearpill span i { font-style:normal; color:var(--glass-amber); }
 /* one year only: the arrows sit disabled (faint, above) and say there is nothing to step to. The whole pill used to
    fade to 50%, background and all, so the map showed through it and the year itself, which is real, went dim
    (2026-10-03). */
 .lv-rankbtn { height:42px; padding:0 18px; border-radius:999px; cursor:pointer;
-  background:var(--surface); border:1px solid var(--border2); color:var(--t1);
-  font-family:var(--font); font-size:var(--t-fine); font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.45); }
-.lv-rankbtn:hover { border-color:var(--teal); }
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim); color:var(--key-ink);
+  font-family:var(--font); font-size:var(--t-fine); font-weight:700; box-shadow:var(--key-lift); }
 /* The live count, same weight as the operators map's 'in view' tally.
    nowrap is load-bearing: the bottom bar has 370px, the year pill takes 176 of it and
    grows again for '2023 est.', which left the button 132px. The long form
@@ -295,11 +309,29 @@ og_image: /brand/og-multi-lens-map.jpg
   .lv-shell:has(#lvSheet.open) .lv-bottombar { bottom:150px; }   /* the FAB rides the bar now */
 }
 .lv-scope { flex:none; height:38px; padding:0 13px; border-radius:999px; cursor:pointer;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--teal);
-  color:var(--t1); font-family:var(--font); font-size:var(--t-fine); font-weight:700; backdrop-filter:blur(8px);
-  white-space:nowrap; max-width:40vw; overflow:hidden; text-overflow:ellipsis; box-shadow:0 4px 16px rgba(0,0,0,.35); }
-[data-theme="light"] .lv-scope { border-color:var(--teal-dk); }
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim);
+  color:var(--key-ink); font-family:var(--font); font-size:var(--t-fine); font-weight:700;
+  white-space:nowrap; max-width:40vw; overflow:hidden; text-overflow:ellipsis; box-shadow:var(--key-lift); }
+/* THE KEYS' STATES (the recipe in docs/HU-BRASS-LOOK-2026-10-11.md): a brass top edge and a little light on hover, a
+   press that sinks onto the floor, the site's teal focus ring. The phone dock turns the metric and List back into plain
+   rows inside one face (the phone block below), so their press stays off there. */
+@media (prefers-reduced-motion: no-preference){
+  .lv-metric, .lv-mstep, .lv-rankbtn, .lv-scope, .lv-inset, .lv-vx, .lv-tabs button { transition:transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .15s; }
+}
+:is(.lv-mstep, .lv-scope):hover { color:var(--key-ink); border-color:transparent; border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] :is(.lv-mstep, .lv-scope):hover { border-top-color:var(--brass-lo); filter:brightness(.97); }
+:is(.lv-mstep, .lv-scope):active { transform:translateY(3px); box-shadow:var(--key-down); }
+@media (min-width:700px) and (min-height:501px){
+  :is(.lv-metric, .lv-rankbtn):hover { color:var(--key-ink); border-color:transparent; border-top-color:var(--brass); filter:brightness(1.08); }
+  [data-theme="light"] :is(.lv-metric, .lv-rankbtn):hover { border-top-color:var(--brass-lo); filter:brightness(.97); }
+  :is(.lv-metric, .lv-rankbtn):active { transform:translateY(3px); box-shadow:var(--key-down); }
+}
+:is(.lv-metric, .lv-mstep, .lv-rankbtn, .lv-scope, .lv-inset):focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+[data-theme="light"] :is(.lv-metric, .lv-mstep, .lv-rankbtn, .lv-scope, .lv-inset):focus-visible { outline-color:var(--teal-dk); }
 #lvSheet { padding:0 16px calc(14px + env(safe-area-inset-bottom)); z-index:300; }
+/* the drawer's face runs its gradient over a fixed 760px, the desk drawer's height, so a short phone detent shows the
+   same top of the face and the sticky name row (--face-a) sits on its own color instead of reading as a band */
+#lvSheet { background:linear-gradient(180deg, var(--face-a), var(--face-b)) 0 0 / 100% 760px no-repeat, var(--face-b); }
 #lvSheet:not(.open) { transform:translateY(105%); }
 /* survey ticks, local copy: .shell-sheet::before is the kit's grabber
    fallback, so the drawer carries its two corner ticks as <i> elements
@@ -343,7 +375,7 @@ og_image: /brand/og-multi-lens-map.jpg
 }
 /* readable sub text (David's call): brighter tier + a size up, drawer-wide */
 .lv-sub { font-family:var(--mono); font-size:var(--t-label); color:var(--t2); margin:3px 0 12px; }
-#lvSheet .hu-stat .k { font-size:var(--t-label); color:var(--t2); }
+#lvSheet .hu-stat .k { font-size:var(--t-label); color:var(--glass-sub); }   /* a stat tile is glass in both themes */
 /* the primary table (David's spec): rows = Value/Rank/Population, columns =
    the two geographies. One glance, one structure, every card the same. */
 /* The comparison table on the Ruled Figure (DESIGN.md Do: dissolve boxes into rules
@@ -375,7 +407,7 @@ og_image: /brand/og-multi-lens-map.jpg
   /* the drawer tracks the RESIZABLE width (monitor yes, phone no, David's
      call). The locate FAB left this corner for the bottom-center cluster. */
   #lvSheet { left:auto; right:12px; bottom:12px; top:124px; width:var(--drawer-w, 370px);
-    border:1px solid var(--border2); border-radius:14px; height:auto; max-height:none; }
+    border:1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2)); border-radius:14px; height:auto; max-height:none; }
   #lvSheet.dt-peek, #lvSheet.dt-half, #lvSheet.dt-full { height:auto; max-height:calc(100dvh - 200px); overflow-y:auto; }
   /* Display = the workbench: a pin adds a "This view" row, and height:auto
      would grow the whole drawer under the cursor mid-multi-select. While
@@ -421,10 +453,11 @@ og_image: /brand/og-multi-lens-map.jpg
      it. So does this now: the dock draws the box, and the metric, the year and the
      way into the list live INSIDE it as plain content divided by hairlines. */
   .lv-top { top:auto; bottom:56px; }
+  /* the dock is a face with a brass hairline, the same surface as the kit's phone dock (.hu-vdock in hu-global.css) */
   .lv-viewgrp {
-    background:color-mix(in srgb, var(--surface) 94%, transparent);
-    border:1px solid var(--border); border-radius:14px;
-    backdrop-filter:blur(10px); box-shadow:0 6px 20px rgba(0,0,0,.35);
+    background:var(--face-bg);
+    border:1px solid color-mix(in srgb, var(--brass-lo) 45%, var(--border)); border-radius:14px;
+    box-shadow:var(--panel-lift);
     display:grid; grid-template-columns:1fr auto; align-items:center;
     padding:0; overflow:hidden; gap:0;
   }
@@ -440,6 +473,12 @@ og_image: /brand/og-multi-lens-map.jpg
     backdrop-filter:none; height:46px;
   }
   .lv-yearpill { justify-self:start; padding-left:4px; }
+  /* inside the dock the year is plain content on the face, so it takes the face's inks, not the glass ones */
+  .lv-yearpill span { color:var(--t1); }
+  .lv-yearpill span i { color:var(--amber); }
+  [data-theme="light"] .lv-yearpill span i { color:var(--amber-dk); }
+  .lv-yearpill button { color:var(--t2); }
+  .lv-yearpill button:hover { color:var(--teal); background:var(--raised); }
   .lv-rankbtn { justify-self:end; border-left:1px solid var(--border); padding:0 15px; }
   .lv-mstep { display:none; }
   .lv-viewgrp { flex-wrap:nowrap; gap:6px; }
@@ -512,11 +551,11 @@ og_image: /brand/og-multi-lens-map.jpg
   <div id="lvLive" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js" integrity="sha256-B+bKcaW22DWnw4A/tITwpuXw3L+hMUB2Zu256TFlZPk=" crossorigin="anonymous"></script>
 <script src="/assets/js/hu-kit.js?v=20260920"></script>
 <script type="module" src="/assets/js/tools/multi-lens-map.js?v=20260823"></script>
 
 {% endraw %}
 {% set ta_fixed = true %}
-{% set ta_source = 'CDC PLACES, KFF, BLS, Census, CMS and peers per metric (tap a metric for its source) · trend years estimated from drift rates, marked est.' %}
+{% set ta_source = 'CDC PLACES, KFF, BLS, Census, CMS and peers per metric (tap a metric for its source) · values retrieved Jan. 2025 to Oct. 2026 · trend years estimated from drift rates, marked est.' %}
 {% include "components/tool-attribution.njk" %}

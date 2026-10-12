@@ -33,7 +33,8 @@ test('every tagline beside a shelf heading is marked as flavor', () => {
       }
     }
   }
-  assert.ok(seen >= 11, 'the shelf headings are still found (' + seen + ')');
+  // 10 since 2026-10-11: the Tools page's Fun shelf became the Fun section's own page (DECISIONS BR3)
+  assert.ok(seen >= 10, 'the shelf headings are still found (' + seen + ')');
   assert.deepStrictEqual(missing, []);
 });
 

@@ -31,13 +31,13 @@
        dark art on dark tabs. Browsers cache favicons far harder than they cache
        pages, so the v= stamp is the ONLY reliable way to push a new icon out.
        Bump it whenever scripts/build-favicons.js regenerates the family. -->
-  <link rel="icon" href="/brand/favicon.svg?v=20260807" type="image/svg+xml" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="/brand/favicon-32.png?v=20260807" sizes="32x32" type="image/png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="/brand/favicon-16.png?v=20260807" sizes="16x16" type="image/png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="/brand/favicon-32-dark.png?v=20260807" sizes="32x32" type="image/png" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="/brand/favicon-16-dark.png?v=20260807" sizes="16x16" type="image/png" media="(prefers-color-scheme: dark)">
-  <link rel="shortcut icon" href="/favicon.ico?v=20260807">
-  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png?v=20260807">
+  <link rel="icon" href="/brand/favicon.svg?v=20261011" type="image/svg+xml" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="/brand/favicon-32.png?v=20261011" sizes="32x32" type="image/png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="/brand/favicon-16.png?v=20261011" sizes="16x16" type="image/png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="/brand/favicon-32-dark.png?v=20261011" sizes="32x32" type="image/png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/brand/favicon-16-dark.png?v=20261011" sizes="16x16" type="image/png" media="(prefers-color-scheme: dark)">
+  <link rel="shortcut icon" href="/favicon.ico?v=20261011">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png?v=20261011">
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Healthcare Uncharted">
@@ -137,7 +137,7 @@
       function apply(t){
         document.documentElement.setAttribute('data-theme', t);
         var m = document.getElementById('metaThemeColor');
-        if (m) m.setAttribute('content', t === 'light' ? '#EEF2F7' : '#0a0f1a');
+        if (m) m.setAttribute('content', t === 'light' ? '#EDF1F6' : '#0a0f1a');
       }
       apply(chose ? saved : (mq && mq.matches ? 'light' : 'dark'));
       if (!chose && mq) {
@@ -177,12 +177,14 @@
   </a>
   {% endif %}
   <div class="nav-links" id="navLinks">
-    <a class="nav-link {% if navPage == 'home' %}active{% endif %}" href="/">Home</a>
+    {# Home and the Atlas left the bar 2026-10-11 (David, reviewing home: "maybe we don't need the home button... and maybe
+       we don't need the Atlas button at all that'll just be linked through tools"): the logo is home, the Tools page
+       carries the Atlas. #}
     <a class="nav-link {% if navPage == 'tools' %}active{% endif %}" href="/tools/">Tools</a>
+    <a class="nav-link {% if navPage == 'fun' %}active{% endif %}" href="/fun/">Fun</a>
     <a class="nav-link {% if navPage == 'learn' %}active{% endif %}" href="/learn/">Learn</a>
     <a class="nav-link {% if navPage == 'rounds' %}active{% endif %}" href="/rounds/">Rounds</a>
     <a class="nav-link {% if navPage == 'about' %}active{% endif %}" href="/about/">About</a>
-    <a class="nav-pill" href="/atlas/">Atlas &rarr;</a>
     <button class="nav-theme-btn" id="themeToggle" aria-label="Toggle light / dark mode" title="Toggle light / dark mode">☀</button>
   </div>
   <button class="nav-theme-btn nav-search-btn" data-hu-search aria-label="Search the site" title="Search &middot; press /"><i data-lucide="search"></i></button>
@@ -199,7 +201,11 @@
    every learn module", and everything that is not home or About wants a "clean small"
    footer. So home and About carry the full footer; every other page carries a lean one
    that is the brand, the Explore links, Support and the copyright. Nothing was deleted,
-   it moved. #}
+   it moved.
+   FIELD NOTES CAME DOWN 2026-10-11 (David: "i think we scrap the field notes for now, it makes the lower bar section to
+   large"). The signup form is gone from the footer; /thanks/ stays, unlinked and unindexed, for when it comes back. On a
+   phone the footer is the support button, the copyright and the policy links ("I do not think we need any on the phone,
+   its a long scroll too"): the bottom bar already carries the sections. #}
 {% set footerFull = page.url == '/' or page.url == '/about/' %}
 {% if not no_footer %}<footer class="{% if footerFull %}footer-full{% else %}footer-lean{% endif %}">
   <div class="footer-inner">
@@ -215,6 +221,7 @@
         <div class="footer-col-title">Explore</div>
         <div class="footer-nav-list">
           <a class="footer-nav-link" href="/tools/">Tools</a>
+          <a class="footer-nav-link" href="/fun/">Fun</a>
           <a class="footer-nav-link" href="/learn/">Learn</a>
           <a class="footer-nav-link" href="/rounds/">Rounds</a>
           <a class="footer-nav-link" href="/atlas/">Atlas</a>
@@ -234,36 +241,25 @@
         </div>
       </div>
       {% endif %}
+      {# Support block. Renders only when site.support.url is set, so the site is
+         unchanged until David pastes his Ko-fi link into _data/site.js. Uses the
+         footer's column grammar (col title, sub line, button) so it adds no new
+         component. Since 2026-10-11 it is the last column of the top row, not a band of its own. A plain outbound link: no widget, no script, no CSP change.
+         The blurb is three lines on a phone, so the lean footer keeps the button only. #}
+      {% if site.support.url %}
+      <div class="footer-support">
+        <div class="footer-col-title">Support</div>
+        {% if footerFull %}<p class="fs-sub">{{ site.support.blurb }}</p>{% endif %}
+        <a class="fs-btn fs-btn-link" href="{{ site.support.url }}" target="_blank" rel="noopener">{{ site.support.label }}</a>
+      </div>
+      {% endif %}
     </div>
-    {% if footerFull %}
-    <div class="footer-subscribe">
-      <div class="footer-col-title">Field Notes</div>
-      <p class="fs-sub">New tools and new data, silence in between. Leave an address and you go on the list.</p>
-      <form name="field-notes" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="bot-field" class="fs-form">
-        <input type="hidden" name="form-name" value="field-notes">
-        <p class="fs-hp" aria-hidden="true"><label>Skip this field: <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
-        <label class="fs-label" for="fsEmail">Email</label>
-        <div class="fs-row">
-          <input class="fs-input" id="fsEmail" type="email" name="email" required autocomplete="email" placeholder="you@hospital.org">
-          <button class="fs-btn" type="submit">Sign up</button>
-        </div>
-      </form>
-    </div>
-    {% endif %}
-    {# Support block. Renders only when site.support.url is set, so the site is
-       unchanged until David pastes his Ko-fi link into _data/site.js. Reuses the
-       Field Notes grammar above (col title, sub line, button) so it adds no new
-       component. A plain outbound link: no widget, no script, no CSP change.
-       The blurb is three lines on a phone, so the lean footer keeps the button only. #}
-    {% if site.support.url %}
-    <div class="footer-support">
-      <div class="footer-col-title">Support</div>
-      {% if footerFull %}<p class="fs-sub">{{ site.support.blurb }}</p>{% endif %}
-      <a class="fs-btn fs-btn-link" href="{{ site.support.url }}" target="_blank" rel="noopener">{{ site.support.label }}</a>
-    </div>
-    {% endif %}
     <div class="footer-bottom">
       <div class="footer-copy">&copy; 2026 Healthcare Uncharted &middot; David Eitel &middot; Educational use &middot; not clinical advice</div>
+      {# the trust pages (2026-10-11, the Ideas card "The trust pages") #}
+      <nav class="footer-legal" aria-label="Site policies">
+        <a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/disclaimer/">Disclaimer</a><a href="/accessibility/">Accessibility</a><a href="/ai/">How AI is used</a>
+      </nav>
     </div>
     {% if footerFull %}
     <div class="content-policy">
@@ -285,13 +281,15 @@
 {# HUB PAGES ONLY, by exact URL: the old navPage test also matched every TOOL detail page
    (they set navPage: tools) and the fixed bar buried each tool's own thumb-zone controls —
    all six tool audits flagged it as their shared blocker. #}
-{% if page.url == '/' or page.url == '/tools/' or page.url == '/learn/' or page.url == '/rounds/' or page.url == '/secret-menu/' %}
+{% if page.url == '/' or page.url == '/tools/' or page.url == '/fun/' or page.url == '/learn/' or page.url == '/rounds/' or page.url == '/secret-menu/' %}
 <!-- Phone bottom bar (V3 phase 3): the hub pages carry it; the lit slot
      follows navPage. Rounds and the Secret Menu ride the bar with no lit
-     slot (both live in More). Search rides the center; More opens the nav menu. -->
+     slot (both live in More). Search rides the center; More opens the nav menu.
+     2026-10-11 (BR3): Fun joined as a section and took Home's slot, so Search stays
+     in the middle of five; home is the logo, which the top bar always carries. -->
 <nav class="hu-bbar" id="huBottomBar" aria-label="Quick navigation">
-  <a class="bb-item {% if navPage == 'home' %}on{% endif %}" href="/" {% if navPage == 'home' %}aria-current="page"{% endif %}><i data-lucide="house"></i><span>Home</span></a>
   <a class="bb-item {% if navPage == 'tools' %}on{% endif %}" href="/tools/" {% if navPage == 'tools' %}aria-current="page"{% endif %}><i data-lucide="wrench"></i><span>Tools</span></a>
+  <a class="bb-item {% if navPage == 'fun' %}on{% endif %}" href="/fun/" {% if navPage == 'fun' %}aria-current="page"{% endif %}><i data-lucide="gamepad-2"></i><span>Fun</span></a>
   <button class="bb-search" type="button" data-hu-search aria-label="Search the site"><i data-lucide="search"></i><span>Search</span></button>
   <a class="bb-item {% if navPage == 'learn' %}on{% endif %}" href="/learn/" {% if navPage == 'learn' %}aria-current="page"{% endif %}><i data-lucide="book-open"></i><span>Learn</span></a>
   <button class="bb-item" type="button" id="bbMore" aria-label="More menu" aria-expanded="false" aria-controls="navLinks"><i data-lucide="menu"></i><span>More</span></button>
@@ -364,7 +362,7 @@ if (themeToggle) themeToggle.addEventListener('click', () => {
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem('hu-theme', next); } catch (e) {}   // a browser that refuses storage still switches for this page
   const m = document.getElementById('metaThemeColor');
-  if (m) m.setAttribute('content', next === 'light' ? '#EEF2F7' : '#0a0f1a');
+  if (m) m.setAttribute('content', next === 'light' ? '#EDF1F6' : '#0a0f1a');
   syncToggleLabel();
 });
 </script>

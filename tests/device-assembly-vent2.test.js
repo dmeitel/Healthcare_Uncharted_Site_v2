@@ -250,7 +250,7 @@ test('the ICU in the deals: every ICU wall solves before it is dealt, arrives un
 
 test('the daily wall visits the ICU only from #5, out of the hospital days, and a made ICU wall comes from the maker', () => {
   for (const k of ['2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06']) assert.notStrictEqual(da.dayPlace(k), 'icu', k);
-  let icu = 0; for (let d = 7; d <= 60; d++) { const k = new Date(Date.UTC(2026, 9, d)).toISOString().slice(0, 10); if (da.dayPlace(k) === 'icu') { icu++; const L = da.levelById('day:' + k); assert.ok(L && L.gen.place === 'icu', k); } }
+  let icu = 0; for (let d = 7; d <= 60; d++) { const k = new Date(Date.UTC(2026, 9, d)).toISOString().slice(0, 10); if (da.dayPlace(k) === 'icu') { icu++; if (da.dayNumber(k) >= da.YEAR_DAY) continue; /* from wall #23 the daily year deals */ const L = da.levelById('day:' + k); assert.ok(L && L.gen.place === 'icu', k); } }
   assert.ok(icu >= 3, 'some days in two months are an ICU bed: ' + icu);
   const id = da.myId({ recipe: 'vsecretions', flow: 0, fio2: 50, twist: 'icu', room: 'right', clock: false, seed: 'ICU1' }), L = da.levelById(id);
   assert.ok(L && L.req.patient.secretions && L.req.fio2 === 50, 'a made wall with thick secretions at 50%');

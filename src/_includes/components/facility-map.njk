@@ -3,7 +3,7 @@
     data-map off .gv-shell). A page sets `fm` (see src/tools/operators-map/index.html) and includes this. -#}
 {% raw %}
 <!-- ════════════════════════════════════════════════════════════════
-     U.S. HOSPITAL OPERATIONS MAP — v2, on the HU full-map standard
+     U.S. HOSPITAL OPERATIONS MAP, v2, on the HU full-map standard
      (docs/HU-UI-GRAMMAR.md §5b). Promoted from the geo-v2 pilot
      2026-07-19; the D3 v1 lives in archive/operators-map-2026-07-19-d3-v1.html.
      Stack: MapLibre GL 5 + OpenFreeMap (fiord/positron by theme) +
@@ -12,7 +12,7 @@
      drill; one click router (pin > cluster > county > state); draw
      search; locate-me via HUKit; old v1 URL params still honored.
 ════════════════════════════════════════════════════════════════ -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.css" integrity="sha256-eSrJl9z2rm9kPrTi3uRjDIXnBWUmvY+4X/6Dxn1sQbQ=" crossorigin="anonymous">
 <style>
 .vh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .gv-shell { position:relative; height:calc(100dvh - var(--nav-h)); overflow:hidden; }
@@ -22,48 +22,59 @@
 .gv-top { position:absolute; top:10px; left:10px; right:10px; z-index:20; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
 .gv-top > * { pointer-events:auto; }
 .gv-srow { display:flex; gap:8px; align-items:center; }
+/* THE BRASS LOOK (2026-10-11, the site-wide refresh), the twin of the Population Health Map's pass: the ident and the
+   legend are faces, the pills you press are keys, the search pill and the loading line are glass, the drawer and the
+   search panel are faces with a brass hairline. The map, its colors, markers and legend swatches are untouched. */
 .gv-ident { flex:none; display:flex; align-items:center; height:38px; padding:0 13px; border-radius:10px;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
-  font-family:var(--display); font-size:var(--t-fine); font-weight:700; color:var(--t2); backdrop-filter:blur(8px); white-space:nowrap; }
+  background:var(--face-bg); border:1px solid var(--border); box-shadow:0 6px 14px var(--depth);
+  font-family:var(--display); font-size:var(--t-fine); font-weight:700; color:var(--t2); white-space:nowrap; }
 .gv-ident b { color:var(--teal); margin-left:4px; }
 [data-theme="light"] .gv-ident b { color:var(--teal-ink); }
 @media (max-width:699px), (max-height:500px){ .gv-ident { display:none; } }   /* phone: canvas gets the pixels, the tab carries the name */
 /* scope-back: pops one level per tap. County → state → United States */
 .gv-scope { flex:none; height:38px; padding:0 13px; border-radius:999px; cursor:pointer;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--teal);
-  color:var(--t1); font-family:var(--font); font-size:var(--t-fine); font-weight:700; backdrop-filter:blur(8px);
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim);
+  color:var(--key-ink); font-family:var(--font); font-size:var(--t-fine); font-weight:700;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw;
-  box-shadow:0 4px 16px rgba(0,0,0,.35); }
-.gv-scope:hover { background:color-mix(in srgb, var(--teal) 14%, var(--surface)); }
+  box-shadow:var(--key-lift); }
 /* the back chip's place name: in full on a desktop, short on a phone, so the search box keeps its words (2026-10-03) */
 .gv-scope .sc-s { display:none; }
 @media (max-width:699px), (max-height:500px){ .gv-scope .sc-l { display:none; } .gv-scope .sc-s { display:inline; } }
 /* ...and with a place open, the search box drops its count on a phone (the List button and the card carry it) */
 @media (max-width:699px), (max-height:500px){ .gv-srow:has(#gvScope:not([hidden])) .gv-pill .qn { display:none; } }
-[data-theme="light"] .gv-scope { border-color:var(--teal-dk); }
+/* the search pill is a field, like the site search launcher (.hv-search): glass at night, a light well in day */
 .gv-pill { flex:1; max-width:440px; display:flex; align-items:center; gap:9px; height:38px; padding:0 14px; border-radius:999px;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
-  color:var(--t3); font-family:var(--font); font-size:var(--t-ui); cursor:pointer; backdrop-filter:blur(8px);
-  box-shadow:0 4px 16px rgba(0,0,0,.35); text-align:left; overflow:hidden; }
-.gv-pill:hover { border-color:var(--teal); }
+  background:var(--field-bg); border:1px solid transparent;
+  color:var(--field-sub); font-family:var(--font); font-size:var(--t-ui); cursor:pointer;
+  box-shadow:var(--field-well), 0 6px 14px var(--depth); text-align:left; overflow:hidden; }
+.gv-pill:hover { box-shadow:var(--field-well), 0 0 0 1px var(--brass-lo), 0 6px 14px var(--depth); }
 .gv-pill .q { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.gv-pill .q.set { color:var(--t1); font-weight:600; }
+.gv-pill .q.set { color:var(--glass-ink); font-weight:600; }
 /* the clear X is the pill's SIBLING (a button can't hold a button), so it is reached with +; written as a descendant it
    never hid, and the X sat on the placeholder with nothing to clear (2026-10-02) */
-.gv-pillwrap .clr { margin-left:auto; flex:none; color:var(--t3); font-size:var(--t-body); padding:4px; display:none; }
+.gv-pillwrap .clr { margin-left:auto; flex:none; color:var(--glass-sub); font-size:var(--t-body); padding:4px; display:none; }
 .gv-pill.has-q + .clr { display:block; }
 .gv-pill.has-q { padding-right:32px; }   /* a long name stops short of the X */
-.gv-pillwrap .clr:hover { color:var(--t1); }
+.gv-pillwrap .clr:hover { color:var(--glass-ink); }
 /* ── the chrome grammar: ONE bar, ONE drawer, ONE cluster ──
    The chip rail is gone. Filters live in the drawer's Display tab; the bar
    carries READOUT pills that say their state (Zillow move, variant A). */
 .gv-rpill { flex:none; display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 13px; border-radius:999px;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
-  color:var(--t3); font-family:var(--font); font-size:var(--t-fine); font-weight:600; cursor:pointer; backdrop-filter:blur(8px);
-  box-shadow:0 4px 16px rgba(0,0,0,.35); white-space:nowrap; }
-.gv-rpill b { color:var(--t1); font-weight:700; }
-.gv-rpill .car { color:var(--t3); font-size:var(--t-micro); }
-.gv-rpill:hover { border-color:var(--teal); }
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim);
+  color:var(--key-sub); font-family:var(--font); font-size:var(--t-fine); font-weight:600; cursor:pointer;
+  box-shadow:var(--key-lift); white-space:nowrap; }
+.gv-rpill b { color:var(--key-ink); font-weight:700; }
+.gv-rpill .car { color:var(--key-sub); font-size:var(--t-micro); }
+/* THE KEYS' STATES (the recipe in docs/HU-BRASS-LOOK-2026-10-11.md): a brass top edge and a little light on hover, a
+   press that sinks onto the floor, the site's teal focus ring */
+@media (prefers-reduced-motion: no-preference){
+  .gv-scope, .gv-rpill, .gv-listbtn, .gv-inset, .gv-tolist, .gv-tabs button, .gv-pill { transition:transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .15s; }
+}
+:is(.gv-scope, .gv-rpill, .gv-tolist):hover { color:var(--key-ink); border-color:transparent; border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] :is(.gv-scope, .gv-rpill, .gv-tolist):hover { border-top-color:var(--brass-lo); filter:brightness(.97); }
+:is(.gv-scope, .gv-rpill):active { transform:translateY(3px); box-shadow:var(--key-down); }
+:is(.gv-scope, .gv-rpill, .gv-listbtn, .gv-inset, .gv-tolist):focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+[data-theme="light"] :is(.gv-scope, .gv-rpill, .gv-listbtn, .gv-inset, .gv-tolist):focus-visible { outline-color:var(--teal-dk); }
 /* view pills park RIGHT, stacked over the drawer they open (nav left, view right) */
 #gvLayersPill { margin-left:auto; }
 .gv-dispill { margin-left:auto; }
@@ -73,10 +84,19 @@
   .gv-rpill.gv-dispill { display:inline-flex; }   /* narrow: the two readouts fold into one ⚙ Display pill */
 }
 /* drawer tabs: Details (what you tapped) | Display (how the map reads) */
-.gv-tabs { display:flex; gap:4px; background:var(--raised); border-radius:9px; padding:3px; margin:4px 0 10px; flex:none; }
-.gv-tabs button { flex:1; border:1px solid transparent; background:none; border-radius:7px; padding:6px 0;
-  font-family:var(--font); font-size:var(--t-label); font-weight:700; color:var(--t3); cursor:pointer; }
-.gv-tabs button.on { background:var(--surface); border-color:var(--border2); color:var(--t1); }
+/* the Details|Display switch is the site's view switch (.hu-seg in hu-global.css): keys in a recessed track, the tab
+   on screen in brass */
+.gv-tabs { display:flex; gap:4px; background:var(--track-bg); box-shadow:var(--track-well);
+  border-radius:9px; padding:3px; margin:4px 0 10px; flex:none; }
+[data-theme="light"] .gv-tabs { background:var(--raised); box-shadow:inset 0 2px 6px var(--depth); }
+.gv-tabs button { flex:1; border:1px solid transparent; border-top-color:var(--brass-rim); background:var(--key-bg); border-radius:7px; padding:6px 0;
+  box-shadow:0 2px 0 var(--key-floor); font-family:var(--font); font-size:var(--t-label); font-weight:700; color:var(--key-ink); cursor:pointer; }
+.gv-tabs button:hover { filter:brightness(1.08); }
+[data-theme="light"] .gv-tabs button:hover { filter:brightness(.97); }
+.gv-tabs button:active { transform:translateY(2px); box-shadow:none; }
+.gv-tabs button.on { background:var(--brass-bg); border-color:transparent; color:var(--brass-ink); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 var(--brass-deep); }
+.gv-tabs button:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+[data-theme="light"] .gv-tabs button:focus-visible { outline-color:var(--teal-dk); }
 /* ── Fixed header, scrolling body (David's phone QA 2026-08-23). The sheet is a flex
    column, and at a short detent its children SQUISHED: the tabs crushed toward zero
    and the card title compressed into the sheet edge, which is the half-swallowed
@@ -88,7 +108,7 @@
 .hu-sheet-x.gv-x { position:sticky; top:6px; align-self:flex-end;
   margin:0 4px -44px 0; z-index:7; flex:none; }
 .gv-tabs { flex:none; margin-right:52px; }
-.gv-card-name { position:sticky; top:0; z-index:4; background:var(--surface); flex:none; }
+.gv-card-name { position:sticky; top:0; z-index:4; background:var(--face-a); flex:none; }   /* the top of the drawer's face */
 /* the body's children hold their natural height; the BODY is what scrolls. Without
    this the card content flex-shrank inside the body and nothing ever overflowed, so
    the "scrolling body" was scrolling three pixels. */
@@ -103,12 +123,12 @@
 .gv-dsec h5 .sub { margin-left:auto; font-family:var(--mono); font-size:var(--t-label); font-weight:400;
   letter-spacing:.08em; text-transform:uppercase; color:var(--t2); }
 /* readable sub text drawer-wide (David's call): brighter tier + a size up */
-#gvSheet .hu-stat .k { font-size:var(--t-label); color:var(--t2); }
+#gvSheet .hu-stat .k { font-size:var(--t-label); color:var(--glass-sub); }   /* a stat tile is glass in both themes */
 .gv-drow { display:flex; gap:6px; flex-wrap:wrap; }
 .gv-drow .hu-chip i { width:9px; height:9px; border-radius:50%; flex:none; }
-.gv-drow .hu-chip .cnt { font-family:var(--mono); font-size:var(--t-label); font-weight:600; color:var(--t3); white-space:pre; }
-/* the global .hu-chip.on is a SOLID teal fill now (The Ink State Rule): teal
-   text on it vanished; the count rides the chip's ink */
+.gv-drow .hu-chip .cnt { font-family:var(--mono); font-size:var(--t-label); font-weight:600; color:var(--key-sub); white-space:pre; }   /* the chip is a key */
+/* the global .hu-chip.on is a SOLID brass fill (it was teal under The Ink State Rule):
+   a colored count on it vanishes, so the count rides the chip's ink */
 .gv-drow .hu-chip.on .cnt { color:inherit; }
 .gv-tgl { display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:var(--t-fine); color:var(--t2); }
 /* the maps' menus (2026-10-08, DECISIONS M1): one Add or Only switch above the chips (the "only" inside every chip
@@ -130,7 +150,7 @@
   /* the drawer tracks the RESIZABLE width (monitor yes, phone no, David's
      call). The FABs left this corner for the bottom-center cluster. */
   #gvSheet { left:auto; right:12px; bottom:12px; top:124px; width:var(--drawer-w, 370px);
-    border:1px solid var(--border2); border-radius:14px;
+    border:1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2)); border-radius:14px;
     height:auto; max-height:none; }
   #gvSheet.dt-peek, #gvSheet.dt-half, #gvSheet.dt-full { height:auto; max-height:calc(100dvh - 200px); overflow-y:auto; }
   #gvSheet:not(.open) { transform:translateX(115%); }
@@ -142,20 +162,21 @@
 .gv-resize { display:none; }   /* phone/tablet: the sheet owns its width */
 /* desktop hover card (fine pointers only) */
 .gv-tip { position:absolute; z-index:40; pointer-events:none; display:none; max-width:250px;
-  background:var(--surface); border:1px solid var(--border2); border-radius:9px; padding:8px 11px;
-  box-shadow:0 8px 26px rgba(0,0,0,.45); }
+  background:var(--face-bg); border:1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2)); border-radius:9px; padding:8px 11px;
+  box-shadow:var(--panel-lift); }
 .gv-tip .tn { font-size:var(--t-fine); font-weight:700; color:var(--t1); line-height:1.3; }
 .gv-tip .ts { font-family:var(--mono); font-size:var(--t-label); color:var(--t3); margin-top:3px; }
 .gv-tip .ts .st { color:var(--amber); }
 [data-theme="light"] .gv-tip .ts .st { color:var(--amber-dk); }
 
 /* ── search takeover ── */
-.gv-search { position:fixed; inset:var(--nav-h) 0 auto 0; z-index:340; background:var(--surface); border-bottom:1px solid var(--border2);
-  box-shadow:0 18px 50px rgba(0,0,0,.5); padding:12px 14px 8px; display:none; flex-direction:column; max-height:calc(100dvh - var(--nav-h)); }
+.gv-search { position:fixed; inset:var(--nav-h) 0 auto 0; z-index:340; background:var(--face-bg); border-bottom:1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2));
+  box-shadow:var(--panel-lift); padding:12px 14px 8px; display:none; flex-direction:column; max-height:calc(100dvh - var(--nav-h)); }
 .gv-search.open { display:flex; }
 .gv-search-row { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
-.gv-search-in { flex:1; height:42px; border-radius:10px; border:1px solid var(--border2); background:var(--raised); color:var(--t1);
+.gv-search-in { flex:1; height:42px; border-radius:10px; border:1px solid transparent; background:var(--field-bg); box-shadow:var(--field-well); color:var(--field-ink);
   font-family:var(--font); font-size:var(--t-lede); padding:0 14px; }
+.gv-search-in::placeholder { color:var(--field-sub); }
 .gv-search-in:focus { outline:none; border-color:var(--teal); }
 .gv-search-list { overflow-y:auto; min-height:0; padding-bottom:8px; }
 .gv-search-list .pop-opt { width:100%; }
@@ -165,9 +186,9 @@
 
 /* ── status chip (above the list pill so they never collide) ── */
 .gv-status { position:absolute; bottom:88px; left:50%; transform:translateX(-50%); z-index:20;
-  font-family:var(--mono); font-size:var(--t-label); color:var(--t2); padding:6px 12px; border-radius:999px; white-space:nowrap;
-  background:color-mix(in srgb, var(--surface) 94%, transparent); border:1px solid var(--border2);
-  backdrop-filter:blur(8px); transition:opacity .3s; }
+  font-family:var(--mono); font-size:var(--t-label); color:var(--field-sub); padding:6px 12px; border-radius:999px; white-space:nowrap;
+  background:var(--field-bg); border:1px solid transparent; box-shadow:var(--field-well), 0 6px 14px var(--depth); }
+@media (prefers-reduced-motion: no-preference){ .gv-status { transition:opacity .3s; } }
 .gv-status.done { opacity:0; pointer-events:none; }
 /* tablet: bottom-centre put it on the AK and HI insets (tool review 2026-09-23); lift it clear */
 @media (max-width:1099px){ .gv-status { bottom:138px; } }
@@ -181,11 +202,13 @@
    corner and ride the row in-flow) ── */
 .gv-bottombar { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); z-index:110;
   display:flex; gap:8px; align-items:center; }
-.gv-bottombar .hu-fab { position:static; width:42px; height:42px; flex:none; box-shadow:0 6px 20px rgba(0,0,0,.45); }
+.gv-bottombar .hu-fab { position:static; width:42px; height:42px; flex:none; }   /* the key's own lift, from hu-global.css */
 .gv-listbtn { display:flex; align-items:center; gap:7px; height:42px; padding:0 18px; border-radius:999px; cursor:pointer;
-  background:var(--surface); border:1px solid var(--border2); color:var(--t1);
-  font-family:var(--font); font-size:var(--t-fine); font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.45); }
-.gv-listbtn:hover { border-color:var(--teal); }
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim); color:var(--key-ink);
+  font-family:var(--font); font-size:var(--t-fine); font-weight:700; box-shadow:var(--key-lift); }
+.gv-listbtn:hover { color:var(--key-ink); border-color:transparent; border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] .gv-listbtn:hover { border-top-color:var(--brass-lo); filter:brightness(.97); }
+.gv-listbtn:active { transform:translateY(3px); box-shadow:var(--key-down); }
 /* .gv-bottombar is absolute at left:50% with no right, so its shrink-to-fit width is
    only half the viewport. Both FABs are flex:none, so the whole squeeze landed here
    and "1,096 in view" wrapped to three lines and clipped at every phone width. */
@@ -201,8 +224,9 @@
 .gv-insets { position:absolute; left:10px; bottom:34px; z-index:20; display:flex; gap:8px; transition:opacity .2s; }
 .gv-insets.hide { opacity:0; pointer-events:none; }
 .gv-inset { position:relative; width:120px; height:92px; padding:0; border-radius:10px; overflow:hidden; cursor:pointer;
-  border:1px solid var(--border2); background:var(--surface); box-shadow:0 4px 16px rgba(0,0,0,.35); }
-.gv-inset:hover { border-color:var(--teal); }
+  border:1px solid var(--border); border-top-color:var(--brass-rim); background:var(--face-b); box-shadow:0 3px 0 var(--key-floor), 0 8px 14px var(--depth); }
+.gv-inset:hover { border-color:var(--border); border-top-color:var(--brass); }
+[data-theme="light"] .gv-inset:hover { border-top-color:var(--brass-lo); }
 .gv-inset .gv-inset-map { position:absolute; inset:0; display:block; pointer-events:none; }
 .gv-inset b { position:absolute; top:5px; left:7px; z-index:2; font-family:var(--mono); font-size:var(--t-label); font-weight:600;
   color:var(--t1); background:color-mix(in srgb, var(--surface) 88%, transparent); border:1px solid var(--border);
@@ -213,8 +237,8 @@
 
 /* choropleth legend: one small row, bottom-left, only while a tint is on */
 .gv-cleg { position:absolute; bottom:34px; left:10px; z-index:20; display:flex; align-items:center; gap:3px;
-  padding:5px 9px; border-radius:999px; background:color-mix(in srgb, var(--surface) 94%, transparent);
-  border:1px solid var(--border2); backdrop-filter:blur(8px); }
+  padding:5px 9px; border-radius:999px; background:var(--face-bg);
+  border:1px solid var(--border); box-shadow:0 6px 14px var(--depth); }
 .gv-cleg i { width:14px; height:8px; border-radius:2px; }
 .gv-cleg .cl-name { font-family:var(--mono); font-size:var(--t-label); color:var(--t2); margin-right:5px; }
 .gv-cleg .cl-dir { font-family:var(--mono); font-size:var(--t-label); color:var(--t3); margin-left:5px; }
@@ -238,10 +262,11 @@
      zoom controls. Bordered objects at rest: 3 -> 2. */
   .gv-bottombar { bottom:56px; left:10px; right:10px; transform:none;
     justify-content:space-between; align-items:flex-end; }
+  /* the tool column is a face with a brass hairline, the kit's phone dock surface (.hu-vdock in hu-global.css) */
   .gv-fabcol { display:flex; flex-direction:column;
-    background:color-mix(in srgb, var(--surface) 94%, transparent);
-    border:1px solid var(--border); border-radius:14px; overflow:hidden;
-    backdrop-filter:blur(10px); box-shadow:0 6px 20px rgba(0,0,0,.35); }
+    background:var(--face-bg);
+    border:1px solid color-mix(in srgb, var(--brass-lo) 45%, var(--border)); border-radius:14px; overflow:hidden;
+    box-shadow:var(--panel-lift); }
   .gv-fabcol .hu-fab { background:none; border:none; border-radius:0; box-shadow:none; }
   .gv-fabcol .hu-fab + .hu-fab { border-top:1px solid var(--border); }
   .tool-attribution--fixed { bottom:166px; right:10px; }
@@ -303,6 +328,9 @@
 
 /* ── the sheet: pin card / county card / state card / list ── */
 #gvSheet { padding:0 16px calc(14px + env(safe-area-inset-bottom)); }
+/* the drawer's face runs its gradient over a fixed 760px, the desk drawer's height, so a short phone detent shows the
+   same top of the face and the sticky name row (--face-a) sits on its own color instead of reading as a band */
+#gvSheet { background:linear-gradient(180deg, var(--face-a), var(--face-b)) 0 0 / 100% 760px no-repeat, var(--face-b); }
 #gvSheet:not(.open) { transform:translateY(105%); }
 /* the desk drawer's top padding: the rule above came after the >=1100 block's padding-top:12px and cut the Details and
    Display strip off at the top of every drawer (2026-10-08). The Population Health Map has the two the right way round. */
@@ -332,7 +360,7 @@
 [data-theme="light"] .gv-card-name .pv { color:var(--teal-ink); }
 @media (max-width:1099px){
   /* parity with multi-lens: the parked card carries the answer, and the answer leads.
-     Same voice as .hu-stat .v — display face, 800, tabular. */
+     Same voice as .hu-stat .v: display face, 800, tabular. */
   .gv-card-name .pv { display:inline; font-size:27px; font-weight:800; font-family:var(--display);
     font-variant-numeric:tabular-nums; line-height:1; }
 }
@@ -348,8 +376,9 @@
 .gv-card-sys { margin-top:12px; }
 .gv-x { position:absolute; top:10px; right:10px; z-index:2; }
 .gv-tolist { display:inline-flex; align-items:center; gap:5px; margin-top:14px; padding:7px 12px; border-radius:999px; cursor:pointer;
-  background:var(--raised); border:1px solid var(--border); color:var(--t2); font-family:var(--font); font-size:var(--t-label); font-weight:600; }
-.gv-tolist:hover { color:var(--t1); border-color:var(--teal); }
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim); color:var(--key-ink);
+  box-shadow:0 2px 0 var(--key-floor), 0 4px 8px var(--depth); font-family:var(--font); font-size:var(--t-label); font-weight:600; }
+.gv-tolist:active { transform:translateY(2px); box-shadow:0 0 0 var(--key-floor), 0 2px 4px var(--depth); }
 .gv-list-h { font-family:var(--mono); font-size:var(--t-label); letter-spacing:.1em; text-transform:uppercase; color:var(--t3); padding:2px 0 8px; }
 .gv-rows { overflow-y:auto; min-height:0; flex:1; }
 .gv-rows.short { flex:none; max-height:190px; margin-top:12px; }
@@ -461,7 +490,7 @@
   <div id="gvLive" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js" integrity="sha256-B+bKcaW22DWnw4A/tITwpuXw3L+hMUB2Zu256TFlZPk=" crossorigin="anonymous"></script>
 <script src="/assets/js/hu-kit.js?v=20260920"></script>
 <script type="module" src="/assets/js/tools/operators-map.js?v=20260823"></script>
 

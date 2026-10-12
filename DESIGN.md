@@ -55,6 +55,39 @@ colors:
   deep-step-pubhealth-chip: "#206E47"
   deep-step-techeco-chip: "#0D6589"
   deep-step-medsci-chip: "#B12B2B"
+  # The brass instruments look, 2026-10-11 (DECISIONS BR2): brass joins the brand colors for frames, the one main act
+  # on a screen and the section you are in; keys, faces and glass carry the depth. Tokens in hu-global.css, last section.
+  brass-hi: "#ECD08E"
+  brass: "#D9B56A"
+  brass-lo: "#B48A45"
+  brass-deep: "#5E4519"
+  brass-frame-mid: "#6B5126"
+  brass-ink: "#2A1D08"
+  brass-text: "#C9A35B"
+  brass-text-deep: "#7A5A1E"
+  key-navy-top: "#223F64"
+  key-navy-foot: "#182F4F"
+  key-navy-floor: "#0A1729"
+  key-ink-night: "#F6F9FC"
+  key-sub-night: "#A9BFD6"
+  key-day-foot: "#E3E9F1"
+  key-day-floor: "#A7B4C5"
+  face-night-top: "#13203A"
+  face-night-foot: "#0C1626"
+  face-day-foot: "#F9FBFD"
+  # the day theme as shipped (LT1 and LT2, "go with cool slate", 2026-10-11)
+  slate-ground-day: "#E1E7EF"
+  page-top-day: "#EDF1F6"
+  edge-day: "#B4C0CF"
+  glass-night: "#060A12"
+  glass-day: "#0D1117"
+  glass-line-night: "#1A2D48"
+  glass-sub: "#9BB3CE"
+  page-top-night: "#111C2E"
+  region-rounds-night: "#9FB6CF"
+  region-rounds-day: "#4A5D78"
+  switch-knob-foot: "#C9D4DF"
+  seg-track-day: "#DFE6EE"
 typography:
   display:
     fontFamily: "Outfit, Trebuchet MS, sans-serif"
@@ -147,22 +180,15 @@ spacing:
   space-9: "96px"
 components:
   button-primary:
-    backgroundColor: "{colors.chart-blue}"
-    textColor: "{colors.paper-white}"
+    backgroundColor: "{colors.brass}"
+    textColor: "{colors.brass-ink}"
     rounded: "{rounded.md}"
-    padding: "13px 26px"
-  button-primary-hover:
-    backgroundColor: "{colors.chart-blue-bright}"
-  button-ghost:
-    backgroundColor: "transparent"
-    textColor: "{colors.fog-blue}"
+    padding: "0 18px"
+  button-key:
+    backgroundColor: "{colors.key-navy-top}"
+    textColor: "{colors.key-ink-night}"
     rounded: "{rounded.md}"
-    padding: "13px 26px"
-  button-secondary:
-    backgroundColor: "rgba(78,205,196,.08)"
-    textColor: "{colors.signal-teal}"
-    rounded: "{rounded.md}"
-    padding: "13px 26px"
+    padding: "0 16px"
   chip:
     backgroundColor: "{colors.raised-chart}"
     textColor: "{colors.fog-blue}"
@@ -193,14 +219,16 @@ Healthcare Uncharted looks like a working explorer's atlas of the healthcare sys
 
 The system is tactile and confident. Cards lift when you reach for them, buttons press, and arrows slide toward where you are going, all inside a strict motion budget (150ms state changes, 280ms structural moves, 250ms ceiling on phones, stillness under reduced motion). Density is medium-high and unapologetic: this is an atlas, and atlases are full. What keeps the fullness readable is discipline, one-pixel sounding lines around every container, a four-step tonal ladder instead of shadow soup, and monospace labels that caption everything like coordinates on a chart.
 
-**The Quiet Precision era (adopted 2026-08-06, from the Reskin Lab: Signal Boost, then Quiet Precision, then Cartographic Quiet).** Hierarchy comes from type and space, not from effects. State is ink and weight, never a halo. Boxes dissolve into rules: stat tiles stand on a 2px top rule instead of sitting in a filled box, callouts read as margin notes on open ground, toolbars are mastheads over one strong rule. The cartographic layer whispers on top: hairline survey ticks at two corners of outer surfaces, drawn in border gray and never in accent; names at drawer-card scale in tracked caps; fact labels as mono captions; tiny geometric markers leading catalog rows. The stated anti-goal, in the founder's words: nothing that feels AI generated fast and dirty. Glows, gradient accent bars, tinted callout panels, and 300-weight body on dark are all retired.
+**The Brass Instruments era (adopted 2026-10-11, DECISIONS BR1 to BR3, after four rounds of mockups in docs/HU-DESIGN-DIRECTION-2026-10-11.md).** The site is a set of instruments. Things you press are keys, raised on a floor with a fine brass edge, and they sink when pressed. Brass marks three things only: the one main act on a screen, the place you are or the choice that is on, and the frame of a featured panel. Panels are faces, readouts are recessed glass that stays dark in both themes the way a device's screen does in daylight, fields are recessed wells (glass at night, light in day, on David's review), and nothing glows. Night is the navy the site always had; day is white panels on a cool slate ground with tight shadows and the same brass. The working guide is docs/HU-BRASS-LOOK-2026-10-11.md and the recipes live in the last section of hu-global.css. The design phase CLOSED 2026-10-12 (DECISIONS BR4) after David's page-by-page review of every page in both themes; Tier 3 below is what shipped, and the change budget governs it again.
+
+It replaced **the Quiet Precision era (2026-08-06 to 2026-10-11, from the Reskin Lab: Signal Boost, then Quiet Precision, then Cartographic Quiet)**, described here for the record: Hierarchy comes from type and space, not from effects. State is ink and weight, never a halo. Boxes dissolve into rules: stat tiles stand on a 2px top rule instead of sitting in a filled box, callouts read as margin notes on open ground, toolbars are mastheads over one strong rule. The cartographic layer whispers on top: hairline survey ticks at two corners of outer surfaces, drawn in border gray and never in accent; names at drawer-card scale in tracked caps; fact labels as mono captions; tiny geometric markers leading catalog rows. The stated anti-goal, in the founder's words: nothing that feels AI generated fast and dirty. Glows, gradient accent bars, tinted callout panels, and 300-weight body on dark are all retired.
 
 **Key Characteristics:**
 - Dark-first: deep navy pages where content carries the light; a full light theme exists and flips by token, never by redesign
-- One teal signal (#4ECDC4) does the pointing; chart blue (#1B5FA8) does the acting
-- State is ink and weight: selection reads as a solid fill or an ink change plus weight, never a glow
+- Brass (#D9B56A) does the acting and marks where you are; one teal signal (#4ECDC4) still points: focus rings, live values
+- State is brass: the choice that is on is a brass key with brass ink, never a glow
 - Monospace is the voice of data: every label, source line, and coordinate is IBM Plex Mono, small and letterspaced
-- Bordered, tonal depth; shadows are reserved for things that move or float
+- Depth is physical: keys on a floor, framed faces, recessed glass; shadows fall downward and never radiate
 - Real data density, phone-honest: 44px touch floor and a one-transient-surface rule on every interactive tool
 
 ## Colors
@@ -213,12 +241,12 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 
 ### Secondary
 - **Beacon Amber** (#E8A838): warnings, draw modes, "lo" stat states, the lab notice. Text-on-light flips to **Beacon Amber Deep** (#856004; was #946905 until 2026-09-23, which missed 4.5:1 on the page ground).
-- **Landfall Green** (#2D9B6F): positive signals and guest accents. The Secret Menu runs a brighter guest step (#4ecb8d) as its section identity; that value is deliberate incumbent vocabulary, not drift.
+- **Landfall Green** (#2D9B6F): positive signals. The Secret Menu keeps a brighter step (#4ecb8d) as its section identity. Guest authors carry no color of their own (David, 2026-10-11: "Will no longer let guest authors have a different color tone or palette").
 - **Reef Red** (#DF5752): negative signals and the medical-science lens.
 - **Meridian Purple** (#7C6FCD): the policy lens.
 
 ### Neutral
-- **Deep Water** (#0a0f1a): the page itself (`--dark`). Light theme: #EEF2F7.
+- **Deep Water** (#0a0f1a): the page itself (`--dark`). Light theme: #E1E7EF, cool slate (2026-10-11; #EEF2F7 before, which read washed out under white panels).
 - **Chart Surface** (#0f1825): cards and footer (`--surface`). Light: #FFFFFF.
 - **Raised Chart** (#162030): chips, tags, inputs, stat tiles (`--raised`). Light: #E2E8F0.
 - **Chart Shelf** (#1c2a40): the highest resting step (`--raised2`).
@@ -233,20 +261,20 @@ A nautical chart at night: four depths of navy water, paper-white and fog-blue i
 - **Content-type badges** (one hue per content type, tints at 12 to 14% alpha): Tools ride Signal Teal, Learn #6aabff, Talks #5DBF87, Lab Beacon Amber, Reference #a99ee8, Rounds #7B92AB (`--type-*` tokens).
 - **Lens-pill brights**: policy #b59ff5, tech/economy #38b6f0, medical science #FF6B6B alongside the named accents. Their tint BASES (the rgba anchors behind the 12 to 16% fills) are #8B5CF6 (policy) and #0EA5E9 (tech/economy).
 - **Deep steps for light surfaces** (The Deep-Step Rule's per-lens dark values): teal #0F7A72 (#0D7268 on tinted chips), provider #1d5fae, policy #6A45D8, public health #23794e, tech #0e6f96, med-sci #C22F2F. On their own tinted chips (the .fp lens pills) each drops one more step, since the tint over the ground costs about half a contrast point: patient #0D6C65, provider #1d5fae, payer #7D5A04, policy #613FC5, public health #206E47, tech #0D6589, med-sci #B12B2B (2026-09-23, each at 4.65 or better on the tint over page ground, white and raised).
-- **Guest green** #4ecb8d: the Secret Menu's section identity, deep step #2D9B6F.
+- **Secret green** #4ecb8d: the Secret Menu's section identity and the "guest" lens word on the Learn shelf, deep step #2D9B6F. Never an author's color.
 - **Learn filter accents** (documented 2026-08-09): the leaders filter gold #F0CF6B (tint base #E8C547, deep step #8A6A15 on light) and the patient text step #aac8ff ride alongside the type badges; patient active fills use type-learn #6aabff, policy tints ride the lens-policy base. Interop tags run reef-red tints with the #ff9090 text step on dark.
-- **The Secret Beacon** rgba(21,128,61,x) (#15803d family): the home secret tile's pulse, the ONE sanctioned glow on the site, earned by the 8-tap secret. A scoped exception to The Ink State Rule, locked with the V3 comp.
+- **The Secret Beacon** (RETIRED 2026-10-11): the home secret tile's green pulse, once the one sanctioned glow. On David's note the tile now stands like a zone, a raised green tile with its own route from the compass, and the site has no glow at all.
 - **Hub card steps**: Raised-Chart-plus #131f30 (hub catalog card ground) and #12233a (tool-thumb resting water).
 - **Chart Blue Mid** #2D4A8A: the button hover midpoint token (`--brand-blue-mid`).
 
 ### Named Rules
-**The One Signal Rule.** Signal Teal points at one thing per view: the active state, the live value, the place to look. If teal is everywhere, it is nowhere. Chart Blue owns actions so teal can stay a signal.
+**The One Signal Rule.** Signal Teal points: the focus ring, the live value, the place to look. If teal is everywhere, it is nowhere. Since 2026-10-11 brass owns the main act and the choice that is on, so teal can stay a signal.
 
 **The Deep-Step Rule.** Any accent used as TEXT on a light surface drops to its deep step (`--teal-dk`, `--amber-dk`, or the per-lens dark values). Tinted backgrounds keep the bright hue; text never does.
 
 **The Earned Color Rule.** Data color appears only when the reader chose the metric. Maps rest in neutral teal-tinted fills until a lens or shading is picked; a tint nobody asked for reads as unexplained decoration.
 
-**The Ink State Rule.** State is ink and weight, never light. Active means a solid teal fill with deep-water ink (#062024) and weight 700, or an ink shift plus a rule; it never means a glow, halo, or tinted wash. If an element needs to say "you are here," it says it the way print does: darker, heavier, ruled.
+**The Brass State Rule (was the Ink State Rule, rewritten 2026-10-11).** State is a material, never light. Active means a brass key with brass ink (#2A1D08) and weight 700: the current tab, view, filter, switch, the section in the top bar. It never means a glow, a halo or a tinted wash. Inside a data drawing a selection may still use ink and weight, the way print does.
 
 ## Typography
 
@@ -292,14 +320,14 @@ Interactive tools follow the full-map standard from docs/HU-UI-GRAMMAR.md: an ed
 
 ## Elevation & Depth
 
-Depth is drawn, not cast. The four-step tonal ladder (Deep Water to Chart Surface to Raised Chart to Chart Shelf) plus one-pixel Sounding Line borders establish every plane; almost nothing floats at rest. Shadows are reserved for two jobs: things that MOVE (a card lifting on hover, a button pressing) and things that FLOAT above the canvas (sheets, FABs, sticky chrome). Sticky surfaces add backdrop blur (16px) over transparent color-mix backgrounds so the page shows through like water under glass.
+SINCE 2026-10-11 depth is physical. A key stands on a 3px floor and a soft drop below it (`--key-lift`), sinks 3px when pressed (`--key-down`); a panel is a face with a downward depth shadow; a readout is glass, a recessed well (`--glass-well`); a field is the same well on the field tokens (`--field-bg`, `--field-well`), glass at night and light in day. Shadows fall in `--depth` only, never in a color. The Quiet Precision description that follows is the record of the era before. Depth was drawn, not cast. The four-step tonal ladder (Deep Water to Chart Surface to Raised Chart to Chart Shelf) plus one-pixel Sounding Line borders establish every plane; almost nothing floats at rest. Shadows are reserved for two jobs: things that MOVE (a card lifting on hover, a button pressing) and things that FLOAT above the canvas (sheets, FABs, sticky chrome). Sticky surfaces add backdrop blur (16px) over transparent color-mix backgrounds so the page shows through like water under glass.
 
 ### Shadow Vocabulary
 - **Ambient** (`box-shadow: 0 8px 40px rgba(0,0,0,.5)`): the default `--shadow`, big, soft, low. For floating panels.
 - **Card lift** (`0 12px 40px rgba(0,0,0,.45)`): appears only with the hover translateY(-4px).
 - **FAB rest** (`0 4px 16px rgba(0,0,0,.4)`): the one resting shadow, earned by floating over a map canvas.
 - **Sheet** (`0 -12px 40px rgba(0,0,0,.45)`): upward, under bottom sheets.
-- **Light-theme steps** (documented 2026-08-09): on light ground the black alphas read as smudges, so lifted surfaces run ink-blue shadows instead: hub cards `0 10px 28px rgba(13,32,54,.14)`, the search box `0 12px 32px rgba(13,32,54,.18)`, the card-lift hover `0 12px 40px rgba(13,32,54,.18)`.
+- **Day steps** (LT1, 2026-10-11, replacing the ink-blue steps of 2026-08-09): shadows sit tight under the thing, 2 to 10px in ink blue: a panel `0 1px 2px rgba(15,24,37,.12), 0 4px 10px rgba(15,24,37,.08)`, a card `0 1px 2px rgba(15,24,37,.10), 0 3px 8px rgba(15,24,37,.06)`, a key an inset hairline rim over a 2px #A7B4C5 floor. A wide soft shadow on a light ground read as haze ("washed out", his review); do not bring it back.
 - **RETIRED (Quiet Precision, 2026-08-06):** the CTA glow and the signal glow. Zero-offset halos and colored hover glows are out of the vocabulary everywhere; hover states brighten and lift, they do not radiate.
 
 ### Named Rules
@@ -309,7 +337,7 @@ Depth is drawn, not cast. The four-step tonal ladder (Deep Water to Chart Surfac
 
 **The Hub Lift Rule (V3 hub surfaces, locked 2026-08-06).** The hub pages (home, tools, learn indexes) are PRODUCT surfaces, not documents: their catalog cards and the search box carry RESTING elevation as an interaction affordance. Vocabulary: search box `0 12px 32px rgba(0,0,0,.55)`, catalog cards `0 10px 28px rgba(0,0,0,.45)` on the Raised-Chart-plus (#131f30 family) step. This is a scoped exception to the Border-First Rule, which continues to govern reading and editorial surfaces unchanged. Source: the V3 Field Office comp (docs/HU-V3-HOME-BUILD-SPEC-2026-08-06.md).
 
-**The Earned Scenery Rule (V3, 2026-08-06).** The home hero's canvas world (hex panel + routes) draws only when the reader taps the compass rose; at rest the ground is clean. The Earned Color Rule applied to scenery: atmosphere is a reward, not a preload. The 8-tap secret and route rerolls ride the same tap path; reduced motion reveals without animation.
+**The Earned Scenery Rule (V3, 2026-08-06; RETIRED 2026-10-11, HX2).** The home hero's canvas world used to draw only after a tap on the compass. Now the honeycomb is there from the start and the seven Atlas zones stand on it as raised tiles routed to the compass, each a link into the Atlas; the map moves for 20 seconds, slows, rests at 30, and wakes on a hover or a press. Reduced motion draws it still.
 
 ## Shapes
 
@@ -319,36 +347,39 @@ Soft-cornered rectangles in a strict ladder: 7px nav links, 8px inputs and tags,
 
 Tactile and confident: controls respond to touch like they enjoy it, one state at a time, inside the motion budget.
 
-### Buttons
-- **Shape:** softly rounded (10px)
-- **Primary:** Chart Blue (#1B5FA8) with white text, 13px 26px padding, 600 weight at 14px
-- **Hover:** brightens to #2478d4 and lifts translateY(-1px). No glow; the press is the feedback.
-- **Ghost:** transparent with Sounding Line Bold border, Fog Blue text; border and text turn Signal Teal on hover
-- **Secondary:** teal-tinted fill (rgba(78,205,196,.08)) with Signal Teal text and a .25-alpha teal border
+### Buttons (since 2026-10-11)
+- **Shape:** softly rounded (10px), at least 44px tall
+- **Brass** (`.hu-brass`, `.btn-primary`, `.btn-primary-v2`): the one main act on a screen. Brass gradient, brass ink, Outfit 800, a 3px brass-deep floor; sinks 3px when pressed
+- **Key** (`.hu-key`, `.btn-ghost`, `.btn-secondary`, the kit's menu rows and dialog buttons): navy at night, white in day, a fine brass top edge, a 3px floor; hover brightens, press sinks
+- **Off:** 45 percent, no floor, not-allowed cursor
 
 ### Chips (the hu-chip standard)
 - **Style:** Raised Chart fill, Sounding Line border, Fog Blue text at 12px/600, pill radius, 7px 13px padding
-- **State:** `.on` = SOLID Signal Teal fill, deep-water ink (#062024), weight 700 (The Ink State Rule); hover borders teal; 44px min-height on touch
+- **Look:** small keys with a pill radius (since 2026-10-11)
+- **State:** `.on` = brass with brass ink, weight 700 (The Brass State Rule); 44px min-height on touch
 - **Doctrine:** chips apply state, they never navigate
 
 ### Cards / Containers
 - **Corner Style:** 12px
-- **Background:** Chart Surface over Deep Water pages; Raised Chart for nested items
-- **Shadow Strategy:** flat at rest with a Sounding Line border; hover lifts -4px with the card-lift shadow and a type-colored border
+- **Background:** a face (`--face-bg`) with a Sounding Line border and a downward depth shadow; a catalog card is a face inside a 2px brass frame (since 2026-10-11)
+- **Shadow Strategy:** a card you can press is a key: it stands on a floor and sinks
 - **Internal Padding:** 24px (22px 18px on phones)
 - **Meta:** every card carries a mono meta line and mono tags; the whole card is the tap target with a stretched link
+- **The Learn card** (LC1, 2026-10-11): the module number and its lens words with a dot each, the title, three lines of description; no map pills, no format line
+- **The author card** (AB2, 2026-10-12): a face with a brass-ringed photo, the name, mono credentials and a role line, the bio's first part face up and the rest behind "More about", what they wrote as keys, their links; every author the same parts, from src/_data/authors.js
 
 ### Inputs / Fields
-- **Style:** Raised Chart fill, Sounding Line border, 8px radius, 9px 13px padding, Faded Ink placeholder
-- **Focus:** border shifts to half-alpha Signal Teal; no glow, no outline besides the border
+- **Style (since 2026-10-11):** a recessed well on the field tokens (`--field-bg`, `--field-well`, `--field-ink`, `--field-sub`): glass at night, white in day (David's review, 2026-10-11), 10px radius
+- **Focus:** the site's teal ring
 
 ### Navigation
-- **Style:** 64px sticky bar, blurred translucent Deep Water, Sounding Line bottom border
-- **Links:** 13px/500 Fog Blue, 7px radius; hover fills Raised Chart; active turns Signal Teal (deep step on light)
-- **Phone:** 44px hamburger, full-width 48px menu rows, Atlas pill and theme toggle as sized rows
+- **Style:** 64px sticky bar over the page-top ground, a brass hairline under it
+- **The logo** is a key too (LG1): raised, it presses, and it goes home
+- **Links (since 2026-10-11):** keys: Tools, Fun, Learn, Rounds, About; the section you are in is brass; the theme switch and search are keys. No Home key (the logo goes home) and no Atlas key (it is on the Tools shelf), on David's review
+- **Tablet and phone:** under 860px the links fold into a menu key; the menu is the same keys, stacked, 48px tall; hub pages on a phone carry the bottom bar (Tools, Fun, Search, Learn, More)
 
 ### Stat Tiles (signature)
-- **The Ruled Figure Rule.** One value, one label: Outfit 800 at 20px over an 11px uppercase mono caption in Fog Blue, standing on a 2px Sounding Line Bold TOP RULE with no fill and no border box. The figure owns the ground it sits on, the way a table in print does. `.hi` values go Signal Teal, `.lo` go Beacon Amber; values set tabular-nums. Grids of two to four, never tables.
+- **Since 2026-10-11 a stat tile is a readout:** the figure in Plex Mono on recessed glass (`.hu-stat`), glass inks in both themes. The Ruled Figure it replaced, for the record: one value, one label: Outfit 800 at 20px over an 11px uppercase mono caption in Fog Blue, standing on a 2px Sounding Line Bold TOP RULE with no fill and no border box. The figure owns the ground it sits on, the way a table in print does. `.hi` values go Signal Teal, `.lo` go Beacon Amber; values set tabular-nums. Grids of two to four, never tables.
 
 ### Callouts (signature)
 - **The Margin Note Rule.** Warnings and asides are margin notes, not panels: a 3px accent left rule (Beacon Amber for cautions, per-lens hues where earned) against open ground, 14px of lead-in padding, no background tint, no border box, no radius. The editor writes in the margin; the page does not build a little room for the remark.
@@ -500,7 +531,7 @@ whether a fix lands in one place or twenty. Keep them through a phase; a new loo
 hand-rolled twins is a new maintenance problem.
 
 - **Don't** color data the reader did not ask for; resting maps stay neutral (The Earned Color Rule).
-- **Do** dissolve boxes into rules where the content can stand on open ground: ruled stat figures, margin-note callouts, masthead toolbars.
+- **Do** build controls from the recipes in hu-global.css (keys, brass, faces, glass): use the class, or give a page's own selector the recipe properties; never copy a gradient (since 2026-10-11).
 
 Also system, and living in the instrument grammar: HUKit for sheet, back, motion, phone
 line and selector-pop, with zero hand-rolled twins. Tokens over raw hex. Shared partials
@@ -510,21 +541,25 @@ over repeated fixes.
 
 ### TIER 3 · This era's look · SUSPENDABLE
 
-This is the Quiet Precision world, written down so it would stop being relitigated. That
-worked. It is also the tier that stops a redesign, so a declared design phase suspends all
-of it on the named surface.
+This is the BRASS INSTRUMENTS world, written from what shipped. It was built as the site-wide refresh of 2026-10-11
+(DECISIONS BR1 to BR3), tuned through David's page-by-page review of every page in both themes, and CLOSED 2026-10-12
+(BR4). It replaced the Quiet Precision world of 2026-08-06. It is the tier that stops a redesign, so a declared design
+phase suspends it on the named surface, and a phase that closes rewrites it again.
 
-Nothing here is wrong. It is a previous decision, and when a phase closes this section gets
-REWRITTEN to describe whatever actually shipped.
-
-- **Do** point with Signal Teal and act with Chart Blue; keep the two jobs separate.
-- **Do** draw containers with Sounding Line borders and tonal steps; save shadows for movement and floating chrome.
-- **Do** let cards lift (-4px), buttons press, and arrows slide; tactile response is the brand's handshake, within the budget.
+- **Do** press with keys: navy at night, white in day, a fine brass top edge, a floor under it, sinking on press. The logo is a key.
+- **Do** keep brass scarce: the one main act on a screen, the choice that is on, the section you are in, the frame of a featured panel. Body text is never brass.
+- **Do** put readouts (stat tiles, clocks, scores, the year pill) on recessed glass that stays dark in both themes, with the glass inks. A page's own header band of numbers takes the field tokens and goes light in day (the Data Observatory band and the Traffic tiles, his review).
+- **Do** put everything you type into or pick in on the field tokens: glass at night, white in day (search, inputs, editors, save boxes, segment tracks).
+- **Do** give day its own ground: cool slate #E1E7EF (#EDF1F6 at the top of a page) under white panels with #F9FBFD feet, #B4C0CF edges, and shadows 2 to 10px tight under the thing. Never a wide soft shadow on a light ground.
+- **Do** let panels be faces with a downward depth shadow; a catalog card is a face in a brass frame.
+- **Don't** glow, anywhere: no colored blur in a shadow, no text-shadow halo, no radiance on hover or focus (The Brass State Rule). There is no exception left; the secret tile is a raised tile now.
+- **Don't** restyle data: lens pills, map ramps, chart series, game art and the hex terrain keep their own colors.
+- **Don't** give an author a palette: guest pieces wear the site's look, and every author is the same card.
 - **Don't** ship literal pictogram icons on maps or dashboards; geometric symbols only.
-- **Don't** introduce new fonts, new accent hues, or a fifth tonal step; the ladder is the system.
-- **Don't** glow: no zero-offset halos, no colored hover radiance, no box-shadow as emphasis (The Ink State Rule).
-- **Don't** run gradient accent bars or gradient text; accents are solid, one hue, drawn like rules.
-- **Don't** put survey ticks on nested elements or draw them in accent color; two corners, border gray, outer surfaces only (The Survey Tick Rule).
+- **Don't** introduce new fonts or new accent hues beyond the six brand colors and brass.
+- **Do** draw the compass rose in its brass dial on home, the light rose in day, its lines heavier when it is drawn big; on a desk the honeycomb carries the seven Atlas zones as raised tiles routed to it, and the map rests after 30 seconds.
+- **Do** keep reading pages quiet at the end: no Share button on a Learn module or a Rounds piece (a reader copies the address), the sources list folded shut ("Show all N sources"), then the keep-reading card.
+- **Do** keep home and the footer short: on a desk, three picks under the hero and an All tools key; a footer without a signup, and on a phone only the support key, the copyright and the policy links.
 
 #### The instrument grammar · shipped on the maps 2026-08-23 · applies to EVERY tool
 
@@ -578,7 +613,7 @@ docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md.)
 - **Views are navigation, not controls** (David's call, career-tree phone QA
   2026-08-23). A tool with multiple SCREENS puts them in a bottom app-tab bar on
   phones, the way the home page and the career tree do: 56px items, icon over a mono
-  label, safe-area padding, teal active. The sheet carries details only; navigation
+  label, safe-area padding, brass ink on the active item (since 2026-10-11). The sheet carries details only; navigation
   never hides inside a pull-up.
 
 ---

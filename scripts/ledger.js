@@ -35,7 +35,7 @@ const REVIEWS = path.join(ROOT, 'data-build', 'page-reviews.json');
 const OUT = path.join(ROOT, 'tmp', 'ledger', 'ledger.json');
 
 // Hubs list other pages; they are read like reading pages but are not articles.
-const HUBS = new Set(['/', '/tools/', '/learn/', '/rounds/', '/secret-menu/', '/learn/talks/']);
+const HUBS = new Set(['/', '/tools/', '/fun/', '/learn/', '/rounds/', '/secret-menu/', '/learn/talks/']);
 // Internal pages in the secret menu that work like tools but are not public tools.
 const INTERNAL_TOOLS = new Set(['/secret-menu/data-observatory/', '/secret-menu/data-observatory/traffic/', '/secret-menu/hospital-price-finder/']);
 
@@ -111,8 +111,11 @@ function compute() {
     else {
       const bad = Object.entries(ph.viewports || {}).filter(([, v]) => !v.ok).map(([k, v]) => k + ': ' + v.why.join(', '));
       if (ph.slow && !ph.slow.ok) bad.push('slow data: ' + ph.slow.why.join(', '));
-      const n = Object.keys(ph.viewports || {}).length;
-      add({ id: 'phone', label: 'Phone and desktop sweep', state: bad.length ? 'fail' : n >= 9 ? 'pass' : 'unknown', detail: (bad.length ? bad.join('; ') : n + ' sizes clean') + ' (' + String(ph.at).slice(0, 10) + ')', rule: 'CLAUDE.md, ALWAYS TRUE' });
+      // since 2026-10-11 a sweep reads each size at night and in day; a day row's key ends in " day"
+      const keys = Object.keys(ph.viewports || {});
+      const n = keys.filter((k) => !k.endsWith(' day')).length;
+      const day = keys.length - n;
+      add({ id: 'phone', label: 'Phone and desktop sweep', state: bad.length ? 'fail' : n >= 9 ? 'pass' : 'unknown', detail: (bad.length ? bad.join('; ') : n + ' sizes clean' + (day ? ', night and day' : ', night only')) + ' (' + String(ph.at).slice(0, 10) + ')', rule: 'CLAUDE.md, ALWAYS TRUE' });
     }
     const x = W.htmlToBlocks(html);
     const wr = W.check(x.blocks, { register: W.registerForPath(url, html), guest: x.guest, links: x.links });
@@ -160,6 +163,8 @@ function compute() {
       url, src, kind, title: W.decode(title).replace(/\s*[|·]\s*Healthcare Uncharted\s*$/, '').trim(),
       phase: fail.length ? 1 : unknown.length ? '?' : 2,
       holds: fail.map((c) => c.label), checks, review: reviews[url] || null,
+      // David's night and day marks since 2026-10-11, each flagged when the page changed after it (scripts/lib/reviews.js)
+      marks: require('./lib/reviews').marks(reviews[url], src, url),
     });
   }
   rows.sort((a, b) => String(a.phase).localeCompare(String(b.phase)) || a.kind.localeCompare(b.kind) || a.url.localeCompare(b.url));
@@ -175,7 +180,7 @@ if (require.main === module) {
   const by = {};
   for (const r of L.rows) { const k = r.kind; by[k] = by[k] || { 1: 0, 2: 0, '?': 0 }; by[k][r.phase]++; }
   console.log('');
-  for (const r of L.rows) console.log(('Phase ' + r.phase).padEnd(9) + r.kind.padEnd(9) + r.url.padEnd(44) + (r.holds.length ? 'held by: ' + r.holds.join(', ') : r.phase === '?' ? 'not measured yet' : '') + (r.review ? '  [reviewed ' + r.review.date + ']' : ''));
+  for (const r of L.rows) console.log(('Phase ' + r.phase).padEnd(9) + r.kind.padEnd(9) + r.url.padEnd(44) + (r.holds.length ? 'held by: ' + r.holds.join(', ') : r.phase === '?' ? 'not measured yet' : '') + (r.marks && (r.marks.night || r.marks.day) ? '  [reviewed' + (r.marks.night ? ' night ' + r.marks.night.date : '') + (r.marks.day ? ' day ' + r.marks.day.date : '') + ']' : ''));
   console.log('\n' + Object.entries(by).map(([k, v]) => k + ': ' + v[2] + ' at phase 2, ' + v[1] + ' at phase 1' + (v['?'] ? ', ' + v['?'] + ' not measured' : '')).join(' · '));
   if (L.stale.length) console.log('Left out, built pages with no source any more (renamed or removed): ' + L.stale.join(', '));
   console.log('Written: ' + path.relative(ROOT, OUT));

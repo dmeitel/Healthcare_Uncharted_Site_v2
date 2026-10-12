@@ -574,3 +574,197 @@ placeholder; on a short screen Display opens full height. Measured with the revi
 the Display panel on a phone opens on 24 words with metrics showing (it was 48, 30 of them prose, and none); the whole
 panel is 289 words (593); a parked state card shows UTAH 79.5 yrs. Held by tests/map-menus.test.js and a two-guard test
 in tests/hu-kit.menu.test.js. Not in this pass: one hospital in three row layouts, the school program rows, and part C.
+
+## 2026-10-10 to 11 · The hub · one look per page, and the Ideas tab
+
+Two changes on the hub, both in its open phase. ONE LOOK PER PAGE (ship night, 2026-10-10): the same 14 changed pages sat on
+three QA lists (the maps, the view switch, the hub), so a page marked on any list since the last push now counts on every
+list the push carries, unless the page changed after the mark, when it reopens as "Changed since your Good of ..."
+(`pageMarks` in scripts/hub/qa.js; `touchedPages` returns each page's last change as `when`). The QA tab's switcher shows
+every list the push carries, not only the two in focus. David's night went from about 53 marks to 21. THE IDEAS TAB
+(2026-10-11, David: "spend a few hours coming up with ideas and adding them all to a page on the hub for us to review...
+all rules are off... i will do responses and QA statements for all of them like i do with the games"): /__hub/ideas, a
+QA item per idea with its report folded under the pitch (what, why, the evidence with links and check dates, effort and
+cost, risks, the first step), pictures and a "Try the mockup" link where a look is involved, and three answers (Yes,
+Maybe, No) with a note that keeps a draft; a Yes can send itself to the board's Inbox once. Ideas live in
+data-build/ideas.json, answers in data-build/qa/ideas.json. Sections as chips, which scroll sideways in one row on a
+phone; a "Start here" shortlist numbered in Claude's order. Mockups are served read-only from tmp/hub/mocks under
+/__hub/mocks/ (share cards, a main-menu home, five skins). New in the palette: nothing on the hub itself (the Yes, Maybe
+and No fills reuse the QA list's phase colors); the skin mockups propose new colors by design, each flagged on its card.
+Proof: tests/hub.test.js (24, including an idea's answers and its one Inbox send), the type check, phone and desk
+pictures with no card wider than a 390 px screen.
+
+## 2026-10-11 · The brass instruments look, site-wide · opened and built (DECISIONS BR1 to BR3)
+
+Opened on David's answer to BR1 to BR3: "do a whole site wide refresh and then i will do a page by page review and QA in
+the tool. That will serve as our final point/Review on these first batch of pages." The list it ran:
+docs/HU-SITE-REFRESH-2026-10-11.md; the guide every page pass followed: docs/HU-BRASS-LOOK-2026-10-11.md.
+
+- THE SHARED LOOK: one section at the end of hu-global.css. Tokens for night and day (brass, keys, faces, glass, depth,
+  the four region marks), the recipes as custom properties, and every shared piece restyled on its surface only: the
+  top bar (keys, Fun added, brass on the section you are in, a menu key under 1100px), buttons (brass for the main act,
+  keys for the rest), chips and the switch (brass when on), the view switch (keys in a recessed track), cards (faces;
+  catalog cards framed in brass), the kit's dialogs and menus, fields and stat tiles (glass), the tool and game bars,
+  the bottom bar (Tools, Fun, Search, Learn, More), the footer (with the trust pages' links), and pages that glide
+  (a cross-fade between pages, off under reduced motion). No glow anywhere except the Secret Beacon.
+- HOME: the compass rose in a brass dial (components/compass-rose.njk, generated from the brand rose: no plate, no glow,
+  lines 1.6 times, a day twin in the light colors); the earned map now spreads from the dial and keeps clear of the
+  words; four section keys with counts; the h1 is "Healthcare doesn't come with a map" and the mission heading a label
+  (the writing checker's two "heading that sells" findings).
+- FUN: its own page at /fun/ (BR3); the games light Fun in the top bar; the Tools page keeps one line pointing there.
+- THE PAGE PASSES (five helpers, one set of files each): the six tools, the two maps and the Atlas, Learn, Rounds and the
+  secret menu and the utility pages, the six games' chrome. Play screens, map layers and data colors untouched.
+- ALSO: Alarm Fatigue's helpers no longer take a CHECK tap; System Layers and the Career Tree hold one bar row on a
+  phone; dated source lines on five tools; the phone gate reads every size in night AND day, exempts a brand mark
+  (data-brand) the way it exempts a game drawing, and its line check now honours the zoom-scene rule the other checks
+  already did.
+
+Closing: David's page-by-page review on /__review (a Night and a Day mark per page). DESIGN.md's Tier 3 already
+describes the look as built.
+
+### 2026-10-11 · The brass look, round 2: David's first review notes
+
+His notes on the main pages (data-build/page-reviews.json); Learn's modules and the tools wait for after today's upgrades.
+- THE TOP BAR: no Home key (the logo goes home), no Atlas key (it is on the Tools shelf); seven keys fit from 860px, so
+  the menu key now starts under 860 instead of 1100.
+- HOME: the example searches under the box are gone; the hero is one centered column at every width, the phone's
+  order (dial, heading, line, search, then the four section keys in a row, two by two under 860px).
+- FIELDS GO LIGHT IN DAY ("the search bar is not the correct color for the day theme", Learn and Rounds; the secret menu
+  "doesn't work for days"): new field and track tokens in hu-global.css (--field-bg, --field-well, --field-ink,
+  --field-sub, --field-line, --track-bg, --track-well), glass at night and a white well in day. Every search box, input
+  and recessed segment track on the site moved to them; readouts (clocks, scores, the year pill, stat tiles, KPIs) stay
+  glass in both modes. The secret menu's list rows ride the same tokens.
+- ABOUT: the guest section is a shelf (the shared kicker over a rule, the guest a framed face); a "My card, to share" key
+  under LinkedIn opens the new card page, /me/ (a framed face: photo cropped to head and shoulders, name, letters, role,
+  one line, LinkedIn in brass, the site, Share, and a QR code to the card; its own link preview, card-me.png).
+- FUN: the standfirst under the title is gone.
+- ALARM FATIGUE: a burst of presses is one "+N" over the button that adds up and goes about a second after the last
+  press (`pressFloat`); the message floats keep their stack and reading time.
+- THE CHROME'S TYPE: the top bar and footer set the site font, so the two guest pieces' serif body no longer reaches them.
+- READING PAGES: .hu-read no longer paints its own flat background, so the page's top gradient meets the top bar the
+  way it does on every other page.
+- LEARN (the helper's pass, finished): module headers framed, panels faces, link cards pressable, choices keys with brass
+  when on; the amber chart lines take the darker amber in day; the sources search on the field tokens.
+
+### 2026-10-11 · Device Assembly: the daily year, the first month built (DY2)
+
+On David's "yes to the daily walls, start oct 25". Plan: docs/HU-DEVICE-ASSEMBLY-DAILY-PLAN-2026-10-11.md. Section 3d of
+src/fun/device-assembly/index.html.
+- THE CALENDAR AND THE CLIMB: from wall #23 (Sunday 2026-10-25) `genLevel` hands a day to `yearLevel`; the weekday picks
+  the kind (YEAR_KIND), `yearHospital` / `yearPlace` re-deal until the wall's par sits in its band (YEAR_BAND, or the
+  twist's own `band`); the first month is YEAR_PLAN; a day past it takes its kind's pool; a day the year cannot deal
+  falls back to the old dealer. tests/device-assembly-daily.test.js pins 77 old walls (#1 to #22, random, made, rooms,
+  shifts) in tests/device-assembly-pins.json and holds the month.
+- MONDAYS: YEAR_ROOMS (the bed in the middle, the split rail; kept out of ROOMS), `deadRoom`, the far bed; `anyO2`
+  feeds from the nearest oxygen outlet (`far` the farthest). TUESDAYS: `decoyN`, `decoyPool`, `cartAdd` on a twist;
+  `L.noLabels` (cart names hidden until a part's sheet is opened, `seenSheets`); `expiredTwin` (exp- parts, a red line on
+  the sheet, a rule in `evaluate`). WEDNESDAYS: `L.orderLines` (the screen's order), SHORTHAND with the long form behind
+  an "i" (`L.orderLong`), read the chart, written beats verbal on an ICU bed; THE GOAL, NOT THE DEVICE (`req.goal`,
+  `goalFor` reads the order against the interface chosen). THURSDAYS: DECOR sink, sterile field, curtain, placed against
+  the solution's path (`barrierBox`, `curtainLine`, a twist's `obstacles` function). FRIDAYS: `makeFault` (one or two of
+  the shift's faults on a solved wall), `makeHandoff` (`it.taped`, refused by every move verb, kept in snapshots, drawn
+  with `tapeSVG`); a daily fault card counts for the streak (`genFaultFinish`, `dailyStreak`). SATURDAYS: Halloween
+  (`halloweenDecor`), `stackTwists`, the bottle across the room (`BOTTLE_FAR`, src `cyl-far`). SUNDAYS: a three-wall
+  story (`yearStoryPlan`, Y codes, `plan.len`, `plan.noFault`, YEAR_STORIES), wall one under the day's id, its end
+  marking the day done.
+- TEACH WALLS: YEAR_TEACH (find the fault: f1; the goal: `teach:goal`), played first the first time (`teachFirst`,
+  `teachThen`), then kept under "New on the daily" in the walls list. THE CARD: "Monday · #24", the wall's name.
+- Changed from the plan in the build, each written into the plan: Sundays have no parts band; Going home is at home only;
+  Nov 14 puts the bottle across the room (a humidified bottle needs a DISS cylinder, now in December).
+
+## 2026-10-11 · The brass look · the day theme, sharper (LT1 and LT2)
+
+His review: day read washed out and hazy on Tools and Rounds; Vital Stats kept dark pieces in day. Measured: white panels
+sat 1.12 to 1 on #EEF2F7 and only a 32px shadow at 16% set them off; white keys on white panels; the prose inks were fine.
+Three options drawn (A sharper edges, B a deeper ground, C both); he picked C, then asked for other shades of white, and of
+five (cool slate, clinical blue, neutral grey, warm paper, bright white) picked COOL SLATE. Applied in hu-global.css: the
+day page #E1E7EF (#EDF1F6 at the top and in the browser bar, base.njk), panel edges #B4C0CF, panel feet #F9FBFD, keys
+#FFFFFF to #E3E9F1 on a #A7B4C5 floor with a fine inset rim, shadows 2 to 10px (--key-lift, --brass-lift, --panel-lift,
+the cards, .rn-card, .tool-bar, .icon-btn), and --depth lighter (.10) so a page's own wide shadow fades instead of
+fogging. Every day ink still clears 4.5 on the ground (the lowest: amber words 4.60, teal words 4.66); tests/contrast.test.js
+gained three rows. Night unchanged. The same window: Vital Stats' name, room code and answer boxes on the field tokens
+(the room chip stays glass, a readout), its cards on the tight shadow; the secret menu's stamps ("Game · Playable · v1")
+became a pin beside each name (icon and one word). Pictures: /__hub/mocks/light-theme.html, light-shades.html; the run
+sheet. Then his picks LG1 "on a key" and HM1 "three columns" (the columns later gave way to HM2, below): the logo is a key in every bar (.nav-brand, .tb-brand), and
+home's groups on a desk are headings over three columns (900px up; 700 to 899 stacked; the phone keeps the switch; panes
+off by .is-off, named by their heading on a desk). The sweep caught four Learn modules' day diagram lines at 2.8:1 on the
+slate ground (--teal-dk strokes, Request Routing's green branch): their day accent is --dgm-flow (4.0) and --green-dk.
+
+## 2026-10-11 · The brass look · one standard Learn card (LC1)
+
+His review: the Learn cards were cluttered (lens tags at the top, colored map pills at the bottom, "Framework · Mental
+Model · Interactive" under them; on a phone the first card was a whole screen). Drawn three ways (now, A dots, B small
+words); he picked B. On /learn/: a card is its number and lens words on one line (.ac-head; .ac-tag a small mono word in
+the muted ink with a dot in its lens color, --dot), the title and three lines of the description; the whole card is the
+link. The map pills left the 16 module cards and the 2 talk cards (every module page carries its own Atlas links), and
+so did the footer line and arrow. The guest byline stays as a lens word. Phone gate clean at nine sizes in both themes.
+
+## 2026-10-11 · The brass look · home's three picks and a short footer (HM2)
+
+He did not like the three columns live and asked what a good home page holds: what the site is and one way in, the best
+few things (the rest a link away), what is new, who is behind it, a short footer. Of three options he picked A: on a desk,
+"Start here" is three picks in one row (src/index.html .hv-picks: the Population Health Map, the Cost of Living
+Comparison and Vital Stats, by tools.js id) and an All tools key, and the catalog is the phone's only; the columns came
+out. Shared fix found on the way: .hc-desc no longer grows (a clamped description showed a fourth line in a stretched
+card); .hc-meta sits at the card's foot. The footer: Field Notes off ("scrap the field notes for now"), Support a top-row
+column, a phone footer of the support button, the copyright and the policy links. The sweep caught five more Learn
+modules' day diagram lines on --teal-dk; their day accent is --dgm-flow.
+
+## 2026-10-11 · The brass look · the hex grid, the Atlas on the map (HX1, HX2)
+
+He wanted the hex grid kept and made "more dynamic". Three ideas ran live on the real home page (A wakes up, B explore it, C the
+sections on the map); he picked C and asked for Atlas items and tile depth, then "atlas zones at 10px, no raised ground". Built
+in src/index.html: the honeycomb at rest (an offscreen canvas per size and theme, a ping from the compass on arrival), the seven
+Atlas zones as 10 px raised tiles (two lower sides drawn darker, the top face tinted, no glow), routed to the compass with A*
+that prices edges under the words and the dial at twelve times; one zone in play at a time (2.2 s turns, a pointer or a keyboard
+focus takes over, the tile lifts 6 px and its route runs as a moving dash); .hv-zone links over the tiles open /atlas/#zone, so
+a keyboard reaches them with a visible ring. A phone (the shorter side under 700) gets routes arriving in the zone colors. Reduced
+motion: all drawn, none moving. The loop pauses off screen and in a hidden tab. The press advances the zone or sends a route; the
+Secret Menu tile's cadence is unchanged. The Earned Scenery Rule is retired. Phone gate clean on home.
+
+## 2026-10-11 · The brass look · his full review worked (window i)
+
+On his page-by-page review, every page night and day. Shared: the Share button left read-next.njk (and reading.js);
+`.hu-src-fold` folds the sources on eleven Learn modules. Home: the hex world has a pace (AWAKE 30 s, SLOW 10 s, WAKE 14 s;
+the dash offset accumulates so slowing never jumps; the loop stops at rest and `kick()` draws single frames); the secret
+tile is a raised tile with its route (`drawSecretRoute` under the zones, `drawSecretTile` over them, `smHover` lift, no
+shadow glow, placement fully on screen). Day theme: the Observatory band and the Traffic tiles on the field tokens (his
+note overrides "readouts dark in both modes" there), the SQL editor and the hospital game's save box as fields; the
+review screen's chrome themed. The oxygen module on the shared shell (guest palettes retired, his ruling). The data
+sources and process engineering drawings fixed for overflow and the phone. The phase can close on BR4.
+
+## 2026-10-12 · The brass look · the About page, every author the same card (AB2)
+
+His pick A. The site's own story first in the reading column, then one author card per person on the shared reading grid
+(components/author-card.njk, data in src/_data/authors.js): a framed face, a brass-ringed photo, mono credentials and role, the
+bio's second half behind "More about", credentials as glass tiles, pieces as keys with a brass rule. The guest green retired.
+Phone: a small photo beside the name, tags hidden; 6,434 px to 4,747 px at 390.
+
+## 2026-10-12 · The brass look · CLOSED (BR4)
+
+David: "yes close the brass phase", after his page-by-page review of every page in both themes and the window that worked
+his notes. DESIGN.md Tier 3 rewritten from what shipped (the cool slate day ground and tight shadows, fields light in day,
+readouts glass except a page's header band of numbers, no glow anywhere now that the secret tile is raised, no author
+palettes, the home honeycomb with the Atlas zones, quiet reading-page endings, a short home and footer); the colors, elevation
+and components sections brought level (the Secret Beacon and the Earned Scenery Rule retired; the Learn card, the author card
+and the logo key added). The change budget governs the look again. The block CLAUDE.md carried while the phase was open,
+verbatim, for the record:
+
+> **The brass instruments look, site-wide · OPEN 2026-10-11** (DECISIONS BR1 to BR3; David: "ok lets make these
+> changes along with any other changes that can be done by the AI. do a whole site wide refresh and then i will do a page
+> by page review and QA in the tool"). Surface: THE WHOLE SITE'S LOOK, every page under src/ in both themes. The list, in
+> order: docs/HU-SITE-REFRESH-2026-10-11.md. The look: round 3.1 of docs/HU-DESIGN-DIRECTION-2026-10-11.md (mockup
+> tmp/hub/mocks/round31.html): raised keys that press (navy at night, white in day), brass for the one main act on a
+> screen, the section you are in and the frames; recessed glass for readouts, dark in both modes, and fields (search,
+> inputs, segment tracks) on the field tokens, glass at night and light in day (his first review notes, 2026-10-11); in day the
+> cool slate ground #E1E7EF under white panels with tight 2 to 10px shadows and a fine rim on every key (LT1, LT2); framed faces
+> for panels; NO GLOW; the compass rose in a brass dial on home (the light rose in day, heavier lines when drawn big), on a honeycomb where the
+> seven Atlas zones stand as raised tiles routed to it and linking into the Atlas (HX2; a phone gets routes in the zone colors; the secret tile, when the taps call it, stands raised and routed the same way, no glow; the map slows after 20 seconds and rests at 30, a hover or a press wakes it, his review 2026-10-11); Fun
+> its own section at /fun/ between Tools and Learn. What the phase does NOT open: any page's words (except meta
+> descriptions and the writing checker's findings, item 22 and 23 of the list), the engines, levels and data of the games,
+> the maps' layers, zones, routes and nodes, the identity in LOAD-BEARING below. The seven LOCKED pages take the new look
+> through the shared pieces only (hu-global.css, rounds.css, the layout) plus the ledger's small fixes; their own styles
+> stay. The other Learn and Rounds pages (a parked surface, so no rewrites and no new tooling) may dress their own
+> controls and panels in the recipes (keys, faces, glass): a change of surface, never of layout or words. Tier 1 and Tier 2
+> bind throughout. Closing =
+> David's page-by-page review (day and night marks on /__review), then DESIGN.md Tier 3 describes the new look.

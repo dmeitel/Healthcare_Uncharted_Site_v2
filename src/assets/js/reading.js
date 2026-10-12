@@ -96,23 +96,4 @@
       setTimeout(function () { if (!userMoved) jump(); }, 350);
     }
   }
-
-  /* ── Share (end-of-article block) ───────────────────────────────────────── */
-  var shareBtn = document.getElementById('rn-share');
-  var sharedOk = document.getElementById('rn-shared');
-  if (shareBtn) {
-    var canShare = !!navigator.share;
-    var canCopy = !!(navigator.clipboard && navigator.clipboard.writeText);
-    if (canShare || canCopy) {
-      shareBtn.hidden = false;
-      shareBtn.addEventListener('click', function () {
-        if (canShare) { navigator.share({ title: title, url: location.href }).catch(function () {}); return; }
-        navigator.clipboard.writeText(location.href).then(function () {
-          if (!sharedOk) return;
-          sharedOk.hidden = false;
-          setTimeout(function () { sharedOk.hidden = true; }, 2000);
-        }).catch(function () {});
-      });
-    }
-  }
 })();

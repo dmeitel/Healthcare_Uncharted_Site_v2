@@ -311,6 +311,52 @@ test('a page looked at on one list counts on every list the push carries, until 
   assert.deepEqual(Object.keys(qa.pageMarks(dir, '9999-01-01 00:00')), [], 'marks from before the last push belong to that push');
 });
 
+test('an idea takes Yes, Maybe or No with a note, keeps it, and a Yes goes to the Inbox once', () => {
+  const ideas = require('../scripts/hub/ideas.js');
+  const dir = path.dirname(tmp('x'));
+  const opt = { file: path.join(dir, 'ideas.json'), marks: path.join(dir, 'marks.json'), board: path.join(dir, 'board.json') };
+  fs.writeFileSync(opt.file, JSON.stringify({ sections: [{ id: 'games', title: 'New games' }], ideas: [
+    { id: 'vent-game', section: 'games', title: 'A ventilator game', pitch: 'Run a vent for a shift.' },
+    { id: 'retro', section: 'themes', title: 'A retro theme', pitch: 'The site as a monitor.', wild: true },
+  ] }));
+  fs.writeFileSync(opt.board, JSON.stringify({ cards: [], asks: [] }));
+
+  assert.deepEqual(ideas.counts(ideas.items(opt)), { total: 2, todo: 2, yes: 0, maybe: 0, no: 0 });
+  assert.throws(() => ideas.answer('nope', 'yes', '', opt), /No such idea/);
+  assert.throws(() => ideas.answer('vent-game', 'sure', '', opt), /Yes, Maybe or No/);
+  assert.throws(() => ideas.answer('vent-game', '', '  ', opt), /or write a note/, 'nothing to save');
+  assert.throws(() => ideas.toInbox('vent-game', opt), /Say Yes/, 'only a Yes goes to the board');
+
+  ideas.answer('vent-game', 'maybe', 'After the launch.', opt);
+  ideas.answer('vent-game', '', 'After the launch, with RT faculty.', opt);
+  let it = ideas.items(opt)[0];
+  assert.equal(it.state, 'maybe', 'a note alone keeps the answer');
+  assert.equal(it.note, 'After the launch, with RT faculty.');
+  ideas.answer('retro', 'no', '', opt);
+  ideas.answer('vent-game', 'yes', 'Do it.', opt);
+  assert.deepEqual(ideas.counts(ideas.items(opt)), { total: 2, todo: 0, yes: 1, maybe: 0, no: 1 });
+
+  const card = ideas.toInbox('vent-game', opt);
+  assert.equal(ideas.toInbox('vent-game', opt), card, 'sent once, the same card after');
+  const b = JSON.parse(fs.readFileSync(opt.board, 'utf8'));
+  assert.equal(b.cards.length, 1);
+  assert.equal(b.cards[0].lane, 'inbox');
+  assert.ok(b.cards[0].line.includes('Do it.'), 'his note goes with it');
+  assert.equal(ideas.items(opt)[0].inbox, card);
+  const saved = JSON.parse(fs.readFileSync(opt.marks, 'utf8'));
+  assert.equal(saved.items['idea:vent-game'].history.length, 2, 'the two earlier answers are kept');
+
+  // Claude answers his note on the card; his answer stays his, and the reply survives his next answer
+  assert.throws(() => ideas.reply('vent-game', '  ', opt), /needs words/);
+  ideas.reply('vent-game', 'Planned after the launch.', opt);
+  assert.equal(ideas.items(opt)[0].reply, 'Planned after the launch.');
+  assert.equal(ideas.items(opt)[0].state, 'yes', 'a reply never changes his answer');
+  ideas.answer('vent-game', 'maybe', 'Thinking about it.', opt);
+  assert.equal(ideas.items(opt)[0].reply, 'Planned after the launch.', 'the reply survives his next answer');
+  ideas.reply('retro', 'A note on an idea he said no to.', opt);
+  assert.equal(ideas.items(opt)[1].state, 'no');
+});
+
 test('a picture is found by its page, the newest step last', () => {
   assert.equal(qa.slug('/__hub/run'), 'hub-run');
   assert.equal(qa.slug('/secret-menu/data-observatory/#top'), 'secret-menu-data-observatory');
@@ -373,7 +419,7 @@ test('the hub answers at /__hub and refuses what it should', { skip: !BUILT }, a
   const server = await start(0, { quiet: true });
   const at = 'http://localhost:' + server.port;
   try {
-    for (const [url, has] of [['/__hub', 'The board'], ['/__hub/run', 'Run sheet'], ['/__hub/qa', 'QA list|Playtest'], ['/__hub/site', 'Site blocks'], ['/__hub/library', 'Library']]) {
+    for (const [url, has] of [['/__hub', 'The board'], ['/__hub/run', 'Run sheet'], ['/__hub/qa', 'QA list|Playtest'], ['/__hub/site', 'Site blocks'], ['/__hub/library', 'Library'], ['/__hub/ideas', 'Ideas']]) {
       const r = await fetch(at + url);
       assert.equal(r.status, 200, url);
       const html = await r.text();
@@ -407,6 +453,8 @@ test('the hub answers at /__hub and refuses what it should', { skip: !BUILT }, a
     assert.equal((await post('/__hub/api/inbox', { title: '   ' })).status, 400, 'an idea needs a name');
     assert.equal((await post('/__hub/api/promote', { id: 'no-such-card' })).status, 400);
     assert.equal((await post('/__hub/api/qa', { card: 'no-such-card', item: 'check:x', mark: 'good' })).status, 400);
+    assert.equal((await post('/__hub/api/idea', { id: 'no-such-idea', mark: 'yes' })).status, 400, 'an answer needs a real idea');
+    assert.equal((await fetch(at + '/__hub/mocks/..%2F..%2Fpackage.json')).status, 404, 'a mockup address cannot climb out of the mockups folder');
     assert.equal((await post('/__hub/api/nothing', {})).status, 404);
 
     const page = await (await fetch(at + '/secret-menu/data-observatory/')).text();

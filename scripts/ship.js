@@ -149,7 +149,9 @@ async function live(card) {
 
   // the record: which notes this push carried, the release note's commit, the board
   const day = today();
-  for (const n of devlog.sessions().filter((x) => !x.pushed)) {
+  /* only a note the pushed commit carries: one written after the push (not committed yet) waits for the next ship
+     (2026-10-11: the night's second window was marked as pushed in the commit before it) */
+  for (const n of devlog.sessions().filter((x) => !x.pushed && git(['ls-tree', '--name-only', 'HEAD', '--', x.file.split(path.sep).join('/')]))) {
     const f = path.join(ROOT, n.file);
     const text = fs.readFileSync(f, 'utf8');
     fs.writeFileSync(f, /^pushed:.*$/m.test(text) ? text.replace(/^pushed:.*$/m, `pushed: "${short}"`) : text.replace(/^---\n/, `---\npushed: "${short}"\n`));

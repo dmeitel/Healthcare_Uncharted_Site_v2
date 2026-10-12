@@ -1,7 +1,7 @@
 ---
 date: 2026-10-11
 milestone: "Pages with views people can find"
-commit: ""
+commit: "3db3d58"
 ---
 
 # Pages with views people can find

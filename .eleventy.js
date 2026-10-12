@@ -9,6 +9,7 @@ module.exports = function(eleventyConfig) {
     ["src/site.webmanifest", "site.webmanifest"],
     ["src/brand", "brand"],                     // brand kit -> /brand/
     ["src/brand/favicon.ico", "favicon.ico"],   // root /favicon.ico for auto-discovery
+    ["src/.well-known/security.txt", ".well-known/security.txt"],   // how to report a security problem (RFC 9116), 2026-10-11
   ];
   for (const [src, out] of PASSTHROUGH) {
     if (src === "src/" + out) eleventyConfig.addPassthroughCopy(src);
@@ -88,6 +89,11 @@ module.exports = function(eleventyConfig) {
       .sort((a, b) => new Date(b.data.date) - new Date(a.data.date));
   });
 
+  // The games, a section of their own since 2026-10-11 (DECISIONS BR3); the home page's Fun key counts them.
+  eleventyConfig.addCollection("funPages", function(collection) {
+    return collection.getAll().filter(item => item.data.section === "fun");
+  });
+
   eleventyConfig.addCollection("featuredPages", function(collection) {
     const all = collection.getAll();
     const featured = all.filter(item => {
@@ -118,6 +124,21 @@ module.exports = function(eleventyConfig) {
   });
 
   // ── FILTERS ──────────────────────────────────────────────────────────
+  // A page's real last-changed date: the last commit that touched its source (2026-10-11, the sitemap's lastmod; Google
+  // uses lastmod only when it is accurate, and a file's own timestamp is the clone time on Netlify). Falls back to the
+  // page's date when git has no answer.
+  const lastChangedCache = new Map();
+  eleventyConfig.addFilter("lastChanged", function(inputPath, fallback) {
+    if (!inputPath) return fallback;
+    if (!lastChangedCache.has(inputPath)) {
+      let iso = "";
+      try { iso = require("child_process").execFileSync("git", ["log", "-1", "--format=%cI", "--", inputPath], { encoding: "utf8" }).trim(); } catch (e) { iso = ""; }
+      lastChangedCache.set(inputPath, iso);
+    }
+    const iso = lastChangedCache.get(inputPath);
+    return iso ? new Date(iso) : fallback;
+  });
+
   eleventyConfig.addFilter("json", function(value) {
     return JSON.stringify(value);
   });

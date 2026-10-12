@@ -68,10 +68,17 @@ Ranked. The top three are the live ones; the rest wait their turn by rule 3.
 
 ### Yours to do, no decision needed
 
-- **Delete two old Netlify projects.** Answered 2026-09-23 (row 10, "Delete the project and Verdant Thing"), not
-  confirmed done. On app.netlify.com, open `healthcareuncharted` (a09e2c0f) and `verdant-treacle-8c70aa` (9fdd2a68);
-  for each, Project configuration, Danger zone, Delete project. Delete ONLY those two: the one WITH the hyphen,
-  `healthcare-uncharted`, is the live site. Until both are gone, every push builds three times.
+- **Delete two old Netlify projects, BEFORE THE LAUNCH.** Answered 2026-09-23 (row 10, "Delete the project and Verdant
+  Thing"), still not done on 2026-10-11. On app.netlify.com, open `healthcareuncharted` (a09e2c0f) and
+  `verdant-treacle-8c70aa` (9fdd2a68); for each, Project configuration, Danger zone, Delete project. Delete ONLY those
+  two: the one WITH the hyphen, `healthcare-uncharted`, is the live site. Why it is urgent now (research, 2026-10-11):
+  the account is on Netlify's credit plan, 1,000 credits a month and 15 per production deploy, and at zero credits every
+  site on the account pauses and forms are refused. `healthcareuncharted` still deploys on every push (17 seconds before
+  production on 2026-10-11), so each push costs double. While you are there: look at this month's balance under Usage
+  and Billing, and consider turning on auto-recharge for October and November. The Ideas tab has the full report
+  ("Make sure a busy launch month cannot pause the site").
+- **Answer the Ideas tab on the hub.** 143 ideas from a night of research, each with its report; Yes, Maybe or No and
+  a note, like the puzzle sheet. Start with "Start here": 1 to 13 are the before-launch list. /__hub/ideas.
 - **The cost of living tool's warnings, one ruling each.** On 2026-10-03 their explanations moved behind an "i"
   and the warnings themselves were left for you to rule on one at a time. Claude lays the list out again, with a
   picture of each, when you want to do it.
@@ -98,6 +105,7 @@ Listed so they stop reading like unfinished work.
 
 No decision needed. Listed so you can veto any of them.
 
+- **How the new look behaves** (BR1 to BR3 answered 2026-10-11, the phase closed 2026-10-12 on BR4; DESIGN.md Tier 3 is the rule now). In day mode the readouts stay dark glass and the inputs go light (your first review), except the Data Observatory band and the Traffic tiles, which go light on your 2026-10-11 note; the compass rose and its dial follow the mode. The fonts stay. The two maps themselves are untouched; their panels and buttons take the keys. The games' play screens keep their own look and their top bar takes the new one. The rollout runs as milestones with your QA at each, and DESIGN.md is rewritten to describe what shipped. The open design phases (the merged band, the map menus, the view switch, the cost of living tool, the games' reading load) keep their own work; their look rides on the shared pieces.
 - **Device Assembly round 2 part 2** (card backing behind parts, lighter tubing, larger
   joints, a phone magnifier). Recommendation: skip it. You called alpha. This is polish on
   polish and the surface has had fifteen rounds.

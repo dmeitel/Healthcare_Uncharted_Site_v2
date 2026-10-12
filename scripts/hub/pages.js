@@ -44,6 +44,7 @@ const TABS = [
   { id: 'run', label: 'Run sheet', href: '/__hub/run' },
   { id: 'qa', label: 'QA', href: '/__hub/qa' },
   { id: 'puzzles', label: 'Puzzles', href: '/__hub/puzzles' },
+  { id: 'ideas', label: 'Ideas', href: '/__hub/ideas' },
   { id: 'site', label: 'Site', href: '/__hub/site' },
   { id: 'library', label: 'Library', href: '/__hub/library' },
 ];
@@ -486,7 +487,7 @@ function site() {
     return `<li>
     <button type="button" class="obs-brick ph-${ph}" aria-expanded="false" aria-controls="obsDock" data-tpl="${tid}">
       <span class="n">${esc(r.short)}</span>
-      <span class="m"><span class="t">${r.phase === 2 ? 'Phase 2' : r.phase === 1 ? 'Phase 1 · ' + plural(r.holds.length, 'hold') : 'Not measured'}</span>${r.locked ? icon('lock') + '<span class="obs-sr">, locked</span>' : ''}${r.reviewed ? icon('check') + '<span class="obs-sr">, reviewed</span>' : ''}${r.uncommitted ? icon('pencil') + '<span class="obs-sr">, changes not pushed</span>' : ''}${r.phases.length ? icon('palette') + '<span class="obs-sr">, in a design phase</span>' : ''}</span>
+      <span class="m"><span class="t">${r.phase === 2 ? 'Phase 2' : r.phase === 1 ? 'Phase 1 · ' + plural(r.holds.length, 'hold') : 'Not measured'}</span>${r.locked ? icon('lock') + '<span class="obs-sr">, locked</span>' : ''}${r.night && !r.nightChanged ? icon('moon') + '<span class="obs-sr">, reviewed at night</span>' : ''}${r.day && !r.dayChanged ? icon('sun') + '<span class="obs-sr">, reviewed in day</span>' : ''}${r.uncommitted ? icon('pencil') + '<span class="obs-sr">, changes not pushed</span>' : ''}${r.phases.length ? icon('palette') + '<span class="obs-sr">, in a design phase</span>' : ''}</span>
     </button>
     <template id="${tid}">
       <button class="obs-pane-x" type="button" data-close aria-label="Close">&times;</button>
@@ -497,7 +498,9 @@ function site() {
         <dt>Standard</dt><dd>${r.phase === 2 ? 'Phase 2: passes every check for a ' + esc(r.kind) + '.' : r.phase === 1 ? 'Phase 1, held back by:<ul>' + r.holds.map((/** @type {string} */ h) => `<li>${esc(h)}</li>`).join('') + '</ul>' : 'Not measured yet.'}</dd>
         <dt>Changed</dt><dd>${r.changed ? 'Last pushed ' + esc(r.changed) : 'Never pushed'}${r.uncommitted ? ', with changes not pushed yet' : ''}.</dd>
         <dt>Locked</dt><dd>${r.locked ? 'Since ' + esc(r.locked) + (r.lockNote ? '. ' + esc(r.lockNote) : '') : 'No'}</dd>
-        <dt>Reviewed</dt><dd>${r.reviewed ? 'Yes, ' + esc(r.reviewed) : 'Not yet'}</dd>
+        <dt>Night</dt><dd>${r.night ? (r.nightChanged ? 'Changed since your mark of ' : 'Reviewed ') + esc(r.night) : 'Not yet'}</dd>
+        <dt>Day</dt><dd>${r.day ? (r.dayChanged ? 'Changed since your mark of ' : 'Reviewed ') + esc(r.day) : 'Not yet'}</dd>
+        ${r.legacy ? `<dt>Before the refresh</dt><dd>Reviewed ${esc(r.legacy)}</dd>` : ''}
         ${r.phases.length ? `<dt>Design phase</dt><dd>${esc(r.phases.join('; '))}</dd>` : ''}
       </dl>
     </template>
@@ -513,7 +516,7 @@ function site() {
   <div class="obs-card"><p class="obs-lab">Live pages</p><p class="obs-big">${sum.pages}</p></div>
   <div class="obs-card"><p class="obs-lab">Meet today's standard</p><p class="obs-big">${sum.p2} <small>Phase 2</small></p></div>
   <div class="obs-card"><p class="obs-lab">Held back by a named check</p><p class="obs-big">${sum.p1} <small>Phase 1</small></p></div>
-  <div class="obs-card"><p class="obs-lab">Locked · reviewed</p><p class="obs-big">${sum.locked} <small>locked</small> · ${sum.reviewed} <small>reviewed</small></p></div>
+  <div class="obs-card"><p class="obs-lab">Locked · reviewed night and day</p><p class="obs-big">${sum.locked} <small>locked</small> · ${sum.reviewed} <small>both</small></p></div>
 </div>
 <h2 class="obs-h2" id="blocks">The blocks <small>${s.byArea.length} areas</small></h2>
 <ul class="obs-key">

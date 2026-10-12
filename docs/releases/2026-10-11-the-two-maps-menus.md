@@ -1,7 +1,7 @@
 ---
 date: 2026-10-11
 milestone: "The two maps' menus"
-commit: ""
+commit: "3db3d58"
 ---
 
 # The two maps' menus

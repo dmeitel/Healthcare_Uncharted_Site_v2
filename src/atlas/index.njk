@@ -1,14 +1,14 @@
 ---
 layout: base.njk
 title: Healthcare Atlas
-description: "The whole U.S. healthcare system as one hex territory map: nine zones, the routes between them, and an expansion under every landmark. Start anywhere and follow the connections."
+description: "The whole U.S. healthcare system as one hex territory map: nine zones, the routes between them, and an expansion under every landmark. Follow the connections."
 no_footer: true
 nav_merged: true
 navPage: atlas
 permalink: /atlas/
 ---
 
-<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" integrity="sha256-8glLv2FBs1lyLE/kVOtsSw8OQswQzHr5IfwVj864ZTk=" crossorigin="anonymous"></script>
 <script src="/assets/js/hu-kit.js?v=20260920"></script>
 
 <style>
@@ -19,10 +19,14 @@ permalink: /atlas/
   overflow: hidden; position: relative;
   font-family: var(--font);
 }
+/* THE BRASS LOOK (2026-10-11, the site-wide refresh): the chrome around the hex territory wears the recipes in
+   hu-global.css. The bar and the panels are faces with a brass hairline, the buttons are keys, the search and the hint
+   are glass, the place you are and the filter that is on are brass. The territory itself (the shell's ground, the hex
+   grid, the zones, the routes, the corner brackets and the stamp) is untouched. */
 #atlas-tb {
-  height: 52px; background: rgba(3,7,6,0.99);
-  border-bottom: 2px solid rgba(78,205,196,0.2);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+  height: 52px; background: var(--face-bg);
+  border-bottom: 2px solid color-mix(in srgb, var(--brass-lo) 45%, var(--border2));
+  box-shadow: 0 6px 14px var(--depth);
   display: flex; align-items: center;
   padding: 0 16px; gap: 10px; flex-shrink: 0; z-index: 20;
   /* instrument chrome needs an anchor; #atlas-tb is NOT .tool-bar, so there is
@@ -59,18 +63,28 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
    bottom at every width, and the 44px phone Overview kept only its right edge. */
 #atlas-bc .abc-item:focus-visible { outline-offset: -2px; }
 .abc-item:hover { color: #E2EEF4; }
-.abc-item.active { color: #9B8FE0; font-weight: 600; }
+.abc-item.active { color: var(--brass-text); font-weight: 600; }   /* the place you are, in brass (a zone crumb keeps its zone's hue) */
 #bc-z { color: var(--zc); }   /* the zone's own hue, set by atlas.js */
 .abc-sep { font-size:var(--t-ui); color: rgba(78,205,196,0.25); margin: 0 2px; flex-shrink: 0; }
 #atlas-controls { display: flex; gap: 5px; flex-shrink: 0; }
+/* the canvas verbs are keys (the .icon-btn recipe in hu-global.css): navy at night, white in day, a brass top edge */
 .atlas-btn {
-  width: 32px; height: 32px;
-  background: rgba(78,205,196,0.04); border: 1px solid rgba(78,205,196,0.18);
-  color: rgba(78,205,196,0.60); cursor: pointer;
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--key-bg); border: 1px solid transparent; border-top-color: var(--brass-rim);
+  color: var(--key-ink); cursor: pointer; box-shadow: 0 2px 0 var(--key-floor), 0 4px 8px var(--depth);
   display: flex; align-items: center; justify-content: center;
-  font-size:var(--t-lede); transition: background-color .12s, border-color .12s, color .12s; font-family: inherit;
+  font-size:var(--t-lede); font-family: inherit;
 }
-.atlas-btn:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.50); color: #4ECDC4; }
+.atlas-btn:hover { background: var(--key-bg); border-color: transparent; border-top-color: var(--brass); color: var(--key-ink); filter: brightness(1.08); }
+[data-theme='light'] .atlas-btn:hover { border-top-color: var(--brass-lo); filter: brightness(.97); }
+.atlas-btn:active { transform: translateY(2px); box-shadow: 0 0 0 var(--key-floor), 0 2px 4px var(--depth); }
+.atlas-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+[data-theme='light'] .atlas-btn:focus-visible { outline-color: var(--teal-dk); }
+@media (prefers-reduced-motion: no-preference) {
+  .atlas-btn, #hud-close, #help-close, #conn-panel-close, .hud-link, .cf-chip, .fd-chip, .fd-link {
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .15s, color .15s;
+  }
+}
 .atlas-btn svg { width: 15px; height: 15px; stroke-width: 2; }   /* the Lucide set replaced the tuned-per-glyph + − ⊙ ? characters */
 #atlas-canvas { flex: 1; position: relative; overflow: hidden; }
 #atlas-svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
@@ -139,8 +153,8 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 #atlas-hud {
   position: relative; margin-top: 7px; width: 100%;
   max-height: min(58vh, 540px);
-  background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.24);
-  border-radius: 11px; box-shadow: 0 14px 36px rgba(0,0,0,0.5);
+  background: var(--face-bg); border: 1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2));
+  border-radius: 11px; box-shadow: var(--panel-lift);
   display: none; flex-direction: column; overflow: hidden;
 }
 #atlas-hud.open { display: flex; }
@@ -163,7 +177,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .hud-ktype {
   font-family: var(--mono);
   font-size:var(--t-micro); letter-spacing: 0.12em; text-transform: uppercase;
-  color: rgba(140,180,215,0.70);
+  color: var(--t3);   /* the old .70 ink held 4.5:1 only on the near-black panel; on the face it read 4.4 */
 }
 #hud-title {
   font-family: var(--display); font-size:var(--t-sub); font-weight: 800;
@@ -202,44 +216,52 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .hud-lhdr {
   font-family: var(--mono);
   font-size:var(--t-micro); letter-spacing: 0.14em; text-transform: uppercase;
-  color: rgba(78,205,196,0.66); margin-bottom: 6px;
+  color: var(--teal); margin-bottom: 6px;   /* the .66 teal read 4.4:1 on the face; full teal, like the Live data head */
 }
+/* a connected link is a key you press, the same floor as the canvas verbs */
 .hud-link {
-  display: flex; align-items: center; gap: 9px; padding: 7px 11px;
-  background: rgba(78,205,196,0.04); border: 1px solid rgba(78,205,196,0.12);
-  color: rgba(140,180,215,0.85); font-family: var(--font);
-  font-size:var(--t-fine); text-decoration: none; transition: background-color .12s, border-color .12s, color .12s;
+  display: flex; align-items: center; gap: 9px; padding: 7px 11px; border-radius: 8px;
+  background: var(--key-bg); border: 1px solid transparent; border-top-color: var(--brass-rim);
+  box-shadow: 0 2px 0 var(--key-floor), 0 4px 8px var(--depth);
+  color: var(--key-ink); font-family: var(--font);
+  font-size:var(--t-fine); text-decoration: none;
 }
-.hud-link:hover { background: rgba(78,205,196,0.10); border-color: rgba(78,205,196,0.32); color: #E2EEF4; }
+.hud-link:hover { background: var(--key-bg); border-color: transparent; border-top-color: var(--brass); color: var(--key-ink); filter: brightness(1.08); }
+.hud-link:active { transform: translateY(2px); box-shadow: 0 0 0 var(--key-floor), 0 2px 4px var(--depth); }
 /* placement and stacking come from the kit's .hu-sheet-x, which keeps the X above the grabber */
 #hud-close {
   margin: 0;
   width: 26px; height: 26px; flex-shrink: 0;
-  background: rgba(78,205,196,0.06); border: 1px solid rgba(78,205,196,0.20);
-  color: rgba(78,205,196,0.55); cursor: pointer; font-size:var(--t-lede);
-  display: flex; align-items: center; justify-content: center; transition: background-color .12s, border-color .12s, color .12s;
+  cursor: pointer; font-size:var(--t-lede);
+  display: flex; align-items: center; justify-content: center;
 }
-#hud-close:hover { background: rgba(78,205,196,0.14); border-color: rgba(78,205,196,0.45); color: #4ECDC4; }
+/* the three panel closes are small keys */
+#hud-close, #help-close, #conn-panel-close {
+  border-radius: 8px; background: var(--key-bg); border: 1px solid transparent; border-top-color: var(--brass-rim);
+  color: var(--key-ink); box-shadow: 0 2px 0 var(--key-floor), 0 4px 8px var(--depth);
+}
+:is(#hud-close, #help-close, #conn-panel-close):hover { background: var(--key-bg); border-color: transparent; border-top-color: var(--brass); color: var(--key-ink); filter: brightness(1.08); }
+:is(#hud-close, #help-close, #conn-panel-close):active { transform: translateY(2px); box-shadow: 0 0 0 var(--key-floor), 0 2px 4px var(--depth); }
+[data-theme='light'] :is(.hud-link, #hud-close, #help-close, #conn-panel-close):hover { border-top-color: var(--brass-lo); filter: brightness(.97); }
+/* the hint sits on the field tokens: glass at night, a light well in day (2026-10-11) */
 #atlas-hint {
   position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-  background: rgba(3,8,6,0.82); border: 1px solid rgba(78,205,196,0.1);
-  padding: 6px 16px; font-size:var(--t-label); color: rgba(140,180,215,0.42);
+  background: var(--field-bg); border: 1px solid transparent; box-shadow: var(--field-well), 0 6px 14px var(--depth);
+  padding: 6px 16px; font-size:var(--t-label); color: var(--field-sub);
   letter-spacing: 0.06em; pointer-events: none; white-space: nowrap;
   z-index: 10; transition: opacity .4s; font-family: var(--font);
 }
 /* shared attribution chip: bottom-left, clear of the centered hint
-   and the right-side find/help panels */
+   and the right-side find/help panels. Its surface is the shared one, as on the two maps. */
 .tool-attribution--fixed {
   left: 16px; right: auto; bottom: 12px;
-  background: rgba(3,8,6,0.85); border-color: rgba(78,205,196,0.18);
 }
-[data-theme='light'] .tool-attribution--fixed { background: rgba(255,255,255,0.92); border-color: rgba(27,95,168,0.15); }
 /* ── HELP PANEL ──────────────────────────────────────────────────────────── */
 #atlas-help {
   position: absolute; top: 0; right: 0; bottom: 0; z-index: 40;
-  width: 320px; background: rgba(2,6,4,0.99);
-  border-left: 2px solid rgba(78,205,196,0.22);
-  box-shadow: -6px 0 32px rgba(0,0,0,0.6);
+  width: 320px; background: var(--face-bg);
+  border-left: 2px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2));
+  box-shadow: -6px 0 32px var(--depth);
   transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
   display: flex; flex-direction: column; overflow: hidden;
 }
@@ -254,12 +276,10 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   letter-spacing: 0.09em; text-transform: uppercase; color: rgba(78,205,196,0.92);
 }
 #help-close {
-  width: 26px; height: 26px; background: rgba(78,205,196,0.06);
-  border: 1px solid rgba(78,205,196,0.18); color: rgba(78,205,196,0.55);
+  width: 26px; height: 26px;
   cursor: pointer; font-size:var(--t-body); display: flex; align-items: center;
-  justify-content: center; transition: background-color .12s, border-color .12s, color .12s;
+  justify-content: center;
 }
-#help-close:hover { background: rgba(78,205,196,0.14); color: #4ECDC4; }
 #help-body { flex: 1; overflow-y: auto; padding: 18px; }
 #help-body::-webkit-scrollbar { width: 3px; }
 #help-body::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.15); }
@@ -268,7 +288,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .help-section-title {
   font-family: var(--mono); font-size:var(--t-micro);
   letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(78,205,196,0.66); margin-bottom: 10px;
+  color: var(--teal); margin-bottom: 10px;   /* the .66 teal read 4.4:1 on the face */
   padding-bottom: 6px; border-bottom: 1px solid rgba(78,205,196,0.10);
 }
 .help-item {
@@ -305,7 +325,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 }
 
 /* ── PHONE (≤699): the toolbar WRAPS (the controls row overflowed the right edge at every
-   portrait width — first real-browser run), controls hit the 44px floor, and the
+   portrait width, first real-browser run), controls hit the 44px floor, and the
    "best on a desktop screen" hint retires (it was rendering UNDER the search bar) ── */
 @media (max-width:699px), (max-height:500px){
   #atlas-tb { flex-wrap: wrap; row-gap: 6px; height: auto; min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
@@ -323,23 +343,23 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
      the breadcrumb says which tool you are in. The hairline separators go: on a wrapped
      multi-row bar they divide nothing. Craft keeps its link but drops to its glyph. */
   #atlas-tb .atlas-logo { display: none; }
-  /* RULED 2026-08-23 (David): the hex grid IS the atlas — the brain of the site —
+  /* RULED 2026-08-23 (David): the hex grid IS the atlas, the brain of the site,
      and stays the experience on every device. A browse-flow replacement shipped here
      for hours and was reverted on his call; pinch and zoom are the phone answer. */
   /* Controls join the thumb (David: "move the menu buttons to the bottom"). Same
      grammar as the maps: Layers is the dock pill bottom-left with Craft beside it,
      the canvas verbs (zoom, centre, help) are the tool cluster bottom-right, the info
      chip stacks above the pill. The top keeps only the breadcrumb. */
+  /* Layers is the shared .selector key (hu-global.css), so only its place and shape are set here; the tool cluster is a
+     face with a brass hairline, the kit's phone dock surface (.hu-vdock), its verbs plain inside it */
   #atlas-layers-btn { position: fixed; left: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 120;
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
-    border: 1px solid var(--border); border-radius: 14px; min-height: 52px; padding: 0 16px;
-    backdrop-filter: blur(10px); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
+    border-radius: 14px; min-height: 52px; padding: 0 16px; }
   #atlas-controls { position: fixed; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 120;
     margin-left: 0; display: flex; gap: 8px;
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
-    border: 1px solid var(--border); border-radius: 14px; padding: 4px;
-    backdrop-filter: blur(10px); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
-  #atlas-controls .atlas-btn { border: none; background: none; }
+    background: var(--face-bg);
+    border: 1px solid color-mix(in srgb, var(--brass-lo) 45%, var(--border)); border-radius: 14px; padding: 4px;
+    box-shadow: var(--panel-lift); }
+  #atlas-controls .atlas-btn { border: none; background: none; box-shadow: none; }
   .tool-attribution--fixed { bottom: calc(66px + env(safe-area-inset-bottom)); left: 10px; right: auto; }
   /* chrome yields to the sheet: the info chip was floating over the open panel's text */
   body:has(#atlas-hud.open) .tool-attribution--fixed,
@@ -420,17 +440,12 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 
 /* ── LIGHT MODE ──────────────────────────────────────────────────────────── */
 [data-theme='light'] #atlas-shell { background: #eaf0eb; }
-[data-theme='light'] #atlas-tb { background: rgba(255,255,255,0.97); border-bottom-color: rgba(27,95,168,0.15); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
 [data-theme='light'] .atlas-logo span { color: #1B5FA8; }
 [data-theme='light'] .atlas-sep { background: rgba(27,95,168,0.15); }
 [data-theme='light'] .abc-item { color: rgba(15,30,50,0.64); }
 [data-theme='light'] .abc-item:hover { color: #0d1117; }
-[data-theme='light'] .abc-item.active { color: #1B5FA8; }
 [data-theme='light'] #bc-z { color: color-mix(in srgb, var(--zc) 50%, #000); }   /* raw zone hues are 1.9-2.8:1 on white; halfway to black is 6.5+, same step as the zone labels */
 [data-theme='light'] .abc-sep { color: rgba(27,95,168,0.28); }
-[data-theme='light'] .atlas-btn { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.70); }   /* icons: .60 was 2.8:1, under the 3:1 floor */
-[data-theme='light'] .atlas-btn:hover { background: rgba(27,95,168,0.12); border-color: rgba(27,95,168,0.45); color: #1B5FA8; }
-[data-theme='light'] #atlas-hud { background: rgba(249,252,250,0.98); border-color: rgba(27,95,168,0.20); box-shadow: 0 14px 36px rgba(0,0,0,0.14); }
 [data-theme='light'] #hud-grip { background: rgba(27,95,168,0.025); border-bottom-color: rgba(27,95,168,0.10); }
 [data-theme='light'] #hud-grip::after { background: rgba(27,95,168,0.20); }
 [data-theme='light'] #hud-grip:hover::after { background: rgba(27,95,168,0.45); }
@@ -440,19 +455,10 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] #hud-desc-col { border-right-color: rgba(27,95,168,0.10); }
 [data-theme='light'] #hud-desc { color: rgba(15,30,50,0.78); }
 [data-theme='light'] .hud-lhdr { color: rgba(27,95,168,0.88); }
-[data-theme='light'] .hud-link { background: rgba(27,95,168,0.04); border-color: rgba(27,95,168,0.12); color: rgba(15,30,50,0.80); }
-[data-theme='light'] .hud-link:hover { background: rgba(27,95,168,0.10); border-color: rgba(27,95,168,0.32); color: #0d1117; }
-[data-theme='light'] #hud-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.72); }
-[data-theme='light'] #hud-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
-[data-theme='light'] #atlas-hint { background: rgba(255,255,255,0.90); border-color: rgba(27,95,168,0.12); color: rgba(15,30,50,0.48); }
-[data-theme='light'] #conn-tooltip { background: rgba(255,255,255,0.99); border-color: rgba(27,95,168,0.25); box-shadow: 0 4px 18px rgba(0,0,0,0.12); }
 [data-theme='light'] .ctt-label { color: rgba(27,95,168,0.88); }
 [data-theme='light'] .ctt-desc { color: rgba(15,30,50,0.75); }
-[data-theme='light'] #atlas-help { background: rgba(249,252,250,0.99); border-left-color: rgba(27,95,168,0.18); box-shadow: -6px 0 32px rgba(0,0,0,0.10); }
 [data-theme='light'] #help-hdr { border-bottom-color: rgba(27,95,168,0.12); }
 [data-theme='light'] #help-hdr-title { color: #1B5FA8; }
-[data-theme='light'] #help-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.72); }
-[data-theme='light'] #help-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
 [data-theme='light'] .help-section-title { color: rgba(27,95,168,0.88); border-bottom-color: rgba(27,95,168,0.10); }
 [data-theme='light'] .help-icon { color: rgba(27,95,168,0.72); }
 [data-theme='light'] .help-text { color: rgba(15,30,50,0.78); }
@@ -469,7 +475,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] .ft-r2 { fill: #d8e2d9; fill-opacity: 0.30; }
 [data-theme='light'] .ft-r1 { fill: #cddacf; fill-opacity: 0.50; }
 [data-theme='light'] .az-lbl text { fill: #1a2a3a; fill-opacity: 0.82; }
-[data-theme='light'] .exp-sub text { fill: #1a2a3a !important; }   /* JS sets #E2EEF4 inline — light theme was white-on-white on every expansion */
+[data-theme='light'] .exp-sub text { fill: #1a2a3a !important; }   /* JS sets #E2EEF4 inline; light theme was white-on-white on every expansion */
 
 /* ── TILE NAMES · tracked caps (Cartographic Quiet) ─────────────────────────
    Node, landmark, and expansion sub-tile names go uppercase at their existing
@@ -485,9 +491,9 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 /* ── CONNECTION TOOLTIP ──────────────────────────────────────────────────── */
 #conn-tooltip {
   position: absolute; pointer-events: none; display: none;
-  background: rgba(3,8,6,0.97); border: 1px solid rgba(78,205,196,0.30);
+  background: var(--face-bg); border: 1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2));
   padding: 8px 13px; max-width: 260px; z-index: 25;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+  box-shadow: var(--panel-lift);
 }
 .ctt-label {
   font-family: var(--mono); font-size:var(--t-micro);
@@ -502,9 +508,9 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 /* ── CONNECTIONS PANEL (searchable route list) ────────────────────────────── */
 #atlas-conn {
   position: absolute; top: 0; left: 0; bottom: 0; z-index: 40;
-  width: 314px; background: rgba(2,6,4,0.99);
-  border-right: 2px solid rgba(78,205,196,0.22);
-  box-shadow: 6px 0 32px rgba(0,0,0,0.6);
+  width: 314px; background: var(--face-bg);
+  border-right: 2px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2));
+  box-shadow: 6px 0 32px var(--depth);
   transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
   display: flex; flex-direction: column; overflow: hidden;
 }
@@ -519,19 +525,18 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   letter-spacing: 0.09em; text-transform: uppercase; color: rgba(78,205,196,0.92);
 }
 #conn-panel-close {
-  width: 26px; height: 26px; background: rgba(78,205,196,0.06);
-  border: 1px solid rgba(78,205,196,0.18); color: rgba(78,205,196,0.55);
+  width: 26px; height: 26px;
   cursor: pointer; font-size:var(--t-body); display: flex; align-items: center;
-  justify-content: center; transition: background-color .12s, border-color .12s, color .12s;
+  justify-content: center;
 }
-#conn-panel-close:hover { background: rgba(78,205,196,0.14); color: #4ECDC4; }
+/* the connection search is a field: glass at night, a light well in day (the field tokens, 2026-10-11) */
 #conn-search {
   margin: 12px 14px 9px; padding: 8px 11px; flex-shrink: 0;
-  background: rgba(78,205,196,0.06); border: 1px solid rgba(78,205,196,0.18);
-  color: #cfe6e2; font-family: var(--font); font-size:var(--t-fine); outline: none;
+  background: var(--field-bg); border: 1px solid transparent; box-shadow: var(--field-well);
+  color: var(--field-ink); font-family: var(--font); font-size:var(--t-fine); outline: none;
 }
-#conn-search::placeholder { color: rgba(140,180,200,0.70); }
-#conn-search:focus { border-color: rgba(78,205,196,0.42); }
+#conn-search::placeholder { color: var(--glass-sub); }
+#conn-search:focus { border-color: var(--teal); }
 /* the field sets outline:none and the light theme overrode its focus border, so light had no focus mark at all */
 #conn-search:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
 [data-theme='light'] #conn-search:focus-visible { outline-color: var(--teal-ink); }
@@ -539,20 +544,27 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   display: flex; flex-wrap: wrap; gap: 5px; padding: 0 14px 11px; flex-shrink: 0;
   border-bottom: 1px solid rgba(78,205,196,0.10);
 }
+/* the route filters are keys; the one that is on is brass */
 .cf-chip {
   font-family: var(--mono); font-size:var(--t-micro);
   letter-spacing: 0.07em; text-transform: uppercase;
-  padding: 4px 8px; cursor: pointer;
-  background: rgba(78,205,196,0.05); border: 1px solid rgba(78,205,196,0.16);
-  color: rgba(140,180,200,0.78); transition: background-color .12s, border-color .12s, color .12s;
+  padding: 4px 8px; cursor: pointer; border-radius: 999px;
+  background: var(--key-bg); border: 1px solid transparent; border-top-color: var(--brass-rim);
+  color: var(--key-ink); box-shadow: 0 2px 0 var(--key-floor);
 }
-.cf-chip.on { background: var(--teal); color: #062024; border-color: var(--teal); font-weight: 700; }
+.cf-chip:hover { border-color: transparent; border-top-color: var(--brass); filter: brightness(1.08); }
+[data-theme='light'] .cf-chip:hover { border-top-color: var(--brass-lo); filter: brightness(.97); }
+.cf-chip:active { transform: translateY(2px); box-shadow: none; }
+.cf-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+[data-theme='light'] .cf-chip:focus-visible { outline-color: var(--teal-dk); }
+.cf-chip.on { background: var(--brass-bg); color: var(--brass-ink); border-color: transparent; font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 var(--brass-deep); }
 #conn-list { flex: 1; overflow-y: auto; padding: 6px 0; }
 #conn-list::-webkit-scrollbar { width: 3px; }
 #conn-list::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.15); }
 #conn-empty {
   font-family: var(--font); font-size:var(--t-fine);
-  color: rgba(140,180,200,0.70); padding: 14px 16px; display: none;
+  color: var(--t3); padding: 14px 16px; display: none;   /* the .70 ink read 4.3:1 on the face */
 }
 .conn-row {
   display: flex; gap: 9px; align-items: center;
@@ -562,8 +574,8 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 /* the "/ ''" alt text keeps the marker out of each row button's spoken name; the first line is the fallback */
 .conn-row::before { content: '\25B8'; content: '\25B8' / ''; font-family: var(--mono); font-size:var(--t-micro); color: var(--t4); flex-shrink: 0; }
 .conn-row:hover { background: rgba(78,205,196,0.09); }
-.conn-row.active { box-shadow: inset 3px 0 0 #4ECDC4; }
-.conn-row.active::before { content: '\25C6'; content: '\25C6' / ''; color: #4ECDC4; }
+.conn-row.active { box-shadow: inset 3px 0 0 var(--brass-text); }   /* the route picked, in brass */
+.conn-row.active::before { content: '\25C6'; content: '\25C6' / ''; color: var(--brass-text); }
 .conn-row.active .conn-row-label { color: #fff; font-weight: 600; }
 .conn-dot { width: 9px; height: 9px; flex-shrink: 0; border-radius: 2px; }
 .conn-row-text { min-width: 0; }
@@ -574,18 +586,12 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .conn-row-zones {
   font-family: var(--mono); font-size:var(--t-micro);
   letter-spacing: 0.05em; text-transform: uppercase;
-  color: rgba(140,180,200,0.70); margin-top: 2px;
+  color: var(--t3); margin-top: 2px;   /* the .70 ink read 4.3:1 on the face */
 }
-[data-theme='light'] #atlas-conn { background: rgba(249,252,250,0.99); border-right-color: rgba(27,95,168,0.18); box-shadow: 6px 0 32px rgba(0,0,0,0.10); }
+/* day: the panel, its close, the field and the chips take their day surface from the tokens; the field stays glass */
 [data-theme='light'] #conn-hdr { border-bottom-color: rgba(27,95,168,0.12); }
 [data-theme='light'] #conn-hdr-title { color: #1B5FA8; }
-[data-theme='light'] #conn-panel-close { background: rgba(27,95,168,0.06); border-color: rgba(27,95,168,0.18); color: rgba(27,95,168,0.72); }
-[data-theme='light'] #conn-panel-close:hover { background: rgba(27,95,168,0.12); color: #1B5FA8; }
-[data-theme='light'] #conn-search { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.18); color: #14283c; }
-[data-theme='light'] .cf-chip { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.16); color: rgba(40,70,100,0.84); }
-[data-theme='light'] .cf-chip.on { background: #1B5FA8; color: #fff; border-color: #1B5FA8; }
 [data-theme='light'] .conn-row:hover { background: rgba(27,95,168,0.08); }
-[data-theme='light'] #conn-search::placeholder { color: rgba(40,70,100,0.78); }
 [data-theme='light'] #conn-empty { color: rgba(40,70,100,0.80); }
 [data-theme='light'] .conn-row-zones { color: rgba(40,70,100,0.80); }
 
@@ -596,7 +602,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 #atlas-find { position: absolute; top: 12px; right: 16px; width: min(400px, calc(100% - 32px)); z-index: 30; font-family: var(--font); }
 /* The phone override MUST sit after the base rule: same specificity, and a media query
    adds none, so the later declaration wins. Run-2 raised the value (110 then 170) inside
-   the early phone block and it never applied — computed top stayed 64 and the search bar
+   the early phone block and it never applied: computed top stayed 64 and the search bar
    sat on top of the wrapped controls row, which bottoms at ~164 (run-3 root cause). */
 /* Docked under the breadcrumb, full width: the Watch Duty read (David's device pass,
    2026-08-23). It was a fixed 58px from the shell top, which assumed a one-row toolbar;
@@ -610,15 +616,18 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
   #atlas-find { bottom: calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; pointer-events: none; }
   #atlas-find > * { pointer-events: auto; }
 }
-#find-bar { display: flex; align-items: center; gap: 9px; background: rgba(8,14,20,0.92); border: 1px solid rgba(78,205,196,0.30); border-radius: 11px; padding: 9px 13px; backdrop-filter: blur(8px); box-shadow: 0 10px 34px rgba(0,0,0,0.45); }
-#find-bar svg { flex: none; opacity: .6; width: 16px; height: 16px; stroke-width: 2; color: #4ECDC4; }
-#find-input { flex: 1; background: none; border: none; outline: none; color: #dcefe9; font-size:var(--t-sub); font-family: inherit; }
+/* the search is a field: glass at night, a light well in day, its inks the --field-* ones (2026-10-11); the
+   results and the entity card under it are faces with a brass hairline, like every floating card */
+#find-bar { display: flex; align-items: center; gap: 9px; background: var(--field-bg); border: 1px solid transparent; border-radius: 11px; padding: 9px 13px; box-shadow: var(--field-well), 0 10px 24px var(--depth); }
+#find-bar:hover { box-shadow: var(--field-well), 0 0 0 1px var(--brass-lo), 0 10px 24px var(--depth); }
+#find-bar svg { flex: none; opacity: .6; width: 16px; height: 16px; stroke-width: 2; color: var(--field-sub); }
+#find-input { flex: 1; background: none; border: none; outline: none; color: var(--glass-ink); font-size:var(--t-sub); font-family: inherit; }
 /* the input drops its own outline, so the bar carries the focus mark (it had none in either theme) */
 #find-bar:focus-within { outline: 2px solid var(--teal); outline-offset: 2px; }
 [data-theme='light'] #find-bar:focus-within { outline-color: var(--teal-ink); }
-#find-input::placeholder { color: rgba(140,180,200,0.70); }
-#find-count { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.74); white-space: nowrap; font-variant-numeric: tabular-nums; }
-#find-results { margin-top: 7px; max-height: min(58vh, 540px); overflow-y: auto; background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.18); border-radius: 11px; display: none; }
+#find-input::placeholder { color: var(--glass-sub); }
+#find-count { font-family: var(--mono); font-size:var(--t-micro); color: var(--glass-sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#find-results { margin-top: 7px; max-height: min(58vh, 540px); overflow-y: auto; background: var(--face-bg); border: 1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2)); border-radius: 11px; box-shadow: var(--panel-lift); display: none; }
 #find-results.open { display: block; }
 #find-results::-webkit-scrollbar { width: 4px; } #find-results::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.18); }
 .find-grp { padding: 3px 0; }
@@ -631,14 +640,8 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .find-lbl mark { background: rgba(78,205,196,0.22); color: #7fead9; border-radius: 3px; padding: 0 1px; }
 .find-sub { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.74); white-space: nowrap; }
 .find-on { font-family: var(--mono); font-size:var(--t-micro); color: rgba(78,205,196,0.8); border: 1px solid rgba(78,205,196,0.32); border-radius: 4px; padding: 1px 5px; flex: none; }
-.find-more { padding: 5px 13px 9px; font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.70); }
+.find-more { padding: 5px 13px 9px; font-family: var(--mono); font-size:var(--t-micro); color: var(--t3); }   /* the .70 ink read 4.3:1 on the face */
 .az-node-cell.az-find-hit .hex-body { stroke-opacity: 1 !important; stroke-width: 3px !important; fill-opacity: 0.34 !important; filter: url(#n-glow); }
-[data-theme='light'] #find-bar { background: rgba(249,252,250,0.96); border-color: rgba(27,95,168,0.26); box-shadow: 0 10px 34px rgba(0,0,0,0.14); }   /* the dark .45 shadow greyed the top of the results and detail panels (2.8:1 headers); .14 matches #atlas-hud */
-[data-theme='light'] #find-bar svg { stroke: var(--teal-dk); }
-[data-theme='light'] #find-input { color: #14283c; }
-[data-theme='light'] #find-input::placeholder { color: rgba(40,70,100,0.78); }
-[data-theme='light'] #find-count { color: rgba(40,70,100,0.80); }
-[data-theme='light'] #find-results { background: rgba(249,252,250,0.98); border-color: rgba(27,95,168,0.16); }
 [data-theme='light'] .find-grp-h { color: rgba(40,70,100,0.84); }
 [data-theme='light'] .find-row:hover { background: rgba(27,95,168,0.08); }
 [data-theme='light'] .find-lbl { color: #14283c; }
@@ -648,16 +651,16 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] .find-more { color: rgba(40,70,100,0.78); }
 /* search-result detail summary (the entity card, on the atlas) ·
    instrument inspector: tabular numerals + hairline section dividers */
-#find-detail { margin-top: 7px; max-height: min(62vh, 580px); overflow-y: auto; background: rgba(8,14,20,0.97); border: 1px solid rgba(78,205,196,0.18); border-radius: 11px; display: none; padding: 14px 15px; font-variant-numeric: tabular-nums; }
+#find-detail { margin-top: 7px; max-height: min(62vh, 580px); overflow-y: auto; background: var(--face-bg); border: 1px solid color-mix(in srgb, var(--brass-lo) 50%, var(--border2)); border-radius: 11px; box-shadow: var(--panel-lift); display: none; padding: 14px 15px; font-variant-numeric: tabular-nums; }
 #find-detail.open { display: block; }
 #find-detail::-webkit-scrollbar { width: 4px; } #find-detail::-webkit-scrollbar-thumb { background: rgba(78,205,196,0.18); }
 .fd-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
-.fd-back { background: none; border: none; color: rgba(140,180,200,0.7); font-family: var(--mono); font-size:var(--t-label); cursor: pointer; padding: 0; }
+.fd-back { background: none; border: none; color: var(--t3); font-family: var(--mono); font-size:var(--t-label); cursor: pointer; padding: 0; }   /* the .7 ink read 4.3:1 on the face */
 .fd-back:hover { color: #4ECDC4; }
 .fd-type { font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; color: var(--tc); }
 .fd-type[data-t="metric"] { color: color-mix(in srgb, var(--tc) 50%, #fff); }   /* HU Blue on its own tint is 2.75:1 on the dark panel */
 .fd-title { font-family: var(--display); font-weight: 800; font-size: 17px; color: #e6f2f0; line-height: 1.2; margin-bottom: 2px; }
-.fd-uid { font-family: var(--mono); font-size:var(--t-micro); color: rgba(140,180,200,0.70); word-break: break-all; margin-bottom: 12px; }
+.fd-uid { font-family: var(--mono); font-size:var(--t-micro); color: var(--t3); word-break: break-all; margin-bottom: 12px; }
 .fd-facets { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size:var(--t-fine); margin-bottom: 4px; }
 .fd-facets .fk { color: var(--t2); font-family: var(--mono); font-size:var(--t-micro); letter-spacing: 0.12em; text-transform: uppercase; }
 .fd-facets .fv { color: rgba(200,222,235,0.9); }
@@ -667,19 +670,26 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 .fd-rv.inc { color: #E8C36B; }
 .fd-rn { opacity: 0.65; }
 .fd-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.fd-chip { display: inline-flex; align-items: center; gap: 6px; font-size:var(--t-label); padding: 3px 9px; border-radius: 7px; border: 1px solid rgba(78,205,196,0.14); background: rgba(78,205,196,0.05); color: rgba(200,222,235,0.9); cursor: pointer; transition: .1s; }
-.fd-chip:hover { border-color: rgba(78,205,196,0.4); color: #fff; }
-/* "+N more" is not a button, so it stays dimmer than the chips; was an inline .55 (4.1:1 dark, 2.9:1 light) */
-.fd-chip-more { cursor: default; opacity: .66; }
-[data-theme='light'] .fd-chip-more { opacity: .8; }
+/* a related entity is a small key. #find-detail carries it because button.fd-chip (the reset at the top) outranked a
+   bare .fd-chip, so at night the buttons had lost their chip and only the day theme drew one */
+.fd-chip { display: inline-flex; align-items: center; gap: 6px; font-size:var(--t-label); padding: 3px 9px; border-radius: 7px; cursor: pointer; }
+#find-detail .fd-chip { background: var(--key-bg); border: 1px solid transparent; border-top-color: var(--brass-rim); color: var(--key-ink); box-shadow: 0 2px 0 var(--key-floor); }
+#find-detail .fd-chip:hover { border-color: transparent; border-top-color: var(--brass); color: var(--key-ink); filter: brightness(1.08); }
+[data-theme='light'] #find-detail .fd-chip:hover { border-top-color: var(--brass-lo); filter: brightness(.97); }
+#find-detail .fd-chip:active { transform: translateY(2px); box-shadow: none; }
+/* "+N more" is not a button, so it stays dimmer than the chips and has no floor to press; was an inline .55 (4.1:1 dark, 2.9:1 light) */
+#find-detail .fd-chip-more { cursor: default; opacity: .66; background: none; border-color: var(--border); box-shadow: none; filter: none; }
+[data-theme='light'] #find-detail .fd-chip-more { opacity: .8; }
 .fd-cdot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
 .fd-cv { font-family: var(--mono); font-size:var(--t-micro); color: #7fead9; }
-.fd-link { display: inline-block; margin-top: 14px; font-size:var(--t-fine); color: #4ECDC4; text-decoration: none; border: 1px solid rgba(78,205,196,0.4); padding: 6px 11px; border-radius: 8px; }
-.fd-link:hover { background: rgba(78,205,196,0.1); }
-[data-theme='light'] #find-detail { background: rgba(249,252,250,0.98); border-color: rgba(27,95,168,0.16); }
+/* Open in its tool: a key */
+.fd-link { display: inline-block; margin-top: 14px; font-size:var(--t-fine); text-decoration: none; padding: 6px 11px; border-radius: 8px;
+  background: var(--key-bg); color: var(--key-ink); border: 1px solid transparent; border-top-color: var(--brass-rim); box-shadow: var(--key-lift); }
+.fd-link:hover { background: var(--key-bg); color: var(--key-ink); border-color: transparent; border-top-color: var(--brass); filter: brightness(1.08); }
+[data-theme='light'] .fd-link:hover { border-top-color: var(--brass-lo); filter: brightness(.97); }
+.fd-link:active { transform: translateY(3px); box-shadow: var(--key-down); }
 [data-theme='light'] .fd-title { color: #14283c; }
 [data-theme='light'] .fd-facets .fv { color: #22405c; }
-[data-theme='light'] .fd-chip { background: rgba(27,95,168,0.05); border-color: rgba(27,95,168,0.16); color: #22405c; }
 [data-theme='light'] .fd-back { color: rgba(40,70,100,0.86); }
 [data-theme='light'] .fd-back:hover { color: #1B5FA8; }
 [data-theme='light'] .fd-type { color: color-mix(in srgb, var(--tc) 50%, #000); }
@@ -690,11 +700,6 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 [data-theme='light'] .fd-rv.inc { color: #946905; }
 [data-theme='light'] .fd-rn { opacity: 1; }   /* teal-ink and this amber pass on the panel only at full strength */
 [data-theme='light'] .fd-cv { color: var(--teal-ink); }
-[data-theme='light'] .fd-chip:hover { color: #0d1117; border-color: rgba(27,95,168,0.4); }
-[data-theme='light'] .fd-link { color: var(--teal-ink); border-color: rgba(27,154,144,0.45); }
-[data-theme='light'] .fd-link:hover { background: rgba(27,154,144,0.08); }
-[data-theme='light'] .conn-row.active { box-shadow: inset 3px 0 0 #1B5FA8; }
-[data-theme='light'] .conn-row.active::before { color: #1B5FA8; }
 [data-theme='light'] .conn-row.active .conn-row-label { color: #0d1117; }
 [data-theme='light'] .conn-row-label { color: rgba(20,40,60,0.9); }
 
@@ -865,7 +870,7 @@ button.find-row:focus-visible, button.fd-chip:focus-visible { outline: 2px solid
 </div>
 
 {% set ta_fixed = true %}
-{% set ta_source = 'Unified HU dataset' %}
+{% set ta_source = 'Unified HU dataset · CMS facilities pulled June 2026 · DMEPOS suppliers: CMS release of Sept. 27, 2026 · state metrics retrieved Jan. 2025 to Oct. 2026 · vendor directory as of Aug. 10, 2026' %}
 {% include "components/tool-attribution.njk" %}
 
 <script type="application/json" id="atlas-content-links">{{ atlasContentLinks | dump | safe }}</script>

@@ -35,7 +35,7 @@ class DeviceAssemblyParts {
   data() {
     return {
       layout: 'base.njk',
-      navPage: 'tools',
+      navPage: 'fun',
       noindex: true,
       eleventyExcludeFromCollections: true,
       og_image: '/assets/images/tool-thumbs/fun-device-assembly.png',

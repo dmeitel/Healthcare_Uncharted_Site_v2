@@ -131,7 +131,14 @@ two home oxygen faults (`f4`, `f5`, `ownRoom`), in `ICU_ROOM()`, `ICU_BOOM()` (a
 the shift's "A night on the ventilator", SHIFT_V 3). Parts flagged `vc` stay off the hospital bench; side ports are
 `term` (`ev.termHits`); a `battery` device runs unplugged with a note; the sheet's rules are switches in `VENT_RULES`,
 so David's marks flip lines, not code; `level.after` builds a wall after the room is up; tests device-assembly-vent and
--vent2. The rulings below still hold.
+-vent2. THE DAILY YEAR (DY2, 2026-10-11, "yes to the daily walls, start oct 25"; plan
+docs/HU-DEVICE-ASSEMBLY-DAILY-PLAN-2026-10-11.md): from wall #23 (Sunday 2026-10-25) the daily follows the weekly climb
+(Monday a new room, Tuesday the cart, Wednesday the order, Thursday barriers, Friday take it apart, Saturday hard and the
+jokes, Sunday a three-wall story), each day re-dealt into its band; walls #1 to #22 never change (a test pins them), and
+a day the year cannot deal falls back to the old dealer. New MODES (find the fault, the goal not the device) get a teach
+wall the first time; new TWISTS just name themselves on the wall. BUILT 2026-10-11 (section 3d; the month YEAR_PLAN, kinds
+YEAR_KIND, bands YEAR_BAND, twists YEAR_TWISTS, teach walls YEAR_TEACH; tests/device-assembly-daily.test.js and its pins;
+the log in docs/HU-DESIGN-PHASE-LOG.md), at his QA by Oct 20. The rulings below still hold.
 
 **Device Assembly game feel · OPEN since 2026-09-16, PARKED AT ALPHA 2026-09-19, REOPENED 2026-10-04** for the
 cleanup before the playtest (David: "Yes complete that build in full order"; the list is K1 to K8 in
@@ -231,8 +238,19 @@ SHEET (the milestone's stage, this window's open, work and close steps with what
 PUZZLES sheet (Device Assembly's every wall from `npm run da:qa`, pictured, checked, markable; a wall mark never holds
 up a Ship), the QA LIST (the card's written checks plus every page touched since the last push, from git; Good or Needs a tweak with
 a note; marks in data-build/qa/<card>.json), SITE (every live page as a brick, from the ledger; a LOCK is David's
-alone), LIBRARY (every tool as a block; scripts/hub/kit.js). The hub reads files and draws them; it writes only a QA
-mark, an Inbox idea and a promotion, and it runs NO commands (it listens on the home network for his phone).
+alone; each brick shows his NIGHT and DAY review marks), LIBRARY (every tool as a block; scripts/hub/kit.js), IDEAS (2026-10-11: every idea from research with its
+report, answered Yes, Maybe or No with a note; ideas in data-build/ideas.json, answers in data-build/qa/ideas.json;
+mockups read-only from tmp/hub/mocks; scripts/hub/ideas.js). A page marked on one QA list counts on every list the push
+carries until it changes again. THE REVIEW SCREEN (/__review, 2026-10-11): a page takes a Night mark and a Day mark,
+each with a note, set in the theme on screen; a mark older than the page's last change reads as changed; ONE BUTTON
+(key m) saves the notes in the bar under the header with the mark: at night it then shows day, in day the next page
+that still needs a look; a new note never erases an old one (the mark keeps an earlier list) (scripts/lib/reviews.js,
+data-build/page-reviews.json, his alone). A RUN (data-build/review-run.json) names the pages a round walks, in order; the button,
+its counter and the board stay inside it. A failed save says so and keeps the note; typed notes stay in his browser until
+saved; on a phone it is one frame and a stacked bar (2026-10-11: his first phone review saved nothing). Its own chrome follows
+the theme. A page on data-build/review-finished.json (his call: "does not need to be reviewed every time") has left the review:
+its marks never go stale and the button steps past it. The hub reads files and draws them; it writes only a QA mark, a review mark,
+an idea's answer, an Inbox idea and a promotion, and it runs NO commands (it listens on the home network for his phone).
 Plan and build calls: docs/HU-ADMIN-HUB-PLAN-2026-10-04.md. Built 2026-10-04, awaiting his milestone QA.
 Closing = the back-office grammar into DESIGN.md Tier 3.
 
@@ -265,7 +283,8 @@ replace the row buttons; `peekI` puts explainers behind an i; one "?" per map (`
 Share; the kit's back guards share one listener (`HUKit.backConsumed()`); tests/map-menus.test.js. Closing = the map menu grammar into
 DESIGN.md Tier 3, beside the map instrument grammar.
 
-CLOSED, details in the log: the Atlas (2026-08-23; phone browse flow REVERTED; the hex grid is
+CLOSED, details in the log: THE BRASS INSTRUMENTS LOOK, site-wide (2026-10-12, DECISIONS BR4, after his page-by-page review of
+every page night and day; what shipped is DESIGN.md Tier 3, and the change budget governs it again), the Atlas (2026-08-23; phone browse flow REVERTED; the hex grid is
 Tier 4 identity, pinch and zoom are the phone answer), My Path's status card (shipped), the two
 MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
 ---
@@ -275,6 +294,7 @@ MapLibre maps (shipped; "the map instrument grammar" is DESIGN.md Tier 3).
 - The compass rose, the hex grid system, the secret menu.
 - The map information model: layers, zones, routes, nodes.
 - The brand palette: HU Blue #1B5FA8, HU Teal #4ECDC4, Green #2D9B6F, Red #DF5752, dark base #0d1117, clinical white #F6F9FC.
+  Brass #D9B56A joined it 2026-10-11 (BR2), for frames, the one main act on a screen and the section you are in.
 - The instrument grammar: docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md (seven laws, enforcement ladder, new-build checklist).
 
 ---
@@ -512,6 +532,13 @@ If any of these appear in output, rewrite before delivering:
 - Scoped rules: .claude/rules/{templates,css,tools}.md. Prose standard: .claude/skills/hu-voice. Agent crew: .claude/agents/hu-{auditor,voice-editor,mobile-tester,a11y-fixer,polish}.md.
 - THE HUB (2026-10-04): scripts/hub/ (board.js, run.js, qa.js, shots.js, pages.js, index.js, kit.js, devlog.js), scripts/ship.js, scripts/session-open.js and session-close.js, scripts/lib/session.js (ONE CLOCK: `today()` and `stamp()` in Mountain time; never a bare date string). tests/hub.test.js. Restart the hub's server after changing its code (data and hub.css are read fresh; the modules are not). The "before" picture of any page is the live site.
 - THE CONSISTENCY TOOLKIT (2026-10-03, plan docs/HU-CONSISTENCY-TOOLKIT-2026-10-03.md). Every check, skill and rule, mapped: docs/HU-QA-TOOLKIT.md. The page ledger, `npm run ledger`: every live page, its kind, the checks for that kind, and its PHASE (Phase 2 meets today's standard, Phase 1 names what holds it, computed and never typed). David's page-by-page review is the Board and the Report in `npm run review`; his "Reviewed" marks live in data-build/page-reviews.json and are his alone. `npm run phone` records each page's verdict in tmp/ledger/phone.json. Games: the one game bar (src/_includes/components/game-bar.njk), tests/game-shell.test.js, skill hu-game-shell.
+- THE DEV BLOG (2026-10-11, his ask): /secret-menu/blog/, a post every couple of updates in his voice (process, best practices,
+  content ideas, community feedback), each ending on its feedback rows and what came of each. Posts are pages in
+  src/secret-menu/blog/<slug>/; the list and the rows are src/_data/devBlog.js. Secret menu only: noindex and out of every
+  collection (tests/dev-blog.test.js). Never invent community feedback: a row names who said it.
+- THE AUTHORS (2026-10-12, AB2): the About page draws every author on one card, src/_includes/components/author-card.njk,
+  from src/_data/authors.js. A new guest or staff author is a new entry there (tests/authors.test.js); no author gets a palette
+  of their own (his ruling 2026-10-11).
 - Writing checker (2026-10-03): patient information, professional tone and the voice, for site pages and pasted drafts. Rules: scripts/lib/writing-rules.js. David's screen: `npm run writing` (/__writing). Gates: tests/writing-phi.test.js, tests/writing-voice.test.js (ratchet, tests/writing-baseline.json). Panel and how to run it: .claude/skills/hu-writing-review.
 - Tool interaction law: docs/HU-INSTRUMENT-GRAMMAR-2026-08-11.md. Layout shell: docs/HU-TOOL-SHELL.md.
 - Dev server gotcha: the long-running Eleventy serve caches _data; if a data change looks ignored, run a one-off `npx @11ty/eleventy`.

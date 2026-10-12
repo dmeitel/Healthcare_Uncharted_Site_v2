@@ -268,6 +268,55 @@ textarea#editor::placeholder{color:var(--sql-text3)}
   textarea#editor { height:150px; font-size:var(--t-sub); }
 }
 
+/* ═══ THE BRASS LOOK · 2026-10-11 (docs/HU-BRASS-LOOK-2026-10-11.md) ═══
+   Surface only. The panes are faces, the score is glass, the editor a field (light in day), Run is the one brass act, the other
+   buttons are keys and the case you are on carries the brass edge. The editor-semantics palette (SQL syntax,
+   level tags, PK and FK, the solved green) stays; on glass it uses its night steps in both themes, because
+   glass stays dark. */
+.sqlm { --sql-code-glass:#a8d8a8; --sql-caret-glass:#58a6ff; --sql-green-glass:#3fb950; }
+.sqlm :is(.case-sidebar, .schema-panel, .case-desc, .editor-bar, .results-bar, .mob-bar) { background:var(--face-bg); }
+.sqlm :is(.mob-panel-hdr, .res-table th) { background:var(--face-a); }
+.sqlm .mob-panel-hdr { border-bottom-color:color-mix(in srgb, var(--brass-lo) 55%, var(--border2)); }
+/* the editor is where you type, so it is a field: recessed glass at night, light in day (his review, 2026-10-11: the
+   editor stayed dark after the page turned light). The code ink takes its day step, --sql-code, 7.6:1 on white. */
+.sqlm textarea#editor {
+  background:var(--glass); color:var(--sql-code-glass); caret-color:var(--sql-caret-glass); box-shadow:var(--glass-well);
+}
+[data-theme="light"] .sqlm textarea#editor { background:var(--field-bg); color:var(--sql-code); caret-color:var(--sql-caret); box-shadow:var(--field-well); }
+.sqlm textarea#editor::placeholder { color:var(--glass-sub); }
+[data-theme="light"] .sqlm textarea#editor::placeholder { color:var(--field-sub); }
+/* the score is a readout */
+.sqlm .badge, [data-theme="light"] .sqlm .badge { background:var(--glass); border-color:transparent; color:var(--glass-ink); box-shadow:var(--glass-well); }
+.sqlm .badge.win { color:var(--sql-green-glass); }
+/* Run is the one main act on the screen */
+.sqlm .btn-run, [data-theme="light"] .sqlm .btn-run {
+  background:var(--brass-bg); color:var(--brass-ink); border:1px solid transparent; box-shadow:var(--brass-lift); font-weight:700;
+}
+.sqlm .btn-run:hover { filter:brightness(1.05); }
+.sqlm .btn-run:active { transform:translateY(3px); box-shadow:var(--brass-down); }
+/* the other buttons are keys */
+.sqlm :is(.btn-sec, .hint-btn, .quick-btn, .mob-btn), [data-theme="light"] .sqlm :is(.btn-sec, .hint-btn, .quick-btn, .mob-btn) {
+  background:var(--key-bg); color:var(--key-ink); border:1px solid transparent; border-top-color:var(--brass-rim); box-shadow:var(--key-lift);
+}
+.sqlm :is(.btn-sec, .hint-btn, .quick-btn, .mob-btn):hover { background:var(--key-bg); color:var(--key-ink); border-color:transparent; border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] .sqlm :is(.btn-sec, .hint-btn, .quick-btn, .mob-btn):hover { background:var(--key-bg); color:var(--key-ink); border-color:transparent; border-top-color:var(--brass-lo); filter:brightness(.97); }
+.sqlm :is(.btn-sec, .hint-btn, .quick-btn, .mob-btn):active { transform:translateY(3px); box-shadow:var(--key-down); }
+.sqlm .hint-btn:disabled, .sqlm .hint-btn:disabled:hover { opacity:.45; filter:none; transform:none; box-shadow:0 1px 0 var(--key-floor); border-top-color:transparent; cursor:not-allowed; }
+/* the quick queries keep their code blue, lifted a step so it reads on the key */
+.sqlm .quick-btn, .sqlm .quick-btn:hover { color:color-mix(in srgb, var(--sql-blue-text) 75%, var(--key-ink)); }
+[data-theme="light"] .sqlm .quick-btn, [data-theme="light"] .sqlm .quick-btn:hover { color:var(--blue); }
+/* the open panel's button and the case you are on */
+.sqlm .mob-btn.active, [data-theme="light"] .sqlm .mob-btn.active { background:var(--brass-bg); color:var(--brass-ink); border-color:transparent; box-shadow:var(--brass-lift); }
+.sqlm .case-btn.active { border-left-color:var(--brass); }
+[data-theme="light"] .sqlm .case-btn.active { border-left-color:var(--brass-lo); }
+.sqlm .case-btn.active .case-name::before { color:var(--brass-text); }
+@media (prefers-reduced-motion: no-preference) {
+  .sqlm :is(.btn-run, .btn-sec, .hint-btn, .quick-btn, .mob-btn) { transition:transform .12s ease, box-shadow .12s ease, filter .12s ease, color .15s, border-color .15s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sqlm :is(.btn-run, .btn-sec, .hint-btn, .quick-btn, .mob-btn, .case-btn, .tbl-hdr) { transition:none; }
+}
+
 </style>
 
 <noscript><p class="hu-noscript">This tool runs entirely in your browser and needs JavaScript turned on. Nothing you do here is sent to a server.</p></noscript>
@@ -359,12 +408,14 @@ textarea#editor::placeholder{color:var(--sql-text3)}
 
 </div>
 
-{% set ta_source = 'Synthetic clinical data · no real PHI' %}
+{# The dataset in this page was written Apr. 8, 2026 and has not changed since (git blame of its CREATE and INSERT lines,
+   checked 2026-10-11). #}
+{% set ta_source = 'Synthetic clinical data, built Apr. 8, 2026 · no real PHI' %}
 {% include "components/tool-attribution.njk" %}
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js" integrity="sha512-Rw3r47C4BVCj/4dy0MiF30B9c7+dLNeJdgPkyw8KiiYqUzAP3XFFw90EjO7mHLkJBl7JCm+/iTuL9dGh47lbMw==" crossorigin="anonymous"></script>
 <script>
 const CASES = [
   {

@@ -38,7 +38,7 @@ const opt = (name, dflt) => { const i = argv.indexOf(name); return i > -1 ? argv
 // path conversion): "/tools/" arrives as "C:/Program Files/Git/tools/". Accept either
 // spelling, and the slashless one (tools/ai-skills/), by stripping anything up to the msys
 // root and putting exactly one leading slash back.
-const paths = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--base' && argv[i - 1] !== '--widths')
+const paths = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--base' && argv[i - 1] !== '--widths' && argv[i - 1] !== '--theme')
   .map((a) => '/' + a.replace(/^[A-Za-z]:[\\/](?:.*?[\\/])?Git[\\/]/, '').replace(/^\/+/, ''));
 // A viewport is WIDTHxHEIGHT now, so a phone can be read on its side. A bare number keeps
 // its old meaning and its old default height. David, 2026-09-21: the review is "phone vert
@@ -59,6 +59,11 @@ const viewports = opt('--widths', '360x740,430x932,699x900,700x900,768x1024,1024
   return { w, h: m[2] ? Number(m[2]) : (w <= 699 ? 800 : 900) };
 }).filter(Boolean);
 const base = opt('--base', null);
+// BOTH THEMES (2026-10-11). David reviews every page in day and night ("I will be reviewing each page in day and night
+// themes"), and the brass look restyles both, so the gate reads each viewport twice: night first, then day. A day row is
+// labelled "day" and its picture ends in -day. --theme dark or --theme light reads one.
+const THEME_ARG = opt('--theme', 'both');
+const THEMES = THEME_ARG === 'both' ? ['dark', 'light'] : [THEME_ARG === 'light' ? 'light' : 'dark'];
 // the slow-data pass (see where it runs); --no-slow skips it for a quick layout-only read
 const NO_SLOW = argv.includes('--no-slow');
 const SLOW_MS = 2000;
@@ -137,7 +142,7 @@ function inspect({ phone, deviceWidth }) {
       // DOI, a source name or a map credit, not a control. .maplibregl-* is the
       // basemap's own attribution and not ours to size.
       const INLINE = 'p, li, blockquote, figcaption, .cp-text, .jp-p, .jp-source, .jp-sources,'
-        + ' .src-body, .tool-attribution, .ref-item, .ds-src-name, .rate-context-source,'
+        + ' .src-body, .tool-attribution, .ref-item, .ds-src-name,'
         + ' .stats-source, .source-note, .ehr-src, .jp-counter-body, em, .maplibregl-ctrl-attrib-inner';
       if (el.tagName === 'A' && el.closest(INLINE)) continue;
       small.push([sel(el), Math.round(r.width) + 'x' + Math.round(r.height), (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 30)]);
@@ -237,6 +242,8 @@ function inspect({ phone, deviceWidth }) {
   // text). Marked `data-drawing` on the svg: the type floor skips <text> inside it and the stroke and ink
   // floors skip the svg, never the HTML UI around it, and the count is printed so the exemption is seen
   // rather than silent. The 44px touch floor still applies to everything.
+  // A BRAND MARK (svg[data-brand], 2026-10-11) is exempt the same way: the home dial's compass rose is the brand's
+  // own art, hidden from assistive tech, and its letters are part of the logo (WCAG 1.4.3 exempts logotypes).
   let drawnCount = 0;
   /* A layout fault is a fault at every size. This used to be phone-gated, so a tablet and a
      desktop were never checked for it at all: the report printed n/a and the page "passed".
@@ -269,7 +276,7 @@ function inspect({ phone, deviceWidth }) {
       // Reporting it as a floor violation is a false positive (/atlas/ did).
       if (!text || text.length < 2 || !isFinite(px) || px <= 0 || px >= FUNC - 0.4) continue;
       if (zoomScene(el)) continue;
-      if (el.tagName.toLowerCase() === 'text' && el.closest('svg[data-drawing]')) { drawnCount++; continue; }
+      if (el.tagName.toLowerCase() === 'text' && el.closest('svg[data-drawing], svg[data-brand]')) { drawnCount++; continue; }
       if (px < ABS - 0.4) tiny.push([Math.round(px * 10) / 10, sel(el), text.slice(0, 30)]);
       else softCount++;   // between the absolute and the functional floor
     }
@@ -409,12 +416,15 @@ function inspect({ phone, deviceWidth }) {
     for (const svg of document.querySelectorAll('svg')) {
       const box = svg.getBoundingClientRect();
       if (box.width < 120 || box.height < 90) continue;          // an icon, not a figure
-      if (svg.hasAttribute('data-drawing')) continue;            // a game drawing: its ink is the art (see drawnCount)
+      if (svg.hasAttribute('data-drawing') || svg.hasAttribute('data-brand')) continue;   // a game drawing or brand mark: its ink is the art (see drawnCount)
       const bg = behind(svg);
       for (const el of svg.querySelectorAll('line,path,polyline,rect,polygon,circle,ellipse')) {
         const cs = getComputedStyle(el);
         if (cs.stroke === 'none' || parseFloat(cs.strokeWidth) === 0) continue;
         if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+        // a scene the reader can magnify is exempt for its terrain, as it is for the type floor and the ink floor
+        // (David 2026-08-23, the Atlas hex grid); this check was the one that never learned it (2026-10-11)
+        if (zoomScene(el)) continue;
         const r = el.getBoundingClientRect();
         if (!r.width && !r.height) continue;
         const c = parse(cs.stroke); if (!c) continue;
@@ -451,7 +461,7 @@ function inspect({ phone, deviceWidth }) {
     for (const svg of document.querySelectorAll('svg')) {
       const box = svg.getBoundingClientRect();
       if (box.width < 120 || box.height < 90) continue;
-      if (svg.hasAttribute('data-drawing')) continue;            // a game drawing: its label contrast is the art (see drawnCount)
+      if (svg.hasAttribute('data-drawing') || svg.hasAttribute('data-brand')) continue;   // a game drawing or brand mark: its label contrast is the art (see drawnCount)
       const page = pageBg(svg);
       // every filled shape in the drawing, so a label can be measured against the one it sits on
       const shapes = [];
@@ -915,15 +925,16 @@ function inspect({ phone, deviceWidth }) {
     const slug = p.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'home';
     LEDGER[p] = { at: new Date().toISOString(), viewports: {} };
     console.log('\n== ' + p);
-    for (const { w, h } of viewports) {
+    for (const { w, h, theme } of viewports.flatMap((v) => THEMES.map((t) => Object.assign({ theme: t }, v)))) {
       // The SHORTER side decides. A phone on its side is 740x360: still a phone, still
       // touch, still the phone floors, even though its width is over the 699 line.
       const phone = Math.min(w, h) <= 699;
-      const label = w + 'x' + h;
-      // colorScheme pinned 2026-09-24: pages now follow the device's light or dark setting on a first visit, and
-      // Playwright's device says light unless told. The gate has always measured the dark side; the light side
-      // was swept whole by the 2026-09-23 theme pass (tmp/theme-scan/scan.js).
-      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone, colorScheme: 'dark' });
+      const label = w + 'x' + h + (theme === 'light' ? ' day' : '');
+      // colorScheme pinned 2026-09-24: pages follow the device's light or dark setting on a first visit, and
+      // Playwright's device says light unless told. Since 2026-10-11 each viewport is read in both (THEMES above);
+      // the stored choice is set too, so a page that reads it agrees with the device.
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone, colorScheme: theme });
+      await ctx.addInitScript((t) => { try { localStorage.setItem('hu-theme', t); } catch (e) {} }, theme);
       const page = await ctx.newPage();
       // The goat tracker polls the LIVE GoatCounter API. Read nine times over, the real service
       // answered 429 and the page timed out on two viewports, so the gate failed on someone
@@ -965,7 +976,7 @@ function inspect({ phone, deviceWidth }) {
       await page.waitForTimeout(600);
       const EMPTY = { overflow: false, unhidden: [], unhiddenCount: 0, culprits: [], small: [], smallCount: 0, clipped: [], clippedCount: 0, vh: [], tiny: [], tinyCount: 0, softCount: 0, chromeBars: [], chromeH: 0, chromePct: 0, topBars: 0, collide: [], collideCount: 0, spill: [], spillCount: 0, burst: [], burstCount: 0, floats: [], floatsCount: 0, cut: [], cutCount: 0 };
       const { r, steps } = await readWholePage(page, { phone, deviceWidth: w }, EMPTY);
-      const shot = path.join(OUT, slug + '-' + label + '.png');
+      const shot = path.join(OUT, slug + '-' + label.replace(' ', '-') + '.png');
       await page.screenshot({ path: shot }).catch(() => {});
       // A generic "Failed to load resource" console line is the echo of a 4xx we
       // already classified. Discount one per serverless 404 so the gate does not
@@ -998,7 +1009,7 @@ function inspect({ phone, deviceWidth }) {
         phone && r.tinyCount && r.tinyCount + ' under the type floor', phone && r.faintCount && r.faintCount + ' faint lines',
         phone && r.dimCount && r.dimCount + ' dim labels', overBudget && 'chrome ' + r.chromePct + '%' + (r.topBars > 1 ? ', ' + r.topBars + ' top bars' : ''),
       ].filter(Boolean).map(String) };
-      console.log(`  ${label.padStart(8)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      console.log(`  ${label.padStart(12)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
       for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
       for (const u of [...new Set(offOrigin)]) console.log('         (not a defect) third-party origin the harness may not call: ' + u);
       for (const e of errors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
@@ -1013,7 +1024,7 @@ function inspect({ phone, deviceWidth }) {
       for (const [px, s, txt] of (r.tiny || [])) console.log('         UNDER THE TYPE FLOOR at ' + px + 'px: ' + s + (txt ? ' "' + txt + '"' : ''));
       for (const [pct, a, b] of (r.collide || [])) console.log('         LABELS COLLIDE, ' + pct + '% overlap: "' + a + '"  x  "' + b + '"');
       if (phone && r.softCount) console.log('         (backlog, not a fail) ' + r.softCount + ' element(s) between the absolute and the functional floor');
-      if (phone && r.drawnCount) console.log('         (game drawing, exempt) ' + r.drawnCount + ' label(s) printed on an svg marked data-drawing; its line and label contrast are not measured either');
+      if (phone && r.drawnCount) console.log('         (game drawing or brand mark, exempt) ' + r.drawnCount + ' label(s) printed on an svg marked data-drawing or data-brand; its line and label contrast are not measured either');
       for (const t of (r.dim || [])) console.log('         LABEL UNDER THE INK FLOOR, ' + t);
       for (const t of (r.faint || [])) console.log('         LINE UNDER THE STROKE FLOOR, ' + t + ' (a connector carries meaning; 3:1 is the floor)');
       if (overBudget) console.log('         CHROME OVER BUDGET: ' + r.chromeH + 'px of ' + r.vhPx + ' is ' + r.chromePct + '%'

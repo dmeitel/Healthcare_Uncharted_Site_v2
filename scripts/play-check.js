@@ -44,7 +44,10 @@ const FIND_OVERLAPS = () => {
   // the things a player acts on
   const targets = [...document.querySelectorAll(
     '#bigBtn, .room, .bank-tile, .pump button, .pump, .ehr-tab, .shopcard, .card, [data-act], button.hit'
-  )].filter(vis);
+  )].filter(vis)
+    // the walking helpers let taps fall through since 2026-10-11 (the CHECK fix): one passing over a panel is not a
+    // covered control, so they are not targets
+    .filter((e) => !e.matches('.tech, .widget.family, .widget.surveyor, .pizza'));
 
   // the things that float over the floor and stay there
   const floaters = [...document.querySelectorAll('.widget, .callboard, #bank, #pumpRow, .stage, .clicker, .shopcard, .ehrp, .gamemenu, .soundmenu')]

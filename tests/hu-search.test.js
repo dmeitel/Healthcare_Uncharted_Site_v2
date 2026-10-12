@@ -31,17 +31,19 @@ test('the matcher is exposed for testing', () => {
   assert.equal(typeof S.rank, 'function');
 });
 
-test('every example chip on the home page finds the page it promises', () => {
+// The home page's example chips came off 2026-10-11 (David: "we don't need those example search buttons underneath the
+// search bar"). The four questions they asked are still the search's own test, and any chip a page shows again is held
+// to finding a page too.
+test('the home page\'s old example searches, and any example chip it shows, find the page they promise', () => {
   const home = fs.readFileSync(path.join(ROOT, 'src/index.html'), 'utf8');
-  const chips = [...home.matchAll(/data-q="([^"]+)"/g)].map(m => m[1]);
-  assert.ok(chips.length >= 3, 'the home page shows example searches');
+  const shown = [...home.matchAll(/data-q="([^"]+)"/g)].map(m => m[1]);
   const want = {
     'Travel pay': '/tools/cost-of-living/',
     'Hospitals near me': '/tools/operators-map/',
     'Respiratory therapist': '/tools/career-tree/',
     'Prior auth': /\/learn\//
   };
-  for (const q of chips) {
+  for (const q of new Set([...Object.keys(want), ...shown])) {
     const url = top(q);
     assert.ok(url, '"' + q + '" finds nothing');
     if (want[q] instanceof RegExp) assert.match(url, want[q], q);

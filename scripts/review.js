@@ -87,6 +87,13 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return res.end(html);
   }
+  /* THE RUN (2026-10-11): the pages this round of the review walks, in order (data-build/review-run.json, read fresh) */
+  if (url === '/__review/run.json') {
+    let run = null;
+    try { run = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data-build', 'review-run.json'), 'utf8')); } catch (e) { run = null; }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end(JSON.stringify(run && Array.isArray(run.pages) ? { name: run.name, since: run.since, pages: run.pages } : null));
+  }
   if (url === '/__review/pages.json') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify(pages()));
@@ -109,21 +116,13 @@ const server = http.createServer((req, res) => {
     req.on('data', (c) => { body += c; if (body.length > 1e5) req.destroy(); });
     req.on('end', () => {
       try {
-        const { page, note, reviewed } = JSON.parse(body || '{}');
-        if (typeof page !== 'string' || !page.startsWith('/')) throw new Error('no page');
-        const file = path.join(ROOT, 'data-build', 'page-reviews.json');
-        const all = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
-        if (reviewed === false) delete all[page];
-        else {
-          const d = new Date();
-          const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-          all[page] = { date, note: String(note || '').slice(0, 2000) };
-        }
-        const sorted = Object.fromEntries(Object.keys(all).sort().map((k) => [k, all[k]]));
-        fs.writeFileSync(file, JSON.stringify(sorted, null, 2) + '\n');
+        // a mark per theme since 2026-10-11 (scripts/lib/reviews.js): the screen sends the theme it was looking in
+        const { page, note, reviewed, theme } = JSON.parse(body || '{}');
+        const which = theme === 'light' || theme === 'day' ? 'day' : 'night';
+        const review = require('./lib/reviews').set(page, which, note, reviewed);
         ledgerCache = null;
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ ok: true, review: all[page] || null }));
+        res.end(JSON.stringify({ ok: true, review }));
       } catch (e) {
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ error: String(e && e.message || e) }));

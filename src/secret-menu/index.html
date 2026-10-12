@@ -16,11 +16,17 @@ eleventyExcludeFromCollections: true
 .sm-hero h1 { font-family:var(--display); font-size:clamp(30px,4.5vw,44px); font-weight:800; letter-spacing:-.03em; color:var(--t1); }
 .sm-hero h1 em { font-style:normal; color:#4ecb8d; }
 .sm-sub { font-size:var(--t-body); color:var(--t2); line-height:1.7; max-width:56ch; margin:10px auto 0; }
-.sm-hero .hv-search { margin:22px auto 0; }
 
-.sm-shelves { max-width:1100px; margin:0 auto; padding:26px clamp(20px,5vw,80px) 64px; }
+/* THE CAPTAIN'S LOG (the brass look, 2026-10-11, round 3.1's secret view). The shelves are one framed
+   case and every card on the menu is an entry in it: a recessed glass row with its stamp in brass mono,
+   its name and blurb, and its picture as a small screen at the end. Glass stays dark in day too, so the
+   row's inks are the --glass-* set and its picture is the dark vignette in both themes. The guest green
+   stays as this page's mark: the h1, the note's rule, the focus ring. */
+.sm-shelves { width:min(860px, calc(100% - 2 * clamp(20px,5vw,80px))); margin:26px auto 64px; padding:22px 24px 24px;
+  background:var(--face-bg) padding-box, var(--frame-bg) border-box; border:2px solid transparent; border-radius:16px; box-shadow:var(--panel-lift); }
 
-.sm-callout { border-left:3px solid #2D9B6F; padding:6px 0 6px 14px; max-width:860px; margin-bottom:30px; }
+/* the note is the shared margin note; this page keeps only its green rule, and it opens the case */
+.sm-shelves .hu-read-note { border-left-color:#2D9B6F; margin-top:0; }
 .sm-callout-title { font-family:var(--display); font-size:var(--t-ui); font-weight:700; margin-bottom:8px; color:var(--t1); }
 .sm-callout-body { font-size:var(--t-sub); color:var(--t2); line-height:1.75; }
 
@@ -29,108 +35,126 @@ eleventyExcludeFromCollections: true
 .sm-kicker { font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); }
 .sm-kicker i { font-style:normal; color:var(--border2); }
 .sm-shelf-h .n { margin-left:auto; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
-.sm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; padding:16px 0 4px; }
 
-/* guest-green identity on the shared hub cards, this page only */
-.sm-grid .hc-card:hover { border-color:#4ecb8d; }
-.sm-grid .hc-card:focus-visible { outline-color:#4ecb8d; }
+/* the entries: one column, each a glass row (name and blurb | picture). Every entry is an <a> wearing the shared .hc-card;
+   these rules only re-lay and re-surface it inside the log. The stamp that stood on the left ("Game · Playable · v1") is
+   gone (his review, 2026-10-11, "eliminate that flavor text altogether"); a pin beside the name says what it is. */
+.sm-log { display:grid; gap:10px; padding:14px 0 4px; }
+.sm-log > a, [data-theme="light"] .sm-log > a {
+  display:grid; grid-template-columns:minmax(0,1fr) 176px; grid-template-areas:"title thumb" "desc thumb";
+  grid-template-rows:auto 1fr; column-gap:16px; align-items:start; padding:12px 14px; border-radius:12px;
+  background:var(--field-bg); border:1px solid transparent; box-shadow:var(--field-well);
+}
+.sm-log > a:hover, [data-theme="light"] .sm-log > a:hover { transform:none; border-color:transparent; box-shadow:var(--field-well), 0 0 0 1px var(--brass-lo); }
+.sm-log > a:active { transform:translateY(2px); }
+.sm-log > a:focus-visible { outline:2px solid #4ecb8d; outline-offset:2px; }
+[data-theme="light"] .sm-log > a:focus-visible { outline-color:var(--green-dk); }
+[data-theme="light"] .sm-log > a:focus-visible { outline-color:#2D9B6F; }
+.sm-log .hc-title { grid-area:title; color:var(--field-ink); display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; }
+.sm-pin { display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:6px; border:1px solid var(--field-line);
+  font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--field-sub); }
+.sm-pin svg { width:13px; height:13px; flex:none; color:var(--brass-text); }
+.sm-log .hc-desc { grid-area:desc; color:var(--field-sub); }
+.sm-log .hc-thumb { grid-area:thumb; align-self:center; height:60px; margin:0; border-color:var(--field-line); }
 
 .hc-card.draft { opacity:.6; pointer-events:none; }
 .sm-draft-badge { font-size:var(--t-label); font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:8px; background:rgba(255,255,255,.07); border:1px solid var(--border); color:var(--t3); font-family:var(--mono); margin-left:8px; }
 
 /* Guest green as TEXT drops to its deep step on light ground (The Deep-Step Rule). */
 [data-theme="light"] .sm-hero h1 em { color:#2D9B6F; }
-[data-theme="light"] .sm-grid .hc-card:hover { border-color:#2D9B6F; }
-[data-theme="light"] .sm-grid .hc-card:focus-visible { outline-color:#2D9B6F; }
 
+/* a narrow desk: the picture steps aside before the blurb runs out of room */
+@media (max-width:899px) {
+  .sm-log > a, [data-theme="light"] .sm-log > a { grid-template-columns:minmax(0,1fr); grid-template-areas:"title" "desc"; }
+  .sm-log .hc-thumb { display:none; }
+}
 @media (max-width:699px), (max-height:500px) {
   .sm-hero { padding-top:36px; }
-  .sm-grid { grid-template-columns:1fr; }
+  .sm-shelves { width:auto; margin:20px 16px 48px; padding:18px 14px 16px; }
+  /* a phone stacks the row: the name and its pin, the blurb, then the picture at the shared card size */
+  .sm-log > a, [data-theme="light"] .sm-log > a { grid-template-columns:minmax(0,1fr); grid-template-areas:"title" "desc" "thumb"; grid-template-rows:none; row-gap:4px; }
+  .sm-log .hc-thumb { display:block; height:88px; margin-top:8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sm-log > a { transition:transform .12s ease, box-shadow .12s ease; }
 }
 </style>
 
 <div class="sm-hero">
   <h1>The <em>Secret Menu</em></h1>
   <p class="sm-sub">You found it. Eight taps on the compass, or you just knew the address. This is the part of the site that isn't on the site: no nav link points here, the sitemap doesn't list it, search engines are told to look away.</p>
-  <!-- Site search only. Secret pages stay OUT of the search index on purpose:
-       indexing the back room would hand the secret to anyone who types "goat". -->
-  <button class="hv-search" type="button" data-hu-search aria-label="Search the site">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
-    <b>Try: hospitals near me &middot; travel pay &middot; the payer</b>
-    <span class="k">/</span>
-  </button>
+  <!-- No search box here (2026-10-11, his review: the secret menu does not need one). The site search in the nav still
+       works, and secret pages stay out of its index on purpose. -->
 </div>
 
 <section class="sm-shelves" aria-label="Everything on the menu">
 
-  <div class="sm-callout">
+  <div class="hu-read-note">
     <div class="sm-callout-title">What this is</div>
     <div class="sm-callout-body">A back room. Half-finished ideas, experiments that aren't ready for the front page, and the occasional thing that's just for people paying attention. It works like Learn. It's just quieter. Check back, the menu changes.</div>
   </div>
 
   <div class="sm-shelf-h"><span class="sm-kicker"><i>&#9472; </i>On the Menu</span><span class="n hu-flavor">live right now</span></div>
-  <div class="sm-grid">
+  <div class="sm-log">
+
+    <!-- The dev blog (2026-10-11): a reading page, so no thumb, like the reading pages in the back. -->
+    <a class="hc-card" href="/secret-menu/blog/">
+      <div class="hc-title"><span>Dev Blog</span><span class="sm-pin"><i data-lucide="pencil-line" aria-hidden="true"></i>Blog</span></div>
+      <div class="hc-desc">Notes from building this site, every couple of updates: what we figured out, what broke, ideas for what comes next, and the feedback we heard, with a record of what came of it. Post 1 is the 1.0 release.</div>
+    </a>
 
     <a class="hc-card" href="/secret-menu/uncharted-general/">
       <div class="hc-thumb" aria-hidden="true" style="--thumb:url('/assets/images/tool-thumbs/sm-uncharted-general.png');--thumb-l:url('/assets/images/tool-thumbs/sm-uncharted-general-light.png')"></div>
-      <div class="hc-title">Uncharted General</div>
+      <div class="hc-title"><span>Uncharted General</span><span class="sm-pin"><i data-lucide="gamepad-2" aria-hidden="true"></i>Game</span></div>
       <div class="hc-desc">A healthcare systems roguelite. Run a hospital network quarter by quarter. Set pay, move staff, open units, then run the quarter and see if you hit the goal. Clear it, pick an upgrade. Miss it, the run's over. It gets meaner every level.</div>
-      <div class="hc-meta">Game &middot; Playable &middot; v1</div>
     </a>
 
     <a class="hc-card" href="/secret-menu/er-charge/">
       <div class="hc-thumb" aria-hidden="true" style="--thumb:url('/assets/images/tool-thumbs/sm-er-charge.png');--thumb-l:url('/assets/images/tool-thumbs/sm-er-charge-light.png')"></div>
-      <div class="hc-title">ER Charge Nurse</div>
+      <div class="hc-title"><span>ER Charge Nurse</span><span class="sm-pin"><i data-lucide="gamepad-2" aria-hidden="true"></i>Game</span></div>
       <div class="hc-desc">Twelve hours in twelve minutes. You run the board, not the bedside: place patients, watch the queues, spend six charge cards on the right crises. Overcooked energy, emergency-department physics. The smallest lens in the game ladder.</div>
-      <div class="hc-meta">Game &middot; Playable &middot; Real-time</div>
     </a>
 
     <a class="hc-card" href="/secret-menu/health-system/">
       <div class="hc-thumb" aria-hidden="true" style="--thumb:url('/assets/images/tool-thumbs/sm-health-system.png');--thumb-l:url('/assets/images/tool-thumbs/sm-health-system-light.png')"></div>
-      <div class="hc-title">Uncharted Regional</div>
+      <div class="hc-title"><span>Uncharted Regional</span><span class="sm-pin"><i data-lucide="gamepad-2" aria-hidden="true"></i>Game</span></div>
       <div class="hc-desc">The sequel lens to Uncharted General: the hospital becomes a card. Run three facilities in one region, one shared workforce pool, one payer table. Centralize a service line and the margin thanks you before the community does.</div>
-      <div class="hc-meta">Game &middot; Playable &middot; v1</div>
     </a>
 
     <a class="hc-card" href="/secret-menu/camp-nauvoo/">
       <div class="hc-thumb" aria-hidden="true" style="--thumb:url('/assets/images/tool-thumbs/sm-camp-nauvoo.png');--thumb-l:url('/assets/images/tool-thumbs/sm-camp-nauvoo-light.png')"></div>
-      <div class="hc-title">Camp Nauvoo</div>
+      <div class="hc-title"><span>Camp Nauvoo</span><span class="sm-pin"><i data-lucide="map" aria-hidden="true"></i>Vision</span></div>
       <div class="hc-desc">A long-term plan to buy an 86-acre camp in the Sierra foothills and run it as a nonprofit: respite for burned-out clinicians, last good days outdoors for people near the end of life, and public camping that keeps it all running.</div>
-      <div class="hc-meta">Vision &middot; The long game</div>
     </a>
 
     <a class="hc-card" href="/secret-menu/data-observatory/">
       <div class="hc-thumb" aria-hidden="true" style="--thumb:url('/assets/images/tool-thumbs/sm-data-observatory.png');--thumb-l:url('/assets/images/tool-thumbs/sm-data-observatory-light.png')"></div>
-      <div class="hc-title">Data Observatory</div>
+      <div class="hc-title"><span>Data Observatory</span><span class="sm-pin"><i data-lucide="activity" aria-hidden="true"></i>Instrument</span></div>
       <div class="hc-desc">The site's plumbing, drawn. Every external source, every pipeline script, every dataset and the tools that read them, laid out as one flow map. Hover a node and its whole chain lights up. The second tab is the traffic, from the Goat Tracker.</div>
-      <div class="hc-meta">Instrument &middot; Live &middot; Self-portrait</div>
     </a>
 
     <a class="hc-card" href="/secret-menu/hospital-price-finder/">
       <div class="hc-thumb" aria-hidden="true" style="--thumb:url('/assets/images/tool-thumbs/sm-hospital-price-finder.png');--thumb-l:url('/assets/images/tool-thumbs/sm-hospital-price-finder-light.png')"></div>
-      <div class="hc-title">Utah Hospital Price Finder</div>
+      <div class="hc-title"><span>Utah Hospital Price Finder</span><span class="sm-pin"><i data-lucide="activity" aria-hidden="true"></i>Instrument</span></div>
       <div class="hc-desc">Every hospital has to publish its full price list. We pulled Utah's, all 8,500 billable codes across 43 hospitals, including the 43-gigabyte University of Utah file. Search any service or code and see the cash price at every hospital that posts one, cheapest first.</div>
-      <div class="hc-meta">Instrument &middot; Pilot &middot; 43 hospitals</div>
     </a>
 
 
   </div>
 
   <div class="sm-shelf-h"><span class="sm-kicker"><i>&#9472; </i>In the Back</span><span class="n hu-flavor">not ready yet</span></div>
-  <div class="sm-grid">
+  <div class="sm-log">
 
     <!-- No thumb on purpose: this is a reading page, not a tool, and .hc-thumb would print an
-         88px empty box. The card still carries a title, a blurb and a meta line. 2026-09-21. -->
+         88px empty box. The card still carries a title with its pin and a blurb. 2026-09-21. -->
     <a class="hc-card" href="/secret-menu/patient-journeys/">
-      <div class="hc-title">Patient Populations</div>
+      <div class="hc-title"><span>Patient Populations</span><span class="sm-pin"><i data-lucide="book-open" aria-hidden="true"></i>Reading</span></div>
       <div class="hc-desc">The twenty states a person can be in when healthcare meets them, across three journeys that run alongside each other: acuity, maternal, and newborn. Sorted by what the system has to do next rather than by diagnosis or department.</div>
-      <div class="hc-meta">Reading &middot; Draft &middot; No voice pass yet</div>
     </a>
 
     <a class="hc-card" href="/secret-menu/a-routine-fracture/">
-      <div class="hc-title">A Routine Fracture</div>
+      <div class="hc-title"><span>A Routine Fracture</span><span class="sm-pin"><i data-lucide="book-open" aria-hidden="true"></i>Reading</span></div>
       <div class="hc-desc">One patient's elbow fracture followed through two EDs, a surgery center and three EHRs: what the patient lived, and the records, paperwork and costs set off underneath each step.</div>
-      <div class="hc-meta">Reading &middot; Draft &middot; Out for review</div>
     </a>
 
   </div>

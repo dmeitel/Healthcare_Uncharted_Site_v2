@@ -67,49 +67,54 @@ Step statuses: NEXT · DOING · DONE · WAITING (say on what) · MOVED (say wher
 <!-- board:start (printed from data-build/board.json by `npm run board`; change the file, not this block) -->
 The board, printed. The picture of it is the hub: `npm run hub`, then /__hub. Stage names: Plan, Build, QA, Tweaks, Ship.
 
-### Focus · primary · Device Assembly: beta session one · stage: QA
+### Focus · Learn modules and tools, page by page · stage: Ship
 
-Build the beta plan: the mechanics every wall leans on, the ventilators rethought, the paths of walls with decoys and stored answers, and the level menu, so Device Assembly is ready for beta session one.
-Done looks like: Every step below built and checked, his pick on the level menu built, and his QA list for the beta marked.
-Plan: docs/HU-DEVICE-ASSEMBLY-BETA-1-PLAN-2026-10-05.md
+Every Learn module and every tool looked at in detail, night and day, with its content pass, starting from one standard Learn card.
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
-| 18 | **The mechanics:** a part dropped on a run seats in line and the run closes when it comes out; power cords lie over things; two runs can cross. | Claude | In the tests and pictured at a phone and a desk | DONE 2026-10-05 |
-| 19 | **The ventilators:** oxygen and air, the vent cart with its humidifier, three port layouts, the circuit as one piece (Ventilator 1 keeps the loose pieces), the extension, HME or heater. | Claude | Every vent wall passes the puzzle sheet | DONE 2026-10-05 |
-| 20 | **The paths:** oxygen on the floor, humidity and aerosol, high flow, find the fault and ventilators, four to six walls each, with variations, decoys that fail for a named reason, and a stored answer for every wall. | Claude | Every wall on the Puzzles sheet with its breaks tried | DONE 2026-10-05 |
-| 21 | **The front door, three mockups** at phone and desktop width, for his pick: today first, the map as home, or straight onto the wall with a bar of parts. He picked A (DECISIONS B7). | Claude, then David | His pick | DONE 2026-10-06 |
-| 22 | **The front door and the addresses, built** on his pick: the door; the game on the Fun shelf at /fun/device-assembly/ with the old address forwarding; a plain address for every part (/today/, /training/, /paths/ and each path, /shift/, /race/, /make/); the daily's share line linking that day's own address. | Claude | Pictured at a phone and a desk | DONE 2026-10-06 |
-| 23 | **QA for beta session one:** play the list and mark it. | David | Every item marked | NEXT |
-| 32 | **His Puzzles-sheet notes, worked** (ventilators first): four vent cart builds, eight ways a cart stands, a setup wall for each on the sheet; Ventilator 8 on the other side of the bed; cords round parts; Swap on a tap; the sandbox headwall loose; the screen never turning by itself; the shift without the bonus pick; rooms for the simple walls; Find the fault 2 on an extension cord and Find the fault 6; one finish card. Every note written back on his sheet. | Claude | npm run verify and npm run da:qa green; every note back for another look | DONE 2026-10-07 |
-| 33 | **Ventilators only, on the Puzzles sheet** (/__hub/puzzles?group=ventilators): the eight configuration walls, Ventilator 8, and his three notes back for another look. | David | Every ventilator wall marked | DONE 2026-10-08 |
-| 24 | **The launch post,** docs/HU-LAUNCH-POST-DEVICE-ASSEMBLY.md, at beta session one. | David | Posted, or his edits back | WAITING on the beta QA |
+| 66 | **One standard Learn card** (his note: the lens tags top and bottom plus "framework", "mental model", "interactive" crowd it): a plan with pictures of the card before and after. | Claude | The plan and pictures on the hub | DONE 2026-10-11 |
+| 70 | **His pick** of the Learn card (LC1: now, A dots, B small words) on /__hub/mocks/learn-card.html. | David | His pick in the chat | DONE 2026-10-11 |
+| 71 | **The Learn card built** on /learn/ in his pick: every module card and the talk cards, both themes, phone and desk. | Claude | Phone gate clean on /learn/; verify green; pictures filed | DONE 2026-10-11 |
+| 67 | **His page-by-page review** of the Learn modules and the tools on /__review, night and day, with notes. | David | Every Learn module and tool carries his marks | DONE 2026-10-11 |
+| 77 | **His review notes worked** (59 pages, night and day): the Share button off every Learn module and Rounds piece; sources folded on eleven modules; the home map rests after 30 seconds; the 4Ps tab bar unpinned on a phone; the Observatory, Traffic, the SQL editor and the hospital game save box light in day; the review screen in day; five pages finished out of the review; the secret menu search gone; the oxygen module in the standard look; the data sources diagrams fixed; the process engineering drawings on a phone; future items to the Inbox. | Claude | Phone gate clean on every page touched; verify green; pictures filed | DONE 2026-10-11 |
 
-### Focus · The two maps' menus · stage: QA
+### Focus · primary · The site-wide refresh · stage: Ship
 
-Plan: docs/HU-MAP-MENUS-REVIEW-2026-10-08.md
+Every page in the brass instruments look in night and day, the outstanding notes the AI can act on done, and the review screen ready for his page-by-page marks.
+Done looks like: Every page passes the phone gate at nine sizes in both themes, verify is green, and /__review carries a Day and a Night mark for every page.
+Plan: docs/HU-SITE-REFRESH-2026-10-11.md
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
-| 34 | **A. Defect fixes** from the review: a card at the peek shows its name and value; back and Esc close the search panel and the info card; the desk drawer strip; 44px tabs and label rows; 13px labels on a phone; each number once; the coach on the metric; the catalog search full height; one word per act; prose in the sans face. | Claude | Pictured at a phone and a desk; npm run verify and npm run phone clean on both maps | DONE 2026-10-08 |
-| 35 | **B. The game menu rules** on both maps: explanations behind an i; one Color, Size, Pin switch over the catalog instead of buttons on every row (Add, Only on the hospital map); one ? per map instead of the coach; three search examples; List and Share on both. | Claude | Pictured; words at first paint measured against the review | DONE 2026-10-08 |
-| 36 | **QA: the two maps' menus,** at a phone and a desk. | David | Every item marked | NEXT |
+| 43 | **Set up:** BR1 to BR3 recorded, the design phase opened, brass in the brand colors (list items 1 and 2). | Claude | CLAUDE.md, DESIGN.md and the decisions log say so | DONE 2026-10-11 |
+| 44 | **The shared look:** tokens, the top bar with Fun, buttons, cards, chips and the switch, fields and readouts, the kit cards, the footer, pages that glide (items 3 to 11). | Claude | Every page picks it up; pictures in both themes | DONE 2026-10-11 |
+| 45 | **The front door:** home with the compass rose in a brass dial, the Fun page at /fun/, the Tools shelf (items 12 to 14). | Claude | Phone gate clean in both themes on /, /fun/ and /tools/ | DONE 2026-10-11 |
+| 46 | **Tools and the two maps** in the new look, the two tool bars from the Inbox, dated source lines (items 15 and 16). | Claude | Phone gate clean in both themes on every tool | DONE 2026-10-11 |
+| 47 | **Games:** the game bar and menus on every game, Alarm Fatigue's helpers off the CHECK buttons (item 17). | Claude | Phone gate clean in both themes on every game | DONE 2026-10-11 |
+| 48 | **Learn, Rounds, the secret menu, About, 404, thanks and the Atlas** (items 18 to 21). Words unchanged. | Claude | Phone gate clean in both themes on every page | DONE 2026-10-11 |
+| 49 | **The page ledger's small fixes:** 33 meta descriptions, the writing checker's findings on 12 pages (items 22 and 23). | Claude | The ledger shows no meta or writing failures; every edit listed | DONE 2026-10-11 |
+| 50 | **The Yes cards the AI can do:** pdf.js, security quick wins, AI search engines, share cards, the sitemap, channel tags, the trust pages and /ai, the launch plan and checklist, GitHub pins (items 24 to 32). | Claude | Each one built and tested, or waiting on David by name | DONE 2026-10-11 |
+| 51 | **QA in night and day:** every page at nine sizes in both themes, contrast, the design hook, verify, old pages, links, pictures filed, DESIGN.md Tier 3 rewritten (items 33 to 36). | Claude | All green; the pictures on the hub | DONE 2026-10-11 |
+| 52 | **The review ready:** a Day and a Night mark per page on /__review, changed-since shown, the Site tab showing both (items 37 and 38). | Claude | He can open /__review and mark the first page | DONE 2026-10-11 |
+| 53 | **His page-by-page review** of the main pages in day and night on /__review (the Learn modules and the tools move to the next card). His notes archived in data-build/archive/page-reviews-2026-10-11.json, answered in docs/HU-SITE-REFRESH-2026-10-11.md. | David | Every page carries his Day and Night marks | DONE 2026-10-11 |
+| 63 | **The light theme, sharper** (his notes on Tools, Rounds and Vital Stats: day reads washed out and hazy): measure it, then two or three options at a phone and a desk (a crisper edge and a tighter shadow; a deeper ground; both), and Vital Stats' dark pieces in day fixed. | Claude | The options pictured on the hub, both themes, phone and desk | DONE 2026-10-11 |
+| 64 | **His pick** of the light theme option. | David | His pick in the chat | DONE 2026-10-11 |
+| 65 | **The pick applied everywhere,** then the small tweaks from his notes: the logo reads as the way home; home's three group buttons (redundant, left on a desk) reworked with options; the secret menu's card flavor text to a pin by the name with the sentence behind an "i". | Claude | Phone gate clean on every page in both themes; verify green; pictures filed | DONE 2026-10-11 |
+| 68 | **His picks** for the logo (LG1: now, on a key, a slight shadow, a brass frame) and home's group buttons on a desk (HM1: centered, three columns, gone), on /__hub/mocks/home-tweaks.html. | David | His picks in the chat | DONE 2026-10-11 |
+| 69 | **His picks applied**: the logo and home's group buttons, in both themes at a phone and a desk. | Claude | Phone gate clean on the home page and a tool page; verify green; pictures filed | DONE 2026-10-11 |
+| 72 | **Field Notes off the footer, a short phone footer** (his note: "scrap the field notes for now"; "its a long scroll too"): the form gone, Support a column of the top row, a phone keeps the support button, the copyright and the policy links; the Privacy page says there is no signup now. | Claude | Phone gate clean on home and a module; verify green | DONE 2026-10-11 |
+| 73 | **His pick** for home under the hero (HM2: three picks, one feature and what is new, every tool as a tile) on /__hub/mocks/home-options.html. | David | His pick in the chat | DONE 2026-10-11 |
+| 74 | **Home under the hero built** in his pick, desk and phone, both themes. | Claude | Phone gate clean on home; verify green; pictures filed | DONE 2026-10-11 |
+| 75 | **His settings** for the hex grid (HX2: the Atlas zones or the sections, the tile height, the raised ground) on /__hub/mocks/hex-hero.html. He picked C. | David | His pick in the chat | DONE 2026-10-11 |
+| 76 | **The hex grid built** in his pick: routes kept off the words, reduced motion holds still, the secret tile and the eight taps unchanged, both themes, desk and phone. | Claude | Phone gate clean on home; verify green; pictures filed | DONE 2026-10-11 |
+| 78 | **The secret tile like a zone and the dev blog** (his note mid-review): the SM tile raised with its own route from the compass, no glow, same triggers; a blog on the secret menu at /secret-menu/blog/ with a feedback tracker, post 1 the Site 1.0 release. | Claude | Phone gate clean on home and the blog; verify green; pictures filed | DONE 2026-10-11 |
+| 79 | **His read of post 1** of the dev blog ("looks ok", the one-liners out) and **his call on the brass phase** (BR4: "yes close the brass phase"; DESIGN.md Tier 3 rewritten from what shipped). | David | His edits or his yes in the chat | DONE 2026-10-12 |
+| 80 | **The About page for more authors, drawn** (his "yes draw the about page options", AB1): A every author the same card, B a lead author and contributors, on /__hub/mocks/about-authors.html at phone and desk, night and day. | Claude | The flip page and pictures on the hub | DONE 2026-10-11 |
+| 81 | **His pick** for the About page (AB2: Now, A or B). | David | His pick in the chat | DONE 2026-10-12 |
+| 82 | **The About page built in his pick A**: the site first, then every author on the same card from src/_data/authors.js; phone and desk, both themes. | Claude | Phone gate clean on /about/; verify green; pictures filed | DONE 2026-10-12 |
 
-### Up next · The hub
-
-David, 2026-10-04: "the first item is to build out this dashboard make everything work and visualize our process the best we can in this admin space"; then "yes to both, go ahead and build the hub" (DECISIONS HUB1, HUB2)
-The back office as a working screen on David's computer: the sprint board, the process drawn live, and his QA list.
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 1 | **Go on the plan,** and answers to HUB1 (the hub on his computer only) and HUB2 (save now, push at the milestone). | David | His go in the chat | DONE 2026-10-04 |
-| 2 | **The front door and the board.** One address, home is the board drawn from one file, Process and Site move in and come off the live site. | Claude | The board shows this sprint on his phone and his desk | DONE 2026-10-04 |
-| 3 | **The run sheet.** Open and close write each step's result where the hub reads it; every build step files a phone and a desktop picture. | Claude | A window opened and closed lights the sheet by itself | DONE 2026-10-04 |
-| 4 | **The QA list and Ship.** The full machine gate, what changed with a before and after, Good or Needs a tweak with a note, the release steps. | Claude | The list is ready for step 5 | DONE 2026-10-04 |
-| 5 | **Milestone QA of the hub,** on its own QA list, phone and desk. Then tweaks until his list is empty. | David, then Claude | His list is empty | DONE 2026-10-04 |
-| 6 | **Ship.** In GitHub Desktop, "Commit to main" whenever you like; that is a save point. "Push origin" waits for both QA lists to be clear (the folder button marks the rest of a folder Good): the push now carries the game's cleanup too, so it is one push for both. The message is in tmp/commit-message.txt. Then Claude checks the live site is on it. | David, then Claude | Live on that commit | WAITING on David, when both QA lists are clear |
-
-### Up next · secondary · A Routine Fracture
+### Up next · A Routine Fracture
 
 The broken arm Rounds piece, a review draft in the secret menu since 2026-10-03.
 
@@ -119,27 +124,36 @@ The broken arm Rounds piece, a review draft in the secret menu since 2026-10-03.
 | 13 | **DECISIONS R1 and the rest of R6:** whether places and people are named, and three details only he knows. | David | Answered | NEXT |
 | 14 | **The fifth panel's notes,** then the publish-to-Rounds checklist at the top of the page. | Claude, when he says | The piece is in Rounds on his yes | WAITING on steps 12 and 13 |
 
-### Up next · Pages with views people can find
+### Up next · secondary · A year of daily walls
 
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 25 | **The switch, two mockups** on the fracture post: docked at the foot of a phone (?switch=dock) or pinned at the top (?switch=top), the same on a desk. | Claude | Pictured at phone and desktop; the phone check run on both | DONE 2026-10-06 |
-| 26 | **His pick** between the two: the dock (DECISIONS L2). | David | His pick | DONE 2026-10-06 |
-| 27 | **The switch, built** on the fracture post on his pick; the other mockup taken out. | Claude | Pictured at a phone and a desk | DONE 2026-10-06 |
-| 28 | **The Learn pages,** in one pass: Laws and Paradoxes, Process Engineering, Request Routing and the home page's tool groups. | Claude | Pictured at a phone and a desk | DONE 2026-10-06 |
-| 29 | **The standard written down:** the hu-view-switch skill and tests/view-switch.test.js (built 2026-10-06); DESIGN.md Tier 3 when he closes the phase. | Claude | The test in verify | WAITING on David, closing the phase after his QA |
-| 30 | **QA:** the switch on each page, at a phone and a desk. | David | Every item marked | NEXT |
-
-### Up next · A year of daily walls
-
-David, 2026-10-10, on DY1's three recommendations: "yeah all that of that sounds good". A weekly climb (easy Monday, hard Saturday, Sunday a story day), joke days on Saturdays only, and a one-wall teach the first time a rule shows up, one or two new modes a month.
+David, 2026-10-11: "yes to the daily walls, start oct 25" (DY2). On his DY1 answers of 2026-10-10: a weekly climb (easy Monday, hard Saturday, Sunday a story day), joke days on Saturdays only, a one-wall teach the first time a new mode shows up, one or two new modes a month.
 A year of daily walls for Device Assembly that change what the puzzle asks you to do, not only where the oxygen comes from.
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
-| 37 | **The plan:** the first month of dailies laid out day by day on the weekly climb, the modes it needs built first, and the teaching wall for each new rule, with pictures of a Monday and a Saturday. | Claude | His yes to the plan | WAITING on Device Assembly: beta session one |
-| 38 | **His yes** to the first month. | David | His yes in the chat | NEXT |
+| 37 | **The plan:** the first month of dailies laid out day by day on the weekly climb, the modes it needs built first, and the teaching wall for each new rule, with pictures of a Monday and a Saturday. | Claude | His yes to the plan | DONE 2026-10-11 |
+| 38 | **His yes** to the first month. | David | His yes in the chat | DONE 2026-10-11 |
+| 54 | **The calendar and the climb, and the month sheet** (plan pieces 1 and 2): the year turns on at wall #23, the weekday picks the kind, the dealer re-deals until the wall sits in its band, today's dealer is the fallback; tests pin walls #1 to #22 and hold every day of the month. | Claude | Walls #1 to #22 unchanged by test; every day #23 to #51 deals, solves, sits in its band and differs from the others; verify green | DONE 2026-10-11 |
+| 55 | **Mondays and Tuesdays** (pieces 3 and 4): the bed in the middle, the far bed, the split rail, dead outlets; just enough, supply dumped everything, the labels fell off, expired. | Claude | Each one deals on its day in the month sheet; pictures filed | DONE 2026-10-11 |
+| 56 | **Wednesdays and Thursdays** (pieces 5 and 6): shorthand, read the chart, written beats verbal; the sink, the sterile field, the curtain. | Claude | Each one deals on its day in the month sheet; pictures filed | DONE 2026-10-11 |
+| 57 | **Mode 1, find the fault** (piece 7): the daily breaks a solved wall with the shift's faults, two faults, the hand-off, and its teach wall. | Claude | Oct 30, Nov 6, Nov 13 and Nov 20 deal and their faults are findable; the teach wall plays first the first time | DONE 2026-10-11 |
+| 58 | **Saturdays** (piece 8): twists that stack, a bottle that feeds a real build, the Halloween dressing. | Claude | Every Saturday of the month is 5 parts or more, or stacked; pictures filed | DONE 2026-10-11 |
+| 59 | **Sundays** (piece 9): three walls from the shift's stories (and Going home) as one daily with one result card. | Claude | Every Sunday deals three walls and counts once toward the streak | DONE 2026-10-11 |
+| 60 | **Mode 2, the goal, not the device** (piece 10), and its teach wall, for World COPD Day. | Claude | Nov 18 accepts any setup that meets the target and explains a working miss; the teach wall plays first | DONE 2026-10-11 |
+| 61 | **The daily card and the teach shelf** (piece 11), the month on the hub's Puzzles screen, the phone gate on the game. | Claude | The card names the day; npm run da:qa pictures the month; npm run phone clean on /fun/device-assembly/ | DONE 2026-10-11 |
+| 62 | **His QA** of the month on the hub's Puzzles screen, by Oct 20 to ride the refresh push (Oct 22 at the latest). | David | His QA list is clear | WAITING on his QA of the month on the hub's Puzzles screen (group The daily year) and the card's pictures, by Oct 20 |
+
+### Up next · Heavier lines on the logo and the rose
+
+His yes on the Ideas card line-weights, 2026-10-11 ("yeah lets make the change", then "Lets move forward with these changes"). Its QA rides the site-wide refresh review.
+The logo mark reads as one object at the sizes the site draws it small, and the home rose answers a tap where it is drawn.
+
+| # | Step | Owner | Done when | Status |
+|---|---|---|---|---|
+| 39 | **The logo mark:** the hex outline from 18 to 26 of 512 units in hu-mark, hu-mark-dark, hu-mark-outline and favicon.svg, their PNGs, the favicons and app icons regenerated, and the icon cache stamps bumped. | Claude | The new outline shows in the bars, the tool pages and the browser tab; verify green | DONE 2026-10-11 |
+| 40 | **The home rose on a phone:** the tap area lines up with the rose the canvas draws (today it sits 14 px higher). | Claude | Measured at 360, 390, 740x360 and 1280: the centers match; the phone gate clean on / | DONE 2026-10-11 |
+| 41 | **A rose drawn big:** its lines grow with it (1.6 times in the dial), written into the design direction for the brass look, and the dial mockup defaults to the heavier lines. | Claude | Written down; the mockup shows it | DONE 2026-10-11 |
+| 42 | **His QA** on the hub: the logo in the bars and the tab, the home rose on his phone. | David | His QA list is clear | WAITING on his QA list on the hub |
 
 ### Waiting on David, small
 
@@ -153,22 +167,48 @@ More of his are in DECISIONS.md: the open questions, and "Yours to do".
 
 Nothing here is worked until David promotes it.
 
-- **The page over page review** Open since 2026-09-21: every page at phone upright, phone sideways and desktop, with his Reviewed mark. 0 of 55. Each milestone's QA covers the pages that milestone touches. (added 2026-10-04)
 - **Alarm Fatigue's real-or-nuisance alarms** Built 2026-09-24, never played by him; then its launch post, docs/HU-LAUNCH-POST-ALARM-FATIGUE.md. (added 2026-10-04)
 - **The friend test** Open since old Sprint 1: a friend on their own phone and network joins a table by code. (added 2026-10-04)
 - **Two tool bars left from 2026-10-03** System Layers' three rows of controls on a phone, and the Career Tree's missing tool name on a phone. (added 2026-10-04)
 - **Alarm Fatigue: the floor's helpers cover CHECK** Found by play-check in the full QA, 2026-10-05: on a fully bought floor the walking techs, the float RN, the family and the surveyor sit on the monitors' CHECK buttons and take the tap, at 360 to 699. Pictures: tmp/play-*.png. (added 2026-10-05)
 - **One standard for saved pictures** David on the Device Assembly card, 2026-10-05: "consider visual standardization or print standardization across any tools that print out Jpegs". The 1080 frame with a footer nothing draws over; Device Assembly's card is the first. (added 2026-10-05)
-
-### Done since the last push
-
-- **Device Assembly**, 2026-10-05
-- **Old pages cleaned up**, 2026-10-07
+- **Make sure a busy launch month cannot pause the site** From the Ideas tab: The site's Netlify account is on monthly credits: 1,000 a month, 15 per deploy. When they run out, every site on the account is paused and forms are refused. The duplicate project you ruled to delete on September 23 stil (added 2026-10-11)
+- **Decide what of the back office stays public** From the Ideas tab: The site's GitHub repo is public. Anyone can read CLAUDE.md, DECISIONS.md, SPRINT.md, the board and the voice profile today, and DECISIONS.md carries the medical details from the fracture questions (R6). A launch puts mo (added 2026-10-11)
+- **A trademark look before spending on the brand** From the Ideas tab: The USPTO has no HEALTHCARE UNCHARTED mark, which is good. But UNCHARTED alone is crowded, and Sony holds it for video game software, which sits close to games named "Uncharted General" and "Uncharted Regional". David: y (added 2026-10-11)
+- **An employer-safe launch checklist** From the Ideas tab: One page you clear before the LinkedIn post: read your employer's social media, outside activity and conflict-of-interest policies, keep the "not affiliated" line, no internal screenshots or logos, and run the post throu (added 2026-10-11)
+- **Decide on AI answer engines** From the Ideas tab: robots.txt blocks ChatGPT's and Perplexity's search bots, not just their training bots, so the site cannot be cited in ChatGPT search at all. (added 2026-10-11)
+- **Free GitHub protections, and a hook tripwire** From the Ideas tab: Turn on the free protections for a public repo (secret scanning, push protection, Dependabot, code scanning), pin the two workflow actions to exact versions, and add a test that fails if a hook appears in the settings fi (added 2026-10-11)
+- **Security header quick wins** From the Ideas tab: Self-host GoatCounter's script, add integrity checks to the six pinned library files from CDNs, add a cross-origin opener policy, and publish a security.txt. Cheap trust signals that informatics readers check. (added 2026-10-11)
+- **Learn visuals: diagrams and motion** His review 2026-10-11: AI in Healthcare, Alarm Fatigue, Change Healthcare, Healthcare Gap and Leading the AI Transition could use diagrams or animation; Healthcare Data Sources needs a full visual redesign (its defects were fixed); EHR Arch (added 2026-10-11)
+- **Older tools on a phone** His review 2026-10-11: the Career Tree and the System Layers map are cluttered on a phone; the Hospital Map needs fewer, clearer places to tap instead of everything being clickable. One phone method for system maps. (added 2026-10-11)
+- **One standard for what you can click on a map** His review 2026-10-11: on the Population Health Map and the Operations Map it should be obvious what can be clicked, picked or filtered (a toggle or radio look people know); easier dragging and getting around on phone and desk. (added 2026-10-11)
+- **New card art for the tools** His review 2026-10-11: the Career Tree card could show a branching tree, maps should show maps (Operations Map, Vendor Directory too), and the same art should appear wherever a tool is linked. (added 2026-10-11)
+- **The Atlas, a content and visual phase** His review 2026-10-11: fine as it is, but more detail is possible (islands, deeper zones) and the look could follow the newer visual practice. (added 2026-10-11)
+- **Clinical SQL Mystery as a game** His review 2026-10-11: levels like Device Assembly, bigger public datasets, pulling data to solve things; look at existing SQL training sites and repos, aligned to healthcare. (added 2026-10-11)
+- **Vendor Directory and Operations Map content growth** His review 2026-10-11: vendor terminology and item classes, maybe the device SKUs from Device Assembly; the Operations Map data set grows as content. (added 2026-10-11)
+- **The secret menu games, a menus and visuals phase** His review 2026-10-11: Uncharted Regional's dashboards need to be actionable without overwhelming (look at other games); Uncharted General needs the new visual practice and more game feel; ER Charge could take the newer menu rules. (added 2026-10-11)
+- **Patient Populations as a Learn module** His review 2026-10-11: close to a Learn module; more sourcing first, then visuals. Stays on the secret menu until then. (added 2026-10-11)
+- **The Hospital Price Finder, later** His review 2026-10-11: a good project to come back to as the site grows; its data files caused big size problems. (added 2026-10-11)
+- **The Reference Appendix as a sortable list** His review 2026-10-11: as the site grows, the sources page may need a database-like way to sort and search. (added 2026-10-11)
+- **The About page for more than one author** His review 2026-10-11: plan the page shape for guest and staff authors now (no content change yet), and make the phone version simpler. (added 2026-10-11)
+- **The dev blog's voice and notes** His note 2026-10-12: the blog looks ok but the little one-liners read as AI; work on the dev notes and the blog's voice with him later. (added 2026-10-12)
 <!-- board:end -->
 
 ---
 
 ## CHANGES
+
+- 2026-10-11 · **Learn modules and tools, page by page moves into focus, at Build, on David's "ok start the learn modules and tools review"**. The review screen walks a run of the 17 Learn pages and the 8 tools (data-build/review-run.json); the standard Learn card is drawn for his pick (LC1). A year of daily walls steps back to Up next while it waits on his QA (step 62, by Oct 20). Nothing dropped.
+
+- 2026-10-11 · **The site-wide refresh moves to Tweaks on David's review of the main pages**; his notes archived (data-build/archive/page-reviews-2026-10-11.json). The light theme comes first ("a little bit less blurred out or sharp"), then the small tweaks from his notes. The page over page review card becomes Learn modules and tools, page by page, for after it. Nothing dropped.
+
+- 2026-10-11 · **A year of daily walls moved into focus as secondary, at Build, on David's yes to DY2** ("yes to the daily walls,
+  start oct 25"). Build steps 54 to 61, his QA step 62. A Routine Fracture steps back from secondary to Up next; it waits on
+  him (step 12, his manager's read, and R1) either way. Nothing dropped.
+
+- 2026-10-11 · **The site-wide refresh moved into focus as primary, on David's answer to BR1 to BR3** ("do a whole site wide
+  refresh and then i will do a page by page review and QA in the tool"). The page over page review moves from the Inbox to Up
+  next as its QA. Heavier lines on the logo and the rose steps back to Up next; its QA rides the same review. Nothing dropped.
 
 - 2026-10-10 · **A year of daily walls moved from the Inbox to Up next, on David's yes to DY1** ("yeah all that of that sounds
   good"). Its Plan step waits on tonight's push; nothing else moved.

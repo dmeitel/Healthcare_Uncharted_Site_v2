@@ -32,12 +32,14 @@ const SIZES = [
 const DEALT = ['gen:QA0', 'gen:QA1', 'gen:QA2', 'gen:QA3', 'rehab:QA0', 'rehab:QA1', 'home:QA0', 'home:QA1', 'icu:QA0', 'icu:QA1', 'shift:QA0',
   // the eight ways a ventilator cart can stand, a setup wall on each (2026-10-07, David: "consider every configuration"):
   // the plain build, underneath, a port each side, top and bottom, each facing right then left
-  'icu:VB29', 'icu:VB72', 'icu:VB50', 'icu:VB86', 'icu:VB0', 'icu:VB34', 'icu:VB8', 'icu:VB66'];
+  'icu:VB29', 'icu:VB72', 'icu:VB50', 'icu:VB86', 'icu:VB0', 'icu:VB34', 'icu:VB8', 'icu:VB66',
+  // the daily year's first month (2026-10-11, DY2): wall #23, Sunday 2026-10-25, to #51, and the goal mode's teach wall
+  ...Array.from({ length: 29 }, (_, i) => 'day:' + new Date(Date.UTC(2026, 9, 25 + i)).toISOString().slice(0, 10)), 'teach:goal'];
 
 /* run inside the page, through the game's test hook: the answer and its breaks */
 function inPage() {
   const d = window.__da, S0 = d.S, L = S0.level, out = { id: L.id, title: L.title, kicker: L.kicker, kind: L.kind, crumb: (document.querySelector('.game-bar .tool-bar-crumb') || {}).textContent || '' };
-  out.group = L.vent ? 'Ventilators' : L.kind === 'tutorial' ? 'Tutorial' : L.kind === 'fault' ? 'Find the fault' : L.kind === 'sandbox' ? 'Sandbox' : L.gen ? 'Dealt' : L.shift ? 'The shift' : 'Levels';
+  out.group = L.year || L.id === 'teach:goal' ? 'The daily year' : L.vent ? 'Ventilators' : L.kind === 'tutorial' ? 'Tutorial' : L.kind === 'fault' ? 'Find the fault' : L.kind === 'sandbox' ? 'Sandbox' : L.gen ? 'Dealt' : L.shift ? 'The shift' : 'Levels';
   out.order = (L.brief || '').slice(0, 220);
   out.overflow = document.documentElement.scrollWidth > innerWidth + 1;
   if (!L.solution) { out.solvable = null; out.breaks = null; return out; }

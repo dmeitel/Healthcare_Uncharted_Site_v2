@@ -112,10 +112,12 @@ if (!FAST) {
     const ghosts = built.filter((p) => !live.has(p));
     if (ghosts.length) console.log('  (left out, built pages with no source any more: ' + ghosts.join(', ') + ')');
   }
-  const out = run('viewport sweep (' + sweepPaths.length + ' pages x 9)', 'node',
-    ['scripts/phone-check.js', ...sweepPaths], { timeout: 3600000 });
+  const out = run('viewport sweep (' + sweepPaths.length + ' pages x 9, both themes)', 'node',
+    ['scripts/phone-batches.js', ...sweepPaths], { timeout: 7200000 });
   // 60 minutes, raised from 30 on 2026-09-23: the whole-page read of 50 pages at nine viewports
   // outgrew 30 and the gate reported FAIL on a sweep that had found nothing, killed mid-page.
+  // 2026-10-12: both themes doubled it (19 of 60 pages in 32 minutes), so the sweep runs in three
+  // parallel batches (scripts/phone-batches.js) and the limit is 120 minutes.
   const fails = [...out.matchAll(/^== (\S+)/gm)].map((m) => m[1]);
   const failing = [];
   let cur = null;

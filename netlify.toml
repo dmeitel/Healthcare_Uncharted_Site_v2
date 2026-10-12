@@ -3,7 +3,7 @@
   publish = "_site"
 
 # Serverless functions (first use: the Assignment Compass GSA per diem
-# proxy). Set GSA_API_KEY in the Netlify env — free key from
+# proxy). Set GSA_API_KEY in the Netlify env, a free key from
 # api.data.gov; DEMO_KEY fallback works but rate-limits hard.
 [functions]
   directory = "netlify/functions"
@@ -18,6 +18,9 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    # A page this site opens in a new tab, or that opens one of ours, gets no handle on the other window
+    # (2026-10-11). Nothing here relies on window.opener: shares and outbound links already open with noopener.
+    Cross-Origin-Opener-Policy = "same-origin"
     # geolocation=(self): the geo tools' locate-me FAB (kit HUKit.locate) asks
     # permission ON TAP only; blanket () would silently kill it in production.
     Permissions-Policy = "geolocation=(self), microphone=(), camera=()"
@@ -25,13 +28,13 @@
     # this tells browsers to never even try plain HTTP. Add `; preload` later if
     # you want to submit to the browser preload lists (that commitment is hard to undo).
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    # CSP — ENFORCED (flipped from report-only 2026-07-09 after auditing every
+    # CSP, ENFORCED (flipped from report-only 2026-07-09 after auditing every
     # external reference in the built site). Sources match what actually loads:
     #   jsdelivr   -> D3 + topojson + MapLibre GL JS tags, the maplibre-gl.css
     #                 stylesheet (hence jsdelivr in style-src), AND runtime fetch
     #                 of us-atlas TopoJSON (hence jsdelivr in connect-src)
     #   openfreemap-> the geo tools' vector basemap: style JSON, tiles, glyphs,
-    #                 sprites — all fetched, so connect-src (added 2026-07-19)
+    #                 sprites, all fetched, so connect-src (added 2026-07-19)
     #   worker-src -> MapLibre spins its workers from blob: URLs; without this
     #                 directive workers fall back to script-src and the map dies
     #   unpkg      -> Lucide icons        cdnjs -> sql.js + its wasm fetch
@@ -167,7 +170,7 @@ form-action 'self'\
   [headers.values]
     Cache-Control = "public, max-age=604800, stale-while-revalidate=2592000"
 
-# Brand kit (logos, favicons, og-image) — same story as images.
+# Brand kit (logos, favicons, og-image), the same story as images.
 [[headers]]
   for = "/brand/*"
   [headers.values]

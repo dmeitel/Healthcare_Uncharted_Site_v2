@@ -1,7 +1,7 @@
 ---
 layout: base.njk
 title: Healthcare Career Tree
-description: An interactive map of 164 real healthcare careers. Start at the entry rungs and follow any credential upward. Pin the roles you hold and the ones you want, and the tool prices the path.
+description: An interactive map of 164 real healthcare careers. Start at the entry rungs, follow any credential upward, pin the roles you want, and the tool prices the path.
 nav_merged: true
 no_footer: true
 navPage: tools
@@ -295,7 +295,6 @@ og_image: /brand/og-career-tree.jpg
   .hct-node .hx-body { transition: fill-opacity .15s, stroke-opacity .15s; }
   /* free-look toggle lit state (career-line focus is the default; pressed = free look) */
   .hct-btn[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: #062024; font-weight: 700; }
-  .icon-btn[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: #062024; }   /* Free look lit state, icon-button form */
   [data-theme='light'] .hct-btn[aria-pressed="true"] { background: var(--teal); color: #062024; }
   /* fill:none is load-bearing: a filled ring would tint the semi-transparent .hx-body above it */
   .hct-node .hx-pinring { fill: none; stroke: #F6F9FC; stroke-width: 2.6; pointer-events: none; }   /* unified on-path ring: solid = have, dashed = aiming (set per-node) */
@@ -1426,10 +1425,9 @@ og_image: /brand/og-career-tree.jpg
   /* ── career matrix usage hint (parity with the other views' .view-hint) ── */
   .hct-blurb-hint { font-family: var(--mono); font-size:var(--t-label); letter-spacing: .05em; color: var(--t3); padding: 0 14px 6px; }
 
-  /* static close buttons adopt the .icon-btn primitive (ids + JS untouched);
-     re-assert the primitive over the earlier scene rules that zeroed the border */
-  .hct-p-close.icon-btn, .bp-modal-x.icon-btn { border: 1px solid var(--border); background: transparent; color: var(--t2); font-size: 0; }
-  .hct-p-close.icon-btn:hover, .bp-modal-x.icon-btn:hover { border-color: rgba(78,205,196,0.5); color: var(--t1); }
+  /* static close buttons adopt the .icon-btn primitive (ids + JS untouched); the brass block
+     at the end gives them the key surface back over the earlier rules that zeroed it */
+  .hct-p-close.icon-btn, .bp-modal-x.icon-btn { font-size: 0; }
 
   @media (max-width:699px), (max-height:500px) {
     /* the logo wrapper was display:none, so the h1 inside it measured 0x0 and nothing
@@ -1446,6 +1444,13 @@ og_image: /brand/og-career-tree.jpg
     .hct-logo .tool-bar-title span { display: none; }   /* "Career", not "Career Tree" */
     /* the My Path row controls sat at 27px */
     #hct-mp-goals, #hct-mp-more { min-height: 44px; }
+    /* ONE ROW WITH THE NAME (2026-10-11). Showing the name cost the row about 60px, and at 360 the
+       help button wrapped to a second row. The two words go behind their icons the way the shared
+       .tool-bar-long does it (they stay in the accessible name and the title), and the bar never wraps:
+       if it is still short of room, the context strip scrolls as it already did. */
+    #hct-tb { flex-wrap: nowrap; }
+    #hct-mp-goals, #hct-mp-more { min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    #hct-mp-goals svg, #hct-mp-more svg { margin-right: 0; }
     .hct-search-box { flex: 1 1 auto; }
     .hct-p-close.icon-btn, .bp-modal-x.icon-btn { width: 34px; height: 34px; padding: 0; }
   }
@@ -1513,9 +1518,10 @@ og_image: /brand/og-career-tree.jpg
   #hct-tabs .tab-badge, #hct-tabs .tab-count { position: absolute; top: 5px; right: calc(50% - 22px); }
   /* the canvas clears the bar */
   #hct-shell { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
-  /* the wordmark retires: the site nav one row up already says it (same call as the
-     atlas and multi-lens) */
-  #hct-tb .hct-logo, #hct-tb .hct-sep { display: none; }
+  /* The separator retires. The tool name stays (2026-10-11): on this merged band the site nav is
+     parked off screen, so the wordmark was the only thing that could name the tool, and hiding it
+     left a phone with no name at all. */
+  #hct-tb .hct-sep { display: none; }
   /* THE SOFT-LOCK FIX (David hit it live, 2026-08-23): the toolbar is z-40 and the
      panel was z-30, so a sheet dragged to full slid its header UNDER the toolbar —
      grabber, X and title all buried beneath fixed chrome, tab bar already yielded,
@@ -1599,6 +1605,149 @@ og_image: /brand/og-career-tree.jpg
   @media (hover:none){
   #bp-name,#bp-goal{min-height:44px}
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     THE BRASS LOOK · 2026-10-11 (docs/HU-BRASS-LOOK-2026-10-11.md).
+     Surface only: keys for the tool's own buttons, brass for what is on,
+     faces for panels and cards, glass for fields. Sizes, layout and the
+     boards themselves are untouched. Every rule carries the shell id so it
+     outranks the light-theme rules above without rewriting each one.
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* the toolbar is a face, like the shared .tool-bar */
+  #hct-shell #hct-tb { background: var(--face-bg); border-bottom-color: color-mix(in srgb, var(--brass-lo) 45%, var(--border2)); box-shadow: 0 6px 14px var(--depth); }
+
+  /* the view tabs: a recessed strip, the view on screen lit in brass */
+  #hct-shell .hct-seg { background: var(--track-bg); border-color: transparent; box-shadow: var(--track-well); }
+  [data-theme='light'] #hct-shell .hct-seg { background: var(--raised); box-shadow: inset 0 2px 6px var(--depth); }
+  #hct-shell .hct-seg button { color: var(--field-sub); }
+  #hct-shell .hct-seg button:hover { color: var(--glass-ink); background: rgba(255,255,255,0.05); }
+  [data-theme='light'] #hct-shell .hct-seg button { color: var(--t2); }
+  [data-theme='light'] #hct-shell .hct-seg button:hover { color: var(--t1); background: rgba(0,0,0,0.04); }
+  #hct-shell .hct-seg button.on, [data-theme='light'] #hct-shell .hct-seg button.on { background: var(--brass-bg); color: var(--brass-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+  #hct-shell .hct-tabs button svg { color: var(--glass-sub); }
+  [data-theme='light'] #hct-shell .hct-tabs button svg { color: var(--t2); }
+  #hct-shell .hct-tabs button.on svg, [data-theme='light'] #hct-shell .hct-tabs button.on svg { color: var(--brass-ink); }
+  @media (min-width: 700px) and (min-height: 501px) {
+    #hct-shell .hct-tabs button.on .tab-badge { color: var(--brass-ink); background: color-mix(in srgb, var(--brass-ink) 14%, transparent); }
+  }
+
+  /* KEYS: the tool's own buttons, raised on a floor with a fine brass edge */
+  #hct-shell :is(.hct-p-tabs button, .hct-float-pill, .hct-p-focus, .mp-fbtn, .bp-addbtn, .bp-modal-btn, .hct-chip,
+      .edu-d-chip, .hct-con-row, .st-add, .atlas-lens button, .atlas-multibtn, .atlas-selbtn, .sch-zoombar button, .hct-allbtn,
+      .applied-chip .ac-show, .ah-back, .bp-guide, .hw-chip, .hw-skip-btn, .hw-sg, .bp-sgs-chip, .hct-pin-btn, .hct-edu-add, .edu-d-add,
+      .hct-p-close.icon-btn, .bp-modal-x.icon-btn),
+  [data-theme='light'] #hct-shell :is(.hct-p-tabs button, .hct-float-pill, .hct-p-focus, .mp-fbtn, .bp-addbtn, .bp-modal-btn,
+      .hct-chip, .edu-d-chip, .hct-con-row, .st-add, .atlas-lens button, .atlas-multibtn, .atlas-selbtn, .sch-zoombar button, .hct-allbtn,
+      .applied-chip .ac-show, .ah-back, .bp-guide, .hw-chip, .hw-skip-btn, .hw-sg, .bp-sgs-chip, .hct-pin-btn, .hct-edu-add, .edu-d-add,
+      .hct-p-close.icon-btn, .bp-modal-x.icon-btn) {
+    background: var(--key-bg); color: var(--key-ink);
+    border: 1px solid transparent; border-top-color: var(--brass-rim); box-shadow: var(--key-lift);
+  }
+  #hct-shell :is(.hct-p-tabs button, .hct-float-pill, .hct-p-focus, .mp-fbtn, .bp-addbtn, .bp-modal-btn, .hct-chip,
+      .edu-d-chip, .hct-con-row, .st-add, .atlas-lens button, .atlas-multibtn, .atlas-selbtn, .sch-zoombar button, .hct-allbtn,
+      .applied-chip .ac-show, .ah-back, .bp-guide, .hw-chip, .hw-skip-btn, .hw-sg, .bp-sgs-chip, .hct-pin-btn, .hct-edu-add, .edu-d-add,
+      .hct-p-close.icon-btn, .bp-modal-x.icon-btn):hover {
+    background: var(--key-bg); color: var(--key-ink); border-color: transparent; border-top-color: var(--brass); filter: brightness(1.08);
+  }
+  [data-theme='light'] #hct-shell :is(.hct-p-tabs button, .hct-float-pill, .hct-p-focus, .mp-fbtn, .bp-addbtn, .bp-modal-btn,
+      .hct-chip, .edu-d-chip, .hct-con-row, .st-add, .atlas-lens button, .atlas-multibtn, .atlas-selbtn, .sch-zoombar button, .hct-allbtn,
+      .applied-chip .ac-show, .ah-back, .bp-guide, .hw-chip, .hw-skip-btn, .hw-sg, .bp-sgs-chip, .hct-pin-btn, .hct-edu-add, .edu-d-add,
+      .hct-p-close.icon-btn, .bp-modal-x.icon-btn):hover {
+    background: var(--key-bg); color: var(--key-ink); filter: brightness(.97); border-color: transparent; border-top-color: var(--brass-lo);
+  }
+  #hct-shell :is(.hct-p-tabs button, .hct-float-pill, .hct-p-focus, .mp-fbtn, .bp-addbtn, .bp-modal-btn, .hct-chip,
+      .edu-d-chip, .hct-con-row, .st-add, .atlas-lens button, .atlas-multibtn, .atlas-selbtn, .sch-zoombar button, .hct-allbtn,
+      .applied-chip .ac-show, .ah-back, .bp-guide, .hw-chip, .hw-skip-btn, .hw-sg, .bp-sgs-chip, .hct-pin-btn, .hct-edu-add, .edu-d-add,
+      .hct-p-close.icon-btn, .bp-modal-x.icon-btn):active { transform: translateY(3px); box-shadow: var(--key-down); }
+  #hct-shell .hct-p-close.icon-btn, #hct-shell .bp-modal-x.icon-btn { border-radius: 8px; }
+  #hct-shell .atlas-selbtn:disabled { opacity: .45; filter: none; transform: none; box-shadow: 0 1px 0 var(--key-floor); border-top-color: transparent; cursor: not-allowed; }
+  /* inks that carry meaning stay: gold is the goal layer, purple is multi-select, red removes */
+  #hct-shell #hct-canvas-wrap :is(.hct-pin-btn, .st-add):not(.pinned) { color: #F0CF6B; }
+  [data-theme='light'] #hct-shell #hct-canvas-wrap :is(.hct-pin-btn, .st-add):not(.pinned) { color: var(--amber-dk); }
+  #hct-shell #hct-canvas-wrap :is(.atlas-multibtn, .atlas-selbtn.add):not(.on) { color: #C9A6E6; }
+  [data-theme='light'] #hct-shell #hct-canvas-wrap :is(.atlas-multibtn, .atlas-selbtn.add):not(.on) { color: #7A4AA8; }
+  #hct-shell .bp-guide.todo, #hct-shell .bp-guide.dormant { color: var(--key-sub); }
+  #hct-shell .bp-guide.next { border-top-color: var(--brass); }
+  [data-theme='light'] #hct-shell .bp-guide.next { border-top-color: var(--brass-lo); }
+
+  /* BRASS: what is on, and the one act a screen asks for */
+  #hct-shell :is(.hct-p-tabs button.on, .mp-fbtn.on, .atlas-lens button.on, .atlas-multibtn.on,
+      .hw-chip[aria-pressed="true"], .hct-pin-btn.pinned, .hct-edu-add.added, .edu-d-add.added, .bp-modal-btn.primary, .hw-go, .hw-strip-btn),
+  [data-theme='light'] #hct-shell :is(.hct-p-tabs button.on, .mp-fbtn.on, .atlas-lens button.on,
+      .atlas-multibtn.on, .hw-chip[aria-pressed="true"], .hct-pin-btn.pinned, .hct-edu-add.added, .edu-d-add.added, .bp-modal-btn.primary,
+      .hw-go, .hw-strip-btn) {
+    background: var(--brass-bg); color: var(--brass-ink); border: 1px solid transparent; box-shadow: var(--brass-lift); font-weight: 700;
+  }
+  #hct-shell :is(.hct-p-tabs button.on, .mp-fbtn.on, .atlas-lens button.on, .atlas-multibtn.on,
+      .hw-chip[aria-pressed="true"], .hct-pin-btn.pinned, .hct-edu-add.added, .edu-d-add.added, .bp-modal-btn.primary, .hw-go, .hw-strip-btn):hover,
+  [data-theme='light'] #hct-shell :is(.hct-p-tabs button.on, .mp-fbtn.on, .atlas-lens button.on,
+      .atlas-multibtn.on, .hw-chip[aria-pressed="true"], .hct-pin-btn.pinned, .hct-edu-add.added, .edu-d-add.added, .bp-modal-btn.primary,
+      .hw-go, .hw-strip-btn):hover {
+    background: var(--brass-bg); color: var(--brass-ink); border-color: transparent; filter: brightness(1.05); transform: none;
+  }
+  #hct-shell :is(.bp-modal-btn.primary, .hw-go, .hw-strip-btn):active { transform: translateY(3px); box-shadow: var(--brass-down); }
+  #hct-shell :is(.hct-edu-add.added, .edu-d-add.added):hover { filter: none; }
+  #hct-shell .hw-go:disabled { opacity: .45; filter: none; transform: none; box-shadow: 0 1px 0 var(--key-floor); cursor: not-allowed; }
+  #hct-shell .mp-fbtn.on svg { color: var(--brass-ink); }
+
+  /* FACES: panels, cards and the floating cards that open over the boards */
+  #hct-shell :is(.bp-panel, .edu-detail, .hct-clegend, .atlas-lens),
+  [data-theme='light'] #hct-shell :is(.bp-panel, .edu-detail, .hct-clegend, .atlas-lens) {
+    background: var(--face-bg); border-color: var(--border); box-shadow: 0 10px 22px var(--depth);
+  }
+  #hct-shell .bp-panel-next, [data-theme='light'] #hct-shell .bp-panel-next { background: var(--face-bg); }
+  #hct-shell :is(#hct-panel, .bp-modal-card, .bp-addmenu, #hct-tip, .atlas-selbar),
+  [data-theme='light'] #hct-shell :is(#hct-panel, .bp-modal-card, .bp-addmenu, #hct-tip, .atlas-selbar),
+  .bp-suggest, [data-theme='light'] .bp-suggest {
+    background: var(--face-bg); border-color: color-mix(in srgb, var(--brass-lo) 50%, var(--border2)); box-shadow: var(--panel-lift);
+  }
+  #hct-shell .atlas-selbar, [data-theme='light'] #hct-shell .atlas-selbar { border-color: rgba(176,123,214,0.45); }
+  @media (max-width:699px), (max-height:500px) {
+    #hct-shell .atlas-lens, [data-theme='light'] #hct-shell .atlas-lens { box-shadow: none; }
+    #hct-shell #hct-panel, [data-theme='light'] #hct-shell #hct-panel { box-shadow: 0 -10px 30px var(--depth); }
+    #hct-shell #bp-pback:not([hidden]), [data-theme='light'] #hct-shell #bp-pback:not([hidden]) { background: var(--face-bg); border-bottom-color: color-mix(in srgb, var(--brass-lo) 45%, var(--border2)); }
+  }
+
+  /* READOUTS: the board's tally sits on glass, which stays dark in both themes */
+  #hct-shell .ah-box, [data-theme='light'] #hct-shell .ah-box { background: var(--glass); border-color: transparent; border-left-color: var(--zc, var(--glass-teal)); box-shadow: var(--glass-well); }
+  #hct-shell .ah-box .ah-n { color: var(--glass-ink); }
+  #hct-shell .ah-box .ah-lbl, #hct-shell .ah-box .ah-g { color: var(--glass-sub); }
+
+  /* FIELDS: glass at night, a light well in day, with the field inks (2026-10-11) */
+  #hct-shell :is(.edu-search, .bp-id-goal-in, .bp-modal-ta, .bp-text, .bp-pick-in, .hw-search-in),
+  [data-theme='light'] #hct-shell :is(.edu-search, .bp-id-goal-in, .bp-modal-ta, .bp-text, .bp-pick-in, .hw-search-in) {
+    background: var(--field-bg); color: var(--field-ink); border-color: transparent; box-shadow: var(--field-well);
+  }
+  #hct-shell :is(.edu-search, .bp-id-goal-in, .bp-modal-ta, .bp-text, .bp-pick-in, .hw-search-in):focus,
+  #hct-shell .hw-search-in.picked { border-color: var(--field-sub); }
+  #hct-shell :is(.edu-search, .bp-id-goal-in, .bp-modal-ta, .bp-text, .bp-pick-in, .hw-search-in)::placeholder,
+  [data-theme='light'] #hct-shell :is(.edu-search, .bp-id-goal-in, .bp-modal-ta, .bp-text, .bp-pick-in, .hw-search-in)::placeholder { color: var(--field-sub); }
+  #hct-shell .hct-search-box .hct-search-ico { color: var(--glass-sub); }
+
+  /* the phone's bottom tab bar is a bar, not a strip of keys: a face, the screen you are on in brass ink */
+  @media (max-width:699px), (max-height:500px) {
+    #hct-shell #hct-tabs, [data-theme='light'] #hct-shell #hct-tabs { background: var(--face-bg); border-top: 1px solid color-mix(in srgb, var(--brass-lo) 45%, var(--border2)); box-shadow: none; }
+    #hct-shell #hct-tabs button, #hct-shell #hct-tabs button:hover { background: none; color: var(--t3); box-shadow: none; }
+    #hct-shell #hct-tabs button svg { color: currentColor; }
+    #hct-shell #hct-tabs button.on, [data-theme='light'] #hct-shell #hct-tabs button.on { background: none; color: var(--brass-text); box-shadow: none; }
+  }
+
+  /* motion: only the press and the light move, and only for those who allow it */
+  @media (prefers-reduced-motion: no-preference) {
+    #hct-shell :is(.hct-p-tabs button, .hct-float-pill, .hct-p-focus, .mp-fbtn, .bp-addbtn, .bp-modal-btn, .hct-chip,
+        .edu-d-chip, .hct-con-row, .st-add, .atlas-lens button, .atlas-multibtn, .atlas-selbtn, .sch-zoombar button, .hct-allbtn,
+        .applied-chip .ac-show, .ah-back, .bp-guide, .hw-chip, .hw-skip-btn, .hw-sg, .bp-sgs-chip, .hct-pin-btn, .hct-edu-add, .edu-d-add,
+        .hw-go, .hw-strip-btn) {
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, color .15s, border-color .15s;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #hct-shell :is(.hct-p-tabs button, .hct-float-pill, .hct-p-focus, .mp-fbtn, .bp-addbtn, .bp-modal-btn, .hct-chip,
+        .edu-d-chip, .hct-con-row, .st-add, .atlas-lens button, .atlas-multibtn, .atlas-selbtn, .sch-zoombar button, .hct-allbtn,
+        .applied-chip .ac-show, .ah-back, .bp-guide, .hw-chip, .hw-skip-btn, .hw-sg, .bp-sgs-chip, .hct-pin-btn, .hct-edu-add, .edu-d-add,
+        .hw-go, .hw-strip-btn, .hct-seg button) { transition: none; }
+  }
 </style>
 
 <noscript><p class="hu-noscript">This tool runs entirely in your browser and needs JavaScript turned on. Nothing you do here is sent to a server.</p></noscript>
@@ -1669,8 +1818,8 @@ og_image: /brand/og-career-tree.jpg
 
     <!-- CONTEXTUAL CONTROLS — My Path tab (visibility driven by #hct-tb[data-view]) -->
     <span class="tb-ctx" id="tbc-path">
-      <button class="mp-fbtn" id="hct-mp-goals" title="Theorycraft: hide what you have and see just the plan" aria-pressed="false"><i data-lucide="diamond" aria-hidden="true"></i>Goals only</button>
-      <span class="bp-addwrap mp-more"><button class="mp-fbtn" id="hct-mp-more" title="Save, load, export, reset" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-horizontal" aria-hidden="true"></i>More</button>
+      <button class="mp-fbtn" id="hct-mp-goals" title="Theorycraft: hide what you have and see just the plan" aria-pressed="false"><i data-lucide="diamond" aria-hidden="true"></i><span class="tool-bar-long">Goals only</span></button>
+      <span class="bp-addwrap mp-more"><button class="mp-fbtn" id="hct-mp-more" title="Save, load, export, reset" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-horizontal" aria-hidden="true"></i><span class="tool-bar-long">More</span></button>
         <div class="bp-addmenu" id="hct-mp-menu">
           <button type="button" class="bp-addmenu-item" id="hct-mp-data" title="Back up your path to a code/file, or restore one"><i data-lucide="save" aria-hidden="true"></i>Save / Load</button>
           <button type="button" class="bp-addmenu-item" id="hct-mp-export" title="Download your path as an image"><i data-lucide="download" aria-hidden="true"></i>Export JPEG</button>
@@ -1997,6 +2146,6 @@ og_image: /brand/og-career-tree.jpg
 {% set ta_source = 'BLS Occupational Outlook · May 2025 wages, checked 2026-09-23 · exam pass rates from the credentialing boards (NCSBN, NBRC, ARRT, NCCPA and peers)' %}
 {% include "components/tool-attribution.njk" %}
 
-<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" integrity="sha256-8glLv2FBs1lyLE/kVOtsSw8OQswQzHr5IfwVj864ZTk=" crossorigin="anonymous"></script>
 <script src="/assets/js/hu-kit.js"></script>
 <script type="module" src="/assets/js/tools/career-tree.js?v=20260923b"></script>

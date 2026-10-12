@@ -2108,6 +2108,8 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     _pdfjsP = new Promise((resolve, reject) => {
       if (window.pdfjsLib){ try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; } catch(e){} return resolve(window.pdfjsLib); }
       const s = document.createElement('script'); s.src = PDFJS_SRC; s.async = true;
+      // integrity: the browser refuses the file if the CDN ever serves different bytes (2026-10-11, hash from jsDelivr)
+      s.integrity = 'sha256-W1eZ5vjGgGYyB6xbQu4U7tKkBvp69I9QwVTwwLFWaUY='; s.crossOrigin = 'anonymous';
       s.onload = () => { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; resolve(window.pdfjsLib); } catch(e){ reject(e); } };
       s.onerror = () => reject(new Error('could not load the PDF reader'));
       document.head.appendChild(s);
@@ -2121,7 +2123,9 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
   async function extractLinkedInPdf(file){
     const pdfjsLib = await loadPdfJs();
     const data = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: data }).promise;
+    // isEvalSupported:false closes CVE-2024-4367 in this pdf.js (3.11.174): a crafted PDF could run script through the
+    // font path. The setting is the documented fix for versions before 4.2.67 (2026-10-11, tests/pdfjs-safe.test.js).
+    const pdf = await pdfjsLib.getDocument({ data: data, isEvalSupported: false }).promise;
     const out = [], side = []; let name = '', headline = '';
     for (let p = 1; p <= pdf.numPages; p++){
       const page = await pdf.getPage(p);

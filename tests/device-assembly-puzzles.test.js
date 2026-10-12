@@ -42,6 +42,9 @@ const DEALT = [
   ...['rehab', 'home', 'icu'].flatMap((p) => Array.from({ length: 5 }, (_, i) => p + ':QA' + i)),
   ...Array.from({ length: 7 }, (_, i) => 'day:' + new Date(Date.UTC(2026, 9, 5 + i)).toISOString().slice(0, 10)),
   ...Array.from({ length: 5 }, (_, k) => 'shift:QA0:' + k),
+  // the daily year's first month, wall #23 (Sunday 2026-10-25) to #51, and the goal mode's teach wall (2026-10-11, DY2)
+  ...Array.from({ length: 29 }, (_, i) => 'day:' + new Date(Date.UTC(2026, 9, 25 + i)).toISOString().slice(0, 10)),
+  'teach:goal',
   // a ventilator setup on each of the four builds, each way it faces (2026-10-07; tests/device-assembly-vent-builds.test.js)
   ...['VB29', 'VB72', 'VB50', 'VB86', 'VB0', 'VB34', 'VB8', 'VB66'].map((c) => 'icu:' + c),
 ];

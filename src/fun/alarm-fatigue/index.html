@@ -1,12 +1,12 @@
 ---
 layout: base.njk
 nav_merged: true
-navPage: tools
+navPage: fun
 title: "Alarm Fatigue"
 description: "A med-surg shift as an idle clicker. One patient and one monitor to start. Buy more responsibility, silence more alarms, and try to hear the one that matters."
 section: fun
 no_footer: true
-og_image: /assets/images/tool-thumbs/fun-alarm-fatigue.png
+og_image: /assets/images/og/card-alarm-fatigue.png
 featured: true
 status: published
 date: 2026-09-10
@@ -52,7 +52,7 @@ date: 2026-09-10
      global backdrop blur is pure GPU cost here; solid surface instead. The bar
      itself is the site's game bar (2026-10-03): its height, gaps, name and kit
      buttons belong to hu-global.css, and the game sets only this surface. */
-  .af .tool-bar{backdrop-filter:none; background:var(--surface);}
+  .af .tool-bar{backdrop-filter:none; background:var(--face-bg);}
   /* (the "Learn" back chip moved into the game menu as its Leave row, 2026-09-23;
      the sound fader moved into Settings as its Sound mix row, 2026-10-03) */
 
@@ -1510,6 +1510,43 @@ date: 2026-09-10
   @media (hover:none){
   #tabUpg{min-height:44px}
   }
+
+  /* THE CHECK BUTTONS TAKE THE TAP (the board's Inbox, 2026-10-05: on a fully bought floor the walking
+     techs, the float RN, the family and the surveyor sat on the monitors' CHECK buttons and took the tap,
+     at 360 to 699). The helpers, the pizza and the surveyor's sticky notes let a tap fall through to what
+     is under them, so a CHECK under one is the button that gets pressed. For one hit test the script turns
+     them back on (af-hitall), and a tap anywhere else still lands on the helper it always did. */
+  .af .tech, .af .widget.family, .af .widget.surveyor, .af .pizza, .af .tjc-pop .tp-x{pointer-events:none;}
+  .af.af-hitall .tech, .af.af-hitall .widget.family, .af.af-hitall .widget.surveyor, .af.af-hitall .pizza,
+  .af.af-hitall .tjc-pop .tp-x{pointer-events:auto;}
+
+  /* THE BRASS LOOK (2026-10-11, docs/HU-BRASS-LOOK-2026-10-11.md). The floor is a place, so it keeps its own
+     look: the chart, the monitors, the pumps, the big button and its scrubs, the people, the cards that
+     happen on the floor and the break room. What is chrome around it takes the site's instrument look: the
+     game bar is a face, the shift clock in it a glass readout, the sound mixer a face like the kit's cards,
+     and the buttons on the end-of-shift card are keys, with the one main act brass (Stay for overtime on a
+     lunch, Clock in tomorrow at clock-out). Surface only: sizes, gaps and words are as they were. */
+  .af #clockV{background:var(--glass); color:var(--glass-ink); box-shadow:var(--glass-well);}
+  .af #clockV:hover{background:var(--glass); box-shadow:var(--glass-well), 0 0 0 1px var(--brass-lo);}
+  .af #clockV[aria-pressed="true"]{color:var(--glass-teal);}
+  .soundmenu{background:var(--face-bg); color:var(--t1); border-color:color-mix(in srgb, var(--brass-lo) 50%, var(--border2)); box-shadow:var(--panel-lift);}
+  .sm-hd{background:transparent; color:var(--t1); border-bottom:1px solid var(--border);}
+  .sm-x{color:var(--t2);}
+  .sm-row input[type=range]{accent-color:var(--brass-lo);}
+  #lunch button:is(#lunchStay, #lunchReload, #lunchShare){background:var(--key-bg); color:var(--key-ink); border:1px solid transparent;
+    border-top-color:var(--brass-rim); box-shadow:var(--key-lift); opacity:1; text-shadow:none; font-weight:700;}
+  #lunch button#lunchStay, #lunch.out button#lunchReload{background:var(--brass-bg); color:var(--brass-ink); box-shadow:var(--brass-lift);}
+  #lunch button:is(#lunchStay, #lunchReload, #lunchShare):hover{border-top-color:var(--brass); filter:brightness(1.08);}
+  [data-theme="light"] #lunch button:is(#lunchReload, #lunchShare):hover{border-top-color:var(--brass-lo); filter:brightness(.97);}
+  #lunch button#lunchStay:hover, #lunch.out button#lunchReload:hover{border-color:transparent; filter:brightness(1.05);}
+  #lunch button:is(#lunchStay, #lunchReload, #lunchShare):active{transform:translateY(3px); box-shadow:var(--key-down);}
+  #lunch button#lunchStay:active, #lunch.out button#lunchReload:active{box-shadow:var(--brass-down);}
+  #lunch button#lunchShare:disabled{opacity:.45; filter:none; transform:none; box-shadow:0 1px 0 var(--key-floor); border-top-color:transparent; cursor:not-allowed;}
+  #lunch :is(#lunchStay, #lunchReload, #lunchShare):focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+  [data-theme="light"] #lunch :is(#lunchStay, #lunchReload, #lunchShare):focus-visible{outline-color:var(--teal-dk);}
+  @media (prefers-reduced-motion: no-preference){
+    #lunch :is(#lunchStay, #lunchReload, #lunchShare){transition:transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .15s;}
+  }
 </style>
 
 <div class="af hu-shell" id="afShell">
@@ -2090,6 +2127,35 @@ function floatText(x,y,txt,big){
   while(floatStack.length>4){ const old=floatStack.pop(); old.remove(); }
   layoutFloats();
   later(()=>{ f.classList.add('gone'); later(()=>dropFloat(f), 500); }, big ? 4200 : 3000);
+  return f;
+}
+/* THE PRESS NUMBER (David's review, 2026-10-11: mashing the button stacked "+N" chips until they overflowed). A
+   burst of presses is ONE number that adds up as you press, right over the button, and it goes about a second after
+   the last press. The other floats keep the stack and their reading time. */
+let pressF=null, pressSum=0, pressAt=0;
+function pressFloat(power){
+  pressAt=Date.now();
+  if(pressF && pressF.isConnected && floatStack.includes(pressF)){
+    pressSum+=power; pressF.textContent='+'+fmt(pressSum);
+    floatStack.splice(floatStack.indexOf(pressF), 1); floatStack.unshift(pressF);
+    pressF.style.animation='none'; void pressF.offsetWidth; pressF.style.animation='';   /* reduced motion's fade starts over */
+    layoutFloats(); return;
+  }
+  pressSum=power;
+  const f=document.createElement('div'); f.className='float';
+  f.textContent='+'+fmt(power);
+  floor.appendChild(f);
+  floatStack.unshift(f);
+  while(floatStack.length>4){ const old=floatStack.pop(); old.remove(); }
+  layoutFloats();
+  pressF=f;
+  const tick=()=>{
+    if(!f.isConnected) return;
+    if(Date.now()-pressAt<1100){ later(tick, 250); return; }
+    if(pressF===f) pressF=null;
+    f.classList.add('gone'); later(()=>dropFloat(f), 500);
+  };
+  later(tick, 1100);
 }
 function rectOf(el){ return el.getBoundingClientRect(); }
 /* leaving mid-shift asks first: a phone back-swipe or a closed tab should not
@@ -2170,8 +2236,7 @@ bigBtn.addEventListener('click', ()=>{
   if(MEM.bling==='gold') S.stats.goldClicks=(S.stats.goldClicks||0)+1;
   if(S.stats.clicks>=100) offerTech();
   pressN++; setBtnLabel(pressN<SHIFT_START.length ? SHIFT_START[pressN] : pick(btnLabels));
-  if(!btnBox){ const r=rectOf(bigBtn); btnBox={x:r.left-floorBox.left, y:r.top-floorBox.top, w:r.width}; }
-  floatText(btnBox.x+rand(10,btnBox.w-30), btnBox.y-8, '+'+power);
+  pressFloat(power);
   renderTop(); renderShop();
 });
 
@@ -3430,6 +3495,21 @@ function spawnTech(rn){
   floor.appendChild(el);
   t.el=el; techs.push(t);
 }
+/* THE CHECK BUTTONS TAKE THE TAP (the board's Inbox, 2026-10-05). The helpers, the pizza and the surveyor's
+   sticky notes let taps fall through (pointer-events:none, in the css beside .af-hitall), so a CHECK button
+   under one of them is what the tap presses. Anywhere else the tap must still land where it always did: for
+   one hit test the helpers catch again, and if one of them is what the tap would have hit, the click is
+   handed to it and nothing under it hears it. Key presses and forwarded clicks pass straight through. */
+floor.addEventListener('click', e=>{
+  if(!e.isTrusted || !e.detail) return;
+  if(e.target.closest && e.target.closest('.sat-box')) return;
+  shell.classList.add('af-hitall');
+  const top=document.elementFromPoint(e.clientX, e.clientY);
+  shell.classList.remove('af-hitall');
+  if(!top || !top.closest('.tech, .widget.family, .widget.surveyor, .pizza, .tjc-pop .tp-x')) return;
+  e.stopPropagation(); e.preventDefault();
+  top.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true, view:window, clientX:e.clientX, clientY:e.clientY}));
+}, true);
 /* movement + collision on requestAnimationFrame with TIME-BASED steps.
    setInterval only promises "no sooner than": measured gaps ran 50-67ms, and
    fixed per-tick steps turned every late tick into a visible freeze-then-jump.
@@ -5568,7 +5648,7 @@ function endShift(kind){
       '<button type="button" id="lunchReload" class="ghost">Clock in tomorrow</button>'+
       '<button type="button" id="lunchShare" class="ghost" data-kind="'+(early?'lunch':'end')+'">Share card</button>'+
     '</div>'+
-    '<a class="lunch-link" href="/tools/#fun">Back to Tools</a>'+
+    '<a class="lunch-link" href="/fun/">Back to Fun</a>'+
   '</div>';
   L.classList.add('show');
   document.getElementById('lunchStay').addEventListener('click', resumeShift);
@@ -5582,7 +5662,7 @@ const LUNCH_INFO='<p><b>About this game.</b> Alarm Fatigue is a clicker where ev
   'and from the idle games before it: Cookie Clicker, Universal Paperclips, A Dark Room, Candy Box.</p>'+
   '<p>The alarm fatigue is real. Bedside monitors fire hundreds of alarms per patient per day, most of them not actionable, and clinicians learn to tune them out. '+
   'The Joint Commission has listed it as a patient safety goal since 2014. The numbers, with their sources, are in <a href="/learn/alarm-fatigue/">the companion article</a>. Nothing here is a patient. All of it is a shift.</p>'+
-  '<p>Built for <a href="/tools/#fun">Healthcare Uncharted</a>. No accounts, no tracking of you, and the badges live only on this device.</p>';
+  '<p>Built for <a href="/fun/">Healthcare Uncharted</a>. No accounts, no tracking of you, and the badges live only on this device.</p>';
 function wireMoreInfo(L){
   const sh=L.querySelector('#lunchShare'); if(sh) sh.addEventListener('click', ()=>{ sh.disabled=true; shiftCard(sh.dataset.kind, true).finally(()=>{ sh.disabled=false; }); });
   const m=L.querySelector('#lunchMore'), i=L.querySelector('#lunchInfo'); if(!m||!i) return;
@@ -5611,7 +5691,7 @@ function clockOut(){
     '<button type="button" class="hit lunch-more" id="lunchMore" aria-expanded="false">More info</button>'+
     '<div class="lunch-info" id="lunchInfo" hidden>'+LUNCH_INFO+'</div>'+
     '<div class="lunch-actions"><button type="button" id="lunchReload" class="ghost">Clock in tomorrow</button><button type="button" id="lunchShare" class="ghost" data-kind="out">Share card</button></div>'+
-    '<a class="lunch-link" href="/tools/#fun">Back to Tools</a>'+
+    '<a class="lunch-link" href="/fun/">Back to Fun</a>'+
     '</div>';
   L.classList.add('show','out');
   document.getElementById('lunchReload').addEventListener('click', reloadNow);
@@ -5826,7 +5906,7 @@ function restartShift(){ reloadNow(); }
 const afMenu=HUKit.gameMenu({
   title:'Alarm Fatigue', help:afHelp, settings:afSet,
   restart:{ verb:'Restart the shift', title:'Restart the shift?', body:'The floor starts over at 0600, and this shift\'s tasks are gone.', run:restartShift },
-  leave:{ href:'/tools/#fun' },
+  leave:{ href:'/fun/' },
   onOpen:()=>closeSound(),
   /* Esc opens the menu only when nothing of the floor's own is up to close first */
   escOpens:()=> soundMenu.hidden && !ehrPanel.classList.contains('show') && !codeActive && !reportActive && !breakActive &&

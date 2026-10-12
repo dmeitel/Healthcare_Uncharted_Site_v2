@@ -8,9 +8,10 @@
  * built site, the /__review screen, and saves his marks. The hub is the same idea grown up, so it
  * shares the address. Nothing under /__ exists in _site.
  *
- * WHAT THE HUB MAY DO. It reads files and draws them. It writes three things, each to one fixed
- * file: a QA mark (data-build/qa/<card>.json), a new Inbox idea and a promotion (data-build/
- * board.json, which re-prints SPRINT.md). It runs NO commands: the server listens on the home
+ * WHAT THE HUB MAY DO. It reads files and draws them. It writes four things, each to one fixed
+ * file: a QA mark (data-build/qa/<card>.json), an answer on the Ideas tab (data-build/qa/ideas.json),
+ * a new Inbox idea and a promotion (data-build/board.json, which re-prints SPRINT.md; a Yes on the
+ * Ideas tab can send itself there). It runs NO commands: the server listens on the home
  * network so his phone can reach it, and a button that ran a script would be a way to run things
  * on this computer from that network. The checks and the build are run by a session.
  */
@@ -21,10 +22,12 @@ const path = require('path');
 const pages = require('./pages');
 const boardLib = require('./board');
 const qaLib = require('./qa');
+const ideasLib = require('./ideas');
 const { ROOT } = require('../lib/session');
 
 const HERE = __dirname;
 const SHOTS = path.join(ROOT, 'tmp', 'hub', 'shots');
+const MOCKS = path.join(ROOT, 'tmp', 'hub', 'mocks');
 
 /** This computer's addresses on the home network. */
 function lan() {
@@ -99,6 +102,12 @@ function handle(req, res, ctx) {
         const saved = qaLib.mark(card.id, String(b.item || ''), String(b.mark || ''), String(b.note || ''));
         return json(res, 200, { ok: true, saved, counts: qaLib.counts(qaLib.items(card)) });
       }
+      if (url === '/__hub/api/idea') {
+        const id = String(b.id || '');
+        if (b.inbox) return json(res, 200, { ok: true, inbox: ideasLib.toInbox(id) });
+        const saved = ideasLib.answer(id, String(b.mark || ''), String(b.note || ''));
+        return json(res, 200, { ok: true, saved, counts: ideasLib.counts(ideasLib.items()) });
+      }
       if (url === '/__hub/api/inbox') {
         const board = boardLib.load();
         const id = boardLib.addInbox(board, String(b.title || ''), String(b.line || ''));
@@ -158,9 +167,22 @@ function handle(req, res, ctx) {
     return guard(() => html(res, pages.puzzles(/^[a-z0-9-]{1,40}$/.test(only) ? only : '')));
   }
   if (url === '/__hub/library') return guard(() => html(res, pages.library()));
+  if (url === '/__hub/ideas') {
+    const only = new URL(req.url || '', 'http://x').searchParams.get('group') || '';
+    return guard(() => html(res, ideasLib.page(/^[a-z0-9-]{1,40}$/.test(only) ? only : '')));
+  }
+  /* a mockup an idea links to: a page of its own, read-only, from tmp/hub/mocks */
+  if (url.startsWith('/__hub/mocks/')) {
+    const file = path.join(MOCKS, decodeURIComponent(url.slice('/__hub/mocks/'.length)));
+    const type = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml' }[path.extname(file).toLowerCase()];
+    if (!file.startsWith(MOCKS + path.sep) || !type || !fs.existsSync(file)) { res.writeHead(404); res.end(); return true; }
+    res.writeHead(200, { 'Content-Type': type + (type.startsWith('text') ? '; charset=utf-8' : ''), 'Cache-Control': 'no-store' });
+    fs.createReadStream(file).pipe(res);
+    return true;
+  }
 
   res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(pages.layout({ title: 'Not found', tab: '', body: '<div class="obs-head"><h1>No such screen</h1><p>The hub has the board, the run sheet, the QA list, the site blocks and the library.</p></div>' }));
+  res.end(pages.layout({ title: 'Not found', tab: '', body: '<div class="obs-head"><h1>No such screen</h1><p>The hub has the board, the run sheet, the QA list, the puzzles, the ideas, the site blocks and the library.</p></div>' }));
   return true;
 }
 

@@ -1,7 +1,7 @@
 ---
 date: 2026-10-11
 milestone: "Device Assembly: beta session one"
-commit: ""
+commit: "3db3d58"
 ---
 
 # Device Assembly: beta session one

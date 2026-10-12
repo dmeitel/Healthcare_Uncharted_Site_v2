@@ -186,12 +186,16 @@ function site() {
     const inPhase = phaseList.filter((p) => p.paths.some((q) => (r.src || '').startsWith(q) || (q.endsWith('/') && dir.startsWith(q)))).map((p) => p.name + (p.state === 'parked' ? ' (parked)' : ''));
     const lock = locks[r.url] || null;
     const rev = reviews[r.url] || r.review || null;
+    // night and day since 2026-10-11; a mark the page changed after reads as changed, not done
+    const mk = require('../lib/reviews').marks(reviews[r.url], r.src, r.url);
     return {
       url: r.url, title: r.title, short: shortName(r.title || r.url, r.url), area, kind: r.kind,
       phase: r.phase, holds: r.holds || [],
       changed: (r.src && last.get(r.src)) || '', uncommitted: r.src ? dirty.has(r.src) : false,
       locked: lock ? (lock.since || 'yes') : '', lockNote: lock && lock.note ? lock.note : '',
       reviewed: rev ? (rev.date || rev.at || 'yes') : '',
+      night: mk.night ? mk.night.date : '', day: mk.day ? mk.day.date : '',
+      nightChanged: mk.nightChanged, dayChanged: mk.dayChanged, legacy: mk.legacy ? mk.legacy.date : '',
       phases: inPhase,
     };
   });
@@ -201,7 +205,9 @@ function site() {
     p1: rs.filter((r) => r.phase === 1).length,
     pq: rs.filter((r) => r.phase !== 1 && r.phase !== 2).length,
     locked: rs.filter((r) => r.locked).length,
-    reviewed: rs.filter((r) => r.reviewed).length,
+    reviewed: rs.filter((r) => r.night && r.day && !r.nightChanged && !r.dayChanged).length,
+    night: rs.filter((r) => r.night && !r.nightChanged).length,
+    day: rs.filter((r) => r.day && !r.dayChanged).length,
     uncommitted: rs.filter((r) => r.uncommitted).length,
   });
   const byArea = AREAS.map((a) => {

@@ -1,8 +1,9 @@
 ---
 layout: base.njk
 title: Healthcare doesn't come with a map
-description: Interactive maps, career tools, and plain-language writing on how American healthcare actually runs. The money, the data, the machines, and the people who keep it moving.
+description: "Interactive maps, career tools and plain-language writing on how American healthcare runs: the money, the data, the machines, and the people who keep it moving."
 navPage: home
+og_image: /assets/images/og/card-home.png
 ---
 <!-- ════════════════════════════════════════════════════════════════
      HOME V3 · FIELD OFFICE (locked spec: docs/HU-V3-HOME-BUILD-SPEC-2026-08-06.md)
@@ -13,35 +14,68 @@ navPage: home
 ════════════════════════════════════════════════════════════════ -->
 
 <style>
-/* ── HERO · clean ground, rose crown, floating search ── */
-.hv-hero { position:relative; border-bottom:1px solid var(--border); overflow:hidden; }
-#hu-network-bg { position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0; }
-.hv-hero-content { position:relative; z-index:1; text-align:center; padding:180px clamp(20px,5vw,72px) 44px; max-width:860px; margin:0 auto; }
-/* the rose is canvas-drawn at top-center; this transparent button is its hit area.
-   Tap: draw the map / reroll routes. The 8-tap ride is inside the canvas code. */
-#hu-compass-btn { position:absolute; top:92px; left:50%; width:150px; height:150px; transform:translate(-50%,-50%);
-  padding:0; border:0; background:transparent; border-radius:50%; cursor:pointer; z-index:2; -webkit-tap-highlight-color:transparent; }
-#hu-compass-btn:active { transform:translate(-50%,-50%) scale(0.97); }
-#hu-compass-btn:focus-visible { outline:2px solid var(--teal); outline-offset:6px; }
-#hu-secret-tile { position:absolute; transform:translate(-50%,-50%); display:none; z-index:3; border-radius:50%; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-#hu-secret-tile.revealed { display:block; animation:hu-sm-pulse 1.8s ease-in-out infinite; }
-#hu-secret-tile:hover, #hu-secret-tile:focus-visible { animation:none; box-shadow:0 0 26px 8px rgba(21,128,61,1); outline:none; }
-@keyframes hu-sm-pulse { 0%,100% { box-shadow:0 0 10px 2px rgba(21,128,61,0.55); } 50% { box-shadow:0 0 22px 6px rgba(21,128,61,0.9); } }
-@media (prefers-reduced-motion:reduce) { #hu-secret-tile.revealed { animation:none; box-shadow:0 0 18px 5px rgba(21,128,61,0.8); } }
+/* ── HERO · the compass rose in a brass dial, the door beside it (the brass instruments look, 2026-10-11) ──
+   The rose is the brand's own art (components/compass-rose.njk), in a dial the reader presses: the first press
+   draws the hex world behind the hero from the dial's center (The Earned Scenery Rule), every press after rerolls
+   it, and the 8-tap ride to the secret menu is unchanged. */
+.hv-hero { position:relative; border-bottom:1px solid color-mix(in srgb, var(--brass-lo) 40%, var(--border)); overflow:hidden; }
+#hu-network-bg { position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0; pointer-events:none; }
+/* ONE CENTERED COLUMN at every width, the phone's order on a desk too (David's review, 2026-10-11): the dial, then the
+   words, the search and the four sections, all on the center line */
+.hv-hero-grid { position:relative; z-index:1; max-width:880px; margin:0 auto; padding:clamp(28px,5vh,52px) clamp(20px,5vw,72px) clamp(36px,6vh,60px);
+  display:grid; grid-template-columns:minmax(0,1fr); justify-items:center; gap:clamp(20px,3vh,32px); text-align:center; }
+#hu-compass-btn { position:relative; z-index:2; justify-self:center; width:100%; max-width:340px; aspect-ratio:1; display:grid; place-items:center;
+  padding:0; border:0; border-radius:50%; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+#hu-compass-btn:focus-visible { outline:3px solid var(--teal); outline-offset:6px; }
+[data-theme="light"] #hu-compass-btn:focus-visible { outline-color:var(--teal-dk); }
+.hv-ring { position:absolute; inset:0; border-radius:50%; pointer-events:none;
+  background:conic-gradient(from 210deg, var(--brass-hi), var(--brass-lo), var(--brass), var(--brass-deep), var(--brass-hi));
+  box-shadow:0 22px 40px var(--depth), inset 0 0 0 2px rgba(255,255,255,.25); }
+.hv-ring::after { content:''; position:absolute; inset:5%; border-radius:50%;
+  background:radial-gradient(circle at 50% 38%, var(--face-a), var(--face-b) 72%); box-shadow:inset 0 6px 18px rgba(0,0,0,.8); }
+[data-theme="light"] .hv-ring::after { background:radial-gradient(circle at 50% 38%, var(--key-a), var(--key-b) 72%); box-shadow:inset 0 5px 14px rgba(42,29,8,.22); }
+.hv-rose { position:relative; z-index:1; display:block; width:72%; height:auto; pointer-events:none; }
+.hv-rose-day { display:none; }
+[data-theme="light"] .hv-rose-night { display:none; }
+[data-theme="light"] .hv-rose-day { display:block; }
+@media (prefers-reduced-motion: no-preference) {
+  #hu-compass-btn { transition:transform .12s ease; }
+  #hu-compass-btn:active { transform:scale(.985); }
+}
+.hv-door { min-width:0; width:100%; display:grid; justify-items:center; }
+/* the Atlas zones on the hex map (DECISIONS HX2): a link over each raised tile, so a keyboard or a screen reader reaches the
+   Atlas the way a pointer does; the tile itself is drawn on the canvas below */
+.hv-zone { position:absolute; z-index:2; transform:translate(-50%,-50%); width:62px; height:62px; border-radius:14px; }
+.hv-zone:focus-visible { outline:3px solid var(--teal); outline-offset:2px; }
+[data-theme="light"] .hv-zone:focus-visible { outline-color:var(--teal-dk); }
+@media (max-width:699px), (max-height:500px) { .hv-zone { display:none; } }
+/* the secret tile is drawn on the canvas as a raised tile with its own route, like the zones (his note, 2026-10-11); this
+   link over it only takes the press and the focus ring. No glow. */
+#hu-secret-tile { position:absolute; transform:translate(-50%,-50%); display:none; z-index:3; border-radius:14px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+#hu-secret-tile.revealed { display:block; }
+#hu-secret-tile:focus-visible { outline:3px solid var(--teal); outline-offset:2px; }
+[data-theme="light"] #hu-secret-tile:focus-visible { outline-color:var(--teal-dk); }
 
-.hv-hero h1 { font-family:var(--display); font-size:clamp(34px,5vw,54px); font-weight:800; line-height:1.05; letter-spacing:-.03em; color:var(--t1); }
-.hv-hero h1 strong { color:var(--teal); font-weight:800; }
-[data-theme="light"] .hv-hero h1 strong { color:var(--teal-dk); }
-.hv-sub { font-size:var(--t-lede); line-height:1.7; color:var(--t2); max-width:52ch; margin:12px auto 0; }
+.hv-hero h1 { font-family:var(--display); font-size:clamp(34px,4.6vw,56px); font-weight:900; line-height:1.03; letter-spacing:-.03em; color:var(--t1); text-wrap:balance; }
+.hv-sub { font-size:var(--t-lede); line-height:1.65; color:var(--t2); max-width:52ch; margin:14px auto 0; text-wrap:balance; }
 
 /* search box + hub cards are global hub components now; home adds placement */
-.hv-search { margin:24px auto 0; }
-.hv-chips { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
-.hv-chip { display:inline-flex; align-items:center; gap:6px; font-family:var(--font); font-size:var(--t-fine); font-weight:600; color:var(--t2); background:var(--raised);
-  border:1px solid var(--border); border-radius:999px; padding:8px 15px; text-decoration:none; cursor:pointer; transition:color .15s, border-color .15s; }
-.hv-chip svg { flex:none; color:var(--t3); }
-.hv-chip:hover, .hv-chip:active { color:var(--t1); border-color:var(--teal); }
-.hv-chip:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+.hv-search { margin:22px auto 0; }
+/* the four sections as keys: a name and one number (games.md menus rule 9) */
+.hv-regions { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-top:24px; width:100%; max-width:760px; text-align:left; }
+.hv-region { display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; min-height:64px; padding:0 16px; border-radius:14px; text-decoration:none;
+  background:var(--key-bg); color:var(--key-ink); border:1px solid transparent; border-top-color:var(--brass-rim);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 4px 0 var(--key-floor), 0 12px 22px var(--depth); }
+[data-theme="light"] .hv-region { box-shadow:0 4px 0 var(--key-floor), 0 12px 22px var(--depth); }
+.hv-region:hover { color:var(--key-ink); filter:brightness(1.08); border-top-color:var(--brass); }
+[data-theme="light"] .hv-region:hover { filter:brightness(.97); border-top-color:var(--brass-lo); }
+.hv-region:active { transform:translateY(4px); box-shadow:0 0 0 var(--key-floor), 0 4px 8px var(--depth); }
+.hv-region:focus-visible { outline:2px solid var(--teal); outline-offset:3px; }
+[data-theme="light"] .hv-region:focus-visible { outline-color:var(--teal-dk); }
+.hv-region .dot { width:12px; height:12px; border-radius:50%; background:var(--c); }
+.hv-region b { font-family:var(--display); font-size:19px; font-weight:800; }
+.hv-region .n { font-family:var(--mono); font-size:24px; font-weight:600; color:var(--c); font-variant-numeric:tabular-nums; }
+@media (prefers-reduced-motion: no-preference) { .hv-region { transition:transform .12s ease, box-shadow .12s ease, filter .12s ease; } }
 
 /* ── CATALOG · T2 tabs fed from tools.js clusters ── */
 .hv-cat { max-width:1100px; margin:0 auto; padding:36px clamp(20px,5vw,80px) 8px; }
@@ -56,6 +90,16 @@ navPage: home
 [data-theme="light"] .hv-alltools { color:var(--teal-ink); }
 .hv-pane { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; padding:18px 0 6px; }
 .hv-pane[hidden] { display:none; }
+/* START HERE (2026-10-11, his pick HM2 "A"): he did not like every tool on home under four keys that already lead to them,
+   and asked what a good home page holds: the best few things, the rest a link away. On a desk, home shows three picks in
+   one row and an All tools key; the phone keeps its switch of every tool, which he liked as it was. */
+.hv-picks { max-width:1100px; margin:0 auto; padding:36px clamp(20px,5vw,80px) 8px; }
+.hv-picks-h { margin:0 0 18px; padding-bottom:7px; border-bottom:1px solid var(--border); text-align:center;
+  font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); }
+.hv-picks-row { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:18px; }
+.hv-picks-all { text-align:center; margin:18px 0 0; }
+@media (max-width:699px), (max-height:500px) { .hv-picks { display:none; } }
+@media (min-width:700px) and (min-height:501px) { .hv-cat { display:none; } }
 /* .hc-card / .hc-thumb / .hc-title family: global hub components (hu-global.css) */
 
 /* ── NEW ON THE SITE · dated rows + the live pulse ── */
@@ -92,47 +136,66 @@ navPage: home
 .hv-cred { font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
 
 /* ── PHONE (699 = the kit line): pinned-high search, scrolling chip rail ── */
+/* a narrow desk or tablet puts the four sections two by two */
+@media (max-width:860px) { .hv-regions { grid-template-columns:repeat(2, minmax(0,1fr)); max-width:560px; } }
 @media (max-width:699px), (max-height:500px) {
-  .hv-hero-content { padding:150px 20px 34px; }
-  #hu-compass-btn { top:78px; width:120px; height:120px; }
+  .hv-hero-grid { padding:22px 20px 32px; gap:22px; }
+  #hu-compass-btn { max-width:260px; }
   .hv-hero h1 { font-size:clamp(30px,9vw,38px); }
+  .hv-regions { gap:10px; }
+  .hv-region { min-height:56px; padding:0 12px; gap:10px; }
+  .hv-region b { font-size:17px; }
+  .hv-region .n { font-size:20px; }
   .hv-search { min-height:48px; }
-  .hv-chips { flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; scrollbar-width:none; padding-bottom:4px; }
-  .hv-chips::-webkit-scrollbar { display:none; }
-  .hv-chip { flex:none; min-height:44px; display:inline-flex; align-items:center; }
   .hv-tab { padding:8px 6px; min-height:44px; white-space:normal; line-height:1.2; }
   .hv-row .sub { display:none; }
   .hv-pulse { display:none; }
 }
 @media (hover:none) {
   .hv-search { min-height:48px; }
-  .hv-chip, .hv-tab { min-height:44px; }
+  .hv-tab { min-height:44px; }
 }
 </style>
 
 <!-- HERO -->
 <div class="hv-hero">
   <canvas id="hu-network-bg" aria-hidden="true"></canvas>
-  <button id="hu-compass-btn" type="button" aria-label="Draw the map: new routes each press" title="Draw the map"></button>
   <a id="hu-secret-tile" href="/secret-menu/" aria-label="Secret Menu" title="Secret Menu"></a>
-  <div class="hv-hero-content">
-    <h1>Healthcare doesn't come with a map. <strong>So we made one.</strong></h1>
+  <div class="hv-hero-grid">
+  <button id="hu-compass-btn" type="button" aria-label="Draw the map: new routes each press" title="Draw the map"><span class="hv-ring" aria-hidden="true"></span>{% include "components/compass-rose.njk" %}</button>
+  <div class="hv-door">
+    <h1>Healthcare doesn't come with a map</h1>
     <p class="hv-sub">Interactive tools and honest writing on the machinery behind American healthcare.</p>
     <button class="hv-search" type="button" data-hu-search aria-label="Search the site">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
       <b>What are you trying to figure out?</b>
       <span class="k">/</span>
     </button>
-    <!-- example searches: each one opens the search with its words typed in, and each must find a
-         page (tests/hu-search.test.js holds them to that) -->
-    <div class="hv-chips" role="group" aria-label="Example searches">
-      <button class="hv-chip" type="button" data-hu-search data-q="Travel pay"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Travel pay</button>
-      <button class="hv-chip" type="button" data-hu-search data-q="Hospitals near me"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Hospitals near me</button>
-      <button class="hv-chip" type="button" data-hu-search data-q="Respiratory therapist"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Respiratory therapist</button>
-      <button class="hv-chip" type="button" data-hu-search data-q="Prior auth"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>Prior auth</button>
-    </div>
+    <nav class="hv-regions" aria-label="The four sections">
+      <a class="hv-region" href="/tools/" style="--c:var(--region-tools)"><span class="dot" aria-hidden="true"></span><b>Tools</b><span class="n">{{ (collections.toolPages | length) + (collections.labPages | length) }}</span></a>
+      <a class="hv-region" href="/fun/" style="--c:var(--region-fun)"><span class="dot" aria-hidden="true"></span><b>Fun</b><span class="n">{{ collections.funPages | length }}</span></a>
+      <a class="hv-region" href="/learn/" style="--c:var(--region-learn)"><span class="dot" aria-hidden="true"></span><b>Learn</b><span class="n">{{ collections.learnModules | length }}</span></a>
+      <a class="hv-region" href="/rounds/" style="--c:var(--region-rounds)"><span class="dot" aria-hidden="true"></span><b>Rounds</b><span class="n">{{ collections.roundsPages | length }}</span></a>
+    </nav>
+  </div>
   </div>
 </div>
+
+<!-- START HERE: three picks on a desk (the phone shows the catalog below instead) -->
+<section class="hv-picks" aria-labelledby="hv-picks-h">
+  <h2 class="hv-picks-h" id="hv-picks-h">Start here</h2>
+  <div class="hv-picks-row">
+    {%- for pick in ['multi-lens-map', 'assignment-compass', 'fun-vital-stats'] %}{% for tool in tools %}{% if tool.id == pick %}
+    <a class="hc-card" href="{{ tool.url }}">
+      <div class="hc-thumb" aria-hidden="true" style="--thumb:url('/assets/images/tool-thumbs/{{ tool.id }}.png');--thumb-l:url('/assets/images/tool-thumbs/{{ tool.id }}-light.png')"></div>
+      <div class="hc-title">{{ tool.title }}</div>
+      <div class="hc-desc">{{ tool.desc }}</div>
+      <div class="hc-meta">{{ tool.tags | join(' · ') }}</div>
+    </a>
+    {% endif %}{% endfor %}{% endfor %}
+  </div>
+  <p class="hv-picks-all"><a class="hu-key" href="/tools/">All tools</a></p>
+</section>
 
 <!-- CATALOG -->
 <section class="hv-cat" id="hv-cat" aria-label="The tool catalog">
@@ -214,7 +277,7 @@ navPage: home
 <section class="hv-mission" aria-label="The mission">
   <div class="hv-mission-in hu-ticks">
     <div class="hv-mk">The mission</div>
-    <h2>Map the connections, not just the components.</h2>
+    <h2>Mapping the connections between the components</h2>
     <p>Healthcare technology is full of territory nobody maps in plain language. Clinicians use systems nobody explains to them. Analysts query the data without its clinical meaning. Leaders sign AI contracts on the vendor's word. Healthcare Uncharted exists to close that gap, for every role in the building, clinical and business alike. Built from real bedside and informatics experience.</p>
     <div class="hv-mission-foot">
       <a href="/about/">The whole story &rarr;</a>
@@ -252,409 +315,350 @@ navPage: home
   });
 })();
 
-// ── HEX WORLD · drawn on tap (The Earned Scenery Rule) ───
-// The brand rose renders alone at rest, top-center. The first press of the
-// rose draws the hex panel and walking routes into the hero zone; every
-// further press rerolls them. The 8-tap Secret Menu ride is unchanged.
+// ── HEX WORLD · the Atlas on the map (2026-10-11, DECISIONS HX1 and HX2) ───
+// David: "any ideas for the hex grid? i want to keep it but maybe there is a way to make it more dynamic", then C with
+// "atlas items" and "the depth or height of the tiles", then "atlas zones at 10px, no raised ground". The grid used to
+// draw only after a press of the compass and hold still (the Earned Scenery Rule). Now, on a desk, the honeycomb is there
+// from the start and the seven Atlas zones stand on it as raised tiles in their Atlas colors, each routed to the compass
+// around the words. They take turns; a pointer or a keyboard focus lifts one and runs its route; each is a real link into
+// the Atlas on that zone (the .hv-zone links over the tiles). A phone has no room for seven places round the dial, so its
+// routes arrive one at a time in the zone colors. Reduced motion: everything drawn, nothing moving. The compass press
+// still rerolls (the next zone on a desk, a new route on a phone), and the eight-tap Secret Menu ride is unchanged. The
+// drawing stops while the hero is off screen or the tab is hidden. No glow: fills and strokes only.
 (function () {
   const cv = document.getElementById('hu-network-bg');
   if (!cv) return;
+  const hero = cv.parentElement;
   const ctx = cv.getContext('2d');
-  let W = 0, H = 0;
-  let revealed = false;
-
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const s = 34, colW = Math.sqrt(3) * s, rowH = 1.5 * s, TILE = 10, TURN = 2200;
+  // the map moves at full pace for 20 seconds, slows over the next 10, then rests on its last frame (his review,
+  // 2026-10-11: the dotted line should stop or slow after 20 or 30 seconds); a hover, a focus or a press on the compass
+  // wakes it for another spell
+  const AWAKE = 30000, SLOW = 10000, WAKE = 14000;
+  const ZONES = [
+    { id: 'patient', name: 'Patient', c: '#4ECDC4' }, { id: 'provider', name: 'Provider', c: '#6aabff' },
+    { id: 'payer', name: 'Payer', c: '#E8A838' }, { id: 'policy', name: 'Policy', c: '#8B5CF6' },
+    { id: 'pubhealth', name: 'Public Health', c: '#5DBF87' }, { id: 'techeco', name: 'Health Tech', c: '#0EA5E9' },
+    { id: 'medsci', name: 'Medical Science', c: '#FF6B6B' }
+  ];
+  // where each zone stands, as a share of the hero from the compass: three to a side, one high on the left
+  const SPOTS = [[-0.36, -0.20], [-0.42, 0.10], [-0.34, 0.40], [0.36, -0.20], [0.42, 0.10], [0.34, 0.40], [-0.20, -0.33]];
+  const rgbOf = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(',');
+  const shade = (rgb, f) => rgb.split(',').map((v) => Math.round(+v * f)).join(',');
+  const lighten = (rgb, f) => rgb.split(',').map((v) => Math.round(+v + (255 - +v) * f)).join(',');
   const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
-  const ROSE_CY = 92;          // rose anchor: top-center, matches #hu-compass-btn
-  const ROSE_S  = 22;          // compass scale (hex-frame radius = 2.7 * this)
+  const teal = () => (isDark() ? '78,205,196' : '15,118,110');
 
-  function rollRoutes() {
-    const r = [
-      { a: [0.05 + Math.random() * 0.22, 0.12 + Math.random() * 0.48],
-        b: [0.66 + Math.random() * 0.28, 0.12 + Math.random() * 0.48] },
-      { a: [0.12 + Math.random() * 0.74, 0.05 + Math.random() * 0.16],
-        b: [0.12 + Math.random() * 0.74, 0.74 + Math.random() * 0.20] }
-    ];
-    if (Math.random() < 0.4) {
-      r.push({ a: [0.05 + Math.random() * 0.24, 0.58 + Math.random() * 0.30],
-               b: [0.70 + Math.random() * 0.24, 0.08 + Math.random() * 0.30] });
-    }
-    return r;
-  }
-  function rollSpecialRoutes() {
-    const out = [];
-    const n = 6 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < n; i++) {
-      const ang = (i / n) * Math.PI * 2 + Math.random() * 0.35;
-      const rad = 0.40 + Math.random() * 0.12;
-      const bx = Math.max(0.04, Math.min(0.96, 0.5 + Math.cos(ang) * rad * 0.92));
-      const by = Math.max(0.05, Math.min(0.93, 0.5 + Math.sin(ang) * rad));
-      out.push({ a: [0.5, ROSE_CY / Math.max(H, 1)], b: [bx, by] });
-    }
-    return out;
-  }
-  const ATLAS_COLORS = ['#FF6B6B','#6aabff','#4ECDC4','#5DBF87','#0EA5E9','#8B5CF6','#E8A838'];
-  const hexToRgb = h =>
-    [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)].join(',');
-  function rollLitHexes(count) {
-    const n = (count != null) ? count : (7 + Math.floor(Math.random() * 4));
-    const out = [];
-    let guard = 0;
-    while (out.length < n && guard++ < 300) {
-      const fx = 0.04 + Math.random() * 0.92;
-      const fy = 0.05 + Math.random() * 0.90;
-      if (Math.abs(fx - 0.5) < 0.14 && fy < 0.40) continue;    // clear the rose crown
-      out.push({ a: [fx, fy], rgb: hexToRgb(ATLAS_COLORS[(Math.random() * ATLAS_COLORS.length) | 0]) });
-    }
-    return out;
-  }
-  function rollAll() {
-    if (Math.random() < 0.1) {
-      routes = rollSpecialRoutes();
-      litHexes = rollLitHexes(12 + Math.floor(Math.random() * 4));
-    } else {
-      routes = rollRoutes();
-      litHexes = rollLitHexes();
-    }
-  }
-  let routes, litHexes;
-  rollAll();
+  let W = 0, H = 0, dpr = 1, desk = true, boxes = [], grid = null, places = [], routes = [], c0 = [0, 0];
+  let t0 = performance.now(), turn = 0, turnAt = 0, hover = -1, nextRoute = 600, raf = 0, running = false, visible = true;
+  let awakeUntil = AWAKE, dashOff = 0, lastT = 0;
+  // 1 while awake, easing to 0 over the last SLOW of the spell
+  const pace = (t) => Math.max(0, Math.min(1, (awakeUntil - t) / SLOW));
+  function wake() { awakeUntil = Math.max(awakeUntil, performance.now() - t0 + WAKE); kick(); }
+  const base = document.createElement('canvas'), bctx = base.getContext('2d');
 
-  // Secret tile: same cadence as ever (teaser at presses 8-9, cycle from 28).
-  // New home: it lands in the side margins, clear of the centered content column.
-  let secretTile = null;
-  let compassClicks = 0;
-  function rollSecretTile() {
-    let guard = 0;
-    while (guard++ < 200) {
-      const side = Math.random() < 0.5;
-      const fx = side ? 0.06 + Math.random() * 0.18 : 0.76 + Math.random() * 0.18;
-      const fy = 0.25 + Math.random() * 0.55;
-      return { fx, fy };
-    }
-    return { fx: 0.84, fy: 0.30 };
+  const dialEl = document.getElementById('hu-compass-btn');
+  const doorEl = document.querySelector('.hv-door');
+  function boxIn(el, pad) {
+    if (!el) return null;
+    const b = el.getBoundingClientRect(), c = cv.getBoundingClientRect();
+    return { l: b.left - c.left - pad, t: b.top - c.top - pad, r: b.right - c.left + pad, b: b.bottom - c.top + pad };
   }
+  const inBox = (k, x, y) => k && x >= k.l && x <= k.r && y >= k.t && y <= k.b;
+  function clearOfDoor(px, py, pad) {
+    return [boxIn(dialEl, pad), boxIn(doorEl, pad)].every((k) => !k || px < k.l || px > k.r || py < k.t || py > k.b);
+  }
+  function roseAt() { const d = boxIn(dialEl, 0); return d ? [(d.l + d.r) / 2, (d.t + d.b) / 2] : [W / 2, H / 3]; }
 
-  function hex(cx, cy, s) {
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const a = (-90 + 60 * i) * Math.PI / 180;
-      const px = cx + s * Math.cos(a), py = cy + s * Math.sin(a);
-      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
-    }
-    ctx.closePath();
+  function hexOn(g, cx, cy, r) {
+    g.beginPath();
+    for (let i = 0; i < 6; i++) { const a = (-90 + 60 * i) * Math.PI / 180, px = cx + r * Math.cos(a), py = cy + r * Math.sin(a); i ? g.lineTo(px, py) : g.moveTo(px, py); }
+    g.closePath();
   }
-  function snap(x, y, colW, rowH) {
-    const row = Math.round(y / rowH);
-    const offset = (row % 2) ? colW / 2 : 0;
-    const col = Math.round((x - offset) / colW);
-    return [col * colW + offset, row * rowH];
-  }
-  function buildGrid(s, colW, rowH) {
-    const verts = new Map();
-    const adj   = new Map();
-    const key = (x, y) => Math.round(x) + ',' + Math.round(y);
-    const addVert = (x, y) => {
-      const k = key(x, y);
-      if (!verts.has(k)) { verts.set(k, { x, y }); adj.set(k, new Set()); }
-      return k;
-    };
+  function snap(x, y) { const row = Math.round(y / rowH), off = (row % 2) ? colW / 2 : 0, col = Math.round((x - off) / colW); return [col * colW + off, row * rowH]; }
+
+  function buildGrid() {
+    const verts = new Map(), adj = new Map(), key = (x, y) => Math.round(x) + ',' + Math.round(y), cells = [];
+    const add = (x, y) => { const k = key(x, y); if (!verts.has(k)) { verts.set(k, { x, y }); adj.set(k, new Set()); } return k; };
     for (let row = 0; row * rowH <= H + s; row++) {
-      const cy = row * rowH;
-      const offset = (row % 2) ? colW / 2 : 0;
+      const cy = row * rowH, off = (row % 2) ? colW / 2 : 0;
       for (let cx = -colW; cx <= W + colW; cx += colW) {
-        const corners = [];
-        for (let i = 0; i < 6; i++) {
-          const a = (-90 + 60 * i) * Math.PI / 180;
-          corners.push(addVert(cx + offset + s * Math.cos(a), cy + s * Math.sin(a)));
-        }
-        for (let i = 0; i < 6; i++) {
-          const u = corners[i], v = corners[(i + 1) % 6];
-          adj.get(u).add(v); adj.get(v).add(u);
-        }
+        cells.push([cx + off, cy]);
+        const cs = [];
+        for (let i = 0; i < 6; i++) { const a = (-90 + 60 * i) * Math.PI / 180; cs.push(add(cx + off + s * Math.cos(a), cy + s * Math.sin(a))); }
+        for (let i = 0; i < 6; i++) { const u = cs[i], v = cs[(i + 1) % 6]; adj.get(u).add(v); adj.get(v).add(u); }
       }
     }
-    return { verts, adj, key };
+    return { verts, adj, key, cells };
   }
-  function nearestCorner(c, toward, s, grid) {
+  function nearestCorner(c, toward) {
     let best = null, bestD = Infinity;
     for (let i = 0; i < 6; i++) {
-      const a = (-90 + 60 * i) * Math.PI / 180;
-      const x = c[0] + s * Math.cos(a), y = c[1] + s * Math.sin(a);
-      const k = grid.key(x, y);
+      const a = (-90 + 60 * i) * Math.PI / 180, x = c[0] + s * Math.cos(a), y = c[1] + s * Math.sin(a), k = grid.key(x, y);
       if (!grid.verts.has(k)) continue;
       const d = Math.hypot(x - toward[0], y - toward[1]);
       if (d < bestD) { bestD = d; best = k; }
     }
     return best;
   }
-  function astar(grid, startK, goalK) {
+  // A* along hex edges; an edge under the words or the dial costs twelve times as much, so routes go round them
+  function astar(startK, goalK) {
     if (!startK || !goalK) return null;
-    if (startK === goalK) return [startK];
-    const { verts, adj } = grid;
-    const goal = verts.get(goalK);
-    const h = k => { const p = verts.get(k); return Math.hypot(p.x - goal.x, p.y - goal.y); };
-    const g = new Map([[startK, 0]]);
-    const f = new Map([[startK, h(startK)]]);
-    const came = new Map();
-    const open = new Set([startK]);
+    const { verts, adj } = grid, goal = verts.get(goalK);
+    const blocked = (p) => boxes.some((k) => inBox(k, p.x, p.y));
+    const h = (k) => { const p = verts.get(k); return Math.hypot(p.x - goal.x, p.y - goal.y); };
+    const g = new Map([[startK, 0]]), f = new Map([[startK, h(startK)]]), came = new Map(), open = new Set([startK]);
     while (open.size) {
       let cur = null, curF = Infinity;
       for (const k of open) { if (f.get(k) < curF) { curF = f.get(k); cur = k; } }
-      if (cur === goalK) {
-        const path = [cur];
-        while (came.has(path[0])) path.unshift(came.get(path[0]));
-        return path;
-      }
+      if (cur === goalK) { const path = [cur]; while (came.has(path[0])) path.unshift(came.get(path[0])); return path.map((k) => { const p = verts.get(k); return [p.x, p.y]; }); }
       open.delete(cur);
       const cp = verts.get(cur);
       for (const nb of adj.get(cur)) {
-        const np = verts.get(nb);
-        const t = g.get(cur) + Math.hypot(cp.x - np.x, cp.y - np.y);
-        if (t < (g.get(nb) ?? Infinity)) {
-          came.set(nb, cur);
-          g.set(nb, t);
-          f.set(nb, t + h(nb));
-          open.add(nb);
-        }
+        const np = verts.get(nb), cost = Math.hypot(cp.x - np.x, cp.y - np.y) * (blocked(np) ? 12 : 1), tt = g.get(cur) + cost;
+        if (tt < (g.has(nb) ? g.get(nb) : Infinity)) { came.set(nb, cur); g.set(nb, tt); f.set(nb, tt + h(nb)); open.add(nb); }
       }
     }
     return null;
   }
-  function drawRoute(route, grid, teal, s, colW, rowH) {
-    const ca = snap(route.a[0] * W, route.a[1] * H, colW, rowH);
-    const cb = snap(route.b[0] * W, route.b[1] * H, colW, rowH);
-    const path = astar(grid, nearestCorner(ca, cb, s, grid), nearestCorner(cb, ca, s, grid));
-    ctx.save();
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.shadowColor = `rgba(${teal},0.3)`;
-    ctx.shadowBlur = 5;
-    if (path && path.length > 1) {
-      ctx.strokeStyle = `rgba(${teal},0.32)`;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      path.forEach((k, i) => {
-        const p = grid.verts.get(k);
-        i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
-      });
-      ctx.stroke();
+  const routeTo = (cell) => astar(nearestCorner(c0, cell), nearestCorner(cell, c0));
+  function lengthOf(p) { let L = 0; for (let i = 1; i < p.length; i++) L += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); return L; }
+  function strokePart(p, frac) {
+    const L = lengthOf(p) * frac; let d = 0;
+    ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) {
+      const seg = Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]);
+      if (d + seg >= L) { const q = (L - d) / seg; ctx.lineTo(p[i - 1][0] + (p[i][0] - p[i - 1][0]) * q, p[i - 1][1] + (p[i][1] - p[i - 1][1]) * q); break; }
+      ctx.lineTo(p[i][0], p[i][1]); d += seg;
     }
-    [ca, cb].forEach(c => {
-      hex(c[0], c[1], s - 1);
-      ctx.fillStyle = `rgba(${teal},0.12)`;
-      ctx.fill();
-      ctx.strokeStyle = `rgba(${teal},0.6)`;
-      ctx.lineWidth = 1.3;
-      ctx.stroke();
+    ctx.stroke();
+  }
+  // a raised tile: the top face lifted by h, and the two lower sides that face the viewer drawn under it
+  function tile(cx, cy, h, rgb, lit) {
+    const r = s - 1, top = cy - h, V = [];
+    for (let i = 0; i < 6; i++) { const a = (-90 + 60 * i) * Math.PI / 180; V.push([cx + r * Math.cos(a), top + r * Math.sin(a)]); }
+    const night = isDark();
+    [[2, 3, night ? 0.55 : 0.78], [3, 4, night ? 0.40 : 0.66]].forEach(([i, j, f]) => {
+      const p = V[i], q = V[j];
+      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.lineTo(q[0], q[1] + h); ctx.lineTo(p[0], p[1] + h); ctx.closePath();
+      ctx.fillStyle = 'rgba(' + shade(rgb, f) + ',0.95)'; ctx.fill();
     });
-    ctx.restore();
-  }
-  function drawLitHex(lit, s, colW, rowH) {
-    const c = snap(lit.a[0] * W, lit.a[1] * H, colW, rowH);
-    const rgb = lit.rgb;
-    ctx.save();
-    ctx.lineJoin = 'round';
-    ctx.shadowColor = `rgba(${rgb},0.45)`;
-    ctx.shadowBlur = 8;
-    hex(c[0], c[1], s - 1);
-    ctx.fillStyle = `rgba(${rgb},0.16)`;
-    ctx.fill();
-    ctx.strokeStyle = `rgba(${rgb},0.7)`;
-    ctx.lineWidth = 1.4;
-    ctx.stroke();
-    ctx.restore();
-  }
-  function drawSecretTile(t, s, colW, rowH) {
-    const c = snap(t.fx * W, t.fy * H, colW, rowH);
-    ctx.save();
-    ctx.lineJoin = 'round';
-    ctx.shadowColor = 'rgba(21,128,61,0.95)';
-    ctx.shadowBlur = 20;
-    hex(c[0], c[1], s - 1);
-    ctx.fillStyle = 'rgba(16,94,45,0.92)';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(52,199,89,0.95)';
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#eafff2';
-    ctx.font = '700 15px "IBM Plex Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('SM', c[0], c[1]);
-    ctx.restore();
-    placeSecretLink(c[0], c[1], s);
-  }
-  function placeSecretLink(cx, cy, s) {
-    const link = document.getElementById('hu-secret-tile');
-    if (!link) return;
-    const d = Math.round(s * 1.7);
-    link.style.left = cx + 'px';
-    link.style.top = cy + 'px';
-    link.style.width = d + 'px';
-    link.style.height = d + 'px';
-    link.classList.add('revealed');
+    ctx.beginPath(); V.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath();
+    ctx.fillStyle = night ? '#13203A' : '#FFFFFF'; ctx.fill();
+    ctx.fillStyle = 'rgba(' + rgb + ',' + (lit ? 0.34 : 0.2) + ')'; ctx.fill();
+    ctx.strokeStyle = 'rgba(' + rgb + ',0.9)'; ctx.lineWidth = lit ? 2 : 1.4; ctx.lineJoin = 'round'; ctx.stroke();
   }
 
-  // Brand compass rose, unchanged geometry from the shipped design
-  // (/brand/hu-atlas-core-node.svg): blue hex frame, teal ring and ticks,
-  // four-point star, N/E/S/W, HU monogram.
-  const MONO_H1 = new Path2D('M0,4 Q0,0 4,0 L15,0 Q19,0 19,4 L19,23 Q19,27 15.7,29.26 L3.3,37.74 Q0,40 0,36 Z');
-  const MONO_H2 = new Path2D('M0,50 Q0,46 3.38,43.86 L15.62,36.14 Q19,34 23,34 L46,34 Q50,34 50,38 L50,49 Q50,53 46,53 L23,53 Q19,53 19,57 L19,80 Q19,84 15,84 L4,84 Q0,84 0,80 Z');
-  const MONO_U  = new Path2D('M57,1.5 Q57,-2.5 61,-2.5 L72,-2.5 Q76,-2.5 76,1.5 L76,52.5 Q76,67.5 91,67.5 Q106,67.5 106,52.5 L106,1.5 Q106,-2.5 110,-2.5 L121,-2.5 Q125,-2.5 125,1.5 L125,52.5 Q125,86.5 91,86.5 Q57,86.5 57,52.5 Z');
-
-  function drawCompass(cx, cy, dark, bg, s) {
-    const R = 2.7 * s;
-    const k = R / 182;
-    const circleR = 115 * k;
-    const BLUE    = dark ? '#3585cc' : '#1B5FA8';
-    const BLUE_LT = dark ? '#5aa6e6' : '#3585cc';
-    const TEAL    = dark ? '#4ecdc4' : '#2FA79E';
-    const TEAL_LT = dark ? '#7ff0e6' : '#4ecdc4';
-    const TEAL_DK = dark ? '#3fa9a2' : '#1f7d76';
-    ctx.save();
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    hex(cx, cy, R);
-    ctx.fillStyle = bg;
-    ctx.fill();
-    hex(cx, cy, R);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = BLUE;
-    ctx.globalAlpha = 0.85;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.arc(cx, cy, circleR, 0, Math.PI * 2);
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = TEAL;
-    ctx.globalAlpha = 0.9;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    for (let i = 0; i < 36; i++) {
-      const ang = (-90 + i * 10) * Math.PI / 180;
-      const c = Math.cos(ang), sn = Math.sin(ang);
-      const major = (i % 9 === 0), sec = (i % 3 === 0);
-      const len = (major ? 11 : sec ? 7 : 4) * k;
-      ctx.beginPath();
-      ctx.moveTo(cx + c * circleR, cy + sn * circleR);
-      ctx.lineTo(cx + c * (circleR - len), cy + sn * (circleR - len));
-      ctx.lineWidth = major ? 2 : 1;
-      ctx.strokeStyle = TEAL;
-      ctx.globalAlpha = major ? 0.9 : 0.4;
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    const darts = [
-      { ax: 0,  ay: -1, lt: TEAL_LT, dk: TEAL_DK },
-      { ax: 1,  ay: 0,  lt: BLUE_LT, dk: BLUE    },
-      { ax: 0,  ay: 1,  lt: TEAL_LT, dk: TEAL_DK },
-      { ax: -1, ay: 0,  lt: BLUE_LT, dk: BLUE    }
-    ];
-    darts.forEach(d => {
-      const ax = d.ax, ay = d.ay, px = -ay, py = ax;
-      const P = (dist, off) => [cx + ax * dist * k + px * off * k,
-                                cy + ay * dist * k + py * off * k];
-      const base = P(15, 0), tip = P(100, 0);
-      const quad = (offB, offM, col) => {
-        const b = P(15, offB), m = P(56, offM);
-        ctx.beginPath();
-        ctx.moveTo(base[0], base[1]);
-        ctx.lineTo(b[0], b[1]);
-        ctx.lineTo(m[0], m[1]);
-        ctx.lineTo(tip[0], tip[1]);
-        ctx.closePath();
-        ctx.fillStyle = col;
-        ctx.fill();
-      };
-      quad(10, 15, d.lt);
-      quad(-10, -15, d.dk);
+  // the honeycomb, drawn once per size and theme into its own canvas, fading down the hero
+  function drawBase() {
+    base.width = W * dpr; base.height = H * dpr;
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bctx.clearRect(0, 0, W, H);
+    const t = teal();
+    grid.cells.forEach(([cx, cy]) => {
+      const f = Math.max(0, 1 - cy / H);
+      bctx.strokeStyle = 'rgba(' + t + ',' + (0.028 + 0.09 * f * f).toFixed(3) + ')';
+      bctx.lineWidth = 1; hexOn(bctx, cx, cy, s - 1); bctx.stroke();
     });
-    const fs = Math.max(11, Math.round(21 * k));
-    ctx.font = `700 ${fs}px Outfit, "Poppins", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const lr = 132 * k;
-    [['N', 0, -1, TEAL_LT], ['E', 1, 0, BLUE_LT],
-     ['S', 0, 1, TEAL], ['W', -1, 0, BLUE_LT]].forEach(([t, ax, ay, col]) => {
-      ctx.fillStyle = col;
-      ctx.fillText(t, cx + ax * lr, cy + ay * lr);
-    });
-    ctx.beginPath();
-    ctx.arc(cx, cy, 27 * k, 0, Math.PI * 2);
-    ctx.fillStyle = BLUE;
-    ctx.globalAlpha = 0.18;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    const chR = 32 * k;
-    hex(cx, cy, chR);
-    ctx.fillStyle = dark ? '#0d1117' : '#ffffff';
-    ctx.fill();
-    hex(cx, cy, chR);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = BLUE;
-    ctx.globalAlpha = 0.9;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    ctx.save();
-    ctx.translate(cx - 21.25 * k, cy - 14.28 * k);
-    ctx.scale(0.34 * k, 0.34 * k);
-    ctx.fillStyle = BLUE;
-    ctx.fill(MONO_H1);
-    ctx.fill(MONO_H2);
-    ctx.fillStyle = TEAL;
-    ctx.fill(MONO_U);
-    ctx.restore();
-    ctx.restore();
   }
 
-  function draw() {
-    const dark = isDark();
-    const pageBg = dark ? '#0a0f1a' : '#EEF2F7';
-    const teal = dark ? '78,205,196' : '15,118,110';
-    const s = 34, colW = Math.sqrt(3) * s, rowH = 1.5 * s;
-    ctx.clearRect(0, 0, W, H);
-    ctx.lineWidth = 1;
+  // the zone links over the tiles: keyboard and screen readers reach the Atlas zones the way the mouse does
+  const links = ZONES.map((z, i) => {
+    const a = document.createElement('a');
+    a.className = 'hv-zone'; a.href = '/atlas/#' + z.id; a.setAttribute('aria-label', z.name + ', in the Atlas'); a.title = z.name + ' · open in the Atlas';
+    a.addEventListener('mouseenter', () => { hover = i; wake(); });
+    a.addEventListener('mouseleave', () => { if (hover === i) hover = -1; kick(); });
+    a.addEventListener('focus', () => { hover = i; wake(); });
+    a.addEventListener('blur', () => { if (hover === i) hover = -1; kick(); });
+    hero.appendChild(a);
+    return a;
+  });
 
-    // The map is EARNED: the honeycomb, routes, lit hexes, and the secret
-    // tile draw only after the first press of the rose.
-    if (revealed) {
-      for (let row = 0; row * rowH <= H + s; row++) {
-        const cy = row * rowH;
-        const offset = (row % 2) ? colW / 2 : 0;
-        const f = Math.max(0, 1 - cy / H);
-        ctx.strokeStyle = `rgba(${teal},${(0.028 + 0.09 * f * f).toFixed(3)})`;
-        for (let cx = -colW; cx <= W + colW; cx += colW) {
-          hex(cx + offset, cy, s - 1);
-          ctx.stroke();
-        }
-      }
-      const grid = buildGrid(s, colW, rowH);
-      routes.forEach(r => drawRoute(r, grid, teal, s, colW, rowH));
-      litHexes.forEach(l => drawLitHex(l, s, colW, rowH));
-      if (secretTile) drawSecretTile(secretTile, s, colW, rowH);
-    }
-
-    // The rose crowns the door at rest and after the reveal alike.
-    drawCompass(W / 2, ROSE_CY, dark, pageBg, ROSE_S);
-  }
-
-  function resize() {
-    const dpr = window.devicePixelRatio || 1;
+  function layout() {
+    dpr = window.devicePixelRatio || 1;
     W = cv.offsetWidth; H = cv.offsetHeight;
     cv.width = W * dpr; cv.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    draw();
+    desk = Math.min(window.innerWidth, window.innerHeight) > 699 && W >= 700;
+    boxes = [boxIn(dialEl, 6), boxIn(doorEl, 14)].filter(Boolean);
+    grid = buildGrid();
+    c0 = snap(roseAt()[0], roseAt()[1]);
+    drawBase();
+    places = []; routes = [];
+    if (desk) {
+      const cc = roseAt();
+      places = ZONES.map((z, i) => {
+        const want = [cc[0] + SPOTS[i][0] * Math.max(W, 900), cc[1] + SPOTS[i][1] * Math.max(H, 700)];
+        want[0] = Math.max(70, Math.min(W - 70, want[0])); want[1] = Math.max(60, Math.min(H - 60, want[1]));
+        let cell = snap(want[0], want[1]);
+        for (let k = 0; k < 40 && !clearOfDoor(cell[0], cell[1], 34); k++) { want[0] += (SPOTS[i][0] < 0 ? -1 : 1) * colW; cell = snap(want[0], want[1]); }
+        return { z, cell, rgb: rgbOf(z.c), path: routeTo(cell), lift: 0 };
+      });
+    }
+    links.forEach((a, i) => {
+      const p = places[i];
+      a.hidden = !p;
+      if (p) { a.style.left = p.cell[0] + 'px'; a.style.top = (p.cell[1] - TILE) + 'px'; }
+    });
+    t0 = performance.now(); turnAt = 0; nextRoute = 600; awakeUntil = AWAKE; lastT = 0;
+    if (secretTile) secretTile = rollSecretTile();
   }
-  window.addEventListener('resize', resize);
-  resize();
 
-  const themeBtn = document.getElementById('themeToggle');
-  if (themeBtn) themeBtn.addEventListener('click', () => setTimeout(draw, 0));
+  function drawDesk(t) {
+    const pc = pace(t);
+    // the turns stretch out as the map slows, and stop when it rests
+    if (!reduce && pc > 0 && t - turnAt > TURN / Math.max(pc, 0.3)) { turn++; turnAt = t; }
+    dashOff += ((t - lastT) / 40) * pc;
+    const act = hover >= 0 ? hover : (reduce ? -1 : turn % places.length);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    places.forEach((p, i) => {
+      if (!p.path) return;
+      const intro = reduce ? 1 : Math.min(1, Math.max(0, (t - i * 300) / 900)), on = i === act;
+      ctx.strokeStyle = 'rgba(' + p.rgb + ',' + (on ? 0.85 : 0.26) + ')'; ctx.lineWidth = on ? 2.2 : 1.2;
+      if (on && !reduce) { ctx.setLineDash([6, 7]); ctx.lineDashOffset = -dashOff; }
+      strokePart(p.path, intro); ctx.setLineDash([]);
+    });
+    // the tiles last, the lower ones over the upper, the one in play lifting a little
+    places.map((p, i) => ({ p, i })).sort((a, b) => a.p.cell[1] - b.p.cell[1]).forEach(({ p, i }) => {
+      const on = i === act, intro = reduce ? 1 : Math.min(1, Math.max(0, (t - i * 300) / 900));
+      if (intro < 1) return;
+      p.lift += ((on ? 6 : 0) - p.lift) * (reduce ? 1 : 0.18);
+      tile(p.cell[0], p.cell[1], TILE + p.lift, p.rgb, on);
+      ctx.fillStyle = 'rgb(' + (isDark() ? lighten(p.rgb, 0.3) : shade(p.rgb, 0.55)) + ')';
+      ctx.font = '700 12px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(p.z.name.toUpperCase(), p.cell[0], p.cell[1] + s + 6);
+    });
+  }
 
-  const compassBtn = document.getElementById('hu-compass-btn');
-  if (compassBtn) compassBtn.addEventListener('click', () => {
-    if (!revealed) { revealed = true; } else { rollAll(); }
+  function randomCell(pad) {
+    for (let i = 0; i < 200; i++) {
+      const c = grid.cells[(Math.random() * grid.cells.length) | 0];
+      if (c[0] > 20 && c[0] < W - 20 && c[1] > 20 && c[1] < H - 20 && clearOfDoor(c[0], c[1], pad)) return c;
+    }
+    return null;
+  }
+  function addRoute(t) {
+    const c = randomCell(30); if (!c) return;
+    const p = routeTo(c); if (!p) return;
+    routes.push({ p, c, rgb: rgbOf(ZONES[(Math.random() * ZONES.length) | 0].c), t });
+  }
+  function drawPhone(t) {
+    if (reduce && !routes.length) { for (let i = 0; i < 3; i++) addRoute(-1e9); }
+    const pc = pace(t);
+    if (!reduce && pc > 0.3 && t > nextRoute && routes.length < 2) { addRoute(t); nextRoute = t + 2400 / pc; }
+    routes = routes.filter((r) => {
+      const age = t - r.t, drawn = reduce ? 1 : Math.min(1, age / 1500), fade = reduce ? 1 : (age > 4200 ? Math.max(0, 1 - (age - 4200) / 1000) : 1);
+      if (fade <= 0) return false;
+      ctx.globalAlpha = fade;
+      ctx.strokeStyle = 'rgba(' + teal() + ',0.55)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      strokePart(r.p, drawn);
+      if (drawn >= 1) tile(r.c[0], r.c[1], 0, r.rgb, false);
+      ctx.globalAlpha = 1;
+      return true;
+    });
+  }
+
+  // Secret tile: same cadence as ever (teaser at presses 8-9, cycle from 28), on open ground clear of the dial, the
+  // words and the zone tiles. Since 2026-10-11 (his note) it stands like a zone: a raised green tile with a route from
+  // the compass, lifting on hover; no glow.
+  let secretTile = null, compassClicks = 0, smHover = false;
+  const SM_RGB = '52,199,89';
+  function rollSecretTile() {
+    // the whole tile on screen (its cell a tile's width in from each side), clear of the dial, the words and the zones;
+    // a phone has little open ground, so a second pass lets it stand closer to the words
+    const onScreen = (c) => c[0] >= s + 2 && c[0] <= W - s - 2 && c[1] >= s + 2 && c[1] <= H - s - 2;
+    for (const pad of [40, 6]) {
+      for (let guard = 0; guard < 300; guard++) {
+        const fx = 0.03 + Math.random() * 0.94, fy = 0.05 + Math.random() * 0.90;
+        const x = fx * W, y = fy * H, c = snap(x, y);
+        if (!onScreen(c)) continue;
+        if (clearOfDoor(c[0], c[1], pad) && places.every((p) => Math.hypot(p.cell[0] - c[0], p.cell[1] - c[1]) > colW * 1.4)) return { fx, fy };
+      }
+    }
+    return { fx: 1 - (s + colW) / W, fy: 1 - (s + rowH) / H };
+  }
+  // its cell and route are worked out once per showing (and again after a resize)
+  function smPlace(tl, t) {
+    if (tl.W !== W || tl.H !== H || !tl.cell) { tl.W = W; tl.H = H; tl.cell = snap(tl.fx * W, tl.fy * H); tl.path = routeTo(tl.cell); tl.at = t; tl.lift = 0; }
+    return tl;
+  }
+  // the route goes down first, under the zone tiles, marching while the map is awake
+  function drawSecretRoute(tl, t) {
+    smPlace(tl, t);
+    if (!tl.path) return;
+    const intro = reduce ? 1 : Math.min(1, Math.max(0, (t - tl.at) / 900));
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(' + SM_RGB + ',0.85)'; ctx.lineWidth = 2.2;
+    if (!reduce) { ctx.setLineDash([6, 7]); ctx.lineDashOffset = -dashOff; }
+    strokePart(tl.path, intro); ctx.setLineDash([]);
+  }
+  function drawSecretTile(tl, t) {
+    smPlace(tl, t);
+    const c = tl.cell;
+    tl.lift += ((smHover ? 6 : 0) - tl.lift) * (reduce ? 1 : 0.18);
+    const h = TILE + 4 + tl.lift;
+    tile(c[0], c[1], h, SM_RGB, true);
+    ctx.fillStyle = 'rgb(' + (isDark() ? lighten(SM_RGB, 0.55) : shade(SM_RGB, 0.42)) + ')';
+    ctx.font = '700 15px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('SM', c[0], c[1] - h);
+    const link = document.getElementById('hu-secret-tile');
+    if (!link) return;
+    const d = 62;
+    link.style.left = c[0] + 'px'; link.style.top = (c[1] - TILE - 4) + 'px'; link.style.width = d + 'px'; link.style.height = d + 'px';
+    link.classList.add('revealed');
+  }
+  const smLink = document.getElementById('hu-secret-tile');
+  if (smLink) {
+    smLink.addEventListener('mouseenter', () => { smHover = true; wake(); });
+    smLink.addEventListener('mouseleave', () => { smHover = false; kick(); });
+    smLink.addEventListener('focus', () => { smHover = true; wake(); });
+    smLink.addEventListener('blur', () => { smHover = false; kick(); });
+  }
+
+  function frame(now) {
+    // a frame can be stamped a hair before the clock was set, so the clock never runs below zero; and one bad frame never
+    // stops the loop
+    const t = Math.max(0, now - t0);
+    raf = 0;
+    try {
+      ctx.clearRect(0, 0, W, H);
+      // the honeycomb spreads out from the compass on arrival, like a ping
+      const maxR = Math.hypot(W, H), r = reduce ? maxR : Math.min(maxR, (t / 1400) * maxR);
+      if (r >= maxR) ctx.drawImage(base, 0, 0, W, H);
+      else if (r > 0) { ctx.save(); ctx.beginPath(); ctx.arc(c0[0], c0[1], r, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(base, 0, 0, W, H); ctx.restore(); }
+      if (secretTile) drawSecretRoute(secretTile, t);
+      if (desk) drawDesk(t); else drawPhone(t);
+      if (secretTile) drawSecretTile(secretTile, t);
+      lastT = t;
+    } finally {
+      // at rest the canvas keeps its last frame and the loop stops; a phone rests once its routes have faded
+      const rested = t > awakeUntil + 1200 && (desk || !routes.length);
+      if (running && !rested) raf = requestAnimationFrame(frame);
+    }
+  }
+  // one frame now (reduced motion, a hover, a theme change), or the loop while the hero is on screen
+  function kick() { if (!raf) raf = requestAnimationFrame(frame); }
+  function setRunning() {
+    const want = !reduce && visible && !document.hidden;
+    if (want === running) return;
+    running = want;
+    if (running && !raf) raf = requestAnimationFrame(frame);
+  }
+
+  layout();
+  setRunning(); kick();
+  window.addEventListener('resize', () => { layout(); kick(); });
+  document.addEventListener('visibilitychange', setRunning);
+  if ('IntersectionObserver' in window) new IntersectionObserver((e) => { visible = e[0].isIntersecting; setRunning(); }).observe(hero);
+  new MutationObserver(() => { drawBase(); kick(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  if (dialEl) dialEl.addEventListener('click', () => {
+    // the press rerolls: the next zone takes its turn on a desk, a new route sets off on a phone
+    const now = performance.now() - t0;
+    if (desk) { turn++; turnAt = now; } else { addRoute(now); }
+    wake();
     compassClicks++;
     const FIRST_SHOW_AT = 8, CYCLE_START = 28, SHOW_LEN = 2, CYCLE_LEN = 10;
     const inFirst = compassClicks >= FIRST_SHOW_AT && compassClicks < FIRST_SHOW_AT + SHOW_LEN;
@@ -667,7 +671,7 @@ navPage: home
       const link = document.getElementById('hu-secret-tile');
       if (link) link.classList.remove('revealed');
     }
-    draw();
+    kick();
   });
 })();
 </script>

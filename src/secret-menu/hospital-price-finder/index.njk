@@ -1,7 +1,7 @@
 ---
 layout: base.njk
 title: Utah Hospital Price Finder
-description: "Search any billable service or code and see what every reporting Utah hospital charges for it, cash price and list price, straight from each hospital's own federally required price file."
+description: "Search any billable service or code and see what every reporting Utah hospital charges, cash and list price, from each hospital's own federally required price file."
 noindex: true
 no_footer: true
 eleventyExcludeFromCollections: true
@@ -9,7 +9,7 @@ has_interactive: true
 ---
 {% raw %}
 <!-- ════════════════════════════════════════════════════════════════
-     UTAH HOSPITAL PRICE FINDER — round 21 (2026-07-27), PARKED in the
+     UTAH HOSPITAL PRICE FINDER · round 21 (2026-07-27), PARKED in the
      secret menu 2026-07-29 by David's call: concept proven, work on
      hold, deliberately ISOLATED (no links to or from the operators
      map) until the price project resumes way down the line.
@@ -27,15 +27,25 @@ has_interactive: true
 .pf-stats b { color:var(--teal); font-weight:600; }
 [data-theme="light"] .pf-stats b { color:var(--teal-ink); }
 .pf-search { position:relative; }
-.pf-search input { width:100%; padding:14px 16px; font-family:var(--font); font-size:var(--t-lede); color:var(--t1);
-  background:var(--raised); border:1px solid var(--border); border-radius:12px; }
+/* THE BRASS LOOK (2026-10-11): the search is a recessed field (glass at night, a light well in day: the field
+   set), the example chips and the copy button are keys, and the results list is a face. The table's figures stay. */
+.pf-search input { width:100%; padding:14px 16px; font-family:var(--font); font-size:var(--t-lede); color:var(--field-ink);
+  background:var(--field-bg); border:1px solid transparent; box-shadow:var(--field-well); border-radius:12px; }
+.pf-search input::placeholder { color:var(--field-sub); }
 .pf-search input:focus { outline:none; border-color:var(--teal); }
 .pf-chips { display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 6px; }
-.pf-chips button { font-family:var(--mono); font-size:var(--t-label); color:var(--t2); background:var(--raised);
-  border:1px solid var(--border); border-radius:999px; padding:7px 12px; cursor:pointer; }
-.pf-chips button:hover { border-color:var(--teal); color:var(--t1); }
+.pf-chips button { font-family:var(--mono); font-size:var(--t-label); color:var(--key-ink); background:var(--key-bg);
+  border:1px solid transparent; border-top-color:var(--brass-rim); box-shadow:var(--key-lift); border-radius:999px; padding:7px 12px; cursor:pointer; }
+.pf-chips button:hover { color:var(--key-ink); border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] .pf-chips button:hover { filter:brightness(.97); border-top-color:var(--brass-lo); }
+.pf-chips button:active, .pf-links a:active, .pf-links button:active { transform:translateY(3px); box-shadow:var(--key-down); }
+.pf-chips button:focus-visible, .pf-links a:focus-visible, .pf-links button:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+[data-theme="light"] :is(.pf-chips button, .pf-links a, .pf-links button):focus-visible { outline-color:var(--teal-dk); }
+@media (prefers-reduced-motion: no-preference) {
+  .pf-chips button, .pf-links a, .pf-links button { transition:transform .12s ease, box-shadow .12s ease, filter .12s ease; }
+}
 .pf-hint { font-family:var(--mono); font-size:var(--t-micro); color:var(--t3); margin-top:10px; }
-.pf-results { margin-top:14px; border:1px solid var(--border); border-radius:12px; overflow:hidden; display:none; }
+.pf-results { margin-top:14px; background:var(--face-bg); border:1px solid var(--border); border-radius:12px; box-shadow:0 10px 22px var(--depth); overflow:hidden; display:none; }
 .pf-results.on { display:block; }
 .pf-hit { display:flex; align-items:baseline; gap:12px; width:100%; text-align:left; padding:10px 14px; cursor:pointer;
   background:none; border:none; border-bottom:1px solid var(--border); }
@@ -65,9 +75,10 @@ has_interactive: true
 .pf-table tr.lo td.cash::after { content:" · lowest"; font-size:var(--t-micro); color:var(--t3); font-weight:400; }
 .pf-note { font-family:var(--mono); font-size:var(--t-micro); color:var(--t3); line-height:1.6; margin-top:16px; max-width:80ch; }
 .pf-links { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
-.pf-links a, .pf-links button { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px; cursor:pointer;
-  background:var(--raised); border:1px solid var(--border); color:var(--t2); font-family:var(--font); font-size:var(--t-fine); font-weight:600; text-decoration:none; }
-.pf-links a:hover, .pf-links button:hover { color:var(--t1); border-color:var(--teal); }
+.pf-links a, .pf-links button { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; cursor:pointer;
+  background:var(--key-bg); border:1px solid transparent; border-top-color:var(--brass-rim); box-shadow:var(--key-lift); color:var(--key-ink); font-family:var(--font); font-size:var(--t-fine); font-weight:600; text-decoration:none; }
+.pf-links a:hover, .pf-links button:hover { color:var(--key-ink); border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] .pf-links a:hover, [data-theme="light"] .pf-links button:hover { filter:brightness(.97); border-top-color:var(--brass-lo); }
 .pf-load { font-family:var(--mono); font-size:var(--t-label); color:var(--t3); padding:22px 0; }
 @media (max-width:640px){
   .pf-table th:nth-child(2), .pf-table td:nth-child(2) { display:none; }   /* city folds into the phone's tight table */

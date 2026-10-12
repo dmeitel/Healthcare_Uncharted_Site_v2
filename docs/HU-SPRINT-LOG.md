@@ -11,7 +11,12 @@ From here on, steps finished in a window go at the top, under "Since the split",
 
 ## Since the split
 
-(nothing yet)
+- 2026-10-11 · **The hub** shipped on 3db3d58. Steps: 1 Go on the plan; 2 The front door and the board; 3 The run sheet; 4 The QA list and Ship; 5 Milestone QA of the hub; 6 Ship.
+- 2026-10-11 · **Pages with views people can find** shipped on 3db3d58. Steps: 25 The switch; 26 His pick between the two; 27 The switch; 28 The Learn pages; 29 The standard written down; 30 QA.
+- 2026-10-11 · **The two maps' menus** shipped on 3db3d58. Steps: 34 A; 35 B; 36 QA.
+- 2026-10-11 · **Device Assembly** shipped on 3db3d58. Steps: 7 The deep dive; 8 The playtest list; 16 Say yes to the cleanup list; 17 The cleanup; 9 Play the QA list and mark it; 10 The build list.
+- 2026-10-11 · **Device Assembly: beta session one** shipped on 3db3d58. Steps: 18 The mechanics; 19 The ventilators; 20 The paths; 21 The front door; 22 The front door and the addresses; 23 QA for beta session one; 32 His Puzzles-sheet notes; 33 Ventilators only; 24 The launch post.
+- 2026-10-11 · **Old pages cleaned up** shipped on 3db3d58. Steps: 31 Built on David's ask in the moment (2026-10-07.
 
 ---
 

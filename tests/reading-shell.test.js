@@ -48,7 +48,7 @@ const BASELINE = {
   'src/learn/patient-data-record/index.html': 7,
   'src/learn/request-routing/index.html': 6,
   'src/secret-menu/index.html': 6,
-  'src/about/index.html': 5,
+  'src/about/index.html': 2,   // 2026-10-11: the author cards on the shared reading grid (AB2)
   'src/learn/4ps-framework/index.html': 5,
   'src/tools/index.html': 5,
   'src/learn/healthcare-data-sources/index.html': 4,

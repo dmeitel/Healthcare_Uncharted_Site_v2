@@ -268,6 +268,10 @@ permalink: /tools/iceberg-map/
    Replaces the .ln brightness filter, which never changed the computed ink. */
 [data-theme="light"] .lt,[data-theme="light"] .ln,[data-theme="light"] .ptic .ptilab{color:color-mix(in srgb,var(--lc) 50%,#000)!important}
 [data-theme="light"] .nnum{color:color-mix(in srgb,var(--lc) 50%,#000)!important;opacity:1}
+/* the row connectors in day: each layer color is a night color, 1.5 to 2.6:1 on the light rows; the same mix the step numbers
+   use brings them over the 3:1 a connector needs (2026-10-11) */
+[data-theme="light"] .row-svg path{stroke:color-mix(in srgb,var(--lc) 55%,#001117);stroke-opacity:1}
+[data-theme="light"] .row-svg marker circle{fill:color-mix(in srgb,var(--lc) 55%,#001117);fill-opacity:1}
 [data-theme="light"] .ll-icon,[data-theme="light"] .rp-icon{filter:brightness(0.75) saturate(1.3)}
 [data-theme="light"] .nc.sl .ni{color:#0B1929!important}
 [data-theme="light"] .rb[style]{color:rgba(30,65,110,0.55)!important}
@@ -275,8 +279,10 @@ permalink: /tools/iceberg-map/
 [data-theme="light"] .pz-reset-btn{background:rgba(240,249,255,0.94);border-color:rgba(27,154,144,0.55);color:var(--teal-ink)}
 [data-theme="light"] .pz-hint{background:rgba(240,249,255,0.9);border-color:rgba(27,154,144,0.35);color:rgba(5,110,100,0.9)}
 /* ── TEXT LEGIBILITY ────────────────────────────────────── */
-.nc span,.lt,.lsu,.wlt,.sml-lbl,.ll-icon,.rnt,.rh,.rb,.rbl,.pain-txt,.lgt,.lgt-s,.ptilab,.mv,.ml,.bi,.bi.cur{text-shadow:0 1px 3px rgba(0,0,0,0.95),0 0 8px rgba(0,0,0,0.65)}
-[data-theme="light"] .nc span,[data-theme="light"] .lt,[data-theme="light"] .lsu,[data-theme="light"] .wlt,[data-theme="light"] .sml-lbl,[data-theme="light"] .rnt,[data-theme="light"] .rh,[data-theme="light"] .rb,[data-theme="light"] .rbl,[data-theme="light"] .pain-txt,[data-theme="light"] .lgt,[data-theme="light"] .lgt-s,[data-theme="light"] .ptilab,[data-theme="light"] .mv,[data-theme="light"] .ml,[data-theme="light"] .bi,[data-theme="light"] .bi.cur{text-shadow:0 1px 3px rgba(255,255,255,0.95),0 0 6px rgba(255,255,255,0.75)}
+/* The halo stays on the map's own labels (the drawing). The panels and the toolbar lost theirs 2026-10-11: they sit
+   on solid faces where the ink already clears 4.5:1, and the brass look has no glow. */
+.nc span,.lt,.lsu,.wlt,.sml-lbl,.ll-icon{text-shadow:0 1px 3px rgba(0,0,0,0.95),0 0 8px rgba(0,0,0,0.65)}
+[data-theme="light"] .nc span,[data-theme="light"] .lt,[data-theme="light"] .lsu,[data-theme="light"] .wlt,[data-theme="light"] .sml-lbl{text-shadow:0 1px 3px rgba(255,255,255,0.95),0 0 6px rgba(255,255,255,0.75)}
 
 /* ── MOBILE / TABLET  ≤ 768px ───────────────────────────── */
 @media (max-width:699px), (max-height:500px) {
@@ -484,6 +490,58 @@ permalink: /tools/iceberg-map/
 @media (max-width:699px), (max-height:500px){
   #as{position:static} /* toolbar and content are static in the phone stack · the strip joins the flow */
   #tb .tool-bar-kicker{display:none} /* room for the Layer selector next to the breadcrumb */
+}
+
+/* ═══ THE BRASS LOOK · 2026-10-11 (docs/HU-BRASS-LOOK-2026-10-11.md) ═══
+   Surface only. The toolbar and the two panels are faces, the reset and the Lines switch are keys and the
+   switch lights brass when on. The layer rows and node cards are the map's drawing and keep their own look. */
+#wrap #tb, [data-theme="light"] #wrap #tb { background:var(--face-bg); border-bottom-color:color-mix(in srgb, var(--brass-lo) 45%, var(--border2)); box-shadow:0 6px 14px var(--depth); }
+#wrap :is(.hi, .ltg, .pz-reset-btn), [data-theme="light"] #wrap :is(.hi, .ltg, .pz-reset-btn) {
+  background:var(--key-bg); color:var(--key-ink); border:1px solid transparent; border-top-color:var(--brass-rim);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 2px 0 var(--key-floor), 0 4px 8px var(--depth); backdrop-filter:none;
+}
+#wrap .hi { border-radius:8px; }
+/* #wrap * zeroed these two boxes' own padding (the same reset the selector re-seat above answers), so the Lines key
+   sat with its word against its edges and the Map Controls header against the panel's border; the values are the
+   ones their own rules already declare */
+#wrap .ltg { border-radius:6px; padding:3px 8px; }
+#wrap .lph { padding:12px 18px 11px; }
+/* the same reset flattened the kit's sheet grabber to a 4px strip with its bar pushed to the left edge */
+#wrap .hu-sheet-grab { padding:10px 0 6px; }
+@media (hover:none) { #wrap .hu-sheet-grab { padding:20px 0 16px; } }
+#wrap .hu-sheet-grab span { margin:0 auto; }
+#wrap :is(.hi, .ltg, .pz-reset-btn):hover { background:var(--key-bg); color:var(--key-ink); border-color:transparent; border-top-color:var(--brass); filter:brightness(1.08); }
+[data-theme="light"] #wrap :is(.hi, .ltg, .pz-reset-btn):hover { background:var(--key-bg); color:var(--key-ink); border-color:transparent; border-top-color:var(--brass-lo); filter:brightness(.97); }
+#wrap :is(.hi, .ltg, .pz-reset-btn):active { transform:translateY(2px); box-shadow:0 0 0 var(--key-floor), 0 2px 4px var(--depth); }
+#wrap .pz-reset-btn:active { transform:translateX(-50%) translateY(2px); }
+#wrap .ltg.lton, [data-theme="light"] #wrap .ltg.lton, #wrap .ltg.lton:hover, [data-theme="light"] #wrap .ltg.lton:hover {
+  background:var(--brass-bg); color:var(--brass-ink); border-color:transparent; box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 var(--brass-deep);
+}
+#wrap :is(#rp, #lp), [data-theme="light"] #wrap :is(#rp, #lp) {
+  background:var(--face-bg); border-color:color-mix(in srgb, var(--brass-lo) 45%, var(--border2)); box-shadow:0 10px 22px var(--depth);
+}
+#wrap #as, [data-theme="light"] #wrap #as { background:var(--face-bg); border-bottom-color:color-mix(in srgb, var(--brass-lo) 45%, var(--border2)); }
+@media (prefers-reduced-motion: no-preference) {
+  #wrap :is(.hi, .ltg, .pz-reset-btn) { transition:transform .12s ease, box-shadow .12s ease, filter .12s ease, color .15s, border-color .15s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #wrap :is(.hi, .ltg, .pz-reset-btn) { transition:none; }
+}
+/* ONE ROW ON A PHONE (the Inbox's "two tool bars", 2026-10-11). The bar took three rows at 360: the brand,
+   the name and the Layer selector; then the views, reset and site menu; then the trail. Like the other tools
+   it is one row now. The HU mark yields (home is in the site menu, as on the Career Tree and the SQL mystery),
+   the name keeps its noun ("Layers", as Cost of Living keeps "Cost of Living"), the selector gives up width
+   before anything wraps, and the trail steps off the phone: the map right under the bar already shows the
+   path, outlined, with the card you are on lit. */
+@media (max-width:699px), (max-height:500px){
+  #wrap #tb { flex-wrap:nowrap; column-gap:6px; min-height:52px; padding:0 12px; }
+  #wrap #tb .tb-brand, #wrap #tb .sp, #wrap #bc { display:none; }
+  #wrap #tb .logo .tool-bar-title { font-size:0; }
+  #wrap #tb .logo .tool-bar-title span { font-size:var(--t-body); }
+  #wrap #tb .selector { flex:0 1 auto; }
+  #wrap #tb .selector .sel-val { min-width:0; }
+  @media (hover:none){ #wrap #tb .selector { padding:10px 12px; } }
+  #wrap #rp, [data-theme="light"] #wrap #rp { box-shadow:0 -10px 30px var(--depth); }
 }
 </style>
 

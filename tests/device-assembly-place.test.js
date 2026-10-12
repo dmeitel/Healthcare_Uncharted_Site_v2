@@ -118,9 +118,11 @@ test('furniture never sits on the patient, the bedside screen or another piece, 
 
 test('the daily wall visits the new places only from wall #4, and a home deal leaves the hospital wall with its rail', () => {
   assert.deepStrictEqual(['2026-10-03', '2026-10-04', '2026-10-05'].map(da.dayPlace), ['hospital', 'hospital', 'hospital'], 'walls #1 to #3 are as they were dealt');
-  const days = {}; for (let n = 3; n < 63; n++) { const d = new Date(Date.UTC(2026, 9, 3 + n)).toISOString().slice(0, 10); days[da.dayPlace(d)] = d; }
+  // the old schedule of places, for the days the old dealer deals: from wall #23 the daily year deals instead, and
+  // tests/device-assembly-daily.test.js holds that it still visits every place
+  const days = {}; for (let n = 3; n < 63; n++) { const d = new Date(Date.UTC(2026, 9, 3 + n)).toISOString().slice(0, 10); if (!days[da.dayPlace(d)]) days[da.dayPlace(d)] = d; }
   assert.ok(days.hospital && days.rehab && days.home, 'all three places come up');
-  assert.strictEqual(da.levelById('day:' + days.home).gen.place, 'home', 'a home day deals a home');
+  if (da.dayNumber(days.home) < da.YEAR_DAY) assert.strictEqual(da.levelById('day:' + days.home).gen.place, 'home', 'a home day deals a home');
   const S = da.start('day:2026-10-04');
   da.levelById('home:FRESH1');
   assert.strictEqual(da.GRID.rail, 0, 'the hospital wall on screen keeps its rail');

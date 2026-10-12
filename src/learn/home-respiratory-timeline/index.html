@@ -108,9 +108,10 @@ date: 2026-04-27
 
   /* ─── HEADER ─── */
   header {
-    /* Flat navy token; flips itself for light so header text stays readable. */
-    background: var(--navy);
-    border-bottom: 1px solid rgba(26,140,140,0.3);
+    /* The brass look (2026-10-11): the header is a featured panel, a face with a brass edge along its foot. */
+    background: var(--face-bg);
+    border-bottom: 1px solid var(--brass-lo);
+    box-shadow: inset 0 -1px 0 var(--brass), 0 10px 22px var(--depth);
     padding: 48px 40px 36px;
     position: relative;
     overflow: hidden;
@@ -150,9 +151,9 @@ header h1 {
 
   /* ─── FILTER BAR ─── */
   .filter-bar {
-    background: var(--navy-veil);
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid var(--border2);
+    background: var(--face-bg);
+    border-bottom: 2px solid color-mix(in srgb, var(--brass-lo) 45%, var(--border2));
+    box-shadow: 0 6px 14px var(--depth);
     padding: 14px 40px;
     display: flex;
     align-items: center;
@@ -171,36 +172,39 @@ header h1 {
     margin-right: 6px;
   }
   .filter-label::before { content: '\2500 '; color: var(--border2); letter-spacing: 0; }
+  /* each filter a key; the one that is on is brass. The category hues stay on the rail's dots and the
+     detail badge, where they are data. */
   .filter-btn {
-    background: var(--neutral-tint);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text-dim);
+    background: var(--key-bg);
+    border: 1px solid transparent;
+    border-top-color: var(--brass-rim);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 0 var(--key-floor);
+    color: var(--key-ink);
     font-family: 'Source Serif 4', serif;
     font-size:var(--t-fine);
     padding: 5px 14px;
     border-radius: 20px;
     cursor: pointer;
-    transition: all 0.2s;
     white-space: nowrap;
   }
-  [data-theme="light"] .filter-btn { border-color: rgba(14,14,15,0.12); }
   .filter-btn:hover {
-    background: rgba(26,140,140,0.2);
-    border-color: var(--hrt-teal);
-    color: var(--teal-light);
+    border-top-color: var(--brass);
+    filter: brightness(1.08);
   }
+  [data-theme="light"] .filter-btn:hover { filter: brightness(.97); border-top-color: var(--brass-lo); }
+  .filter-btn:active { transform: translateY(2px); box-shadow: 0 0 0 var(--key-floor); }
+  .filter-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  [data-theme="light"] .filter-btn:focus-visible { outline-color: var(--teal-ink); }
   .filter-btn.active {
-    background: var(--teal);
-    border-color: var(--teal);
-    color: #062024;
+    background: var(--brass-bg);
+    border-color: transparent;
+    color: var(--brass-ink);
     font-weight: 600;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 var(--brass-deep);
   }
-  /* Category actives keep their data hue: solid fill, page-ink text (flips with theme) */
-  .filter-btn.cat-legislation.active { background: var(--cat-leg); border-color: var(--cat-leg); color: var(--deep); }
-  .filter-btn.cat-technology.active { background: var(--teal-light); border-color: var(--teal-light); color: var(--deep); }
-  .filter-btn.cat-clinical.active { background: var(--cat-clin); border-color: var(--cat-clin); color: var(--deep); }
-  .filter-btn.cat-profession.active { background: var(--cat-prof); border-color: var(--cat-prof); color: var(--deep); }
-  .filter-btn.cat-payment.active { background: var(--gold-light); border-color: var(--gold-light); color: var(--deep); }
+  @media (prefers-reduced-motion: no-preference) {
+    .filter-btn { transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .15s; }
+  }
 
   /* ─── LAYOUT ─── */
   .main {
@@ -259,9 +263,10 @@ header h1 {
   .timeline-item:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; transition: none; }
   /* teal-ink, not teal-dk: teal-dk measures 2.93:1 on this page's cream rail, under the 3:1 ring floor */
   [data-theme="light"] .timeline-item:focus-visible { outline-color: var(--teal-ink); }
+  /* the event on screen: a key under it and a brass edge */
   .timeline-item.active {
-    background: none;
-    border-left-color: var(--hrt-teal);
+    background: var(--key-bg);
+    border-left-color: var(--brass);
   }
   .timeline-item.hidden { display: none; }
 
@@ -464,19 +469,25 @@ header h1 {
     border-top: 1px solid rgba(26,140,140,0.15);
   }
   .nav-btn {
-    background: rgba(26,140,140,0.1);
-    border: 1px solid rgba(26,140,140,0.2);
-    color: var(--teal-light);
+    background: var(--key-bg);
+    border: 1px solid transparent;
+    border-top-color: var(--brass-rim);
+    box-shadow: var(--key-lift);
+    color: var(--key-ink);
     font-family: 'Source Serif 4', serif;
     font-size:var(--t-ui);
     padding: 8px 18px;
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s;
     font-style: italic;
   }
-  .nav-btn:hover { background: rgba(26,140,140,0.2); }
-  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn:hover { border-top-color: var(--brass); filter: brightness(1.08); }
+  [data-theme="light"] .nav-btn:hover { filter: brightness(.97); border-top-color: var(--brass-lo); }
+  .nav-btn:active { transform: translateY(3px); box-shadow: var(--key-down); }
+  .nav-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; transform: none; box-shadow: 0 1px 0 var(--key-floor); border-top-color: transparent; }
+  @media (prefers-reduced-motion: no-preference) {
+    .nav-btn { transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .15s; }
+  }
   .nav-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
   [data-theme="light"] .nav-btn:focus-visible { outline-color: var(--teal-ink); }
 
@@ -518,7 +529,7 @@ header h1 {
   [data-theme="light"] .hu-guest-pill { color: var(--teal-light); }
 
   .hu-bio {
-    background: var(--hu-surface);
+    background: var(--face-bg);
     border-top: 2px solid var(--hu-blue);
     padding: 48px 32px;
     margin-top: 48px;
@@ -555,9 +566,17 @@ header h1 {
   }
   .hu-bio-link {
     display: inline-flex; align-items: center; gap: 8px;
-    font-size:var(--t-ui); color: var(--hu-accent); text-decoration: none; font-weight: 500;
-    border: 1px solid var(--hu-accent-border-strong);
+    font-size:var(--t-ui); color: var(--key-ink); text-decoration: none; font-weight: 500;
+    background: var(--key-bg);
+    border: 1px solid transparent; border-top-color: var(--brass-rim);
+    box-shadow: var(--key-lift);
     padding: 8px 14px; border-radius: 6px;
+  }
+  .hu-bio-link:hover { color: var(--key-ink); border-top-color: var(--brass); filter: brightness(1.08); }
+  [data-theme="light"] .hu-bio-link:hover { filter: brightness(.97); border-top-color: var(--brass-lo); }
+  .hu-bio-link:active { transform: translateY(3px); box-shadow: var(--key-down); }
+  @media (prefers-reduced-motion: no-preference) {
+    .hu-bio-link { transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .15s; }
   }
   /* 8px pad on 13px text lands at 39 */
   @media (hover:none) { .hu-bio-link { min-height: 44px; }

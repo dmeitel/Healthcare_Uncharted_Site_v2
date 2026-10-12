@@ -67,7 +67,7 @@
     } catch (e) { /* private window: the box still works, it just cannot keep a draft */ }
     return '';
   };
-  Array.prototype.forEach.call(document.querySelectorAll('.hub-qa-item'), function (/** @type {any} */ item) {
+  Array.prototype.forEach.call(document.querySelectorAll('.hub-qa-item:not(.hub-idea)'), function (/** @type {any} */ item) {
     var kept = draft(draftKey(item));
     var ta = item.querySelector('textarea');
     if (kept && ta && item.getAttribute('data-state') !== 'tweak') {
@@ -76,8 +76,16 @@
       item.querySelector('.hub-err').textContent = 'Not sent yet. Press Send to Claude to save this note.';
     }
   });
+  /* the same for an answer on the Ideas tab: the box keeps a draft until it is saved */
+  Array.prototype.forEach.call(document.querySelectorAll('.hub-idea'), function (/** @type {any} */ idea) {
+    var ta = idea.querySelector('textarea');
+    idea.setAttribute('data-saved', ta.value);
+    var kept = draft('hub-idea:' + idea.getAttribute('data-idea'));
+    if (kept && kept !== ta.value) { ta.value = kept; idea.querySelector('.hub-err').textContent = 'Not saved yet. Press Save the note, or an answer.'; }
+  });
   var unsent = function () {
-    return Array.prototype.some.call(document.querySelectorAll('.hub-qa-item'), function (/** @type {any} */ item) {
+    if (Array.prototype.some.call(document.querySelectorAll('.hub-idea'), function (/** @type {any} */ idea) { return !!draft('hub-idea:' + idea.getAttribute('data-idea')); })) return true;
+    return Array.prototype.some.call(document.querySelectorAll('.hub-qa-item:not(.hub-idea)'), function (/** @type {any} */ item) {
       var ta = item.querySelector('textarea');
       return ta && ta.value.trim() && item.getAttribute('data-state') !== 'tweak' && draft(draftKey(item));
     });
@@ -122,6 +130,20 @@
       return;
     }
 
+    /* the Ideas tab: Yes, Maybe or No saves at once, with whatever is in the box; Save the note keeps the answer;
+       a Yes can go to the board's Inbox */
+    var idea = t.closest('.hub-idea');
+    if (idea && t.closest('[data-idea-mark], [data-idea-save], [data-idea-inbox]')) {
+      var ib = idea.querySelector('textarea'), ie = idea.querySelector('.hub-err');
+      var im = t.closest('[data-idea-mark]');
+      var ibody = t.closest('[data-idea-inbox]') ? { id: idea.getAttribute('data-idea'), inbox: true }
+        : { id: idea.getAttribute('data-idea'), mark: im ? im.getAttribute('data-idea-mark') : '', note: String(ib.value || '').trim() };
+      if (!im && !ibody.inbox && !ibody.note && idea.getAttribute('data-state') === 'todo') { ie.textContent = 'Pick Yes, Maybe or No, or write a note first.'; ib.focus(); return; }
+      ie.textContent = '';
+      post('/__hub/api/idea', ibody).then(function () { draft('hub-idea:' + ibody.id, ''); leaving = true; reloadInPlace(); }, function (x) { ie.textContent = x.message; });
+      return;
+    }
+
     /* the QA list: Good saves at once; Needs a tweak opens the note first */
     var m = t.closest('[data-mark]');
     if (m) {
@@ -148,6 +170,12 @@
   });
   document.addEventListener('input', function (e) {
     var t = /** @type {any} */ (e.target);
+    var idn = t && t.closest && t.closest('.hub-idea');
+    if (idn) {
+      idn.querySelector('.hub-err').textContent = '';
+      draft('hub-idea:' + idn.getAttribute('data-idea'), t.value !== idn.getAttribute('data-saved') ? t.value : '');
+      return;
+    }
     var it = t && t.closest && t.closest('.hub-qa-item');
     if (!it) return;
     it.querySelector('.hub-err').textContent = '';
