@@ -147,7 +147,7 @@ const kit = {
     { id: 'build', set: 'data', kind: 'maker', name: 'Build', how: 'npm run build',
       what: 'Data, entities, icons, then the whole site into _site.',
       when: ['work'], shows: '_site/',
-      covers: ['npm run build:data', 'npm run build:entities', 'npm run build:icons', 'npm run build:geo', 'npm run build:suppliers', 'npm run build:vital-stats'] },
+      covers: ['npm run build:data', 'npm run build:entities', 'npm run build:icons', 'npm run build:geo', 'npm run build:suppliers', 'npm run build:vital-stats', 'npm run build:huddle'] },
     { id: 'pulls', set: 'data', kind: 'maker', name: 'Data pulls', how: 'npm run pull:all',
       what: 'Fetches from the public sources: CDC PLACES, Census, BLS, CMS, IPEDS and more.',
       when: ['monthly'], shows: 'Dry run unless --write',

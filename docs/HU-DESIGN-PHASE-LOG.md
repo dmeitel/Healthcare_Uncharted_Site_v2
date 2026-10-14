@@ -783,3 +783,15 @@ fits within 44 px, the nearest port a run can take, a press near an open port st
 bottom rows are reachable); a tap is a tap (10 px slop, no unplugging on a press, no double-tap Turn or pull-off on touch); the
 buzz and its Settings row. The standard behind it is the hu-game-shell skill's "a finger is not a mouse" (twelve rules) and the
 Touch section of .claude/rules/games.md; the gate is `npm run da:thumb`. The desk layout and play did not change.
+
+## 2026-10-14 · Daily Huddle, the hex trivia board · OPENED, round 1 at QA (DH1 to DH3)
+
+Opened on David's "Yes this all looks awesome, Lets build its core functions out get me a functional demo and QA list/Review
+test list on the hub and we will start the refinement process from there." Surface: src/secret-menu/daily-huddle/ and its bank.
+Round 1 (the working demo) is at his QA (board card daily-huddle, step 97): a 19-tile board laid out like the Atlas, six zones of
+three around a brass compass, raised tiles on a floor in the Atlas zone colors in both themes, held tiles filled with a brass rim
+and brass joints between them, closed tiles as dark glass; the question as a side card on a desk from 1100 px and a dialog over
+the board below that; the answer card with the right option in green, the values behind every option, the source and its check
+date, and the link into the tool that shows the number. Measured: tiles 72 to 87 px on real phone screens, taps 14 and 22 px
+off-centre open the tile aimed at every time, `npm run phone` clean at nine sizes on the start screen, the board and the list.
+Plan and build record: docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md, sections 2 and 10.

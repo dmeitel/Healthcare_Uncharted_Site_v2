@@ -84,6 +84,22 @@ Plan: docs/HU-PHONE-PLAY-PLAN-2026-10-12.md
 | 89 | **Write the standard down, then measure the other games:** the twelve rules into the hu-game-shell skill and games.md, the thumb test made shareable, Uncharted General, Alarm Fatigue and Vital Stats measured. | Claude | The skill section is in and the three-game report is filed | DONE 2026-10-13 |
 | 90 | **His QA:** he plays it on his phone over the home wifi and marks the hub's QA list. | David | His QA list is clear | NEXT |
 
+### Focus · secondary · Daily Huddle · stage: QA
+
+A working demo of the daily trivia board: the day's 19 tiles in the Atlas zones, cross from top to bottom in three minutes with three misses, the dots as the score, a share line, practice, past boards and a made-board link, on one phone screen.
+Done looks like: David plays today's board on his phone and a desk, and marks the hub's QA list; his notes start the refinement rounds.
+Plan: docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md
+
+| # | Step | Owner | Done when | Status |
+|---|---|---|---|---|
+| 91 | **The question bank:** scripts/build-huddle.js turns Vital Stats' bank, the license compacts, clinical math and the hand-checked sets (normals, laws, health tech, odd codes) into tile questions, each with its source and check date. | Claude | tests/huddle-questions.test.js passes and every zone can fill its tiles every day | DONE 2026-10-14 |
+| 92 | **The engine:** the board dealt by date (six zones around the compass, the seventh in the compass), crossing, misses, the clock, the dots score, save and resume, all plain data through one dispatcher. | Claude | tests/huddle.test.js passes: the same date deals the same board, every board can be crossed, a save restores | DONE 2026-10-14 |
+| 93 | **The page:** the start screen, the board, the question card, the answer with its source, the finish card and the share line, on one phone screen; the board reads the exact press point. | Claude | npm run phone clean at nine viewports and a scripted play-through at phone and desk | DONE 2026-10-14 |
+| 94 | **Make a board, practice and past boards:** a link carries the board, the clock and the misses; practice is any board, untimed if you like; past days replay as practice. | Claude | A made link opens the same board in a fresh browser | DONE 2026-10-14 |
+| 95 | **Menus from the kit:** the how-to, the game menu, Settings with More time, and a question list for checking the bank. | Claude | tests/game-shell.test.js passes with the new game in it | DONE 2026-10-14 |
+| 96 | **The QA list and pictures** on the hub. | Claude | The card's QA list shows on /__hub/qa with phone and desk pictures | DONE 2026-10-14 |
+| 97 | **His QA:** he plays today's board on his phone and a desk and marks the hub's QA list. | David | Every check marked Good or Needs a tweak with a note | NEXT |
+
 ### Up next · A Routine Fracture
 
 The broken arm Rounds piece, a review draft in the secret menu since 2026-10-03.
@@ -94,7 +110,7 @@ The broken arm Rounds piece, a review draft in the secret menu since 2026-10-03.
 | 13 | **DECISIONS R1 and the rest of R6:** whether places and people are named, and three details only he knows. | David | Answered | NEXT |
 | 14 | **The fifth panel's notes,** then the publish-to-Rounds checklist at the top of the page. | Claude, when he says | The piece is in Rounds on his yes | WAITING on steps 12 and 13 |
 
-### Up next · secondary · A year of daily walls
+### Up next · A year of daily walls
 
 David, 2026-10-11: "yes to the daily walls, start oct 25" (DY2). On his DY1 answers of 2026-10-10: a weekly climb (easy Monday, hard Saturday, Sunday a story day), joke days on Saturdays only, a one-wall teach the first time a new mode shows up, one or two new modes a month.
 A year of daily walls for Device Assembly that change what the puzzle asks you to do, not only where the oxygen comes from.
@@ -170,6 +186,8 @@ Nothing here is worked until David promotes it.
 ---
 
 ## CHANGES
+
+- 2026-10-14 · **Daily Huddle moves into focus as secondary, at Build, on David's "Yes this all looks awesome, Lets build its core functions out get me a functional demo and QA list/Review test list on the hub"** (DH1 to DH3 answered with the recommendations). Steps 91 to 97; his QA is step 97. A year of daily walls stays in Up next with its QA step 62 (by Oct 20) unchanged; it gives up the secondary label because focus and Up next hold one secondary.
 
 - 2026-10-13 · **The other games by thumb promoted to Up next on David's word** ("promote the other games by thumb card"). Alarm Fatigue, Vital Stats and Uncharted General against the phone play standard; the measurements are docs/HU-PHONE-PLAY-THREE-GAMES-2026-10-13.md. It gets its plan and steps when it moves into focus; Phone play stays primary at QA. Nothing dropped.
 

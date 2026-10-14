@@ -295,6 +295,15 @@ replace the row buttons; `peekI` puts explainers behind an i; one "?" per map (`
 Share; the kit's back guards share one listener (`HUKit.backConsumed()`); tests/map-menus.test.js. Closing = the map menu grammar into
 DESIGN.md Tier 3, beside the map instrument grammar.
 
+**Daily Huddle, the hex trivia board · OPEN 2026-10-14** (DECISIONS DH1 to DH3; plan docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md).
+David: "Yes this all looks awesome, Lets build its core functions out get me a functional demo and QA list/Review test list on
+the hub and we will start the refinement process from there." Surface: src/secret-menu/daily-huddle/ and its bank
+(scripts/build-huddle.js, scripts/data/huddle-curated.json, src/assets/data/huddle-questions.json). A new game, so Tier 3 is
+open on it; Tier 1 and 2, the finger standard and "a phone is one screen" (hu-game-shell) bind. Rules he answered: a 19-tile
+board crossed top to bottom, the dots on the crossing are the score (DH1); normals are drafts until he checks them, drugs only as
+facts, doses only as math with every number in the question (DH2); no accounts and no public names (DH3). Stage 1 is the demo
+(the daily, practice, past boards, made-board links); the players-today counter and live rooms are Stages 2 and 3.
+
 CLOSED, details in the log: THE BRASS INSTRUMENTS LOOK, site-wide (2026-10-12, DECISIONS BR4, after his page-by-page review of
 every page night and day; what shipped is DESIGN.md Tier 3, and the change budget governs it again), the Atlas (2026-08-23; phone browse flow REVERTED; the hex grid is
 Tier 4 identity, pinch and zoom are the phone answer), My Path's status card (shipped), the two
