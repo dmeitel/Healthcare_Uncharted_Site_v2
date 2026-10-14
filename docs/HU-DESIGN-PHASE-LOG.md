@@ -768,3 +768,18 @@ verbatim, for the record:
 > controls and panels in the recipes (keys, faces, glass): a change of surface, never of layout or words. Tier 1 and Tier 2
 > bind throughout. Closing =
 > David's page-by-page review (day and night marks on /__review), then DESIGN.md Tier 3 describes the new look.
+
+## 2026-10-12 · Device Assembly game feel · phone play (P1, P2)
+
+David played the game on his phone after the a36e2ff push: "I couldn't plug things in or connect things very easily with my
+fingers the menu at the bottom felt like it was taking up the screen all the time". Measured at the screens a phone browser
+really leaves (375 x 548, 393 x 659): the wall was 28% and 41% of the screen, its squares 11 and 19 px, and a thumb that missed
+by 10 to 20 px rebuilt 12 of 112 wall runs. Plan docs/HU-PHONE-PLAY-PLAN-2026-10-12.md, section 7 the result. Shipped to his QA
+(board steps 83 to 89, his phone play is step 90): the bottom of an upright phone's screen (one line of order that opens whole,
+one slim row of parts with All parts, a picked part's buttons in that row with Done and Move, Undo beside Complete, nothing on
+the wall while a part is held; the wall to 56% of an SE and the full width of an iPhone 15); presses and their clicks read at the
+exact point (Chrome's touch adjustment had handed them to ports); the game aiming for you on touch (the nearest place a part
+fits within 44 px, the nearest port a run can take, a press near an open port starts its run, the held part decides so the
+bottom rows are reachable); a tap is a tap (10 px slop, no unplugging on a press, no double-tap Turn or pull-off on touch); the
+buzz and its Settings row. The standard behind it is the hu-game-shell skill's "a finger is not a mouse" (twelve rules) and the
+Touch section of .claude/rules/games.md; the gate is `npm run da:thumb`. The desk layout and play did not change.

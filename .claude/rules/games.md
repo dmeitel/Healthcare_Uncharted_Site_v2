@@ -68,6 +68,23 @@ docs/HU-GAME-REVIEW-2026-09-23.md. A game's menus are built from the kit, never 
 9. An item shows its name and one number; the paragraph goes behind `HUKit.peek`.
 10. Every menu reads and every button is reachable at 740x360.
 
+## Touch
+
+Adopted 2026-10-12 on David's yes (DECISIONS P1 and P2), after he played Device Assembly on his
+phone and could not plug things in. The twelve rules are the hu-game-shell skill's "a finger is not a
+mouse"; the plan and the numbers are docs/HU-PHONE-PLAY-PLAN-2026-10-12.md. In short, for any game
+played on a board:
+
+1. Anything pressed is 44 px at the real phone screen, board targets included.
+2. What was pressed is read from the exact point (`document.elementsFromPoint`), not `event.target`:
+   Chrome moves a touch to the nearest thing it judges pressable. The nearer centre wins an overlap.
+3. Every move works with taps alone; dragging is the quick way (WCAG 2.5.7).
+4. On touch the game aims: a piece lands on the nearest place it fits within 44 px of the aim.
+5. Nothing sits on the board while a piece is held; the board gets the screen.
+6. A drag starts at 10 px on touch; nothing destructive happens on the press (WCAG 2.5.2).
+7. The touch test plays at the four real phone screens, moves at a touchscreen's pace and misses on
+   purpose (scripts/lib/thumb.js). A test that aims to the pixel proves nothing.
+
 ## Tests
 
 - Every game exposes a test hook when `window.__UG_TEST` is set before its script runs:
@@ -84,6 +101,8 @@ docs/HU-GAME-REVIEW-2026-09-23.md. A game's menus are built from the kit, never 
   and a desk (`npm run da:qa`, drawn on the hub's Puzzles screen). A new puzzle is on the sheet before it ships.
 - `npm run verify` green and `npm run phone -- <path>` clean across its nine default viewports
   (portrait, landscape and both sides of the 699 line) before a game ships.
+- A board or puzzle game passes its thumb test (the Touch section above). Device Assembly's is
+  `npm run da:thumb`, and `npm run da:qa` runs its quick pass.
   The pane's screenshots can time out; Playwright shots into tmp/ are the reliable proof.
 
 ## What stays under the change budget

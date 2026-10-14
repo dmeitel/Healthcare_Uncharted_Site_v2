@@ -8,6 +8,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { loadGame } = require('./helpers/ug');
+const { el } = require('./helpers/dom');
 
 function trauma() {
   const g = loadGame();
@@ -43,6 +44,34 @@ test('a unit intent resolves by id after a close shifts the positions', () => {
   ug.dispatchAct('expand', { i: oldSurgery, u: 'surgery' });
   assert.strictEqual(ug.run.cash, cash, 'an intent for a closed unit is dropped');
   assert.doesNotThrow(() => ug.dispatchAct('hire', { i: '99', type: 'rn' }), 'an index past the end is dropped, not thrown');
+});
+
+test('a mouse click on a pay or overhead slider never turns its value into NaN', () => {
+  // 2026-10-13: the click handler sent every [data-act] element down the game-action funnel, and a
+  // range input's value is not in its dataset, so one desktop click set RN pay to NaN.
+  const { ug, ids } = loadGame();
+  ug.dispatchAct('start', { ceo: 'mba' });
+  const click = target => ids.ug._listeners.click.forEach(fn => fn({ target }));
+  const control = (tag, attrs, value) => {
+    const n = el(tag, attrs);
+    Object.keys(attrs).filter(k => k.startsWith('data-')).forEach(k => { n.dataset[k.slice(5)] = attrs[k]; });
+    n.value = value;
+    return n;
+  };
+  // the same route still runs a button's act, so the checks below are not passing on a dead handler
+  const rn0 = ug.run.departments[0].staff.rn;
+  click(control('button', { 'data-act': 'hire', 'data-i': '0', 'data-type': 'rn' }));
+  assert.strictEqual(ug.run.departments[0].staff.rn, rn0 + 1, 'a click on a hire button reaches the game');
+
+  const pay = ug.run.pay.rn, aust = ug.run.austerity;
+  click(control('input', { type: 'range', 'data-act': 'pay', 'data-type': 'rn' }, '1.10'));
+  click(control('input', { type: 'range', 'data-act': 'aust' }, '0.85'));
+  assert.strictEqual(ug.run.pay.rn, pay, 'the click leaves pay alone; the input listener sends it');
+  assert.strictEqual(ug.run.austerity, aust, 'the click leaves overhead alone too');
+
+  ug.startConstruction(ug.UNITS.find(u => u.id === 'telehealth'));
+  ug.dispatchAct('runq');
+  for (const k of ['cash', 'morale']) assert.ok(Number.isFinite(ug.run[k]), k + ' is still a number after the quarter');
 });
 
 test('a draft pick with no card behind it is dropped', () => {

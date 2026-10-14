@@ -1,7 +1,7 @@
 ---
 date: 2026-10-12
 milestone: "Learn modules and tools, page by page"
-commit: ""
+commit: "a36e2ff"
 ---
 
 # Learn modules and tools, page by page

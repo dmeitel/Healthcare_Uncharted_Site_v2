@@ -106,9 +106,11 @@ Listed so they stop reading like unfinished work.
 No decision needed. Listed so you can veto any of them.
 
 - **How the new look behaves** (BR1 to BR3 answered 2026-10-11, the phase closed 2026-10-12 on BR4; DESIGN.md Tier 3 is the rule now). In day mode the readouts stay dark glass and the inputs go light (your first review), except the Data Observatory band and the Traffic tiles, which go light on your 2026-10-11 note; the compass rose and its dial follow the mode. The fonts stay. The two maps themselves are untouched; their panels and buttons take the keys. The games' play screens keep their own look and their top bar takes the new one. The rollout runs as milestones with your QA at each, and DESIGN.md is rewritten to describe what shipped. The open design phases (the merged band, the map menus, the view switch, the cost of living tool, the games' reading load) keep their own work; their look rides on the shared pieces.
-- **Device Assembly round 2 part 2** (card backing behind parts, lighter tubing, larger
-  joints, a phone magnifier). Recommendation: skip it. You called alpha. This is polish on
-  polish and the surface has had fifteen rounds.
+- **The bottom of Device Assembly's phone screen goes to direction A** (one line of order, one slim row of parts,
+  Undo beside Complete), not B (parts behind a button): on an iPhone 15 both give the wall the same 377 px and B costs a
+  tap for every part. Picture: tmp/hub/mocks/phone-touch/compare.png. Built only on P1. (2026-10-12; it replaces the
+  old "Device Assembly round 2 part 2" row, a phone magnifier among other polish: the phone play plan does a
+  magnifier's job without one.)
 - **Vendor Directory QA.** Claude runs the auditor and brings you failures only.
 - **The attending tier and the seven-role voice pass** on the career matrix. Claude drafts,
   you edit.

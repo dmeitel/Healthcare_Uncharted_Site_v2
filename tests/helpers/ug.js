@@ -34,7 +34,9 @@ function stubEl(id) {
       toggle(c, f) { f ? this._s.add(c) : this._s.delete(c); },
       contains(c) { return this._s.has(c); },
     },
-    addEventListener() {},
+    _listeners: {},
+    /** kept so a test can fire the page's own handlers, e.g. ids.ug._listeners.click */
+    addEventListener(type, fn) { (this._listeners[type] = this._listeners[type] || []).push(fn); },
     scrollIntoView() {},
     select() {},
   };

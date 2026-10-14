@@ -1,7 +1,7 @@
 ---
 date: 2026-10-12
 milestone: "The site-wide refresh"
-commit: ""
+commit: "a36e2ff"
 ---
 
 # The site-wide refresh

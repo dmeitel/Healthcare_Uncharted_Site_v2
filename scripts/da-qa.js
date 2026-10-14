@@ -7,8 +7,9 @@
 //   - it opens on the wall the link names, with no console error and nothing off the side of the screen;
 //   - a picture empty and, where the wall carries its answer, built;
 //   - the answer passes, and every part or run taken out of it in turn is explained with a place.
-// Then a touch play test of Tutorial 1 with a thumb: pull the cannula off the cart onto the nose, pull its tubing to
-// the barb, press Complete. The report is tmp/da-qa/report.json; the pictures go under the hub's shots, and the hub's
+// Then the thumb test (scripts/da-thumb.js): walls rebuilt by a thumb that misses, at four real phone screens, and the
+// phone play checks. (Until 2026-10-12 this was a robot that aimed to the pixel at 390 x 844 and proved nothing.)
+// The report is tmp/da-qa/report.json; the pictures go under the hub's shots, and the hub's
 // Puzzles page (/__hub/puzzles) draws both. A new wall shows up there by itself.
 //
 //   npm run da:qa                 every wall
@@ -107,7 +108,9 @@ async function main() {
     report.walls = [...byId.values()].map((w) => Object.assign(w, {
       ok: (w.opened === w.asked || /^shift:/.test(w.asked)) && !w.phone.errors.length && !w.desktop.errors.length && !w.phone.overflow && !w.desktop.overflow && w.solvable !== false && !(w.breaks && w.breaks.vague.length),
     }));
-    if (touch) report.touch = await touchTest(browser, origin);
+    /* PHONE PLAY (2026-10-12): the thumb that misses replaces the robot that aimed to the pixel. Here, the quick pass: three walls,
+       20 px misses, drag and taps, at the four real phone screens; `npm run da:thumb` runs the whole set. */
+    if (touch) { const TH = require('./da-thumb.js'); report.thumb = await TH.thumbTest(browser, origin, { walls: ['t1', 'l2', 'v2'], miss: 20 }); report.touch = TH.summary(report.thumb); }
     report.screens = await screens(browser, origin);
   } finally {
     await browser.close();
@@ -120,7 +123,7 @@ async function main() {
   console.log(report.walls.length + ' walls, ' + (report.walls.length - bad.length) + ' clean; ' + breaks + ' breaks tried, every one located: ' + (report.walls.every((w) => !w.breaks || !w.breaks.vague.length) ? 'yes' : 'no') + '.');
   for (const sc of report.screens || []) if (!sc.ok) console.log('  does not fit ' + sc.name + ' (' + sc.size + '): ' + [sc.scroll > 1 ? 'the page scrolls ' + sc.scroll + ' px' : '', sc.complete ? '' : 'Complete is off the screen', sc.parts ? '' : 'the parts are off the screen', sc.dock ? '' : "the part's buttons meet the zoom buttons or leave the screen"].filter(Boolean).join(', '));
   if (report.screens) console.log("A phone's real screen: " + report.screens.filter((x) => x.ok).length + ' of ' + report.screens.length + ' fit with nothing to scroll (wall ' + report.screens.map((x) => x.wall + (x.small ? ' small, play it zoomed' : '')).join(', ') + ' px).');
-  if (report.touch) console.log('Touch play test, Tutorial 1: ' + (report.touch.ok ? 'passed' : 'FAILED') + ' (' + report.touch.steps.map((s) => s.what + (s.ok ? '' : ' x')).join(', ') + ')');
+  if (report.touch) console.log('Thumb test: ' + (report.touch.ok ? 'passed' : 'FAILED') + ' (' + report.touch.steps.map((s) => s.what + (s.ok ? '' : ' x')).join(', ') + ')');
   console.log('Report: tmp/da-qa/report.json. The hub draws it: /__hub/puzzles');
   if (bad.length || (report.touch && !report.touch.ok) || (report.screens || []).some((x) => !x.ok)) process.exitCode = 1;
 }
@@ -149,51 +152,5 @@ async function screens(browser, origin) {
   return out;
 }
 
-/* Tutorial 1 with a thumb, through the touch events a phone sends */
-async function touchTest(browser, origin) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
-  await ctx.addInitScript(() => { window.__DA_HOOK = true; try { localStorage.setItem('hu-howto-da', '1'); } catch (e) {} });
-  const page = await ctx.newPage();
-  const steps = []; const errs = []; page.on('pageerror', (e) => errs.push(e.message));
-  const cdp = await ctx.newCDPSession(page);
-  const touchAt = async (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: p[0], y: p[1] }] });
-  const pull = async (a, b) => { await touchAt('touchStart', a); for (let i = 1; i <= 12; i++) await touchAt('touchMove', [a[0] + (b[0] - a[0]) * i / 12, a[1] + (b[1] - a[1]) * i / 12]); await touchAt('touchEnd', b); await page.waitForTimeout(450); };
-  try {
-    await page.goto(origin + PAGE + '?wall=t1&dadev=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(400);
-    // 1. the cannula, pulled up off the cart and onto the nose; the part rides above the thumb, so aim the thumb under the square
-    const aim = await page.evaluate(() => { const d = window.__da, b = document.getElementById('board').getBoundingClientRect(), vb = document.getElementById('board').getAttribute('viewBox').split(' ').map(Number), sc = b.width / vb[2];
-      const n = d.GRID.nose, cell = 60 * sc, lift = Math.round(cell / 2 + 36), c = document.querySelector('.da-item[data-def="cannula"]').getBoundingClientRect();
-      return { from: [c.left + c.width / 2, c.top + c.height / 2], to: [b.left + (n[0] * 60 - vb[0]) * sc + cell / 2, b.top + (n[1] * 60 - vb[1]) * sc + cell / 2 + lift] }; });
-    // a sideways swipe scrolls the cart; an upward pull lifts the part. Halfway there, the part is in the hand.
-    await touchAt('touchStart', aim.from);
-    for (let i = 1; i <= 6; i++) await touchAt('touchMove', [aim.from[0] + (aim.to[0] - aim.from[0]) * i / 12, aim.from[1] + (aim.to[1] - aim.from[1]) * i / 12]);
-    const lifted = await page.evaluate(() => !!document.querySelector('.da-ghost'));
-    for (let i = 7; i <= 12; i++) await touchAt('touchMove', [aim.from[0] + (aim.to[0] - aim.from[0]) * i / 12, aim.from[1] + (aim.to[1] - aim.from[1]) * i / 12]);
-    await touchAt('touchEnd', aim.to); await page.waitForTimeout(450);
-    const onNose = await page.evaluate(() => { const d = window.__da, it = d.S.items.find((i) => i.def.id === 'cannula'); return !!it && it.x === d.GRID.nose[0] && it.y === d.GRID.nose[1]; });
-    steps.push({ what: 'an upward pull lifts a part off the cart', ok: lifted }, { what: 'cannula onto the nose by touch', ok: onNose });
-    // 2. its tubing, pulled from the ring to the barb
-    const ends = await page.evaluate(() => { const d = window.__da, S = d.S, b = document.getElementById('board').getBoundingClientRect(), vb = document.getElementById('board').getAttribute('viewBox').split(' ').map(Number), sc = b.width / vb[2];
-      const xy = (p) => { const D = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[p.s]; return [b.left + (p.x * 60 + 30 + D[0] * 30 - vb[0]) * sc, b.top + (p.y * 60 + 30 + D[1] * 30 - vb[1]) * sc]; };
-      const can = S.items.find((i) => i.def.id === 'cannula'), src = S.items.find((i) => i.def.id === 'src-t1');
-      if (!can || !src) return null;
-      return { ring: xy(d.portsOf(can).find((p) => p.pi === 'lead')), barb: xy(d.portsOf(src).find((p) => p.std === 'barb')) }; });
-    if (ends) await pull(ends.ring, ends.barb);
-    const joined = await page.evaluate(() => { const S = window.__da.S, tb = S.tubes.find((t) => t.lead && t.to); return !!tb && !tb.short; });
-    steps.push({ what: 'tubing pulled to the barb', ok: joined });
-    // 3. Complete, with a tap
-    const btn = await page.locator('#submitBtn').boundingBox();
-    const at = [btn.x + btn.width / 2, btn.y + btn.height / 2];
-    const tap = async () => { await touchAt('touchStart', at); await page.waitForTimeout(60); await touchAt('touchEnd', at); await page.waitForTimeout(1900); };
-    await tap();
-    let passed = await page.evaluate(() => !!window.__da.S.finished);
-    if (!passed && !(await page.evaluate(() => (window.__da.S.tests || []).length))) { await page.waitForTimeout(400); await tap(); passed = await page.evaluate(() => !!window.__da.S.finished); }   /* a tap a gesture swallowed: once more */
-    if (!passed) steps.push({ what: 'what the card said: ' + await page.evaluate(() => { const o = document.getElementById('overlay'); return (o && !o.hidden ? o.innerText : 'no card').replace(/\s+/g, ' ').slice(0, 200); }), ok: false });
-    steps.push({ what: 'Complete passes', ok: passed });
-    await page.screenshot({ path: path.join(SHOTS, 'touch-t1-done.jpg'), type: 'jpeg', quality: 72 });
-  } catch (e) { steps.push({ what: 'the script: ' + e.message.split('\n')[0], ok: false }); }
-  await ctx.close();
-  return { ok: steps.every((s) => s.ok) && !errs.length, steps, errors: errs.slice(0, 3), shot: '/__hub/shots/device-assembly/puzzles/touch-t1-done.jpg' };
-}
 
 main().catch((e) => { console.error(e); process.exitCode = 1; });

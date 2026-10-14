@@ -402,7 +402,7 @@ ${group('good', 'Good', '')}`;
 /* ── the puzzle sheet ───────────────────────────────────────────────────── */
 
 /* Device Assembly's every wall, from `npm run da:qa` (scripts/da-qa.js): opened by its link at a phone and a desk,
-   pictured empty and built, every break checked for where it stops, Tutorial 1 played by touch. A new wall is on the
+   pictured empty and built, every break checked for where it stops, walls rebuilt by a thumb that misses. A new wall is on the
    sheet the next time it runs. A wall takes a mark like a QA item (wall:<id>, in the card's marks), so a puzzle that
    needs work comes back to Claude with a note; the marks never hold up a milestone's Ship. */
 /** @param {string} [only] a group's slug from ?group=: the sheet shows that group alone (David, 2026-10-07: "another QA on specifically ventilators only") */
@@ -462,7 +462,7 @@ function puzzles(only) {
 <div class="obs-cards hub-qa-sum">
   <div class="obs-card"><p class="obs-lab">Walls</p><p class="obs-big">${clean} <small>clean of ${walls.length}</small></p></div>
   <div class="obs-card"><p class="obs-lab">Breaks tried</p><p class="obs-big">${tried}</p><p>${walls.every((/** @type {any} */ w) => !w.breaks || !w.breaks.vague.length) ? 'Every one says where the gas stops.' : 'Some do not say where; they are marked below.'}</p></div>
-  <div class="obs-card"><p class="obs-lab">Played by touch</p><p>${t ? `${t.ok ? 'Tutorial 1 passes with a thumb' : '<strong>Tutorial 1 failed by touch</strong>'}: ${esc(t.steps.map((/** @type {any} */ s) => s.what + (s.ok ? '' : ' (no)')).join(', '))}.` : 'Not run.'}</p></div>
+  <div class="obs-card"><p class="obs-lab">Played by touch</p><p>${t ? `${t.ok ? 'A thumb that misses rebuilds every wall' : '<strong>The thumb test failed</strong>'}: ${esc(t.steps.map((/** @type {any} */ s) => s.what + (s.ok ? '' : ' (no)')).join(', '))}.` : 'Not run.'}</p></div>
   <div class="obs-card"><p class="obs-lab">A phone's real screen</p><p>${rep.screens ? `${rep.screens.filter((/** @type {any} */ x) => x.ok).length} of ${rep.screens.length} fit with nothing to scroll: ${esc(rep.screens.map((/** @type {any} */ x) => x.name + ' ' + x.wall + ' px wall' + (x.small ? ', small: play it zoomed' : '') + (x.ok ? '' : ' (no)')).join('; '))}.` : 'Not run.'}</p></div>
   <div class="obs-card"><p class="obs-lab">The sheet ran</p><p>${esc(rep.at || '')}. The engine half runs in every verify: every dealt wall solves, every break says where, no hint tells a thumb to right-click.</p></div>
 </div>

@@ -67,52 +67,22 @@ Step statuses: NEXT · DOING · DONE · WAITING (say on what) · MOVED (say wher
 <!-- board:start (printed from data-build/board.json by `npm run board`; change the file, not this block) -->
 The board, printed. The picture of it is the hub: `npm run hub`, then /__hub. Stage names: Plan, Build, QA, Tweaks, Ship.
 
-### Focus · Learn modules and tools, page by page · stage: Ship
+### Focus · primary · Phone play · stage: QA
 
-Every Learn module and every tool looked at in detail, night and day, with its content pass, starting from one standard Learn card.
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 66 | **One standard Learn card** (his note: the lens tags top and bottom plus "framework", "mental model", "interactive" crowd it): a plan with pictures of the card before and after. | Claude | The plan and pictures on the hub | DONE 2026-10-11 |
-| 70 | **His pick** of the Learn card (LC1: now, A dots, B small words) on /__hub/mocks/learn-card.html. | David | His pick in the chat | DONE 2026-10-11 |
-| 71 | **The Learn card built** on /learn/ in his pick: every module card and the talk cards, both themes, phone and desk. | Claude | Phone gate clean on /learn/; verify green; pictures filed | DONE 2026-10-11 |
-| 67 | **His page-by-page review** of the Learn modules and the tools on /__review, night and day, with notes. | David | Every Learn module and tool carries his marks | DONE 2026-10-11 |
-| 77 | **His review notes worked** (59 pages, night and day): the Share button off every Learn module and Rounds piece; sources folded on eleven modules; the home map rests after 30 seconds; the 4Ps tab bar unpinned on a phone; the Observatory, Traffic, the SQL editor and the hospital game save box light in day; the review screen in day; five pages finished out of the review; the secret menu search gone; the oxygen module in the standard look; the data sources diagrams fixed; the process engineering drawings on a phone; future items to the Inbox. | Claude | Phone gate clean on every page touched; verify green; pictures filed | DONE 2026-10-11 |
-
-### Focus · primary · The site-wide refresh · stage: Ship
-
-Every page in the brass instruments look in night and day, the outstanding notes the AI can act on done, and the review screen ready for his page-by-page marks.
-Done looks like: Every page passes the phone gate at nine sizes in both themes, verify is green, and /__review carries a Day and a Night mark for every page.
-Plan: docs/HU-SITE-REFRESH-2026-10-11.md
+Device Assembly plays by thumb on a real phone: the game aims for you, every move works with taps, and the wall gets most of the screen; the twelve rules behind it hold every game.
+Done looks like: The thumb test passes at four real phone screens (10 and 20 px misses, drag and taps alone), the wall is at least 55% of the screen on the SE and iPhone 15, and David marks his phone play good on the hub's QA list.
+Plan: docs/HU-PHONE-PLAY-PLAN-2026-10-12.md
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
-| 43 | **Set up:** BR1 to BR3 recorded, the design phase opened, brass in the brand colors (list items 1 and 2). | Claude | CLAUDE.md, DESIGN.md and the decisions log say so | DONE 2026-10-11 |
-| 44 | **The shared look:** tokens, the top bar with Fun, buttons, cards, chips and the switch, fields and readouts, the kit cards, the footer, pages that glide (items 3 to 11). | Claude | Every page picks it up; pictures in both themes | DONE 2026-10-11 |
-| 45 | **The front door:** home with the compass rose in a brass dial, the Fun page at /fun/, the Tools shelf (items 12 to 14). | Claude | Phone gate clean in both themes on /, /fun/ and /tools/ | DONE 2026-10-11 |
-| 46 | **Tools and the two maps** in the new look, the two tool bars from the Inbox, dated source lines (items 15 and 16). | Claude | Phone gate clean in both themes on every tool | DONE 2026-10-11 |
-| 47 | **Games:** the game bar and menus on every game, Alarm Fatigue's helpers off the CHECK buttons (item 17). | Claude | Phone gate clean in both themes on every game | DONE 2026-10-11 |
-| 48 | **Learn, Rounds, the secret menu, About, 404, thanks and the Atlas** (items 18 to 21). Words unchanged. | Claude | Phone gate clean in both themes on every page | DONE 2026-10-11 |
-| 49 | **The page ledger's small fixes:** 33 meta descriptions, the writing checker's findings on 12 pages (items 22 and 23). | Claude | The ledger shows no meta or writing failures; every edit listed | DONE 2026-10-11 |
-| 50 | **The Yes cards the AI can do:** pdf.js, security quick wins, AI search engines, share cards, the sitemap, channel tags, the trust pages and /ai, the launch plan and checklist, GitHub pins (items 24 to 32). | Claude | Each one built and tested, or waiting on David by name | DONE 2026-10-11 |
-| 51 | **QA in night and day:** every page at nine sizes in both themes, contrast, the design hook, verify, old pages, links, pictures filed, DESIGN.md Tier 3 rewritten (items 33 to 36). | Claude | All green; the pictures on the hub | DONE 2026-10-11 |
-| 52 | **The review ready:** a Day and a Night mark per page on /__review, changed-since shown, the Site tab showing both (items 37 and 38). | Claude | He can open /__review and mark the first page | DONE 2026-10-11 |
-| 53 | **His page-by-page review** of the main pages in day and night on /__review (the Learn modules and the tools move to the next card). His notes archived in data-build/archive/page-reviews-2026-10-11.json, answered in docs/HU-SITE-REFRESH-2026-10-11.md. | David | Every page carries his Day and Night marks | DONE 2026-10-11 |
-| 63 | **The light theme, sharper** (his notes on Tools, Rounds and Vital Stats: day reads washed out and hazy): measure it, then two or three options at a phone and a desk (a crisper edge and a tighter shadow; a deeper ground; both), and Vital Stats' dark pieces in day fixed. | Claude | The options pictured on the hub, both themes, phone and desk | DONE 2026-10-11 |
-| 64 | **His pick** of the light theme option. | David | His pick in the chat | DONE 2026-10-11 |
-| 65 | **The pick applied everywhere,** then the small tweaks from his notes: the logo reads as the way home; home's three group buttons (redundant, left on a desk) reworked with options; the secret menu's card flavor text to a pin by the name with the sentence behind an "i". | Claude | Phone gate clean on every page in both themes; verify green; pictures filed | DONE 2026-10-11 |
-| 68 | **His picks** for the logo (LG1: now, on a key, a slight shadow, a brass frame) and home's group buttons on a desk (HM1: centered, three columns, gone), on /__hub/mocks/home-tweaks.html. | David | His picks in the chat | DONE 2026-10-11 |
-| 69 | **His picks applied**: the logo and home's group buttons, in both themes at a phone and a desk. | Claude | Phone gate clean on the home page and a tool page; verify green; pictures filed | DONE 2026-10-11 |
-| 72 | **Field Notes off the footer, a short phone footer** (his note: "scrap the field notes for now"; "its a long scroll too"): the form gone, Support a column of the top row, a phone keeps the support button, the copyright and the policy links; the Privacy page says there is no signup now. | Claude | Phone gate clean on home and a module; verify green | DONE 2026-10-11 |
-| 73 | **His pick** for home under the hero (HM2: three picks, one feature and what is new, every tool as a tile) on /__hub/mocks/home-options.html. | David | His pick in the chat | DONE 2026-10-11 |
-| 74 | **Home under the hero built** in his pick, desk and phone, both themes. | Claude | Phone gate clean on home; verify green; pictures filed | DONE 2026-10-11 |
-| 75 | **His settings** for the hex grid (HX2: the Atlas zones or the sections, the tile height, the raised ground) on /__hub/mocks/hex-hero.html. He picked C. | David | His pick in the chat | DONE 2026-10-11 |
-| 76 | **The hex grid built** in his pick: routes kept off the words, reduced motion holds still, the secret tile and the eight taps unchanged, both themes, desk and phone. | Claude | Phone gate clean on home; verify green; pictures filed | DONE 2026-10-11 |
-| 78 | **The secret tile like a zone and the dev blog** (his note mid-review): the SM tile raised with its own route from the compass, no glow, same triggers; a blog on the secret menu at /secret-menu/blog/ with a feedback tracker, post 1 the Site 1.0 release. | Claude | Phone gate clean on home and the blog; verify green; pictures filed | DONE 2026-10-11 |
-| 79 | **His read of post 1** of the dev blog ("looks ok", the one-liners out) and **his call on the brass phase** (BR4: "yes close the brass phase"; DESIGN.md Tier 3 rewritten from what shipped). | David | His edits or his yes in the chat | DONE 2026-10-12 |
-| 80 | **The About page for more authors, drawn** (his "yes draw the about page options", AB1): A every author the same card, B a lead author and contributors, on /__hub/mocks/about-authors.html at phone and desk, night and day. | Claude | The flip page and pictures on the hub | DONE 2026-10-11 |
-| 81 | **His pick** for the About page (AB2: Now, A or B). | David | His pick in the chat | DONE 2026-10-12 |
-| 82 | **The About page built in his pick A**: the site first, then every author on the same card from src/_data/authors.js; phone and desk, both themes. | Claude | Phone gate clean on /about/; verify green; pictures filed | DONE 2026-10-12 |
+| 83 | **The thumb test, first:** a touch test that misses like a person (10 and 20 px, eight directions), by drag and by taps alone, at 375x548, 393x659, 360x640 and 430x746, plus the layout checks; it replaces the robot test in da:qa. | Claude | It runs and its first report shows today's failures on the hub | DONE 2026-10-12 |
+| 84 | **The bottom of the screen:** the order as one line, the tray as one slim row that turns into the picked part's buttons and the Back to cart zone, Undo beside Complete; nothing floats over the wall. | Claude | The wall is at least 55% of the screen at 375x548 and 393x659 (today 28% and 41%); nothing over the wall while a part is held; no scroll | DONE 2026-10-13 |
+| 85 | **A tap is a tap:** touch drags start after 10 px; a tubed port unplugs only when pulled; press areas go to the nearest port or part; the tray swipe scrolls without a ghost. | Claude | The thumb test's wobble checks pass | DONE 2026-10-13 |
+| 86 | **The game aims for you:** a held part or tubing end lands on the nearest place it fits within 44 px, only those places lit; the bottom rows reachable. | Claude | Every drag in the thumb test lands with a 20 px miss | DONE 2026-10-13 |
+| 87 | **Everything by taps:** tap a part or tubing on the tray, tap a lit place; tap a wall part to move it; the phone hints teach the tap way. | Claude | Tutorials 1 to 5 and Level 2 solve with zero drags at all four phone screens | DONE 2026-10-13 |
+| 88 | **The feel of a connection:** the snap checked on touch at the new sizes; a buzz on phones that can, with a Settings row, on by default. | Claude | The setting is remembered; pictures filed | DONE 2026-10-13 |
+| 89 | **Write the standard down, then measure the other games:** the twelve rules into the hu-game-shell skill and games.md, the thumb test made shareable, Uncharted General, Alarm Fatigue and Vital Stats measured. | Claude | The skill section is in and the three-game report is filed | DONE 2026-10-13 |
+| 90 | **His QA:** he plays it on his phone over the home wifi and marks the hub's QA list. | David | His QA list is clear | NEXT |
 
 ### Up next · A Routine Fracture
 
@@ -154,6 +124,9 @@ The logo mark reads as one object at the sizes the site draws it small, and the 
 | 40 | **The home rose on a phone:** the tap area lines up with the rose the canvas draws (today it sits 14 px higher). | Claude | Measured at 360, 390, 740x360 and 1280: the centers match; the phone gate clean on / | DONE 2026-10-11 |
 | 41 | **A rose drawn big:** its lines grow with it (1.6 times in the dial), written into the design direction for the brass look, and the dial mockup defaults to the heavier lines. | Claude | Written down; the mockup shows it | DONE 2026-10-11 |
 | 42 | **His QA** on the hub: the logo in the bars and the tab, the home rose on his phone. | David | His QA list is clear | WAITING on his QA list on the hub |
+
+### Up next · The other games by thumb
+
 
 ### Waiting on David, small
 
@@ -197,6 +170,12 @@ Nothing here is worked until David promotes it.
 ---
 
 ## CHANGES
+
+- 2026-10-13 · **The other games by thumb promoted to Up next on David's word** ("promote the other games by thumb card"). Alarm Fatigue, Vital Stats and Uncharted General against the phone play standard; the measurements are docs/HU-PHONE-PLAY-THREE-GAMES-2026-10-13.md. It gets its plan and steps when it moves into focus; Phone play stays primary at QA. Nothing dropped.
+
+- 2026-10-13 · **Phone play built, at QA** (steps 83 to 89 done in window 2026-10-12-b): the thumb test passes on all four phones. His phone play is step 90, six checks on the hub's QA list. The other three games' fixes are a new Inbox card, The other games by thumb. Nothing dropped.
+
+- 2026-10-12 · **Phone play moves into focus as primary, at Plan, on David's note after playing Device Assembly on his phone** ("I couldn't plug things in or connect things very easily with my fingers the menu at the bottom felt like it was taking up the screen all the time"). Plan: docs/HU-PHONE-PLAY-PLAN-2026-10-12.md, steps 83 to 90, his yes to both came the same window ("yes to both, go ahead and build it"), so it moved to Build. A year of daily walls stays in Up next on his QA (step 62, by Oct 20). Nothing dropped.
 
 - 2026-10-11 · **Learn modules and tools, page by page moves into focus, at Build, on David's "ok start the learn modules and tools review"**. The review screen walks a run of the 17 Learn pages and the 8 tools (data-build/review-run.json); the standard Learn card is drawn for his pick (LC1). A year of daily walls steps back to Up next while it waits on his QA (step 62, by Oct 20). Nothing dropped.
 
