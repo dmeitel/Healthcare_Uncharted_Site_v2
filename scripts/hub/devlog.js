@@ -156,7 +156,7 @@ function phases() {
     const name = head.split(' · ')[0].trim();
     const last = [...head.matchAll(/\b(OPEN|PARKED|REOPENED)\b/g)].pop();   // the latest word wins: PARKED AT ALPHA, REOPENED is open
     const state = last && last[1] === 'PARKED' ? 'parked' : 'open';
-    const since = (head.match(/\d{4}-\d{2}-\d{2}/) || [''])[0];
+    const since = (head.slice(Math.max(0, head.indexOf(' · '))).match(/\d{4}-\d{2}-\d{2}/) || [''])[0];   // after the name: a renamed surface carries a date in it ("Headwall (Device Assembly until 2026-10-15)")
     const paths = [...new Set((p.match(/src\/[\w\-/.]+/g) || []).map((s) => s.replace(/[.,;]+$/, '')))];
     return { name, state, since, paths };
   });

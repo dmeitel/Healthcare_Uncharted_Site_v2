@@ -112,3 +112,14 @@ test('filler words alone fall back to the phrase match and do not throw', () => 
 test('no redirect page sits in the index', () => {
   for (const e of idx()) assert.ok(!/^Moved to /.test(e.label), 'redirect stub in search: ' + e.label);
 });
+
+// A renamed tool keeps its old name as a search key (the naming rule, 2026-08-30). Device Assembly became Headwall on
+// 2026-10-15 (DECISIONS HW1): both names, and what the game is, find it.
+test('Headwall answers to its name, its old name and what it is', () => {
+  for (const q of ['headwall', 'head wall', 'device assembly', 'device assembly game', 'respiratory equipment game']) assert.equal(top(q), '/fun/headwall/', q);
+});
+
+// Daily Huddle came off the secret menu onto the Fun shelf 2026-10-15, so search finds it now.
+test('Daily Huddle answers to its name', () => {
+  for (const q of ['daily huddle', 'huddle']) assert.equal(top(q), '/fun/daily-huddle/', q);
+});

@@ -241,7 +241,7 @@ https://medlineplus.gov/lab-tests/; https://data.hrsa.gov/data/download. ICD-10-
 On David's yes, the same window. The card is `daily-huddle` on the board, steps 91 to 97; his QA is step 97, eleven checks on
 the hub's QA list.
 
-- **The game:** src/secret-menu/daily-huddle/index.html (the engine in `#hd-engine`: `deal`, `newGame`, `dispatchAct`,
+- **The game:** src/fun/daily-huddle/index.html (src/secret-menu/daily-huddle/ until 2026-10-15) (the engine in `#hd-engine`: `deal`, `newGame`, `dispatchAct`,
   `crossing`, `canCross`, `packSave`/`applySave`, `madeCode`/`parseMade`, `shareText`, the Mountain-time day). Today's
   board, practice (`?board=practice`), past days (`?board=day:YYYY-MM-DD`, untimed), made boards (`?board=my:CODE`, the
   seed, the clock and the misses), the question list for checking the bank (`?list=all`, `?list=normals`, `?list=<zone>`).

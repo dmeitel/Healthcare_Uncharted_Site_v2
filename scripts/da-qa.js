@@ -1,4 +1,4 @@
-// da-qa.js — Device Assembly's puzzle sheet. `npm run da:qa`
+// da-qa.js · Headwall's puzzle sheet (Device Assembly until 2026-10-15). `npm run da:qa`
 //
 // David, 2026-10-04: "a functional or working QA system specifically for this game as we continue to build out new
 // puzzles". The engine half is tests/device-assembly-puzzles.test.js, in every `npm run verify`: every dealt wall
@@ -15,6 +15,7 @@
 //   npm run da:qa                 every wall
 //   npm run da:qa -- t1 v2        just those walls (and the touch test)
 //   npm run da:qa -- --no-touch   skip the touch test
+//   npm run da:qa -- --origin http://localhost:8098   against a server already running (a private copy of _site)
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +25,7 @@ const { stamp } = require('./lib/session.js');
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'tmp', 'da-qa');
 const SHOTS = path.join(ROOT, 'tmp', 'hub', 'shots', 'device-assembly', 'puzzles');
-const PAGE = '/fun/device-assembly/';
+const PAGE = '/fun/headwall/';
 const SIZES = [
   { name: 'phone', width: 390, height: 844, mobile: true },
   { name: 'desktop', width: 1440, height: 900, mobile: false },
@@ -53,15 +54,27 @@ function inPage() {
     if (/No patient interface/.test(first) || ev.kind === 'invalid' || (ev.stop && ev.stop.text && !/Nothing carries gas from an outlet/.test(first))) located++;
     else vague.push((w.def.short || w.def.id) + ': ' + first); }
   out.breaks = { total, located, vague };
+  /* the cart holds the answer (2026-10-14): every part and run the answer uses is on the cart in its numbers, a circuit bag
+     counting as its Y and two limbs (the same count as tests/device-assembly-puzzles.test.js) */
+  { const S = d.newState(L), sol = JSON.parse(L.solution), have = Object.assign({}, S.cart), need = {}, add = (o, k) => { o[k] = (o[k] || 0) + 1; };
+    const si = new Map(S.items.map((i) => [i.uid, i])), stb = new Map(S.tubes.map((t) => [t.uid, t])), keep = new Set(sol.items.map((i) => i.uid)), keepT = new Set(sol.tubes.map((t) => t.uid));
+    for (const i of sol.items) if (!si.has(i.uid)) add(need, i.def);
+    for (const t of sol.tubes) if (!t.lead && !stb.has(t.uid)) add(need, (t.def && t.def.id) || t.def);
+    for (const [u, i] of si) if (!i.fixed && !keep.has(u)) add(have, i.def.id);   /* what a built wall starts with and the answer takes off goes back on the cart */
+    for (const [u, t] of stb) if (!t.lead && !keepT.has(u)) add(have, t.def.id);
+    const short = (k) => (need[k] || 0) > (have[k] || 0), fit = (k) => { const x = d.DB[k].kit; return [x.y, x.insp, x.exp].filter((q) => need[q]).length; };
+    for (const k of Object.keys(have).filter((k) => have[k] > 0 && d.DB[k] && d.DB[k].kit).sort((a, b) => fit(b) - fit(a))) for (let n = have[k]; n > 0; n--) { const x = d.DB[k].kit; if (![x.y, x.insp, x.exp].some(short)) break; for (const q of [x.y, x.insp, x.exp]) add(have, q); }
+    out.cart = Object.keys(need).filter(short).map((k) => need[k] + ' ' + k + ', the cart holds ' + (have[k] || 0)); }
   return out;
 }
 
 async function main() {
   const argv = process.argv.slice(2);
-  const only = argv.filter((a) => !a.startsWith('--'));
+  const oi = argv.indexOf('--origin'), given = oi > -1 ? argv[oi + 1] : null;   /* --origin <url>: a server already running (a copy of _site, say) */
+  const only = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--origin');
   const touch = !argv.includes('--no-touch');
-  const server = await require('./review.js').start(0, { quiet: true });
-  const origin = 'http://localhost:' + server.port;
+  const server = given ? null : await require('./review.js').start(0, { quiet: true });
+  const origin = given || 'http://localhost:' + server.port;
   fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(SHOTS, { recursive: true });
   const browser = await chromium.launch();
   const report = { at: stamp(), walls: [], touch: null };
@@ -72,8 +85,9 @@ async function main() {
     await probe.addInitScript(() => { window.__DA_HOOK = true; });
     await probe.goto(origin + PAGE + '?dadev=1', { waitUntil: 'networkidle' });
     const authored = await probe.evaluate(() => window.__da.LEVELS.filter((L) => !L.parked).map((L) => L.id));
+    const today = await probe.evaluate(() => window.__da.todayId());   /* and today's daily, the wall David plays (2026-10-14) */
     await probe.close();
-    const ids = (only.length ? only : [...authored, ...DEALT]);
+    const ids = (only.length ? only : [...new Set([...authored, today, ...DEALT])]);
     for (const size of SIZES) {
       const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height }, deviceScaleFactor: 1, isMobile: size.mobile, hasTouch: size.mobile });
       await ctx.addInitScript(() => { window.__DA_HOOK = true; try { localStorage.setItem('hu-howto-da', '1'); } catch (e) {} });
@@ -89,7 +103,7 @@ async function main() {
         const r = await page.evaluate(inPage);
         const wall = byId.get(id) || { id, link, asked: id };
         byId.set(id, wall);
-        Object.assign(wall, { title: r.title, kicker: r.kicker, kind: r.kind, group: r.group, order: r.order, opened: r.id, solvable: r.solvable, breaks: r.breaks });
+        Object.assign(wall, { title: r.title, kicker: r.kicker, kind: r.kind, group: r.group, order: r.order, opened: r.id, solvable: r.solvable, breaks: r.breaks, cart: r.cart || null });
         const file = (tag) => id.replace(/[^a-z0-9]+/gi, '-') + '-' + size.name + '-' + tag + '.jpg';
         await page.screenshot({ path: path.join(SHOTS, file('empty')), type: 'jpeg', quality: 72 });
         const shots = { empty: '/__hub/shots/device-assembly/puzzles/' + file('empty') };
@@ -106,15 +120,16 @@ async function main() {
     }
     process.stdout.write('\n');
     report.walls = [...byId.values()].map((w) => Object.assign(w, {
-      ok: (w.opened === w.asked || /^shift:/.test(w.asked)) && !w.phone.errors.length && !w.desktop.errors.length && !w.phone.overflow && !w.desktop.overflow && w.solvable !== false && !(w.breaks && w.breaks.vague.length),
+      ok: (w.opened === w.asked || /^shift:/.test(w.asked)) && !w.phone.errors.length && !w.desktop.errors.length && !w.phone.overflow && !w.desktop.overflow && w.solvable !== false && !(w.breaks && w.breaks.vague.length) && !(w.cart && w.cart.length),
     }));
-    /* PHONE PLAY (2026-10-12): the thumb that misses replaces the robot that aimed to the pixel. Here, the quick pass: three walls,
-       20 px misses, drag and taps, at the four real phone screens; `npm run da:thumb` runs the whole set. */
-    if (touch) { const TH = require('./da-thumb.js'); report.thumb = await TH.thumbTest(browser, origin, { walls: ['t1', 'l2', 'v2'], miss: 20 }); report.touch = TH.summary(report.thumb); }
+    /* PHONE PLAY (2026-10-12): the thumb that misses replaces the robot that aimed to the pixel. Here, the quick pass: three walls
+       and today's daily (2026-10-14), a drag watched 20 px off, a thumb on the place 10 px off, and taps 10 px off, at the four
+       real phone screens and the daily at two more; `npm run da:thumb` runs the whole set. */
+    if (touch) { const TH = require('./da-thumb.js'); report.thumb = await TH.thumbTest(browser, origin, { walls: ['t1', 'l2', 'v2', 'today'], quick: true }); report.touch = TH.summary(report.thumb); }
     report.screens = await screens(browser, origin);
   } finally {
     await browser.close();
-    await server.close();
+    if (server) await server.close();
   }
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 1));
   const bad = report.walls.filter((w) => !w.ok);

@@ -2,7 +2,7 @@
 layout: base.njk
 nav_merged: true
 navPage: fun
-title: "Device Assembly: The Respiratory Equipment Setup Game"
+title: "Headwall: The Respiratory Equipment Setup Game"
 description: "Set up real respiratory equipment on the wall behind the bed, with real connector standards, and get a therapist's read on why a build failed. Mistakes are free."
 section: fun
 no_footer: true
@@ -158,6 +158,7 @@ date: 2026-10-06
 .da-read-body .is-bad{color:#b3261e;} .da-read-k.is-ok{color:#1d7a4d;} .da-read-k.is-twist{color:#b3261e; margin-top:6px;}
 .da-read-big{font-size:var(--t-lede); font-weight:700;}
 .da-read-old{font-family:var(--mono); font-size:var(--t-micro); color:#52616f; margin-top:4px !important;}
+.da-read-note{margin-top:8px !important;}   /* the chart note, a step below the order (2026-10-15) */
 .da-read-flash{margin:0 0 6px !important; padding:4px 8px; border-left:3px solid #4ECDC4; border-radius:4px; background:#e9eff4; color:#1d2733; font-size:var(--t-label); line-height:1.35;}   /* a message over the page (2026-10-07) */
 .da-read-flash.is-ok{border-left-color:#2D9B6F;} .da-read-flash.is-warn{border-left-color:#b9822c;} .da-read-flash.is-bad{border-left-color:#c2443e;}
 /* the drag ghost follows the pointer 1:1 (transform only, never left/top); the lift is on an
@@ -303,6 +304,7 @@ date: 2026-10-06
 .da-big span{font-family:var(--display); font-weight:700; font-size:18px; color:var(--teal);}
 .da-dial{display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap;} .da-dial b{min-width:44px; text-align:center; font-family:var(--mono); font-size:var(--t-sub); color:var(--t1);}
 .da-dial-btn{width:auto; min-height:36px; padding:4px 8px; margin:0; font-family:var(--mono); font-size:var(--t-fine);} .da-dial-btn.on{border-color:var(--teal); color:var(--teal);}
+@media (max-width:699px), (max-height:500px){ .da-pbtn.da-dial-btn{min-height:44px; min-width:44px;} }   /* the touch floor: the FiO2 dial is pressed on the daily (2026-10-14, they were 35 x 36) */
 .da-fits{font-size:var(--t-fine); color:var(--t2); line-height:1.5;} .da-fits b{color:var(--da-ok); font-weight:600;} .da-fits i{color:var(--da-warn); font-style:normal; font-weight:600;}
 
 /* ---------- overlays ---------- */
@@ -588,6 +590,7 @@ date: 2026-10-06
   #cartDock .da-item .nm{display:block; -webkit-line-clamp:unset; min-height:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:var(--t-micro); line-height:1.25;}
   #cartDock .da-item .n{top:1px; right:2px;}
   .da-item.da-all .ic{background:var(--raised); color:var(--t1);}
+  #cartList.slim, #cartList.slim .da-item{touch-action:none;}   /* the row scrolls itself: a rising pull lifts a part (rowSwipe) */
   .da-rowph{flex:none;}
   /* a picked part's buttons take the same row; Done (or Cancel, with a part in the hand) brings the parts back */
   #cartDock.verbs #cartList{display:none;}
@@ -711,7 +714,7 @@ date: 2026-10-06
 <!-- the site's game bar (components/game-bar.njk): one status (the timed wall's sat, hidden otherwise) and one
      action (Home, the front door: the word on a desktop, its icon on a phone; it was Walls until 2026-10-06). The "?" and the game menu mount into #daKit; the
      Secret Menu link and the site menu are rows inside the menu. The tagline carries the wall's crumb. -->
-{% endraw %}{% call gameBar({ name: 'Device', accent: 'Assembly', tagline: 'Beta', kitId: 'daKit' }) %}
+{% endraw %}{% call gameBar({ name: 'Headwall', tagline: 'Beta', kitId: 'daKit' }) %}
     <span class="da-time" id="clock" hidden aria-live="off">01:30</span>
     <button class="toggle-chip" id="menuBtn" type="button">Home</button>
     <button class="icon-btn da-ico" id="menuBtnI" type="button" aria-label="Home" title="Home"><i data-lucide="house" aria-hidden="true"></i></button>
@@ -1270,7 +1273,7 @@ def({id:'circuit-plain', vc:true, name:'Unheated circuit, in its bag', short:'Pl
   desc:'A whole unheated circuit out of one bag: two plain limbs and the Y. It goes on in one piece, the same way; it is the circuit for an HME, not for a heated humidifier, where it rains out.',
   ports:[], tags:[], provides:[], tier:'i', source:'Unheated dual-limb circuits are the category convention (inferred); laying itself is a rule for the puzzle (gameplay).'});
 def({id:'bag-bvm', vc:true, name:'Resuscitation bag', short:'Bag', mfr:'Generic', model:'Self-inflating bag with trach connector and oxygen port', cat:'device', draw:'bag', w:1, h:2, backup:'bag', upright:'It hangs by the bed where anyone can grab it.',
-  desc:'The bag that breathes for him if the ventilator stops. Its 15 mm connector fits the trach. It is not hooked up; it hangs in the room, ready.',
+  desc:'The bag that breathes for him if anything fails. Its 15 mm connector fits an ET tube or a trach. It is not hooked up; it hangs on the wall by the bed, ready. Every patient with an artificial airway has one there.',
   ports:[P('iso15','f','bi',[0,1],'S','Patient connector')], tags:['backup'], provides:[], tier:'v',
   source:'AARC guideline, long-term invasive ventilation in the home [30]: a self-inflating resuscitation bag with tracheostomy attachments.'});
 def({id:'suction-portable', vc:true, name:'Portable suction, battery', short:'Battery suction', mfr:'Representative', model:'Portable aspirator with battery and canister', cat:'device', draw:'portsuct', w:2, h:2, backup:'suction', upright:'It sits on the floor or a shelf.',
@@ -1572,16 +1575,17 @@ const LEVELS = [
      {text:'From the flowmeter outlet the path is the heated route from Tutorial 5: tree, oxygen tubing, socket adapter, chamber (plug it in). Then tap the heated circuit on the cart, the chamber outlet, and the Optiflow. Its wire plugs into the heater base, so it only heats on the chamber.', done:F=>F.ifaceLinked&&F.onBed},
      {text:'Press Complete. Par is the whole chain; the score is about keeping the runs short.', done:()=>false}]},
 
-  {id:'l3', face:LOWER, kind:'level', kicker:'Level 4', title:'Trach collar', crumb:'Level 4 · Trach collar', room:ROOM_TURNED(),   /* 2026-10-07: turned the other way */
+  {id:'l3', bag:'cart', face:LOWER, kind:'level', kicker:'Level 4', title:'Trach collar', crumb:'Level 4 · Trach collar', room:ROOM_TURNED(),   /* 2026-10-07: turned the other way */
    brief:'Order: cool aerosol, 35% FiO2 at 10 L/min, by trach collar.',
    scenario:'A tracheostomy bypasses the nose, so the gas has to arrive wet, and the collar goes on the NECK, the square right below the nose square, not on the face. The large-volume nebulizer does the humidifying and sets the percentage with its collar; corrugated tubing carries the aerosol. Read the lengths on the cart before you lay it: the nebulizer hangs high on the wall and the neck is low.',
-   cart:TRACH_CART,
+   cart:TRACH_CART.concat([['bag-bvm',1]]),
    req:{iface:['trach'], flow:10, humid:true, fio2:35},
    par:{comp:4, cells:13, conn:4, len:8, adapters:0, bends:0, time:180}, timer:null, scored:true,
    steps:[
      {text:'A flowmeter on an oxygen outlet, and the nebulizer threads straight onto its DISS outlet: its nut is the same thread the tree uses. Click the percentage on the nebulizer (or its sliders corner) and set the collar to the order.', done:F=>F.fio2Ok},
      {text:'The collar goes on the neck, the square right below the nose square. On the nose it reads red, and the toast says why.', done:F=>F.onBed},
      {text:'Corrugated tubing from the nebulizer cone to the collar cone, straight down the column beside the face. Six feet will not make it; the cart has a longer cut.', done:F=>F.ifaceLinked},
+     {text:'He has a trach, so a resuscitation bag hangs on the wall by his bed, ready if anything fails. It is on the cart: put it up anywhere it fits. It does not get hooked up.', done:F=>F.ev.ok},
      {text:'Press Complete.', done:()=>false}]},
 
   /* PARKED 2026-09-23 (David): bubble CPAP is a neonatal therapy, and this wall puts it on the adult patient. Out of
@@ -1683,21 +1687,21 @@ const LEVELS = [
    steps:[{text:'Something on this setup is wrong. Follow the oxygen from the machine to his nose, and fix it with what is there. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
   /* STAGE C · THE VENTILATOR WALLS (2026-10-04, David: "lets move onto stage c"). Plan C4: set up a ventilator, add a
      treatment, and a fault wall. The rules they judge are VENT_RULES, off the rule sheet. */
-  {id:'v1', vent:true, kind:'level', kicker:'Ventilator 1', title:'Set up a ventilator', crumb:'Ventilator 1 · Set up', room:ICU_ROOM(), extras:[ETT_AT],
+  {id:'v1', vent:true, kind:'level', kicker:'Ventilator 1', title:'Set up a ventilator', crumb:'Ventilator 1 · Set up', room:ICU_ROOM(), bag:'cart', extras:[ETT_AT],
    brief:'Order: mechanical ventilation, FiO2 40%, with heated humidity. The patient is intubated. Set up the ventilator and its circuit.',
    scenario:'He came up from the emergency department intubated, with someone bagging him. The ventilator cart is here with its heated humidifier on the pole, and the circuit is on the cart in pieces. The cart\u2019s cord goes on a red outlet, its oxygen hose in an oxygen outlet and its air hose in an air outlet; the heated limb runs from the chamber to the Y, and the expiratory limb comes back from the Y to the ventilator.',
-   cart:VENT_CART.concat([['hme',1], ['flowmeter',1], ['tube-o2-7',1]]),
+   cart:VENT_CART.concat([['hme',1], ['flowmeter',1], ['tube-o2-7',1], ['bag-bvm',1]]),
    req:{iface:['ett'], vent:true, fio2:40, humid:true},
    par:{comp:3, cells:20, conn:4, len:11, adapters:0, bends:2, time:300}, timer:null, scored:true,
-   steps:[{text:'Stand the ventilator cart where its cord reaches a red outlet and its hoses reach an oxygen and an air outlet. Then the circuit: the Y on the tube, the heated limb from the chamber to the Y, and the expiratory limb from the Y back to the ventilator. The FiO2 is on its spec sheet.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
-  {id:'v8', vent:true, kind:'level', kicker:'Ventilator 8', title:'The other side of the bed', crumb:'Ventilator 8 · The other side', room:ICU_LEFT(), extras:[ETT_AT],
+   steps:[{text:'Stand the ventilator cart where its cord reaches a red outlet and its hoses reach an oxygen and an air outlet. Then the circuit: the Y on the tube, the heated limb from the chamber to the Y, and the expiratory limb from the Y back to the ventilator. The FiO2 is on its spec sheet. He is intubated, so the resuscitation bag on the cart goes up on the wall too, anywhere it fits; it does not get hooked up.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
+  {id:'v8', vent:true, kind:'level', kicker:'Ventilator 8', title:'The other side of the bed', crumb:'Ventilator 8 · The other side', room:ICU_LEFT(), bag:'cart', extras:[ETT_AT],
    brief:'Order: mechanical ventilation, FiO2 40%, with heated humidity. The patient is intubated. Set up the ventilator.',
    scenario:'A bed space laid out the other way round: the red outlets are at the left end of the headwall, so the ventilator goes on his left. Its ports have to face him.',
-   cart:[['vent-cart',1], ['circuit-heated',1], ['hme',1]],
+   cart:[['vent-cart',1], ['circuit-heated',1], ['hme',1], ['bag-bvm',1]],
    req:{iface:['ett'], vent:true, fio2:40, humid:true},
    par:{comp:3, cells:23, conn:4, len:14, adapters:0, bends:3, time:300}, timer:null, scored:true,
-   steps:[{text:'Stand the cart on his left, where its cord reaches a red outlet, its ports facing him (Flip turns it round). Then drop the circuit bag on the wall, and set the FiO2 on its spec sheet.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
-  {id:'v2', vent:true, kind:'level', kicker:'Ventilator 2', title:'An inline treatment', crumb:'Ventilator 2 · Treatment', room:ICU_ROOM(), extras:[ETT_AT],
+   steps:[{text:'Stand the cart on his left, where its cord reaches a red outlet, its ports facing him (Flip turns it round). Then drop the circuit bag on the wall, and set the FiO2 on its spec sheet. The resuscitation bag on the cart goes up on the wall too; it does not get hooked up.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
+  {id:'v2', vent:true, kind:'level', kicker:'Ventilator 2', title:'An inline treatment', crumb:'Ventilator 2 · Treatment', room:ICU_ROOM(), bag:'wall', extras:[ETT_AT, {def:'bag-bvm', x:-4, y:1}],
    brief:'Order: albuterol by inline mesh nebulizer, with a filter on the expiratory limb. The ventilator is running.',
    scenario:'The same patient, wheezing now. The circuit is up and working. The treatment goes in the inspiratory limb, and what he breathes out has to stop at a filter before it reaches the ventilator.',
    cart:[['vent-cart-split',1], ['neb-mesh',1], ['filter-bv',1], ['hme',1]],
@@ -1707,7 +1711,7 @@ const LEVELS = [
    steps:[{text:'The circuit works. Drop the mesh nebulizer on the inspiratory limb near the Y, and a filter on the expiratory limb near the ventilator: each goes in at that joint.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
   /* STAGE C, the rest (2026-10-04, David: "go ahead and build the rest of stage c"): the inhaler, suction and EtCO2 on
      the circuit, the HME that has to go, noninvasive ventilation, and a ventilator at home */
-  {id:'v3', vent:true, kind:'level', kicker:'Ventilator 3', title:'An inhaler on the ventilator', crumb:'Ventilator 3 · Inhaler', room:ICU_ROOM(), extras:[ETT_AT],
+  {id:'v3', vent:true, kind:'level', kicker:'Ventilator 3', title:'An inhaler on the ventilator', crumb:'Ventilator 3 · Inhaler', room:ICU_ROOM(), bag:'wall', extras:[ETT_AT, {def:'bag-bvm', x:-4, y:1}],
    brief:'Order: albuterol, 4 puffs by inhaler, in line. The ventilator is running.',
    scenario:'The same patient, a different treatment. An inhaler on a ventilator goes in a spacer in the inspiratory limb, so the breath carries the puff in. There is an elbow adapter on the cart too.',
    cart:[['vent-cart-stack',1], ['mdi-spacer',1], ['mdi-elbow',1], ['filter-bv',1]],
@@ -1715,7 +1719,7 @@ const LEVELS = [
    after:st=>{ ventSetup(st, {v:[9,5], build:'vent-cart-stack'}); ventPlug(st); },   /* 2026-10-07: ports top and bottom */
    par:{comp:4, cells:23, conn:5, len:13, adapters:0, bends:2, time:240}, timer:null, scored:true,
    steps:[{text:'The circuit works. Drop the spacer on the inspiratory limb near the Y; it goes in at that joint. A filter dropped on the expiratory limb near the ventilator keeps the drug off its sensors.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
-  {id:'v4', vent:true, kind:'level', kicker:'Ventilator 4', title:'Suction and EtCO2 on the circuit', crumb:'Ventilator 4 · Suction and EtCO2', room:ICU_BOOM(), extras:[ETT_AT],
+  {id:'v4', vent:true, kind:'level', kicker:'Ventilator 4', title:'Suction and EtCO2 on the circuit', crumb:'Ventilator 4 · Suction and EtCO2', room:ICU_BOOM(), bag:'wall', extras:[ETT_AT, {def:'bag-bvm', x:-4, y:1}],
    brief:'Order: in-line suction, and continuous EtCO2. The ventilator is running.',
    scenario:'He needs suctioning often now, and the team wants a capnogram. This bed has a boom: a vacuum outlet at bed height on the right. The closed suction catheter goes on the tube, the CO2 adapter at the patient end, and the Y on top of them.',
    cart:[['vent-cart-low',1], ['suction-closed',1], ['capno-adapter',1], ['suction-reg',1], ['tube-suct',1], ['tube-suct-10',1], ['flex-tube',1]],
@@ -1723,7 +1727,7 @@ const LEVELS = [
    after:st=>{ ventSetup(st, {v:[9,2], low:true}); ventPlug(st); },   /* BETA V3: the cart with its ports underneath */
    par:{comp:5, cells:18, conn:6, len:7, adapters:0, bends:1, time:300}, timer:null, scored:true,
    steps:[{text:'The closed suction catheter goes on the tube, the CO2 adapter on top of it, and the Y on top of that. Drop the adapter on the Y and the Y slides out a square to make room; the catheter is an elbow, so move the Y up and turn it for that one. Suction tubing runs from a regulator on the boom to the catheter, and the sampling line goes in the monitor.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
-  {id:'v5', vent:true, kind:'level', kicker:'Ventilator 5', title:'Swap the HME for heated humidity', crumb:'Ventilator 5 · Heated humidity', room:ICU_ROOM(), extras:[ETT_AT],
+  {id:'v5', vent:true, kind:'level', kicker:'Ventilator 5', title:'Swap the HME for heated humidity', crumb:'Ventilator 5 · Heated humidity', room:ICU_ROOM(), bag:'wall', extras:[ETT_AT, {def:'bag-bvm', x:-4, y:1}],
    brief:'Order: mechanical ventilation, FiO2 40%. He has thick, copious secretions: change the humidity to heated.',
    scenario:'He came over from another unit on an HME. His secretions are thick now, and an HME clogs with them.',
    cart:[['vent',1], ['limb-plain',2], ['y-piece',1], ['hme',1], ['heated',1], ['tube-22',1], ['limb-insp',1], ['water-trap',1]],
@@ -1745,7 +1749,7 @@ const LEVELS = [
    req:{iface:['trachvent'], vent:true, o2:2, humid:true, patient:{dependent:true}},
    par:{comp:7, cells:14, conn:7, len:5, adapters:1, bends:0, time:420}, timer:null, scored:true,
    steps:[{text:'The trach is at the neck: the HME on it, an adapter up to 22 mm, then the exhalation port. One limb back to the ventilator, with the pressure valve and the bleed-in at its outlet. Then the backups, anywhere in the room.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
-  {id:'vf1', vent:true, kind:'fault', kicker:'Ventilator fault 1', title:'Heated, and an HME', crumb:'Ventilator fault 1', room:ICU_ROOM(), extras:[ETT_AT],
+  {id:'vf1', vent:true, kind:'fault', kicker:'Ventilator fault 1', title:'Heated, and an HME', crumb:'Ventilator fault 1', room:ICU_ROOM(), bag:'wall', extras:[ETT_AT, {def:'bag-bvm', x:-4, y:1}],
    brief:'Order: mechanical ventilation, FiO2 40%, with heated humidity. The circuit is built, and something on it is wrong. Fix it.',
    scenario:'Night shift set this one up, and his numbers on the monitor look fine. Whatever is wrong has not shown itself yet.',
    cart:VENT_BUILT.concat([['hme',1]]),
@@ -1754,7 +1758,7 @@ const LEVELS = [
    par:{comp:3, cells:22, conn:4, len:13, adapters:0, bends:2, time:180}, timer:null, scored:false,
    fault:{parts:['hme'], name:'An HME on a heated circuit', why:'The heated humidifier is already humidifying, and the HME at the patient end soaks up its water. A flooded HME can block the airway.', fix:'Take the HME out and seat the Y back on the tube.'},
    steps:[{text:'Something on this circuit is wrong. Follow the gas from the ventilator to the patient and back. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
-  {id:'vf2', vent:true, kind:'fault', kicker:'Ventilator fault 2', title:'A nebulizer behind an HME', crumb:'Ventilator fault 2', room:ICU_ROOM(), extras:[ETT_AT],
+  {id:'vf2', vent:true, kind:'fault', kicker:'Ventilator fault 2', title:'A nebulizer behind an HME', crumb:'Ventilator fault 2', room:ICU_ROOM(), bag:'wall', extras:[ETT_AT, {def:'bag-bvm', x:-4, y:1}],
    brief:'Order: albuterol by inline mesh nebulizer. He is on an HME, with no heater. The treatment is running, and something on the circuit is wrong. Fix it.',
    scenario:'The treatment has been running for ten minutes and he is still wheezing.',
    cart:[['vent',1], ['limb-plain',2], ['y-piece',1], ['hme',1], ['neb-mesh',1], ['filter-bv',1]],
@@ -1763,7 +1767,7 @@ const LEVELS = [
    par:{comp:4, cells:20, conn:5, len:12, adapters:0, bends:1, time:180}, timer:null, scored:false,
    fault:{parts:['hme'], name:'A nebulizer behind an HME', why:'The HME sits between the nebulizer and the tube, and it catches the drug before it gets there. The treatment is going into the HME.', fix:'Take the HME out for the treatment and seat the Y on the tube, the neb with it. The HME goes back on afterward.'},
    steps:[{text:'Something on this circuit is wrong. Follow the gas from the ventilator to the patient and back. Show me points at it if you are stuck.', done:F=>F.ev.ok}, {text:'It works. Press Complete.', done:()=>false}]},
-  {id:'vf3', vent:true, kind:'fault', kicker:'Ventilator fault 3', title:'The filter on the wrong limb', crumb:'Ventilator fault 3', room:ICU_ROOM(), extras:[ETT_AT],
+  {id:'vf3', vent:true, kind:'fault', kicker:'Ventilator fault 3', title:'The filter on the wrong limb', crumb:'Ventilator fault 3', room:ICU_ROOM(), bag:'wall', extras:[ETT_AT, {def:'bag-bvm', x:-4, y:1}],
    brief:'Order: albuterol by inline mesh nebulizer, with a filter on the expiratory limb. The circuit is built, and something on it is wrong. Fix it.',
    scenario:'Day shift added the treatment and a filter before they left.',
    cart:[['vent-cart-split',1], ['neb-mesh',1], ['filter-bv',1]],
@@ -1910,14 +1914,14 @@ const GEN_CACHE = new Map();
 /* a generated wall's level, from its id: 'day:YYYY-MM-DD' or 'gen:<code>' */
 function genLevel(id){
   if(GEN_CACHE.has(id)) return GEN_CACHE.get(id);
-  if(/^my:/.test(id)){ const o=myParse(id), L=o && makeWall(o, id); if(L) GEN_CACHE.set(id, L); return L || undefined; }
-  { const m=/^(rehab|home|icu):([A-Za-z0-9]{1,12})$/.exec(id); if(m){ const c=m[2].toUpperCase(), L=genPlaceWall(m[1]+'|'+c, {id, kicker:({home:'Someone\u2019s home · wall ', rehab:'A rehab room · wall ', icu:'An ICU bed · wall '})[m[1]]+c, code:c}, m[1]); if(L) GEN_CACHE.set(id, L); return L || undefined; } }
+  if(/^my:/.test(id)){ const o=myParse(id), L=o && addBag(makeWall(o, id)); if(L) GEN_CACHE.set(id, L); return L || undefined; }
+  { const m=/^(rehab|home|icu):([A-Za-z0-9]{1,12})$/.exec(id); if(m){ const c=m[2].toUpperCase(), L=genPlaceWall(m[1]+'|'+c, {id, kicker:({home:'Someone\u2019s home · wall ', rehab:'A rehab room · wall ', icu:'An ICU bed · wall '})[m[1]]+c, code:c}, m[1]); if(L){ addBag(L); GEN_CACHE.set(id, L); } return L || undefined; } }
   const day=/^day:(\d{4}-\d{2}-\d{2})$/.exec(id), code=/^gen:([A-Za-z0-9]{1,12})$/.exec(id);
   if(!day && !code) return undefined;
-  if(day && dayNumber(day[1])>=YEAR_DAY){ const Y=yearLevel(day[1], id); if(Y){ GEN_CACHE.set(id, Y); return Y; } }   /* 3d: the daily year; the old dealer if a day cannot be dealt */
+  if(day && dayNumber(day[1])>=YEAR_DAY){ const Y=yearLevel(day[1], id); if(Y){ addBag(Y); GEN_CACHE.set(id, Y); return Y; } }   /* 3d: the daily year; the old dealer if a day cannot be dealt */
   const pl=day ? dayPlace(day[1]) : 'hospital', meta=day ? {id, kicker:'Daily wall #'+dayNumber(day[1]), daily:day[1]} : {id, kicker:'Random wall '+code[1].toUpperCase(), code:code[1].toUpperCase()};
   const L=pl==='hospital' ? genWall(day ? 'day|'+day[1] : 'gen|'+code[1].toUpperCase(), meta) : genPlaceWall('day|'+day[1], meta, pl);   /* STAGE B: from wall #4 on, some days are a rehab room or a home */
-  if(L) GEN_CACHE.set(id, L);
+  if(L){ addBag(L); GEN_CACHE.set(id, L); }
   return L;
 }
 /* the generator works on the shared GRID (the room and the face live there), so it puts it back afterwards */
@@ -2516,7 +2520,7 @@ function makeFault(L, r, n){
   if(!got || evaluate(st).ok) return false;
   const T=pick.map(id=>SHIFT_FAULTS.find(t=>t.id===id));
   L.kind='fault'; L.scored=false; L.faultIds=pick;
-  L.build=s2=>{ restore(s2, sol); applyFaults(s2, pick); };
+  L.build=s2=>{ restore(s2, L.gen.solution); applyFaults(s2, pick); };   /* the stored answer as it stands, a bag hung after the deal included */
   L.fault={parts:[...new Set(got.flatMap(f=>f.parts||[]))], name: n===1 ? T[0].name : 'Two things are wrong', why:T.map(t=>t.why).join(' '), fix:T.map(t=>t.fix).join(' ')};
   L.title=L.title.split(' \u00b7 ')[0]+' \u00b7 '+(n===1 ? 'Find the fault' : 'Two faults');
   L.brief=orderBrief(L.gen.recipe, L.req)+(n===1 ? ' The wall is already built, and something on it is wrong. Fix it.' : ' The wall is already built, and two separate things on it are wrong. Fix both.');
@@ -2526,8 +2530,7 @@ function makeFault(L, r, n){
 }
 /* the hand-off: the night shift set up the supply side and taped it down; the patient side is yours */
 function makeHandoff(L){
-  const sol=L.gen.solution;
-  L.build=st=>{ restore(st, sol);
+  L.build=st=>{ restore(st, L.gen.solution);   /* the stored answer as it stands, a bag hung after the deal included */
     for(const tb of st.tubes.filter(t=>!t.lead)){ st.cart[tb.def.id]=(st.cart[tb.def.id]||0)+1; }
     st.tubes=st.tubes.filter(t=>t.lead && !st.items.some(i=>i.uid===t.lead && i.def.cat==='interface'));
     for(const it of st.items.filter(i=>!i.fixed && i.def.cat==='interface')){ st.cart[it.def.id]=(st.cart[it.def.id]||0)+1; }
@@ -2859,8 +2862,8 @@ function shiftPlan(code, opt){ opt=opt||{};
       const r0=recipeOf(walls[0].recipe), pool=r0.decoys.filter(id=>DB[id] && !walls[0].need[id]), decoys=[];
       while(pool.length && decoys.length<2) decoys.push(pool.splice(rng.int(0, pool.length-1), 1)[0]);
       const cart=[...Object.entries(walls[0].need), ...decoys.map(id=>[id,1])].sort((a,b)=>a[0].localeCompare(b[0]));
-      return {v:SHIFT_V, code, story:story.id, storyName:story.name, place, room:roomName, walls, cart, faults:shuffleW(rng, SHIFT_FAULTS).map(x=>x.id),
-        len:opt.len || SHIFT_LEN, noFault:!!opt.len, daily:opt.daily || null, n:opt.n || null, dayName:opt.dayName || null, title:opt.title || null};
+      return bagShift({v:SHIFT_V, code, story:story.id, storyName:story.name, place, room:roomName, walls, cart, faults:shuffleW(rng, SHIFT_FAULTS).map(x=>x.id),
+        len:opt.len || SHIFT_LEN, noFault:!!opt.len, daily:opt.daily || null, n:opt.n || null, dayName:opt.dayName || null, title:opt.title || null});   /* THE BAG, after the search */
     }
     return null;
   });
@@ -2888,7 +2891,7 @@ function shiftLevel(code, k){
     brief:w.brief+(fault ? ' One thing on the wall is wrong.' : (comp.blurb ? ' '+comp.blurb : '')), scenario:(plan.title || plan.storyName)+'. '+hint,
     room:roomCopy(w.room), extras:w.extras||[], cart: k===0 ? plan.cart : Object.entries(w.need),
     req:w.req, par:Object.assign({}, w.par), timer:null, scored:true, steps:[{text:hint, done:()=>false}],
-    twistName: fault ? 'Find the fault' : (comp.name || null), solution:w.solution, shift:{code:plan.code, wall:k}};
+    twistName: fault ? 'Find the fault' : (comp.name || null), solution:w.solution, shift:{code:plan.code, wall:k}, bag:plan.bag||undefined};
   SHIFT_LEVELS.set(id, L);
   return L;
 }
@@ -3204,14 +3207,119 @@ const VENT_RULES = {
   bubbleBackwards:true,  /* 14. a humidifier connected backwards fails [37] */
   cylTubing:true,        /* 15. a small cylinder at home with more than 7 ft of tubing warns [38] */
   rainout:true,          /* Claude's, not on the sheet: an unheated limb off a heated humidifier needs a water trap [17][19] */
-  deadSpace:true         /* BETA V6 (David on Ventilator 1, 2026-10-05: "maybe we need extensions or more Dead Space which could be
+  deadSpace:true,        /* BETA V6 (David on Ventilator 1, 2026-10-05: "maybe we need extensions or more Dead Space which could be
                                 insane"): one flex tube between the Y and the tube is room, and a note on small breaths; two or more
                                 is dead space he breathes back every breath, and fails */
+  airwayBag:true         /* David's, 2026-10-15: a patient with an ET tube or a trach has a resuscitation bag on the wall (THE BAG) */
 };
 /* NOT JUDGED, and why. Rule 11 (a humidifier above the patient): the wall is a drawing of the headwall, and everything on
    it hangs above the bed, so height on the wall is not height in the room. Rule 13 (a flow above a concentrator's range)
    has been judged since Stage A, as flowCap. Rule 15's first half (concentrator tubing past the maker's 50 ft): no run
    on a wall this size comes near it. */
+/* THE BAG (2026-10-15, David: "On any patient with an artificial airway we have to have a bag on the headwall, it can
+   either be missing and have to be placed on the wall like everything else, or it can already be on the wall and fill in
+   space that has to be worked around"; asked, "on the wall is enough"). An ET tube or a trach, on a ventilator or not,
+   has a resuscitation bag hanging on the wall, not hooked up. A wall that holds to it says how in `bag`: 'cart' (the bag
+   is on the cart and goes up like any part) or 'wall' (it already hangs there, fixed, in the way). A dealt wall takes its
+   bag after the deal, from a stream of its own, so the deal is the one it always was; the daily walls take it from #14
+   (2026-10-16), so the walls already played stay as they were played. Ventilator 7 at home keeps its own rule. The
+   written walls that have it hanging hang it in the top-left corner, under the call light: beside the build on
+   Ventilator 2 it threw a 20 px drag off on the smallest phone (the thumb test, 2026-10-15). */
+const BAG_V = 1, BAG_DAY = 14, AIRWAY = ['ett', 'trach', 'trachvent'];
+const BAG_WHY = 'No resuscitation bag on the wall. Every patient with an ET tube or a trach has one hanging at the bedside, so if anything fails, someone can grab it and breathe for him. It only has to hang there, not be hooked up.';
+const hasBag = st => st.items.some(it=>it.def.backup==='bag');
+const airwayWall = L => !!(L && L.req && !L.req.goal && (L.req.iface||[]).some(r=>AIRWAY.includes(r)));
+/* the cells a build takes: its parts and every run, cords included (a bag hung over a cord hides it) */
+function buildCells(st){ const s=new Set(); for(const it of st.items) for(const c of cellsOf(it)) s.add(key(c[0],c[1])); for(const tb of st.tubes) for(const c of tb.path) s.add(key(c[0],c[1])); return s; }
+/* where a bag can hang: clear of every part and run, the patient and the screen, off the rail; `near` orders them */
+function bagSpots(st, used, near){
+  const d=DB['bag-bvm'], keep=placeKeepOut(st.room), out=[];
+  for(let y=1; y<=GRID.rows-d.h; y++) for(let x=0; x<GRID.cols; x++){
+    if(!canPlace(st, d, 0, x, y).ok) continue;
+    const cells=[]; for(let yy=y; yy<y+d.h; yy++) cells.push([x, yy]);
+    if(cells.some(c=>used.has(key(c[0],c[1])) || keep.has(key(c[0],c[1])))) continue;
+    out.push([x, y, near(cells)]);
+  }
+  return out.sort((a,b)=>a[2]-b[2] || a[1]-b[1] || a[0]-b[0]);
+}
+/* the bag onto a solved wall: 'wall' hangs it fixed beside the build, in the way; 'cart' puts it up from the cart, by his
+   head, the way the answer would. The build has to pass with it there, or the next spot is tried. Returns the spot. */
+function hangBag(st, mode, rng){
+  const used=buildCells(st), work=[], nose=[GRID.nose];
+  for(const it of st.items) if(!it.fixed) for(const c of cellsOf(it)) work.push(c);
+  for(const tb of st.tubes) if(!isCord(tb)) for(const c of tb.path) work.push(c);
+  const gap=(cells, to)=>to.length ? Math.min(...cells.flatMap(a=>to.map(b=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])))) : 99;
+  /* two squares or more clear of the build: hard against a joint, the bag took the squares a thumb's aim forgives with,
+     and a drop 20 px off on the smallest phone landed in the wrong square (the thumb test, 2026-10-15). Hanging: as close
+     as that allows, in the space a different build would use. From the cart: by his head, as close as that allows. */
+  const all=bagSpots(st, used, cells=>gap(cells, work)), clear=all.filter(s=>s[2]>=2), pool=clear.length ? clear : all;
+  if(!pool.length) return null;
+  let order;
+  if(mode==='wall'){ const best=pool.filter(s=>s[2]<=pool[0][2]+1); order=(rng ? shuffleW(rng, best) : best).concat(pool.filter(s=>!best.includes(s))); }
+  else order=pool.map(s=>[s[0], s[1], gap([[s[0],s[1]], [s[0],s[1]+1]], nose)]).sort((a,b)=>a[2]-b[2] || a[1]-b[1] || a[0]-b[0]);
+  const keep=snapshot(st);
+  for(const [x,y] of order.slice(0, 40)){
+    if(mode==='wall') st.items.push({uid:'i'+(st.uidN++), def:DB['bag-bvm'], x, y, r:0, fixed:true});
+    else { if(!(st.cart['bag-bvm']>0)) st.cart['bag-bvm']=1; if(!place(st, 'bag-bvm', x, y, 0).ok){ restore(st, keep); continue; } }
+    if(evaluate(st).ok) return {x, y};
+    restore(st, keep);
+  }
+  return null;
+}
+/* a bag hung into a stored answer takes the id a fresh wall gives it, and the answer's own pieces from there step up one,
+   so the answer and the wall it is played on name the same pieces (the puzzle sheet matches them by id) */
+function bagUid(st, L){
+  const fresh=newState(L), fb=fresh.items.find(it=>it.fixed && it.def.id==='bag-bvm'), bag=st.items.find(it=>it.fixed && it.def.id==='bag-bvm');
+  if(!fb || !bag) return;
+  const n=+fb.uid.slice(1), bump=u=>(u && +String(u).slice(1)>=n ? String(u)[0]+(+String(u).slice(1)+1) : u);
+  for(const it of st.items) if(it!==bag) it.uid=bump(it.uid);
+  for(const tb of st.tubes){ tb.uid=bump(tb.uid); if(tb.from) tb.from=Object.assign({}, tb.from, {uid:bump(tb.from.uid)}); if(tb.to) tb.to=Object.assign({}, tb.to, {uid:bump(tb.to.uid)}); if(tb.lead) tb.lead=bump(tb.lead); }
+  bag.uid='i'+n; st.uidN=Math.max(st.uidN, n+1);
+}
+/* a dealt wall's bag: half the airway walls on the cart, half already hanging; a wall that arrives built (find the fault,
+   the hand-off) always has it hanging. The stored answer carries it. */
+function addBag(L){
+  if(!L || L.bag || !VENT_RULES.airwayBag || !airwayWall(L) || L.kind==='shift') return L;
+  const day=/^day:(\d{4}-\d{2}-\d{2})$/.exec(L.id); if(day && dayNumber(day[1])<BAG_DAY) return L;
+  const sol=L.solution || (L.gen && L.gen.solution); if(!sol) return L;
+  const rng=window.HURng.make('da-bag-v'+BAG_V+'|'+L.id), mode=(L.kind==='fault' || L.handoff) ? 'wall' : (rng()<0.5 ? 'cart' : 'wall');   /* a hand-off's bag hangs: from the cart it would come back up taped with the night shift's parts */
+  return withGrid(()=>{
+    const st=newState(Object.assign({}, L, {build:null})); restore(st, sol);
+    if(hasBag(st)) return L;
+    const at=hangBag(st, mode, rng); if(!at) return L;   /* nowhere to hang it: tests/device-assembly-bag.test.js says so */
+    L.bag=mode;
+    if(mode==='wall'){ L.extras=(L.extras||[]).concat([{def:'bag-bvm', x:at.x-st.room.dx, y:at.y, r:0}]); bagUid(st, L); if(!evaluate(st).ok) return L; }
+    else L.cart=[...L.cart, ['bag-bvm',1]].sort((a,b)=>a[0].localeCompare(b[0]));
+    const snap=snapshot(st); L.solution=snap; if(L.gen) L.gen.solution=snap;
+    return L;
+  });
+}
+/* a shift's bag hangs from its first wall and stays, the way your build does: one spot clear of every wall's build */
+function bagShift(plan){
+  if(!plan || plan.bag || !VENT_RULES.airwayBag || !plan.walls.some(airwayWall)) return plan;
+  if(plan.daily && dayNumber(plan.daily)<BAG_DAY) return plan;
+  return withGrid(()=>{
+    const rng=window.HURng.make('da-bag-v'+BAG_V+'|shift|'+plan.code);
+    const lay=w=>{ const st=newState({id:'shift-bag', kind:'shift', room:w.room, extras:w.extras||[], cart:[], req:w.req, par:w.par, timer:null, scored:true, steps:[]}); restore(st, w.solution); return st; };
+    const states=plan.walls.map(lay), used=new Set(), work=[];
+    for(const st of states){ for(const k of buildCells(st)) used.add(k); for(const it of st.items) if(!it.fixed) for(const c of cellsOf(it)) work.push(c); }
+    const gap=cells=>Math.min(...cells.flatMap(a=>work.map(b=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1]))));
+    const spots=bagSpots(states[0], used, work.length ? gap : ()=>99), clear=spots.filter(s=>s[2]>=2), pool=clear.length ? clear : spots;   /* two squares clear, as hangBag */
+    const best=pool.filter(s=>s[2]<=pool[0][2]+1);
+    for(const [x,y] of shuffleW(rng, best).concat(pool.filter(s=>!best.includes(s))).slice(0, 40)){
+      const snaps=[];
+      for(const st of states){ const keep=snapshot(st);
+        if(!canPlace(st, DB['bag-bvm'], 0, x, y).ok){ snaps.length=0; break; }
+        st.items.push({uid:'i'+(st.uidN++), def:DB['bag-bvm'], x, y, r:0, fixed:true});
+        const ok=evaluate(st).ok; snaps.push(snapshot(st)); restore(st, keep); if(!ok){ snaps.length=0; break; } }
+      if(snaps.length!==states.length) continue;
+      plan.walls.forEach((w,k)=>{ w.extras=(w.extras||[]).concat([{def:'bag-bvm', x:x-states[k].room.dx, y, r:0}]);
+        const st=states[k]; restore(st, snaps[k]); bagUid(st, {id:'shift-bag', kind:'shift', room:w.room, extras:w.extras, cart:[], req:w.req, par:w.par, timer:null, scored:true, steps:[]}); w.solution=snapshot(st); });
+      plan.bag='wall'; return plan;
+    }
+    return plan;
+  });
+}
 /* the exhalation port's slots face its leak side; anything on the square there covers them */
 function exhBlocked(S, it){
   const s0=rotSide(it.def.leakSide||'N', it.r), s=it.f ? flipSide(s0) : s0, d=DELTA[s], x=it.x+d[0], y=it.y+d[1];
@@ -3487,6 +3595,7 @@ function evaluate(S){
     if(ft>7) ev.warns.push('More than 7 ft of tubing on a small cylinder: a tug on a long line tips it over. Bring the cylinder close enough for the cannula\u2019s own 7 ft.'); }
   for(const need of (iface.def.needs||[])) if(!provides.has(need)) bad.push('This '+ROLE_NAME[iface.def.role]+' '+NEED_TEXT[need]+'.');
   const cw=circuitWhy(S, links, ev, provides); if(cw) bad.push(cw.t);   /* the Optiflow's gas arrives through the heated circuit, heating */
+  if(VENT_RULES.airwayBag && L.bag && AIRWAY.includes(role) && !hasBag(S)) bad.push(BAG_WHY);   /* THE BAG, last: the build is right, and the bag is not up */
   if(bad.length){ ev.kind='invalid'; ev.title='System invalid'; ev.lines=bad.map(t=>({h:'Requirement', t}));
     const u=about.get(0), it=u && S.items.find(i=>i.uid===u);
     ev.stop={kind:'rule', head:'Not to the order', a:it ? {x:it.x, y:it.y, s:''} : null, b:null, uids:u ? [u] : [], text:bad[0]};
@@ -3524,6 +3633,9 @@ function functionTest(S){
       return {k:'CPAP', ok: !!gen && gen.cpap===L.req.cpap, t: !gen?'The expiratory limb does not end in a generator. No water column, no pressure.': gen.cpap!==L.req.cpap?'Probe at '+gen.cpap+' cm; the order is '+L.req.cpap+' cm H2O.':'Probe at '+gen.cpap+' cm, bubbling.'}; })()
   ];
   if(ev.warns && ev.warns.length) rows.push({k:'Note', ok:null, t:ev.warns[0]});   /* a warning passes, and says so */
+  /* 2026-10-15: a build that breaks one of the order's rules (the bag, dead space, an HME where it cannot go) with every
+     line above ticked read NOT FUNCTIONAL with no red line to fix; the rule is that line */
+  if(!ev.ok && ev.kind==='invalid' && !rows.some(r=>r.ok===false) && ev.lines.length) rows.push({k:'The order', ok:false, t:ev.lines[0].t});
   /* K1: with nothing reaching the patient, source, flow, humidity, the interface and the FiO2 all fail for one reason.
      The read leads with that reason, and those lines wait until gas gets through. */
   if(ev.stop && (ev.stop.kind==='joint' || ev.stop.kind==='gap')){
@@ -3900,7 +4012,7 @@ function raceLobbyCard(){
     '<div class="da-invite"><div><div class="da-k">Room code</div><div class="da-roomcode">'+esc(NET.room)+'</div>'+
       '<div class="btns"><button type="button" class="da-ghostbtn" id="rCopy">Copy invite link</button><button type="button" class="da-ghostbtn" id="rBig">'+(phone?'Show QR code':'Big screen')+'</button></div></div>'+
       (phone || !window.HUQR ? '' : '<div class="da-qr">'+HUQR.svg(link, {label:'QR code for the invite link to room '+NET.room})+'</div>')+'</div>'+
-    '<p class="da-small">People scan the QR code or open the link. Or they open Device Assembly, tap Race, and type the code.</p>'+
+    '<p class="da-small">People scan the QR code or open the link. Or they open Headwall, tap Race, and type the code.</p>'+
     '<span class="da-lbl">In the race</span>'+runnersHTML(false)+
     '<div class="da-form">'+raceSettingsHTML(p, true)+'</div>'+
     '<div class="btns da-make-foot"><button type="button" class="da-go" id="rDeal">Start the race</button><button type="button" class="da-ghostbtn" id="rLink">Copy race link</button><button type="button" class="da-ghostbtn" id="rClose">Close the room</button></div>');
@@ -3927,7 +4039,7 @@ function raceGuestLobby(note){
 function raceBigScreen(){
   if(!NET.room) return;
   const link=raceInvite();
-  openCard('big', '<div class="da-bigscreen"><div class="da-k teal">Device Assembly · race</div><div class="da-roomcode">'+esc(NET.room)+'</div>'+
+  openCard('big', '<div class="da-bigscreen"><div class="da-k teal">Headwall · race</div><div class="da-roomcode">'+esc(NET.room)+'</div>'+
     (window.HUQR ? '<div class="da-qr">'+HUQR.svg(link, {label:'QR code for the invite link to room '+NET.room})+'</div>' : '')+
     '<p class="da-small">'+esc(link)+'</p>'+runnersHTML(false)+'<div class="btns"><button type="button" class="da-go" id="rBigBack">Back</button></div></div>');
   $('rBigBack').addEventListener('click', ()=>{ race && race.started ? closeOverlay() : raceLobbyCard(); });
@@ -4015,7 +4127,9 @@ function newState(level, roomName){
   st.screen={page:'order', alerts:[]};   /* ROUND 10: what the wall screen shows */
   for(const [id,n] of level.cart) st.cart[id]=(st.cart[id]||0)+n;
   if(level.build){ level.build(st); st.history=[]; st.moves=0; }   /* find the fault: the wall arrives built, from the cart */
-  for(const f of roomFixed(room, level.extras)){ const it={uid:'i'+(st.uidN++), def:DB[f.def], x:f.x, y:f.y, r:f.r, fixed:true}; if(f.f) it.f=true; st.items.push(it);   /* only a dealt bottle or pump is ever mirrored */
+  /* 2026-10-15: a wall that arrives as a whole stored answer (a Friday fault, a hand-off) already holds the room's fixed pieces;
+     placing them again set every one down twice. A wall built from the cart (the written faults) builds on a bare wall first. */
+  if(!st.items.some(i=>i.fixed)) for(const f of roomFixed(room, level.extras)){ const it={uid:'i'+(st.uidN++), def:DB[f.def], x:f.x, y:f.y, r:f.r, fixed:true}; if(f.f) it.f=true; st.items.push(it);   /* only a dealt bottle or pump is ever mirrored */
     /* STAGE A: a part the room places can come with its own line (the home concentrator's power cord), the way a
        part from the cart does in place() */
     for(const L of (it.def.leads||[])) st.tubes.push({uid:'t'+(st.uidN++), def:{id:it.def.id+'-'+L.pi, name:L.name, kind:L.kind, t:L.t, reach:L.reach, ends:L.ends}, name:it.def.short+' '+L.tname, from:{uid:it.uid, pi:L.pi}, to:null, path:[], short:0, lead:it.uid}); }
@@ -4485,6 +4599,7 @@ function answerOf(L){
         const c={src:'wall', cannula:st.cart['cannula-14']>0 ? 'cannula-14' : 'cannula', mirror:!!(st.room.face && st.room.face.flip), order:{req:L.req, brief:L.brief}};
         if(!recipe.build(st, c)) return null; }
     }catch(e){ return null; }
+    if(L.bag==='cart' && !hasBag(st) && !hangBag(st, 'cart')) return null;   /* THE BAG: up from the cart, by his head */
     if(Object.values(st.cart).some(n=>n<0) || !evaluate(st).ok) return null;
     return snapshot(st);
   });
@@ -4510,7 +4625,38 @@ function outerPort(st, p){
   }
   return null;
 }
-function layCircuit(st, kitId){
+/* a circuit that will not lay says the fix that works (2026-10-14, the daily on David's phone: a cart parked right of the
+   bed as it comes off the cart, ports to the wall, was told to move closer when the fix was Flip). The flip from the same
+   spot is tried for real, then a square each way, as it is and flipped. Failing those: a cart on the Y's square or beside
+   it, or with a port pressed into the patient, is too close; ports that face away need the flip as well as the move; a
+   port facing the floor, the wall's edge or a fixture is blocked, and the way out is toward the patient; distance alone
+   needs the move. The fix leads, so a phone's one-line screen shows it. tests/device-assembly-vent-miss.test.js holds every
+   answer to a spot where it works. */
+const FAR_WHY='Move the ventilator closer. The limbs do not reach from it to the tube here.';
+function circuitMiss(st, kitId, ventUid, C, why){
+  const v=st.items.find(i=>i.uid===ventUid); if(!v || v.fixed || v.taped) return why;
+  const circ=()=>portsOf(v).filter(p=>/^(Inspiratory|Expiratory) port$/.test(p.label));
+  const toward=()=>circ().filter(p=>DELTA[p.s][0]*(C[0]-p.x)+DELTA[p.s][1]*(C[1]-p.y)>0).length;
+  const now=toward(); v.f=!v.f; const away=toward()>now; v.f=!v.f;
+  const body=new Set(), fixt=new Set();
+  for(const it of st.items){ const at=(it.def.cat==='patient' || it.def.cat==='interface') ? body : it.fixed ? fixt : null; if(at) for(const c of cellsOf(it)) at.add(key(c[0],c[1])); }
+  const near=cellsOf(v).some(c=>Math.abs(c[0]-C[0])+Math.abs(c[1]-C[1])<=1) || circ().some(p=>body.has(key(...facing(p))));
+  const walled=circ().some(p=>{ const c=facing(p); return !inBounds(c[0], c[1]) || fixt.has(key(c[0], c[1])); });
+  const keep=snapshot(st), moves=st.moves, lost=st.lost && [...st.lost], x=v.x, y=v.y, d=dims(v.def, v.r);
+  const lays=(f, dx, dy)=>{ restore(st, keep); return (!f || flip(st, ventUid).ok) && (!(dx || dy) || moveItem(st, ventUid, x+dx, y+dy).ok) && layCircuit(st, kitId, true).ok; };
+  const gap=([dx, dy])=>Math.max(x+dx-C[0], 0, C[0]-(x+dx+d.w-1))+Math.max(y+dy-C[1], 0, C[1]-(y+dy+d.h-1));
+  const steps=[[0,1,'down'], [0,-1,'up'], [1,0,'right'], [-1,0,'left']].sort((a, b)=>gap(a)-gap(b));
+  let fix=lays(true, 0, 0) ? {flip:true} : null;
+  for(const f of [false, true]) for(const [dx, dy, dir] of steps) if(!fix && lays(f, dx, dy)) fix={f, dir};
+  restore(st, keep); st.moves=moves; if(lost) st.lost=lost; else delete st.lost;
+  if(fix && fix.flip) return 'Flip the ventilator so its ports face the patient. The limbs do not reach from this side.';
+  if(fix) return (fix.f ? 'Flip the ventilator, then move it' : 'Move the ventilator')+' one square '+fix.dir+'. The limbs do not reach from here.';
+  if(near) return away ? 'Flip the ventilator, then move it back a little. It is too close to the patient, and its ports face away.' : 'Move the ventilator back a little. It is too close to the patient for the circuit.';
+  if(away) return 'Flip the ventilator so its ports face the patient, then move it closer. The limbs do not reach from here.';
+  if(walled) return 'Move the ventilator closer to the patient so both ports are clear. A port is blocked here.';
+  return why;
+}
+function layCircuit(st, kitId, quiet){
   const kd=DB[kitId], kit=kd && kd.kit; if(!kit) return {ok:false, why:'That is not a circuit.'};
   if(!(st.cart[kitId]>0)) return {ok:false, why:'None left on the cart.'};
   const vent=st.items.find(i=>i.def.vent && !i.def.isSource); if(!vent) return {ok:false, why:'Put the ventilator on the wall first. The circuit hangs off it.'};
@@ -4522,12 +4668,15 @@ function layCircuit(st, kitId){
   const hum=st.items.find(i=>i.def.id==='heated' && ((feed && [feed.from, feed.to].some(r=>r.uid===i.uid)) || computeLinks(st).some(l=>l.kind==='adj' && l.s==='ok' && [l.a.uid, l.b.uid].includes(i.uid) && [l.a.uid, l.b.uid].includes(vent.uid))));
   if(hum) inspFrom=portsOf(hum).find(p=>p.label==='Chamber outlet');
   const I=outerPort(st, inspFrom), E=outerPort(st, vp('Expiratory port')), T=outerPort(st, tip);
-  if(!I || !E || portTaken(st, I) || portTaken(st, E)) return {ok:false, why:'The ventilator already has a circuit on it. Put that one back first.'};
+  const miss=why=>({ok:false, why:quiet ? why : circuitMiss(st, kitId, vent.uid, facing(T||tip), why)});
+  if((I && tubeOn(st, I)) || (E && tubeOn(st, E))) return {ok:false, why:'The ventilator already has a circuit on it. Put that one back first.'};
+  /* a part against a port is not a circuit: the cart parked with a port on the tube was told to put a circuit back */
+  if(!I || !E || portTaken(st, I) || portTaken(st, E)) return miss('Move the ventilator, or take off what is seated on its port.');
   if(!T || portTaken(st, T)) return {ok:false, why:'Something is already on the tube. The circuit goes on the free end.'};
-  const keep=snapshot(st), fail=why=>{ restore(st, keep); return {ok:false, why}; };
+  const keep=snapshot(st);
   /* the Y on the tube's free end, its patient port facing it, either way up; the limbs laid in either order; the first
      that reaches and stays clear wins */
-  const C=facing(T); let why='No room for the Y at the tube.';
+  const C=facing(T); let why='No room for the Y at the tube.', far=false;
   for(const f of [false, true]) for(let r=0; r<4; r++) for(const order of ['insp', 'exp']){
     restore(st, keep);
     for(const id of [kit.y, kit.insp, kit.exp]) st.cart[id]=(st.cart[id]||0)+1;
@@ -4540,9 +4689,10 @@ function layCircuit(st, kitId){
     const rs=(order==='insp' ? lay : [lay[1], lay[0]]).map(fn=>fn());
     const bad=rs.find(x=>!x.ok || x.short);
     if(!bad){ st.moves++; return {ok:true, item:y, heated:!!DB[kit.insp].heatedWire}; }
-    why=bad.ok ? 'The limbs do not reach from the ventilator to the tube here. Move the ventilator closer.' : 'The circuit does not reach: '+lc1(bad.why||'something is in the way');
+    if(bad.ok) far=true; else why='The circuit does not reach: '+lc1(bad.why||'something is in the way');
   }
-  return fail(why);
+  restore(st, keep);
+  return miss(far ? FAR_WHY : why);
 }
 /* =====================================================================
    BETA M3 · SWAP (David on Level 3, 2026-10-05: "toggle between heated and non heated with a button once you select a
@@ -5066,9 +5216,18 @@ let screenH=null;
 const fitBlock=(text,w,h,maxF,minF)=>{ for(let f=maxF; f>=minF; f-=0.5){ const maxChars=Math.max(8, Math.floor(w/(f*0.55))); const lines=wrapText(text,maxChars); const lh=f*1.28; if(lines.length*lh<=h) return {f, lines, lh}; } const f=minF, lh=f*1.28, lines=wrapText(text, Math.max(8, Math.floor(w/(f*0.55)))); const n=Math.max(1, Math.floor(h/lh)); return {f, lh, lines:lines.slice(0,n).map((l,i)=>i===n-1&&lines.length>n?l.replace(/\s*\S*$/,'')+'...':l)}; };
 const wrapText=(t, max)=>{ const words=String(t||'').split(/\s+/), lines=[]; let cur=''; for(const w of words){ if((cur+' '+w).trim().length>max && cur){ lines.push(cur); cur=w; } else cur=(cur+' '+w).trim(); } if(cur) lines.push(cur); return lines; };
 /* The words on the screen, shared by the wall and the readout under it, so the two never drift */
-const TEST_IDLE='Press Complete and the gas lights up whatever is hooked to an outlet.';
+/* 2026-10-15 (David: "we do not need test and note tabs if we are not going to put anything specificly usefull there"):
+   the screen is two pages, the order and the hint. The chart note is the wall's premise, so it sits with the order: under
+   it on a phone's sheet, and behind a Note tag on the glass where no side panel stands beside the wall (the panel shows it
+   from 1000 px). Par sits at the order's foot, where the move counts were. The test read is the miss card, the stop on
+   the wall and the side panel. */
+const pageOf=sc=>(sc && (sc.page==='hint' || sc.page==='alerts')) ? sc.page : 'order';
 const screenHintTag=()=>S.level.kind==='timed'?'TIMED':'HINT '+((S.coachStep|0)+1)+'/'+S.level.steps.length;
-const screenNoteText=()=>{ const L=S.level; return touchText(String(L.scenario||''))+(L.scored?' Par: '+L.par.comp+' parts from the cart, '+L.par.len+' ft of tubing, '+(L.par.adapters?L.par.adapters+' adapter.':'no adapters.'):''); };
+const screenNoteText=()=>touchText(String(S.level.scenario||''));
+const parText=short=>{ const L=S.level; if(!L.scored || !L.par) return '';
+  const n=(k, w)=>k+' '+w+(k===1 ? '' : 's');
+  return short ? 'Par · '+n(L.par.comp, 'part')+' · '+L.par.len+' ft' : 'Par: '+n(L.par.comp, 'part')+' from the cart, '+L.par.len+' ft of tubing, '+(L.par.adapters ? n(L.par.adapters, 'adapter')+'.' : 'no adapters.'); };
+const sideShows=()=>typeof matchMedia==='function' && matchMedia('(min-width:1000px)').matches;   /* the spec sheet panel stands beside the wall */
 function screenOrderLines(L){ const rq=(L||S.level).req;
   if((L||S.level).orderLines) return (L||S.level).orderLines;   /* 3d, the Wednesday orders: the order as it is written, or a pointer to the chart */
   /* QA 2026-10-05: a ventilator order has no flow, and every vent wall's screen read "undefined L/min" */
@@ -5089,7 +5248,7 @@ function screenReadout(){
   const box=$('screenRead'); if(!box || TEST) return;
   const on=!!(S && S.screen) && screenSmall();
   box.hidden=!on; if(!on){ closeScreenFull(); return; }
-  const sc=S.screen, page=sc.page||'order', mini=onePhoneScreen();
+  const sc=S.screen, page=pageOf(sc), mini=onePhoneScreen();
   /* PHONE PLAY (2026-10-12, David: "the menu at the bottom felt like it was taking up the screen all the time"): on an
      upright phone the screen is one line under the wall, two on a tutorial where the step is the lesson. A tap opens the
      whole screen, tabs and all, in the sheet over the wall. The wall got the 70 px the tabs and the third line took. */
@@ -5106,13 +5265,9 @@ const CHEV_UP='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" strok
 function screenLine(sc, page){
   const K=t=>'<span class="da-read-k">'+esc(t)+'</span> ';
   const fl=sc.flash; if(fl && Date.now()<fl.until) return '<span class="da-line is-'+esc(fl.kind)+'"><b>'+esc(fl.head)+'</b> '+esc(fl.body||'')+'</span>';
-  if(page==='hint') return '<span class="da-line">'+K(S.level.kind==='timed' ? 'Timed' : 'Hint '+((S.coachStep|0)+1)+'/'+S.level.steps.length)+esc(S.coachText||S.level.brief)+'</span>';
-  if(page==='note') return '<span class="da-line">'+K('Chart note')+esc(screenNoteText())+'</span>';
+  /* the line is the order, except on a training wall, where the step is the lesson; a hint read in the sheet stays there */
+  if(page==='hint' && hintLeads()) return '<span class="da-line">'+K('Hint '+((S.coachStep|0)+1)+'/'+S.level.steps.length)+esc(S.coachText||S.level.brief)+'</span>';
   if(page==='alerts'){ const a=sc.alerts[0]; return '<span class="da-line">'+(a ? K(a.head)+esc(a.body) : K('No alerts'))+'</span>'; }
-  if(page==='test'){ const t=lastTest;
-    if(!t) return '<span class="da-line">'+K('Not tested yet')+esc(TEST_IDLE)+'</span>';
-    if(t.stop) return '<span class="da-line is-bad">'+K('Where it stops')+esc(t.stop.text)+'</span>';
-    const fail=t.rows.filter(r=>r.ok!==null).find(r=>!r.ok); return '<span class="da-line'+(t.ok?'':' is-bad')+'">'+K(t.ok ? 'System functional' : 'Not functional')+esc(fail ? fail.t : '')+'</span>'; }
   const [head, flow, byWhat]=screenOrderLines(); return '<span class="da-line">'+K('Order')+'<b>'+esc(head)+'</b> '+esc(flow+' '+byWhat)+'</span>';
 }
 function openScreenFull(){
@@ -5127,20 +5282,14 @@ function closeScreenFull(){
 }
 function fillRead(tabs, body, box, sc, page){
   const one=onePhoneScreen(), step=S.level.kind==='timed' ? 'Timed' : 'Hint '+((S.coachStep|0)+1)+'/'+S.level.steps.length;
-  tabs.innerHTML=[['order','Order'],['hint', one ? step : 'Hint'],['test','Test'],['note','Note']]
+  tabs.innerHTML=[['order','Order'],['hint', one ? step : 'Hint']]
     .map(([id,l])=>'<button type="button" data-page="'+id+'"'+(page===id?' aria-current="true"':'')+'>'+l+'</button>').join('');
   const K=(t,cls)=>'<span class="da-read-k'+(cls?' '+cls:'')+'">'+esc(t)+'</span>', P=t=>'<p>'+esc(t)+'</p>';
   let h='';
   if(page==='hint') h=(one ? '' : K(screenHintTag()))+P(S.coachText||S.level.brief);   /* THE SCREEN: on a phone the step is in its tab */
-  else if(page==='note') h=K('Chart note')+P(screenNoteText());
   else if(page==='alerts'){ const a=sc.alerts[0];
     h = !a ? K('No alerts') : K(a.head, 'is-'+a.kind)+P(a.body)+sc.alerts.slice(1,3).map(e=>'<p class="da-read-old">earlier: '+esc(e.head)+'</p>').join(''); }
-  else if(page==='test'){
-    if(!lastTest) h=K('Not tested yet')+P(TEST_IDLE);
-    else if(lastTest.stop){ h=K('Where it stops', 'is-bad')+P(lastTest.stop.text); }
-    else { const t=lastTest, live=t.rows.filter(r=>r.ok!==null), fail=live.find(r=>!r.ok);
-      h=K(t.ok?'System functional':'Not functional', t.ok?'is-ok':'is-bad')+'<ul>'+live.slice(0,5).map(r=>'<li class="'+(r.ok?'':'is-bad')+'">'+(r.ok?'✓ ':'✗ ')+esc(r.k)+'</li>').join('')+'</ul>'+(fail?P(fail.t):''); } }
-  else { const [head, flow, byWhat]=screenOrderLines(); h=K('Order')+'<p class="da-read-big">'+esc(head)+'</p>'+P(flow+' '+byWhat)+(S.level.twistName?K(S.level.twistName,'is-twist'):'')+(statusPlain?'<p class="da-read-old">'+esc(statusPlain)+'</p>':''); }
+  else { const [head, flow, byWhat]=screenOrderLines(); h=K('Order')+'<p class="da-read-big">'+esc(head)+'</p>'+P(flow+' '+byWhat)+(S.level.twistName?K(S.level.twistName,'is-twist'):'')+(screenNoteText()?'<p class="da-read-note">'+esc(screenNoteText())+'</p>':'')+(parText()?'<p class="da-read-old">'+esc(parText())+'</p>':''); }
   const fl=sc.flash; if(fl && Date.now()<fl.until) h='<p class="da-read-flash is-'+esc(fl.kind)+'"><b>'+esc(fl.head)+'</b> '+esc(fl.body||'')+'</p>'+h;   /* the message, over the page (2026-10-07) */
   body.innerHTML=h;
   if(box.dataset.page!==page){ body.scrollTop=0; box.dataset.page=page; }   /* a new page starts at its top; a redraw of the same page keeps the reader's place */
@@ -5159,20 +5308,16 @@ function screenSVG(){
   out+=R(x, y+8, w, h-8, '#2f3a48', 12, 2);
   const sx=x+8, sy=y+16, sw=w-16, sh=h-36;
   out+='<rect x="'+sx+'" y="'+sy+'" width="'+sw+'" height="'+sh+'" rx="6" fill="#f6f9fc"/><rect x="'+sx+'" y="'+sy+'" width="'+sw+'" height="26" rx="6" fill="#e1e8ee"/><rect x="'+sx+'" y="'+(sy+18)+'" width="'+sw+'" height="8" fill="#e1e8ee"/>';
-  const page=sc.page||'order';
+  const page=pageOf(sc);
   /* ROUND 11: the tabs are buttons; a tap turns the page */
-  const TABS=[['order','ORDER',10,48],['hint','HINT',66,38],['test','TEST',112,38],['note','NOTE',158,42]];   /* K7: the alerts page shows for a moment and has no tab */
+  const TABS=[['order','ORDER',10,48],['hint','HINT',66,38]];   /* K7: the alerts page shows for a moment and has no tab */
   for(const [id,label,tx,tw] of TABS){ const on=page===id; out+=TL(sx+tx, sy+18, 9.5, label, on?'#0f7f78':'#6b7a88', MONO+(on?' text-decoration="underline"':''))+'<rect class="scrtab" data-page="'+id+'" x="'+(sx+tx-5)+'" y="'+sy+'" width="'+tw+'" height="26" fill="transparent" style="pointer-events:all; cursor:pointer"/>'; }
-  out+=C(x+w/2, y+h-10, 2.6, page==='order'?GRN:(page==='test'&&lastTest&&!lastTest.ok?RED:'#4ECDC4'), 0);
+  out+=C(x+w/2, y+h-10, 2.6, page==='order'?GRN:'#4ECDC4', 0);
   const by=sy+46, lx=sx+14;
   if(page==='hint'){ const step=screenHintTag();
     out+=TL(lx, by-8, 9, step, '#0f7f78', MONO);
     const fb=fitBlock(S.coachText||S.level.brief, sw-28, sh-62, 18, 10);
     fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); });
-  }
-  else if(page==='note'){ const txt=screenNoteText();
-    out+=TL(lx, by-8, 9, 'CHART NOTE', '#0f7f78', MONO);
-    const fb=fitBlock(txt, sw-28, sh-62, 16, 8); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); });
   }
   else if(page==='alerts'){ if(!sc.alerts.length){ out+=TL(lx, by, 10, 'NO ALERTS', '#6b7a88', MONO); }
     else { const a=sc.alerts[0]; const col={ok:GRN, warn:YEL, bad:RED, info:'#4ECDC4'}[a.kind]||'#4ECDC4';
@@ -5180,13 +5325,6 @@ function screenSVG(){
       out+=TL(lx, by, 10, String(a.head).toUpperCase(), col, MONO);
       const fb=fitBlock(a.body, sw-30, sh-92, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+8+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); });
       sc.alerts.slice(1,3).forEach((e,i)=>{ out+=TL(lx, sy+sh-24+i*12, 9, 'earlier: '+e.head, '#6b7a88', MONO); }); } }
-  else if(page==='test'){ if(!lastTest){ out+=TL(lx, by, 10, 'NOT TESTED YET', '#6b7a88', MONO); const fb=fitBlock(TEST_IDLE, sw-28, sh-62, 16, 10); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); }); }
-    else if(lastTest.stop){ out+=TL(lx, by, 10, 'WHERE IT STOPS', RED, MONO); const fb=fitBlock(lastTest.stop.text, sw-28, sh-62, 16, 9); fb.lines.forEach((ln,i)=>{ out+=TL(lx, by+8+fb.f*0.9+i*fb.lh, fb.f, ln, INK, 'font-weight="600"'); }); }
-    else { const t=lastTest; out+=TL(lx, by, 10, t.ok?'SYSTEM FUNCTIONAL':'NOT FUNCTIONAL', t.ok?GRN:RED, MONO);
-      const live=t.rows.filter(r=>r.ok!==null), fail=live.find(r=>!r.ok);
-      const rows=live.slice(0,5), rf=Math.max(11, Math.min(16, (sh-(fail?96:70))/(rows.length*1.3)));
-      rows.forEach((r,i)=>{ out+=TL(lx, by+rf*0.6+8+i*rf*1.3, rf, (r.ok?'\u2713 ':'\u2717 ')+r.k, r.ok?INK:RED, 'font-weight="600"'); });
-      if(fail){ const fb=fitBlock(fail.t, sw-28, 30, 12, 9); fb.lines.forEach((ln,i)=>{ out+=TL(lx, sy+sh-34+fb.f*0.9+i*fb.lh, fb.f, ln, RED, 'font-weight="600"'); }); } } }
   else { const [head, flow, byWhat]=screenOrderLines();
     const fitS=(t, max)=>Math.max(10, Math.min(max, (sw-28)/(Math.max(1, String(t).length)*0.54)));   /* a vent order is longer than an oxygen one: it fits the glass */
     out+=TL(lx, by+12, fitS(head, 24), head);
@@ -5194,8 +5332,12 @@ function screenSVG(){
     out+=TL(lx, by+76, 16, byWhat, INK, 'font-weight="600"');
     /* STAGE A: a dealt wall's twist is named under the order, so the joke lands before the first part does */
     const tw=S.level.twistName; if(tw) out+=TL(lx, by+100, monoFit(tw, sw-28, 10), tw.toUpperCase(), '#b3261e', MONO);
-    const stl=statusPlain || 'Nothing on the wall yet';
-    out+='<path d="M'+lx+' '+(sy+sh-26)+' h'+(sw-28)+'" stroke="#c5d0da" stroke-width="1.5"/>'+TL(lx, sy+sh-10, monoFit(stl, sw-28, 9), stl, '#6b7a88', MONO);
+    /* the foot: par where the move counts were, and the chart note behind a tag where no panel beside the wall shows it */
+    const par=parText(true).toUpperCase(), note=!sideShows() && screenNoteText(), tagW=note ? 74 : 0;
+    if(par || note) out+='<path d="M'+lx+' '+(sy+sh-26)+' h'+(sw-28)+'" stroke="#c5d0da" stroke-width="1.5"/>';
+    if(par) out+=TL(lx, sy+sh-10, monoFit(par, sw-28-tagW, 9), par, '#6b7a88', MONO);
+    if(note){ const [bg, ink]=TAG_FILL.info;
+      out+='<g class="da-tag info" data-def="'+esc('<b>Chart note</b>'+esc(note))+'" tabindex="0" role="button" aria-label="'+esc('Chart note. '+note)+'" transform="translate('+(sx+sw-14-tagW+8)+' '+(sy+sh-22)+')"><rect width="'+(tagW-8)+'" height="20" rx="10" fill="'+bg+'"/><circle cx="12" cy="10" r="4" fill="'+ink+'"/><text x="21" y="14.5" fill="'+ink+'">Note</text></g>'; }
   }
   /* the message strip (2026-10-07): along the foot of the glass, over the page, for a few seconds */
   const fl=sc.flash; if(fl && Date.now()<fl.until){ const col={ok:GRN, warn:YEL, bad:RED, info:'#4ECDC4'}[fl.kind]||'#4ECDC4', bh=38, bt=sy+sh-bh;
@@ -5210,13 +5352,13 @@ const hintLeads = () => !!(S && S.level && S.level.kind==='tutorial');
 /* the timed wall's sat in the bar: its label over the number on a phone, so the bar stays one row (QA 2026-10-05) */
 const satChip = n => '<span class="k">SpO2</span> <b>'+Math.round(n)+'%</b>';
 function renderScreen(){ const g=$('wallScreen'); if(g) g.innerHTML=screenSmall()?'':screenSVG(); screenReadout(); }
-/* after an alert the screen goes back to the test read if the wall has not changed since the test, else to the order */
+/* after an alert the screen goes back to the order (the hint, on a training wall) */
 /* a new step and an alert often land in the same tick: the alert shows first, the hint follows it, then the screen rests */
 function screenShow(page, ms){ if(!S||!S.screen) return;
   if(page==='hint' && ms && S.screen.page==='alerts' && screenH){ S.screen.next='hint'; return; }
   if(page==='alerts' && S.screen.page==='hint' && screenH) S.screen.next='hint';
   S.screen.page=page; renderScreen(); clearTimeout(screenH);
-  if(ms) screenH=setTimeout(()=>{ if(!(S && S.screen && S.screen.page===page)) return; const nx=S.screen.next; S.screen.next=null; if(nx){ screenShow(nx, 5000); return; } S.screen.page=(lastTest && S.screen.testAt===S.history.length) ? 'test' : (S.level && S.level.kind==='tutorial' ? 'hint' : 'order'); renderScreen(); }, ms); }
+  if(ms) screenH=setTimeout(()=>{ if(!(S && S.screen && S.screen.page===page)) return; const nx=S.screen.next; S.screen.next=null; if(nx){ screenShow(nx, 5000); return; } S.screen.page=hintLeads() ? 'hint' : 'order'; renderScreen(); }, ms); }
 /* ROUND 7 drew the patient; ROUND 17 (2026-09-23) cut him down to size. The gown and blanket used to fill the wall
    from the chin to the floor, seven columns wide; David: "we do not have to give that much space on the board for
    his body". Now the pillow, the head, and shoulders under a blanket that stops a row and a half under the chin,
@@ -5524,11 +5666,16 @@ function toast(kind, head, body){
   for(let i=0;i<live.length-1;i++){ const old=live[i];   /* ROUND 9: one toast at a time */ clearTimeout(old._t1); clearTimeout(old._t2); old.classList.add('out'); setTimeout(()=>gone(old), 240); }
   void el.offsetWidth; el.classList.add('in'); arm(el);
 }
+/* 2026-10-15 (David: "it should not jump to the hint section or say what the last move is during the play... the whole
+   point is that its a puzzle game"): a move that worked says nothing, and neither does whether a joint is right; the wall
+   shows that, and Complete judges it. The five training walls keep their messages, they are the lesson. A move that did
+   not happen still says why ('No'), and acts off the wall (a copy, a save, the race) still answer. */
+function moveToast(kind, head, body){ if(hintLeads()) toast(kind, head, body); }
 function linkToast(c, aLabel, bLabel, extra){
-  if(c.short){ S.tried=true; toast('bad','Too short', c.why); }
-  else if(c.s==='ok') toast('ok','Connected', aLabel+' to '+bLabel+'.'+(extra||''));
-  else if(c.s==='warn'){ S.tried=true; toast('warn','Interface mismatch', c.why+(c.adapter && S.cart[c.adapter.id]>0 ? ' There is one on the cart.' : '')); }
-  else { S.tried=true; toast('bad','Incompatible connection', c.why); }
+  if(c.short){ S.tried=true; moveToast('bad','Too short', c.why); }
+  else if(c.s==='ok') moveToast('ok','Connected', aLabel+' to '+bLabel+'.'+(extra||''));
+  else if(c.s==='warn'){ S.tried=true; moveToast('warn','Interface mismatch', c.why+(c.adapter && S.cart[c.adapter.id]>0 ? ' There is one on the cart.' : '')); }
+  else { S.tried=true; moveToast('bad','Incompatible connection', c.why); }
 }
 /* K8: the words a hint uses follow the hand in use: the last press was a thumb, or the screen has no hover */
 let lastTouch=false;
@@ -5555,7 +5702,7 @@ function renderCoach(){
      place it lives, and a new step turns the screen to it. (David 2026-09-20.) */
   return F;
 }
-let statusHTML='', statusPlain='';   /* the counts, drawn on the bedside screen's order page */
+let statusHTML='', statusPlain='';   /* the counts; the screen's order page drew them until 2026-10-15, when par took their place */
 function renderStatus(F){
   const ev=F.ev, ok=ev.links.filter(l=>l.s==='ok'&&l.kind!=='lead'&&!(l.a.item&&l.b.item&&l.a.item.fixed&&l.b.item.fixed)).length, warn=ev.links.filter(l=>l.s==='warn').length, bad=ev.links.filter(l=>l.s==='bad'&&!l.short).length, short=ev.links.filter(l=>l.short).length;
   const parts=S.items.filter(i=>!i.fixed).length + S.tubes.filter(t=>!t.lead).length;
@@ -5564,7 +5711,7 @@ function renderStatus(F){
   if(unrouted) s+=' · <b>'+unrouted+'</b> tubing not joined';
   if(short) s+=' · <b>'+short+'</b> too short';
   if(warn) s+=' · <b>'+warn+'</b> need an adapter'; if(bad) s+=' · <b>'+bad+'</b> incompatible';
-  statusHTML=s;                                    /* the bedside screen's ORDER page reads this */
+  statusHTML=s;
   statusPlain=s.replace(/<[^>]+>/g, '');
   $('cancelBtn').hidden=!(S.hand||S.link);
 }
@@ -5589,7 +5736,7 @@ let lastTest=null, flowT1=null, flowT2=null, flowT3=null;
    traversal order; then it marches; then it fades out. Reduced motion shows the static dashes. */
 function runTest(){
   const t=functionTest(S); lastTest=t; raceSubmit(t); (S.tests||(S.tests=[])).push(!!t.ok);
-  S.stopMark = t.ev.stop ? Object.assign({at:S.history.length}, t.ev.stop) : null; S.testedAt=S.history.length;   /* K1: ringed on the wall until it changes */   /* Today's wall shares one square per test */ if(S.screen){ S.screen.page='test'; S.screen.testAt=S.history.length; clearTimeout(screenH); }
+  S.stopMark = t.ev.stop ? Object.assign({at:S.history.length}, t.ev.stop) : null; S.testedAt=S.history.length;   /* K1: ringed on the wall until it changes */   /* Today's wall shares one square per test */
   const vis=t.ev.visited; S.flow=new Set([...vis.keys()]);
   const depth=new Map();
   for(const uid of vis.keys()){ let n=0, c=uid; while(c && vis.get(c) && vis.get(c).parent && n<200){ c=vis.get(c).parent; n++; } depth.set(uid, n); }
@@ -5625,6 +5772,7 @@ function renderCart(F){
   /* K2: an amber joint names the adapter that bridges it; when the cart has one, it is lit */
   const need=new Set(); if(F && F.ev && !hideHelp()) for(const l of F.ev.links) if(l.s==='warn' && l.adapter && S.cart[l.adapter.id]>0) need.add(l.adapter.id);
   const row=onePhoneScreen() && !trayOpen();   /* PHONE PLAY: the tray is one slim row on an upright phone, its full list one tap away */
+  list.classList.toggle('slim', row);   /* the row scrolls itself (rowSwipe) */
   const sig=JSON.stringify([L.id, S.cart, S.hand?S.hand.def.id:null, S.material, q, L.kind, [...need], cartTab, L.noLabels ? seenSheets.size : 0, row]); if(sig===cartSig) return; cartSig=sig;
   /* the kind tabs: All, then each kind this wall's cart holds, with how many are left; a dot where a needed adapter is */
   const kinds=CAT_ORDER.filter(cat=>L.cart.some(c=>DB[c[0]].cat===cat && !(L.kind==='fault' && !(S.cart[c[0]]||0))));
@@ -5648,9 +5796,10 @@ function renderCart(F){
   }
   if(!out && q) out='<div class="da-note">Nothing on this cart matches. Try a connector name: barb, DISS, 22 mm.</div>';
   else if(!out && L.kind==='fault') out='<div class="da-note">The wall is built. Fix what is wrong with what is on it, then submit.</div>';
-  /* PHONE PLAY: the row leads with All parts when the cart holds more than a row shows: the full list, with the kinds and
-     the whole names, in the sheet over the wall */
-  if(row && L.cart.length>4) out='<button type="button" class="da-item da-all" id="cartAll" aria-expanded="false" aria-label="All parts: the full list, '+total+' left"><span class="ic">'+ALL_SVG+'</span><span class="tx"><span class="nm">All parts</span></span></button>'+out;
+  /* PHONE PLAY: the row leads with All parts: the full list, with the kinds and the whole names, in the sheet over the wall.
+     2026-10-14: on every cart of two parts or more, not only past four; the daily's four ("Heated c...") had no way to
+     open the cart at all (David: "i also cannot drop down the cart of tools") */
+  if(row && L.cart.length>1) out='<button type="button" class="da-item da-all" id="cartAll" aria-expanded="false" aria-label="All parts: the full list, '+total+' left"><span class="ic">'+ALL_SVG+'</span><span class="tx"><span class="nm">All parts</span></span></button>'+out;
   const keep=list.scrollTop; list.innerHTML=out; list.scrollTop=keep; $('cartN').textContent=total+' left';
 }
 const ALL_SVG='<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>';
@@ -5673,6 +5822,26 @@ function closeTray(){
   f.hidden=true; f.classList.remove('open'); cartSig=''; renderCart();
   if(back){ const a=$('cartAll'); if(a) a.focus({preventScroll:true}); }
 }
+/* 2026-10-14 (David on the daily, by thumb: "i also cannot drop down the cart of tools"). The slim row scrolls itself. It
+   left the sideways pan to the browser (touch-action pan-x), and the browser claims any pull that starts more sideways
+   than up, so a straight pull from a tile toward the far side of the wall never lifted the part. The row takes every
+   touch now (touch-action none) and the game decides at 10 px: a pull that rises lifts the part, a flatter swipe scrolls. */
+function rowScrolls(){ const l=$('cartList'); return !!(l && l.classList.contains('slim') && l.scrollWidth>l.clientWidth+1); }
+/* a swipe along the row; with x0 it is already past the slop (a pull off a tile that turned out sideways) */
+function rowSwipe(e, x0){
+  const l=$('cartList'), sl=l.scrollLeft, ox=x0!=null ? x0 : e.clientX; let live=x0!=null, v=0, lx=e.clientX, lt=performance.now();
+  const off=()=>{ document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', off); };
+  const mv=ev=>{ if(ev.pointerId!==e.pointerId) return;
+    if(!live){ if(Math.hypot(ev.clientX-e.clientX, ev.clientY-e.clientY)<10) return; if(!rowScrolls()){ off(); return; } live=true; }
+    l.scrollLeft=sl-(ev.clientX-ox); const t=performance.now(); if(t>lt){ v=(ev.clientX-lx)/(t-lt); lx=ev.clientX; lt=t; } };
+  const up=ev=>{ if(ev.pointerId!==e.pointerId) return; off(); if(!live) return; hush();
+    /* and it coasts a little, the way a list does when it is let go moving */
+    let sp=-v, t0=performance.now(); if(REDUCED() || Math.abs(sp)<0.1) return;
+    const step=t=>{ const dt=t-t0; t0=t; const was=l.scrollLeft; l.scrollLeft=was+sp*dt; sp*=Math.pow(0.94, dt/16); if(Math.abs(sp)>0.03 && l.scrollLeft!==was) requestAnimationFrame(step); };
+    requestAnimationFrame(step); };
+  document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', off);
+  if(live) mv(e);
+}
 /* ---------- info dock ---------- */
 let infoMode='level', infoDef=null, infoUid=null, sheetApi=null;
 /* what a part fits, read off the standards: direct mates in green, adapter-bridged in amber */
@@ -5693,7 +5862,7 @@ function renderInfo(mode, def, uid){
   if(mode==='level'){
     el.innerHTML='<div class="da-k teal">'+esc(L.kicker)+'</div><h3>'+esc(L.title)+'</h3><div class="mf">'+esc(L.brief)+(L.orderLong ? ' '+peekBadge('The order, written out', L.orderLong) : '')+'</div>'+(race || NET.mode ? tableFoldHTML() : '')+
       (L.kind==='sandbox' ? '<div class="btns"><button type="button" class="da-ghostbtn" id="daBuildLink">Copy build link</button></div>' : '')+
-      '<p class="da-small da-panelnote">'+esc(touchText(L.scenario||''))+(L.scored ? ' Par: '+L.par.comp+' parts from the cart, '+L.par.len+' ft of tubing.' : '')+'</p><div class="da-src">Tap any part, on the cart or the wall, for its spec sheet. Every fact on a sheet is labeled verified, inferred or gameplay. Complete judges the build, and nothing stops you building it first.</div>';
+      '<p class="da-small da-panelnote">'+esc(touchText(L.scenario||''))+(parText() ? ' '+parText() : '')+'</p><div class="da-src">Tap any part, on the cart or the wall, for its spec sheet. Every fact on a sheet is labeled verified, inferred or gameplay. Complete judges the build, and nothing stops you building it first.</div>';
     wireTableFold(el);
     { const bl=el.querySelector('#daBuildLink'); if(bl) bl.addEventListener('click', copyBuildLink); }
     return;
@@ -5786,7 +5955,10 @@ function renderInfo(mode, def, uid){
 /* the setting row of a part, opened and pointed at */
 function openSetting(it){
   S.sel=it.uid; openInfo(it.def, it.uid);
-  const row=$('infoDock').querySelector('.da-dial'); if(row){ const r=row.closest('.da-row')||row; r.classList.add('da-flash'); r.scrollIntoView({block:'center'}); setTimeout(()=>r.classList.remove('da-flash'), 1600); }
+  const row=$('infoDock').querySelector('.da-dial'); if(row){ const r=row.closest('.da-row')||row; r.classList.add('da-flash'); r.scrollIntoView({block:'center'}); setTimeout(()=>r.classList.remove('da-flash'), 1600);
+    /* and again once the sheet has opened: it settles to half height after the first scroll, which left the dial under the
+       bottom of the screen on a phone (2026-10-14, at 393 x 659 its buttons sat at 646 to 682 px) */
+    setTimeout(()=>{ if(r.isConnected) r.scrollIntoView({block:'center'}); }, 340); }
 }
 function openInfo(def, uid){
   renderInfo('item', def, uid||null);
@@ -5842,7 +6014,7 @@ function swapSel(){
   if(!S || !S.sel) return;
   const res=dispatchAct('swap', {uid:S.sel});
   if(!res.ok){ toast('bad','No', res.why); return; }
-  toast('ok','Swapped', res.from+' for the '+res.to.toLowerCase()+'.'); armClock();
+  moveToast('ok','Swapped', res.from+' for the '+res.to.toLowerCase()+'.'); armClock();
   if(infoMode==='item'){ const x=swappable(S, S.sel); if(x) renderInfo('item', x.def, S.sel); }
   render();
 }
@@ -5867,16 +6039,19 @@ function parsePort(pk){ const [uid,pi]=pk.split(':'); return {uid, pi: /^\d+$/.t
 const sameRef=(a,b)=>a&&b&&a.uid===b.uid&&a.pi===b.pi;
 function tryPlace(def, r, x, y, onPlaced, f){
   if(def.kit){ const res=dispatchAct('kit', {def:def.id});   /* BETA V4: the bag lays itself, wherever it lands */
-    if(!res.ok){ toast('bad','No', res.why); shake(); return false; }
+    /* a bag that will not lay goes back on the cart, and the row with it (2026-10-15): the failed lay restores the wall,
+       which lets go of the hand, and the row kept the bag's Turn and Flip, so a player told to flip the ventilator pressed
+       a Flip that did nothing */
+    if(!res.ok){ S.hand=null; S.preview=null; rowVerbs=false; render(); toast('bad','No', res.why); shake(); return false; }
     armClock(); S.hand=null; S.preview=null; S.sel=res.item.uid; rowVerbs=false;
-    toast('ok','Circuit on', (res.heated ? 'The heated limb runs from the chamber' : 'The inspiratory limb runs from the ventilator')+' to the Y on the tube, and the expiratory limb comes back to the ventilator.');
+    moveToast('ok','Circuit on', (res.heated ? 'The heated limb runs from the chamber' : 'The inspiratory limb runs from the ventilator')+' to the Y on the tube, and the expiratory limb comes back to the ventilator.');
     afterChange(res.item.uid); return res.item.uid; }
   let res=dispatchAct('place', {def:def.id, x, y, r, f, orient:true});
-  if(!res.ok && inlinePlan(S, def, x, y, null)){ res=dispatchAct('inline', {def:def.id, x, y}); if(res.ok) toast('ok','In line', def.short+' went in at the '+res.at.toLowerCase()+(res.on ? ' on the '+res.on.toLowerCase() : '')+'.'); }   /* BETA V5 */
+  if(!res.ok && inlinePlan(S, def, x, y, null)){ res=dispatchAct('inline', {def:def.id, x, y}); if(res.ok) moveToast('ok','In line', def.short+' went in at the '+res.at.toLowerCase()+(res.on ? ' on the '+res.on.toLowerCase() : '')+'.'); }   /* BETA V5 */
   if(!res.ok){ toast('bad','No', res.why); shake(); return false; }
   armClock(); S.hand=null; S.preview=null; rowVerbs=false;   /* PHONE PLAY: the tray's row goes back to the parts */
   if(onPlaced) onPlaced(res.item.uid);   /* the drag hides the new part under its ghost until it lands */
-  if(res.ao && res.ao.turned) toast('info','Turned to fit', res.item.def.short+' turned itself to seat.');
+  if(res.ao && res.ao.turned) moveToast('info','Turned to fit', res.item.def.short+' turned itself to seat.');
   afterChange(res.item.uid);
   return res.item.uid;
 }
@@ -5906,7 +6081,7 @@ function startLink(aRef, armed){
     if(!r.ok){ toast('bad','No', r.why); return; }
     if(!(S.cart[S.material]>0)) S.material=null;
     armClock(); S.moves++;
-    toast(r.state==='ok'?'ok':(r.state==='warn'?'warn':'bad'), r.state==='ok'?'Tubing on':'Tubing on, but', r.tube.def.short+' hangs off the '+p.item.def.short.toLowerCase()+' '+p.label.toLowerCase()+'. '+(r.state==='ok'?'Its free end is the ring: pick it up and click where it runs to.':r.why));
+    moveToast(r.state==='ok'?'ok':(r.state==='warn'?'warn':'bad'), r.state==='ok'?'Tubing on':'Tubing on, but', r.tube.def.short+' hangs off the '+p.item.def.short.toLowerCase()+' '+p.label.toLowerCase()+'. '+(r.state==='ok'?'Its free end is the ring: pick it up and click where it runs to.':r.why));
     S.hand=null; S.sel=null; S.link={from:{uid:r.tube.uid, pi:'to'}, pt:null, armed:!!armed, t:r.tube.def.t||'gas', stub:true}; render(); return;
   }
   S.hand=null; S.sel=null; S.link={from:aRef, pt:null, armed:!!armed, t:p.t}; render();
@@ -5917,7 +6092,7 @@ function finishLink(bRef){
   if(!res.ok){ toast('bad','No', res.why); shake(); return false; }
   armClock(); S.link=null;
   for(const l of res.ends) linkToast(l, res.tube.name+' end', l.b.item.def.short+' '+l.b.label.toLowerCase(), l.s==='ok' ? ' '+res.len+' ft used'+(res.bends?', '+res.bends+(res.bends===1?' bend.':' bends.'):', straight run.') : '');
-  if(res.picked && !res.tube.lead) toast('info','From the cart', res.tube.def.name+(res.short?', and it is still '+res.short+' ft short. Pick the longer tubing on the cart to use that instead.':'.'));
+  if(res.picked && !res.tube.lead) moveToast('info','From the cart', res.tube.def.name+(res.short?', and it is still '+res.short+' ft short. Pick the longer tubing on the cart to use that instead.':'.'));
   markPops(res.ends.filter(l=>l.s==='ok').map(l=>pkey(l.b)));
   S.sel=res.tube.uid; rowVerbs=false; render(); return true;   /* PHONE PLAY: a run just laid is picked, and the row stays on the parts */
 }
@@ -5959,7 +6134,7 @@ function pickJump(jk){
   const worst=res.ends.find(l=>l.s==='bad')||res.ends.find(l=>l.s==='warn')||res.ends[0];
   if(lead) linkToast(worst||{s:'ok'}, lead.item.def.short+' tubing', (lead===pa?pb:pa).item.def.short+' '+(lead===pa?pb:pa).label.toLowerCase());
   else if(worst && worst.s!=='ok') linkToast(worst, pa.item.def.short, pb.item.def.short);
-  else { const kind={o2:'oxygen tubing', suct:'suction tubing', c22:'22 mm tubing', heat22:'heated circuit', c15:'15 mm tubing'}[res.tube.def.kind]||'tubing'; toast('ok','Jumper laid', 'A short piece of '+kind+' joins the '+pa.item.def.short.toLowerCase()+' to the '+pb.item.def.short.toLowerCase()+' in place.'); }
+  else { const kind={o2:'oxygen tubing', suct:'suction tubing', c22:'22 mm tubing', heat22:'heated circuit', c15:'15 mm tubing'}[res.tube.def.kind]||'tubing'; moveToast('ok','Jumper laid', 'A short piece of '+kind+' joins the '+pa.item.def.short.toLowerCase()+' to the '+pb.item.def.short.toLowerCase()+' in place.'); }
   render();
 }
 function pickPort(pk){
@@ -6061,15 +6236,18 @@ function moveGhost(e){
   const g=drag.ghost, cell=U*scale, r=drag.rects.board;
   const gx=e.clientX-drag.offX, gy=e.clientY-drag.offY;
   g.style.transform='translate3d('+Math.round(gx)+'px,'+Math.round(gy)+'px,0)';
-  if(!inRect(r, drag.touch ? ghostPoint(drag, e) : e)){ drag.land=null; if(drag.cell||drag.pvKey){ drag.cell=null; drag.pvKey=''; setPreview(null); } return; }
+  /* PHONE PLAY: on touch the nearest place it fits within reach of the part or the thumb wins over the square it is over
+     (aimLanding); a place within reach counts as on the wall even when the part drawn above the thumb has left it (a thumb
+     on an outlet in the top row) */
+  const P=drag.touch ? ghostPoint(drag, e) : e;
+  const ld=drag.lands && drag.lands.length ? aimLanding(drag.lands, drag.members[0].def, (P.clientX-r.left)/scale+VIEW.x, (P.clientY-r.top)/scale+VIEW.y, (e.clientX-r.left)/scale+VIEW.x, (e.clientY-r.top)/scale+VIEW.y) : null;
+  drag.land=null;
+  if(!ld && !inRect(r, P)){ if(drag.cell||drag.pvKey){ drag.cell=null; drag.pvKey=''; setPreview(null); } return; }
   const m=drag.members, minx=Math.min(...m.map(q=>q.x)), miny=Math.min(...m.map(q=>q.y));
   const gw=Math.max(...m.map(q=>q.x+dims(q.def,q.r).w))-minx, gh=Math.max(...m.map(q=>q.y+dims(q.def,q.r).h))-miny;
   const nx=Math.max(0, Math.min(GRID.cols-gw, Math.round((gx-r.left)/cell+VIEW.x/U))), ny=Math.max(0, Math.min(GRID.rows-gh, Math.round((gy-r.top)/cell+VIEW.y/U)));
   let dx=nx-minx, dy=ny-miny, rr=m[0].r, ff=drag.f;
-  /* PHONE PLAY: on touch the nearest place it fits within reach wins over the square it is over (aimLanding) */
-  drag.land=null;
-  if(drag.lands && drag.lands.length){ const P=ghostPoint(drag, e), ld=aimLanding(drag.lands, m[0].def, (P.clientX-r.left)/scale+VIEW.x, (P.clientY-r.top)/scale+VIEW.y);
-    if(ld){ drag.land=ld; dx=ld.x-m[0].x; dy=ld.y-m[0].y; rr=ld.r; ff=ld.f; } }
+  if(ld){ drag.land=ld; dx=ld.x-m[0].x; dy=ld.y-m[0].y; rr=ld.r; ff=ld.f; }
   drag.cell=[dx,dy];
   const chk = (drag.uid && m.length>1) ? moveGroupCheck(S, m.map(q=>q.uid), dx, dy) : canPlace(S, m[0].def, rr, m[0].x+dx, m[0].y+dy, drag.uid), ok=chk.ok;
   const key=dx+','+dy+','+ok+','+rr+','+(ff?1:0); if(key===drag.pvKey) return; drag.pvKey=key;   /* the same cell again draws nothing */
@@ -6121,19 +6299,27 @@ function landingsFor(st, def, r0, f0, uid){
     for(const k of cells){ const [x,y]=k.split(',').map(Number); if(canPlace(st, def, r0, x, y, uid).ok) continue; const pl=inlinePlan(st, def, x, y, uid); if(pl) push({x:pl.x, y:pl.y, r:r0, f:!!f0, s:'ok', why:'inline'}); } }
   return out;
 }
-/* the landing nearest the aim, if it is within reach. The aim is where the part's middle is meant to go, in wall units. */
-function aimLanding(cands, def, ax, ay){
+/* the landing nearest the aim, if it is within reach. The aim is where the part's middle is meant to go, in wall units.
+   A drag has two aims (2026-10-14): the part as it is drawn above the thumb, and the thumb itself, for a player who puts
+   the thumb on the place they mean (bx, by); the nearer of the two counts. */
+function aimLanding(cands, def, ax, ay, bx, by){
   let best=null, bd=Infinity;
-  for(const c of cands || []){ const dm=dims(def, c.r), d=Math.hypot((c.x+dm.w/2)*U-ax, (c.y+dm.h/2)*U-ay); if(d<bd){ bd=d; best=c; } }
+  for(const c of cands || []){ const dm=dims(def, c.r), cx=(c.x+dm.w/2)*U, cy=(c.y+dm.h/2)*U, d=Math.min(Math.hypot(cx-ax, cy-ay), bx==null ? Infinity : Math.hypot(cx-bx, cy-by)); if(d<bd){ bd=d; best=c; } }
   return best && bd*scale<=REACH ? best : null;
 }
 /* the open port a run's end takes at a point: on touch the nearest that can take it within reach (the one under the
-   point is nearest of all), otherwise whatever port is under the point */
-function portNear(ev, touch){
-  if(touch && S.link){ const r=$('board').getBoundingClientRect(); let best=null, bd=REACH;
+   point is nearest of all), otherwise whatever port is under the point.
+   2026-10-14 (David on the daily, by thumb: "my finger still does not line up with the touch screen"). Within reach of the
+   end OR of the thumb under it: the end rides TUBE_LIFT above the thumb, so a thumb set on the outlet it means carried the
+   end off the wall and the hose stayed loose (12 aims in 15 at 393 x 659). And a port the run's end fits beats a nearer one
+   it does not: 20 px off, an oxygen hose went into the air outlet one square over. A port it does not fit still takes it
+   when nothing that fits is in reach, so a wrong joint can be made on purpose and the test says why. */
+function portNear(ev, touch, thumb){
+  if(touch && S.link){ const r=$('board').getBoundingClientRect(), end=linkEnd(), at=[ev, thumb||ev]; let best=null, bd=REACH, miss=null, md=REACH;
     for(const g of $('board').querySelectorAll('.pt.cand[data-port]')){ const p=findPort(S, parsePort(g.dataset.port)); if(!p) continue;
-      const q=p.stub ? stubEndXY(p) : portXY(p), d=Math.hypot(r.left+(q[0]-VIEW.x)*scale-ev.clientX, r.top+(q[1]-VIEW.y)*scale-ev.clientY); if(d<bd){ bd=d; best=g; } }
-    if(best) return best; }
+      const q=p.stub ? stubEndXY(p) : portXY(p), x=r.left+(q[0]-VIEW.x)*scale, y=r.top+(q[1]-VIEW.y)*scale, d=Math.min(...at.map(a=>Math.hypot(x-a.clientX, y-a.clientY)));
+      if(end && compat(end, p).s==='bad'){ if(d<md){ md=d; miss=g; } } else if(d<bd){ bd=d; best=g; } }
+    if(best || miss) return best || miss; }
   const el=document.elementFromPoint(ev.clientX, ev.clientY), pt=el && el.closest && el.closest('.pt[data-port]');
   return pt && !(S.link && pt.dataset.port===S.link.from.uid+':'+S.link.from.pi) ? pt : null;
 }
@@ -6173,7 +6359,10 @@ function beginDrag(e, spec){
       /* PHONE PLAY: a thumb rolls a few pixels on a tap, so on touch a drag starts at 10 px (Android's touch slop is 8 dp);
          a mouse keeps 4. On the tray, a sideways swipe is the tray scrolling: only a pull up lifts the part. */
       if(Math.hypot(mx, my)<(drag.touch ? 10 : 4)) return;
-      if(drag.touch && !drag.uid && Math.abs(mx)>Math.abs(my)){ quit(); return; }
+      /* the slim row decides for itself (rowSwipe): a pull that rises lifts the part, however far sideways it heads; a
+         flatter swipe scrolls the row where there is more of it to see */
+      if(drag.touch && !drag.uid && drag.row){ if(my>-Math.abs(mx)*0.45 && rowScrolls()){ const x0=drag.sx; quit(); rowSwipe(ev, x0); return; } }
+      else if(drag.touch && !drag.uid && Math.abs(mx)>Math.abs(my)){ quit(); return; }
       drag.live=true;
       closeTray(); closeScreenFull(); $('boardWrap').classList.add('holding');   /* PHONE PLAY: a part in the hand clears the sheets, and the zoom steps off the wall */
       if(drag.uid && !drag.patient){ if(!drag.touch || onePhoneScreen()) $('trash').classList.add('show'); if(!drag.touch) $('cartDock').classList.add('drop-ok'); }   /* the places a part can go back, shown while it is held; on touch they light once the part itself is off the wall */
@@ -6190,9 +6379,9 @@ function beginDrag(e, spec){
       if(drag.touch && drag.members.length===1 && !drag.patient){ if(drag.uid){ const it0=S.items.find(i=>i.uid===drag.uid); drag.f=!!(it0 && it0.f); } drag.lands=landingsFor(S, drag.def, drag.r, drag.f, drag.uid||null); }   /* PHONE PLAY: where it can go, once per pickup */
       { const fp=$('fitPv'); if(fp && drag.members.length===1) fp.innerHTML=fitSVG(drag.members[0].def, drag.uid); } }   /* K5 */
     if(!drag.raf) drag.raf=requestAnimationFrame(()=>{ if(!drag) return; drag.raf=0; const ev2=drag.last;
-      const off = drag.touch ? (!!drag.uid && !drag.patient && !inRect(drag.rects.board, ghostPoint(drag, ev2))) : (inRect(drag.rects.trash,ev2) || (!!drag.uid && !drag.patient && (inRect(drag.rects.dock,ev2) || !inRect(drag.rects.board,ev2))));   /* off the wall is back to the cart too */
-      $('trash').classList.toggle('hot', off); if(drag.touch) $('cartDock').classList.toggle('drop-ok', off);
-      moveGhost(ev2); }); };
+      moveGhost(ev2);
+      const off = drag.touch ? (!!drag.uid && !drag.patient && !drag.land && !inRect(drag.rects.board, ghostPoint(drag, ev2))) : (inRect(drag.rects.trash,ev2) || (!!drag.uid && !drag.patient && (inRect(drag.rects.dock,ev2) || !inRect(drag.rects.board,ev2))));   /* off the wall is back to the cart too */
+      $('trash').classList.toggle('hot', off); if(drag.touch) $('cartDock').classList.toggle('drop-ok', off); }); };
   const onScroll=()=>{ if(drag&&drag.live) drag.rects=dragRects(); };
   const quit=()=>{ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); document.removeEventListener('pointercancel',onUp);
     window.removeEventListener('scroll',onScroll); window.removeEventListener('resize',onScroll); drag=null; };
@@ -6212,30 +6401,30 @@ function beginDrag(e, spec){
     const uids=d.uid ? d.members.map(q=>q.uid) : [];
     /* PHONE PLAY: on touch the part decides where it goes, not the thumb under it: the thumb can reach the bottom rows from
        below the wall, and a part pulled down off the wall into the tray goes back on the cart */
-    const P=d.touch ? ghostPoint(d, ev) : ev;
+    const P=d.touch ? ghostPoint(d, ev) : ev, onWall=inRect(br,P) || (d.touch && !!d.land);   /* a place within reach of the thumb is on the wall */
     if(d.patient && (d.touch ? !inRect(br,P) : (inRect(d.rects.trash,ev) || inRect(d.rects.dock,ev)))){ toast('info','He stays on the wall','The patient does not go back on the cart. Set him down anywhere on the wall.'); back(uids); return; }
     /* QA 2026-10-05 (David: "maybe if I just drag it off the play field it automatically goes to the bench"): a wall part
        let go anywhere off the wall goes back on the cart; the strip lights while it is out there. A cancelled pointer is
        not a drop, and the patient stays on the wall. */
-    const offWall = !!d.uid && !d.patient && ev.type==='pointerup' && !inRect(br,P);
+    const offWall = !!d.uid && !d.patient && ev.type==='pointerup' && !onWall;
     if(offWall || (!d.touch && (inRect(d.rects.trash,ev) || (d.uid && inRect(d.rects.dock,ev))))){
       ghostGone(d.ghost);
-      if(d.uid){ dispatchAct('remove', {uids}); S.sel=null; multi=new Set(); infoMode='level'; toast('info','Back on the cart', uids.length>1 ? uids.length+' parts are back on the cart.' : d.def.short+' is back on the cart.'); }
+      if(d.uid){ dispatchAct('remove', {uids}); S.sel=null; multi=new Set(); infoMode='level'; moveToast('info','Back on the cart', uids.length>1 ? uids.length+' parts are back on the cart.' : d.def.short+' is back on the cart.'); }
       render(); return; }
-    if(!inRect(br,P) || !d.cell){ back(uids); return; }
+    if(!onWall || !d.cell){ back(uids); return; }
     const [dx,dy]=d.cell;
     if(d.uid && uids.length>1){
       const res=dispatchAct('group', {uids, dx, dy});
       if(!res.ok){ toast('bad','No',res.why); shake(); back(uids); return; }
-      S.landing=new Set(uids); armClock(); if(res.detached) toast('info','Tubing came off','No run was possible from there. Lay it again.');
+      S.landing=new Set(uids); armClock(); if(res.detached) moveToast('info','Tubing came off','No run was possible from there. Lay it again.');
       if(d.fromMulti || d.patient){ multi=d.patient ? new Set() : new Set(uids); S.sel=null; infoMode='level'; render(); }
-      else { multi=new Set(); toast('info','Moved together', (uids.length-1)+' seated part'+(uids.length>2?'s':'')+' came along with it.'); markSettle(d.uid); select(d.uid); }
+      else { multi=new Set(); moveToast('info','Moved together', (uids.length-1)+' seated part'+(uids.length>2?'s':'')+' came along with it.'); markSettle(d.uid); select(d.uid); }
       land(dx,dy,uids,d.uid); return; }
     if(d.uid){ const m0=d.members[0];
       if(!canPlace(S, m0.def, m0.r, m0.x+dx, m0.y+dy, d.uid).ok && inlinePlan(S, m0.def, m0.x+dx, m0.y+dy, d.uid)){   /* BETA V5: onto a run, in line */
         const res=dispatchAct('inline', {uid:d.uid, x:m0.x+dx, y:m0.y+dy});
-        if(res.ok){ S.landing=new Set(uids); armClock(); toast('ok','In line', m0.def.short+' went in at the '+res.at.toLowerCase()+(res.on ? ' on the '+res.on.toLowerCase() : '')+'.'); markSettle(d.uid); select(d.uid); land(res.item.x-minx, res.item.y-miny, uids, d.uid); return; } } }
-    if(d.uid){ const m=d.members[0]; const res=dispatchAct('move', {uid:d.uid, x:m.x+dx, y:m.y+dy, r:d.land ? d.land.r : m.r, orient:true}); if(!res.ok){ toast('bad','No',res.why); shake(); back(uids); return; } S.landing=new Set(uids); armClock(); if(res.detached) toast('info','Tubing came off','No run was possible from there. Lay it again.'); const ao=res.ao||{}; if(ao.turned) toast('info','Turned to fit', DB[d.def.id].short+' turned itself to seat.'); afterChange(d.uid); land(dx,dy,uids,d.uid); return; }
+        if(res.ok){ S.landing=new Set(uids); armClock(); moveToast('ok','In line', m0.def.short+' went in at the '+res.at.toLowerCase()+(res.on ? ' on the '+res.on.toLowerCase() : '')+'.'); markSettle(d.uid); select(d.uid); land(res.item.x-minx, res.item.y-miny, uids, d.uid); return; } } }
+    if(d.uid){ const m=d.members[0]; const res=dispatchAct('move', {uid:d.uid, x:m.x+dx, y:m.y+dy, r:d.land ? d.land.r : m.r, orient:true}); if(!res.ok){ toast('bad','No',res.why); shake(); back(uids); return; } S.landing=new Set(uids); armClock(); if(res.detached) moveToast('info','Tubing came off','No run was possible from there. Lay it again.'); const ao=res.ao||{}; if(ao.turned) moveToast('info','Turned to fit', DB[d.def.id].short+' turned itself to seat.'); afterChange(d.uid); land(dx,dy,uids,d.uid); return; }
     const placed=tryPlace(d.def, d.land ? d.land.r : d.r, dx, dy, uid=>{ S.landing=new Set([uid]); }, d.land ? d.land.f : d.f);
     if(placed){ const pit=S.items.find(i=>i.uid===placed); land(pit ? pit.x : dx, pit ? pit.y : dy, [placed], placed); } else back([]); };
   document.addEventListener('pointermove',onMove); document.addEventListener('pointerup',onUp); document.addEventListener('pointercancel',onUp);
@@ -6271,9 +6460,9 @@ function toggleMulti(uid){
 /* press on an anchor and pull to another: the rubber band follows the pointer */
 /* K6: the port under the pointer, and the run to it drawn as it would be laid; the straight band hides while it shows */
 let routeKey='';
-function routeHover(ev){
+function routeHover(ev, thumb){
   if(!S.link || hideHelp()) return;
-  const pt=portNear(ev, !!ev.pointerType && ev.pointerType!=='mouse');   /* PHONE PLAY: the port the end would take, not only the one under it */
+  const pt=portNear(ev, !!ev.pointerType && ev.pointerType!=='mouse', thumb);   /* PHONE PLAY: the port the end would take, not only the one under it */
   const k=pt && !pt.dataset.jump && pt.dataset.port!==S.link.from.uid+':'+S.link.from.pi ? pt.dataset.port : '';
   if(k===routeKey) return; routeKey=k;
   const g=$('board').querySelector('#routePv'), rb=$('board').querySelector('#rb'); if(!g) return;
@@ -6286,14 +6475,14 @@ function beginPull(e, aRef){
      can take it; a tap leaves the run waiting for its second tap, as before */
   const sx=e.clientX, sy=e.clientY; let moved=false;
   const lift=ev=>ev.pointerType==='mouse' ? ev : {clientX:ev.clientX, clientY:ev.clientY-TUBE_LIFT, pointerType:ev.pointerType};
-  const onMove=ev=>{ if(!S.link) return; if(!moved && Math.hypot(ev.clientX-sx, ev.clientY-sy)>=(ev.pointerType==='mouse' ? 4 : 10)) moved=true; if(!moved) return; const lv=lift(ev), xy=boardXY(lv); S.link.pt=xy; const rb=$('board').querySelector('#rb'); if(rb){ rb.setAttribute('x2', xy[0]); rb.setAttribute('y2', xy[1]); } routeHover(lv); };
+  const onMove=ev=>{ if(!S.link) return; if(!moved && Math.hypot(ev.clientX-sx, ev.clientY-sy)>=(ev.pointerType==='mouse' ? 4 : 10)) moved=true; if(!moved) return; const lv=lift(ev), xy=boardXY(lv); S.link.pt=xy; const rb=$('board').querySelector('#rb'); if(rb){ rb.setAttribute('x2', xy[0]); rb.setAttribute('y2', xy[1]); } routeHover(lv, ev); };
   const onUp=ev=>{ if(ev.pointerType==='mouse' && ev.button!==0) return;
     document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); document.removeEventListener('pointercancel',onUp);
     pull=null; if(!S.link) return;
-    const pt=!moved ? null : portNear(lift(ev), ev.pointerType!=='mouse');   /* PHONE PLAY: the nearest port that can take it, within reach of the end */
+    const pt=!moved ? null : portNear(lift(ev), ev.pointerType!=='mouse', ev);   /* PHONE PLAY: the nearest port that can take it, within reach of the end or the thumb */
     if(pt && pt.dataset.jump && !pt.dataset.jump.split('|').some(k=>sameRef(parsePort(k), S.link.from))){ hush(); pickJump(pt.dataset.jump); }
     else if(pt && !sameRef(parsePort(pt.dataset.port), S.link.from)){ hush(); finishLink(parsePort(pt.dataset.port)); }
-    else if(S.link.replug){ S.link=null; render(); toast('info','Pulled off','Drop it on a port to re-lay it, or leave it. Undo puts it back.'); }
+    else if(S.link.replug){ S.link=null; render(); moveToast('info','Pulled off','Drop it on a port to re-lay it, or leave it. Undo puts it back.'); }
     else { S.link.pt=null; renderBoard(); } };
   document.addEventListener('pointermove',onMove); document.addEventListener('pointerup',onUp); document.addEventListener('pointercancel',onUp);
 }
@@ -6440,7 +6629,7 @@ function wireBoard(){
           if(ld){ rr=ld.r; ff=ld.f; } }
         if(H.uid){ const res=dispatchAct('move', {uid:H.uid, x:cx, y:cy, r:rr, orient:true});   /* a part moved by taps (Move) */
           if(!res.ok){ toast('bad','No', res.why); shake(); return; }
-          S.hand=null; S.preview=null; rowVerbs=false; armClock(); if(res.detached) toast('info','Tubing came off','No run was possible from there. Lay it again.'); afterChange(H.uid); return; }
+          S.hand=null; S.preview=null; rowVerbs=false; armClock(); if(res.detached) moveToast('info','Tubing came off','No run was possible from there. Lay it again.'); afterChange(H.uid); return; }
         tryPlace(H.def, rr, cx, cy, null, ff); return; } }
     const pt=t.closest('.pt[data-port]'); if(pt){ if(pt.dataset.jump) pickJump(pt.dataset.jump); else pickPort(pt.dataset.port); return; }
     if(S.link && S.link.byNear && S.link.armed){ S.link.armed=false; S.link.byNear=false; return; }   /* PHONE PLAY: the tap that started a run near its port */
@@ -6450,17 +6639,17 @@ function wireBoard(){
          on the cart, then a tap on a run it can stand in for, swaps it in place, joints and all */
       { const tb=S.tubes.find(t=>t.uid===th.dataset.tube && !t.lead);
         if(tb && S.material && S.material!==tb.def.id && twinsOf(S, tb.def).includes(S.material)){ const res=dispatchAct('swap', {uid:tb.uid, to:S.material});
-          if(res.ok){ S.material=null; S.sel=tb.uid; toast('ok','Swapped', res.from+' for the '+res.to.toLowerCase()+'.'); armClock(); render(); return; } } }
+          if(res.ok){ S.material=null; S.sel=tb.uid; moveToast('ok','Swapped', res.from+' for the '+res.to.toLowerCase()+'.'); armClock(); render(); return; } } }
       S.link=null; S.sel=th.dataset.tube; rowVerbs=true; { const tb=S.tubes.find(t=>t.uid===S.sel && !t.lead); if(tb && window.innerWidth>=1000) renderInfo('item', tb.def, tb.uid); } render(); return; }
     const sk=t.closest('.setk'); if(sk){ const gi=sk.closest('.it'); const it=gi&&S.items.find(i=>i.uid===gi.dataset.uid); if(it && !S.hand){ S.link=null; openSetting(it); render(); return; } }
     const g=t.closest('.it');
     if(S.link){ S.link=null; render(); return; }
-    if(g){ const it=S.items.find(i=>i.uid===g.dataset.uid); if(it && it.def.cat==='patient'){ deselect(); return; } if(it && it.def.id==='deco-switch'){ S.lamp=!S.lamp; render(); toast('info', S.lamp?'Bed light on':'Bed light off',''); return; }
+    if(g){ const it=S.items.find(i=>i.uid===g.dataset.uid); if(it && it.def.cat==='patient'){ deselect(); return; } if(it && it.def.id==='deco-switch'){ S.lamp=!S.lamp; render(); moveToast('info', S.lamp?'Bed light on':'Bed light off',''); return; }
       if(e.shiftKey && it && !it.fixed){ toggleMulti(it.uid); return; }
       rowVerbs=true; select(g.dataset.uid); return; }
     deselect();
   });
-  svg.addEventListener('dblclick', e=>{ if(lastTouch) return; const th=e.target.closest('.tube.hit'); if(!th) return; dispatchAct('remove', {uids:[th.dataset.tube]}); S.sel=null; S.link=null; render(); toast('info','Pulled off','Double-click pulls a run off. Undo puts it back.'); });
+  svg.addEventListener('dblclick', e=>{ if(lastTouch) return; const th=e.target.closest('.tube.hit'); if(!th) return; dispatchAct('remove', {uids:[th.dataset.tube]}); S.sel=null; S.link=null; render(); moveToast('info','Pulled off','Double-click pulls a run off. Undo puts it back.'); });
   /* ROUND 6: nothing floats. A port or a joint under the pointer reads in the status line under the wall,
      and the line goes back to the counts when the pointer leaves. Touch never sees this; the preview of
      what a pending run would do at a port stays on the ring. */
@@ -6507,7 +6696,9 @@ function wireCart(){
   list.addEventListener('contextmenu', e=>{ e.preventDefault(); if(drag) return; const b=e.target.closest('.da-item'); if(!b||b.disabled||!b.dataset.def) return; const d=DB[b.dataset.def]; if(d.tube) return;
     if(!(S.hand&&S.hand.def.id===d.id)){ S.link=null; S.hand={def:d, r:d.cartRot||0}; S.sel=null; renderInfo('item', d, null); }
     rotateSel(); });
-  list.addEventListener('pointerdown', e=>{ const b=e.target.closest('.da-item'); if(!b||b.disabled||!b.dataset.def) return; if(e.pointerType==='mouse'&&e.button!==0) return; const d=DB[b.dataset.def]; if(d.tube) return; beginDrag(e,{def:d, r:d.cartRot||0}); });
+  list.addEventListener('pointerdown', e=>{ if(e.pointerType==='mouse'&&e.button!==0) return; const b=e.target.closest('.da-item'), d=b && !b.disabled && b.dataset.def && DB[b.dataset.def], slim=list.classList.contains('slim');
+    if(d && !d.tube){ beginDrag(e,{def:d, r:d.cartRot||0, row:slim}); return; }
+    if(slim && e.pointerType!=='mouse') rowSwipe(e); });   /* All parts, a tubing tile, a gap: the row still scrolls from there */
   list.addEventListener('click', e=>{ if(suppressClick) return;
     if(e.target.closest('#cartAll')){ openTray(); return; }   /* PHONE PLAY: the full list */
     const b=e.target.closest('.da-item'); if(!b||b.disabled||!b.dataset.def) return; const d=DB[b.dataset.def];
@@ -6540,21 +6731,21 @@ function moveSel(){ const it=S.sel && S.items.find(i=>i.uid===S.sel); if(!it || 
 function flipSel(){
   if(S.hand){ S.hand.f=!S.hand.f; render(); return; }
   if(!S.sel) return; const it=S.items.find(i=>i.uid===S.sel); if(!it||it.fixed) return;
-  const res=dispatchAct('flip', {uid:S.sel}); if(!res.ok) return; armClock(); if(res.detached) toast('info','Tubing came off','No run was possible after the flip. Lay it again.'); afterChange(S.sel);
+  const res=dispatchAct('flip', {uid:S.sel}); if(!res.ok) return; armClock(); if(res.detached) moveToast('info','Tubing came off','No run was possible after the flip. Lay it again.'); afterChange(S.sel);
 }
 function rotateSel(){
   if(S.hand && S.hand.def.upright){ toast('info','Hangs upright', S.hand.def.upright); return; }
   if(S.hand){ S.hand.r=(S.hand.r+1)%4; if(S.preview){ S.preview.r=S.hand.r; S.preview.ok=canPlace(S,S.hand.def,S.hand.r,S.preview.x,S.preview.y).ok; } render(); return; }
-  if(!S.sel) return; const res=dispatchAct('rotate', {uid:S.sel}); if(!res.ok){ if(res.why) toast('bad','No',res.why); return; } armClock(); if(res.detached) toast('info','Tubing came off','No run was possible after the turn. Lay it again.'); afterChange(S.sel);
+  if(!S.sel) return; const res=dispatchAct('rotate', {uid:S.sel}); if(!res.ok){ if(res.why) toast('bad','No',res.why); return; } armClock(); if(res.detached) moveToast('info','Tubing came off','No run was possible after the turn. Lay it again.'); afterChange(S.sel);
 }
 function removeSel(){
-  if(multi.size>1){ const n=multi.size; dispatchAct('remove', {uids:[...multi]}); multi=new Set(); S.sel=null; infoMode='level'; render(); toast('info','Back on the cart', n+' parts are back on the cart.'); return; }
+  if(multi.size>1){ const n=multi.size; dispatchAct('remove', {uids:[...multi]}); multi=new Set(); S.sel=null; infoMode='level'; render(); moveToast('info','Back on the cart', n+' parts are back on the cart.'); return; }
   if(!S.sel) return; const res=dispatchAct('remove', {uids:[S.sel]}); if(!res.ok){ if(res.why) toast('bad','No',res.why); return; } S.sel=null; infoMode='level'; render(); }
 /* Reset used to clear the wall with no way back. The history rides across the restart, so Ctrl+Z (or Undo)
    puts the wall back as it was. */
 function resetWall(){ if(!S) return;
-  if(S.shift){ if(!S.finished && dispatchAct('arrive').ok){ infoMode='level'; render(); toast('info','Wall reset','Back to how this wall arrived. Undo puts it back.'); } return; } const keep=S.history.concat([snapshot(S)]); startLevel(S.level.id); S.history=keep.slice(-60); render(); toast('info','Wall reset','Undo puts it back.'); }
-function undoStep(){ if(!S || S.finished) return; if(undo(S)){ saveWallSoon(); infoMode='level'; render(); toast('info','Undone',''); } }
+  if(S.shift){ if(!S.finished && dispatchAct('arrive').ok){ infoMode='level'; render(); moveToast('info','Wall reset','Back to how this wall arrived. Undo puts it back.'); } return; } const keep=S.history.concat([snapshot(S)]); startLevel(S.level.id); S.history=keep.slice(-60); render(); moveToast('info','Wall reset','Undo puts it back.'); }
+function undoStep(){ if(!S || S.finished) return; if(undo(S)){ saveWallSoon(); infoMode='level'; render(); moveToast('info','Undone',''); } }
 function wireGlobal(){
   document.addEventListener('keydown', e=>{
     if(!S) return;
@@ -6588,8 +6779,8 @@ function wireGlobal(){
   $('menuBtnI').addEventListener('click', showLevels);
   $('infoClose').addEventListener('click', ()=>{ if(sheetApi) sheetApi.close(); });
   $('info').addEventListener('click', e=>{ const b=e.target.closest('.da-pbtn'); if(!b) return;
-    if(b.dataset.cpapset){ const it=S.items.find(i=>i.uid===infoUid); if(!it) return; const r=dispatchAct('cpap', {uid:it.uid, value:Number(b.dataset.cpapset)}); if(r.ok){ armClock(); renderInfo('item', it.def, it.uid); render(); toast('info','Probe at '+r.cpap+' cm H2O',''); } return; }
-    if(b.dataset.fio2 || b.dataset.fio2set){ const it=S.items.find(i=>i.uid===infoUid); if(!it) return; const r=dispatchAct('fio2', {uid:it.uid, value:b.dataset.fio2set ? Number(b.dataset.fio2set) : it.fio2+Number(b.dataset.fio2)}); if(r.ok){ armClock(); renderInfo('item', it.def, it.uid); render(); toast('info', it.def.short+' at '+r.fio2+'%',''); } return; }
+    if(b.dataset.cpapset){ const it=S.items.find(i=>i.uid===infoUid); if(!it) return; const r=dispatchAct('cpap', {uid:it.uid, value:Number(b.dataset.cpapset)}); if(r.ok){ armClock(); renderInfo('item', it.def, it.uid); render(); moveToast('info','Probe at '+r.cpap+' cm H2O',''); } return; }
+    if(b.dataset.fio2 || b.dataset.fio2set){ const it=S.items.find(i=>i.uid===infoUid); if(!it) return; const r=dispatchAct('fio2', {uid:it.uid, value:b.dataset.fio2set ? Number(b.dataset.fio2set) : it.fio2+Number(b.dataset.fio2)}); if(r.ok){ armClock(); renderInfo('item', it.def, it.uid); render(); moveToast('info', it.def.short+' at '+r.fio2+'%',''); } return; }
     pickPort(b.dataset.port); if(window.innerWidth<1000 && sheetApi && S.link) sheetApi.close(); });
   { const rt=$('screenReadTabs'); if(rt) rt.addEventListener('click', e=>{ const b=e.target.closest('button[data-page]'); if(b) screenShow(b.dataset.page, 0); }); }   /* the readout's tabs turn the same page the wall's tabs do */
   window.addEventListener('resize', ()=>{ fitBoard(); if(window.innerWidth>=1000 && sheetApi){ ['dt-peek','dt-half','dt-full'].forEach(c=>$('infoDock').classList.remove(c)); } });
@@ -6638,7 +6829,7 @@ function daIsQuiet(){
 function track(name){
   try{
     if(daIsQuiet()) return;   /* asked every time: the hatches are readable from the url, nothing to keep in sync */
-    if(window.goatcounter && window.goatcounter.count)
+    if(window.goatcounter && window.goatcounter.count)   /* the events keep the game's first name (HW1, 2026-10-15), so their counts run on unbroken */
       window.goatcounter.count({path:'/fun/device-assembly/'+name, title:'Device Assembly \u00b7 '+name, event:true});
   }catch(e){}
 }
@@ -6899,11 +7090,11 @@ function showLevels(){
   if(!$('overlay').hidden){ closeOverlay(); afterBack(showLevels); return; }   /* a result card's own back step lands first */
   openDoor();
 }
-/* B6 (2026-10-06): every part has a plain address, /fun/device-assembly/today/ and the rest (src/fun/device-assembly/
-   parts.njk forwards each to ?wall=<token>), and the address follows what is on screen so it can be shared or reloaded:
+/* B6 (2026-10-06): every part has a plain address, /fun/headwall/today/ and the rest (src/fun/headwall/
+   parts.11ty.js forwards each to ?wall=<token>), and the address follows what is on screen so it can be shared or reloaded:
    the door is the game's own address; today's wall, the training and a path read plainly while the wall on screen is the
    one that address opens; anything else is ?wall=<id>. Tester switches (?unlock=1, ?dadev, ?room=mirror|left) stay on. */
-const gameRoot = () => (typeof location!=='undefined' && location.pathname ? location.origin+location.pathname.replace(/(device-assembly\/).*$/, '$1') : 'https://healthcareuncharted.com/fun/device-assembly/');
+const gameRoot = () => (typeof location!=='undefined' && location.pathname ? location.origin+location.pathname.replace(/(headwall\/).*$/, '$1') : 'https://healthcareuncharted.com/fun/headwall/');   /* HW1 (2026-10-15): the game was Device Assembly at /fun/device-assembly/; netlify.toml forwards the old addresses */
 function addressOf(L){
   if(!L || !L.id) return '';
   if(L.id===todayId()) return 'today/';
@@ -6971,7 +7162,7 @@ function faultShow(){
   overlay('<div class="da-k teal">'+esc(L.kicker)+'</div><h2>Here it <span>is</span>.</h2><p><b>'+esc(f.name)+'.</b> '+esc(f.why)+'</p><p class="da-small">'+esc(f.fix)+'</p>'+
     '<div class="btns"><button type="button" class="da-go" id="wallBtn">Back to the wall</button><button type="button" class="da-ghostbtn" id="shareBtn">Share this wall</button></div>');
   $('wallBtn').addEventListener('click', closeOverlay);
-  $('shareBtn').addEventListener('click', ()=>shareWall(L.kicker+' · Device Assembly', 'What is wrong with this wall?', 'device-assembly-'+L.id+'-puzzle'));
+  $('shareBtn').addEventListener('click', ()=>shareWall(L.kicker+' · Headwall', 'What is wrong with this wall?', 'headwall-'+L.id+'-puzzle'));
 }
 
 /* ═══ SHARE CARD (alpha backlog item 4) ═══
@@ -6992,7 +7183,7 @@ async function wallCard(kicker, title){
   const logo=new Image(); await new Promise(res=>{ logo.onload=res; logo.onerror=res; logo.src='/brand/hu-logo-inline-dark.png'; });
   const c=document.createElement('canvas'); c.width=1080; c.height=1080; const g=c.getContext('2d');
   g.fillStyle='#0d1117'; g.fillRect(0,0,1080,1080);
-  g.fillStyle='#4ECDC4'; g.font='600 24px "IBM Plex Mono", monospace'; g.fillText((kicker||'DEVICE ASSEMBLY').toUpperCase(), 60, 84);
+  g.fillStyle='#4ECDC4'; g.font='600 24px "IBM Plex Mono", monospace'; g.fillText((kicker||'HEADWALL').toUpperCase(), 60, 84);
   let fs=54; g.fillStyle='#F6F9FC'; do { g.font='800 '+fs+'px Outfit, "DM Sans", sans-serif'; fs-=2; } while(g.measureText(title).width>960 && fs>26); g.fillText(title, 60, 152);
   /* QA 2026-10-05 (David: "the URL on the bottom kind of messes with or overlaps"): the wall ran to 1052 and the logo and
      the link were drawn over it. Now the wall fits a box between the title and a footer of its own, at its own shape. */
@@ -7001,14 +7192,14 @@ async function wallCard(kicker, title){
   g.fillStyle='#173a63'; g.fillRect(x-10,y-10,W+20,H+20); g.drawImage(img, x, y, W, H);
   g.fillStyle='#22324a'; g.fillRect(60, 1000, 960, 2);   /* the footer's rule */
   let lw=0; if(logo.naturalWidth){ const lh=34; lw=logo.naturalWidth*lh/logo.naturalHeight; g.drawImage(logo, 60, 1024, lw, lh); }
-  const site='healthcareuncharted.com/fun/device-assembly'; let ls=21; g.textAlign='right'; g.fillStyle='#7E9CBF';
+  const site='healthcareuncharted.com/fun/headwall'; let ls=21; g.textAlign='right'; g.fillStyle='#7E9CBF';
   do { g.font='500 '+ls+'px "IBM Plex Mono", monospace'; ls-=1; } while(g.measureText(site).width > 960-lw-32 && ls>12);
   g.fillText(site, 1020, 1048);
   URL.revokeObjectURL(url);
   return c;
 }
 async function shareWall(kicker, title, name){
-  try{ const c=await wallCard(kicker, title); const a=document.createElement('a'); a.href=c.toDataURL('image/jpeg',0.92); a.download=(name||'device-assembly')+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); toast('info','Card saved','A 1080 square of this wall, ready to post.'); }
+  try{ const c=await wallCard(kicker, title); const a=document.createElement('a'); a.href=c.toDataURL('image/jpeg',0.92); a.download=(name||'headwall')+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); toast('info','Card saved','A 1080 square of this wall, ready to post.'); }
   catch(e){ console.error('share card', e); toast('bad','No card','The wall could not be drawn to an image in this browser.'); }
 }
 
@@ -7077,7 +7268,7 @@ function judge(timedOut, ev, L){
     finishBtns(next ? (next.year ? 'Today\u2019s wall' : next.kind==='timed'?'Try it timed':'Next') : null, false));
   if(next) $('nextBtn').addEventListener('click', ()=>startLevel(next.id));
   $('againBtn').addEventListener('click', ()=>startLevel(L.id)); $('lvBtn').addEventListener('click', showLevels);
-  $('shareBtn').addEventListener('click', ()=>shareWall(L.kicker+' · Device Assembly', shareTitle, 'device-assembly-'+L.id));
+  $('shareBtn').addEventListener('click', ()=>shareWall(L.kicker+' · Headwall', shareTitle, 'headwall-'+L.id));
 }
 
 /* K1 · THE MISS CARD. One cause, in a sentence, low on the screen with no dim, so the ring on the wall that marks it
@@ -7107,7 +7298,7 @@ function parWords(f, par){
 }
 function genShareText(L, f){
   const g=L.gen, tests=(S && S.tests) || [], n=tests.length;
-  const head=g.daily ? 'Device Assembly #'+dayNumber(g.daily) : g.made ? 'Device Assembly · a wall made for you' : 'Device Assembly · '+L.kicker;
+  const head=g.daily ? 'Headwall #'+dayNumber(g.daily) : g.made ? 'Headwall · a wall made for you' : 'Headwall · '+L.kicker;
   const link=gameRoot()+'?wall='+L.id, took=S && S.elapsed ? ' · '+mmss(S.elapsed*1000) : '';
   return head+' · '+n+(n===1?' test':' tests')+took+' · '+parWords(f, L.par)+'\n'+tests.map(ok=>ok?'\u{1F7E9}':'\u{1F7E5}').join('')+'\n'+link;
 }
@@ -7128,7 +7319,7 @@ function dailyStreak(L){
 /* 3d: a daily fault wall shares what it was and how many tests it took */
 function genFaultFinish(L){
   const tests=(S && S.tests) || [], n=tests.length, took=S && S.elapsed ? ' · '+mmss(S.elapsed*1000) : '';
-  S.share='Device Assembly #'+dayNumber(L.gen.daily)+' · '+(L.faultIds && L.faultIds.length>1 ? 'two faults' : 'find the fault')+' · '+n+(n===1?' test':' tests')+took+'\n'+tests.map(ok=>ok?'\u{1F7E9}':'\u{1F7E5}').join('')+'\n'+gameRoot()+'?wall='+L.id;
+  S.share='Headwall #'+dayNumber(L.gen.daily)+' · '+(L.faultIds && L.faultIds.length>1 ? 'two faults' : 'find the fault')+' · '+n+(n===1?' test':' tests')+took+'\n'+tests.map(ok=>ok?'\u{1F7E9}':'\u{1F7E5}').join('')+'\n'+gameRoot()+'?wall='+L.id;
   dailyStreak(L);
 }
 /* the reading-load phase (CLAUDE.md, OPEN PHASES): on a phone the share line and the buttons have to be on the first
@@ -7193,9 +7384,9 @@ function shiftRecord(L, sc){
 }
 function shiftShareText(sh, total, word, plan){
   const sq=sh.scores.map(r=>r && r.tests.length===1 && !r.shown ? '\u{1F7E9}' : '\u{1F7E8}').join('');
-  if(plan && plan.daily) return 'Device Assembly #'+plan.n+' · '+(plan.title || plan.storyName)+' · '+total+' · '+word+'\n'+sq+'\n'+gameRoot()+'?wall=day:'+plan.daily;
+  if(plan && plan.daily) return 'Headwall #'+plan.n+' · '+(plan.title || plan.storyName)+' · '+total+' · '+word+'\n'+sq+'\n'+gameRoot()+'?wall=day:'+plan.daily;
   const link=gameRoot()+'?wall=shift:'+sh.code;
-  return 'Device Assembly shift '+sh.code+' · '+total+' · '+word+'\n'+sq+'\n'+link;
+  return 'Headwall shift '+sh.code+' · '+total+' · '+word+'\n'+sq+'\n'+link;
 }
 function shiftResult(){
   const sh=S.shift, L=S.level, k=sh.wall, rec=sh.scores[k], plan=shiftPlanOf(sh.code); if(!rec || !plan) return;
@@ -7293,7 +7484,7 @@ function wireMenus(){
            'Press Complete. The test says what works and what does not, in RT words.'],
     example:ex });
   helpExtras(help);
-  daMenu=HUKit.gameMenu({ title:'Device Assembly', help, settings:daSet,
+  daMenu=HUKit.gameMenu({ title:'Headwall', help, settings:daSet,
     restart:{ verb:'Reset the wall', title:'Reset this wall?', body:'Everything on it goes back on the cart. Undo puts it back.', run:resetWall },
     leave:{ href:'/fun/' } });
   $('daKit').appendChild(help.button()); const mb=daMenu.button(); mb.setAttribute('aria-label','Menu'); $('daKit').appendChild(mb);
@@ -7339,7 +7530,7 @@ function init(){
   else if(qs.get('build')) openBuildLink(qs.get('build'));
   else if(showDoor) openDoor();
 }
-const daHook=()=>({modeFirstDay, wallGroups, goalFor, makeGoal, teachLevel, YEAR_STORIES, storyById, yearStoryPlan, yearStory, halloweenDecor, YEAR_TEACH, teachFirst, get teachThen(){ return teachThen; }, applyFaults, makeFault, makeHandoff, dailyStreak, barrierBox, curtainLine, SHORTHAND, YEAR_ROOMS, deadRoom, expiredTwin, seenSheets, unlabeled, yearSomewhere, yearPlace, YEAR_V, YEAR_DAY, YEAR_KIND, YEAR_BAND, YEAR_PLAN, YEAR_TWISTS, YEAR_DEFAULT, yearPlan, yearLevel, yearHospital, weekdayOf, bandGap, stackTwists, icuCart, icuHmeVent, icuExtras, ICU_CART_SPOTS, VENT_BUILDS, genSolve, cordsClear, doorA, doorToday, doorPath, firstVisit, menuTracks, menuPaths, addressOf, gameRoot, wallCard, screenOrderLines, faceLead, inlinePlan, insertInline, hasThrough, swapPart, twinsOf, layCircuit, outerPort, answerOf, PATHS, pathOf, pathNext, pathOpen, kickerOf, wallGroups, touchWords, landingAt, fitTargets, planRun, linkTarget, whereItStops, portWords, plainName, underScreen, dealIcu, icuRoom, ICU_SPOTS, ICU_TWISTS, VENT_RECIPES, recipeOf, ICU_DAY, hmeCircuit, ICU_BOOM, LIVING, placeKeepOut, exhBlocked, pluggedIn, ventSetup, ventPlug, ICU_ROOM, genPlaceWall, dayPlace, rehabRoom, homeRoom, placeSource, homeLink, PLACE_TWISTS, PLACE_DAY, myParse, myId, makeWall, MY_RANGE, buildCode, readBuildCode, raceNew, raceTick, raceProgress, raceJudge, raceStandings, raceBotsStart, raceHostRoom, raceGo, racePack, raceGhostSnap, RACE_BOTS, RACE_SEATS, compBites, VENT_RULES, ventCircuit, chainOf, compRoom, applyRoom, shiftWallBuild, roomCopy, placeOfTwist, PLACE_ORDERS, shiftPlan, shiftPlanOf, shiftLevel, shiftAdvance, shiftFault, shiftTotal, newShift, supplyCol, needOf, FAULT_DO, SHIFT_STORIES, SHIFT_COMPS, SHIFT_BONUS, SHIFT_FAULTS, SHIFT_LEN, dispatchAct, VERBS, packSave, applySave, unplugRun, genWall, genLevel, genSolve, levelById, dayKey, dayNumber, untilNextDay, todayId, freshCode, TWISTS, RECIPES, GEN_V, syncFace, patientGroup, faceAt, levelRoom, startLevel, render, track, daIsQuiet, daMinBucket, daWallBucket, faultMatches, flip, flipSide, ROOMS, roomOf, roomFixed, DEFAULT_ROOM, DB, STD, LEVELS, GRID, compat, rotCell, rotSide, portsOf, cellsOf, computeLinks, route, bendsOf, evaluate, score, functionTest, newState, place, moveItem, rotate, removeThing, connectPorts, tubeOn, reflow, facts, canPlace, onPatientLinks, atNose, portTaken, remember, undo, snapshot, restore, autoOrient, okJointsAt, powered, circuitHeats, circuitWhy, setFio2, setCpap, generatorOf, capnoOn, facingPort, jumpable, hangTube, findPort, GAUGE, GLYPH, GAS_OF, glyphOf, clusterOf, moveGroup, moveGroupCheck,
+const daHook=()=>({hasBag, hangBag, addBag, bagShift, airwayWall, buildCells, BAG_DAY, BAG_WHY, AIRWAY, modeFirstDay, wallGroups, goalFor, makeGoal, teachLevel, YEAR_STORIES, storyById, yearStoryPlan, yearStory, halloweenDecor, YEAR_TEACH, teachFirst, get teachThen(){ return teachThen; }, applyFaults, makeFault, makeHandoff, dailyStreak, barrierBox, curtainLine, SHORTHAND, YEAR_ROOMS, deadRoom, expiredTwin, seenSheets, unlabeled, yearSomewhere, yearPlace, YEAR_V, YEAR_DAY, YEAR_KIND, YEAR_BAND, YEAR_PLAN, YEAR_TWISTS, YEAR_DEFAULT, yearPlan, yearLevel, yearHospital, weekdayOf, bandGap, stackTwists, icuCart, icuHmeVent, icuExtras, ICU_CART_SPOTS, VENT_BUILDS, genSolve, cordsClear, doorA, doorToday, doorPath, firstVisit, menuTracks, menuPaths, addressOf, gameRoot, wallCard, screenOrderLines, faceLead, inlinePlan, insertInline, hasThrough, swapPart, twinsOf, layCircuit, outerPort, answerOf, PATHS, pathOf, pathNext, pathOpen, kickerOf, wallGroups, touchWords, landingAt, fitTargets, planRun, linkTarget, whereItStops, portWords, plainName, underScreen, dealIcu, icuRoom, ICU_SPOTS, ICU_TWISTS, VENT_RECIPES, recipeOf, ICU_DAY, hmeCircuit, ICU_BOOM, LIVING, placeKeepOut, exhBlocked, pluggedIn, ventSetup, ventPlug, ICU_ROOM, genPlaceWall, dayPlace, rehabRoom, homeRoom, placeSource, homeLink, PLACE_TWISTS, PLACE_DAY, myParse, myId, makeWall, MY_RANGE, buildCode, readBuildCode, raceNew, raceTick, raceProgress, raceJudge, raceStandings, raceBotsStart, raceHostRoom, raceGo, racePack, raceGhostSnap, RACE_BOTS, RACE_SEATS, compBites, VENT_RULES, ventCircuit, chainOf, compRoom, applyRoom, shiftWallBuild, roomCopy, placeOfTwist, PLACE_ORDERS, shiftPlan, shiftPlanOf, shiftLevel, shiftAdvance, shiftFault, shiftTotal, newShift, supplyCol, needOf, FAULT_DO, SHIFT_STORIES, SHIFT_COMPS, SHIFT_BONUS, SHIFT_FAULTS, SHIFT_LEN, dispatchAct, VERBS, packSave, applySave, unplugRun, genWall, genLevel, genSolve, levelById, dayKey, dayNumber, untilNextDay, todayId, freshCode, TWISTS, RECIPES, GEN_V, syncFace, patientGroup, faceAt, levelRoom, startLevel, render, track, daIsQuiet, daMinBucket, daWallBucket, faultMatches, flip, flipSide, ROOMS, roomOf, roomFixed, DEFAULT_ROOM, DB, STD, LEVELS, GRID, compat, rotCell, rotSide, portsOf, cellsOf, computeLinks, route, bendsOf, evaluate, score, functionTest, newState, place, moveItem, rotate, removeThing, connectPorts, tubeOn, reflow, facts, canPlace, onPatientLinks, atNose, portTaken, remember, undo, snapshot, restore, autoOrient, okJointsAt, powered, circuitHeats, circuitWhy, setFio2, setCpap, generatorOf, capnoOn, facingPort, jumpable, hangTube, findPort, GAUGE, GLYPH, GAS_OF, glyphOf, clusterOf, moveGroup, moveGroupCheck,
     get S(){ return S; }, set S(v){ S=v; }, get progress(){ return progress; }, start(id, room){ S=newState(levelById(id), room); return S; },
     /* PHONE PLAY · the thumb test (scripts/da-thumb.js) aims through these: the wall's scale and view, where a port is,
        how far a held part rides above the thumb */

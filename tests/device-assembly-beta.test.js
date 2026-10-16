@@ -11,7 +11,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html'), 'utf8');
   const src = html.slice(html.indexOf('<script>') + '<script>'.length, html.lastIndexOf('</script>'));
   const ctx = {
     document: { getElementById: () => null, addEventListener() {}, readyState: 'complete' },
@@ -26,6 +26,9 @@ function load() {
   return ctx.window.__da;
 }
 const da = load();
+/* THE BAG (2026-10-15): an airway wall wants a resuscitation bag on the wall. A build made here hangs it in the top-left
+   corner, clear of everything these tests move */
+const bagUp = (S) => { S.cart['bag-bvm'] = (S.cart['bag-bvm'] || 0) + 1; return da.place(S, 'bag-bvm', 0, 1, 0).ok; };
 const item = (S, id) => S.items.find((i) => i.def.id === id);
 const ends = (tb) => [tb.from, tb.to].map((r) => r.uid + ':' + r.pi);
 
@@ -127,7 +130,7 @@ test('M3: Swap trades a run or a part for its twin on the cart in place, and its
 });
 
 test('V1: an ICU ventilator needs both hoses in their own outlets, and the test says which is missing', () => {
-  const S = da.newState(da.levelById('v1')); da.ventSetup(S); assert.ok(da.ventPlug(S));
+  const S = da.newState(da.levelById('v1')); assert.ok(bagUp(S)); da.ventSetup(S); assert.ok(da.ventPlug(S));
   assert.ok(da.evaluate(S).ok, 'both hoses in: it works');
   const vent = S.items.find((i) => i.def.vent), hose = (pi) => S.tubes.find((t) => t.lead === vent.uid && t.from.pi === pi);
   Object.assign(hose('airhose'), { to: null, path: [], short: 0, direct: false });
@@ -136,7 +139,7 @@ test('V1: an ICU ventilator needs both hoses in their own outlets, and the test 
 });
 
 test('V4: a circuit in its bag lays itself, the Y on the tube and both limbs back; a plain one off the cart\'s heater rains out', () => {
-  const L = da.levelById('v1'), S = da.newState(L); S.cart['circuit-heated'] = 1; S.cart['circuit-plain'] = 1;
+  const L = da.levelById('v1'), S = da.newState(L); S.cart['circuit-heated'] = 1; S.cart['circuit-plain'] = 1; assert.ok(bagUp(S));
   const vent = da.place(S, 'vent-cart', 10, 6, 0, true).item;   // below the monitor: a cord goes round it since 2026-10-07
   const r = da.layCircuit(S, 'circuit-heated'); assert.ok(r.ok, r.why);
   assert.ok(S.items.some((i) => i.def.yPiece), 'the Y is on the tube');
@@ -151,7 +154,7 @@ test('V4: a circuit in its bag lays itself, the Y on the tube and both limbs bac
 });
 
 test('V5b and V6: a part dropped on the Y goes in at the tube and the Y slides out; out again, the Y slides back; two flex tubes are dead space', () => {
-  const S = da.newState(da.levelById('v1')); S.cart['flex-tube'] = 2; da.ventSetup(S, { v: [11, 7] }); da.ventPlug(S);   // a spot with room for the Y to slide twice
+  const S = da.newState(da.levelById('v1')); S.cart['flex-tube'] = 2; assert.ok(bagUp(S)); da.ventSetup(S, { v: [11, 7] }); da.ventPlug(S);   // a spot with room for the Y to slide twice
   const y = () => S.items.find((i) => i.def.yPiece), y0 = y().x + ',' + y().y;
   const a = da.insertInline(S, { def: 'flex-tube', x: y().x, y: y().y }); assert.ok(a.ok, a.why); assert.strictEqual(a.slid, 'Y-piece');
   assert.notStrictEqual(y().x + ',' + y().y, y0, 'the Y moved out a square');

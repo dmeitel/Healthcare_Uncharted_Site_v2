@@ -113,3 +113,16 @@ test('a trigger with no sentence is left alone', () => {
   click(f, bare);
   assert.equal(shown(kit), null);
 });
+
+// 2026-10-15: a modal dialog draws over the whole page, so a card left in the body sat under Daily Huddle's question card
+test('a trigger inside an open dialog shows the card inside that dialog, and a trigger outside takes it back', () => {
+  const kit = loadKit(); const f = fixture(kit);
+  const dlg = f.root.append(kit.el('dialog', { open: '' }));
+  const life = dlg.append(kit.el('button', { 'data-def': '<b>Hint</b>One line from the same data.' }));
+  kit.HUKit.peek({ root: f.root });
+  over(f, life);
+  assert.equal(shown(kit), '<b>Hint</b>One line from the same data.');
+  assert.equal(card(kit).parentNode, dlg, 'the card is drawn in the dialog, above the page');
+  over(f, f.hard);
+  assert.equal(card(kit).parentNode, kit.doc.body, 'a trigger in the page takes it back to the body');
+});

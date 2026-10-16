@@ -11,7 +11,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);

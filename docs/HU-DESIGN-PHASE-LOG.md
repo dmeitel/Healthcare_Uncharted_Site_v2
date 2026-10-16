@@ -795,3 +795,169 @@ the board below that; the answer card with the right option in green, the values
 date, and the link into the tool that shows the number. Measured: tiles 72 to 87 px on real phone screens, taps 14 and 22 px
 off-centre open the tile aimed at every time, `npm run phone` clean at nine sizes on the start screen, the board and the list.
 Plan and build record: docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md, sections 2 and 10.
+
+## 2026-10-14 · Reading load on all three games · Alarm Fatigue's console on a laptop
+
+A defect round, from David's ask to check every tool-shell page with a real mouse wheel ("Do this task here", the follow-up to
+that audit). On a full floor (every monitor and pump bought, the core cards waiting) the console ran past the foot of the floor,
+which clips, and nothing scrolled: the pumps' Hang buttons sat at y=800 in a 768 px window at 1024x768, at y=904 on the Prophet
+skin at 1280x900, and at 1366x768 two of three waiting cards never showed. Built, at his QA with the rest of the phase: where
+the pumps ride inside the console (under 1040 px wide or 740 px tall, and Prophet at every size) the console ends 8 px above the
+floor and scrolls, as it already did on a phone; from 1040 by 740 up on the other EHRs the waiting cards stand in a 220 px column
+beside the button, as tall as its block, and scroll inside it, so the console never grows when a card arrives and the button
+stops jumping; the short-window rule ends the console 100 px short of the floor instead of 64 (it left 28 px under the window).
+Measured with page.mouse.wheel only, three cards waiting, both skins: every control reachable at 360x740, 740x360, 768x1024,
+1024x768, 1280x600, 1280x720, 1280x900, 1366x768, 1440x900 and 1920x1080; `npm run phone` clean at nine sizes. Pictures and the
+probe: tmp/wheel-probe/.
+
+## 2026-10-14 · Device Assembly game feel · the daily by thumb (his phone play, step 90)
+
+David played the daily (wall #12, a ventilator setup in the ICU) on his Android phone: "not physically possible, like i
+couldn't get it to work. my finger still does not line up with the touch screen ... i also cannot drop down the cart of tools",
+and asked for a touch test and a check that every piece is on the cart. Measured with real touches (CDP, three device pixels to
+the CSS pixel) at 375 x 548, 393 x 659, 360 x 740 and 430 x 932. The wall's own mapping was right; the aim was not. A hose's end
+rides 40 px above the thumb and only ports in reach of the end counted, so a thumb set on the outlet it meant left the hose
+loose 12 times in 15; 20 px off, the oxygen hose went into the air outlet one square over. A pull from a tray tile that started
+more sideways than up was taken as a tray scroll, so a straight pull from the Vent cart, the circuit or the HME toward the far
+side of the wall (34 to 45 degrees) never lifted the part. The daily's cart held four parts and All parts only showed past four,
+so the cart could not be opened. The FiO2 dial opened under the foot of the screen with 35 x 36 px buttons. Built, at his QA:
+the end of a run and a held part each have two aims, what is drawn above the thumb and the thumb itself, the nearer counting, and
+a port the run fits beats a nearer one it does not (`portNear`, `aimLanding`); a place within reach of the thumb counts as on
+the wall; the tray's row scrolls itself (`rowSwipe`) so a pull that rises lifts the part from any tile; All parts leads the row
+on every cart of two parts or more; the dial scrolls into view once the sheet settles and is 44 px on a phone. The thumb test
+(`npm run da:thumb`) was rewritten so it would have caught this: it plays today's daily to Complete, reaches the tray by touch
+alone, drags as two players (one watching the part, one putting the thumb on the place), turns, flips and sets parts with the
+row's buttons, and lays a circuit from its bag; run against the old page it fails on exactly his two complaints. Every wall's
+cart is now held to its answer (357 walls in tests/device-assembly-puzzles.test.js, every one holds; a pill on the hub's Puzzles
+sheet). Not changed: on
+the daily the circuit lays from only a few cart spots and says "move closer" where the fix is Flip (a level question, its own
+session).
+
+## 2026-10-14 · Daily Huddle, the hex trivia board · round 2, the QA reset and your field (DH4, DH5)
+
+David, 2026-10-14: "for this QA i need you to be able to reset it, I also think we should include a prefernce for RT, RN, MD/DO, RX etc. or maybe also like acute, ambulatory". Built, at his QA: ?reset=1 forgets every board the browser has played and the first-visit how-to mark; Practice opens a
+card and Make a board gains a row for your field (Any, RT, RN, MD/DO, Pharmacy), remembered, carried in a made link, leaning about a
+third of a practice or made board toward that profession (pharmacy about a fifth); today's board never leans. The picked key in a
+row of choices now shows (the kit's brass), and a board dealt from a card keeps its address on a phone. `npm run phone` clean at
+nine sizes. The record: docs/HU-DECISIONS-LOG.md, LOG.
+
+## 2026-10-14 · Daily Huddle, the hex trivia board · round 3, no miss limit and numbers to pick (DH6, DH7)
+
+David, 2026-10-14: "this is all very hard, I have to google most of these even with multi choice, not sure we should give misses as a max of three because people are garrented to miss some". Built, at his QA: no miss limit on today's, past and practice boards (Make a board keeps 1, 3, 5 and defaults to No
+limit); every number tile is four answers sized so a sense of scale finds the right one, the bedside math as near misses; no
+keyboard on any tile now. The deal is untouched. The record: docs/HU-DECISIONS-LOG.md, LOG.
+
+## 2026-10-15 · Device Assembly game feel · a circuit that will not lay says the fix that works
+
+David on the daily of 2026-10-14, a ventilator wall: "not physically possible, like i couldn't get it to work". Measured with the
+engine at every spot the cart can stand, as dropped and flipped: the cart comes off the cart with its ports on its right, and the
+wall's answer stands it right of the bed, flipped. Dropped there as it comes, its ports face the wall, and the circuit bag said
+"Move the ventilator closer". The cart stands on 210 spots there and the circuit failed from 166. The message reported
+whichever of the bag's sixteen tries ran last. At the 40 spots where a flip alone fixed it, nothing said Flip. 59 gave a reason
+and no fix (something in the way, no room for the Y, and a circuit already on for a cart parked with a port on the tube), and 4
+said to come closer where nothing closer works. Built as a defect fix, with no rule changed (`circuitMiss`). The bag now tries
+the flip from the same spot for real. Then it tries a square each way, as the cart stands and flipped, and names the move that
+lays. Failing those it says why: too close, a port blocked by the floor or a fixture, ports facing away, or too far; each is
+tested to have a working spot that way. The fix leads. A phone's one-line screen and the desk's alert strip cut a message off
+after about 45 letters, so the reason goes second. A bag that will not lay now goes back on the cart and the row shows the
+parts again. The failed lay had let go of the hand while the row kept the bag's Turn and Flip, so the Flip a player pressed after
+reading the message flipped nothing; now a tap on the ventilator brings up its own Flip. The new test (tests/device-assembly-vent-miss.test.js) plays every spot on the
+daily and on a cart with its ports underneath, one with a port each side, and the plain ventilator, and applies each fix. Not built, and on
+DECISIONS.md as P3: whether the cart should land facing the patient by itself. No part turns unless it seats a joint, and a cart
+seats none, so that is a new rule and his call.
+
+## 2026-10-15 · Daily Huddle, the hex trivia board · round 4, the lifelines (DH8, DH9)
+
+David, 2026-10-15, after asking for "some life lines. or hints, think of other online trivia games": 50:50, Hint and Swap, "Free,
+once each". Built, at his QA: three keys under the answers on every question card and one "i" at the end of the row for the
+sentences. A badge inside each key first: on a phone its 44 px tap area covered half the key, so a thumb on 50:50 opened the
+explanation instead, and the "i" got a 44 px column of its own. 50:50 leaves the right answer and one wrong, the same two for
+everyone; Hint is one line from the same data, built into the bank (the 50-state median, how many states are in a compact, the
+formula); Swap brings a question from the same zone with the same dots. A used key wears the kit's OFF look and says Used; the
+share line counts them, and a clean board says nothing. On a phone the open card gave its Back to the board key to the lifelines
+(the X and the back gesture close it), and under 600 px tall the card tightens: every question with its hint fits an iPhone SE's
+375x548 with nothing to scroll. The kit's peek now draws inside an open dialog. `npm run phone` clean at nine sizes, `npm run
+verify` green. The record: docs/HU-DECISIONS-LOG.md, LOG.
+
+## 2026-10-15 · Daily Huddle, the hex trivia board · round 5, no dots (DH10)
+
+David, 2026-10-15: "at this point not sure we need the dots just tiles will do", then "Time and misses". Built, at his QA: no dot
+anywhere a player looks (tiles, the card, the status bar, the rules, the finish); an open tile is its name alone, the compass its
+rose; the result is "Crossed in 1:42" and the misses, on the finish card and the share line, and a board with no clock counts up
+in the bar. The deal is untouched (730 daily boards the same as git HEAD). `npm run phone` clean at nine sizes. The record:
+docs/HU-DECISIONS-LOG.md, LOG.
+
+## 2026-10-15 · Headwall (Device Assembly until 2026-10-15) · the name and the address (HW1)
+
+David, 2026-10-15: "i want to change the name of device assembly to headwall, somthing catchier", then "Name and address".
+Built: Headwall wherever a player or a reader sees the name. That means the page title, the game bar, the menu, the race cards, the
+share lines ("Headwall #12", "Headwall shift ...") and the saved wall card with its footer address, the Fun shelf card, site search,
+the link preview card and the hub's Puzzles and Library. The shelf card opens on what a headwall is, the panel of gas outlets behind
+a hospital bed, since the name is a word from the unit and the naming rule asks for what a thing is. The game moved to /fun/headwall/
+with its twelve plain addresses. /fun/device-assembly/* and the older /secret-menu/device-assembly/* forward to it with a 301 in
+one hop, and a link's ?wall=, ?build= or ?room= rides along (tests/device-assembly-move.test.js reads netlify.toml). Kept on purpose,
+so saves and counts carry over: the storage keys, the ids, the play counters' event paths, the og card and thumbnail file names, the
+scripts and the test files. The game bar's name is one word now, so it has no teal accent word. The record: docs/HU-DECISIONS-LOG.md, LOG.
+
+## 2026-10-15 · Daily Huddle, the hex trivia board · round 6, onto the Fun shelf
+
+David, 2026-10-15, on his read through the hub: "Move the daily huddle game to fun it should not sit on the secret Menu. Daily
+huddle is good now." Built: the game is at /fun/daily-huddle/ (src/fun/daily-huddle/), the fourth card on the Fun shelf, read
+from tools.js like the others, marked Beta (Stages 2 and 3 are not built), with its own shelf picture (the board, a question's
+picks, the clock; scripts/build-tool-thumbs.js) and share card (scripts/build-share-cards.js; the Fun card now says 4 games).
+It is indexed, in the collections and found by site search; Leave goes to Fun; the secret menu no longer lists it. The old
+address forwards with a 301, query and all, so made-board links and ?reset=1 still open (netlify.toml,
+tests/huddle-move.test.js). The saves never named the address. Same day, his note on the Odd codes tile for Y93.D1 ("not sure
+this question is right"): the answer was right; the explanation now says what Y93 codes record and gives each wrong answer its
+own code, checked live against the NLM ICD-10-CM tables. `npm run phone` clean at nine sizes on /fun/daily-huddle/, /fun/ and
+/secret-menu/; `npm run verify` 672 of 672.
+
+## 2026-10-15 · Headwall game feel · a puzzle keeps quiet, and the screen is the order and the hint
+
+David, 2026-10-15, on his read through the hub: "it should not jump to the hint section or say what the last move is during
+the play. the whole point is that its a puzzle game it also feels like we do not need test and note tabs if we are not going to
+put anything specificly usefull there." What he saw: every move put a strip on the bedside screen ("Connected: patient nose and
+mouth to nasal cannula patient side"), and on a phone that strip replaced the one line under the wall; a joint's message said
+whether it was right before Complete did; Complete turned the screen to its Test page; a hint read in the phone's sheet stayed
+on the line after the sheet closed. Built: outside the five training walls a move that worked says nothing (`moveToast`, 26
+messages: connected, swapped, in line, turned to fit, tubing on, came off, pulled off, back on the cart, undone, the dials and
+the rest), and neither does whether a joint is right; a move that did not happen still says why, and acts off the wall (a copy,
+a save, the race, a resumed wall) still answer. The screen is two pages, Order and Hint (`pageOf`); Complete leaves it on the
+order, and the phone's line is the order unless a training wall's step is the lesson. Test went: before Complete it said "Not
+tested yet", after it the miss card, the ring on the wall and the side panel carry the read. Note went: the chart note is the
+wall's premise (on the written walls it is the clue, "His secretions are thick now", where the hint is the answer), so it sits
+with the order, under it on the phone's sheet and behind a Note tag on the glass where no side panel stands beside the wall
+(700 to 999 px; the panel shows it from 1000). Par took the move counts' place at the order's foot, and reads "1 part", not "1
+parts", there and on the side panel.
+
+## 2026-10-15 · Headwall expansion · the bag on every artificial airway (BAG1, BAG2)
+
+David, 2026-10-15, before the push: "On any patient with an artificial airway we have to have a bag on the headwall, it can
+either be missing and have to be placed on the wall like everything else, or it can already be on the wall and fill in space
+that has to be worked around"; asked, "On the wall is enough", and "Hold the push". Built: VENT_RULES.airwayBag, judged last,
+so the bag is named once the build is otherwise right (BAG_WHY, on the miss card and, new, as a red line in the system check:
+any order rule that failed with every line ticked now gets that line). Level 4, Ventilators 1 and 8: the bag on the cart, the
+hint says to put it up. Ventilators 2 to 5 and the ventilator faults: hanging in the top-left corner under the call light,
+fixed (beside the build, on Ventilator 2 it threw a 20 px drag off on the smallest phone). Dealt walls, two or more squares
+clear of the build: `addBag` after the deal, its own stream (`da-bag-v1|id`), half each way, faults always hanging; `bagShift` hangs one
+for a whole shift; `bagUid` gives a hung bag the id a fresh wall gives it, so the puzzle sheet matches answer to wall. From
+daily #14; eleven pins re-taken on purpose (tests/device-assembly-pins.json says why). Found on the way and left for its own
+session: a Friday fault wall sets every fixed piece down twice (the built wall and the room both place them).
+
+## 2026-10-15 · Headwall expansion · a built wall holds each fixed piece once
+
+Found while hanging the bag into stored answers, and fixed on David's word ("Do this task here"). A wall that arrives as a
+whole stored answer (the daily year's Friday fault, `makeFault`, and the hand-off, `makeHandoff`) restored the answer, fixed
+pieces and all, and `newState` then set the room's fixed pieces down again: 44 pieces on a 22-piece wall. Now `newState` places
+the room's pieces only on a wall that does not already hold them; the written faults build on a bare wall first and are as
+they were. Both builders restore the stored answer as it stands, so a bag hung after the deal arrives with the wall, and a
+hand-off's bag always hangs (from the cart it would come back up taped). No deal and no pin moved.
+tests/device-assembly-once.test.js holds every wall to it.
+
+## 2026-10-16 · Daily Huddle, the hex trivia board · round 7, no time limit (DH11)
+
+David, 2026-10-16: "why is the daily huddle board timed? or if its going to be timed can we make it 5 minutes, or everytime you
+answer a question you get time back?", then "No limit, time is the score". Built: today's board and practice start with no
+clock (clock 0), so the bar counts up from the first tile and the finish reads "Crossed in 1:42" as before. A team board
+keeps its clock pick. Words: the door card, the how-to, the page description, the Fun shelf card, the share card and the hub's
+QA row. `npm run phone` clean at nine sizes on /fun/daily-huddle/ and /fun/; `npm run verify` 682 of 682.

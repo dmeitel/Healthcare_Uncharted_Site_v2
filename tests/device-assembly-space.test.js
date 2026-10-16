@@ -11,7 +11,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);
@@ -267,6 +267,7 @@ test('level 3, trach collar: nebulizer on the flowmeter, collar on the neck, the
   assert.strictEqual(run.ok, true);
   assert.strictEqual(run.picked, 'tube-22-10');
   assert.strictEqual(run.len, 8, 'a row further since the patient lies one row lower (Round 17)');
+  assert.ok(da.hangBag(S, 'cart'), 'he has a trach, so the bag goes up on the wall (THE BAG, 2026-10-15)');
   const ev = da.evaluate(S);
   assert.ok(ev.ok, JSON.stringify(ev.lines));
   const ft = da.functionTest(S);

@@ -163,6 +163,8 @@ test('the design phases read out of CLAUDE.md', () => {
   // the latest word wins: a phase parked and then reopened reads open (the game-feel phase, 2026-10-04)
   const feel = ps.find((p) => /game feel/.test(p.name));
   if (feel && /REOPENED/.test(require('fs').readFileSync(path.join(ROOT, 'CLAUDE.md'), 'utf8'))) assert.equal(feel.state, 'open');
+  // a date inside the name is not when the phase opened (the Headwall rename, 2026-10-15)
+  if (feel && /\(Device Assembly until/.test(feel.name)) assert.equal(feel.since, '2026-09-16');
 });
 
 test('one clock: a date and a time in Mountain time', () => {

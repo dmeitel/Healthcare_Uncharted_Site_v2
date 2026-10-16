@@ -89,7 +89,8 @@ function el(tag = 'div', attrs = {}) {
     append(child) { child.parent = this; child.ownerDoc = this.ownerDoc; this.children.push(child); return child; },
     insertBefore(child) { return this.append(child); },
     appendChild(child) { return this.append(child); },
-    get firstChild() { return this.children[0] || null; }
+    get firstChild() { return this.children[0] || null; },
+    get parentNode() { return this.parent; }
   };
   /* className has to stay in step with classList: the kit creates its grabber with
      `g.className = 'hu-sheet-grab'`, and a stub that ignored that would report the

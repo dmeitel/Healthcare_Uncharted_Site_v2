@@ -15,7 +15,7 @@ const ROOT = path.join(__dirname, '..');
 const FILE = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'assets', 'data', 'huddle-questions.json'), 'utf8'));
 const Q = FILE.questions;
 const ZONES = ['sci', 'prv', 'pat', 'ph', 'tec', 'pol', 'pay'];
-const words = (q) => [q.q, q.sub, q.why, ...(q.o || []), ...(q.v || [])].filter(Boolean).join(' \n ');
+const words = (q) => [q.q, q.sub, q.why, q.h, ...(q.o || []), ...(q.v || [])].filter(Boolean).join(' \n ');
 
 test('the bank matches its builder (run npm run build:huddle after changing a source)', () => {
   execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build-huddle.js'), '--check'], { stdio: 'pipe' });
@@ -91,4 +91,26 @@ test('a number pulled from Vital Stats keeps its year, and a state choice shows 
       assert.strictEqual(nums[q.a], best, q.id + ': the right answer is the extreme of the values shown');
     }
   }
+});
+
+// THE HINT LIFELINE (2026-10-15, DECISIONS DH8): a foothold from the same data, never the answer
+test('a hint gives a foothold and never the answer: no right option in it, and no number in it that would count', () => {
+  const counts = (q, x) => (q.abs != null ? Math.abs(x - q.a) <= q.abs + 1e-9 : Math.abs(x - q.a) <= Math.abs(q.a) * (q.tol || 0.1) + 1e-9);
+  for (const q of Q) {
+    if (!q.h) continue;
+    assert.match(q.h, /^[^\n]{8,80}\.$/, q.id + ': one short line ending in a period, so it fits a phone card');
+    if (q.t === 'choice') assert.ok(!q.h.includes(q.o[q.a]), q.id + ': the hint names the right option');   // the values only show after
+    else {
+      const nums = (q.h.replace(/^\d+-state median: /, '').match(/\d[\d,]*(\.\d+)?/g) || []).map((x) => Number(x.replace(/,/g, '')));
+      for (const x of nums) assert.ok(!counts(q, x), `${q.id}: ${x} in the hint would count as the answer`);
+    }
+  }
+});
+
+test('the hints sit where the data supplies one: every state choice, the bedside math, the compacts but not their count', () => {
+  for (const q of Q) {
+    if (/-(four|two)-\d+$/.test(q.id) || q.f === 'Clinical math' || /^cmp-.+-(in|out)-\d+$/.test(q.id)) assert.ok(q.h, q.id + ': a hint');
+    if (/^cmp-.+-count$/.test(q.id)) assert.ok(!q.h, q.id + ': the count tile cannot be hinted with the count');
+  }
+  assert.ok(Q.filter((q) => q.h).length > 700, 'most of the bank has a hint');
 });

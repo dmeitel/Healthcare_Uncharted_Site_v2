@@ -262,7 +262,31 @@ return {
      ${[[4, 0, TEAL], [3, 1, SKY], [3, 2, GGREEN], [3, 3, AMBER], [2, 0, PURPLE], [5, 0, CORAL]].map(([slot, k, c]) =>
        `<circle cx="${120 + slot * 178 + 30 + k * 32}" cy="318" r="13" fill="${c}" stroke="${BG}" stroke-width="3"/>`).join('')}
      <line x1="${120 + 3 * 178 + 170}" y1="70" x2="${120 + 3 * 178 + 170}" y2="380" stroke="${GGREEN}" stroke-width="4" stroke-dasharray="10 8"/>
-     <path d="M${120 + 3 * 178 + 170} 60 l-16 -26 h32 z" fill="${GGREEN}"/>`)
+     <path d="M${120 + 3 * 178 + 170} 60 l-16 -26 h32 z" fill="${GGREEN}"/>`),
+  // daily huddle: the 19-tile board, six zones of three around the compass, a chain of held tiles from the top row to
+  // the bottom; a question's four picks on the left, the three-minute clock on the right. On the Fun shelf since 2026-10-15.
+  'fun-daily-huddle': frame((() => {
+    const r = 46, s = r * Math.sqrt(3), ZONE = [TEAL, PURPLE, CORAL, AMBER, SKY, BLUE];
+    const tiles = [3, 4, 5, 4, 3].flatMap((n, row) => Array.from({ length: n }, (_, j) => ({ row, x: (j - (n - 1) / 2), y: row - 2 })));
+    const chain = [[0, 0], [1, -0.5], [2, -1], [3, -0.5], [4, 0]];
+    const held = (t) => chain.some(([row, x]) => row === t.row && x === t.x);
+    const at = (t) => [640 + t.x * s, 220 + t.y * 1.5 * r];
+    return `${chain.slice(1).map(([row, x], i) => { const [x1, y1] = at({ row: chain[i][0], x: chain[i][1], y: chain[i][0] - 2 }), [x2, y2] = at({ row, x, y: row - 2 });
+       return `<line x1="${x1.toFixed(1)}" y1="${y1}" x2="${x2.toFixed(1)}" y2="${y2}" stroke="${GREEN}" stroke-width="6"/>`; }).join('')}
+     ${tiles.map((t) => { const [cx, cy] = at(t);
+       if (!t.x && !t.y) return hex(cx, cy, r - 4, HUB, TEAL, 3);
+       if (held(t)) return hex(cx, cy, r - 4, GREEN, GREEN, 4, .6);
+       const a = (Math.atan2(cy - 220, cx - 640) * 180 / Math.PI + 375) % 360, c = ZONE[Math.floor(a / 60) % 6];
+       return hex(cx, cy, r - 4, c, c, 3, .3); }).join('')}
+     <path d="M640 194 L646 214 L666 220 L646 226 L640 246 L634 226 L614 220 L634 214 Z" fill="${TEAL}"/>
+     <rect x="110" y="110" width="300" height="220" rx="14" fill="${PANEL}" stroke="${LINE}" stroke-width="3"/>
+     <rect x="134" y="134" width="210" height="18" rx="9" fill="${INK}" opacity=".55"/>
+     ${[176, 214, 252, 290].map((y, i) =>
+       `<rect x="134" y="${y}" width="252" height="28" rx="14" fill="${i === 2 ? GREEN : 'none'}" opacity="${i === 2 ? 0.5 : 1}" stroke="${i === 2 ? GREEN : LINE}" stroke-width="3"/>`).join('')}
+     <circle cx="1010" cy="220" r="90" fill="none" stroke="${LINE}" stroke-width="10"/>
+     <circle cx="1010" cy="220" r="90" fill="none" stroke="${AMBER}" stroke-width="10" stroke-dasharray="377 566" transform="rotate(-90 1010 220)"/>
+     <circle cx="1010" cy="220" r="10" fill="${AMBER}"/>`;
+  })())
 };
 };
 

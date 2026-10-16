@@ -89,7 +89,7 @@ async function seeText(page, sel, text) { const l = page.locator(sel).first(); a
 // and invite link; a guest who opens the link and joins; the host starts; first build through the test wins.
 async function theRace(browser) {
   const S = 'race';
-  const wall = BASE + '/fun/device-assembly/?wall=t1';
+  const wall = BASE + '/fun/headwall/?wall=t1';
   const ready = () => !!(window.__da && window.__da.T && window.supabase);
   const init = () => { window.__DA_HOOK = true; };
   const phone = await open(browser, PHONE, wall, init, ready, 'race phone');
@@ -113,7 +113,7 @@ async function theRace(browser) {
     if (!step(S, 'the phone set the race to this wall, no bots', set)) return;
 
     // the laptop opens the invite link, types a name, joins
-    laptop = await open(browser, LAPTOP, BASE + '/fun/device-assembly/?room=' + code, init, ready, 'race laptop');
+    laptop = await open(browser, LAPTOP, BASE + '/fun/headwall/?room=' + code, init, ready, 'race laptop');
     await fill(laptop, '#daName', 'Sam');
     await tap(laptop, '#rJoinInv');
     const seated = await until(phone, () => window.__da.NET.seats.p2 === 'Sam');

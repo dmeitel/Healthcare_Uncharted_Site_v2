@@ -2,7 +2,7 @@
  * Device Assembly, the front door and the plain addresses (2026-10-06, DECISIONS B5, B6 and B7: "dock and A, go ahead
  * and build both"). B5: a first visit starts the training, and every visit after leads with today's wall and your path.
  * The games rule: the first screen has one primary button, and it starts or resumes play. B6: every part has a plain
- * address (src/fun/device-assembly/parts.11ty.js), each forwarding a token the game must open, and the address follows
+ * address (src/fun/headwall/parts.11ty.js since HW1), each forwarding a token the game must open, and the address follows
  * the wall on screen. Also the defect found on the way: the daily streak was saved and then dropped on load.
  */
 'use strict';
@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
 function load(saved) {
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
@@ -65,7 +65,7 @@ test('the paths card draws the training and every path as a row of stops', () =>
   assert.strictEqual(n, 1 + da.PATHS.length);
 });
 
-const { PARTS } = require('../src/fun/device-assembly/parts.11ty.js');
+const { PARTS } = require('../src/fun/headwall/parts.11ty.js');
 
 test('every plain address forwards a token the game opens', () => {
   const da = load();
@@ -90,7 +90,7 @@ test('a path not open yet opens the map; an open one, its next wall', () => {
 
 test('the address follows the wall: plain while it opens this wall, ?wall= otherwise', () => {
   const da = load({ done: Object.assign({ t1: 1, t2: 1 }, {}), best: {} });
-  assert.strictEqual(da.gameRoot(), 'https://healthcareuncharted.com/fun/device-assembly/', 'with no page, the live address');
+  assert.strictEqual(da.gameRoot(), 'https://healthcareuncharted.com/fun/headwall/', 'with no page, the live address');
   assert.strictEqual(da.addressOf(da.levelById('day:' + da.dayKey())), 'today/');
   assert.strictEqual(da.addressOf(da.levelById('t3')), 'training/', 'the next tutorial');
   assert.strictEqual(da.addressOf(da.levelById('t1')), '?wall=t1', 'a tutorial played again');

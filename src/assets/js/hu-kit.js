@@ -102,6 +102,11 @@
     var def = t.getAttribute('data-def');
     if (!def) return;
     var card = peekEl();
+    // A modal <dialog> draws in the top layer, over everything in the page, so a card left in the body sat
+    // UNDER it, unseen (2026-10-15, Daily Huddle's lifelines in the question card). A trigger inside an open
+    // dialog takes the card into that dialog; any other trigger takes it back to the body.
+    var host = (t.closest && t.closest('dialog[open]')) || document.body;
+    if (card.parentNode !== host) host.appendChild(card);
     card.innerHTML = def;
     card.hidden = false;
     peekOn = t;

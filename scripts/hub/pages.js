@@ -410,7 +410,7 @@ function puzzles(only) {
   const fs = require('fs');
   const path = require('path');
   const file = path.join(__dirname, '..', '..', 'tmp', 'da-qa', 'report.json');
-  const head = (/** @type {string} */ p) => `<div class="obs-head"><h1>Puzzles <span class="hub-of">· Device Assembly</span></h1><p>${p}</p></div>`;
+  const head = (/** @type {string} */ p) => `<div class="obs-head"><h1>Puzzles <span class="hub-of">· Headwall</span></h1><p>${p}</p></div>`;
   if (!fs.existsSync(file)) return layout({ title: 'Puzzles', tab: 'puzzles', body: head('The sheet has not run on this computer yet. Claude runs it with <code>npm run da:qa</code>; it takes a few minutes.') });
   /** @type {any} */
   const rep = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -425,7 +425,8 @@ function puzzles(only) {
     const errs = (w.phone.errors || []).concat(w.desktop.errors || []);
     const checks = [ok(w.opened === w.asked || /^shift:/.test(w.asked), 'opens on its link', 'opened ' + (w.opened || 'nothing')), ok(!errs.length, 'no errors', errs[0] || 'an error'),
       ok(!w.phone.overflow && !w.desktop.overflow, 'fits the screen', 'runs off the side'), ok(w.solvable, 'its answer passes', 'its answer fails'),
-      w.breaks ? ok(!w.breaks.vague.length, w.breaks.located + ' of ' + w.breaks.total + ' breaks say where', w.breaks.vague.length + ' breaks do not say where') : ''].join(' ');
+      w.breaks ? ok(!w.breaks.vague.length, w.breaks.located + ' of ' + w.breaks.total + ' breaks say where', w.breaks.vague.length + ' breaks do not say where') : '',
+      w.cart ? ok(!w.cart.length, 'its cart holds the answer', 'cart short: ' + w.cart[0]) : ''].join(' ');
     const tid = 'w-' + qaLib.slug(w.id);
     return `<li class="hub-qa-item" data-state="${state}" data-item="wall:${esc(w.id)}" data-card="device-assembly">
   <div class="hub-qa-top"><h3>${esc((w.kicker || w.id) + ' · ' + (w.title || ''))}</h3><span class="obs-pill">${esc(w.group || '')}</span></div>

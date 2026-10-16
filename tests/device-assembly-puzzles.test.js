@@ -19,7 +19,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html'), 'utf8');
   const src = html.slice(html.indexOf('<script>') + '<script>'.length, html.lastIndexOf('</script>'));
   const ctx = {
     document: { getElementById: () => null, addEventListener() {}, readyState: 'complete' },
@@ -73,6 +73,53 @@ test('every wall, authored and dealt, can be solved: its stored answer passes', 
   const bad = [];
   for (const id of ALL) { const S = solved(id); if (!S) { bad.push(id + ' dealt nothing'); continue; } const ev = da.evaluate(S); if (!ev.ok) bad.push(id + ': ' + ev.lines.map((l) => l.t).join(' | ')); }
   assert.deepStrictEqual(bad, []);
+});
+
+/* THE CART HOLDS THE ANSWER (2026-10-14, David: "we should have a QA to confirm that all the required pieces are in the
+   cart"). Every part the stored or searched answer puts on the wall, and every run of tubing it lays, has to be on the
+   wall's cart in the numbers the answer uses. Lead hoses and cords come with their part. A circuit bag stands in for its
+   Y and both limbs, so a bag on the cart counts as those three, the bag whose limbs the answer lays first (a heated bag
+   beside a plain one is a decoy on an HME wall). A part a built wall starts with and the answer takes off goes back on the
+   cart, the way removing it does in the game. The set: every wall above, every daily wall from #1 (2026-10-03) to three
+   months past today, today's whatever the date, and forty more deals of each place and four more shifts. */
+const day = (t) => new Date(t).toISOString().slice(0, 10);
+const CARTS = [...new Set([...ALL, da.todayId(),
+  ...Array.from({ length: Math.round((Date.now() - Date.UTC(2026, 9, 3)) / 864e5) + 92 }, (_, i) => 'day:' + day(Date.UTC(2026, 9, 3) + i * 864e5)),
+  ...Array.from({ length: 40 }, (_, i) => 'gen:CART' + i.toString(36).toUpperCase()),
+  ...['rehab', 'home', 'icu'].flatMap((p) => Array.from({ length: 40 }, (_, i) => p + ':CART' + i)),
+  ...Array.from({ length: 4 }, (_, s) => Array.from({ length: 5 }, (_, k) => 'shift:CART' + s + ':' + k)).flat()])];
+/** what a wall's answer takes from its cart that the cart does not hold, as a list of lines @param {string} id */
+function cartShort(id) {
+  const L = da.levelById(id); if (!L) return [id + ' dealt nothing'];
+  if (!L.solution) return [id + ' has no stored answer'];
+  const S0 = da.newState(L), sol = JSON.parse(L.solution), have = Object.assign({}, S0.cart), need = {};
+  const add = (o, k, n) => { o[k] = (o[k] || 0) + (n || 1); };
+  const startItems = new Map(S0.items.map((i) => [i.uid, i])), startTubes = new Map(S0.tubes.map((t) => [t.uid, t]));
+  const solItems = new Set(sol.items.map((i) => i.uid)), solTubes = new Set(sol.tubes.map((t) => t.uid));
+  for (const i of sol.items) if (!startItems.has(i.uid)) add(need, i.def);
+  for (const t of sol.tubes) if (!t.lead && !startTubes.has(t.uid)) add(need, (t.def && t.def.id) || t.def);
+  for (const [u, i] of startItems) if (!i.fixed && !solItems.has(u)) add(have, i.def.id);
+  for (const [u, t] of startTubes) if (!t.lead && !solTubes.has(u)) add(have, t.def.id);
+  const short = (k) => (need[k] || 0) > (have[k] || 0);
+  const bags = Object.keys(have).filter((k) => have[k] > 0 && da.DB[k] && da.DB[k].kit)
+    .sort((a, b) => { const fit = (k) => { const x = da.DB[k].kit; return [x.y, x.insp, x.exp].filter((p) => need[p]).length; }; return fit(b) - fit(a); });
+  for (const k of bags) for (let n = have[k]; n > 0; n--) { const x = da.DB[k].kit; if (!short(x.y) && !short(x.insp) && !short(x.exp)) break; for (const p of [x.y, x.insp, x.exp]) add(have, p); }
+  return Object.keys(need).filter(short).map((k) => id + ': the answer uses ' + need[k] + ' ' + k + ', the cart holds ' + (have[k] || 0));
+}
+
+test('every wall\'s cart holds every part and run its answer uses, in the numbers it uses', () => {
+  assert.ok(CARTS.length > 300, 'the set is wide enough to mean something (' + CARTS.length + ')');
+  assert.deepStrictEqual(CARTS.flatMap(cartShort), []);
+});
+
+test('the cart check catches a cart that is short', () => {
+  /* the check itself: take one part off a wall's cart and it must say so */
+  const L = da.levelById('t3'), saved = L.cart;
+  try {
+    const used = JSON.parse(L.solution).items.find((i) => !i.fixed && L.cart.some((c) => c[0] === i.def));
+    L.cart = L.cart.map((c) => c[0] === used.def ? [c[0], c[1] - 1] : c);
+    assert.ok(cartShort('t3').some((l) => l.includes(used.def)), 'a cart one ' + used.def + ' short is caught');
+  } finally { L.cart = saved; }
 });
 
 test('every way of breaking a solved wall says where it broke', () => {

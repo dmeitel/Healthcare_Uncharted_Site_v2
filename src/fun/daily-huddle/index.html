@@ -1,11 +1,14 @@
 ---
 layout: base.njk
 nav_merged: true
-title: "Daily Huddle"
-description: "A daily healthcare trivia board. Answer hex tiles to build a chain from the top row to the bottom in three minutes."
-noindex: true
+navPage: fun
+title: "Daily Huddle: The Healthcare Trivia Board"
+description: "A daily healthcare trivia board. Answer hex tiles to build a chain from the top row to the bottom. No time limit: your time to cross is your score."
+section: fun
 no_footer: true
-eleventyExcludeFromCollections: true
+og_image: /assets/images/og/card-daily-huddle.png
+status: published
+date: 2026-10-15
 ---
 {% from "components/game-bar.njk" import gameBar %}
 {% raw %}
@@ -47,11 +50,8 @@ eleventyExcludeFromCollections: true
 .hd-t .hd-floor{ fill:var(--key-floor); }
 .hd-t .hd-hex{ fill:color-mix(in srgb, var(--zc) 24%, var(--face-b)); stroke:var(--zc); stroke-width:2; }
 [data-theme="light"] .hd-t .hd-hex{ fill:color-mix(in srgb, var(--zc) 16%, var(--face-a)); stroke:color-mix(in srgb, var(--zc) 72%, var(--glass)); }
-[data-theme="light"] .hd-t .hd-dots{ fill:color-mix(in srgb, var(--zc) 62%, var(--glass)); }
 [data-theme="light"] .hd-kick i{ background:color-mix(in srgb, var(--zc) 72%, var(--glass)); }
 .hd-t .hd-lbl{ fill:var(--hd-ink); font-family:var(--font); font-weight:700; text-anchor:middle; dominant-baseline:middle; pointer-events:none; }
-.hd-t .hd-dots{ fill:var(--zc); pointer-events:none; }
-.hd-t .hd-dots .off{ fill-opacity:.3; }
 .hd-t.is-held .hd-hex{ fill:var(--zc); stroke:var(--brass); stroke-width:3.5; }
 .hd-t.is-held .hd-lbl, .hd-t.is-held .hd-mark{ fill:var(--hd-held-ink); }
 .hd-t.is-closed{ cursor:default; }
@@ -79,7 +79,7 @@ eleventyExcludeFromCollections: true
 .hd-card{ background:var(--face-bg); border-radius:12px; padding:18px; box-shadow:var(--panel-lift), inset 0 0 0 1px var(--brass-rim); display:flex; flex-direction:column; gap:12px; }
 .hd-kick{ display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:var(--t-label); letter-spacing:.08em; text-transform:uppercase; color:var(--hd-sub); }
 .hd-kick i{ width:10px; height:10px; border-radius:2px; transform:rotate(30deg); background:var(--zc); flex:none; }
-.hd-kick .hd-kdots{ margin-left:auto; color:var(--zc); letter-spacing:2px; }
+.hd-kick .hd-kdots{ margin-left:auto; color:var(--zc); letter-spacing:2px; }   /* how hard, on the bank list only (?list=); a player never sees dots (DH10) */
 .hd-qtext{ font-family:var(--display); font-weight:700; font-size:clamp(18px, 2.2vw, 21px); line-height:1.3; margin:0; }
 .hd-qsub{ font-size:var(--t-sub); color:var(--hd-sub); line-height:1.45; margin:0; }
 .hd-keys{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -97,6 +97,15 @@ dialog.hd-qdlg .hd-kfam{ display:none; }   /* the dialog's title already names t
 .hd-num input:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
 .hd-num .hu-brass{ min-height:52px; }
 .hd-tol{ font-size:var(--t-label); color:var(--hd-sub); margin:0; }
+/* THE LIFELINES (DH8, DH9): three small keys under the answers and one "i" in a 44px column of its own, so its tap area
+   never covers a key (a badge inside a key took half the key on a phone). A used key wears the kit's OFF look
+   (hu-global.css) and says Used; a key this tile cannot take is OFF with no word, and the "i" says why. */
+.hd-life{ display:grid; grid-template-columns:repeat(3, 1fr) 44px; gap:8px; align-items:center; }
+.hd-lf{ min-height:44px; padding:2px 8px; flex-direction:column; gap:0; line-height:1.15; }
+.hd-lf small{ font:500 var(--t-label) var(--mono); }
+.hd-life .hu-i{ justify-self:center; margin:0; }
+.hd-hint{ margin:0; font-size:var(--t-sub); line-height:1.45; padding-left:12px; box-shadow:inset 3px 0 0 var(--brass); }
+.hd-hint b{ font:600 var(--t-label) var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); margin-right:6px; }
 .hd-verdict{ font-family:var(--display); font-weight:800; font-size:var(--t-lede, 20px); margin:0; }
 .hd-verdict.ok{ color:var(--hd-right); } .hd-verdict.no{ color:var(--hd-wrong); }
 [data-theme="light"] .hd-verdict.ok{ color:var(--green-dk); } [data-theme="light"] .hd-verdict.no{ color:var(--red-dk); }
@@ -142,6 +151,9 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
 .hd-chips a{ flex:none; }
 .hd-seg{ display:flex; gap:8px; flex-wrap:wrap; }
 .hd-seg button{ min-height:44px; flex:1 1 auto; }
+/* the key you picked wears the kit's pressed look (.toggle-chip.on, hu-global.css BRASS): a .hu-key has no "on" look of
+   its own, so Make a board never showed which clock and misses were picked (2026-10-14) */
+.hd-seg .hu-key[aria-pressed="true"], .hd-seg .hu-key[aria-pressed="true"]:hover{ background:var(--brass-bg); color:var(--brass-ink); border-color:transparent; box-shadow:var(--brass-lift); font-weight:700; }
 .hd-field{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
 .hd-field > span{ font-size:var(--t-label); font-family:var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--hd-sub); }
 .hd-link{ font:500 var(--t-label) var(--mono); word-break:break-all; background:var(--field-bg); color:var(--field-ink); box-shadow:var(--field-well); padding:10px 12px; border-radius:10px; margin:0 0 12px; }
@@ -163,6 +175,12 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
   .hd-tiles{ gap:8px; }
   .hd-tile{ min-height:70px; }
   .hd-page{ padding:16px 12px 32px; gap:12px; }
+}
+/* A SHORT PHONE (an iPhone SE in Safari leaves about 375 x 548): the question card tightens so a long question with its
+   hint still fits the sheet; the keys stay above the 44px floor */
+@media (max-height:600px) and (min-height:501px){
+  dialog.hd-qdlg .hd-q{ gap:8px; }
+  dialog.hd-qdlg .hd-key{ min-height:46px; }
 }
 @media (max-height:500px){
   #hd.hd-on-board{ height:auto; min-height:calc(100dvh - var(--nav-h, 0px)); overflow:visible; }
@@ -217,10 +235,27 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
   const question = (id) => BANK[id] || null;
   const MIN_ZONE = 4;   // a zone with fewer questions than this sits out (it cannot fill a wedge and keep its templates apart)
 
+  /* YOUR FIELD (2026-10-14, DECISIONS DH4 and DH5, David: practice and team boards only; profession first). A practice
+     or made board can lean toward one profession; today's board never does, so a unit plays one board. A question is
+     the field's by its template key: the occupation in the pay, workforce, school and exam data, the field's licensure
+     compact, and the clinical math that field does at the bedside. The math is a clinical call: cylinder time, ideal
+     body weight, tidal volume, minute ventilation and P/F are RT's; drip and pump rates, doses and draw-ups nursing's;
+     tidal volume, P/F, MAP and drips the physician's; doses, draw-ups, pump rates and IBW pharmacy's. */
+  const FIELDS = [
+    { id:'rt', name:'RT', re:/(^|-)(rt|nbrc|rcic)(-|$)|^math-(cyl|ibw|vt|ve|pf)$/ },
+    { id:'rn', name:'RN', re:/(^|-)(rn|lpn|np|aprn|dnp|ccrn|nclex|ncsbn|nlc|aanp|nbcrna|cnm)(-|$)|^math-(gtt|rate|mcg|draw|map)$/ },
+    { id:'md', name:'MD/DO', re:/(^|-)(physician|physicians|md|do|aamc|imlc)(-|$)|^math-(vt|pf|map|mcg)$/ },
+    { id:'rx', name:'Pharmacy', re:/(^|-)(pharmacist|naplex)(-|$)|^math-(mcg|draw|rate|ibw)$/ }
+  ];
+  const fieldOf = (id) => FIELDS.find((f) => f.id === id) || null;
+
   /* DEAL: the same seed and the same zone out deal the same board. The zone that sits out of the ring holds the
      compass, so all seven Atlas zones are on every board. Inner cells want 2 or 3 dots, outer cells 1 or 2, the compass
-     3; no two tiles share a template; inside a wedge, families differ where they can. */
-  function deal(seed, outPick) {
+     3; no two tiles share a template; inside a wedge, families differ where they can. With a field, up to two tiles of
+     each wedge (the third stays the zone's own) and the compass go to the field's questions where the zone has them,
+     about a third of the board; with none, the deal is the same draw for draw as before fields existed. */
+  function deal(seed, outPick, field) {
+    const F = fieldOf(field);
     const rng = W.HURng.make(seed);
     const ready = ZONES.map((z) => (BYZ[z.id] || []).length >= MIN_ZONE);
     let out = outPick == null ? rng.int(0, 6) : ((outPick % 7) + 7) % 7;
@@ -230,8 +265,9 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     const ring = ZONES.filter((z, i) => i !== out).map((z) => z.id);
     const used = new Set();
     const tiles = new Array(CELLS.length).fill(null);
-    function choose(z, want, fams) {
+    function choose(z, want, fams, lean) {
       let pool = (BYZ[z] || []).filter((q) => !used.has(q.k));
+      if (lean && F) { const mine = pool.filter((q) => F.re.test(q.k)); if (mine.length) pool = mine; }
       if (!pool.length) pool = Object.values(BANK).filter((q) => !used.has(q.k));   // a thin zone borrows rather than leave a hole
       const cost = (q) => (want.includes(q.d) ? 0 : 2 + Math.abs(q.d - want[0])) + (fams.has(q.f) ? 1 : 0);
       let best = Infinity;
@@ -243,22 +279,27 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     }
     WEDGES.forEach((w, i) => {
       const z = ring[i], fams = new Set();
+      let lean = F ? 2 : 0;
       for (const [cell, want] of [[w.inner, [3, 2]], [w.corner, [1, 2]], [w.edge, [1, 2]]]) {
-        const q = choose(z, want, fams);
+        const q = choose(z, want, fams, lean > 0);
+        if (lean > 0 && F.re.test(q.k)) lean--;
         tiles[cell] = { z, q: q.id, d: q.d };
       }
     });
-    const cq = choose(ZONES[out].id, [3, 2], new Set());
+    const cq = choose(ZONES[out].id, [3, 2], new Set(), !!F);
     tiles[CENTER] = { z: ZONES[out].id, q: cq.id, d: cq.d, c: 1 };
     return { out: ZONES[out].id, tiles };
   }
 
   /* A NEW BOARD. o: { id, seed, mode ('day' | 'past' | 'practice' | 'made'), day, clock (seconds, 0 for none), misses,
-     more (half again as long), out (the zone index to sit out, or none for the seed's pick) } */
+     more (half again as long), out (the zone index to sit out, or none for the seed's pick), field (a FIELDS id, practice
+     and made boards only) } */
   function newGame(o) {
-    const b = deal(o.seed, o.out);
-    return { v: 1, id: o.id, seed: o.seed, mode: o.mode, day: o.day || 0, clock: o.clock | 0, misses: o.misses || 3, more: !!o.more,
-      out: b.out, tiles: b.tiles, held: [], closed: [], ans: {}, open: -1, last: -1, phase: 'ready', t0: 0, t1: 0, end: '', score: 0, path: [] };
+    const field = o.mode === 'practice' || o.mode === 'made' ? (fieldOf(o.field) || {}).id || '' : '';
+    const b = deal(o.seed, o.out, field);
+    return { v: 1, id: o.id, seed: o.seed, mode: o.mode, day: o.day || 0, clock: o.clock | 0, misses: o.misses == null ? 3 : o.misses | 0, more: !!o.more,
+      out: b.out, tiles: b.tiles, held: [], closed: [], ans: {}, open: -1, last: -1, phase: 'ready', t0: 0, t1: 0, end: '', path: [],
+      ...(field ? { field } : {}) };
   }
   const limitMs = (G) => (G.clock ? Math.round(G.clock * 1000 * (G.more ? 1.5 : 1)) : 0);
   function timeLeft(G, now) {
@@ -266,18 +307,22 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     if (G.phase === 'ready') return limitMs(G);
     return Math.max(0, limitMs(G) - ((G.phase === 'done' ? G.t1 : now) - G.t0));
   }
-  const weight = (G, i) => (G.tiles[i].d || 1) * (G.tiles[i].c ? 2 : 1);
+  /* THE RESULT IS TIME AND MISSES (2026-10-15, DECISIONS DH10; David: "at this point not sure we need the dots just tiles
+     will do", then "Time and misses"). Crossing is the win; how fast and how clean says how well. Every tile is worth the
+     same and the compass is the middle tile. The time is the time used, so a board with no clock reads the same way. */
+  const elapsed = (G, now) => (G.phase === 'ready' ? 0 : Math.max(0, (G.phase === 'done' ? G.t1 : now) - G.t0));
 
-  /* THE CROSSING: the best-scoring chain of held tiles from the top row to the bottom row, or null */
+  /* THE CROSSING: a chain of held tiles from the top row to the bottom row (the shortest), or null */
   function crossing(G) {
-    const held = new Set(G.held);
-    let best = null;
-    function walk(i, seen, sum, path) {
-      if (BOTTOM.includes(i) && (!best || sum > best.sum)) best = { sum, path: path.slice() };
-      for (const n of NB[i]) if (held.has(n) && !seen.has(n)) { seen.add(n); path.push(n); walk(n, seen, sum + weight(G, n), path); path.pop(); seen.delete(n); }
+    const held = new Set(G.held), from = {};
+    const queue = TOP.filter((i) => held.has(i));
+    queue.forEach((i) => { from[i] = -1; });
+    while (queue.length) {
+      const i = queue.shift();
+      if (BOTTOM.includes(i)) { const path = []; for (let k = i; k !== -1; k = from[k]) path.unshift(k); return { path }; }
+      for (const n of NB[i]) if (held.has(n) && !(n in from)) { from[n] = i; queue.push(n); }
     }
-    for (const t of TOP) if (held.has(t)) walk(t, new Set([t]), weight(G, t), [t]);
-    return best;
+    return null;
   }
   /* can the board still be crossed through tiles that are not closed? */
   function canCross(G) {
@@ -301,11 +346,98 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     if (q.abs != null) return off <= q.abs + 1e-9;
     return off <= Math.abs(q.a) * (q.tol || 0.1) + 1e-9;
   }
+
+  /* NUMBERS ARE PICKED, NOT TYPED (2026-10-14, DECISIONS DH7; David: "this is all very hard, I have to google most of
+     these"). A third of the tiles asked for a number to type within 15 percent, which only looking it up could do. Now a
+     number tile shows four answers: a count, a dollar figure or a rate as four sizes, each double the one before (triple
+     for the big national counts), so a sense of scale finds it; a percent as four even steps inside 0 to 100; an age or a
+     count of states a few apart; the bedside math as near misses (half, double, a quarter or a half off), since every
+     number is in the question. The four come from the question's own id, so a tile always shows the same four. Every
+     wrong one sits outside "close enough", so judge() takes a pick as it took a typed number; the right one carries the
+     exact answer, shown rounded like the rest so it does not stand out. */
+  function hashId(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function picks(q) {
+    if (!q || q.t !== 'number') return null;
+    const rng = W.HURng.make(hashId('picks:' + q.id));
+    const a = q.a, dp = q.dp || 0;
+    const wide = q.abs != null ? q.abs : Math.abs(a) * (q.tol || 0.1);
+    const math = q.f === 'Clinical math';
+    const fix = (v) => +v.toFixed(dp);
+    const show = (v) => { if (math || Math.abs(v) < 100) return fix(v); const p = Math.pow(10, Math.floor(Math.log10(Math.abs(v))) - 1); return Math.round(v / p) * p; };
+    const ladder = (step, lo, hi) => {   // four even steps, the answer at a seeded place, all inside lo to hi
+      const places = [0, 1, 2, 3].filter((k) => a - k * step >= lo && a + (3 - k) * step <= hi);
+      if (!places.length) return null;
+      const k = places[Math.floor(rng() * places.length)];
+      return [0, 1, 2, 3].map((j) => a + (j - k) * step);
+    };
+    const pct = q.suf === '%' || q.unit === 'percent', yrs = q.unit === 'years', fifty = /^(states|jurisdictions)$/.test(q.unit || '');
+    const tries = [];
+    if (math) {
+      const fs = [0.5, 0.75, 1.25, 1.5, 2];
+      for (let i = fs.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = fs[i]; fs[i] = fs[j]; fs[j] = t; }
+      tries.push(fs.map((f) => a * f).concat([a]));
+    } else if (pct && a <= 100) tries.push(ladder(Math.max(Math.round(Math.min(Math.max(a * 0.4, 4), 20)), Math.ceil(wide * 1.6)), 0, 100));
+    else if (yrs || fifty) tries.push(ladder(Math.max(fifty ? 5 : 3, Math.round(a * (fifty ? 0.3 : 0.12)), Math.ceil(wide * 1.6)), 0, fifty ? 51 : Infinity));
+    const r = Math.abs(a) >= 100000 ? 3 : 2, k = Math.floor(rng() * 4);
+    tries.push([0, 1, 2, 3].map((j) => a * Math.pow(r, j - k)));
+    tries.push(ladder(Math.max(Math.pow(10, -dp), Math.ceil(wide * 1.6), Math.ceil(Math.abs(a) * 0.5)), 0, Infinity));
+    for (const t of tries) {
+      if (!t) continue;
+      const wrong = [];
+      for (const v of t) {   // three wrong ones, as shown: positive, apart from each other and outside "close enough"
+        if (v === a || wrong.length === 3) continue;
+        const s = show(v);
+        if (s >= 0 && Math.abs(s - a) > wide + 1e-9 && s !== show(a) && !wrong.includes(s) && !(pct && a <= 100 && s > 100)) wrong.push(s);
+      }
+      if (wrong.length < 3) continue;
+      const vals = wrong.concat([a]).sort((x, y) => x - y);
+      return { vals, shown: vals.map((v) => (v === a ? show(a) : v)), right: vals.indexOf(a) };
+    }
+    return null;
+  }
+  /* THE LIFELINES (2026-10-15, DECISIONS DH8 and DH9; David: "Free, once each"). 50:50 from Millionaire, Swap from
+     Trivia Crack's skip, and a hint from the same data as the question. Each works once a board, on the question
+     showing, through dispatchAct like every move. G.life says which were used, on which tile and on which question,
+     and it only exists once one is used, so a board that never uses one saves and shares exactly as before. A lifeline
+     belongs to the question it was used on: swap a narrowed question away and the narrowing goes with it. */
+  const LIFELINES = ['narrow', 'hint', 'swap'];
+  // 50:50: on a four-answer tile two wrong answers go. The wrong one that stays comes from the question's id, so
+  // everyone sees the same two. Indexes are the keys as shown: the options, or the four picks of a number tile.
+  function narrowKeep(q) {
+    const p = q && q.t === 'number' ? picks(q) : null;
+    if (!q || (q.t === 'choice' ? q.o.length !== 4 : !p)) return null;
+    const right = q.t === 'choice' ? q.a : p.right;
+    const wrong = [0, 1, 2, 3].filter((k) => k !== right);
+    return [right, wrong[Math.floor(W.HURng.make(hashId('narrow:' + q.id))() * 3)]].sort((x, y) => x - y);
+  }
+  const hintOf = (q) => (q && q.h) || '';
+  // Swap: an unused question from the tile's own zone, just as hard (the same d), so the route holds. It comes
+  // from the board's seed and the tile, so the same swap gives everyone the same question, and no template is on the
+  // board twice. Like the deal, it keeps families apart inside a wedge where it can.
+  function swapFor(G, i) {
+    const t = G.tiles[i];
+    if (!t) return null;
+    const used = new Set(G.tiles.map((x) => (question(x.q) || {}).k));
+    let pool = (BYZ[t.z] || []).filter((q) => q.d === t.d && !used.has(q.k));
+    const w = WEDGES.find((x) => [x.inner, x.corner, x.edge].includes(i));
+    const fams = w ? [w.inner, w.corner, w.edge].filter((c) => c !== i).map((c) => (question(G.tiles[c].q) || {}).f) : [];
+    const apart = pool.filter((q) => !fams.includes(q.f));
+    if (apart.length) pool = apart;
+    return pool.length ? pool[Math.floor(W.HURng.make(hashId('swap:' + G.seed + ':' + i))() * pool.length)].id : null;
+  }
+  // was this lifeline used on the question tile i shows now?
+  const lifeOn = (G, kind, i) => { const L = G.life && G.life[kind]; return !!L && L.i === i && (kind === 'swap' ? L.to : L.q) === G.tiles[i].q; };
+  const lifeCount = (G) => LIFELINES.filter((k) => G.life && G.life[k]).length;
+  function canLife(G, kind) {   // can it be used on the question showing?
+    if (!LIFELINES.includes(kind) || G.phase !== 'play' || G.open < 0 || (G.life && G.life[kind])) return false;
+    const q = question(G.tiles[G.open].q);
+    return kind === 'narrow' ? !!narrowKeep(q) : kind === 'hint' ? !!hintOf(q) : !!swapFor(G, G.open);
+  }
+
   function finish(G, why, now) {
     if (G.phase === 'done') return;
     const c = crossing(G);
     G.phase = 'done'; G.end = why; G.t1 = now; G.open = -1;
-    G.score = why === 'crossed' && c ? c.sum : 0;
     G.path = c ? c.path : [];
   }
   const outOfTime = (G, now) => G.clock && G.phase === 'play' && now - G.t0 >= limitMs(G);
@@ -324,15 +456,25 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
       return G;
     }
     if (verb === 'close') { G.open = -1; return G; }
+    if (LIFELINES.includes(verb)) {
+      const i = d.i | 0, t = G.tiles[i];
+      if (i !== G.open || !canLife(G, verb)) return G;
+      G.life = G.life || {};
+      if (verb === 'swap') { const to = swapFor(G, i); G.life.swap = { i, q: t.q, to }; t.q = to; }
+      else G.life[verb] = { i, q: t.q };
+      return G;
+    }
     if (verb === 'answer') {
       const i = d.i | 0;
       if (i !== G.open) return G;
-      const ok = judge(question(G.tiles[i].q), d.v);
+      const q = question(G.tiles[i].q);
+      if (lifeOn(G, 'narrow', i) && !narrowKeep(q).includes(q.t === 'choice' ? Number(d.v) : picks(q).vals.indexOf(Number(d.v)))) return G;   // 50:50 took that one away
+      const ok = judge(q, d.v);
       G.ans[i] = { v: d.v, ok };
       G.last = i; G.open = -1;
       (ok ? G.held : G.closed).push(i);
       if (ok && crossing(G)) finish(G, 'crossed', now);
-      else if (G.closed.length >= G.misses) finish(G, 'misses', now);
+      else if (G.misses && G.closed.length >= G.misses) finish(G, 'misses', now);   // 0 is no limit (DH6): a miss still closes its tile
       else if (!canCross(G)) finish(G, 'blocked', now);
       return G;
     }
@@ -345,18 +487,20 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
   function applySave(o) {
     if (!o || o.v !== 1 || !Array.isArray(o.tiles) || o.tiles.length !== CELLS.length || !Array.isArray(o.held) || !Array.isArray(o.closed)) return null;
     if (o.tiles.some((t) => !t || !question(t.q))) return null;   // a question that left the bank: the board cannot be played as saved
+    if (o.life != null && (typeof o.life !== 'object' || Array.isArray(o.life))) return null;
     return packSave(o);
   }
 
-  /* MADE BOARDS travel as a short code: the seed, the clock and the misses. my:k3x9q-180-3 */
-  const CLOCKS = [0, 120, 180, 300], MISSES = [1, 3, 5];
-  const madeCode = (seed, clock, misses) => `my:${(seed >>> 0).toString(36)}-${clock}-${misses}`;
+  /* MADE BOARDS travel as a short code: the seed, the clock, the misses and, when there is one, the field.
+     my:k3x9q-180-3, my:k3x9q-180-3-rt. A code made before fields still opens the same board. */
+  const CLOCKS = [0, 120, 180, 300], MISSES = [0, 1, 3, 5];   // 0: no clock, no miss limit
+  const madeCode = (seed, clock, misses, field) => `my:${(seed >>> 0).toString(36)}-${clock}-${misses}` + (fieldOf(field) ? '-' + field : '');
   function parseMade(s) {
-    const m = /^my:([0-9a-z]{1,7})-(\d{1,3})-(\d)$/.exec(String(s || ''));
+    const m = /^my:([0-9a-z]{1,7})-(\d{1,3})-(\d)(?:-([a-z]{2}))?$/.exec(String(s || ''));
     if (!m) return null;
     const seed = parseInt(m[1], 36) >>> 0, clock = +m[2], misses = +m[3];
-    if (!CLOCKS.includes(clock) || !MISSES.includes(misses)) return null;
-    return { seed, clock, misses };
+    if (!CLOCKS.includes(clock) || !MISSES.includes(misses) || (m[4] && !fieldOf(m[4]))) return null;
+    return m[4] ? { seed, clock, misses, field: m[4] } : { seed, clock, misses };
   }
 
   /* THE SHARE LINE: the board as rows of squares, the result, no answers */
@@ -370,13 +514,13 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     });
     rows.push(line);
     const title = G.mode === 'day' ? `Daily Huddle #${G.day}` : G.mode === 'past' ? `Daily Huddle #${G.day}, replayed` : G.mode === 'made' ? 'Daily Huddle, a made board' : 'Daily Huddle practice';
-    const res = G.end === 'crossed' ? `crossed, ${G.score} dots` : G.end === 'time' ? 'out of time' : G.end === 'misses' ? 'out of misses' : G.end === 'blocked' ? 'blocked' : 'stopped';
-    const tl = timeLeft(G, now);
-    const m = G.closed.length;
-    const tail = [tl != null && G.end === 'crossed' ? `${clockText(tl)} left` : '', `${m} ${m === 1 ? 'miss' : 'misses'}`, G.more ? 'more time' : ''].filter(Boolean).join(' · ');
-    return [`${title} · ${res}`, ...rows, tail, url].filter(Boolean).join('\n');
+    const res = G.end === 'crossed' ? `crossed in ${stopwatch(elapsed(G, now))}` : G.end === 'time' ? 'out of time' : G.end === 'misses' ? 'out of misses' : G.end === 'blocked' ? 'blocked' : 'stopped';
+    const m = G.closed.length, n = lifeCount(G);   // a clean board says nothing about lifelines, so it still stands out (DH9)
+    const head = [title, res, `${m} ${m === 1 ? 'miss' : 'misses'}`, n ? `${n} ${n === 1 ? 'lifeline' : 'lifelines'}` : '', G.more ? 'more time' : ''].filter(Boolean).join(' · ');
+    return [head, ...rows, url].filter(Boolean).join('\n');
   }
   function clockText(ms) { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  const stopwatch = (ms) => clockText(Math.floor(ms / 1000) * 1000);   // time used reads in whole seconds gone, as a stopwatch does
 
   /* THE DAY: the board turns over at midnight Mountain, for everyone (Device Assembly's rule). Board #1 is DAY_ONE. */
   const DAY_ONE = '2026-10-14';
@@ -389,8 +533,9 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
   const daySeed = (k) => W.HURng.seedFrom('huddle|day|' + k);
   const dayOut = (k) => (dayNumber(k) - 1) % 7;
 
-  W.HuddleEngine = { ZONES, zoneName, CELLS, CENTER, WEDGES, NB, TOP, BOTTOM, setBank, question, deal, newGame, limitMs, timeLeft, weight,
-    crossing, canCross, judge, dispatchAct, packSave, applySave, CLOCKS, MISSES, madeCode, parseMade, shareText, clockText,
+  W.HuddleEngine = { ZONES, zoneName, CELLS, CENTER, WEDGES, NB, TOP, BOTTOM, setBank, question, deal, newGame, limitMs, timeLeft, elapsed,
+    crossing, canCross, judge, picks, dispatchAct, packSave, applySave, CLOCKS, MISSES, madeCode, parseMade, shareText, clockText, stopwatch, FIELDS, fieldOf,
+    LIFELINES, narrowKeep, hintOf, swapFor, lifeOn, lifeCount, canLife,
     DAY_ONE, dayKey, dayNumber, daySeed, dayOut };
 })(this);
 </script>
@@ -407,7 +552,7 @@ const phone = () => !!(window.matchMedia && matchMedia(PHONE).matches);
 // the question opens as a card over the board until there is room for a side panel beside a full-size board
 const CARD = '(max-width:1099px), (max-height:500px)';
 const cardMode = () => !!(window.matchMedia && matchMedia(CARD).matches);
-const ROOT = '/secret-menu/daily-huddle/';
+const ROOT = '/fun/daily-huddle/';
 const ZC = { sci:'var(--z-sci)', prv:'var(--z-prv)', pat:'var(--z-pat)', ph:'var(--z-ph)', tec:'var(--z-tec)', pol:'var(--z-pol)', pay:'var(--z-pay)' };
 
 let G = null;              // the board in play
@@ -415,7 +560,7 @@ let mode = 'door';         // door | board | finish | list
 let reveal = -1;           // the tile whose answer is showing
 let pickAt = null;         // the exact press point (hu-game-shell: a finger is not a mouse)
 let ticker = 0;
-let qDlg = null, qBox = null, menu = null, help = null, prefs = null;
+let qDlg = null, qBox = null, menu = null, help = null, prefs = null, peek = null;
 let listKind = '';
 
 /* ── storage, fenced: a private window or blocked site data must not break the game ── */
@@ -496,22 +641,22 @@ function boardSvg(opts){
     const cls = ['hd-t', held ? 'is-held' : closed ? 'is-closed' : G.phase === 'done' ? 'is-off' : 'is-open', t.c ? 'is-comp' : '', G.open === i || reveal === i ? 'is-pick' : ''].join(' ');
     const label = t.c ? 'Compass' : (q ? q.f : '');
     const state = held ? 'held' : closed ? 'closed' : G.phase === 'done' ? 'not played' : 'open';
-    const aria = `${t.c ? 'The compass, ' + E.zoneName(t.z) : label + ', ' + E.zoneName(t.z)}, ${t.d} ${t.d === 1 ? 'dot' : 'dots'}${t.c ? ', counts double' : ''}, ${state}`;
+    const aria = `${t.c ? 'The compass, ' + E.zoneName(t.z) : label + ', ' + E.zoneName(t.z)}, ${state}`;
     s += `<g class="${cls}" data-i="${i}" style="--zc:${ZC[t.z]}"${opts.mini ? '' : ` role="button" tabindex="${!held && !closed && G.phase !== 'done' ? 0 : -1}" aria-label="${esc(aria)}"`}>`;
     s += `<polygon class="hd-floor" points="${hexPts(x, y + 4, R - 3)}"/>`;
     s += `<g class="hd-face"><polygon class="hd-hex" points="${hexPts(x, y, R - 3)}"/>`;
     if (!opts.mini){
+      // no dots (DH10): an open tile is its name alone, centered; a held or closed one carries its mark under it
+      const mark = held || closed;
       if (t.c){
-        s += `<g transform="translate(${x.toFixed(1)},${(y - 9).toFixed(1)})" class="hd-ink"><circle r="11" fill="none" stroke="currentColor" style="stroke:${closed ? 'var(--hd-sub)' : 'var(--brass-ink)'}" stroke-width="2"/><path d="M0 -9 L2.6 0 L0 9 L-2.6 0Z" style="fill:${closed ? 'var(--hd-sub)' : 'var(--brass-ink)'}"/></g>`;
-        s += `<text class="hd-lbl" x="${x.toFixed(1)}" y="${(y + 15).toFixed(1)}" font-size="14">${held ? '✓ ×2' : closed ? '✕' : '×2'}</text>`;
+        s += `<g transform="translate(${x.toFixed(1)},${(y - (mark ? 9 : 0)).toFixed(1)})" class="hd-ink"><circle r="11" fill="none" stroke="currentColor" style="stroke:${closed ? 'var(--hd-sub)' : 'var(--brass-ink)'}" stroke-width="2"/><path d="M0 -9 L2.6 0 L0 9 L-2.6 0Z" style="fill:${closed ? 'var(--hd-sub)' : 'var(--brass-ink)'}"/></g>`;
+        if (mark) s += `<text class="hd-lbl" x="${x.toFixed(1)}" y="${(y + 15).toFixed(1)}" font-size="14">${held ? '✓' : '✕'}</text>`;
       } else {
         const lines = splitLabel(label), fs = 14;
-        const top = y - (held || closed ? 4 : 8) - (lines.length - 1) * 8;
+        const top = y - (mark ? 4 : 0) - (lines.length - 1) * 8;
         lines.forEach((l, k) => { s += `<text class="hd-lbl" x="${x.toFixed(1)}" y="${(top + k * 16).toFixed(1)}" font-size="${fs}">${esc(l)}</text>`; });
         const below = top + (lines.length - 1) * 16 + 17;
-        if (held) s += `<text class="hd-mark" x="${x.toFixed(1)}" y="${below.toFixed(1)}" font-size="14">✓</text>`;
-        else if (closed) s += `<text class="hd-mark" x="${x.toFixed(1)}" y="${below.toFixed(1)}" font-size="14">✕</text>`;
-        else s += `<g class="hd-dots">${[0, 1, 2].map((k) => `<circle cx="${(x + (k - 1) * 11).toFixed(1)}" cy="${below.toFixed(1)}" r="3.6"${k < t.d ? '' : ' class="off"'}/>`).join('')}</g>`;
+        if (mark) s += `<text class="hd-mark" x="${x.toFixed(1)}" y="${below.toFixed(1)}" font-size="14">${held ? '✓' : '✕'}</text>`;
       }
     }
     s += `</g></g>`;
@@ -591,19 +736,17 @@ function cardHtml(){
   const i = G.open >= 0 ? G.open : reveal;
   if (i < 0) return idleHtml();
   const t = G.tiles[i], q = E.question(t.q);
-  const kick = `<div class="hd-kick" style="--zc:${ZC[t.z]}"><i></i><span class="hd-kfam">${esc(t.c ? 'The compass' : q.f)} · </span>${esc(E.zoneName(t.z))}<span class="hd-kdots" aria-label="${t.d} ${t.d === 1 ? 'dot' : 'dots'}${t.c ? ', counts double' : ''}">${dotsText(t.d)}${t.c ? ' ×2' : ''}</span></div>`;
+  const kick = `<div class="hd-kick" style="--zc:${ZC[t.z]}"><i></i><span class="hd-kfam">${esc(t.c ? 'The compass' : q.f)} · </span>${esc(E.zoneName(t.z))}</div>`;
   const head = `${kick}<p class="hd-qtext">${esc(q.q)}</p>${q.sub ? `<p class="hd-qsub">${esc(q.sub)}</p>` : ''}`;
   const a = G.ans[i];
   if (G.open === i) {
-    if (q.t === 'choice') {
-      return `<div class="hd-q">${head}<div class="hd-keys${q.o.length === 2 ? ' two' : ''}">${q.o.map((o, k) => `<button class="hu-key hd-key" data-ans="${k}">${esc(o)}</button>`).join('')}</div>
-        <div class="hd-acts"><button class="hu-key" data-go="back">Back to the board</button></div></div>`;
-    }
-    return `<div class="hd-q">${head}<form class="hd-num" data-form="num"><label class="hd-sr" for="hdIn">Your answer</label>
-        <input id="hdIn" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" spellcheck="false" placeholder="${esc(q.pre === '$' ? '$' : '')}">
-        <button class="hu-brass" type="submit">Lock it in</button></form>
-        <p class="hd-tol">${esc(tolText(q))}${scaleOf(q) > 1 ? ' Type the number in ' + esc(scaleOf(q) === 1e9 ? 'billions' : scaleOf(q) === 1e6 ? 'millions' : scaleOf(q) === 1e12 ? 'trillions' : 'thousands') + '.' : ''}</p>
-        <div class="hd-acts"><button class="hu-key" data-go="back">Back to the board</button></div></div>`;
+    // a number is four answers to pick from (DH7); 50:50 leaves two of the four, keyed as they were
+    const shown = q.t === 'choice' ? q.o : E.picks(q).shown.map((v) => fmtVal(q, v));
+    const keep = E.lifeOn(G, 'narrow', i) ? E.narrowKeep(q) : null;
+    const hint = E.lifeOn(G, 'hint', i) ? `<p class="hd-hint"><b>Hint</b>${esc(E.hintOf(q))}</p>` : '';
+    // as a card over the board the X, Esc and the back gesture close it, so the lifelines take the row Back to the board had
+    return `<div class="hd-q">${head}${hint}<div class="hd-keys">${shown.map((o, k) => (keep && !keep.includes(k) ? '' : `<button class="hu-key hd-key" data-ans="${k}">${esc(o)}</button>`)).join('')}</div>
+        ${lifeHtml()}${cardMode() ? '' : '<div class="hd-acts"><button class="hu-key" data-go="back">Back to the board</button></div>'}</div>`;
   }
   // the answer
   const done = G.phase === 'done';
@@ -614,7 +757,15 @@ function cardHtml(){
       // the answer's keys are a picture of the result, not buttons: a disabled key would wear the kit's faded OFF look
       const tag = k === q.a ? '<span class="hd-sr"> (the right answer)</span>' : (a && Number(a.v) === k ? '<span class="hd-sr"> (your answer)</span>' : '');
       return `<div class="hu-key hd-key hd-opt${cls}">${esc(o)}${tag}${q.v ? `<small>${esc(q.v[k])}</small>` : ''}</div>`; }).join('')}</div>`;
-  } else {
+  } else if (E.picks(q) && (!a || E.picks(q).vals.includes(Number(a.v)))) {
+    const p = E.picks(q);
+    body = `<div class="hd-keys">${p.shown.map((v, k) => {
+      const mine = a && Number(a.v) === p.vals[k];
+      const cls = k === p.right ? ' right' : (mine ? ' wrong' : '');
+      const tag = k === p.right ? '<span class="hd-sr"> (the right answer)</span>' : (mine ? '<span class="hd-sr"> (your answer)</span>' : '');
+      return `<div class="hu-key hd-key hd-opt${cls}">${esc(fmtVal(q, v))}${tag}</div>`; }).join('')}</div>
+      <p class="hd-ans">Exactly <b>${esc(fmtVal(q, q.a))}${esc(unitWord(q))}</b>.</p>`;
+  } else {   // a number typed before numbers became picks, in a board saved then
     const off = a && isFinite(Number(a.v)) && q.a ? Math.round(Math.abs(Number(a.v) - q.a) / Math.abs(q.a) * 100) : null;
     body = `<p class="hd-ans">The answer: <b>${esc(fmtVal(q, q.a))}${esc(unitWord(q))}</b>.${a ? ` You said <b>${esc(fmtVal(q, Number(a.v)))}</b>${off != null && q.abs == null ? `, ${off} percent off` : ''}.` : ''} ${esc(tolText(q))}</p>`;
   }
@@ -624,10 +775,25 @@ function cardHtml(){
     ${q.draft ? '<p class="hd-draft">A draft value, still being checked before launch.</p>' : ''}${seeHtml(q)}${src}
     <div class="hd-acts"><button class="hu-brass" data-go="${done ? 'result' : 'back'}">${done ? 'See the result' : 'Back to the board'}</button></div></div>`;
 }
+/* the lifelines' keys: the name on the key, the sentences behind one "i" (games.md Menus, rule 9) */
+const LIFE = [
+  { id:'narrow', name:'50:50', def:'two wrong answers go.', no:'This tile has two answers.' },
+  { id:'hint', name:'Hint', def:'one line from the same data, a foothold that never gives the answer.', no:'This tile has none.' },
+  { id:'swap', name:'Swap', def:'a new question from the same zone, just as hard, so your route holds.', no:'No other question fits this tile.' }
+];
+function lifeHtml(){
+  let def = '<b>Lifelines</b>Free, and each works once a board. The share line counts the ones you use.';
+  const keys = LIFE.map((L) => {
+    const used = !!(G.life && G.life[L.id]), can = E.canLife(G, L.id);
+    def += `<p>${L.name}: ${L.def}${used ? ' Used.' : can ? '' : ' ' + L.no}</p>`;
+    return `<button type="button" class="hu-key hd-lf" data-life="${L.id}"${can ? '' : ' aria-disabled="true"'}>${esc(L.name)}${used ? '<small>Used</small>' : ''}</button>`;
+  }).join('');
+  return `<div class="hd-life" role="group" aria-label="Lifelines">${keys}<button type="button" class="hu-i" data-def="${esc(def)}" aria-label="About the lifelines">i</button></div>`;
+}
 function idleHtml(){
   if (G.phase === 'done') return `<div class="hd-card hd-idle"><h2>${esc(resultTitle())}</h2><div class="hd-acts"><button class="hu-brass" data-go="result">See the result</button></div></div>`;
   return `<div class="hd-card hd-idle"><h2>${G.phase === 'ready' ? 'Pick a tile in the top row' : 'Keep the chain going'}</h2>
-    <ol><li>Answer a tile to hold it. A miss closes it.</li><li>Hold a chain of touching tiles from the top row to the bottom row.</li><li>The dots on your chain are your score. The compass counts double.</li></ol></div>`;
+    <ol><li>Answer a tile to hold it. A miss closes it.</li><li>Hold a chain of touching tiles from the top row to the bottom row.</li><li>Your result is your time to cross and your misses.</li></ol></div>`;
 }
 function showCard(){
   if (cardMode()) {
@@ -657,8 +823,10 @@ function focusCard(box){
   if (f) setTimeout(() => f.focus(), 30);
 }
 function onCardClick(e){
+  const lf = e.target.closest('[data-life]');
+  if (lf) { if (lf.getAttribute('aria-disabled') !== 'true') useLife(lf.getAttribute('data-life')); return; }
   const k = e.target.closest('[data-ans]');
-  if (k && G.open >= 0) { answer(+k.getAttribute('data-ans')); return; }
+  if (k && G.open >= 0) { const q = E.question(G.tiles[G.open].q), n = +k.getAttribute('data-ans'); answer(q.t === 'number' ? E.picks(q).vals[n] : n); return; }
   const go = e.target.closest('[data-go]');
   if (!go) return;
   const what = go.getAttribute('data-go');
@@ -681,6 +849,16 @@ function answer(v){
   paintBoard(); paintStatus();
   showCard();
 }
+function useLife(kind){
+  const i = G.open;
+  if (peek) peek.close();
+  act(kind, { i });
+  if (G.phase === 'done') { reveal = -1; if (qDlg && qDlg.isOpen()) qDlg.close('time'); mode = 'finish'; render(); return; }
+  if (!E.lifeOn(G, kind, i)) return;
+  say(kind === 'narrow' ? 'Two wrong answers are gone.' : kind === 'hint' ? 'Hint: ' + E.hintOf(E.question(G.tiles[i].q)) : 'A new question, from the same zone and just as hard.');
+  if (kind === 'swap') paintBoard();   // the tile's label follows its new question
+  showCard();
+}
 function closeCard(toResult){
   if (G.open >= 0) act('close');
   reveal = -1;
@@ -695,19 +873,21 @@ function closeCard(toResult){
 function paintClock(){
   const c = $('hdClock');
   if (!c) return;
-  if (!G || mode !== 'board' || !G.clock) { c.hidden = true; return; }
-  const left = E.timeLeft(G, Date.now());
+  if (!G || mode !== 'board') { c.hidden = true; return; }
   c.hidden = false;
+  // with no clock it counts up: the time to cross is the result (DH10), so the board shows it running
+  if (!G.clock) { c.setAttribute('aria-label', 'Time used'); c.textContent = E.stopwatch(E.elapsed(G, Date.now())); c.classList.remove('low'); return; }
+  const left = E.timeLeft(G, Date.now());
+  c.setAttribute('aria-label', 'Time left');
   c.textContent = E.clockText(left);
   c.classList.toggle('low', left < 30000 && G.phase === 'play');
 }
 function paintStatus(){
   const st = $('hdStatus');
   if (!st) return;
-  const pips = Array.from({ length:G.misses }, (_, k) => `<i class="hd-pip${k < G.closed.length ? ' gone' : ''}"></i>`).join('');
-  const heldDots = G.held.reduce((a, i) => a + E.weight(G, i), 0);
+  const pips = Array.from({ length:G.misses }, (_, k) => `<i class="hd-pip${k < G.closed.length ? ' gone' : ''}"></i>`).join('');   // none with no limit: a count instead
   st.innerHTML = `<span><b>${esc(boardName())}</b>${G.mode === 'day' ? ' · ' + esc(shortDate(G.id.slice(4))) : ''}</span><span class="hd-sp"></span>
-    <span aria-label="Misses: ${G.closed.length} of ${G.misses}">Misses<span class="hd-pips">${pips}</span></span><span><b>${heldDots}</b> ${heldDots === 1 ? 'dot' : 'dots'} held</span>`;
+    ${G.misses ? `<span aria-label="Misses: ${G.closed.length} of ${G.misses}">Misses<span class="hd-pips">${pips}</span></span>` : `<span>Misses <b>${G.closed.length}</b></span>`}<span><b>${G.held.length}</b> held</span>`;
   const f = $('hdFoot');
   if (f) f.textContent = G.phase === 'ready' ? 'Tap any tile in the top row to start. The clock starts with your first tile.' : G.phase === 'done' ? resultTitle() : 'Hold touching tiles down to the bottom row.';
 }
@@ -717,11 +897,14 @@ function paintBoard(){
   w.innerHTML = boardSvg();
   wireBoard();
 }
-function boardName(){ return G.mode === 'day' ? 'Board #' + G.day : G.mode === 'past' ? 'Board #' + G.day + ', replay' : G.mode === 'made' ? 'A made board' : 'Practice board'; }
+function boardName(){
+  const f = E.fieldOf(G.field), lean = f ? ' · ' + f.name : '';
+  return G.mode === 'day' ? 'Board #' + G.day : G.mode === 'past' ? 'Board #' + G.day + ', replay' : G.mode === 'made' ? 'A made board' + lean : 'Practice board' + lean;
+}
 function shortDate(k){ try { return new Date(k + 'T12:00:00Z').toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'UTC' }); } catch (e) { return k; } }
 function resultTitle(){
   if (!G) return '';
-  if (G.end === 'crossed') return `Crossed in ${G.held.length + G.closed.length} tiles`;
+  if (G.end === 'crossed') return `Crossed in ${E.stopwatch(E.elapsed(G, Date.now()))}`;
   if (G.end === 'time') return 'Out of time';
   if (G.end === 'misses') return G.misses === 1 ? 'One miss ends it' : `Out of misses`;
   if (G.end === 'blocked') return 'No way through';
@@ -747,19 +930,21 @@ function todayId(){ return 'day:' + E.dayKey(); }
 function doorHtml(){
   const k = E.dayKey(), saved = E.applySave(store.get(saveKey(todayId())));
   const n = E.dayNumber(k);
-  const preview = saved || E.newGame({ id:todayId(), seed:E.daySeed(k), mode:'day', day:n, clock:180, misses:3, out:E.dayOut(k) });
+  /* no clock on today's board or practice (David, 2026-10-16: "why is the daily huddle board timed?"; asked, "No limit, time is the score"):
+     the clock counts up and the time to cross is the result. A team board can still have one. */
+  const preview = saved || E.newGame({ id:todayId(), seed:E.daySeed(k), mode:'day', day:n, clock:0, misses:0, out:E.dayOut(k) });
   const keepG = G; G = preview; const mini = boardSvg({ mini:true }); G = keepG;
   const label = !saved || saved.phase === 'ready' ? 'Play today’s board' : saved.phase === 'play' ? 'Continue today’s board' : 'See today’s result';
   return `<div class="hd-page">
     <div class="hd-hero"><h2>Daily <span>Huddle</span></h2><p>Cross the board, top to bottom. One board a day.</p></div>
     <section class="hd-frame" aria-label="Today's board"><div class="hd-frame-in">
-      <div class="hd-n">Today · Board #${n} · 3 minutes · 3 misses</div>
+      <div class="hd-n">Today · Board #${n}</div>
       ${mini}
       <button class="hu-brass" data-go="today">${label}</button>
     </div></section>
     <div class="hd-tiles">
       <button class="hu-key hd-tile" data-go="make">Make a board<small>for your team</small></button>
-      <button class="hu-key hd-tile" data-go="practice">Practice<small>any time</small></button>
+      <button class="hu-key hd-tile" data-go="pick">Practice<small>any time</small></button>
       <button class="hu-key hd-tile" data-go="past">Past boards<small>replay a day</small></button>
     </div>
   </div>`;
@@ -769,9 +954,9 @@ function doorHtml(){
 function finishHtml(){
   const url = location.origin + ROOT + '?board=' + (G.mode === 'day' || G.mode === 'past' ? 'day:' + G.id.slice(G.id.indexOf(':') + 1) : G.id);
   const text = E.shareText(G, url, Date.now());
-  const tl = E.timeLeft(G, Date.now());
-  const line = [G.end === 'crossed' ? `${G.score} dots` : `${G.held.length} ${G.held.length === 1 ? 'tile' : 'tiles'} held`,
-    tl != null && G.end === 'crossed' ? E.clockText(tl) + ' left' : '', `${G.closed.length} ${G.closed.length === 1 ? 'miss' : 'misses'}`].filter(Boolean).join(' · ');
+  // the title carries the time to cross (DH10); the line under it, the misses
+  const line = [G.end === 'crossed' ? '' : `${G.held.length} ${G.held.length === 1 ? 'tile' : 'tiles'} held`, `${G.closed.length} ${G.closed.length === 1 ? 'miss' : 'misses'}`,
+    E.lifeCount(G) ? `${E.lifeCount(G)} ${E.lifeCount(G) === 1 ? 'lifeline' : 'lifelines'}` : ''].filter(Boolean).join(' · ');
   return `<div class="hd-page"><section class="hd-frame"><div class="hd-frame-in" style="align-items:stretch">
       <div class="hd-n">${esc(boardName())}</div>
       <p class="hd-big">${esc(resultTitle())}</p>
@@ -787,7 +972,7 @@ function allDialog(){
     const t = G.tiles[i], q = E.question(t.q), a = G.ans[i];
     const st = G.held.includes(i) ? 'Held' : G.closed.includes(i) ? 'Missed' : 'Not played';
     const ans = q.t === 'choice' ? q.o[q.a] : fmtVal(q, q.a) + unitWord(q);
-    return `<li style="--zc:${ZC[t.z]}"><div class="hd-kick"><i></i>${esc(t.c ? 'The compass' : q.f)} · ${esc(E.zoneName(t.z))} · ${st}<span class="hd-kdots">${dotsText(t.d)}</span></div>
+    return `<li style="--zc:${ZC[t.z]}"><div class="hd-kick"><i></i>${esc(t.c ? 'The compass' : q.f)} · ${esc(E.zoneName(t.z))} · ${st}</div>
       <p class="hd-qtext">${esc(q.q)}</p><p><b>${esc(ans)}</b></p>${srcHtml(q, false)}</li>`; }).join('')}</ul>`;
   const d = HUKit.dialog({ title:'All 19 tiles', className:'hd-dlg', body:box, onClose: () => setTimeout(() => d.el.remove(), 300) });
   d.open();
@@ -821,16 +1006,16 @@ function listHtml(){
 function startBoard(id){
   const k = E.dayKey();
   let o = null, addr = id;
-  const past = (d) => ({ id:'past:' + d, seed:E.daySeed(d), mode:'past', day:E.dayNumber(d), clock:0, misses:3, out:E.dayOut(d) });
+  const past = (d) => ({ id:'past:' + d, seed:E.daySeed(d), mode:'past', day:E.dayNumber(d), clock:0, misses:0, out:E.dayOut(d) });
   const dated = /^(day|past):(\d{4}-\d{2}-\d{2})$/.exec(id === 'today' ? 'day:' + k : id);
   if (dated) {
     const d = dated[2];
     if (d > k || E.dayNumber(d) < 1) { toast('That board is not out yet.'); return false; }
-    if (dated[1] === 'day' && d === k) { o = { id:todayId(), seed:E.daySeed(k), mode:'day', day:E.dayNumber(k), clock:180, misses:3, out:E.dayOut(k) }; addr = 'today'; }
+    if (dated[1] === 'day' && d === k) { o = { id:todayId(), seed:E.daySeed(k), mode:'day', day:E.dayNumber(k), clock:0, misses:0, out:E.dayOut(k) }; addr = 'today'; }
     else { o = past(d); addr = d === k ? 'past:' + d : 'day:' + d; }   // today's board replayed keeps its own address, so a reload stays a replay
   }
-  else if (/^gen:[0-9a-z]{1,7}$/.test(id)) o = { id, seed:parseInt(id.slice(4), 36) >>> 0, mode:'practice', clock:180, misses:3 };
-  else if (id.startsWith('my:')) { const m = E.parseMade(id); if (!m) { toast('That board link did not read.'); return false; } o = { id, seed:m.seed, mode:'made', clock:m.clock, misses:m.misses }; }
+  else if (/^gen:[0-9a-z]{1,7}(-[a-z]{2})?$/.test(id)) { const [s, f] = id.slice(4).split('-'); o = { id, seed:parseInt(s, 36) >>> 0, mode:'practice', clock:0, misses:0, field:f || '' }; }
+  else if (id.startsWith('my:')) { const m = E.parseMade(id); if (!m) { toast('That board link did not read.'); return false; } o = { id, seed:m.seed, mode:'made', clock:m.clock, misses:m.misses, field:m.field }; }
   if (!o) return false;
   o.more = !!(prefs && prefs.get('more'));
   const saved = E.applySave(store.get(saveKey(o.id)));
@@ -845,7 +1030,39 @@ function startBoard(id){
   if (help && !help.seen() && G.phase === 'ready') setTimeout(() => help.firstVisit(), 200);
   return true;
 }
-function practice(){ const seed = HURng.freshSeed(); return startBoard('gen:' + seed.toString(36)); }
+/* On a phone a card arms the back gesture with a history step, and closing it steps back a moment later: a board dealt
+   in the same tap set its address and then lost it, so a reload went home. The board starts once the step has landed
+   (Device Assembly's afterBack, 2026-10-05). */
+function afterBack(fn){
+  if (!(window.HUKit && HUKit.phone && HUKit.phone())) { fn(); return; }
+  let done = false; const go = () => { if (done) return; done = true; window.removeEventListener('popstate', go); fn(); };
+  window.addEventListener('popstate', go); setTimeout(go, 400);
+}
+/* YOUR FIELD is picked where a board is dealt, Practice and Make a board, and remembered between visits (Settings hold
+   switches, not a choice of five). A reset keeps it, as it keeps Settings. */
+const FIELD_KEY = 'hd-field';
+const fieldPref = () => { const f = store.get(FIELD_KEY); return E.fieldOf(f) ? f : ''; };
+const fieldSeg = (cur) => `<div class="hd-field"><span>Your field</span><div class="hd-seg" role="group" aria-label="Your field">${[{ id:'', name:'Any' }].concat(E.FIELDS).map((f) => `<button class="hu-key${f.id === cur ? ' on' : ''}" aria-pressed="${f.id === cur}" data-field="${f.id}">${esc(f.name)}</button>`).join('')}</div></div>`;
+function practice(){ const seed = HURng.freshSeed(), f = fieldPref(); return startBoard('gen:' + seed.toString(36) + (f ? '-' + f : '')); }
+// how many of a board's 19 tiles a field usually gets, from the deal itself (pharmacy has no compact, so it leans less)
+function typical(f){
+  const F = E.fieldOf(f); let n = 0;
+  for (let i = 1; i <= 12; i++) n += E.newGame({ id:'gen:x', seed:i * 7919, mode:'practice', clock:0, misses:3, field:f }).tiles.filter((t) => F.re.test(E.question(t.q).k)).length;
+  return Math.round(n / 12);
+}
+function practiceDialog(){
+  let field = fieldPref();
+  const box = document.createElement('div');
+  const draw = () => { box.innerHTML = fieldSeg(field) + `<p class="hd-qsub" style="margin-bottom:12px">${field ? 'About ' + typical(field) + ' of the 19 tiles come from your field.' : 'Questions from every field.'} Today’s board stays the same for everyone.</p><div class="hd-acts"><button class="hu-brass" data-pr="deal">Deal a practice board</button></div>`; };
+  box.addEventListener('click', (e) => {
+    const f = e.target.closest('[data-field]');
+    if (f) { field = f.getAttribute('data-field'); store.set(FIELD_KEY, field); draw(); return; }
+    if (e.target.closest('[data-pr="deal"]')) { d.close('play'); afterBack(practice); }
+  });
+  draw();
+  const d = HUKit.dialog({ title:'Practice', className:'hd-dlg', body:box, onClose: () => setTimeout(() => d.el.remove(), 300) });
+  d.open();
+}
 function setAddress(key, val){
   try { const u = new URL(location.href); u.search = ''; if (key) u.searchParams.set(key, val); history.replaceState(null, '', u.pathname + u.search); } catch (e) {}
 }
@@ -853,11 +1070,11 @@ function home(){ stopTick(); G = null; mode = 'door'; setAddress(); render(); }
 
 /* ── make a board, past boards ── */
 function makeDialog(){
-  let clock = 180, misses = 3, code = '';
+  let clock = 180, misses = 0, code = '', field = fieldPref();
   const box = document.createElement('div');
   const seg = (name, list, cur, fmt) => `<div class="hd-field"><span>${name}</span><div class="hd-seg" role="group" aria-label="${name}">${list.map((v) => `<button class="hu-key${v === cur ? ' on' : ''}" aria-pressed="${v === cur}" data-${name.toLowerCase()}="${v}">${fmt(v)}</button>`).join('')}</div></div>`;
   function draw(){
-    box.innerHTML = seg('Clock', E.CLOCKS.slice(1).concat([0]), clock, (v) => (v ? v / 60 + ' min' : 'No clock')) + seg('Misses', E.MISSES, misses, (v) => String(v))
+    box.innerHTML = seg('Clock', E.CLOCKS.slice(1).concat([0]), clock, (v) => (v ? v / 60 + ' min' : 'No clock')) + seg('Misses', E.MISSES.slice(1).concat([0]), misses, (v) => (v ? String(v) : 'No limit')) + fieldSeg(field)
       + (code ? `<p class="hd-link" id="hdMadeLink">${esc(location.origin + ROOT + '?board=' + code)}</p><div class="hd-acts"><button class="hu-brass" data-mk="copy">Copy the link</button><button class="hu-key" data-mk="play">Play it now</button></div>`
               : `<div class="hd-acts"><button class="hu-brass" data-mk="make">Make the board</button></div>`);
   }
@@ -865,11 +1082,13 @@ function makeDialog(){
     const c = e.target.closest('[data-clock]'), m = e.target.closest('[data-misses]'), k = e.target.closest('[data-mk]');
     if (c) { clock = +c.getAttribute('data-clock'); code = ''; draw(); }
     if (m) { misses = +m.getAttribute('data-misses'); code = ''; draw(); }
+    const fl = e.target.closest('[data-field]');
+    if (fl) { field = fl.getAttribute('data-field'); store.set(FIELD_KEY, field); code = ''; draw(); }
     if (!k) return;
     const what = k.getAttribute('data-mk');
-    if (what === 'make') { code = E.madeCode(HURng.freshSeed(), clock, misses); draw(); const b = box.querySelector('[data-mk="copy"]'); if (b) b.focus(); }
+    if (what === 'make') { code = E.madeCode(HURng.freshSeed(), clock, misses, field); draw(); const b = box.querySelector('[data-mk="copy"]'); if (b) b.focus(); }
     if (what === 'copy') { try { await navigator.clipboard.writeText(location.origin + ROOT + '?board=' + code); toast('Copied. Send it to your team.'); } catch (err) { toast('Select the link to copy it.'); } }
-    if (what === 'play') { d.close('play'); startBoard(code); }
+    if (what === 'play') { d.close('play'); afterBack(() => startBoard(code)); }
   });
   draw();
   const d = HUKit.dialog({ title:'Make a board', className:'hd-dlg', body:box, onClose: () => setTimeout(() => d.el.remove(), 300) });
@@ -884,7 +1103,7 @@ function pastDialog(){
   const box = document.createElement('div');
   box.innerHTML = rows.length ? `<p class="hd-qsub" style="margin-bottom:12px">A past board plays with no clock and does not change that day’s result.</p><ul class="hd-past">${rows.join('')}</ul>`
                               : '<p class="hd-qsub">Board #1 is today’s. Past boards show up here from tomorrow.</p>';
-  box.addEventListener('click', (e) => { const a = e.target.closest('[data-past]'); if (!a) return; e.preventDefault(); d.close('play'); startBoard('day:' + a.getAttribute('data-past')); });
+  box.addEventListener('click', (e) => { const a = e.target.closest('[data-past]'); if (!a) return; e.preventDefault(); const day = a.getAttribute('data-past'); d.close('play'); afterBack(() => startBoard('day:' + day)); });
   const d = HUKit.dialog({ title:'Past boards', className:'hd-dlg', body:box, onClose: () => setTimeout(() => d.el.remove(), 300) });
   d.open();
 }
@@ -897,6 +1116,7 @@ function onMainClick(e){
   const what = go.getAttribute('data-go');
   if (what === 'today') startBoard('today');
   else if (what === 'practice') practice();
+  else if (what === 'pick') practiceDialog();
   else if (what === 'make') makeDialog();
   else if (what === 'past') pastDialog();
   else if (what === 'home') home();
@@ -909,23 +1129,39 @@ function wireMenus(){
   if (!window.HUKit || !HUKit.gameMenu || !$('hdKit')) return;
   help = HUKit.howTo({ id:'hd', auto:false,
     rules:['Answer a tile to hold it. A miss closes it.',
-           'Hold a chain of touching tiles from the top row to the bottom row before the clock or your misses run out.',
-           'The dots on your chain are your score. The compass in the middle counts double.'] });
-  prefs = HUKit.settings({ id:'hd', rows:[{ key:'more', label:'More time', help:'Half again as long on the clock, from your next board. The share line says so.', value:false }] });
+           'Hold a chain of touching tiles from the top row to the bottom row. There is no time limit; the clock counts how long you take.',
+           'Your result is your time to cross and your misses.'] });
+  prefs = HUKit.settings({ id:'hd', rows:[{ key:'more', label:'More time', help:'Half again as long on a board with a clock (a team board can have one), from your next board. The share line says so.', value:false }] });
   menu = HUKit.gameMenu({ title:'Daily Huddle', help, settings:prefs, escOpens: () => !(qDlg && qDlg.isOpen()),
     restart:{ verb:'Start over', title:'Start this board over?', body:'A fresh copy of this board with a new clock. Today’s daily result stays as it is.',
       run: () => { if (!G) return; const id = G.mode === 'day' ? 'past:' + G.id.slice(4) : G.id; store.set(saveKey(id), null); stopTick(); startBoard(id); } },
-    leave:{ href:'/secret-menu/' } });
+    leave:{ href:'/fun/' } });
   $('hdKit').appendChild(help.button());
   $('hdKit').appendChild(menu.button());
 }
 
+/* THE QA RESET (2026-10-14, David: "for this QA i need you to be able to reset it"). ?reset=1 forgets every board
+   this browser has played and the how-to's first-visit mark, so the next look is a first visit; Settings stay. A
+   tester's address, like Device Assembly's ?unlock=1, and not a menu row: a daily anyone can reset from the menu is
+   not one board a day. */
+function forgetAll(){
+  try {
+    const gone = [];
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && (k.startsWith('hd-run:') || k === 'hu-howto-hd')) gone.push(k); }
+    gone.forEach((k) => localStorage.removeItem(k));
+  } catch (e) {}
+}
+
 let BANKLIST = [];
 async function boot(){
+  const reset = new URLSearchParams(location.search).get('reset');
+  if (reset) forgetAll();
   wireMenus();
+  if (HUKit.peek) peek = HUKit.peek({ root:document.body });   // the lifelines' "i", on the side card and in the question card
   $('hdMain').addEventListener('click', onMainClick);
   $('hdMain').addEventListener('submit', (e) => { if (e.target.closest('#hdSide')) onCardSubmit(e); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mode === 'board' && !cardMode() && G && (G.open >= 0 || reveal >= 0) && !(document.querySelector('dialog[open]'))) { e.preventDefault(); closeCard(false); } });
+  // Esc closes the side card, unless a lifeline's peek is showing: then the press is the peek's (it runs after this, so this listens first)
+  document.addEventListener('keydown', (e) => { const pk = $('hu-peek'); if (e.key === 'Escape' && mode === 'board' && !cardMode() && G && (G.open >= 0 || reveal >= 0) && !(document.querySelector('dialog[open]')) && !(pk && !pk.hidden)) { e.preventDefault(); closeCard(false); } }, true);
   window.addEventListener('resize', () => { if (mode === 'board' && G && (G.open >= 0 || reveal >= 0)) { if (!cardMode() && qDlg && qDlg.isOpen()) qDlg.close('resize'); } });
   $('hdMain').innerHTML = '<div class="hd-page"><p class="hd-line">Dealing the board…</p></div>';
   try {
@@ -940,6 +1176,7 @@ async function boot(){
   if (b === 'practice') { practice(); return; }
   if (b && startBoard(b)) return;
   mode = 'door'; render();
+  if (reset) { setAddress(); toast('Every board is fresh again, as on a first visit.'); }
 }
 
 if (TEST) window.__hd = { E, readGuess, parseNum, get G(){ return G; }, set G(v){ G = v; }, render, startBoard, act };

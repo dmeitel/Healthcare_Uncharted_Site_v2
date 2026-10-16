@@ -5,6 +5,7 @@
  * that say what the page is", David's Yes).
  *
  *   node scripts/build-share-cards.js        writes src/assets/images/og/card-*.png, 1200 x 630
+ *   node scripts/build-share-cards.js card-device-assembly    writes only the cards named
  *
  * WHY. The three games' previews were their 1280 x 440 shelf thumbnails with no name on them, so a LinkedIn post showed
  * a cropped strip of abstract art. Each card says what the page is: a kicker, the title, one plain line, and the page's
@@ -35,7 +36,8 @@ const CARDS = [
   { file: 'card-fun', kicker: 'Fun', title: 'Games about how care runs', line: 'Free browser games built on real healthcare data, with no account.', n: String(games), unit: 'games', key: 'Play' },
   { file: 'card-alarm-fatigue', kicker: 'Game', title: 'Alarm Fatigue', line: 'A med-surg shift as an idle clicker. Somewhere in the noise is the alarm that matters.', n: '10 to 20', unit: 'minutes', key: 'Play' },
   { file: 'card-vital-stats', kicker: 'Game · Multiplayer', title: 'Vital Stats', line: 'A trivia game about the real numbers in American healthcare. Play the bots, or a whole room.', n: '2 to 48', unit: 'players', key: 'Play' },
-  { file: 'card-device-assembly', kicker: 'Game · Beta', title: 'Device Assembly', line: 'Set up oxygen, high flow and ventilators on the wall behind the bed, with real connectors.', n: 'Daily', unit: 'a new wall', key: 'Play' },
+  { file: 'card-device-assembly', kicker: 'Game · Beta', title: 'Headwall', line: 'Set up oxygen, high flow and ventilators on the wall behind the bed, with real connectors.', n: 'Daily', unit: 'a new wall', key: 'Play' },
+  { file: 'card-daily-huddle', kicker: 'Game · Beta', title: 'Daily Huddle', line: 'Healthcare trivia on a hex board. Answer tiles to cross it from the top row to the bottom.', n: 'Daily', unit: 'a new board', key: 'Play' },
   { file: 'card-multi-lens-map', kicker: 'Tool · Map', title: 'U.S. Population Health Map', line: 'Every state and county through seven lens groups, from patients to policy.', n: '72', unit: 'metrics', key: 'Open' },
   { file: 'card-operators-map', kicker: 'Tool · Map', title: 'U.S. Hospital Operations Map', line: 'Hospitals, schools, dialysis, surgery centers, pharmacies and suppliers as layers.', n: hospitals.toLocaleString('en-US'), unit: 'hospitals (CMS)', key: 'Open' },
 ];
@@ -77,7 +79,8 @@ ${right}
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
-  for (const c of CARDS) {
+  const only = process.argv.slice(2);   // a rename redraws its own card without re-rendering the rest
+  for (const c of CARDS.filter((x) => !only.length || only.includes(x.file))) {
     await page.setContent(html(c), { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: path.join(OUT, c.file + '.png') });

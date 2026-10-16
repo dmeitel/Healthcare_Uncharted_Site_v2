@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
 const html = fs.readFileSync(PAGE, 'utf8');
 const SRC = html.slice(html.indexOf('<script>') + '<script>'.length, html.lastIndexOf('</script>'));
 const KIT = ['hu-table.js', 'hu-rng.js'].map((f) => new vm.Script(fs.readFileSync(path.join(__dirname, '..', 'src', 'assets', 'js', f), 'utf8'), { filename: f }));
@@ -24,7 +24,7 @@ function load(search, done) {
   const ctx = {
     document: { getElementById: () => null, addEventListener() {}, readyState: 'complete' },
     window: { __UG_TEST: true, addEventListener() {}, innerWidth: 1200, innerHeight: 800 },
-    location: { search, origin: 'http://localhost', pathname: '/fun/device-assembly/' },
+    location: { search, origin: 'http://localhost', pathname: '/fun/headwall/' },
     navigator: {}, console, setTimeout, clearTimeout, setInterval: () => 0, clearInterval() {},
     localStorage: { _s: store, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } },
     Date, Intl,
@@ -72,8 +72,8 @@ test('every playtest link on the hub names a wall the game opens', () => {
   const qa = board.cards.filter((c) => c.id === 'device-assembly' || c.id === 'device-assembly-level-design-and-pathway').flatMap((c) => c.qa || []);
   for (const q of qa) {
     if (!q.link || q.id === 'first-visit' || /^\/__hub\//.test(q.link)) continue;   // a first visit lands wherever a stranger lands; a hub page is not the game
-    assert.ok(/^\/(?!\/)/.test(q.link) && !/^\/secret-menu\/device-assembly\//.test(q.link), q.id + ': the hub serves the build being fixed, so the link is local, at the game address since 2026-10-06');
-    if (!/^\/fun\/device-assembly\//.test(q.link) || !/[?&]wall=/.test(q.link)) continue;   // the shelf, or no wall named: the front door, which is what it checks
+    assert.ok(/^\/(?!\/)/.test(q.link) && !/^\/(secret-menu|fun)\/device-assembly\//.test(q.link), q.id + ': the hub serves the build being fixed, so the link is local, at the game address (/fun/headwall/ since 2026-10-15; the dev server has no forwards)');
+    if (!/^\/fun\/headwall\//.test(q.link) ||!/[?&]wall=/.test(q.link)) continue;   // the shelf, or no wall named: the front door, which is what it checks
     const search = q.link.slice(q.link.indexOf('?'));
     const t = load(search).linkTarget(search);
     assert.ok(t.wall || t.opens, q.id + ' opens nothing: ' + q.link);

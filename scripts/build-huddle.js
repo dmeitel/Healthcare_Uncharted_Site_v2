@@ -29,6 +29,8 @@
  *   why  one plain line       src url yr ck  the source, its year and the date it was checked
  *   see  'tool|query|label', the place on the site that shows it (Vital Stats' format)
  *   draft  true on normals until David has checked them
+ *   h    the hint lifeline (DH8): one line of foothold from the same data that never states the answer, where the
+ *        data can supply one. Adding hints changes no id and no order, so every board deals the same tiles.
  */
 const fs = require('fs');
 const path = require('path');
@@ -151,6 +153,14 @@ for (const k of Object.keys(TEMPLATES)) {
   if (rows.length < 12) continue;
   const one = rows[0];
   const base = { z: T.z, f: T.f, src: one.src, url: one.url, yr: one.year, ck: one.checked };
+  // THE HINT (DH8): the data has no national figure for these, so the hint is the median across the states it covers,
+  // rounded like every figure in the game. A state's own number gets it only when the median, as shown, would not
+  // itself count as the answer.
+  const sorted = rows.map((q) => q.a).sort((x, y) => x - y), n = sorted.length;
+  const mid = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+  const shown = fmt(one, mid), shownN = parseFloat(shown.replace(/[^0-9.]/g, ''));
+  const hint = `${n}-state median: ${shown}`
+    + `${/^(hospitals|schools|degrees|facilities)$/.test(one.unit || '') ? ' ' + one.unit : ''}.`;
   const r = rngFrom('huddle|' + k);
   // which of four: 8 per template, half asking for the lowest where that reads naturally
   for (let n = 0, tries = 0; n < 8 && tries < 200; tries++) {
@@ -167,7 +177,7 @@ for (const k of Object.keys(TEMPLATES)) {
     add({ ...base, id: `${k}-four-${n}`, k: `${k}-four`, d: 2, t: 'choice',
       q: `Which of these states had the ${low ? 'lowest' : 'highest'} ${T.what}?`,
       o: four.map((q) => keyName(q.st)), a: ans, v: four.map((q) => fmt(q, q.a)), see: winner.see,
-      why: one.why && /range ran from/.test(one.why) ? one.why : undefined });
+      why: one.why && /range ran from/.test(one.why) ? one.why : undefined, h: hint });
     n++;
   }
   // which of two is higher: 8 per template
@@ -178,13 +188,14 @@ for (const k of Object.keys(TEMPLATES)) {
     const ans = x > y ? 0 : 1;
     add({ ...base, id: `${k}-two-${n}`, k: `${k}-two`, d: 1, t: 'choice',
       q: `Which state had the higher ${T.what}?`,
-      o: two.map((q) => keyName(q.st)), a: ans, v: two.map((q) => fmt(q, q.a)), see: two[ans].see });
+      o: two.map((q) => keyName(q.st)), a: ans, v: two.map((q) => fmt(q, q.a)), see: two[ans].see, h: hint });
     n++;
   }
   // the state's own number: 6 per template, within 10 percent
   for (const q of r.shuffle(rows).slice(0, 6)) {
     add({ ...base, id: `${k}-num-${q.st.toLowerCase()}`, k: `${k}-num`, d: 3, t: 'number', q: q.q, sub: q.sub, a: q.a, tol: 0.10,
-      pre: q.pre || '', suf: q.suf || '', dp: q.dp || 0, unit: q.unit, why: q.why, see: q.see });
+      pre: q.pre || '', suf: q.suf || '', dp: q.dp || 0, unit: q.unit, why: q.why, see: q.see,
+      h: Math.abs(shownN - q.a) > Math.abs(q.a) * 0.10 ? hint : undefined });
   }
 }
 
@@ -201,6 +212,7 @@ for (const [prof, P] of Object.entries(lic.professions)) {
   const outside = FIFTY.filter((s) => !members.includes(s) && !pending.includes(s));
   const joined = c.operational ? 'is a member of' : 'has enacted';
   const asWord = `Member states as of ${asOfWords}, by the compact's own list. States that have passed it but not yet put it in place do not count.`;
+  const howMany = `${members.length} states ${c.operational ? 'are members' : 'have enacted it'}.`;   // the hint (DH8); never on the count tile
   const base = { z: 'pol', f: 'Compacts', src: c.name + ', member states', url: c.url, yr: Number(String(asOf).slice(0, 4)), ck: asOf, sub: asWord };
   const r = rngFrom('huddle|compact|' + c.code);
   const known = c.code === 'NLC' ? 1 : 2;
@@ -209,14 +221,14 @@ for (const [prof, P] of Object.entries(lic.professions)) {
     const order = r.shuffle([0, 1, 2, 3]);
     add({ ...base, id: `cmp-${c.code.toLowerCase()}-in-${n}`, k: `cmp-${c.code.toLowerCase()}-in`, d: known, t: 'choice',
       q: `Which of these states ${joined} the ${c.name}?`, o: order.map((i) => keyName(pick[i])), a: order.indexOf(0),
-      why: `${members.length} states ${c.operational ? 'are members' : 'have enacted it'}.` });
+      why: `${members.length} states ${c.operational ? 'are members' : 'have enacted it'}.`, h: howMany });
   }
   for (let n = 0; n < 4 && members.length >= 3 && outside.length >= 1; n++) {
     const pick = [r.pick(outside), ...r.shuffle(members).slice(0, 3)];
     const order = r.shuffle([0, 1, 2, 3]);
     add({ ...base, id: `cmp-${c.code.toLowerCase()}-out-${n}`, k: `cmp-${c.code.toLowerCase()}-out`, d: 2, t: 'choice',
       q: `Which of these states has NOT ${c.operational ? 'joined' : 'enacted'} the ${c.name}?`, o: order.map((i) => keyName(pick[i])), a: order.indexOf(0),
-      why: `${members.length} states ${c.operational ? 'are members' : 'have enacted it'}.` });
+      why: `${members.length} states ${c.operational ? 'are members' : 'have enacted it'}.`, h: howMany });
   }
   // how many: four counts, the real one among them
   const nm = members.length;
@@ -230,8 +242,9 @@ for (const [prof, P] of Object.entries(lic.professions)) {
 
 /* ── 4. Clinical math: every number is in the question (DH2). Nothing here claims a dose for any drug. ── */
 const MATH_SRC = { src: 'Arithmetic. Every number is given in the question.', ck: '2026-10-14' };
-function math(id, k, d, q, a, abs, sub, why) {
-  add({ id, z: 'sci', f: 'Clinical math', k, d, t: 'number', q, sub, a, abs, pre: '', suf: '', dp: abs < 1 ? 1 : 0, why, ...MATH_SRC });
+// h is the hint (DH8): the formula, or the first step where the question already gives the formula
+function math(id, k, d, q, a, abs, sub, why, h) {
+  add({ id, z: 'sci', f: 'Clinical math', k, d, t: 'number', q, sub, a, abs, pre: '', suf: '', dp: abs < 1 ? 1 : 0, why, ...MATH_SRC, h });
 }
 {
   const r = rngFrom('huddle|math');
@@ -242,7 +255,8 @@ function math(id, k, d, q, a, abs, sub, why) {
       const flow = r.pick([2, 3, 4, 5, 6, 10]);
       const min = Math.floor(psi * fac / flow);
       math(`math-cyl-${cyl.toLowerCase()}-${n}`, 'math-cyl', 2, `${cyl === 'E' ? 'An' : 'A'} ${cyl} oxygen cylinder reads ${psi.toLocaleString('en-US')} psi and its cylinder factor is ${fac} L/psi. How many minutes will it last at ${flow} L/min?`,
-        min, 1, 'Round down to whole minutes. Leave no reserve.', `${psi.toLocaleString('en-US')} × ${fac} = ${pct(psi * fac)} liters, and ${pct(psi * fac)} ÷ ${flow} = ${pct(psi * fac / flow)} minutes.`);
+        min, 1, 'Round down to whole minutes. Leave no reserve.', `${psi.toLocaleString('en-US')} × ${fac} = ${pct(psi * fac)} liters, and ${pct(psi * fac)} ÷ ${flow} = ${pct(psi * fac / flow)} minutes.`,
+        'Minutes = psi × cylinder factor ÷ flow in L/min.');
     }
   }
   // volume to draw up
@@ -250,24 +264,26 @@ function math(id, k, d, q, a, abs, sub, why) {
   DOSE.forEach(([want, have, per], n) => {
     const ml = want / have * per;
     math(`math-draw-${n}`, 'math-draw', 1, `${want} mg is ordered. The vial holds ${have} mg in ${per} mL. How many mL do you draw up?`,
-      Math.round(ml * 10) / 10, 0.05, 'Round to one decimal place.', `${want} ÷ ${have} × ${per} = ${pct(ml)} mL.`);
+      Math.round(ml * 10) / 10, 0.05, 'Round to one decimal place.', `${want} ÷ ${have} × ${per} = ${pct(ml)} mL.`,
+      'mL to draw = dose ordered ÷ dose in the vial × mL in the vial.');
   });
   // pump rate
   for (const [vol, hrs] of [[1000, 8], [500, 4], [1000, 10], [250, 2], [1000, 12], [750, 6]]) {
     math(`math-rate-${vol}-${hrs}`, 'math-rate', 1, `${vol.toLocaleString('en-US')} mL is to run over ${hrs} hours on a pump. What rate do you set, in mL/hr?`,
-      Math.round(vol / hrs), 1, 'Round to a whole number.', `${vol} ÷ ${hrs} = ${pct(vol / hrs)} mL/hr.`);
+      Math.round(vol / hrs), 1, 'Round to a whole number.', `${vol} ÷ ${hrs} = ${pct(vol / hrs)} mL/hr.`, 'mL/hr = total mL ÷ hours.');
   }
   // gravity drip
   for (const [vol, hrs, gtt] of [[1000, 8, 15], [500, 4, 20], [1000, 6, 10], [250, 2, 15], [100, 1, 60], [500, 5, 15]]) {
     const v = vol * gtt / (hrs * 60);
     math(`math-gtt-${vol}-${hrs}-${gtt}`, 'math-gtt', 2, `${vol.toLocaleString('en-US')} mL is to run over ${hrs} hours on gravity tubing that gives ${gtt} drops per mL. How many drops a minute?`,
-      Math.round(v), 1, 'Round to a whole number.', `${vol} × ${gtt} ÷ ${hrs * 60} minutes = ${pct(v)} drops a minute.`);
+      Math.round(v), 1, 'Round to a whole number.', `${vol} × ${gtt} ÷ ${hrs * 60} minutes = ${pct(v)} drops a minute.`,
+      `Drops a minute = mL × drops per mL ÷ minutes, and ${hrs} ${hrs === 1 ? 'hour is' : 'hours is'} ${hrs * 60} minutes.`);
   }
   // mean arterial pressure, formula given
   for (const [s, dia] of [[120, 80], [90, 60], [150, 90], [100, 50], [138, 72], [84, 48]]) {
     const m = (s + 2 * dia) / 3;
     math(`math-map-${s}-${dia}`, 'math-map', 2, `A blood pressure reads ${s}/${dia}. Using MAP = (systolic + 2 × diastolic) ÷ 3, what is the MAP?`,
-      Math.round(m), 1, 'Round to a whole number, in mmHg.', `(${s} + ${2 * dia}) ÷ 3 = ${pct(m)}.`);
+      Math.round(m), 1, 'Round to a whole number, in mmHg.', `(${s} + ${2 * dia}) ÷ 3 = ${pct(m)}.`, `Start with 2 × ${dia} = ${2 * dia}.`);
   }
   // predicted body weight, formula given
   const PEOPLE = [{ sex: 'man', base: 50, ft: 5, inch: 10 }, { sex: 'woman', base: 45.5, ft: 5, inch: 4 }, { sex: 'man', base: 50, ft: 6, inch: 1 },
@@ -276,28 +292,32 @@ function math(id, k, d, q, a, abs, sub, why) {
     const over = ft * 12 + inch - 60;
     const kg = base + 2.3 * over;
     math(`math-ibw-${sex}-${ft}${inch}`, 'math-ibw', 3, `A ${sex} is ${ft} feet ${inch} inches tall. Using ${base} + 2.3 × (inches over 5 feet), what is the predicted body weight in kg?`,
-      Math.round(kg), 1, 'Round to a whole number.', `${over} inches over 5 feet: ${base} + 2.3 × ${over} = ${pct(kg)} kg.`);
+      Math.round(kg), 1, 'Round to a whole number.', `${over} inches over 5 feet: ${base} + 2.3 × ${over} = ${pct(kg)} kg.`,
+      `${ft} feet ${inch} ${inch === 1 ? 'inch is' : 'inches is'} ${over} inches over 5 feet.`);
   }
   // tidal volume from a weight and mL/kg
   for (const [kg, per] of [[70, 6], [62, 8], [55, 6], [80, 7], [68, 8], [74, 6]]) {
     math(`math-vt-${kg}-${per}`, 'math-vt', 1, `At ${per} mL/kg of predicted body weight, what tidal volume is that for ${kg} kg, in mL?`,
-      kg * per, 1, undefined, `${kg} × ${per} = ${kg * per} mL.`);
+      kg * per, 1, undefined, `${kg} × ${per} = ${kg * per} mL.`, 'Tidal volume = weight in kg × mL/kg.');
   }
   // minute ventilation
   for (const [vt, rr] of [[500, 14], [450, 16], [400, 20], [600, 12], [350, 24], [550, 18]]) {
     const ve = vt * rr / 1000;
     math(`math-ve-${vt}-${rr}`, 'math-ve', 1, `Tidal volume ${vt} mL, respiratory rate ${rr}. What is the minute ventilation, in L/min?`,
-      Math.round(ve * 10) / 10, 0.05, 'One decimal place.', `${vt} × ${rr} = ${(vt * rr).toLocaleString('en-US')} mL, which is ${pct(ve)} L/min.`);
+      Math.round(ve * 10) / 10, 0.05, 'One decimal place.', `${vt} × ${rr} = ${(vt * rr).toLocaleString('en-US')} mL, which is ${pct(ve)} L/min.`,
+      'Minute ventilation = tidal volume × rate, and 1,000 mL is 1 L.');
   }
   // P/F ratio
   for (const [pao2, fio2] of [[80, 0.4], [60, 0.5], [95, 0.3], [70, 0.7], [120, 0.6], [55, 0.35]]) {
     const pf = pao2 / fio2;
     math(`math-pf-${pao2}-${fio2 * 100}`, 'math-pf', 2, `PaO2 ${pao2} mmHg on an FiO2 of ${fio2}. What is the P/F ratio?`,
-      Math.round(pf), 1, 'PaO2 divided by FiO2, to a whole number.', `${pao2} ÷ ${fio2} = ${pct(pf)}.`);
+      Math.round(pf), 1, 'PaO2 divided by FiO2, to a whole number.', `${pao2} ÷ ${fio2} = ${pct(pf)}.`,
+      `${pao2} ÷ ${fio2} is the same as ${(pao2 * 100).toLocaleString('en-US')} ÷ ${Math.round(fio2 * 100)}.`);
   }
   // mg to mcg
   for (const mg of [0.25, 0.125, 0.5, 0.05, 1.5, 0.075]) {
-    math(`math-mcg-${String(mg).replace('.', '')}`, 'math-mcg', 1, `How many micrograms are in ${mg} mg?`, Math.round(mg * 1000), 1, undefined, `${mg} × 1,000 = ${mg * 1000} mcg.`);
+    math(`math-mcg-${String(mg).replace('.', '')}`, 'math-mcg', 1, `How many micrograms are in ${mg} mg?`, Math.round(mg * 1000), 1, undefined, `${mg} × 1,000 = ${mg * 1000} mcg.`,
+      '1 mg is 1,000 mcg.');
   }
 }
 

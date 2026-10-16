@@ -35,13 +35,14 @@ function miss(p, k, dist) {
 
 /**
  * A phone-shaped page with touch, and a thumb to drive it through CDP touch events (pointer events follow from them,
- * pointerType "touch", the way a real phone fires them).
+ * pointerType "touch", the way a real phone fires them). Three device pixels to the CSS pixel unless `scale` says
+ * otherwise: a phone is never one (2026-10-14; the 2026-10-12 version ran at one).
  * @param {any} browser a Playwright browser
  * @param {{name:string, width:number, height:number}} screen
  * @param {{init?:Function, scale?:number}} [opt]
  */
 async function open(browser, screen, opt = {}) {
-  const ctx = await browser.newContext({ viewport: { width: screen.width, height: screen.height }, deviceScaleFactor: opt.scale || 1, isMobile: true, hasTouch: true });
+  const ctx = await browser.newContext({ viewport: { width: screen.width, height: screen.height }, deviceScaleFactor: opt.scale || 3, isMobile: true, hasTouch: true });
   if (opt.init) await ctx.addInitScript(opt.init);
   const page = await ctx.newPage();
   const cdp = await ctx.newCDPSession(page);
@@ -61,6 +62,14 @@ async function open(browser, screen, opt = {}) {
       if (wobble) { await send('touchMove', [p[0] + wobble * 0.6, p[1] + wobble * 0.8]); }
       await page.waitForTimeout(60);
       await send('touchEnd', wobble ? [p[0] + wobble * 0.6, p[1] + wobble * 0.8] : p);
+      await page.waitForTimeout(settle);
+    },
+    /** a swipe that stops before it lifts, the way a thumb scrolls a row to look at it rather than flicking it away */
+    async swipe(a, b, steps = 10, settle = 300) {
+      await send('touchStart', a);
+      for (let i = 1; i <= steps; i++) { await send('touchMove', [a[0] + (b[0] - a[0]) * i / steps, a[1] + (b[1] - a[1]) * i / steps]); await page.waitForTimeout(FRAME); }
+      await page.waitForTimeout(120); await send('touchMove', b); await page.waitForTimeout(FRAME);
+      await send('touchEnd', b);
       await page.waitForTimeout(settle);
     },
     /** a drag in three parts, for a player who looks before letting go: press, move (as often as needed), lift */

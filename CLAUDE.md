@@ -75,7 +75,7 @@ If a session cannot tell whether a surface is in a phase, it is not.
 ### OPEN PHASES
 
 **Reading load on all three games · OPEN 2026-09-20.** Surfaces: src/fun/alarm-fatigue/,
-src/fun/device-assembly/ (on the Fun shelf since 2026-10-06), src/secret-menu/uncharted-general/. David, after playing both
+src/fun/headwall/ (Headwall, Device Assembly until 2026-10-15; on the Fun shelf since 2026-10-06), src/secret-menu/uncharted-general/. David, after playing both
 multiplayer games: "both games seem to have the functionality but the screens feel crowded with
 text and extra information, i think we need to simplify the views to a basic level but then have
 the information be hoverable to understand more to find more detail. Think web games, it needs to
@@ -102,7 +102,7 @@ Current state only. The history of every round (what shipped, when, on which rul
 reverted) lives in docs/HU-DESIGN-PHASE-LOG.md. Append there when a round ships; keep this block
 to what a session needs before it touches the surface.
 
-**Device Assembly expansion · REOPENED 2026-10-03** (DECISIONS 17 and N1 to N3; plan docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md). Surface: src/fun/device-assembly/.
+**Headwall (Device Assembly until 2026-10-15) expansion · REOPENED 2026-10-03** (DECISIONS 17 and N1 to N3; plan docs/HU-DEVICE-ASSEMBLY-EXPANSION-2026-10-03.md). Surface: src/fun/headwall/.
 Three stages in order: replayable on today's parts (today's wall, generated walls, the shift), then rehab and home,
 then ventilators from David's marks on the plan's rule sheet. Generated walls run "from realistic to completely
 insane" (no oxygen, no air, only suction, bring in a bottle). Stage A1 to A4 BUILT 2026-10-03: every wall change goes
@@ -140,7 +140,7 @@ wall the first time; new TWISTS just name themselves on the wall. BUILT 2026-10-
 YEAR_KIND, bands YEAR_BAND, twists YEAR_TWISTS, teach walls YEAR_TEACH; tests/device-assembly-daily.test.js and its pins;
 the log in docs/HU-DESIGN-PHASE-LOG.md), at his QA by Oct 20. The rulings below still hold.
 
-**Device Assembly game feel · OPEN since 2026-09-16, PARKED AT ALPHA 2026-09-19, REOPENED 2026-10-04** for the
+**Headwall (Device Assembly until 2026-10-15) game feel · OPEN since 2026-09-16, PARKED AT ALPHA 2026-09-19, REOPENED 2026-10-04** for the
 cleanup before the playtest (David: "Yes complete that build in full order"; the list is K1 to K8 in
 docs/HU-DEVICE-ASSEMBLY-DEEP-DIVE-2026-10-04.md section 6, built 2026-10-04 to 05, at his QA). What it left on the
 surface: THE STOP (`whereItStops`: a failed test names the one place the gas stops, rings it, and the miss card sits
@@ -150,7 +150,7 @@ cart); LIVE GAS (parts the outlets do not reach dim); THE SHAPES (one plain shap
 the same shape as a slot, the outlets are slots, the bore written upright); WHERE IT GOES (`fitTargets`, `landingAt`:
 a held part rings the ports it fits and the drop preview says Seats here, Needs an adapter or Won't fit here); WILL IT
 REACH (`planRun`: the route before you let go); ONE PLACE PER JOB (one walls card, one Help card holding the old panel
-folds, the screen's tabs Order, Hint, Test and Note); THE PHONE (one screen, the dock only when it has something to do,
+folds, the screen's tabs Order and Hint since 2026-10-15); THE PHONE (one screen, the dock only when it has something to do,
 touch words through `touchText`, the part above the thumb, a sideways swipe scrolls the cart, a second finger turns);
 ZOOM (`VIEW`: pinch, buttons, Ctrl and the wheel, keys, a double tap; nothing is re-laid); a Settings row, Show problems
 as I build, that turns the live help off. Find-the-fault walls keep all of it quiet until their first Complete.
@@ -183,9 +183,9 @@ Ventilator 1 keeps the loose pieces); dead space (VENT_RULES.deadSpace: two flex
 `pathNext`, `kickerOf`, `crumbOf`; five paths, written and made walls mixed; More walls holds home and rehab for beta two);
 a stored ANSWER for every authored wall (`answerOf`, `ANSWER_BY_HAND`, lazy `L.solution`; the puzzle sheet tries every
 break); the extension cord decoy (`ext-cord`, `onExtension`). ICU deals are on the cart (`icuCart`, `ICU_CART_SPOTS`,
-ICU_V 2). THE FRONT DOOR (B7, BUILT 2026-10-06, at his QA): the game opens on a home screen (`doorA`, `openDoor`; the Home button and the result cards' Home come back to it): a first visit leads with Start the training; a visit after with today's wall, then your path with Continue, then tiles (Training, Paths, Random wall in four places, The shift, Race, Make a wall); Paths is B4's map as a card (`menuTracks`). A link to a wall, a room, a race or a build opens what it names; the wall loaded behind the door counts nothing (`bootQuiet`). THE MOVE (B6): the game is on the Fun shelf at src/fun/device-assembly/, marked beta; /secret-menu/device-assembly/* 301s there (netlify.toml); every part has a plain address (src/fun/device-assembly/parts.11ty.js: /today/, /training/, /paths/ and each path, /random/, /shift/, /race/, /make/), and the address follows the wall on screen (`addressOf`, `setAddress`, `gameRoot`); tests/device-assembly-door.test.js. The standard behind it is in the hu-game-shell skill, "a phone is one screen"; `npm run da:qa`
+ICU_V 2). THE FRONT DOOR (B7, BUILT 2026-10-06, at his QA): the game opens on a home screen (`doorA`, `openDoor`; the Home button and the result cards' Home come back to it): a first visit leads with Start the training; a visit after with today's wall, then your path with Continue, then tiles (Training, Paths, Random wall in four places, The shift, Race, Make a wall); Paths is B4's map as a card (`menuTracks`). A link to a wall, a room, a race or a build opens what it names; the wall loaded behind the door counts nothing (`bootQuiet`). THE MOVE (B6): the game is on the Fun shelf at src/fun/headwall/ since the rename (THE NAME, below), marked beta; both old addresses 301 there (netlify.toml); every part has a plain address (src/fun/headwall/parts.11ty.js: /today/, /training/, /paths/ and each path, /random/, /shift/, /race/, /make/), and the address follows the wall on screen (`addressOf`, `setAddress`, `gameRoot`); tests/device-assembly-door.test.js. The standard behind it is in the hu-game-shell skill, "a phone is one screen"; `npm run da:qa`
 checks five real phone screens.
-HIS PUZZLES-SHEET NOTES (2026-10-07, window b; log in docs/HU-DESIGN-PHASE-LOG.md): FOUR VENT BUILDS (`VENT_BUILDS`: `vent-cart` one side, `-low` underneath, `-split` a port each side, `-stack` top and bottom; each flips, eight configurations; `ICU_CART_SPOTS` rows are [x,y,flipped,build]; `icuTryBuild` tries the wall's own build first; ICU_V 3; a setup wall per configuration on the sheet, icu:VB29 VB72 VB50 VB86 VB0 VB34 VB8 VB66, tests/device-assembly-vent-builds.test.js); Ventilator 8 (`v8`, `ICU_LEFT()`, the cart on the patient's left); cords, hoses and sampling lines go ROUND parts and cross runs (`occupancy` holds item cells, `cordsClear` re-routes one a part lands on); Swap on a tap (a twin picked on the cart, then a run); the sandbox headwall is loose pieces (`it.wall`, each moves alone); the screen never turns by itself (a message is `S.screen.flash`, a strip at its foot); the shift has no bonus pick; Levels 1 timed, 3 and 5 in rooms of their own; Find the fault 2 on an extension cord; Find the fault 6 (`f6`, a non-rebreather at 6); ONE FINISH CARD (`finishBtns`: Next, Share, Build it again, Home; Share leads on the daily and made walls; See par build in the breakdown). The hub's Puzzles sheet takes `?group=`. THE DOOR'S SENTENCES ARE BEHIND THE "i" (2026-10-08, his note: flavor text never face up): a tile or card is its name and one number; `peekDef`, `PEEK_I`, `peekBadge`, `notPeek` (a tap on the badge never plays), `HUKit.peek` on `.da-peek[data-def]`.
+HIS PUZZLES-SHEET NOTES (2026-10-07, window b; log in docs/HU-DESIGN-PHASE-LOG.md): FOUR VENT BUILDS (`VENT_BUILDS`: `vent-cart` one side, `-low` underneath, `-split` a port each side, `-stack` top and bottom; each flips, eight configurations; `ICU_CART_SPOTS` rows are [x,y,flipped,build]; `icuTryBuild` tries the wall's own build first; ICU_V 3; a setup wall per configuration on the sheet, icu:VB29 VB72 VB50 VB86 VB0 VB34 VB8 VB66, tests/device-assembly-vent-builds.test.js); Ventilator 8 (`v8`, `ICU_LEFT()`, the cart on the patient's left); cords, hoses and sampling lines go ROUND parts and cross runs (`occupancy` holds item cells, `cordsClear` re-routes one a part lands on); Swap on a tap (a twin picked on the cart, then a run); the sandbox headwall is loose pieces (`it.wall`, each moves alone); the screen never turns by itself (a message is `S.screen.flash`, a strip at its foot); A PUZZLE KEEPS QUIET (2026-10-15, David: "it should not jump to the hint section or say what the last move is during the play"): outside the five training walls a move that worked says nothing (`moveToast`), only a refused move says why, and Complete leaves the screen on the order; the screen is Order and Hint (`pageOf`), the chart note sits with the order (the phone's sheet; on the glass a Note tag where no side panel shows, under 1000 px) and par sits at its foot where the move counts were; the shift has no bonus pick; Levels 1 timed, 3 and 5 in rooms of their own; Find the fault 2 on an extension cord; Find the fault 6 (`f6`, a non-rebreather at 6); ONE FINISH CARD (`finishBtns`: Next, Share, Build it again, Home; Share leads on the daily and made walls; See par build in the breakdown). The hub's Puzzles sheet takes `?group=`. THE DOOR'S SENTENCES ARE BEHIND THE "i" (2026-10-08, his note: flavor text never face up): a tile or card is its name and one number; `peekDef`, `PEEK_I`, `peekBadge`, `notPeek` (a tap on the badge never plays), `HUKit.peek` on `.da-peek[data-def]`.
 PHONE PLAY (2026-10-12, his yes to P1 and P2 after his own phone play: "I couldn't plug things in or connect things very easily
 with my fingers"; plan docs/HU-PHONE-PLAY-PLAN-2026-10-12.md; the standard is the hu-game-shell skill's "a finger is not a mouse"),
 built at his QA: an upright phone's bedside screen is ONE LINE that opens whole as a sheet (`screenLine`, `openScreenFull`); the tray is
@@ -198,8 +198,20 @@ thumb once it moves), a press near an open port on bare wall, the patient or a f
 part's own position decides, so the bottom rows are reachable and a part pulled off the wall goes back (`ghostPoint`). Touch drags
 start at 10 px; a plugged-in port unplugs only when pulled; Settings has Buzz when something connects (`buzz`). The thumb test:
 `npm run da:thumb` (scripts/da-thumb.js, helpers scripts/lib/thumb.js), its quick pass inside `npm run da:qa`.
+THE DAILY BY THUMB (2026-10-14, his phone play: "my finger still does not line up", "i also cannot drop down the cart of tools"):
+a run's end and a held part each have TWO aims, what is drawn above the thumb and the thumb itself, and a port the run fits beats
+a nearer one it does not (`portNear`, `aimLanding`); the row scrolls itself, so a rising pull lifts from any tile (`rowSwipe`);
+All parts on every cart of two or more. The thumb test plays today's daily to Complete, reaches the tray by touch alone and
+drags as two players; every wall's cart is held to its answer (tests/device-assembly-puzzles.test.js).
+A circuit that will not lay names, fix first, a fix that works from where the ventilator stands: Flip, one square a way, back,
+closer (`circuitMiss`; tests/device-assembly-vent-miss.test.js plays every spot). THE BAG (2026-10-15, BAG1 and BAG2: "On any patient with an artificial airway we have to have a bag on the headwall"; "On the wall is enough"): `VENT_RULES.airwayBag`, a wall with an ET tube or a trach that carries `bag` ('cart' or 'wall') fails without a resuscitation bag on the wall; dealt walls take it after the deal (`addBag`, `bagShift`, `bagUid`) so no deal changes, daily walls from #14 (`BAG_DAY`); eleven pins re-taken on purpose; tests/device-assembly-bag.test.js. Whether the cart lands facing the patient is P3.
 The puzzle QA system: tests/device-assembly-puzzles.test.js in verify, `npm run da:qa`, the hub's Puzzles screen.
-Surface: src/fun/device-assembly/ (index.html, and parts.11ty.js, the plain addresses) only.
+THE NAME (HW1, 2026-10-15, David: "Name and address"): Headwall wherever a player or reader sees it, at /fun/headwall/; the
+old Fun shelf address and the older secret menu one 301 to it in one hop, plain addresses and query links included
+(netlify.toml; tests/device-assembly-move.test.js). What kept the old name on purpose, so saves and counts carry over: the
+storage keys (hu-da and the rest), the ids (da, `__da`, `__DA_HOOK`), the play counters' event paths, the og and thumbnail
+file names, the scripts (da:qa, da:thumb) and the test files (tests/device-assembly-*).
+Surface: src/fun/headwall/ (index.html, and parts.11ty.js, the plain addresses) only.
 Fifteen rounds shipped 2026-09-16 to 2026-09-19 on David's reads; every one is recorded in
 docs/HU-DESIGN-PHASE-LOG.md and in docs/HU-DEVICE-ASSEMBLY-FEEL-2026-09-16.md section 3. What a session
 needs before touching the surface:
@@ -212,8 +224,8 @@ needs before touching the surface:
   without a smaller cell, David's call); THE PATIENT (Round 17: he is his three pieces, a level's `face`
   places him, `movePatient` lets the sandbox drag him, Level 1 on lie a row lower with the 14 ft cannula);
   THE MIRROR (it.f, Flip F, auto-orient tries it first, a room's
-  patient can face the other way); THE WALL SCREEN (the bedside computer: ORDER / HINT / TEST / NOTE pages since
-  the cleanup, an alert showing for a moment with no tab, tappable, text sized to the box; where the screen is under 150 px it reads out under
+  patient can face the other way); THE WALL SCREEN (the bedside computer: ORDER and HINT pages since
+  2026-10-15, TEST and NOTE gone, an alert showing for a moment with no tab, tappable, text sized to the box; where the screen is under 150 px it reads out under
   the wall as real text with 44 px tabs, Round 16, and the wall svg is `data-drawing` for the phone gate); NOTHING FLOATS otherwise, except what the cleanup put there on David's word, the problem tags and the stop (no title card, no brief card, no tooltip, no marks on seated joints, the
   status line reads, the touch verbs in a dock at the foot of the wall with their words, on an upright phone in the tray's row since PHONE PLAY, the mouse verbs on the spec sheet); the art
   system (one soft ink, edges from the fill, glints, one soft shadow per part, the patient and the bed at
@@ -247,7 +259,7 @@ partials. ON DAVID'S COMPUTER ONLY (DECISIONS HUB1, "yes"): THE HUB, scripts/hub
 scripts/review.js (`npm run hub`, preview entry `hu-hub`). It never ships: nothing under /__ is in _site, and
 tests/hub.test.js fails if src/ links to it. Screens: the BOARD (home; data-build/board.json, the sprint), the RUN
 SHEET (the milestone's stage, this window's open, work and close steps with what each found; tmp/hub/run.json), the
-PUZZLES sheet (Device Assembly's every wall from `npm run da:qa`, pictured, checked, markable; a wall mark never holds
+PUZZLES sheet (Headwall's every wall from `npm run da:qa`, pictured, checked, markable; a wall mark never holds
 up a Ship), the QA LIST (the card's written checks plus every page touched since the last push, from git; Good or Needs a tweak with
 a note; marks in data-build/qa/<card>.json), SITE (every live page as a brick, from the ledger; a LOCK is David's
 alone; each brick shows his NIGHT and DAY review marks), LIBRARY (every tool as a block; scripts/hub/kit.js), IDEAS (2026-10-11: every idea from research with its
@@ -297,7 +309,7 @@ DESIGN.md Tier 3, beside the map instrument grammar.
 
 **Daily Huddle, the hex trivia board · OPEN 2026-10-14** (DECISIONS DH1 to DH3; plan docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md).
 David: "Yes this all looks awesome, Lets build its core functions out get me a functional demo and QA list/Review test list on
-the hub and we will start the refinement process from there." Surface: src/secret-menu/daily-huddle/ and its bank
+the hub and we will start the refinement process from there." Surface: src/fun/daily-huddle/ (on the Fun shelf since 2026-10-15; the old secret menu address 301s) and its bank
 (scripts/build-huddle.js, scripts/data/huddle-curated.json, src/assets/data/huddle-questions.json). A new game, so Tier 3 is
 open on it; Tier 1 and 2, the finger standard and "a phone is one screen" (hu-game-shell) bind. Rules he answered: a 19-tile
 board crossed top to bottom, the dots on the crossing are the score (DH1); normals are drafts until he checks them, drugs only as

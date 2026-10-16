@@ -21,4 +21,6 @@ interface Window {
   __vs: any;
   /** set before Vital Stats' script runs to ask for __vs without skipping its start-up */
   __VS_HOOK: any;
+  /** the phone gate's wheel check, installed in the page by scripts/lib/wheel-reach.js (2026-10-14) */
+  __reach: any;
 }

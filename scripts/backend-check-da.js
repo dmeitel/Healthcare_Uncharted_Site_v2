@@ -1,7 +1,7 @@
 /* ================================================================
    THE RACE, THE REAL ROUND TRIP: node scripts/backend-check-da.js [url]
 
-   Two headless browsers open Device Assembly. One opens a race room, the
+   Two headless browsers open Headwall. One opens a race room, the
    other joins by code over the REAL relay and is seated, the host starts
    the race with two bots, the wall opens on the guest, the guest builds
    the first tutorial and its wall lands on the host byte for byte, the
@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
-const URL = process.argv[2] || 'http://localhost:8080/fun/device-assembly/';
+const URL = process.argv[2] || 'http://localhost:8080/fun/headwall/';
 const OUT = path.join(__dirname, '..', 'tmp');
 const T = 25000;
 function fail(msg) { console.error('FAIL: ' + msg); process.exit(1); }

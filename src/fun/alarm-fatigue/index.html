@@ -563,13 +563,13 @@ date: 2026-09-10
 
   /* the IV pump is a job, not a passive producer: hang a bag, start it, watch
      the bar, clear the occlusions. It pays only when the bag is done. */
-  /* the pump column lives in the console. Below 1040px it is a strip under the
-     readout; from 1040px up it is a column parked beside the monitors. Either
-     way it can never land on the bank. */
+  /* the pump column lives in the console. Below 1040px (or under 740px tall) it is a
+     strip under the readout; from 1040px up it is a column parked beside the
+     monitors. Either way it can never land on the bank. */
   #pumpRow{display:none; width:100%; gap:8px; justify-content:center; align-items:stretch;}
   #pumpRow.on{display:flex;}
   #pumpRow .pump{flex:1 1 0; min-width:0; max-width:220px;}
-  @media (min-width:1040px){
+  @media (min-width:1040px) and (min-height:740px){
     #pumpRow{position:absolute; top:0; left:calc(344px - 50vw); width:176px;
       flex-direction:column; gap:12px; justify-content:flex-start;}
     #pumpRow .pump{flex:0 0 auto; max-width:none;}
@@ -578,6 +578,34 @@ date: 2026-09-10
      readout at every width instead of beside the console */
   .af[data-ehr="prophet"] #pumpRow{position:static; width:100%; flex-direction:row; gap:8px; justify-content:center;}
   .af[data-ehr="prophet"] #pumpRow .pump{flex:1 1 0; max-width:220px;}
+  /* A FULL FLOOR OUTGROWS A LAPTOP TOO (2026-10-14). Eight monitors, three pumps and the cards
+     still waiting ran past the foot of the floor, which clips: at 1024x768 the pumps' Hang
+     buttons sat under the window and the wheel moved nothing. Where the pumps ride inside the
+     console (under 1040 or under 740 tall, and Prophet at every size) it now ends 8px above the
+     floor, where placeStage() means it to, and scrolls, the way it already does on a phone and a
+     short window (both set their own height further down). */
+  @media (max-width:1039px), (max-height:739px){
+    .stage{max-height:calc(100% - 100px); overflow:auto; overscroll-behavior:contain; scrollbar-width:none;}
+    .stage::-webkit-scrollbar{display:none;}
+    .stage > *{flex:0 0 auto;}
+  }
+  @media (min-width:1040px) and (min-height:740px){
+    .af[data-ehr="prophet"] .stage{max-height:calc(100% - 100px); overflow:auto; overscroll-behavior:contain; scrollbar-width:none;}
+    .af[data-ehr="prophet"] .stage::-webkit-scrollbar{display:none;}
+    .af[data-ehr="prophet"] .stage > *{flex:0 0 auto;}
+    /* The other EHRs park the pumps in a column outside the console here, and a scrolling console
+       would cut that column off. So nothing scrolls: the cards still waiting stand in a column of
+       their own beside the button, as tall as the button's block, and scroll inside it. Under the
+       button they ran off the foot of a laptop's floor (1366x768: two of three never showed). The
+       console no longer grows when a card arrives, so the button no longer jumps. 220px clears the
+       call lights at 1040. */
+    .af:not([data-ehr="prophet"]) .stage{display:grid; grid-template-columns:120px 400px 120px; gap:16px 0;}
+    .af:not([data-ehr="prophet"]) #bank{grid-column:1 / -1;}
+    .af:not([data-ehr="prophet"]) .clicker{grid-column:2;}
+    .af:not([data-ehr="prophet"]) .reveal-tray{grid-column:3; grid-row:1; width:220px; margin-left:16px;
+      height:0; min-height:100%; max-height:none;}
+    .af:not([data-ehr="prophet"]) #bank.on ~ .reveal-tray{grid-row:2;}
+  }
   .af .pump{cursor:default; padding:8px 10px; text-align:left;}
   .af .pump .status{font-size:var(--t-fine); font-weight:700; margin-top:2px;}
   .af .pump .bag{font-size:var(--t-micro); color:#9fb3aa; margin-top:3px; white-space:nowrap;}
@@ -1473,12 +1501,15 @@ date: 2026-09-10
 
   /* a short window (a phone turned sideways, a laptop with the drawer open)
      cannot hold eight call lights in one column, so they wrap to two, and the
-     console scrolls inside the floor the same way it does on a narrow one */
+     console scrolls inside the floor the same way it does on a narrow one. It ends 100px short of
+     the floor, not 64: placeStage() keeps its top at 92px on any floor 420px or taller, so 64 left
+     the last 28px (the pumps, the foot of the button) under the window (2026-10-14). Under 420 the
+     script sets the height itself. */
   @media (max-height:620px){
     .af .callboard{flex-direction:row; flex-wrap:wrap; justify-content:center;
       align-items:flex-start; width:106px; gap:4px; padding:5px;}
     .af .callboard .ttl{width:100%; font-size:var(--t-micro);}
-    .stage{max-height:calc(100% - 64px); overflow:auto; overscroll-behavior:contain; scrollbar-width:none;}
+    .stage{max-height:calc(100% - 100px); overflow:auto; overscroll-behavior:contain; scrollbar-width:none;}
     .stage::-webkit-scrollbar{display:none;}
     .stage > *{flex:0 0 auto;}
     .clicker{position:sticky; bottom:0; z-index:3; width:100%; padding:6px 0 2px;

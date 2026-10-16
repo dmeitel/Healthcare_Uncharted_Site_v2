@@ -79,11 +79,15 @@ played on a board:
 2. What was pressed is read from the exact point (`document.elementsFromPoint`), not `event.target`:
    Chrome moves a touch to the nearest thing it judges pressable. The nearer centre wins an overlap.
 3. Every move works with taps alone; dragging is the quick way (WCAG 2.5.7).
-4. On touch the game aims: a piece lands on the nearest place it fits within 44 px of the aim.
+4. On touch the game aims: a piece lands on the nearest place it fits within 44 px of the aim, and a
+   drag has two aims, the piece drawn above the thumb and the thumb itself (2026-10-14). A place that
+   fits beats a nearer one that does not.
 5. Nothing sits on the board while a piece is held; the board gets the screen.
-6. A drag starts at 10 px on touch; nothing destructive happens on the press (WCAG 2.5.2).
+6. A drag starts at 10 px on touch; nothing destructive happens on the press (WCAG 2.5.2). A tray
+   decides between its own scroll and a pull that lifts a piece; the browser's pan-x does not.
 7. The touch test plays at the four real phone screens, moves at a touchscreen's pace and misses on
-   purpose (scripts/lib/thumb.js). A test that aims to the pixel proves nothing.
+   purpose (scripts/lib/thumb.js), reaches the tray by touch alone, and plays the wall people play
+   (Headwall: today's daily, to Complete). A test that aims to the pixel proves nothing.
 
 ## Tests
 
@@ -101,7 +105,7 @@ played on a board:
   and a desk (`npm run da:qa`, drawn on the hub's Puzzles screen). A new puzzle is on the sheet before it ships.
 - `npm run verify` green and `npm run phone -- <path>` clean across its nine default viewports
   (portrait, landscape and both sides of the 699 line) before a game ships.
-- A board or puzzle game passes its thumb test (the Touch section above). Device Assembly's is
+- A board or puzzle game passes its thumb test (the Touch section above). Headwall's is
   `npm run da:thumb`, and `npm run da:qa` runs its quick pass.
   The pane's screenshots can time out; Playwright shots into tmp/ are the reliable proof.
 

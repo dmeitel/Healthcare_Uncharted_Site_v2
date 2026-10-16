@@ -12,7 +12,7 @@ const path = require('path');
 const vm = require('vm');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);
@@ -31,6 +31,9 @@ function load() {
 const da = load();
 const plain = x => JSON.parse(JSON.stringify(x));
 const level = id => da.LEVELS.find(l => l.id === id);
+/* THE BAG (2026-10-15): an airway wall wants a resuscitation bag on the wall. A build made here hangs it in the top-left
+   corner, clear of everything these tests move */
+const bagUp = (S) => { S.cart['bag-bvm'] = (S.cart['bag-bvm'] || 0) + 1; return da.place(S, 'bag-bvm', 0, 1, 0).ok; };
 const port = (it, label) => ({ uid: it.uid, pi: da.portsOf(it).find(p => p.label === label).pi });
 const item = (S, id) => S.items.find(i => i.def.id === id);
 const text = ev => ev.lines.map(l => l.t).join(' ');
@@ -60,13 +63,14 @@ test('the ventilator walls are on the wall list, play in the ICU bed space, and 
     assert.strictEqual(S.items.filter(i => i.fixed && i.def.id === 'deco-elec-red').length, 2, id + ': two red outlets');
     assert.ok(!S.items.some(i => i.fixed && /sharps|gloves|sanitizer|clock/.test(i.def.id)), id + ': nothing else crowds the bed');
   }
-  for (const d of Object.values(da.DB)) if (d.vc) assert.ok(!da.LEVELS.filter(l => !l.vent && l.kind !== 'sandbox').some(l => l.cart.some(c => c[0] === d.id)), d.id + ' stays on the ventilator walls');
+  // the bag is the one that goes wherever there is an airway, a trach collar too (THE BAG, 2026-10-15)
+  for (const d of Object.values(da.DB)) if (d.vc) assert.ok(!da.LEVELS.filter(l => !l.vent && l.kind !== 'sandbox' && !(d.id === 'bag-bvm' && da.airwayWall(l))).some(l => l.cart.some(c => c[0] === d.id)), d.id + ' stays on the ventilator walls');
 });
 
 test('Set up a ventilator: the reference build passes at par, and the walls that arrive built arrive plugged in', () => {
   const L = level('v1'), S = da.newState(L);
   assert.ok(!da.evaluate(S).ok, 'an empty wall is not a ventilator');
-  da.ventSetup(S); assert.ok(da.ventPlug(S), 'the cords and the hose reach');
+  assert.ok(bagUp(S), 'the bag goes up'); da.ventSetup(S); assert.ok(da.ventPlug(S), 'the cords and the hose reach');
   const ev = da.evaluate(S);
   assert.ok(ev.ok, text(ev)); assert.strictEqual(ev.title, 'System complete');
   const f = da.score(S, ev, 0).facts;
@@ -94,7 +98,7 @@ test('An inline treatment: arrives working but short of the order, and the mesh 
 test('the rules: aerosol with no expiratory filter is a note, a neb on the expiratory side and an HME with a neb are wrong', () => {
   // the same treatment on the first wall, where the order does not ask for the filter: it passes, with a note
   const S = da.newState(level('v1')); S.cart['neb-mesh'] = 1; S.cart['filter-bv'] = 1;
-  da.ventSetup(S); da.ventPlug(S);
+  assert.ok(bagUp(S)); da.ventSetup(S); da.ventPlug(S);
   assert.ok(dropAt(S, 'neb-mesh', jointAt(S, item(S, 'y-piece'), 'Inspiratory arm')).ok);
   const ev = da.evaluate(S);
   assert.ok(ev.ok, text(ev)); assert.strictEqual(ev.title, 'System complete, with a note'); assert.match(ev.warns[0], /no filter on the expiratory limb/);

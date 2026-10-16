@@ -213,15 +213,32 @@ module.exports = [
     cluster:     'fun',
     searchType:  'fun',
     searchSub:   'A respiratory equipment setup game: build oxygen, high flow and ventilator setups on the wall behind the bed',
-    keys:        ['game', 'puzzle', 'respiratory', 'rt', 'oxygen', 'ventilator', 'high flow', 'equipment', 'setup', 'daily', 'play', 'fun'],
+    keys:        ['game', 'puzzle', 'respiratory', 'rt', 'oxygen', 'ventilator', 'high flow', 'equipment', 'setup', 'daily', 'play', 'fun',
+                  'headwall', 'head wall', 'wall behind the bed', 'equipment setup game', 'device assembly', 'device assembly game', 'device assembley'],   // its name until 2026-10-15 (HW1), so old searches still find it
     status:      'live',
     featured:    false,
-    title:       'Device Assembly',
-    desc:        'Set up oxygen, high flow and ventilators on the wall behind the bed, with real connectors, and get a therapist\'s read on why a build fails. A new wall every day, and paths from easy to hard.',
-    url:         '/fun/device-assembly/',
+    title:       'Headwall',
+    desc:        'The headwall is the panel of gas outlets behind a hospital bed. Set up oxygen, high flow and ventilators on it with real connectors, and get a therapist\'s read on why a build fails. A new wall every day, and paths from easy to hard.',
+    url:         '/fun/headwall/',
     type:        'game',
     badge:       'Game',
     tags:        ['Game', 'Beta', 'A new wall every day']
+  },
+
+  {
+    id:          'fun-daily-huddle',   // on the Fun shelf since 2026-10-15 (David: "it should not sit on the secret Menu")
+    cluster:     'fun',
+    searchType:  'fun',
+    searchSub:   'Healthcare trivia on a hex board: answer tiles to cross it from the top row to the bottom',
+    keys:        ['game', 'trivia', 'quiz', 'daily', 'huddle', 'daily huddle', 'hex', 'team', 'nurse', 'rt', 'pharmacy', 'play', 'fun'],
+    status:      'live',
+    featured:    false,
+    title:       'Daily Huddle',
+    desc:        'Healthcare trivia on a hex board laid out like the Atlas. Answer tiles to hold them and build a chain from the top row to the bottom; your time to cross is your score. One board a day, plus boards you make for your team.',
+    url:         '/fun/daily-huddle/',
+    type:        'game',
+    badge:       'Game',
+    tags:        ['Game', 'Beta', 'A new board every day']
   },
 
   ];

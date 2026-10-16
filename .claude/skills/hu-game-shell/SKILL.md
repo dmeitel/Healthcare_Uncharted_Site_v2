@@ -70,7 +70,7 @@ David, 2026-10-05, on Device Assembly: "the phone view for it does not fit well 
 or within the borders that we have pretty set. Is there a standard or a skill set or a training
 guide on how to design... top down games or puzzle like games like this that are both web and
 phone friendly". There is no one standard. This is the site's, built from three sources read that
-day, and Device Assembly is the reference build (src/fun/device-assembly/, THE SCREEN).
+day, and Headwall (Device Assembly until 2026-10-15) is the reference build (src/fun/headwall/, THE SCREEN).
 
 1. THE GAME IS THE SCREEN. Held upright, the game is exactly the visible height (`100dvh`, with a
    `100vh` fallback) and the page never scrolls. A real phone browser leaves far less than the
@@ -106,8 +106,8 @@ things very easily with my fingers the menu at the bottom felt like it was takin
 the time". Measured that night at the screens a phone browser really leaves: the wall was 28% of an
 iPhone SE's screen with 11 px squares, and a thumb that missed by 10 to 20 px rebuilt 12 of 112 wall
 runs. Every HTML button already passed 44 px; the faults lived inside the board drawing, where no
-check looked. Plan, sources and numbers: docs/HU-PHONE-PLAY-PLAN-2026-10-12.md. Device Assembly is
-the reference build (search PHONE PLAY in src/fun/device-assembly/index.html).
+check looked. Plan, sources and numbers: docs/HU-PHONE-PLAY-PLAN-2026-10-12.md. Headwall is
+the reference build (search PHONE PLAY in src/fun/headwall/index.html).
 
 1. ANYTHING YOU PRESS IS 44 PX AT THE REAL SCREEN, board targets included, however small they are
    drawn. A touch lands within about 7 mm of where it is meant at the screen's centre and 12 mm at
@@ -117,17 +117,23 @@ the reference build (search PHONE PLAY in src/fun/device-assembly/index.html).
    moves a touch to the nearest thing it judges pressable (touch adjustment): in the game a mouse in
    the middle of a small part picked it up and a touch at the same point took its port. Read
    `document.elementsFromPoint`; where two press areas overlap, the nearer centre wins, not the one
-   drawn last (Device Assembly's `hitAt`).
+   drawn last (Headwall's `hitAt`).
 3. EVERY MOVE WORKS WITH TAPS ALONE: tap a piece, tap where it goes; tap a port, tap a port; a piece
    already on the board has a Move. Dragging stays as the quick way (WCAG 2.2, 2.5.7).
 4. THE GAME AIMS FOR YOU. On touch a piece lands on the nearest place it fits within a fingertip
    (44 px) of the aim, and the end of a run on the nearest port that can take it; only those places
    light, and the one it will take shows before the finger lifts. Where nothing fits that close it
-   lands where it is. A mouse places exactly (`landingsFor`, `aimLanding`, `portNear`).
+   lands where it is. A mouse places exactly (`landingsFor`, `aimLanding`, `portNear`). A drag has
+   TWO aims, the piece drawn above the thumb and the thumb itself, and the nearer counts: people put
+   the thumb on the place they mean (David on the daily, 2026-10-14: "my finger still does not line
+   up with the touch screen"; with the end riding 40 px above, a thumb on an outlet left the hose
+   loose 12 times in 15). A place that FITS beats a nearer one that does not: an oxygen hose 20 px
+   off went into the air outlet one square over.
 5. WHAT YOU HOLD RIDES CLEAR OF THE THUMB, AND THE PIECE DECIDES. A held piece is drawn above the
    thumb, and where the piece is drawn decides where it lands, so the thumb may leave the board to
    reach the bottom rows; a piece pulled off the board goes back to the tray. The end of a run rides
-   above the thumb the same way, once the thumb has really moved.
+   above the thumb the same way, once the thumb has really moved. A place within reach of the thumb
+   (rule 4) counts as on the board even when the piece above it has left the top edge.
 6. NOTHING SITS ON THE BOARD WHILE YOU AIM: no button dock, no drop strip, no zoom buttons while a
    piece is in the hand. A picked piece's buttons and the drop-back zone take the tray's row, where
    the thumb already is.
@@ -137,7 +143,12 @@ the reference build (search PHONE PLAY in src/fun/device-assembly/index.html).
    thumb.
 8. A TAP IS A TAP. On touch a drag starts at 10 px (a mouse at 4); a sideways swipe on a tray is the
    tray scrolling. Nothing destructive happens on the press: a run comes off when it is pulled, a tap
-   on its port picks it (WCAG 2.5.2).
+   on its port picks it (WCAG 2.5.2). THE TRAY DECIDES, NOT THE BROWSER: left to `touch-action: pan-x`,
+   the browser claims any pull that starts more sideways than up, so a straight pull from a tile to
+   the far side of the board never lifts the piece (David, 2026-10-14: "i also cannot drop down the
+   cart of tools"). The tray takes every touch and scrolls itself; a pull that rises at more than
+   about 25 degrees lifts the piece, a flatter swipe scrolls, and only where there is more tray to see
+   (Headwall's `rowSwipe`). The tray always has a way to open whole (All parts).
 9. A MISS COSTS NOTHING: a drop that fits nowhere goes back where it came from, and the screen says
    why in a few words.
 10. A CONNECTION IS SEEN, AND FELT WHERE THE PHONE ALLOWS: it snaps and pops, and buzzes on phones
@@ -145,12 +156,18 @@ the reference build (search PHONE PLAY in src/fun/device-assembly/index.html).
     off. Never the only signal.
 11. UNDO IS ONE TAP AND ALWAYS ON SCREEN, beside the action that ends the turn.
 12. TESTED LIKE A THUMB. The touch test plays at the screens a phone browser leaves (375 x 548,
-    393 x 659, 360 x 640, 430 x 746), sends moves about 16 ms apart the way a touchscreen does
-    (moves sent with no time between read as a flick, and Chrome swallows the next tap), and misses
-    on purpose: at 10 px every wall rebuilds by drag and by taps alone; at 20 px every wall rebuilds by
-    drag for a player who looks at the drop preview; taps 20 px off are counted, not gated. A test
-    that aims to the pixel proves nothing about a thumb. Device Assembly's is `npm run da:thumb`
-    (scripts/da-thumb.js); the helpers any game can use are scripts/lib/thumb.js.
+    393 x 659, 360 x 640, 430 x 746) at three device pixels to the CSS pixel, sends moves about 16 ms
+    apart the way a touchscreen does (moves sent with no time between read as a flick, and Chrome
+    swallows the next tap), and misses on purpose: at 10 px every wall rebuilds by drag and by taps
+    alone; at 20 px every wall rebuilds by drag for a player who looks at the drop preview; taps 20 px
+    off are counted, not gated. It drags as two players, one watching the piece above the thumb and
+    one putting the thumb on the place. It reaches the tray by touch alone (a straight pull from the
+    tile, the tray swiped, the sheet opened by a tap; nothing clicked or scrolled by script), turns
+    and sets pieces with the game's own buttons, and plays the wall people actually play (Headwall:
+    Assembly: today's daily, to Complete). The 2026-10-12 test passed while David could not build the
+    daily: it never played a dealt wall, opened the tray by script and always pulled a piece straight
+    up first. A test that aims to the pixel proves nothing about a thumb. Headwall's is
+    `npm run da:thumb` (scripts/da-thumb.js); the helpers any game can use are scripts/lib/thumb.js.
 
 ## Checks before a game ships
 
@@ -158,6 +175,6 @@ the reference build (search PHONE PLAY in src/fun/device-assembly/index.html).
 - `npm run phone -- /the/game/` clean at all nine viewports; the bar is ONE row at 360x740 and
   740x360.
 - A board or puzzle game: the real phone screens with nothing to scroll (`npm run da:qa` checks
-  Device Assembly at five; copy its `screens()` for another game).
+  Headwall at five; copy its `screens()` for another game).
 - A board or puzzle game: the thumb test passes (a finger is not a mouse, rule 12; scripts/lib/thumb.js).
 - Screenshots of the first screen at 360x740 and 1280x800 next to Vital Stats'.

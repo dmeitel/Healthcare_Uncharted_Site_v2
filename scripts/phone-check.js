@@ -13,6 +13,9 @@
 //   FLOATING OVER A CONTROL, CUT BY ITS CONTAINER, and a SLOW-DATA pass (a phone with every
 //     data file held back two seconds), all three added 2026-09-23 after the tool review
 //     found four defects this harness had passed. --no-slow skips the slow pass.
+//   OUT OF THE WHEEL'S REACH, added 2026-10-14: at every size above a phone, anything below the
+//     window that no real mouse wheel can scroll into view (scripts/lib/wheel-reach.js). --no-wheel
+//     skips it.
 // Screenshots land in tmp/phone/<slug>-<width>.png. Exit code 1 on any console error or
 // overflow, so it can gate a build. Usage:
 //   npm run phone -- /tools/ai-skills/ /tools/skill-demo/        (serves _site itself)
@@ -24,6 +27,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { chromium } = require('playwright');
+const { wheelReach } = require('./lib/wheel-reach');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = path.join(ROOT, '_site');
@@ -67,6 +71,7 @@ const THEMES = THEME_ARG === 'both' ? ['dark', 'light'] : [THEME_ARG === 'light'
 // the slow-data pass (see where it runs); --no-slow skips it for a quick layout-only read
 const NO_SLOW = argv.includes('--no-slow');
 const SLOW_MS = 2000;
+const NO_WHEEL = argv.includes('--no-wheel');
 const DATA_FILE = /\.(json|geojson|topojson|csv|tsv|pbf)$/i;
 if (!paths.length) paths.push('/', '/tools/', '/learn/');
 
@@ -546,6 +551,9 @@ function inspect({ phone, deviceWidth }) {
         if (zoomScene(t)) continue;
         const cs = getComputedStyle(t);
         if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
+        // hidden by a parent counts too: Headwall's "ET tube" chip sits at opacity 0 until it is wanted, and its text
+        // was measured against the patient drawing under it and failed a label nobody can see (2026-10-15)
+        if (t.checkVisibility && !t.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
         const tb = t.getBoundingClientRect();
         if (!tb.width || !tb.height) continue;
         const tcx = (tb.left + tb.right) / 2, tcy = (tb.top + tb.bottom) / 2;
@@ -978,6 +986,19 @@ function inspect({ phone, deviceWidth }) {
       const { r, steps } = await readWholePage(page, { phone, deviceWidth: w }, EMPTY);
       const shot = path.join(OUT, slug + '-' + label.replace(' ', '-') + '.png');
       await page.screenshot({ path: shot }).catch(() => {});
+      // OUT OF THE WHEEL'S REACH (2026-10-14). Everything above was measured by reading the page and
+      // scrolling the DOCUMENT by script, and a click in any test scrolls an overflow:hidden box by
+      // script too, so a control below the window inside a box that pins itself to the screen read
+      // clean everywhere: Vital Stats' lobby on 2026-10-01 (its Deal button at y=1094 in a 900px
+      // window) and Alarm Fatigue's pumps until 2026-10-14. This rolls the real mouse wheel and fails
+      // on what it cannot bring into view. Above a phone only: a phone has no wheel, and a thumb's
+      // reach is a different question. One theme only, after the picture: the geometry does not
+      // change with the colors, and the wheel moves things.
+      /** @type {import('./lib/wheel-reach').Reach | null} */
+      const reach = (!phone && theme === THEMES[0] && !NO_WHEEL)
+        ? await wheelReach(page).catch((e) => ({ checked: 0, lost: [], error: e.message.split('\n')[0] }))
+        : null;
+      const lostN = reach && !reach.unfinished ? reach.lost.length : 0;
       // A generic "Failed to load resource" console line is the echo of a 4xx we
       // already classified. Discount one per serverless 404 so the gate does not
       // fail on something it cannot serve.
@@ -999,7 +1020,7 @@ function inspect({ phone, deviceWidth }) {
       // band between the absolute and the functional floor, only reports: it is
       // the migration backlog, not a defect.
       const overBudget = phone && (r.chromePct > 20 || r.topBars > 1);
-      const bad = realErrors > 0 || r.overflow || r.collideCount > 0 || r.spillCount > 0 || r.unhiddenCount > 0 || r.burstCount > 0 || r.floatsCount > 0 || r.cutCount > 0 || (phone && r.tinyCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget;
+      const bad = realErrors > 0 || r.overflow || r.collideCount > 0 || r.spillCount > 0 || r.unhiddenCount > 0 || r.burstCount > 0 || r.floatsCount > 0 || r.cutCount > 0 || (phone && r.tinyCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget || lostN > 0;
       if (bad) failed = true;
       LEDGER[p].viewports[label] = { ok: !bad, why: [
         realErrors && realErrors + ' console error' + (realErrors > 1 ? 's' : ''), r.overflow && 'sideways scroll',
@@ -1008,8 +1029,9 @@ function inspect({ phone, deviceWidth }) {
         r.floatsCount && r.floatsCount + ' floating over a control', r.cutCount && r.cutCount + ' cut by a container',
         phone && r.tinyCount && r.tinyCount + ' under the type floor', phone && r.faintCount && r.faintCount + ' faint lines',
         phone && r.dimCount && r.dimCount + ' dim labels', overBudget && 'chrome ' + r.chromePct + '%' + (r.topBars > 1 ? ', ' + r.topBars + ' top bars' : ''),
+        lostN && lostN + " out of the wheel's reach",
       ].filter(Boolean).map(String) };
-      console.log(`  ${label.padStart(12)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      console.log(`  ${label.padStart(12)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  out of the wheel's reach: ${reach ? (reach.unfinished ? '?' : lostN) + ' of ' + reach.checked : 'n/a'}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
       for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
       for (const u of [...new Set(offOrigin)]) console.log('         (not a defect) third-party origin the harness may not call: ' + u);
       for (const e of errors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
@@ -1018,6 +1040,10 @@ function inspect({ phone, deviceWidth }) {
       for (const [over, txt, tw, bw] of (r.burst || [])) console.log('         LABEL PAST ITS BOX by ' + over + 'px: "' + txt + '" is ' + tw + 'px in a ' + bw + 'px box');
       for (const [px, who, txt, ctl, name] of (r.floats || [])) console.log('         FLOATING OVER A CONTROL by ' + px + 'px: ' + who + ' "' + txt + '" sits on ' + ctl + (name ? ' "' + name + '"' : ''));
       for (const [px, who, txt, how] of (r.cut || [])) console.log('         CUT BY ITS CONTAINER by ' + px + 'px: ' + who + (txt ? ' "' + txt + '"' : '') + ' (' + how + ')');
+      if (reach && !reach.unfinished) for (const l of reach.lost.slice(0, 8)) console.log("         OUT OF THE WHEEL'S REACH at y=" + l.y + ' in a ' + h + 'px window: ' + l.sel + (l.text ? ' "' + l.text + '"' : '') + (l.cut ? ', cut off by ' + l.cut : ', and nothing under it scrolls'));
+      if (reach && !reach.unfinished && reach.lost.length > 8) console.log('         ...and ' + (reach.lost.length - 8) + ' more out of reach');
+      if (reach && reach.unfinished) console.log('         (not a fail) the wheel check ran out of time with ' + reach.lost.length + ' not yet reached');
+      if (reach && reach.error) console.log('         wheel check failed to run: ' + reach.error);
       for (const [who, disp, txt] of (r.unhidden || [])) console.log('         HIDDEN BUT SHOWN ' + who + ' renders as display:' + disp + (txt ? ' "' + txt + '"' : '') + '  (fix: that selector plus [hidden] { display:none })');
       for (const [who, box, content, sy, sx, kid, txt] of (r.spill || [])) console.log('         SPILL ' + who + ' box ' + box + ' holds ' + content + (sy ? ', ' + sy + 'px below' : '') + (sx ? ', ' + sx + 'px right' : '') + ' -> ' + kid + (txt ? ' "' + txt + '"' : ''));
       for (const [s, size, txt] of r.small.slice(0, 6)) console.log('         small: ' + s + ' ' + size + (txt ? ' "' + txt + '"' : ''));
@@ -1102,6 +1128,6 @@ function inspect({ phone, deviceWidth }) {
     const prev = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
     fs.writeFileSync(file, JSON.stringify(Object.assign(prev, LEDGER), null, 1));
   } catch (e) { console.log('  (could not write the ledger record: ' + e.message + ')'); }
-  console.log('\n' + (failed ? 'FAILED: see console errors, overflow, type floor or chrome budget above.' : 'CLEAN: no console errors, no overflow, no text under the type floor, chrome inside budget.') + ' Screenshots in ' + path.relative(ROOT, OUT) + '/');
+  console.log('\n' + (failed ? 'FAILED: see console errors, overflow, type floor, chrome budget or wheel reach above.' : 'CLEAN: no console errors, no overflow, no text under the type floor, chrome inside budget.') + ' Screenshots in ' + path.relative(ROOT, OUT) + '/');
   process.exit(failed ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });

@@ -77,6 +77,12 @@ function kindOf(url, html) {
 
 /** @typedef {{id:string, label:string, state:'pass'|'fail'|'unknown'|'judge'|'na', detail?:string, rule?:string}} Check */
 
+/** A page that forwards the moment it loads is not a page of its own. The refresh tag can sit anywhere in it: Headwall's
+ *  plain addresses (src/fun/headwall/parts.11ty.js) carry theirs in the body, past the site's long head, and a test of
+ *  the first 1,500 characters listed all twelve as "no source any more" (2026-10-15). scripts/qa.js and
+ *  scripts/meta-screen.js already read the whole page. @param {string} html */
+const isForwarding = (html) => /<meta[^>]+http-equiv=["']refresh["']/i.test(html);
+
 function shellDrift() {
   try { return JSON.parse(execFileSync(process.execPath, [path.join(__dirname, 'shell-drift.js'), '--json'], { cwd: ROOT, encoding: 'utf8' })); }
   catch (e) { return {}; }
@@ -93,7 +99,7 @@ function compute() {
     const r = path.relative(SITE, f).split(path.sep).join('/');
     if (/^(?:assets|brand)\//.test(r)) continue;
     const html = fs.readFileSync(f, 'utf8');
-    if (/http-equiv=["']refresh["']/i.test(html.slice(0, 1500))) continue;
+    if (isForwarding(html)) continue;
     // a "moved" notice that forwards by script (the Jevons guide went into Laws & Paradoxes) is not a page
     if (/<title>\s*Moved to\b/i.test(html.slice(0, 1500))) continue;
     const url = r === 'index.html' ? '/' : r.endsWith('/index.html') ? '/' + r.slice(0, -10) : '/' + r;
@@ -186,4 +192,4 @@ if (require.main === module) {
   console.log('Written: ' + path.relative(ROOT, OUT));
 }
 
-module.exports = { compute, liveUrls, kindOf };
+module.exports = { compute, liveUrls, kindOf, isForwarding };

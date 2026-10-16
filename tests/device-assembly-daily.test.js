@@ -17,7 +17,7 @@ const vm = require('vm');
 const crypto = require('crypto');
 
 function load() {
-  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const open = html.indexOf('<script>'), close = html.lastIndexOf('</script>');
   const src = html.slice(open + '<script>'.length, close);
@@ -287,7 +287,7 @@ test('the goal, not the device: a cannula at 2 L/min or a Venturi at 24 or 28% m
 function loadOn(iso) {
   const FIXED = Date.parse(iso + 'T18:00:00Z');
   class Fixed extends Date { constructor(/** @type {any[]} */ ...a) { if (a.length) super(.../** @type {[any]} */ (a)); else super(FIXED); } static now() { return FIXED; } }
-  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+  const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
   const html = fs.readFileSync(PAGE, 'utf8');
   const src = html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>'));
   const ctx = { document: { getElementById: () => null, addEventListener() {}, readyState: 'complete' }, window: { __UG_TEST: true, addEventListener() {}, innerWidth: 1200, innerHeight: 800 },

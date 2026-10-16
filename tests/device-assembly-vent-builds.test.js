@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const PAGE = path.join(__dirname, '..', 'src', 'fun', 'device-assembly', 'index.html');
+const PAGE = path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html');
 function load() {
   const html = fs.readFileSync(PAGE, 'utf8');
   const src = html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>'));
@@ -59,7 +59,7 @@ test('every configuration, four builds each way they face, sets up and passes so
       for (const t of S.tubes.filter((t) => !t.lead)) da.removeThing(S, t.uid);
       for (const it of S.items.filter((i) => !i.fixed)) da.removeThing(S, it.uid);
       for (const id of Object.keys(da.DB)) S.cart[id] = 2;
-      return da.icuCart(S, sp, { order: { req: L.req } }) && da.evaluate(S).ok;   // the wall's own order (its FiO2)
+      return da.icuCart(S, sp, { order: { req: L.req } }) && (da.hasBag(S) || !!da.hangBag(S, 'cart')) && da.evaluate(S).ok;   // the wall's own order (its FiO2), and its bag (2026-10-15)
     });
     if (!works) missing.push(da.VENT_BUILDS[b] + (f ? ' flipped' : ''));
   }
