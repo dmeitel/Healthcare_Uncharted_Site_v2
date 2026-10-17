@@ -118,6 +118,15 @@ date: 2026-04-27
   .ox .bar-cut-label{ padding:0 6px; font-family:var(--mono); font-size:var(--t-micro); font-weight:600; white-space:nowrap; color:var(--t1); }
 
   .ox .bar-label-right{ position:absolute; z-index:1; display:flex; align-items:baseline; gap:8px; white-space:nowrap; }
+  /* day: the dollar gridlines are drawn under the value labels and showed through them ("$140/mo", "$95/mo"). The label
+     knocks the line out with the row's own ground behind it: the face (the middle of its gradient), the hover wash, the
+     brass wash of the row picked.
+     The 4px of padding is taken back in the margin, so the figures sit where they did. (Night's lines are too faint to
+     read through the text, and its face is a gradient a flat ground would show against.) */
+  [data-theme="light"] .ox .bar-label-right{ --ox-face:color-mix(in srgb, var(--face-a), var(--face-b)); --ox-ground:var(--ox-face);
+                                            margin-left:-4px; padding:0 4px; border-radius:4px; background:var(--ox-ground); }
+  [data-theme="light"] .ox .bar-row:hover .bar-label-right{ --ox-ground:color-mix(in srgb, var(--t1) 5%, var(--ox-face)); }
+  [data-theme="light"] .ox .bar-row.active .bar-label-right{ --ox-ground:color-mix(in srgb, var(--brass) 12%, var(--ox-face)); }
   .ox .bar-dollar{ flex-shrink:0; font-family:var(--display); font-size:var(--t-lede); font-weight:700; font-variant-numeric:tabular-nums; }
   .ox .bar-track.is-baseline ~ .bar-label-right .bar-dollar{ color:var(--ox-base-t); }
   .ox .bar-track.is-cut ~ .bar-label-right .bar-dollar{ color:var(--ox-cut-t); }
@@ -152,6 +161,10 @@ date: 2026-04-27
     .ox .detail-side{ position:relative; top:auto; height:auto; max-height:72vh; max-height:72dvh; }
   }
   .ox .detail-side-scroll{ flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border2) transparent; }
+  /* the year's text ran on under the Previous and Next bar and was cut mid-line with nothing to say it scrolled (a phone
+     shows no scrollbar). The foot of the scroll fades, as the chip rails on the career tree and cost of living do, and the
+     text carries the fade's height below its last line so nothing stays faded at the end. */
+  .ox .detail-side-scroll{ -webkit-mask-image:linear-gradient(180deg, #000 calc(100% - 36px), transparent); mask-image:linear-gradient(180deg, #000 calc(100% - 36px), transparent); }
   .ox .detail-side-nav{ flex-shrink:0; display:flex; gap:10px; padding:12px 16px; border-top:1px solid var(--border); }
   .ox .panel-nav-btn{ flex:1; }
 
@@ -160,7 +173,7 @@ date: 2026-04-27
                            letter-spacing:.12em; text-transform:uppercase; line-height:1.7; color:var(--t3); }
   .ox .detail-placeholder-icon{ font-size:28px; color:var(--border2); }
 
-  .ox #detailContent{ padding:24px 22px 22px; }
+  .ox #detailContent{ padding:24px 22px 40px; }
   @media (prefers-reduced-motion:no-preference){ .ox #detailContent{ animation:oxIn .2s ease; } }
   @keyframes oxIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
   .ox .panel-year{ margin-bottom:8px; font-family:var(--display); font-size:56px; font-weight:700; line-height:1; letter-spacing:-.02em;

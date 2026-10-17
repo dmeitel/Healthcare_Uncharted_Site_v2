@@ -200,11 +200,12 @@ start at 10 px; a plugged-in port unplugs only when pulled; Settings has Buzz wh
 `npm run da:thumb` (scripts/da-thumb.js, helpers scripts/lib/thumb.js), its quick pass inside `npm run da:qa`.
 THE DAILY BY THUMB (2026-10-14, his phone play: "my finger still does not line up", "i also cannot drop down the cart of tools"):
 a run's end and a held part each have TWO aims, what is drawn above the thumb and the thumb itself, and a port the run fits beats
-a nearer one it does not (`portNear`, `aimLanding`); the row scrolls itself, so a rising pull lifts from any tile (`rowSwipe`);
+a nearer one it does not (`portNear`, `aimLanding`), and a thumb resting inside a place the part fits takes that place (2026-10-16:
+the drag lifts the part two squares, the Y's arms are two squares apart, so the drawn part had won the wrong arm); the row scrolls itself, so a rising pull lifts from any tile (`rowSwipe`);
 All parts on every cart of two or more. The thumb test plays today's daily to Complete, reaches the tray by touch alone and
 drags as two players; every wall's cart is held to its answer (tests/device-assembly-puzzles.test.js).
 A circuit that will not lay names, fix first, a fix that works from where the ventilator stands: Flip, one square a way, back,
-closer (`circuitMiss`; tests/device-assembly-vent-miss.test.js plays every spot). THE BAG (2026-10-15, BAG1 and BAG2: "On any patient with an artificial airway we have to have a bag on the headwall"; "On the wall is enough"): `VENT_RULES.airwayBag`, a wall with an ET tube or a trach that carries `bag` ('cart' or 'wall') fails without a resuscitation bag on the wall; dealt walls take it after the deal (`addBag`, `bagShift`, `bagUid`) so no deal changes, daily walls from #14 (`BAG_DAY`); eleven pins re-taken on purpose; tests/device-assembly-bag.test.js. Whether the cart lands facing the patient is P3.
+closer (`circuitMiss`; tests/device-assembly-vent-miss.test.js plays every spot). THE BAG (2026-10-15, BAG1 and BAG2: "On any patient with an artificial airway we have to have a bag on the headwall"; "On the wall is enough"): `VENT_RULES.airwayBag`, a wall with an ET tube or a trach that carries `bag` ('cart' or 'wall') fails without a resuscitation bag on the wall; dealt walls take it after the deal (`addBag`, `bagShift`, `bagUid`) so no deal changes, daily walls from #14 (`BAG_DAY`); eleven pins re-taken on purpose; tests/device-assembly-bag.test.js. The cart lands facing the patient (P3, 2026-10-16, `ventFace` in `autoOrient`; Flip still turns it).
 The puzzle QA system: tests/device-assembly-puzzles.test.js in verify, `npm run da:qa`, the hub's Puzzles screen.
 THE NAME (HW1, 2026-10-15, David: "Name and address"): Headwall wherever a player or reader sees it, at /fun/headwall/; the
 old Fun shelf address and the older secret menu one 301 to it in one hop, plain addresses and query links included

@@ -961,3 +961,92 @@ answer a question you get time back?", then "No limit, time is the score". Built
 clock (clock 0), so the bar counts up from the first tile and the finish reads "Crossed in 1:42" as before. A team board
 keeps its clock pick. Words: the door card, the how-to, the page description, the Fun shelf card, the share card and the hub's
 QA row. `npm run phone` clean at nine sizes on /fun/daily-huddle/ and /fun/; `npm run verify` 682 of 682.
+
+## 2026-10-16 · Headwall game feel · the ventilator shows a ventilator waveform
+
+David, 2026-10-16, on his hub QA with a picture of the vent's screen: "Vent should have a vent waveform not an EKG waveform".
+The ventilator art (ART.vent, which the vent carts draw too) had a QRS spike on its screen. Now `ventWave` draws two breaths
+of the airway pressure trace in volume control: PEEP as the baseline, a quick rise, the ramp to the peak, the drop to the
+plateau, the fall back to PEEP and the pause, kept under the FiO2 readout. The patient monitor keeps its EKG. Headwall tests
+189 of 189; pictures at a desk and a phone in tmp/hw-quiet/shots. Then, same day: "can you make it a bit more dynamic, like
+the ekg". It moves now, the way the monitor's ECG does: `ventY` is one breath's shape, `ventPath` draws two breaths across the
+screen, and `monitorLoop` redraws every `.ventTrace` each frame on the monitor's breath (14 a minute, so it keeps time with the
+capnogram); a flipped cart draws it mirrored first so it still reads left to right, and reduced motion holds it still
+(checked in a browser: two frames 0.9 s apart differ, and with reduced motion they do not).
+
+## 2026-10-16 · Headwall game feel · a thumb on a place takes it, and daily #19 by thumb
+
+Found on 2026-10-15 while checking the resuscitation bag, and picked up on David's word ("Do this task here"): daily wall #19
+(2026-10-21, an ICU wall with an inline nebulizer) failed the thumb test's drags at every phone size, with or without its bag.
+The test plays today's daily as a gate, so it would have failed on the 21st. Three causes, two in the test and one in the game.
+The test laid a circuit bag last, so the nebulizer was dropped before there was a limb, landed on the tube's free end, and the
+bag was refused: it now lays the bag where the answer built the Y (`kit.after` in scripts/da-thumb.js). A press 20 px off the
+air hose's loose end picked up the cord, whose end is drawn a square away; that is the game being right, and the test's player
+now presses again, once, when the wrong run comes up, as it already did when a press picked up nothing. (A first version of
+that check read tubing off the tray as the wrong run, because the game hangs it on the port first and runs the link from its
+free end; it failed Level 2 in the copy David pushed in d13093f, and is fixed here.) The game: a drag lifts the part 47 to 51
+px, about two squares, and the Y's two arms are two squares apart, so a thumb on the inspiratory arm drew the nebulizer onto
+the expiratory arm and it went in there, at 375 x 548. Now a thumb resting inside a place the part fits takes that place
+(`aimLanding`); anywhere else nothing changed, and the drop box shows the same place the drop takes. Claude's call, on the
+grounds that it is how David says he plays ("my finger still does not line up", 2026-10-14) and that it broke nothing: tried
+first on a patched copy of the built site, every gated drag row passed on nine walls at six sizes. Pictures of the two rules
+at 375 x 548: tmp/hw-quiet/shots/arm-A-held.png (before) and arm-B-held.png (now). Gates: `npm run da:thumb` with #19 added,
+152 of 152 gated runs; `npm run da:qa` 79 of 79; `npm run verify` 685 of 685; `npm run phone -- /fun/headwall/` clean.
+
+## 2026-10-16 · Headwall game feel · a tap beside a run's end, then beside the far port
+
+From the original session's list ("clear out all the outstanding tasks"): on 2026-10-12 the thumb test's ungated "tap 20px"
+row passed 12 of 28 (t1, t2 and Ventilator 2 at four phones); since 2026-10-14 Tutorial 2 missed at every size, the cannula
+tubing left loose. The cause: a tap beside a run's end (on bare wall, within reach) starts the run through `openPortNear`, and
+does two things to swallow that tap's own click: it hushes clicks for 300 ms and arms the run (`byNear`, `armed`). The click
+landed in the hush and returned before the line that disarms, so the armed run ate the NEXT tap, the one beside the barb. A
+tap dead on the barb still worked (an exact port is read first), which is why only taps that missed both times failed. Now a
+hushed click disarms a run started beside its port. Today's daily still misses in that row, for another reason: its answer
+lays the cannula's 7 ft in exactly 7 squares, and a concentrator set down on open wall goes where the thumb is, so 20 px (about a
+square at these sizes) left it a foot short; the wall says so. Gates: `npm run da:thumb` 152 of 152 gated, tap 20px 12 of 28;
+`npm run da:qa` 79 of 79; `npm run verify` 686 of 686; `npm run phone -- /fun/headwall/` clean.
+
+## 2026-10-16 · Daily Huddle, the hex trivia board · round 8, the polish pass before David's QA
+
+David, 2026-10-16: "before i do the Qa on those review, do a full QA check finger check, writing etc and visuals so that i
+am just looking at the most recent polish". A thumb play-through (tmp/hw-quiet/hdthumb.js) played today's board at the four
+screens a phone browser really leaves (375 x 548, 393 x 659, 360 x 640, 430 x 746), a desk and the day theme: a top tile, a
+right answer, a miss on purpose, 50:50 and Hint, a full crossing, then Practice, Make a board and Past boards, with every card
+measured for scrolling and every key for 44 px. Found and fixed: on the SE the start screen ran 10 px past the screen (Make a
+board, Practice and Past boards under the fold), the answer card scrolled inside itself with Back to the board under the fold
+on a long answer, and the finish ran past the screen; on the small Android the finish ran past it. Now the short-phone block
+tightens the start screen and the cards, Back to the board is pinned to the foot of the card on a phone, and the share line
+sets at the phone label size. On a desk the tile names met the hex borders: a name is measured once drawn (and again when the
+web font lands) and shrinks to 52 of the hex's 71 units, never under 13 px on screen, so a phone keeps its size; two short
+words ("Odd codes", "Health IT") take two lines. Clean after: the play-through at all six, `npm run phone` at nine sizes, 37
+Huddle tests; the writing checker on every word the play-through saw: no must-fix.
+
+## 2026-10-16 · the polish pass before David's page review (several surfaces)
+
+David, 2026-10-16: "before i do the Qa on those review, do a full QA check finger check, writing etc and visuals so that i
+am just looking at the most recent polish". Three reviewers photographed the hubs, the games and every Learn page at a phone
+and a desk, night and day (tmp/visual-pass/hubs, learn1, learn2); seven fixers confirmed each finding by eye before changing
+anything and fixed the defects only. By surface:
+- Reading load on all three games. Alarm Fatigue: the Clock in panel sits under room 4's box instead of across its Labs and
+  Meds line (`placeStage`); the phone plate behind it only while the panel scrolls; the day chart readable (the dimmed chart at
+  .92 in day, 4.5 to 5.4:1, was 2.3 to 2.5); the banner names room 4's own patient (`openChartOf`); the Prophet banner on the
+  night teal in both themes, white on it 4.9:1 (the gold name is white now). Uncharted General: the five stat tiles share one
+  grid on an upright phone; the footer shadow shows only while something runs under it; debt reads $0.
+- The hub and the Data Observatory. Data map: stat labels whole, box labels measured and trimmed inside their box, the map packs
+  to the pane at 1280, the totals line breaks only between its pieces. Traffic: the last chart date ends at the edge; the
+  Alarm Fatigue card shows the game's events again (GoatCounter reads include_paths as one comma list).
+- Pages with views: the switch. Process Engineering's desk switch was stretched and wrapped by its own 17 px serif names; it
+  now sits at the shared size, as wide as its names, like the other three.
+- Not in a phase, fixed as defects under the change budget: Uncharted Regional (the same stat grid, the How the region works
+  toggle, the term buttons in one row, the objective card no longer stretched); the home page's New on the site rows on one
+  grid; the footer and every tool's attribution strip draw their dots between items, never at a line's end; SQL Mystery's
+  Schema label and Intern chip; About's Support button gap; the scrollbar corner. Learn (parked, defects only): Laws and
+  Paradoxes has a phone drawing for every chart (19), labels at 12.7 px or more at 360, phase labels from 1.8:1 to 6:1, and
+  five label collisions fixed; Process Engineering's improvement loop labels inside their boxes; 4Ps, Patient Data Record, EHR
+  Architecture, The Payer, Change Healthcare, Data Sources, Oxygen and the dev blog each lost their reported faults (a figure
+  under the type floor, labels past their boxes, three small reds under 4.5:1 now on `--red-dk`, a broken column); an italic
+  word in a heading no longer swallows the space after it; a phone eyebrow that wraps leaves no dot hanging, one that fits
+  stays one line. hu-global.css is now ?v=20261016a, since the footer's markup and its CSS changed together.
+Left for David, look decisions held until his review: Headwall's slim parts row cuts long names; the path crumb reads
+"Ventilators 3" where the panel says "Ventilator 2"; Make a board's clock still defaults to 3 minutes after DH11; a phone table
+as cards on 4Ps (the site has no shared pattern; the fracture post has a page one).

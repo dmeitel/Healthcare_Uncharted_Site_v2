@@ -71,6 +71,30 @@ test('the aim takes the nearest landing within a fingertip, and none beyond it',
   assert.strictEqual(far, null, 'nothing within reach, no pull');
 });
 
+/* 2026-10-16: a drag carries the part about two squares over the thumb, and the Y's two arms are two squares apart, so on
+   daily #19 (2026-10-21) a thumb on the inspiratory arm drew the nebulizer onto the expiratory one and it went in there. */
+test('a thumb resting inside a place the part fits takes it, ahead of the place under the drawn part', () => {
+  const S = da.start('day:2026-10-21'), sol = JSON.parse(S.level.solution), v = sol.items.find((i) => /^vent/.test(i.def) && !i.fixed);
+  da.place(S, v.def, v.x, v.y, v.r, v.f); assert.ok(da.layCircuit(S, 'circuit-heated').ok, 'the circuit lays');
+  const D = da.DB['neb-mesh'], lands = da.landingsFor(S, D, D.cartRot || 0, false, null);
+  const at = (x, y) => lands.find((c) => c.x === x && c.y === y), insp = at(8, 10), exp = at(8, 8);
+  assert.ok(insp && exp, 'both arms of the Y take the nebulizer in line');
+  const [ix, iy] = mid(D, insp), [ex, ey] = mid(D, exp), off = da.U * 0.3;
+  const got = da.aimLanding(lands, D, ex, ey, ix - off, iy + off);   // drawn over the expiratory arm, thumb inside the inspiratory
+  assert.deepStrictEqual([got.x, got.y], [8, 10], 'the thumb\'s place');
+  const free = da.aimLanding(lands, D, ex, ey, ex + da.U * 4, ey + da.U * 6);   // the thumb on no place at all
+  assert.deepStrictEqual([free.x, free.y], [8, 8], 'the place nearest the drawn part, as before');
+});
+
+/* 2026-10-16: a tap beside a run's end starts the run and arms it to swallow that tap's click, and hushes the click too. The
+   hushed click never disarmed it, so the armed run ate the next tap, the one meant for the far port (Tutorial 2, taps 20 px
+   off: the cannula tubing stayed loose at every phone size). The click handler lives in the page, outside what this file can
+   drive, so the line is held in place here; `npm run da:thumb` plays it. */
+test('a hushed click still disarms a run started beside its port', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'fun', 'headwall', 'index.html'), 'utf8');
+  assert.match(src, /if\(suppressClick\)\{ if\(S\.link && S\.link\.byNear && S\.link\.armed\)\{ S\.link\.armed=false; S\.link\.byNear=false; \} return; \}/);
+});
+
 test('a tubing tile and a circuit bag have no landings: runs aim at ports, a bag lays itself', () => {
   const S = da.start('l2');
   assert.deepStrictEqual(da.landingsFor(S, da.DB['tube-o2-7'], 0, false, null).length, 0);

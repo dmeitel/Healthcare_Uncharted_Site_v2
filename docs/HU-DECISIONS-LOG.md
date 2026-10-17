@@ -12,6 +12,7 @@ what got built on it goes at the top of the LOG.
 
 | # | The question | Why it matters | Claude recommended | Open since |
 |---|---|---|---|---|
+| P3 | ANSWERED 2026-10-16, David, in the chat: "Yes, face the patient". Recommendation taken. BUILT the same day (below, LOG). Original question: **When you set the ventilator cart down in Device Assembly, should it turn its ports toward the patient by itself?** | Today the cart lands the way it sits on the cart, ports on its right, and only you can flip it. On the daily you played on 2026-10-14 the answer stands it right of the bed, so it lands with its ports to the wall and the circuit cannot reach until it is flipped. Since that night the circuit's message says so ("Flip the ventilator so its ports face the patient"), and every spot that fails names a fix that works from there. Turning the cart for you is a new rule about how a part lands, not a fix, so it is yours. | Yes: a cart with its ports on one side lands facing the patient, and Flip still turns it round. An RT parks the vent with the circuit side to the bed, and which way it faces is not what these walls are testing. The nasal cannula already turns itself toward its run (your call, 2026-10-05). | 2026-10-14 |
 | DH11 | ANSWERED 2026-10-16, David, in the chat: "No limit, time is the score". Recommendation taken. BUILT the same day (below, LOG). Asked after David, 2026-10-16: "why is the daily huddle board timed? or if its going to be timed can we make it 5 minutes, or everytime you answer a question you get time back?" Original question: **How should today's board and practice handle time?** (no limit, time is the score; five minutes; or 3 minutes plus 15 seconds back per right answer) | Since DH10 the result is time and misses, and with no miss limit a countdown mostly cut people off before they crossed. | No limit: the clock counts up and the time to cross is the score. | 2026-10-16 |
 | BAG2 | ANSWERED 2026-10-15, David, in the chat: "On the wall is enough". Recommendation taken. BUILT the same day (below, LOG). Asked after David, 2026-10-15: "On any patient with an artificial airway we have to have a bag on the headwall". Original question: **Is a bag hanging on the wall enough, or does it also have to be hooked to oxygen?** | Hooked to oxygen, every airway wall needs a spare outlet, a flowmeter and tubing for the bag, and every wall gets harder. | On the wall is enough: what he described, and how the game already treated the bag (hanging by the bed, ready). | 2026-10-15 |
 | BAG1 | ANSWERED 2026-10-15, David, in the chat: "Hold the push". Recommendation NOT taken. Asked after the same note, with the push ready. Original question: **Push what is verified now and ship the bag next, or hold the push for it?** | The bag touches every ventilator and trach wall, so it needs its own full round of checks. | Push now, bag next. | 2026-10-15 |
@@ -135,6 +136,13 @@ THE REST").
 ---
 
 ## LOG
+
+### HEADWALL: THE VENTILATOR CART FACES THE PATIENT (2026-10-16, on P3)
+
+A ventilator whose circuit ports are all on one side (the side-port vent cart) turns them toward the patient when it is set
+down or moved, the way an RT parks it, circuit side to the bed (`ventFace`, in `autoOrient`); Flip still turns it round, and a
+cart with ports on two sides or underneath lands as it did. It is how a part is set down by hand, so no dealt wall and no
+stored answer changes. tests/device-assembly-face.test.js holds it.
 
 ### DAILY HUDDLE: NO TIME LIMIT (2026-10-16, on DH11)
 

@@ -30,7 +30,7 @@ eleventyExcludeFromCollections: true
 .hs-kpi .k-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
 .hs-kpi .k-val{font-family:var(--display);font-weight:800;font-size:20px;margin-top:2px}
 .hs-kpi.good .k-val{color:var(--lt-green,#4ecb8d)}.hs-kpi.warn .k-val{color:var(--amber)}.hs-kpi.bad .k-val{color:var(--lt-red,#ff7a7a)}
-.hs-mission{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:14px;margin-bottom:16px}
+.hs-mission{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:14px;margin-bottom:16px;align-items:start}   /* start: the goal card stretched to the Situation's height and stood ~260px empty */
 @media (max-width:760px){.hs-mission{grid-template-columns:1fr}}
 .hs-obj{background:linear-gradient(135deg,rgba(106,173,255,.14),rgba(106,173,255,.05));border:1px solid rgba(106,173,255,.4);border-left:3px solid var(--acc);border-radius:12px;padding:16px 18px}
 .hs-obj .m-lbl{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:8px}
@@ -50,6 +50,10 @@ eleventyExcludeFromCollections: true
 .hs-fc .fc-row:last-child{margin-bottom:0}
 .hs-fc .fc-tag{flex:none;font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid var(--border2);border-radius:5px;padding:2px 6px}
 .hs-fc .calm{color:var(--t3)}
+/* the tutorial's toggle reads the way the hospital game's does (.ug-tut-toggle): mono at the label size, the
+   title wraps left, and "show"/"hide" never breaks from its caret */
+.hs-fc .hs-tut-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:0;background:none;border:none;cursor:pointer;font-size:var(--t-label);font-weight:600;letter-spacing:.04em;text-transform:none;text-align:left}
+.hs-tut-toggle .tt-caret{flex-shrink:0;white-space:nowrap}
 .hs-main{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start}
 /* min-width:0 lets the single column actually shrink. Without it a grid item keeps its
    min-content width and the sidebar sat 18px outside the page at 360. */
@@ -139,6 +143,7 @@ eleventyExcludeFromCollections: true
 .hs-seg{display:flex;gap:8px;flex-wrap:wrap}
 .hs-seg button{flex:1;min-width:70px;min-height:44px;padding:11px 6px;border-radius:9px;border:1px solid var(--border);background:var(--raised);color:var(--t2);font-family:var(--font);font-weight:600;font-size:var(--t-ui);cursor:pointer}
 .hs-seg button.on{border-color:var(--acc);color:#04101f;background:linear-gradient(135deg,#6aadff,#3d7fd6)}
+@media (max-width:699px), (max-height:500px){.hs-seg button{min-width:44px}}   /* four term keys in one row at 360: at 70px the infinity key wrapped to a row of its own; after the base rule, so it wins */
 .hs-set{margin-top:16px}
 .hs-set .set-l{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
 .hs-set .set-b{font-size:var(--t-label);color:var(--t3);margin-top:8px;line-height:1.55}
@@ -190,6 +195,9 @@ eleventyExcludeFromCollections: true
   .hs-wrap{display:flex;flex-direction:column;gap:14px;padding-bottom:100px}
   .hs-mission,.hs-main,.hs-board{display:contents}
   .hs-head{order:1;margin-bottom:0}.hs-obj{order:2}.hs-facs{order:3}
+  /* the scoreboard is a grid here, so the five readouts share one width instead of each taking its own
+     (2026-10-16); a sideways phone keeps the one-row strip, where all five fit */
+  .hs-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));width:100%}
   .hs-zones{order:4;margin-bottom:0}.hs-brief{order:5}.hs-side{order:6}
   .hs-rundock{position:fixed;left:0;right:0;bottom:0;z-index:110;display:flex;align-items:center;gap:10px;
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border2)}
@@ -689,8 +697,8 @@ eleventyExcludeFromCollections: true
       : 'The bar was sized off THIS configuration when the quarter opened, event included. Change the configuration and you change what it delivers, not what the board asked.';
     const tutBody = `You run all three hospitals as ONE system. Patients go to the nearest open door: some will travel one zone over, few will cross the region, so where a service line lives decides who gets care. Staff for all three come from one shared pool of ${CFG.poolTotal}; hire past ~${Math.round(CFG.poolFloor*100)}% of it and wages rise everywhere. Zones remember how well they are served (the trust bars); one zone at zero ends the run. Each quarter the board posts one objective sized off your CURRENT setup. Adjust staff and lines, then RUN THE QUARTER.`;
     const tutHtml = `<div class="hs-fc" style="margin-top:12px;border-color:rgba(106,173,255,.35)">
-      <button class="fc-h" data-act="tut" style="background:none;border:none;cursor:pointer;padding:0;width:100%;display:flex;justify-content:space-between;color:var(--acc);font:inherit;letter-spacing:inherit;text-transform:inherit">
-        <span>New here? How the region works</span><span>${tutShown()?'&#9652; hide':'&#9662; show'}</span></button>
+      <button class="fc-h hs-tut-toggle" data-act="tut">
+        <span>New here? How the region works</span><span class="tt-caret">${tutShown()?'&#9652; hide':'&#9662; show'}</span></button>
       ${tutShown()?`<div style="font-size:var(--t-fine);color:var(--t2);line-height:1.65;margin-top:8px">${tutBody}</div>`:''}</div>`;
     $('hs-mission').innerHTML=`
       <div class="hs-obj"><div class="m-lbl">${lbl}</div><div class="m-goal">${sys.goal?sys.goal.label:''}</div>

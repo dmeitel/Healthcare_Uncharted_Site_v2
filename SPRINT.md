@@ -86,7 +86,7 @@ Plan: docs/HU-PHONE-PLAY-PLAN-2026-10-12.md
 
 ### Focus · secondary · Daily Huddle · stage: QA
 
-A working demo of the daily trivia board: the day's 19 tiles in the Atlas zones, cross from top to bottom in three minutes with three misses, the dots as the score, a share line, practice, past boards and a made-board link, on one phone screen.
+The daily trivia board: the day's 19 tiles in the Atlas zones, cross from the top row to the bottom with no time limit and no miss limit, your time and misses as the result, three lifelines, a share line, practice, past boards and team boards, on one phone screen, on the Fun shelf.
 Done looks like: David plays today's board on his phone and a desk, and marks the hub's QA list; his notes start the refinement rounds.
 Plan: docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md
 
@@ -143,14 +143,6 @@ The logo mark reads as one object at the sizes the site draws it small, and the 
 
 ### Up next · The other games by thumb
 
-
-### Waiting on David, small
-
-| # | Step | Status |
-|---|---|---|
-| 15 | **OK to remove the empty side worktree** (angry-engelbart). It holds nothing; the open card checks that every time. | WAITING on David's OK |
-
-More of his are in DECISIONS.md: the open questions, and "Yours to do".
 
 ### Inbox · parked, not dropped
 

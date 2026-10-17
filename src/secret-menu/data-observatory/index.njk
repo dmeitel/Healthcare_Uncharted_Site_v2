@@ -66,7 +66,8 @@ obsTab: data
   pointer-events: none;
 }
 
-.obs-shell .shell-canvas { background: var(--dmap-canvas); overflow: auto; }
+/* the gutter is held from the start so the width layout() measures is the width left once the map scrolls down */
+.obs-shell .shell-canvas { background: var(--dmap-canvas); overflow: auto; scrollbar-gutter: stable; }
 #obsWrap { position: relative; min-height: 100%; }
 #obsSvg { display: block; font-family: var(--mono); }
 
@@ -145,6 +146,10 @@ obsTab: data
 .obs-legend .ek svg { display: block; }
 .obs-legend .sep { width: 1px; height: 14px; background: var(--border); }
 #obsTotals { font-family: var(--mono); font-size:var(--t-micro); color: var(--t3); font-variant-numeric: tabular-nums; }
+/* dots between, never at an end: the footer's pattern (hu-global.css, .footer-copy) */
+#obsTotals { display:flex; flex-wrap:wrap; column-gap:.9em; clip-path:inset(-8px -8px -8px -4px); }
+#obsTotals > span { position:relative; white-space:nowrap; }
+#obsTotals > span + span::before { content:'\00B7'; content:'\00B7' / ''; position:absolute; right:100%; width:.9em; text-align:center; }
 
 /* face-up operational stats · a HUD band under the instrument header. Recessed glass at night; in day it takes the
    field tokens and goes light (his review, 2026-10-11: in day "the headers are still dark"). */
@@ -155,7 +160,7 @@ obsTab: data
   box-shadow: inset 0 3px 10px rgba(0,0,0,.7);
 }
 .obs-stat {
-  flex: 1 1 0; min-width: 118px;
+  flex: 1 1 auto; min-width: 118px;
   border-top: 2px solid var(--field-line); padding: 8px 2px 0;
 }
 .obs-stat .v {
@@ -165,9 +170,12 @@ obsTab: data
 .obs-stat .v em { font-style: normal; color: var(--glass-teal); }
 [data-theme="light"] .obs-stats { box-shadow: inset 0 2px 5px rgba(15,24,37,.08); }
 [data-theme="light"] .obs-stat .v em { color: var(--teal-ink); }
+/* a key is never cut (2026-10-16: "DEPLOYED D…" on a phone, "FRESHEST: HOSPITAL-ENRI…" at 1280). On a desk a tile
+   starts as wide as its key and a long file name takes a second line only when the row runs out; on a phone each
+   tile is as wide as its key and the band slides sideways. */
 .obs-stat .k {
   font-family: var(--mono); font-size:var(--t-micro); letter-spacing: .12em; text-transform: uppercase;
-  color: var(--field-sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--field-sub); margin-top: 2px; overflow-wrap: anywhere;
 }
 
 /* plain-terms block · leads the side panel, reads like a sentence, not a spec */
@@ -182,9 +190,10 @@ obsTab: data
 
 /* phone: the DAG can't reflow: fixed-width svg inside a scroll strip */
 @media (max-width:699px), (max-height:500px) {
-  .obs-shell .shell-canvas { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .obs-shell .shell-canvas { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: auto; }
   #obsSvg { min-width: 1080px; }
-  .obs-stat { min-width: 104px; }
+  .obs-stat { min-width: 104px; flex: none; }
+  .obs-stat .k { white-space: nowrap; }
 }
 </style>
 
@@ -352,8 +361,15 @@ function layout() {
   var maxColH = d3.max(colHeights);
   totalH = maxColH + MARGIN.top + MARGIN.bottom;
 
-  var avail = Math.max((canvas ? canvas.clientWidth : 0) - 2, 1080);
-  totalW = Math.max(avail, MARGIN.left + MARGIN.right + NODE_W * 5 + 60 * 4);
+  /* A desk canvas that can hold all five columns packed (gaps of 40, nodes 140 to 172 wide) packs them: at 1280 the
+     1148 map sat in a 974 canvas and the Tools column was under the dock's edge (2026-10-16). A narrower canvas and
+     a phone keep the full 1148 map and scroll it, as before. */
+  var phone = window.matchMedia('(max-width:699px), (max-height:500px)').matches;
+  var cw = (canvas ? canvas.clientWidth : 0) - 2;
+  var fit = Math.floor((cw - MARGIN.left - MARGIN.right - 40 * 4) / 5);
+  var pack = !phone && fit >= 140;
+  NODE_W = pack ? Math.min(172, fit) : 172;
+  totalW = pack ? cw : Math.max(cw, 1080, MARGIN.left + MARGIN.right + NODE_W * 5 + 60 * 4);
   var pitch = (totalW - MARGIN.left - MARGIN.right - NODE_W) / 4;
 
   colNodes.forEach(function (list, c) {
@@ -448,7 +464,8 @@ function render() {
     .attr('class', 'obs-label')
     .attr('x', 9)
     .attr('y', function (n) { return n.h >= 40 && n.bytes ? n.h / 2 - 2 : n.h / 2 + 3.5; })
-    .text(function (n) { return truncate(n.label, NODE_W - 18); });
+    .text(function (n) { return n.label; })
+    .each(function () { fitLabel(this, NODE_W - 18); });
 
   nodeSel.filter(function (n) { return n.h >= 40 && n.bytes; })
     .append('text')
@@ -471,9 +488,14 @@ function render() {
   svg.on('click', function () { select(null); });
 }
 
-function truncate(label, px) {
-  var maxChars = Math.floor(px / 6);                  /* ~6px per mono char at 10px */
-  return label.length > maxChars ? label.slice(0, maxChars - 1) + '…' : label;
+/* trims a label to its box, measured in the size it renders at. A fixed 6px a character was 10px type; --t-micro
+   is 11px on a desk and 12px on a phone, so "CMS Provider of Services" ran past its box while others got an ellipsis. */
+function fitLabel(el, px) {
+  var label = el.textContent;
+  while (label.length > 1 && el.getComputedTextLength() > px) {
+    label = label.slice(0, -1).replace(/\s+$/, '');
+    el.textContent = label + '…';
+  }
 }
 
 /* ── chain highlight: selected node's hue carries the lineage ── */
@@ -621,9 +643,13 @@ function totals(data) {
   var deployed = d3.sum(ds, function (n) { return n.bytes || 0; });
   var buildOnly = d3.sum(nodes.filter(function (n) { return n.kind === 'intermediate'; }),
                          function (n) { return n.bytes || 0; });
-  document.getElementById('obsTotals').textContent =
-    ds.length + ' datasets · ' + fmtBytes(deployed) + ' deployed · '
-    + fmtBytes(buildOnly) + ' build-only · mapped ' + (data._meta.generated || '').slice(0, 10);
+  /* each piece holds together, so a line breaks only between them; the CSS draws the dots */
+  var tot = document.getElementById('obsTotals');
+  tot.textContent = '';
+  [ds.length + ' datasets', fmtBytes(deployed) + ' deployed', fmtBytes(buildOnly) + ' build-only',
+   'mapped ' + (data._meta.generated || '').slice(0, 10)].forEach(function (t) {
+    var s = document.createElement('span'); s.textContent = t; tot.appendChild(s);
+  });
 }
 
 /* ── face-up operational readout (the HUD band under the header) ── */

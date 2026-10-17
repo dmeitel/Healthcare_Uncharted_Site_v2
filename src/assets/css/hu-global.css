@@ -247,6 +247,16 @@ footer {
 
 .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
 .footer-copy { font-size:var(--t-fine); color:var(--t3); }
+/* DOTS BETWEEN, NEVER AT AN END (2026-10-16). The footer's copyright line and a tool's attribution strip are lists of
+   items, and a phone wraps them: a dot written as text dangled at a line's end or opened the next one ("· Support").
+   Each item after the first draws its dot in the gap before it; an item that starts a line has that gap left of the
+   list, where the clip hides it. The clip stops 4px short of the edge so a focus ring there still shows. */
+:is(.footer-copy, .tool-attribution .ta-list) { display:flex; flex-wrap:wrap; align-items:baseline; column-gap:var(--sep); clip-path:inset(-8px -8px -8px -4px); }
+.footer-copy { --sep:.9em; }
+.tool-attribution .ta-list { --sep:calc(1ch + 16px); min-width:0; }
+:is(.footer-copy, .tool-attribution .ta-list) > * { position:relative; }
+:is(.footer-copy, .tool-attribution .ta-list) > * + *::before { content:'\00B7'; content:'\00B7' / ''; position:absolute; right:100%; width:var(--sep); text-align:center; }
+.tool-attribution .ta-list > * + *::before { opacity:.5; }
 .content-policy { border-top:1px solid var(--border); margin-top:24px; padding-top:20px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start; }
 
 /* LEAN FOOTER, 2026-09-21. Every page that is not home or About. David, reading a
@@ -1064,13 +1074,12 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
 
 /* Compact attribution strip for tools (site footer is suppressed there) */
 .tool-attribution {
-  display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;
+  display:inline-flex; align-items:center; gap:8px; flex-wrap:nowrap;   /* the .ta-list inside wraps, beside the ⓘ */
   font-family:var(--mono); font-size:var(--t-label); color:var(--t3);
   padding:7px 12px; line-height:1.5;
 }
 .tool-attribution .ta-brand { font-family:var(--display); font-weight:700; font-size:var(--t-label); color:var(--t2); }
 .tool-attribution .ta-brand span { color:var(--teal); }
-.tool-attribution .ta-sep { opacity:.5; }
 .tool-attribution a { color:var(--t2); border-bottom:1px dotted var(--t4); }
 .tool-attribution a:hover { color:var(--teal); }
 .tool-attribution--fixed { padding-bottom:calc(2px + env(safe-area-inset-bottom));
@@ -1085,7 +1094,7 @@ i[data-lucide] { display:inline-block; width:1em; height:1em; flex:none; }
    tap ✕ to park it. The toggle only exists on the fixed variant. */
 .tool-attribution .ta-toggle { display:none; }
 .tool-attribution--fixed .ta-toggle {
-  display:flex; align-items:center; justify-content:center; flex:none;
+  display:flex; align-items:center; justify-content:center; flex:none; align-self:flex-start;   /* the top line, beside the brand */
   width:38px; height:38px; padding:0; border:none; border-radius:7px;
   background:none; color:var(--t2); font-family:var(--mono); font-size:var(--t-body);
   line-height:1; cursor:pointer;
@@ -1663,6 +1672,7 @@ nav.nav-yield:focus-within { transform: none; }
 /* Scrollbar */
 ::-webkit-scrollbar { width:6px; }
 ::-webkit-scrollbar-track { background:var(--dark); }
+::-webkit-scrollbar-corner { background:var(--dark); }
 ::-webkit-scrollbar-thumb { background:var(--raised2); border-radius:3px; }
 ::-webkit-scrollbar-thumb:hover { background:var(--border2); }
 
@@ -1801,6 +1811,17 @@ nav.nav-yield:focus-within { transform: none; }
 }
 .hu-read-eyebrow .dot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
 .hu-read-eyebrow .sep { width:4px; height:4px; border-radius:50%; background:var(--t4); flex-shrink:0; }
+/* a phone wraps the eyebrow and the separator hung at the end of the first line ("ARTICLE 08 ."),
+   on seven pages at 360. On a phone the part after a separator draws the dot in the gap before it,
+   and a part that starts a line has that gap left of the eyebrow, where the clip hides it: the
+   footer's pattern (.footer-copy). An eyebrow that fits stays one line. */
+@media (max-width:699px), (max-height:500px) {
+  .hu-read-eyebrow { column-gap:24px; row-gap:3px; clip-path:inset(-8px -8px -8px -4px); }
+  .hu-read-eyebrow .dot { margin-right:-14px; }
+  .hu-read-eyebrow .sep { display:none; }
+  .hu-read-eyebrow .sep + * { position:relative; }
+  .hu-read-eyebrow .sep + *::before { content:''; position:absolute; right:calc(100% + 10px); top:50%; width:4px; height:4px; margin-top:-2px; border-radius:50%; background:var(--t4); }
+}
 [data-theme="light"] .hu-read-eyebrow { color:var(--teal-ink); }
 .hu-read-h1 {
   font-family:var(--display); font-weight:700; font-size:clamp(44px,7vw,86px);
@@ -1819,6 +1840,9 @@ nav.nav-yield:focus-within { transform: none; }
   font-family:var(--display); font-size:clamp(28px,4vw,42px); font-weight:700;
   letter-spacing:-.015em; line-height:1.12; color:var(--t1); margin:0 0 16px;
 }
+/* Outfit has no italic face, so an <em> in a heading is the upright letters slanted, and its last
+   letter leans into the space after it ("everypitch"). The pad gives the space back. */
+.hu-read-h1 em, .hu-read-h2 em, .hu-read-h3 em { padding-right:.08em; }
 .hu-read-h3 {
   font-family:var(--display); font-size:var(--t-lede); font-weight:700;
   line-height:1.25; color:var(--t1); margin:0 0 7px;

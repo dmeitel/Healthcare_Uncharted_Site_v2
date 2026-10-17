@@ -102,7 +102,8 @@ no_footer: true
 /* CASE DESC */
 .case-desc{background:var(--sql-surface);border-bottom:1px solid var(--sql-border);padding:14px 18px;flex-shrink:0;max-height:190px;overflow-y:auto}
 .desc-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;gap:12px}
-.desc-title{font-size:var(--t-sub);font-weight:600;color:var(--sql-text);flex:1}
+/* the level tag sits beside the title, or under it flush left when the title fills the line (2026-10-16: it was indented 8px) */
+.desc-title{font-size:var(--t-sub);font-weight:600;color:var(--sql-text);flex:1;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:4px}
 .hint-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid var(--sql-border);color:var(--sql-text2);padding:4px 12px;border-radius:999px;font-size:var(--t-label);cursor:pointer;white-space:nowrap;transition:border-color .12s, color .12s, opacity .12s;font-family:var(--font)}
 .hint-btn .hint-ico{width:12px;height:12px;flex-shrink:0}
 .hint-btn:hover{border-color:var(--sql-amber-text);color:var(--sql-amber-text)}
@@ -360,7 +361,7 @@ textarea#editor::placeholder{color:var(--sql-text3)}
     <div class="mob-bar">
       <button class="mob-btn" id="mobCasesBtn" onclick="mobPanel('cases')">&#9776; Cases</button>
       <span class="mob-bar-label">SQL Editor</span>
-      <button class="mob-btn" id="mobSchemaBtn" onclick="mobPanel('schema')">Schema &#9633;</button>
+      <button class="mob-btn" id="mobSchemaBtn" onclick="mobPanel('schema')">Schema</button>
     </div>
     <div class="case-desc" id="case-desc"></div>
 
@@ -690,7 +691,7 @@ function loadCase(i){
   const hc=hints[i]||0;
   document.getElementById('case-desc').innerHTML=`
     <div class="desc-hdr">
-      <div class="desc-title">Case ${c.id}: ${c.title} <span style="font-size:var(--t-label);font-weight:400;margin-left:8px"><span class="lvl-tag lvl-${c.level}">${c.levelLabel}</span></span></div>
+      <div class="desc-title">Case ${c.id}: ${c.title} <span style="font-size:var(--t-label);font-weight:400"><span class="lvl-tag lvl-${c.level}">${c.levelLabel}</span></span></div>
       <button class="hint-btn" onclick="showHint(${i})" id="hbtn-${i}" ${hc>=c.hints.length?'disabled':''}>
         <svg class="hint-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span id="hbtn-lbl-${i}">Hint ${hc>=c.hints.length?'(all used)':`(${hc}/${c.hints.length})`}</span>
       </button>

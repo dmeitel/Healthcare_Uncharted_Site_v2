@@ -4354,8 +4354,21 @@ function okJointsAt(st, it, r, f){
 }
 /* a part dropped next to something it fits turns to fit it: the rotation with the most green
    joints wins, the current one on a tie, and nothing turns unless it gains a joint */
+/* P3 (2026-10-16, David: "Yes, face the patient"): a ventilator whose circuit ports are all on one side lands with them
+   toward the patient, the way an RT parks it, circuit side to the bed; Flip still turns it round. The cannula already
+   turns itself toward its run (2026-10-05). The flip it wants, or null for a ventilator this does not apply to. */
+function ventFace(st, it){
+  if(!it || !it.def.vent) return null;
+  const sides=new Set(portsOf(Object.assign({}, it, {f:false})).filter(p=>/^(Inspiratory|Expiratory) port$/.test(p.label)).map(p=>p.s));
+  if(sides.size!==1) return null; const s=[...sides][0]; if(s!=='E' && s!=='W') return null;
+  const d=dims(it.def, it.r), toward=(it.x+d.w/2) > GRID.nose[0]+0.5 ? 'W' : 'E';
+  return s!==toward;
+}
 function autoOrient(st, uid){
-  const it=st.items.find(i=>i.uid===uid); if(!it||it.fixed||it.def.upright) return {turned:false};
+  const it=st.items.find(i=>i.uid===uid); if(!it||it.fixed) return {turned:false};
+  { const vf=ventFace(st, it); if(vf!==null){ if(vf===!!it.f || !canPlace(st, it.def, it.r, it.x, it.y, uid).ok) return {turned:false};
+      it.f=vf; reflow(st, uid); return {turned:true, r:it.r, f:vf}; } }
+  if(it.def.upright) return {turned:false};
   /* the rotation with the most green joints wins; a mirror is tried too, so an interface dropped on a patient
      who faces the other way turns to face them */
   let best={r:it.r, f:!!it.f}, bestK=okJointsAt(st, it, it.r, !!it.f);
@@ -4915,6 +4928,16 @@ const T = (x,y,s,txt,fill,extra) => `<text x="${x}" y="${y}" text-anchor="middle
 const GL=(x,y,w,h,o)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w,h)/2}" fill="#ffffff" opacity="${o==null?.5:o}"/>`;
 const DIAL=(cx,cy,r,ang,col)=>C(cx,cy,r,WHITE,2)+[-135,-90,-45,0,45,90,135].map(a=>`<path d="M${cx} ${cy-r+3} v${a%90===0?5:3}" stroke="${INK}" stroke-width="1.5" opacity=".55" transform="rotate(${a} ${cx} ${cy})"/>`).join('')+`<path d="M${cx} ${cy+3} v-${r-6}" stroke="${col||RED}" stroke-width="2.5" stroke-linecap="round" transform="rotate(${ang} ${cx} ${cy})"/>`+C(cx,cy,2.4,INK,0);
 const GAS_FILL = {o2:GRN, air:YEL, vac:WHITE};
+/* the ventilator's screen (David, 2026-10-16: "Vent should have a vent waveform not an EKG waveform", then "can you make it
+   a bit more dynamic, like the ekg"): the airway pressure trace in volume control, moving on the monitor's breath
+   (monBreath, 14 a minute, so it keeps time with the capnogram). One breath: a quick rise off PEEP, the ramp to the peak,
+   the drop to the plateau, the fall back to PEEP and the pause while he breathes out. Two breaths across the screen, the
+   newest at the right; a flipped cart draws it mirrored first, so it still reads left to right. monitorLoop moves it, and
+   holds it still for reduced motion. ventY is the pressure as a share of the peak, u the breath's phase. */
+const ventY=u=>{ u=u-Math.floor(u); if(u<0.03) return 0.35*u/0.03; if(u<0.25) return 0.35+0.65*(u-0.03)/0.22; if(u<0.27) return 1-0.22*(u-0.25)/0.02; if(u<0.31) return 0.78; if(u<0.5) return 0.78*Math.exp(-(u-0.31)/0.035); return 0; };
+const ventPath=(x0, x1, yb, ph, phase, mirror)=>{ const n=120; let d=''; for(let i=0; i<=n; i++){ const x=x0+(x1-x0)*i/n, X=mirror ? x0+x1-x : x; d+=(i?'L':'M')+X.toFixed(1)+' '+(yb-ph*ventY(phase-2*(1-i/n))).toFixed(1)+' '; } return d; };
+const ventTrace=(W, H, it)=>{ const g=[24, W-30, +(16+H*0.36-8).toFixed(1), +Math.max(10, Math.min(30, H*0.36-30)).toFixed(1)], m=!!(it && it.f);
+  return '<path class="ventTrace" data-v="'+g.join(',')+','+(m?1:0)+'" d="'+ventPath(g[0], g[1], g[2], g[3], monBreath, m)+'" fill="none" stroke="'+TRACE+'" stroke-width="2.5" stroke-linejoin="round"/>'; };
 const ART={
   none:()=>'',
   outlet:(W,H,d)=>R(6,4,W-12,H-8,BODY,9)+R(10,8,W-20,4,GAS_FILL[d.gas]||WHITE,2,0)+T(W/2,24,9,d.short),   /* K4: the outlet is its slot (drawn with the connectors); the plate keeps the gas stripe and the name */
@@ -4960,7 +4983,7 @@ const ART={
   table:(W,H)=>R(6,H*0.32,W-12,12,'#a4744c',4)+`<path d="M18 ${H*0.32+12} V${H-4} M${W-18} ${H*0.32+12} V${H-4}" stroke="${edge('#a4744c')}" stroke-width="5" stroke-linecap="round"/>`+R(W*0.62,H*0.32-20,14,20,'#cfe6f2',3,2)+R(W*0.22,H*0.32-8,26,8,'#3a3f48',3,2),
   window:(W,H)=>R(8,8,W-16,H-16,'#cfe6f2',6)+GL(16,14,W*0.3,6,.6)+`<path d="M${W/2} 10 V${H-10} M10 ${H/2} H${W-10}" stroke="${edge('#cfe6f2')}" stroke-width="4"/>`+R(2,4,18,H-6,'#d9b98c',6,2)+R(W-20,4,18,H-6,'#d9b98c',6,2),
   books:(W,H)=>R(4,4,W-8,H-8,'#8a5d3b',6)+[0.3,0.62].map(f=>R(8,H*f,W-16,6,'#6e4a2f',2,2)).join('')+[['#c0504d',10,18],['#4f81bd',28,14],['#9bbb59',44,16],['#f2b32b',62,12]].map(([c,x,w])=>R(x,H*0.3-38,w,38,c,2,2)).join('')+R(W*0.55,H*0.62-34,30,30,'#f6f9fc',3,2),
-  vent:(W,H,d,it)=>R(6,6,W-12,H-12,'#e8eef4',14)+GL(14,12,6,H-30,.5)+R(16,16,W-32,H*0.36,SCREEN,6,2)+`<path d="M24 ${16+H*0.22} l10 0 l6 -14 l6 26 l6 -12 l10 0 l6 -6 l6 6 l${W-110} 0" fill="none" stroke="${TRACE}" stroke-width="2.5" stroke-linejoin="round"/>`+`<g class="setk"><rect x="${W*0.56}" y="18" width="${W*0.3}" height="18"/>`+T(W*0.72,30,10,((it&&it.fio2)||21)+'%','#4ECDC4','font-family="IBM Plex Mono,monospace"')+`</g>`+C(W*0.3,H*0.62,12,METAL,2)+C(W*0.3,H*0.62,4,DKMETAL,0)+R(W*0.18,H-26,W*0.64,10,DKMETAL,4,2)+T(W*0.42,H*0.8,10,'VENT',INK),
+  vent:(W,H,d,it)=>R(6,6,W-12,H-12,'#e8eef4',14)+GL(14,12,6,H-30,.5)+R(16,16,W-32,H*0.36,SCREEN,6,2)+ventTrace(W, H, it)+`<g class="setk"><rect x="${W*0.56}" y="18" width="${W*0.3}" height="18"/>`+T(W*0.72,30,10,((it&&it.fio2)||21)+'%','#4ECDC4','font-family="IBM Plex Mono,monospace"')+`</g>`+C(W*0.3,H*0.62,12,METAL,2)+C(W*0.3,H*0.62,4,DKMETAL,0)+R(W*0.18,H-26,W*0.64,10,DKMETAL,4,2)+T(W*0.42,H*0.8,10,'VENT',INK),
   ett:(W,H)=>`<path d="M${W*0.12} ${H*0.6} q${W*0.3} 0 ${W*0.5} -${H*0.1}" fill="none" stroke="#e8f1f7" stroke-width="9" stroke-linecap="round"/><path d="M${W*0.12} ${H*0.6} q${W*0.3} 0 ${W*0.5} -${H*0.1}" fill="none" stroke="#4f81bd" stroke-width="2" stroke-dasharray="4 4"/>`+R(W*0.6,H*0.36,W*0.32,H*0.26,'#ffffff',4,2)+R(W*0.18,H*0.62,W*0.24,8,'#f2b32b',3,1.5)+C(W*0.3,H*0.86,5,'#bfe3df',1.5),
   ypiece:(W,H)=>`<path d="M${W/2} 6 V${H/2} M${W/2} ${H-6} V${H/2} M6 ${H/2} H${W/2}" stroke="${edge('#d9e2ea')}" stroke-width="16" stroke-linecap="round"/><path d="M${W/2} 6 V${H/2} M${W/2} ${H-6} V${H/2} M6 ${H/2} H${W/2}" stroke="#d9e2ea" stroke-width="11" stroke-linecap="round"/>`+C(W/2,H/2,9,'#c3cfda',2),
   hme:(W,H)=>R(W*0.2,H*0.18,W*0.6,H*0.64,'#dff0f7',10)+[0.32,0.44,0.56,0.68].map(f=>`<path d="M${W*0.28} ${H*f} h${W*0.44}" stroke="#7fb6cf" stroke-width="2.5" stroke-linecap="round"/>`).join('')+R(4,H/2-6,W*0.2,12,'#c3cfda',4,2)+R(W*0.8-2,H/2-6,W*0.2,12,'#c3cfda',4,2),
@@ -6302,7 +6325,13 @@ function landingsFor(st, def, r0, f0, uid){
 /* the landing nearest the aim, if it is within reach. The aim is where the part's middle is meant to go, in wall units.
    A drag has two aims (2026-10-14): the part as it is drawn above the thumb, and the thumb itself, for a player who puts
    the thumb on the place they mean (bx, by); the nearer of the two counts. */
+/* 2026-10-16: a thumb resting inside a place the part fits takes that place, ahead of the place nearest the part drawn above
+   it. A drag carries the part about two squares over the thumb (47 to 51 px), and the Y's two arms are two squares apart, so
+   a thumb on the inspiratory arm drew the nebulizer onto the expiratory one and it went in there (daily #19, 2026-10-21, at
+   375 x 548). The drop box shows the same place the drop takes, so the two never disagree. Anywhere else, as before: the
+   place nearest the drawn part or the thumb. */
 function aimLanding(cands, def, ax, ay, bx, by){
+  if(bx!=null) for(const c of cands || []){ const dm=dims(def, c.r); if(bx>=c.x*U && bx<(c.x+dm.w)*U && by>=c.y*U && by<(c.y+dm.h)*U) return c; }
   let best=null, bd=Infinity;
   for(const c of cands || []){ const dm=dims(def, c.r), cx=(c.x+dm.w/2)*U, cy=(c.y+dm.h/2)*U, d=Math.min(Math.hypot(cx-ax, cy-ay), bx==null ? Infinity : Math.hypot(cx-bx, cy-by)); if(d<bd){ bd=d; best=c; } }
   return best && bd*scale<=REACH ? best : null;
@@ -6611,7 +6640,10 @@ function wireBoard(){
      toward the nearest thing it judges pressable, so a tap on a small part reached here as a tap on its port (found
      2026-10-12 on Tutorial 3: a tap on the cannula started its tubing). */
   svg.addEventListener('click', ev=>{ const d0=downAt, e=(lastTouch && d0 && performance.now()-d0.t<900) ? {clientX:d0.x, clientY:d0.y, target:ev.target, shiftKey:ev.shiftKey} : ev; const t=hitAt(e);
-    if(suppressClick) return;
+    /* 2026-10-16: a tap that starts a run near its port hushes its own click AND arms the run to swallow it; hushed here, the
+       click never disarmed it, and the armed run then ate the next tap, the one meant for the far port (a tap 20 px off the
+       cannula tubing's end on Tutorial 2, then 20 px off the barb: the tubing stayed loose). The hushed click is that click. */
+    if(suppressClick){ if(S.link && S.link.byNear && S.link.armed){ S.link.armed=false; S.link.byNear=false; } return; }
     if(t.closest && t.closest('.da-tag')) return;
     /* SCALE: a double tap on bare wall (a thumb sends no dblclick here) */
     if(lastTouch && !S.hand && !S.link && !t.closest('.it,.pt,.tb,.node,.scrtab')){ const now=Date.now();
@@ -6877,6 +6909,7 @@ function monitorLoop(ts){
   if(!reduced){ monPhase+=dt*hr/60; monBreath+=dt*14/60; }
   const ecg=document.getElementById('ecgTrace'), pl=document.getElementById('plethTrace'), hrN=document.getElementById('hrNum'), spN=document.getElementById('spo2Num'), al=document.getElementById('monAlarm'), call=document.getElementById('callLight'), hands=document.getElementById('clockHands');
   if(ecg){ const W=120, x0=20, w=W-88, beats=2.2; let d='', e='', c=''; for(let i=0;i<=40;i++){ const x=x0+w*i/40, u=monPhase-beats*(1-i/40), b=monBreath-1.6*(1-i/40); d+=(i?'L':'M')+x.toFixed(1)+' '+(31+ecgY(u)).toFixed(1)+' '; e+=(i?'L':'M')+x.toFixed(1)+' '+(54+plethY(u)).toFixed(1)+' '; c+=(i?'L':'M')+x.toFixed(1)+' '+(77+capnoY(b)).toFixed(1)+' '; } ecg.setAttribute('d',d); if(pl) pl.setAttribute('d',e); const cp=document.getElementById('capnoTrace'), cn=document.getElementById('co2Num'), cl=document.getElementById('co2Lbl'); if(cp){ const on=!!S.capno; cp.setAttribute('display', on?'inline':'none'); if(cn) cn.setAttribute('display', on?'inline':'none'); if(cl) cl.setAttribute('display', on?'inline':'none'); if(on) cp.setAttribute('d',c); } }
+  for(const vt of document.querySelectorAll('.ventTrace')){ const v=(vt.getAttribute('data-v')||'').split(',').map(Number); if(v.length===5) vt.setAttribute('d', ventPath(v[0], v[1], v[2], v[3], monBreath, !!v[4])); }   /* the ventilator's pressure trace, on the same breath */
   if(hrN) hrN.textContent=String(hr); if(spN) spN.textContent=String(Math.round(S.sat));
   const alarm=S.sat<90, blink=alarm && Math.floor(ts/500)%2===0;
   if(spN) spN.setAttribute('fill', alarm?'#e0554f':'#5ad7e6'); if(al) al.setAttribute('opacity', blink?'1':'0'); if(call) call.setAttribute('fill', alarm?'#ff6a64':'#e0554f');

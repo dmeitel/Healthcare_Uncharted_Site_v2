@@ -256,7 +256,11 @@ class Thumb {
        lifts that run instead: two loose ends of one ventilator are drawn a square apart (an air hose and a cord, 27 px at
        393 x 659), and 20 px off one is nearer the other (daily #19, 2026-10-21; found 2026-10-16). The wrong run's end is
        in the thumb's hand and plain to see; the player lets it go and presses again. */
-    const picked = () => this.ev(([A]) => { const L = window.__da.S.link; return !L ? 'none' : (L.from && L.from.uid === A.uid && String(L.from.pi) === String(A.pi)) ? 'right' : 'wrong'; }, [aim.A]);
+    /* the run in the thumb: from the port pressed, or, for tubing off the tray, from the free end of the tubing that just hung
+       on it (the game hangs it first and the link runs from its other end) */
+    const picked = () => this.ev(([A]) => { const S = window.__da.S, L = S.link; if (!L) return 'none';
+      const same = (p) => !!p && p.uid === A.uid && String(p.pi) === String(A.pi), t = L.from && S.tubes.find((x) => x.uid === L.from.uid);
+      return same(L.from) || (t && (same(t.from) || same(t.to))) ? 'right' : 'wrong'; }, [aim.A]);
     /* letting the wrong run go clears what was in hand, tubing off the tray included: pick that up again */
     const letGo = async () => { await this.settle(); if (aim.tile) { const t = await this.reachTile(tb.def); if (!t.err) await this.touch.tap(t.c); } };
     if (run.mode === 'drag') {

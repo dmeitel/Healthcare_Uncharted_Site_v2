@@ -128,7 +128,9 @@ the reference build (search PHONE PLAY in src/fun/headwall/index.html).
    the thumb on the place they mean (David on the daily, 2026-10-14: "my finger still does not line
    up with the touch screen"; with the end riding 40 px above, a thumb on an outlet left the hose
    loose 12 times in 15). A place that FITS beats a nearer one that does not: an oxygen hose 20 px
-   off went into the air outlet one square over.
+   off went into the air outlet one square over. A thumb RESTING INSIDE a place the piece fits takes
+   it, ahead of the place under the drawn piece: the lift is about two squares, so two places two
+   squares apart (the arms of a Y) were a coin toss (Headwall, 2026-10-16).
 5. WHAT YOU HOLD RIDES CLEAR OF THE THUMB, AND THE PIECE DECIDES. A held piece is drawn above the
    thumb, and where the piece is drawn decides where it lands, so the thumb may leave the board to
    reach the bottom rows; a piece pulled off the board goes back to the tray. The end of a run rides

@@ -174,13 +174,27 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
   .hd-status{ padding:6px 12px; gap:10px; white-space:nowrap; }
   .hd-tiles{ gap:8px; }
   .hd-tile{ min-height:70px; }
-  .hd-page{ padding:16px 12px 32px; gap:12px; }
+  .hd-page{ padding:16px 12px 16px; gap:12px; }   /* 32 px at the foot ran the start screen 10 px past an SE (2026-10-16) */
+  .hd-share{ font-size:var(--t-label); padding:10px 12px; }   /* the link wrapped to three lines and the finish ran past the screen (360 x 640, 2026-10-16) */
+  /* the answer card's Back to the board stays on screen: a long answer (its link into the site, a two-line source)
+     scrolls above it instead of pushing it under the fold on an SE (2026-10-16) */
+  dialog.hd-qdlg .hd-acts{ position:sticky; bottom:0; z-index:1; padding-top:10px; background:var(--surface); }
 }
 /* A SHORT PHONE (an iPhone SE in Safari leaves about 375 x 548): the question card tightens so a long question with its
-   hint still fits the sheet; the keys stay above the 44px floor */
+   hint still fits the sheet; the keys stay above the 44px floor. 2026-10-16, the thumb pass before David's QA: the start
+   screen ran past the SE's screen (Make a board, Practice and Past boards under the fold) and the answer card scrolled
+   inside itself with Back to the board on the edge, so both tighten here too (a phone is one screen, hu-game-shell). */
 @media (max-height:600px) and (min-height:501px){
-  dialog.hd-qdlg .hd-q{ gap:8px; }
-  dialog.hd-qdlg .hd-key{ min-height:46px; }
+  dialog.hd-qdlg .hd-q{ gap:6px; }
+  dialog.hd-qdlg .hd-key{ min-height:44px; }
+  dialog.hd-qdlg .hd-keys{ gap:8px; }
+  .hd-page{ padding-top:10px; padding-bottom:8px; gap:10px; }
+  .hd-share{ line-height:1.25; }   /* the finish, with its share line, fits the SE too */
+  .hd-hero h2{ font-size:32px; }
+  .hd-hero p{ margin-top:4px; }
+  .hd-frame-in{ padding:12px; gap:10px; }
+  .hd-mini{ width:150px; }
+  .hd-tile{ min-height:58px; }
 }
 @media (max-height:500px){
   #hd.hd-on-board{ height:auto; min-height:calc(100dvh - var(--nav-h, 0px)); overflow:visible; }
@@ -623,7 +637,7 @@ const R = 44, HW = Math.sqrt(3) * R;
 const cx = (c) => HW * (c.q + c.r / 2), cy = (c) => 1.5 * R * c.r;
 function hexPts(x, y, r){ const p = []; for (let i = 0; i < 6; i++){ const a = Math.PI / 180 * (60 * i - 30); p.push((x + r * Math.cos(a)).toFixed(1) + ',' + (y + r * Math.sin(a)).toFixed(1)); } return p.join(' '); }
 function splitLabel(t){
-  if (t.length <= 9 || !t.includes(' ')) return [t];
+  if (t.length <= 8 || !t.includes(' ')) return [t];   /* two short words ("Odd codes", "Health IT") take two lines at full size (2026-10-16) */
   const w = t.split(' '), mid = Math.ceil(w.length / 2);
   let a = w.slice(0, mid).join(' '), b = w.slice(mid).join(' ');
   if (w.length === 3 && w[0].length + w[1].length < w[1].length + w[2].length) { a = w.slice(0, 2).join(' '); b = w[2]; }
@@ -895,7 +909,28 @@ function paintBoard(){
   const w = $('hdBoardWrap');
   if (!w) return;
   w.innerHTML = boardSvg();
+  fitLabels(w);
+  /* the first board can be drawn before the web font lands, and the narrower fallback measures short: fit again then */
+  if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(() => { if (w.isConnected) fitLabels(w); });
   wireBoard();
+}
+/* a tile's name fits its hex (2026-10-16, the visual pass before David's QA: "Hospitals" and "Workforce" ran past the
+   hex and "Compacts" touched both edges). Measured once drawn, so it holds in whatever font the device has; both lines
+   of a name shrink together. 52 of the hex's 71 units across: at 58 a bold name still met the thick borders. */
+function fitLabels(root){
+  if (!root || !root.querySelectorAll) return;
+  /* never under the 13 px floor for words on a phone: on a phone 14 units is about 13 px already, so a name shrinks only
+     where the board is drawn large (a desk), and on a phone it keeps the size it had */
+  const svg = root.querySelector('svg.hd-board'), vb = svg && svg.viewBox && svg.viewBox.baseVal;
+  const ppu = vb && vb.width ? svg.getBoundingClientRect().width / vb.width : 1;
+  for (const g of root.querySelectorAll('.hd-t')){
+    const ls = [...g.querySelectorAll('.hd-lbl')]; if (!ls.length || typeof ls[0].getComputedTextLength !== 'function') continue;
+    const wide = Math.max(...ls.map((t) => t.getComputedTextLength()));
+    if (!(wide > 52)) continue;
+    const fs = parseFloat(ls[0].getAttribute('font-size')), k = Math.max(0.72, 52 / wide, 13 / (fs * ppu));
+    if (k >= 1) continue;
+    for (const t of ls) t.setAttribute('font-size', (parseFloat(t.getAttribute('font-size')) * k).toFixed(1));
+  }
 }
 function boardName(){
   const f = E.fieldOf(G.field), lean = f ? ' · ' + f.name : '';

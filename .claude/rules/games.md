@@ -81,7 +81,8 @@ played on a board:
 3. Every move works with taps alone; dragging is the quick way (WCAG 2.5.7).
 4. On touch the game aims: a piece lands on the nearest place it fits within 44 px of the aim, and a
    drag has two aims, the piece drawn above the thumb and the thumb itself (2026-10-14). A place that
-   fits beats a nearer one that does not.
+   fits beats a nearer one that does not, and a thumb resting inside a place the piece fits takes it
+   (2026-10-16).
 5. Nothing sits on the board while a piece is held; the board gets the screen.
 6. A drag starts at 10 px on touch; nothing destructive happens on the press (WCAG 2.5.2). A tray
    decides between its own scroll and a pull that lifts a piece; the browser's pan-x does not.

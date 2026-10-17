@@ -545,6 +545,9 @@ eleventyExcludeFromCollections: true
    order: a pinned bar there would take ~30% of a 360px screen, past the 20% chrome budget. */
 @media (max-width:699px) and (min-height:501px){
   .ug-main{grid-template-areas:"map" "side" "chart"}
+  /* the scoreboard is a grid here, so the readouts share one width instead of each taking its own
+     (2026-10-16); a sideways phone keeps the one-row strip, where all four fit */
+  .ug-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));width:100%}
   .ug-rundock{position:fixed;left:0;right:0;bottom:0;z-index:110;display:flex;align-items:center;gap:10px;
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border2)}
   .ug-rundock .ug-track{flex:1;margin:0;text-align:left}
@@ -580,6 +583,14 @@ eleventyExcludeFromCollections: true
 .ug-panel,#ug .ug-panel,[data-theme="light"] #ug .ug-panel,.ug-brief,.ug-chartwrap,#ug .ug-chartwrap,[data-theme="light"] #ug .ug-chartwrap{background:var(--face-bg);box-shadow:0 10px 22px var(--depth)}
 .ug-modal{background:var(--face-bg);border-color:color-mix(in srgb, var(--brass-lo) 50%, var(--border2));box-shadow:var(--panel-lift)}
 .ug-start-foot{background:var(--face-b)}
+/* The shade over the Start bar says the card runs on under it, so it shows only while it does: a card that fits,
+   or one scrolled to its end, leaves the bar flat (2026-10-16; in day the always-on shade read as a grey band with
+   nothing under it). The shade follows the scroll and nothing moves. Without scroll timelines it stays as it was. */
+@supports (animation-timeline: scroll()){
+  #ug .ug-start-foot{--ug-shade:0 -14px 24px -8px rgba(13,17,23,.96);box-shadow:none;animation:ug-foot-shade linear both;animation-timeline:scroll(nearest block)}
+  [data-theme="light"] #ug .ug-start-foot{--ug-shade:0 -14px 24px -8px rgba(13,32,54,.14);box-shadow:none}
+}
+@keyframes ug-foot-shade{0%,94%{box-shadow:var(--ug-shade)}100%{box-shadow:none}}
 .ug-deftip,[data-theme="light"] #ug .ug-deftip{background:var(--face-bg);border-color:color-mix(in srgb, var(--brass-lo) 50%, var(--border2));box-shadow:var(--panel-lift)}
 @media (max-width:699px) and (min-height:501px){
   .ug-rundock{background:var(--face-bg);border-top-color:color-mix(in srgb, var(--brass-lo) 45%, var(--border2))}
@@ -2533,7 +2544,7 @@ eleventyExcludeFromCollections: true
   function renderFinance(){
     const interest=Math.round(run.debt*CFG.loanRate);
     $('ug-finance').innerHTML=`<h3>Financing${info('loan')}</h3>
-      <div class="ug-rowline"><span>Outstanding debt</span><b style="color:${run.debt>0?'var(--amber)':'var(--t1)'}">${money(run.debt)}</b></div>
+      <div class="ug-rowline"><span>Outstanding debt</span><b style="color:${run.debt>0?'var(--amber)':'var(--t1)'}">${run.debt?money(run.debt):'$0'}</b></div>
       <div class="ug-rowline"><span>Interest / quarter (${Math.round(CFG.loanRate*100)}%)</span><b style="color:${interest?'var(--lt-red,#ff7a7a)':'var(--t1)'}">${interest?'-'+money(interest):'$0'}</b></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="ug-expand" data-act="borrow" style="margin:0" ${run.debt+CFG.loanChunk>CFG.loanCap?'disabled':''}>Borrow ${money(CFG.loanChunk)}</button>

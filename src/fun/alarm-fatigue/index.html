@@ -162,6 +162,10 @@ date: 2026-09-10
   #ehr{position:absolute; inset:0; z-index:0; pointer-events:none; user-select:none;
     display:flex; flex-direction:column;}
   .ehr-dim{opacity:.55;}
+  /* in day the dim fades the chart toward a light wall, so it fades the ink with it: the nurse
+     brain's handwriting and the white banner measured 2.5:1 at .55 (2026-10-16). At .92 they hold
+     4.5:1 and the chart still sits a step back. Night keeps .55, where the dark wall costs less. */
+  :root[data-theme="light"] .ehr-dim{opacity:.92;}
   /* the banner text stops where the In Basket and Chat chips start: the dock
      reports its width (--dock-w) and the banner keeps that much clear */
   .ehrBanner{background:var(--eb); color:var(--ebf); font-size:var(--t-fine); padding:5px 12px; position:relative;
@@ -249,6 +253,10 @@ date: 2026-09-10
     border-bottom:1px solid color-mix(in srgb, var(--eb) 70%, #000 30%);
   }
   .af[data-ehr="prophet"] .ehrBanner b{color:#e6b95c;}
+  /* Classic's Cerner banner read 2.7 to 3.9:1 in white and 1.5 to 2.4:1 in gold (2026-10-16): it takes the night
+     teal in both themes, undimmed, with the name in the banner's own white (4.9:1 at the gradient's light top) */
+  .af:not([data-chart])[data-ehr="prophet"] .ehrBanner{--eb:#1d5f72; opacity:1;}
+  .af:not([data-chart])[data-ehr="prophet"] .ehrBanner b{color:var(--ebf);}
   .af[data-ehr="prophet"] .pc-menu{background:var(--en);}
   .af[data-ehr="prophet"] .pc-menu-h{background:var(--et); color:var(--enf); font-weight:600;
     border-bottom:1px solid var(--enlin);}
@@ -1518,6 +1526,8 @@ date: 2026-09-10
     .clicker .count{font-size:26px;}
     .clicker .sub{font-size:var(--t-fine); margin-top:5px;}
   }
+  /* the sticky button's plate (both blocks above) only while the console scrolls under it: placeStage() sets .af-scroll */
+  .stage:not(.af-scroll) > .clicker{background:none; box-shadow:none;}
 
   /* ---------- reduced motion: state keeps its color, loses its strobe ---------- */
   @media (prefers-reduced-motion: reduce){
@@ -3131,9 +3141,10 @@ function amaEvent(force){
     if(!f.parentNode) return;
     f.remove(); if(issue){ killIssue(issue); issue=null; }
     row.blank=false; assignRhythm(row); if(row.rebirth) row.rebirth(); row.hrEl.textContent='♥ '+row.hr;
-    const nm=chartName(takeName(false));   /* off the shared shelf; the fallback is a Doe */
+    const pn=takeName(false), nm=chartName(pn);   /* off the shared shelf; the fallback is a Doe */
     const pt=[...document.querySelectorAll('#brain .br-pt')].find(p=>{ const i=p.querySelector('.br-id i'); return i && i.textContent.trim()===String(row.room); });
     if(pt){ const els=pt.querySelectorAll('.br-id i'); if(els[1]) els[1].textContent=nm; }
+    if(row.room===4) openChartOf(pn);
     S.stats.admits=(S.stats.admits||0)+1;
     const b=bonus(byHelp(by) ? 1.5 : 2.5);
     floatText(0,0,(byHelp(by) ? whoIs(by)+' settled the admit. ' : 'NEW ADMIT from the ED. ')+'Room '+row.room+', '+nm+'. Same bed, new binder. +'+b, true);
@@ -3475,8 +3486,17 @@ function chartName(n){ return n.l+', '+n.f[0]; }
 const techNames=['Romona'];
 /* the four rooms on the brain sheet get their names from the same shelf */
 document.querySelectorAll('#brain .br-pt').forEach(p=>{
-  const els=p.querySelectorAll('.br-id i'); if(els[1]) els[1].textContent=chartName(takeName(false));
+  const els=p.querySelectorAll('.br-id i'); if(!els[1]) return;
+  const n=takeName(false); els[1].textContent=chartName(n);
+  if(els[0].textContent.trim()==='4') openChartOf(n);
 });
+/* the open chart (the banner, Heroic's storyboard) is Room 4's: it wore Doe, Jonathan while the
+   brain sheet gave him a name off the shelf (2026-10-16). The banner keeps the brain's short form,
+   never longer than the Doe it replaced, so it still clears the In Basket chips on a phone. */
+function openChartOf(n){
+  document.querySelectorAll('.ehrBanner b').forEach(b=>{ b.textContent=chartName(n).toUpperCase(); });
+  document.querySelectorAll('.sb-name').forEach(s=>{ s.textContent=n.l+', '+n.f; });
+}
 /* 20% quicker than they started (was 1.6-2.4 across, 1.3-2.1 down, per 50ms) */
 const TECH_VX=[1.92,2.88], TECH_VY=[1.56,2.52];
 /* back to work: by their own clock, a tap, a coworker, or a code */
@@ -6041,9 +6061,19 @@ function placeStage(){
     const tb = tabs && tabs.offsetHeight ? tabs.getBoundingClientRect().bottom-floor.getBoundingClientRect().top : 0;
     minTop=Math.max(56, Math.ceil(tb)+4);
   }
-  const top=Math.round(Math.max(minTop, H*0.53 - h/2));
+  let top=Math.round(Math.max(minTop, H*0.53 - h/2));
+  /* the centred console landed on Room 4's Labs and Meds and cut the lines in half (a phone, where
+     the nurse brain is one column, and 1024x768; 2026-10-16). While it fits below his box, it sits there. */
+  const rm4=document.querySelector('#brain .br-pt');
+  if(rm4){
+    const b=rm4.getBoundingClientRect(), s=stage.getBoundingClientRect();
+    const clear=Math.ceil(b.bottom-floor.getBoundingClientRect().top)+8;
+    if(b.right>s.left && b.left<s.right && clear>top && clear+h<=H-8) top=clear;
+  }
   stage.style.top=top+'px';
   stage.style.maxHeight = H<420 ? (H-top-8)+'px' : '';
+  /* the plate behind the button masks monitors scrolling under it; with nothing scrolling it is a square on the chart */
+  stage.classList.toggle('af-scroll', stage.scrollHeight>stage.clientHeight+1);
   btnBox=null; issues.forEach(o=>{ o.rect=null; });   /* everything inside it just moved */
 }
 if(window.ResizeObserver) new ResizeObserver(placeStage).observe(stage);

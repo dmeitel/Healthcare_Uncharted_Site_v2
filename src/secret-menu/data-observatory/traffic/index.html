@@ -292,12 +292,13 @@ function buildSeries(total){
 
 // every path id GoatCounter knows under the game, pages and events alike
 // (the list paginates by id; a handful of pages covers this site many times over)
+var GAME_PATH = /^\/?fun\/alarm-fatigue(\/|$)/;
 function gamePaths(){
   var ids = [];
   function page(after){
     return api('/paths?limit=200' + (after ? '&after=' + after : '')).then(function(p){
       var list = p.paths || [];
-      list.forEach(function(x){ if (/alarm-fatigue/.test(x.path || '')) ids.push(x.id); });
+      list.forEach(function(x){ if (GAME_PATH.test(x.path || '')) ids.push(x.id); });
       if (p.more && list.length && ids.length < 60 && after !== list[list.length - 1].id) return page(list[list.length - 1].id);
       return ids;
     });
@@ -323,7 +324,9 @@ function load(){
     // ids, then ask for hits on just those ids.
     settle(gamePaths().then(function(ids){
       if (!ids.length) return { hits: [] };
-      return api('/stats/hits' + qs + '&limit=50' + ids.map(function(id){ return '&include_paths=' + id; }).join(''));
+      // one comma list: GoatCounter keeps only the first of repeated include_paths, so the card showed the page
+      // and none of its events (2026-10-16)
+      return api('/stats/hits' + qs + '&limit=50&include_paths=' + ids.join(','));
     }))
   ]).then(function(res){
     if (seq !== loadSeq) return;
@@ -399,8 +402,10 @@ function render(total, hits, refs, locs, browsers, game, r){
   // clock-in, first-code, lunch, shift-end, overtime, played-<bucket>-min,
   // tasks-<bucket>. Counts of players are the page's own visit count; time
   // and volume are distributions across the buckets, never per-person.
-  list('gtGame', (game.hits || []).filter(function(h){ return /alarm-fatigue/.test(h.path || ''); }).map(function(h){
-    var name = String(h.path).replace(/^\/fun\/alarm-fatigue\/?/, '') || 'page views';
+  // The game's events are stored without the leading slash (fun/alarm-fatigue/clock-in), and the Learn page
+  // /learn/alarm-fatigue is not the game, so both tests are anchored on fun/alarm-fatigue.
+  list('gtGame', (game.hits || []).filter(function(h){ return GAME_PATH.test(h.path || ''); }).map(function(h){
+    var name = String(h.path).replace(/^\/?fun\/alarm-fatigue\/?/, '') || 'page views';
     return { name: name, count: h.count, event: !!h.event, title: h.title };
   }));
 }
@@ -454,8 +459,11 @@ function drawChart(){
   var ticks = Math.min(5, n), peakIdx = 0;
   series.forEach(function(s,i){ if (s.count > series[peakIdx].count) peakIdx = i; });
   for (var t = 0; t < ticks; t++) {
-    var ti = Math.round(t * (n - 1) / Math.max(1, ticks - 1));
-    parts.push('<text class="gt-axis" x="' + (x(ti) + barW/2) + '" y="' + (H - 6) + '" text-anchor="middle">' + fmtDay(series[ti].day) + '</text>');
+    var ti = Math.round(t * (n - 1) / Math.max(1, ticks - 1)), tx = x(ti) + barW/2;
+    // the last date ends at the chart's right edge when centring would run it past it
+    // (a phone read "Oct 1" for Oct 16, 2026-10-16); ending it at its bar instead ran it into the date before
+    var flush = t === ticks - 1 && tx > W - padR - 24;
+    parts.push('<text class="gt-axis" x="' + (flush ? W - 1 : tx) + '" y="' + (H - 6) + '" text-anchor="' + (flush ? 'end' : 'middle') + '">' + fmtDay(series[ti].day) + '</text>');
   }
   series.forEach(function(s,i){
     var by = y(s.count), bh = Math.max(s.count > 0 ? 1 : 0, padT + ph - by);
