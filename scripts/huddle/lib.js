@@ -84,8 +84,41 @@ const mapSlug = (n) => String(n).toLowerCase().replace(/[^a-z0-9]+/g, '-').repla
    when the best and the next are within 3 percent. Two: which of two is higher, 1 dot, skipped inside 6 percent. The
    absolute floor scales with the decimals a number is shown to. Every option's value rides along in `v`. */
 function floorFor(dp, wide) { return dp >= 2 ? (wide ? 0.05 : 0.03) : dp === 1 ? (wide ? 0.5 : 0.3) : 1; }
+
+/* ── THE EXPLANATION LINE (`why`, 2026-10-20, DECISIONS DH12) ──
+   Every question carries one plain line for the answer card, written from the same rows the question came from. For a
+   "which of these states" choice it is the right state's place among all of them, and who led, so the card says
+   something the option values beside the keys do not. The source, its year and the check date print on the line
+   under it (the page's srcHtml), so the line reports the fact and leaves the citation to that line.
+   rows: [{ st, v }]; `of` names the field ("the 50 states", "the 44 states with any"). Ties share a place. */
+function placeOf(rows, st, lowFirst) {
+  const v = (rows.find((r) => r.st === st) || {}).v;
+  return 1 + rows.filter((r) => (lowFirst ? r.v < v : r.v > v)).length;
+}
+function leaders(rows, lowFirst) {
+  const best = lowFirst ? Math.min(...rows.map((r) => r.v)) : Math.max(...rows.map((r) => r.v));
+  return { v: best, names: rows.filter((r) => r.v === best).map((r) => STATES[r.st]).sort() };
+}
+/** the line for "which of these is highest (lowest)": where the right state placed, and who led all of them */
+function placeWhy(rows, fmt, st, lowFirst, of) {
+  const field = of || `the ${rows.length} states`;
+  const p = placeOf(rows, st, lowFirst), L = leaders(rows, lowFirst), v = (rows.find((r) => r.st === st) || {}).v;
+  const end = lowFirst ? 'lowest' : 'highest';
+  if (p === 1) return `${STATES[st]} was ${end} of ${field}${L.names.length > 1 ? `, tied with ${joinNames(L.names.filter((x) => x !== STATES[st]))}` : ''}, at ${fmt(v)}.`;
+  const lead = `${joinNames(L.names)} ${L.names.length > 1 ? 'were' : 'was'} ${end} at ${fmt(L.v)}.`;
+  return lowFirst ? `Counted from the bottom of ${field}, ${STATES[st]} placed ${ordinal(p)}, at ${fmt(v)}; ${lead}`
+    : `${STATES[st]} placed ${ordinal(p)} of ${field}, at ${fmt(v)}; ${lead}`;
+}
+/** the line for "which of two is higher": both places, counted from the top */
+function pairWhy(rows, fmt, win, lose, of) {
+  const field = of || `the ${rows.length} states`;
+  return `Counted from the top of ${field}, ${STATES[win]} placed ${ordinal(placeOf(rows, win, false))} and ${STATES[lose]} ${ordinal(placeOf(rows, lose, false))}.`;
+}
+/** both lines at once, for fourForm and twoForm's `why` */
+const whyFor = (rows, fmt, of) => ({ four: (st, lo) => placeWhy(rows, fmt, st, lo, of), two: (w, l) => pairWhy(rows, fmt, w, l, of) });
+
 function fourForm(o) {
-  const { rows, fmt, dp, rng, idp, k, what, low, base, hint, n = 8, d = 2, seeOf } = o;
+  const { rows, fmt, dp, rng, idp, k, what, low, base, hint, n = 8, d = 2, seeOf, why } = o;
   const out = [];
   for (let i = 0, tries = 0; i < n && tries < 200 && rows.length >= 6; tries++) {
     const four = rng.shuffle(rows).slice(0, 4);
@@ -98,13 +131,14 @@ function fourForm(o) {
     if (Math.abs(best - next) < Math.max(Math.abs(best) * 0.03, floorFor(dp, false))) continue;
     const ans = vals.indexOf(best);
     out.push({ ...base, id: `${idp}-four-${i}`, k, d, t: 'choice', q: `Which of these states had the ${lo ? 'lowest' : 'highest'} ${what}?`,
-      o: four.map((r) => keyName(r.st)), a: ans, v: four.map((r) => fmt(r.v)), see: seeOf ? seeOf(four[ans].st) : undefined, h: hint });
+      o: four.map((r) => keyName(r.st)), a: ans, v: four.map((r) => fmt(r.v)), see: seeOf ? seeOf(four[ans].st) : undefined, h: hint,
+      why: why ? why.four(four[ans].st, lo) : undefined });
     i++;
   }
   return out;
 }
 function twoForm(o) {
-  const { rows, fmt, dp, rng, idp, k, what, base, hint, n = 8, d = 1, seeOf } = o;
+  const { rows, fmt, dp, rng, idp, k, what, base, hint, n = 8, d = 1, seeOf, why } = o;
   const out = [];
   for (let i = 0, tries = 0; i < n && tries < 200 && rows.length >= 4; tries++) {
     const two = rng.shuffle(rows).slice(0, 2);
@@ -112,7 +146,8 @@ function twoForm(o) {
     if (Math.abs(x - y) < Math.max(Math.max(Math.abs(x), Math.abs(y)) * 0.06, floorFor(dp, true))) continue;
     const ans = x > y ? 0 : 1;
     out.push({ ...base, id: `${idp}-two-${i}`, k, d, t: 'choice', q: `Which state had the higher ${what}?`,
-      o: two.map((r) => keyName(r.st)), a: ans, v: two.map((r) => fmt(r.v)), see: seeOf ? seeOf(two[ans].st) : undefined, h: hint });
+      o: two.map((r) => keyName(r.st)), a: ans, v: two.map((r) => fmt(r.v)), see: seeOf ? seeOf(two[ans].st) : undefined, h: hint,
+      why: why ? why.two(two[ans].st, two[1 - ans].st) : undefined });
     i++;
   }
   return out;
@@ -171,6 +206,8 @@ function check(q, feed) {
     if (!((q.tol > 0 && q.tol <= 0.25) || q.abs > 0)) bad('a share or an amount that counts');
   } else bad('choice or number');
   if (q.h && !hintOK(q, q.h)) bad('the hint breaks a rule: ' + q.h);
+  // every tile explains itself on the answer card (2026-10-20, DH12; tests/huddle-questions.test.js holds the whole bank to it)
+  if (!q.why || !String(q.why).trim() || !/[.?]$/.test(String(q.why).trim())) bad('an explanation line (why) that ends a sentence');
   const t = words(q);
   if (/[—–]/.test(t)) bad('a dash');
   if (BANNED.test(t)) bad('a banned word');
@@ -219,4 +256,4 @@ function versionBank(prev, built, o) {
 }
 
 module.exports = { ROOT, readJson, rngFrom, STATES, keyName, FIFTY, round, commas, median, dateWords, joinNames, ordinal,
-  kOf, idOf, mapSlug, fourForm, twoForm, withDistractors, hintOK, check, FIELD_RES, versionBank };
+  kOf, idOf, mapSlug, fourForm, twoForm, withDistractors, hintOK, check, FIELD_RES, versionBank, placeOf, placeWhy, pairWhy, whyFor };

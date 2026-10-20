@@ -11,7 +11,7 @@
  *     four states is highest or lowest, which of two is higher, and which state is highest of all fifty.
  * A new row: a state's tax type or rate, or a new index in colKeys with a line in INDEX, changes these on the next build.
  */
-const { readJson, rngFrom, STATES, FIFTY, keyName, commas, median, joinNames, kOf, idOf, fourForm, twoForm, withDistractors } = require('../lib');
+const { readJson, rngFrom, STATES, FIFTY, keyName, commas, median, joinNames, ordinal, kOf, idOf, fourForm, twoForm, withDistractors, placeOf, whyFor } = require('../lib');
 
 const reads = ['src/assets/data/assignment-compass.json'];
 
@@ -59,18 +59,26 @@ function build() {
     }
     // which flat rate is higher (a clear half point apart)
     const flatRows = flat.map((s) => ({ st: s, v: A.states[s].tax.rate * 100 }));
+    // THE EXPLANATION (2026-10-20, DH12): where the right state's rate placed among the flat-tax states
+    const flatWhy = (st) => { const p = placeOf(flatRows, st, false), top = flatRows.filter((x) => x.v === Math.max(...flatRows.map((y) => y.v))).map((x) => STATES[x.st]);
+      return p === 1 ? `${STATES[st]} had the highest flat rate of the ${flat.length} flat-tax states.`
+        : `${STATES[st]}'s rate placed ${ordinal(p)} of the ${flat.length} flat-tax states; ${joinNames(top)} had the highest, ${pct(Math.max(...flatRows.map((y) => y.v)) / 100)}.`; };
     for (let n = 0, tries = 0; n < 6 && tries < 200; tries++) {
       const two = r.shuffle(flatRows).slice(0, 2);
       if (Math.abs(two[0].v - two[1].v) < 0.5) continue;
       const ans = two[0].v > two[1].v ? 0 : 1;
       out.push({ ...base, id: `ac-flatrate-two-${n}`, k: kOf('ac', 'flatrate'), d: 2, t: 'choice',
         q: `Both of these states tax income at one flat rate. Which rate was higher for the ${ty} tax year?`, o: two.map((x) => keyName(x.st)), a: ans,
-        v: two.map((x) => pct(x.v / 100)), h: `Flat rates ran from ${pct(Math.min(...flatRows.map((x) => x.v)) / 100)} to ${pct(Math.max(...flatRows.map((x) => x.v)) / 100)}.` });
+        v: two.map((x) => pct(x.v / 100)), h: `Flat rates ran from ${pct(Math.min(...flatRows.map((x) => x.v)) / 100)} to ${pct(Math.max(...flatRows.map((x) => x.v)) / 100)}.`,
+        why: flatWhy(two[ans].st) });
       n++;
     }
     // the highest top rate among states with brackets (a clear point apart)
     const topRate = (s) => { const t = A.states[s].tax; const b = t.brackets && t.brackets.s; return b && b.length ? b[b.length - 1][1] * 100 : null; };
     const topRows = brackets.map((s) => ({ st: s, v: topRate(s) })).filter((x) => x.v != null);
+    // THE EXPLANATION: where the top bracket starts for a single filer, from the same bracket table
+    const topWhy = (st) => { const b = A.states[st].tax.brackets.s, last = b[b.length - 1];
+      return `${STATES[st]}'s top rate of ${pct(last[1])} applied to a single filer's taxable income over $${commas(last[0])}.`; };
     for (let n = 0, tries = 0; n < 8 && tries < 300; tries++) {
       const four = r.shuffle(topRows).slice(0, 4);
       const vals = four.map((x) => x.v), best = Math.max(...vals), rest = vals.filter((v) => v !== best);
@@ -78,7 +86,8 @@ function build() {
       const ans = vals.indexOf(best);
       out.push({ ...base, id: `ac-toprate-four-${n}`, k: kOf('ac', 'toprate'), d: 3, t: 'choice',
         q: `Which of these states had the highest top income tax rate for the ${ty} tax year?`, sub: 'The rate on the last dollar of a single filer\'s highest bracket.',
-        o: four.map((x) => keyName(x.st)), a: ans, v: four.map((x) => pct(x.v / 100)), h: `${brackets.length} states tax income in brackets.` });
+        o: four.map((x) => keyName(x.st)), a: ans, v: four.map((x) => pct(x.v / 100)), h: `${brackets.length} states tax income in brackets.`,
+        why: topWhy(four[ans].st) });
       n++;
     }
   }
@@ -100,8 +109,8 @@ function build() {
       const hint = `Fifty-state median: ${fmt(median(rows.map((x) => x.v)))}.`;
       const r = rngFrom('huddle|ac|' + key);
       const idp = 'ac-' + idOf(key);
-      out.push(...fourForm({ rows, fmt, dp: 1, rng: r, idp, k: kOf('ac', key, 'four'), what, low: true, base, hint }));
-      out.push(...twoForm({ rows, fmt, dp: 1, rng: r, idp, k: kOf('ac', key, 'two'), what, base, hint }));
+      out.push(...fourForm({ rows, fmt, dp: 1, rng: r, idp, k: kOf('ac', key, 'four'), what, low: true, base, hint, why: whyFor(rows, fmt) }));
+      out.push(...twoForm({ rows, fmt, dp: 1, rng: r, idp, k: kOf('ac', key, 'two'), what, base, hint, why: whyFor(rows, fmt) }));
       const sorted = rows.slice().sort((a, b) => b.v - a.v || a.st.localeCompare(b.st));
       for (const dir of ['hi', 'lo']) {
         const order = dir === 'hi' ? sorted : sorted.slice().reverse();

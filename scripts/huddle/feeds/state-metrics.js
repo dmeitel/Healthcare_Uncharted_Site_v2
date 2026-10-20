@@ -20,7 +20,7 @@
  * worded from its name and `sub`. A line in WORDS words it better and puts it in a zone; without one it lands in its
  * lens's zone (LENS_HOME).
  */
-const { readJson, rngFrom, STATES, FIFTY, commas, median, ordinal, joinNames, kOf, idOf, mapSlug, fourForm, twoForm, withDistractors, keyName, hintOK } = require('../lib');
+const { readJson, rngFrom, STATES, FIFTY, commas, median, ordinal, joinNames, kOf, idOf, mapSlug, fourForm, twoForm, withDistractors, keyName, hintOK, whyFor } = require('../lib');
 
 const reads = ['src/_data/metricsConfig.json', 'src/_data/stateData.json', 'src/_data/dataYears.json'];
 
@@ -186,8 +186,8 @@ function build(ctx) {
 
       // the four, the two and the state's own number, where TEMPLATES does not ask them already
       if (!T) {
-        out.push(...fourForm({ rows, fmt: S.fmt, dp: S.dp, rng, idp: id0, k: kOf('sm', it.id, 'four'), what, low, base, hint, seeOf: see }));
-        out.push(...twoForm({ rows, fmt: S.fmt, dp: S.dp, rng, idp: id0, k: kOf('sm', it.id, 'two'), what, base, hint, seeOf: see }));
+        out.push(...fourForm({ rows, fmt: S.fmt, dp: S.dp, rng, idp: id0, k: kOf('sm', it.id, 'four'), what, low, base, hint, seeOf: see, why: whyFor(rows, S.fmt) }));
+        out.push(...twoForm({ rows, fmt: S.fmt, dp: S.dp, rng, idp: id0, k: kOf('sm', it.id, 'two'), what, base, hint, seeOf: see, why: whyFor(rows, S.fmt) }));
         const numQ = W.num || ((Sn, yy) => `What was the ${inSentence(it.name)} in ${Sn} in ${yy}?`);
         for (const r of rng.shuffle(rows).slice(0, 6)) {
           const q = { ...base, id: `${id0}-num-${r.st.toLowerCase()}`, k: kOf('sm', it.id, 'num'), d: 3, t: 'number', q: numQ(STATES[r.st], y),
@@ -279,4 +279,4 @@ function rangeWhy(rows, fmt, st) {
   return `Across the states the range ran from ${fmt(lo)} in ${joinNames(at(lo))} to ${fmt(hi)} in ${joinNames(at(hi))}.`;
 }
 
-module.exports = { name: 'state-metrics', prefix: 'sm-', reads, build, measures };
+module.exports = { name: 'state-metrics', prefix: 'sm-', reads, build, measures, rangeWhy };

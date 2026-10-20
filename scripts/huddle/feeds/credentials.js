@@ -59,6 +59,9 @@ function build(ctx) {
     if (rows.length < 4) continue;
     const lo = Math.min(...rows.map((c) => c.pass)), hi = Math.max(...rows.map((c) => c.pass));
     const hint = `First-time rates in ${y} ran from ${pct(lo)} to ${pct(hi)}.`;
+    // THE EXPLANATION (2026-10-20, DH12): the lowest exam's place among every first-time rate on file for the year
+    const lowWhy = (c, all) => { const top = all.filter((x) => x.pass === hi).map((x) => x.exam);
+      return `${c.exam} passed ${pct(c.pass)} of first-time takers in ${y}; of the ${all.length} exams on file that year, ${top.join(' and ')} passed the most, ${pct(hi)}.`; };
     const base = { z: 'prv', f: 'Exams', src: 'Each exam body\'s own pass-rate report, from the Career Tree\'s credential data', yr: y, ck,
       sub: 'First-time takers, from each exam body\'s own report.' };
     for (let n = 0, tries = 0; n < 6 && tries < 300; tries++) {
@@ -66,7 +69,8 @@ function build(ctx) {
       if (Math.abs(two[0].pass - two[1].pass) < 8) continue;
       const ans = two[0].pass > two[1].pass ? 0 : 1;
       out.push({ ...base, id: `cr-pass-${y}-two-${n}`, k: kOf('cr', 'pass', y), d: 2, t: 'choice',
-        q: `Which exam had the higher first-time pass rate in ${y}?`, o: two.map(label), a: ans, v: two.map((c) => pct(c.pass)), h: hint, url: two[ans].url });
+        q: `Which exam had the higher first-time pass rate in ${y}?`, o: two.map(label), a: ans, v: two.map((c) => pct(c.pass)), h: hint, url: two[ans].url,
+        why: `${two[ans].exam} passed ${pct(two[ans].pass)} of first-time takers in ${y} and ${two[1 - ans].exam} ${pct(two[1 - ans].pass)}, each by its own body's report.` });
       n++;
     }
     for (let n = 0, tries = 0; n < 4 && tries < 300; tries++) {
@@ -76,7 +80,7 @@ function build(ctx) {
       const ans = vals.indexOf(best);
       out.push({ ...base, id: `cr-passlow-${y}-four-${n}`, k: kOf('cr', 'passlow', y), d: 3, t: 'choice',
         q: `Which of these exams had the lowest first-time pass rate in ${y}?`, o: four.map(label), a: ans, v: four.map((c) => pct(c.pass)), h: hint,
-        url: four[ans].url });
+        url: four[ans].url, why: lowWhy(four[ans], rows) });
       n++;
     }
   }
@@ -90,7 +94,7 @@ function build(ctx) {
       id: 'cr-rate-' + idOf(c.key), k: kOf('cr', 'rate', c.key), d: 3, t: 'number',
       q: `What percent of first-time takers passed ${examName(c)} in ${c.passYear}?`, sub: `${cohort}, by ${c.org}'s own report.`,
       a: c.pass, tol: 0.1, pre: '', suf: '%', dp: Number.isInteger(c.pass) ? 0 : 1, unit: 'percent',
-      why: c.note, see: see(c) });
+      why: c.note || `That is ${c.org}'s own figure for ${c.passYear} (${c.cohort}).`, see: see(c) });
   }
   return out;
 }

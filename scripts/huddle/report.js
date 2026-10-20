@@ -26,9 +26,16 @@ const kinds = (list) => new Set(list.map((q) => q.k)).size;
 let stale = false;
 try { execFileSync(process.execPath, [path.join(__dirname, '..', 'build-huddle.js'), '--check'], { stdio: 'pipe' }); } catch (e) { stale = true; }
 
-const v1 = Q.filter((q) => !q.b), v2 = Q.filter((q) => q.b === 2);
+// the feeds' questions are version 2 on (2 from 2026-10-20, 3 from 2026-10-25, DH12); each version's first day is in the bank
+const v1 = Q.filter((q) => !q.b), v2 = Q.filter((q) => q.b >= 2);
 console.log(`Daily Huddle bank, built ${bank.built}: ${Q.length} questions, ${kinds(Q)} templates`);
-console.log(`  version 1: ${v1.length} questions, ${kinds(v1)} templates · version 2 (the feeds): ${v2.length} questions, ${kinds(v2)} templates`);
+console.log(`  version 1: ${v1.length} questions, ${kinds(v1)} templates · the feeds: ${v2.length} questions, ${kinds(v2)} templates`);
+for (const [b, day] of Object.entries(bank.versions || {})) {
+  const vb = Q.filter((q) => q.b === Number(b));
+  console.log(`  version ${b}, first dealt ${day}: ${vb.length} questions${vb.length ? ` (${Object.keys(NAMES).map((z) => z + ' ' + vb.filter((q) => q.z === z).length).filter((x) => !/ 0$/.test(x)).join(', ')})` : ''}`);
+}
+const noWhy = Q.filter((q) => !q.why).length;
+if (noWhy) console.log(`  ${noWhy} questions have no explanation line (why)`);
 if (stale) console.log('  STALE: the sources changed since the last build. Run npm run build:huddle.');
 
 const flags = [];
@@ -43,7 +50,7 @@ for (const z of Object.keys(NAMES)) {
   const fams = {};
   for (const q of zq) (fams[q.f] = fams[q.f] || []).push(q);
   for (const [f, list] of Object.entries(fams).sort((a, b) => b[1].length - a[1].length)) {
-    const fresh = list.filter((q) => q.b === 2).length;
+    const fresh = list.filter((q) => q.b >= 2).length;
     console.log(`       ${pad(f, 16)} ${lpad(list.length, 5)} / ${lpad(kinds(list), 4)}${fresh ? `   (${fresh} from the feeds)` : ''}`);
   }
 }

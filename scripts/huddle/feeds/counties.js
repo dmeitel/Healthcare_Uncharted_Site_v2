@@ -15,7 +15,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { ROOT, readJson, rngFrom, STATES, FIFTY, kOf, idOf } = require('../lib');
+const { ROOT, readJson, rngFrom, STATES, FIFTY, kOf, idOf, ordinal } = require('../lib');
 const { measures } = require('./state-metrics');
 
 const reads = ['src/assets/data/countyData.json', 'src/assets/data/us-counties.json', 'src/assets/data/geo/counties/'];
@@ -37,7 +37,15 @@ function countyNames() {
   return names;
 }
 
-function build(ctx) {
+function build(ctx) { return askCounties(ctx, {}); }
+
+/**
+ * The county questions, for this feed and for a later one that asks more of them (state-more.js, bank version 3):
+ * `idp` is the id prefix, `seed` the generator's, `only` keeps a measure, `skip` holds 'measure id|state' pairs already
+ * asked, and `cap` is how many of each form a measure gets. With no options it is exactly this feed's build.
+ */
+function askCounties(ctx, o) {
+  const { idp = 'co-', seed = 'huddle|co|', only = null, skip = null, cap = 6 } = o;
   const C = readJson(reads[0]);
   const pop = readJson(reads[1]);
   const names = countyNames();
@@ -55,44 +63,50 @@ function build(ctx) {
   }
   const out = [];
   for (const m of measures(ctx)) {
-    if (!m.fresh || !m.S) continue;
+    if (!m.fresh || !m.S || (only && !only(m))) continue;
     const at = (C[m.lens] && C[m.lens][m.index]) ? [m.lens, m.index] : byName[m.it.name];
     const vals = at && C[at[0]] && C[at[0]][at[1]];
     if (!vals) continue;
-    const S = m.S, r = rngFrom('huddle|co|' + m.it.id);
+    const S = m.S, r = rngFrom(seed + m.it.id);
     const base = { ...m.base, f: 'Counties', src: m.base.src + ', county estimates' };
     const see = (f, st) => `plm|lens=${m.lens}&metric=${m.slug}&state=${st}&county=${f}|${label(f, st)}, ${STATES[st]}`;
-    const states = r.shuffle(Object.keys(big).filter((st) => big[st].length >= 4 && big[st].every((f) => typeof vals[f] === 'number')));
+    const states = r.shuffle(Object.keys(big).filter((st) => big[st].length >= 4 && big[st].every((f) => typeof vals[f] === 'number')))
+      .filter((st) => !skip || !skip.has(m.it.id + '|' + st));
     const stateVal = (st) => (stateData[m.lens] && stateData[m.lens][m.index] ? stateData[m.lens][m.index][st] : null);
     let four = 0, two = 0;
     for (const st of states) {
-      if (four >= 6 && two >= 6) break;
+      if (four >= cap && two >= cap) break;
       const rows = big[st].map((f) => ({ f, v: vals[f] }));
       const sv = stateVal(st);
       if (typeof sv !== 'number') continue;
       const hint = `${STATES[st]}'s statewide figure: ${S.fmt(sv)}.`;
-      if (four < 6) {
+      // THE EXPLANATION (2026-10-20, DH12): the right county's place among the state's biggest, and the state's own figure
+      const units = st === 'LA' ? 'parishes' : 'counties';
+      const placeIn = (f, lowFirst) => 1 + rows.filter((x) => (lowFirst ? x.v < vals[f] : x.v > vals[f])).length;
+      const whyOf = (f, lowFirst, other) => `Counted from the ${lowFirst ? 'bottom' : 'top'} of ${STATES[st]}'s ${rows.length} most populous ${units}, ${label(f, st)} placed ${ordinal(placeIn(f, lowFirst))}, at ${S.fmt(vals[f])}`
+        + `${other ? `, and ${label(other, st)} ${ordinal(placeIn(other, lowFirst))}` : ''}; the state as a whole was at ${S.fmt(sv)}.`;
+      if (four < cap) {
         const pick = r.shuffle(rows).slice(0, 4);
         const lo = m.low && four % 2 === 1;
         const vs = pick.map((x) => x.v), best = lo ? Math.min(...vs) : Math.max(...vs), rest = vs.filter((v) => v !== best);
         const next = lo ? Math.min(...rest) : Math.max(...rest);
         if (rest.length === 3 && Math.abs(best - next) >= Math.max(Math.abs(best) * 0.03, S.dp >= 2 ? 0.03 : S.dp === 1 ? 0.3 : 1)) {
           const ans = vs.indexOf(best);
-          out.push({ ...base, id: `co-${idOf(m.it.id.split('/')[1])}-${st.toLowerCase()}-four-0`, k: kOf('co', m.it.id, 'four'), d: 3, t: 'choice',
+          out.push({ ...base, id: `${idp}${idOf(m.it.id.split('/')[1])}-${st.toLowerCase()}-four-0`, k: kOf('co', m.it.id, 'four'), d: 3, t: 'choice',
             q: `Which of these ${STATES[st]} ${st === 'LA' ? 'parishes' : 'counties'} had the ${lo ? 'lowest' : 'highest'} ${m.what}?`, o: pick.map((x) => label(x.f, st)), a: ans,
-            v: pick.map((x) => S.fmt(x.v)), h: hint, see: see(pick[ans].f, st) });
+            v: pick.map((x) => S.fmt(x.v)), h: hint, see: see(pick[ans].f, st), why: whyOf(pick[ans].f, lo) });
           four++;
           continue;                                                   // one question a state, so a state is not asked twice
         }
       }
-      if (two < 6) {
+      if (two < cap) {
         const pair = r.shuffle(rows).slice(0, 2);
         const [x, y] = pair.map((p) => p.v);
         if (Math.abs(x - y) >= Math.max(Math.max(Math.abs(x), Math.abs(y)) * 0.06, S.dp >= 2 ? 0.05 : S.dp === 1 ? 0.5 : 1)) {
           const ans = x > y ? 0 : 1;
-          out.push({ ...base, id: `co-${idOf(m.it.id.split('/')[1])}-${st.toLowerCase()}-two-0`, k: kOf('co', m.it.id, 'two'), d: 2, t: 'choice',
+          out.push({ ...base, id: `${idp}${idOf(m.it.id.split('/')[1])}-${st.toLowerCase()}-two-0`, k: kOf('co', m.it.id, 'two'), d: 2, t: 'choice',
             q: `Which ${STATES[st]} ${st === 'LA' ? 'parish' : 'county'} had the higher ${m.what}?`, o: pair.map((p) => label(p.f, st)), a: ans,
-            v: pair.map((p) => S.fmt(p.v)), h: hint, see: see(pair[ans].f, st) });
+            v: pair.map((p) => S.fmt(p.v)), h: hint, see: see(pair[ans].f, st), why: whyOf(pair[ans].f, false, pair[1 - ans].f) });
           two++;
         }
       }
@@ -101,4 +115,4 @@ function build(ctx) {
   return out;
 }
 
-module.exports = { name: 'counties', prefix: 'co-', reads, build };
+module.exports = { name: 'counties', prefix: 'co-', reads, build, askCounties };

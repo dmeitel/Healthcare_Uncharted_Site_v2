@@ -19,7 +19,13 @@
  *     each asking about every row of its file: the map's state measures, the license compacts, the Assignment Compass's
  *     taxes and living costs, the Vendor Directory, the credential exams, the hospital cost reports, the school file,
  *     state pay, bedside math and the map's counties. Their questions carry b: 2.
+ *   - bank version 3 (2026-10-20, DECISIONS DH12, first dealt 2026-10-25): six more feeds (state-laws, licensing,
+ *     compass-more, vendor-facts, care-sites, state-more) grow Policy, Patient and Health Tech to 300 or more each, so
+ *     the daily's 60-day memory has room. A law or a federal figure is asked only where a live check in
+ *     scripts/data/huddle-law-checks.json agrees with the site's data.
  *
+ * Every question carries `why`, its explanation line, written from the same rows as the question (DH12): the builder
+ * writes it for sections 2 and 3, each feed for its own, and lib.js `check` stops the build on a feed question without one.
  * Adding a data set: when a site data file gains a row (a metric, a vendor, a credential, a school year), run
  * npm run build:huddle and the feed that reads it turns the row into questions, no code change. A new FILE gets a new
  * feed: copy the shortest one in scripts/huddle/feeds/, point it at the file, take src, yr and ck from the file's own
@@ -53,7 +59,7 @@ const CURATED = path.join(ROOT, 'scripts', 'data', 'huddle-curated.json');
 
 // the seeded generator (mulberry32, the same steps as hu-rng.js) and the state names live in scripts/huddle/lib.js now,
 // shared with the feeds; they are the same functions, so every question below comes out as it did before
-const { rngFrom, STATES, keyName, versionBank } = require('./huddle/lib');
+const { rngFrom, STATES, keyName, versionBank, placeWhy, pairWhy } = require('./huddle/lib');
 const { today } = require('./lib/session');
 const { runFeeds } = require('./huddle/feeds');
 
@@ -150,6 +156,12 @@ for (const k of Object.keys(TEMPLATES)) {
   const shown = fmt(one, mid), shownN = parseFloat(shown.replace(/[^0-9.]/g, ''));
   const hint = `${n}-state median: ${shown}`
     + `${/^(hospitals|schools|degrees|facilities)$/.test(one.unit || '') ? ' ' + one.unit : ''}.`;
+  // THE EXPLANATION (2026-10-20, DH12): where the right state placed among all of them, from the same rows. Written only
+  // where Vital Stats gave no line; it is read by the answer card alone, so no board deals differently for it.
+  const rowsV = rows.map((q) => ({ st: q.st, v: q.a }));
+  const ONE = { hospitals: 'hospital', schools: 'school', degrees: 'degree', facilities: 'facility' };
+  const showV = (v) => fmt(one, v) + (ONE[one.unit] ? ' ' + (v === 1 ? ONE[one.unit] : one.unit) : '');
+  const ofV = n === 50 ? 'the 50 states' : `the ${n} states with ${ONE[one.unit] ? 'any' : 'data'}`;
   const r = rngFrom('huddle|' + k);
   // which of four: 8 per template, half asking for the lowest where that reads naturally
   for (let n = 0, tries = 0; n < 8 && tries < 200; tries++) {
@@ -166,7 +178,7 @@ for (const k of Object.keys(TEMPLATES)) {
     add({ ...base, id: `${k}-four-${n}`, k: `${k}-four`, d: 2, t: 'choice',
       q: `Which of these states had the ${low ? 'lowest' : 'highest'} ${T.what}?`,
       o: four.map((q) => keyName(q.st)), a: ans, v: four.map((q) => fmt(q, q.a)), see: winner.see,
-      why: one.why && /range ran from/.test(one.why) ? one.why : undefined, h: hint });
+      why: one.why && /range ran from/.test(one.why) ? one.why : placeWhy(rowsV, showV, winner.st, low, ofV), h: hint });
     n++;
   }
   // which of two is higher: 8 per template
@@ -177,7 +189,8 @@ for (const k of Object.keys(TEMPLATES)) {
     const ans = x > y ? 0 : 1;
     add({ ...base, id: `${k}-two-${n}`, k: `${k}-two`, d: 1, t: 'choice',
       q: `Which state had the higher ${T.what}?`,
-      o: two.map((q) => keyName(q.st)), a: ans, v: two.map((q) => fmt(q, q.a)), see: two[ans].see, h: hint });
+      o: two.map((q) => keyName(q.st)), a: ans, v: two.map((q) => fmt(q, q.a)), see: two[ans].see, h: hint,
+      why: pairWhy(rowsV, showV, two[ans].st, two[1 - ans].st, ofV) });
     n++;
   }
   // the state's own number: 6 per template, within 10 percent
@@ -221,11 +234,13 @@ for (const [prof, P] of Object.entries(lic.professions)) {
   }
   // how many: four counts, the real one among them
   const nm = members.length;
+  const passed = Object.entries(c.pending || {}).filter(([s, how]) => FIFTY.includes(s) && /^(enacted|passed)/i.test(how));
   const opts = [nm, nm + 4, nm - 5, nm + 9].filter((x) => x > 0);
   if (opts.length === 4) {
     const order = r.shuffle([0, 1, 2, 3]);
     add({ ...base, id: `cmp-${c.code.toLowerCase()}-count`, k: `cmp-${c.code.toLowerCase()}-count`, d: 3, t: 'choice',
-      q: `How many states ${c.operational ? 'are members of' : 'have enacted'} the ${c.name}?`, o: order.map((i) => String(opts[i])), a: order.indexOf(0) });
+      q: `How many states ${c.operational ? 'are members of' : 'have enacted'} the ${c.name}?`, o: order.map((i) => String(opts[i])), a: order.indexOf(0),
+      why: `The compact's own list, as of ${asOfWords}, counted ${nm} states ${c.operational ? 'as members' : 'that have enacted it'}${passed.length ? `; ${passed.length} more had passed it but were not yet taking part` : ''}.` });
   }
 }
 

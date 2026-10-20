@@ -23,12 +23,20 @@ const FEEDS = [
   require('./schools'),
   require('./state-pay'),
   require('./bedside-math'),
-  require('./counties')
+  require('./counties'),
+  // bank version 3 (2026-10-20, DECISIONS DH12): Policy, Patient and Health Tech to 300 or more each, so a 60-day memory
+  // has room. Each asks what the feeds above leave out of the same files, or a file they do not read.
+  require('./state-laws'),
+  require('./licensing'),
+  require('./compass-more'),
+  require('./vendor-facts'),
+  require('./care-sites'),
+  require('./state-more')
 ];
 
 /**
  * @param {{TEMPLATES:object, vs:any[], old:any[]}} ctx the builder's state templates, Vital Stats' bank and the
- *   questions already in the bank (version 1)
+ *   questions already in the bank (version 1); each feed also gets `fed`, the questions the feeds before it kept
  */
 function runFeeds(ctx) {
   const oldText = new Set(ctx.old.map((q) => q.q));
@@ -37,7 +45,8 @@ function runFeeds(ctx) {
   const questions = [];
   const report = [];
   for (const F of FEEDS) {
-    const made = F.build(ctx);
+    // `fed` is what the feeds before this one kept, so a later feed can ask about the states and rows an earlier one left
+    const made = F.build({ ...ctx, fed: questions });
     const kept = [];
     const dropped = [];
     for (const raw of made) {

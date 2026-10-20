@@ -14,7 +14,7 @@
  * A new row: a program added to the pull (a new key in _meta.programs) becomes all of these; a new school year re-deals
  * them. A line in DEG words a new program's degree; without one it reads from the program's label.
  */
-const { readJson, rngFrom, STATES, FIFTY, keyName, commas, median, kOf, idOf, fourForm, twoForm, withDistractors } = require('../lib');
+const { readJson, rngFrom, STATES, FIFTY, keyName, commas, median, kOf, idOf, fourForm, twoForm, withDistractors, whyFor } = require('../lib');
 
 const reads = ['src/assets/data/us-health-schools.json', 'src/assets/data/us-health-schools-accred.json'];
 
@@ -65,10 +65,12 @@ function build(ctx) {
       const rows = FIFTY.filter((st) => by[st] > 0).map((st) => ({ st, v: by[st] }));
       if (rows.length < 12) continue;
       const fmt = (v) => commas(v);
+      // THE EXPLANATION (2026-10-20, DH12): the right state's place, with the count named (schools, or degrees awarded)
+      const fmtW = (v) => commas(v) + (form === 'count' ? (v === 1 ? ' school' : ' schools') : (v === 1 ? ' degree' : ' degrees'));
       const hint = `Median of the ${rows.length} states with any: ${commas(median(rows.map((x) => x.v)))}.`;
       const base = { ...base0, sub: undefined };
-      out.push(...fourForm({ rows, fmt, dp: 0, rng: r, idp: `sc-${idOf(prog)}-${form}`, k: kOf('sc', prog, form, 'four'), what, low: false, base, hint, seeOf: stateSee }));
-      out.push(...twoForm({ rows, fmt, dp: 0, rng: r, idp: `sc-${idOf(prog)}-${form}`, k: kOf('sc', prog, form, 'two'), what, base, hint, seeOf: stateSee }));
+      out.push(...fourForm({ rows, fmt, dp: 0, rng: r, idp: `sc-${idOf(prog)}-${form}`, k: kOf('sc', prog, form, 'four'), what, low: false, base, hint, seeOf: stateSee, why: whyFor(rows, fmtW, `the ${rows.length} states with any`) }));
+      out.push(...twoForm({ rows, fmt, dp: 0, rng: r, idp: `sc-${idOf(prog)}-${form}`, k: kOf('sc', prog, form, 'two'), what, base, hint, seeOf: stateSee, why: whyFor(rows, fmtW, `the ${rows.length} states with any`) }));
     }
 
     // the school that awarded the most, in the country and in each state with four or more

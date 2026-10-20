@@ -122,16 +122,19 @@ test('the hints sit where the data supplies one: every state choice, the bedside
 
 // BANK VERSION 2 (2026-10-18, David: "I kept getting ones I have seen"): the feeds in scripts/huddle/feeds/ grow the bank
 // from the site's own data files. Version 1 keeps its place at the head of the file, since the boards already dealt drew
-// from it in file order; every feed question carries b: 2 and its source, year and check date.
+// from it in file order; every feed question carries its version (2 on) and its source, year and check date. Version 3
+// (2026-10-25, DH12) joined at the end, after version 2, the same way.
 const { FEEDS } = require('../scripts/huddle/feeds');
 const { FIELD_RES } = require('../scripts/huddle/lib');
-const V2 = Q.filter((q) => q.b === 2);
+const V2 = Q.filter((q) => q.b >= 2);
 
-test('version 1 comes first and unmarked; everything after it is version 2', () => {
+test('version 1 comes first and unmarked; after it each version follows the one before', () => {
   const first = Q.findIndex((q) => q.b === 2);
   assert.ok(first > 0, 'the feeds made questions');
   assert.ok(Q.slice(0, first).every((q) => !('b' in q)), 'no version-1 question carries b');
-  assert.ok(Q.slice(first).every((q) => q.b === 2), 'nothing after the first feed question is version 1');
+  const rest = Q.slice(first);
+  assert.ok(rest.every((q) => q.b >= 2), 'nothing after the first feed question is version 1');
+  assert.ok(rest.every((q, i) => i === 0 || q.b >= rest[i - 1].b), 'a newer version never sits before an older one');
 });
 
 test('every feed made questions, and every feed question names its source, its year and its check date', () => {
@@ -209,5 +212,38 @@ test('every tile name fits its hex on a phone: no single word longer than "Workf
   const MEASURED_OK = new Set(['Telehealth', 'Behavioral']);   // 67.7 and 68.4 units, measured 2026-10-18
   for (const f of new Set(Q.map((q) => q.f))) {
     for (const w of f.split(' ')) assert.ok(w.length <= 9 || MEASURED_OK.has(w), `"${f}": "${w}" is too wide for a tile on a phone; use two shorter words`);
+  }
+});
+
+// THE EXPLANATION LINE AND THE THIN ZONES (2026-10-20, DECISIONS DH12; plan docs/HU-HUDDLE-MEMORY-PLAN-2026-10-20.md, part 4).
+// Every answer card explains itself: the line comes from the same data row as the question (the feeds and the builder
+// write it, so a rebuild keeps it). And the daily remembers 60 days of tiles, about 2.7 a zone a day, so each zone needs
+// room: Policy, Patient and Health Tech grew to 300 or more in bank version 3.
+test('every question in the bank has an explanation line', () => {
+  const none = Q.filter((q) => !q.why || !String(q.why).trim());
+  assert.deepStrictEqual(none.map((q) => q.id), [], 'questions with no why');
+  for (const q of Q) assert.match(String(q.why).trim(), /[.?)]$/, q.id + ': the why line ends a sentence');
+});
+
+test('Policy, Patient and Health Tech each hold 300 questions or more, and no one family runs a zone', () => {
+  for (const z of ['pol', 'pat', 'tec']) {
+    const zq = Q.filter((q) => q.z === z && !q.gone);
+    assert.ok(zq.length >= 300, `${z}: ${zq.length} questions`);
+    const fams = {};
+    for (const q of zq) fams[q.f] = (fams[q.f] || 0) + 1;
+    const [top, n] = Object.entries(fams).sort((a, b) => b[1] - a[1])[0];
+    assert.ok(n / zq.length < 0.4, `${z}: "${top}" is ${n} of ${zq.length}`);
+    for (const d of [1, 2, 3]) assert.ok(zq.some((q) => q.d === d), `${z}: a ${d}-dot tile`);
+  }
+});
+
+test('version 3 grew the thin zones from the site\'s data: every question names its source, and its first day is set', () => {
+  const v3 = Q.filter((q) => q.b === 3);
+  assert.ok(v3.length >= 300, 'version 3 holds the new questions: ' + v3.length);
+  assert.ok(FILE.versions && FILE.versions[3] > FILE.versions[2], 'version 3 deals from its own first day, after version 2');
+  for (const q of v3) {
+    assert.ok(q.src && q.ck && Number.isInteger(q.yr), q.id + ': a source, a year and a check date');
+    assert.ok(!/\b(dose|dosage|mg\/kg)\b/i.test(q.q), q.id + ': no doses in the new questions');
+    assert.notStrictEqual(q.f, 'Normals', q.id + ': no new normal ranges (those are David\'s to check)');
   }
 });

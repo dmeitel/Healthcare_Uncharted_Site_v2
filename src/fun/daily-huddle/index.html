@@ -246,11 +246,31 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
   const BOTTOM = CELLS.map((c, i) => (c.r === 2 ? i : -1)).filter((i) => i >= 0);
 
   /* THE BANK: questions arrive as a list (src/assets/data/huddle-questions.json); the state holds ids only */
-  let BANK = {}, BYZ = {}, BANK_V = 1;
+  let BANK = {}, BYZ = {}, BANK_V = 1, BYV = {}, MEM = null, IDX = new Map(), TPL = new Map(), FAM = new Map();
   function setBank(list, versions) {
-    BANK = {}; BYZ = {}; BANK_V = 1;
-    for (const q of list || []) { BANK[q.id] = q; (BYZ[q.z] = BYZ[q.z] || []).push(q); BANK_V = Math.max(BANK_V, q.b || 1); }
+    // a new bank deals anew: the numbering, the per-version lists and the daily memory start over
+    BANK = {}; BYZ = {}; BANK_V = 1; BYV = {}; MEM = null; IDX = new Map(); TPL = new Map(); FAM = new Map();
+    for (const q of list || []) {
+      BANK[q.id] = q; (BYZ[q.z] = BYZ[q.z] || []).push(q); BANK_V = Math.max(BANK_V, q.b || 1);
+      if (!IDX.has(q.id)) IDX.set(q.id, IDX.size);
+      if (!TPL.has(q.k)) TPL.set(q.k, TPL.size);
+      if (!FAM.has(q.f)) FAM.set(q.f, FAM.size);
+    }
     if (versions && typeof versions === 'object') { for (const k of Object.keys(BANK_DAYS)) delete BANK_DAYS[k]; Object.assign(BANK_DAYS, versions); }
+  }
+  /* the questions a bank version deals, by zone and in all, in the bank's order, worked out once per version, each with its
+     dots, family, template, place in the bank and normal-range mark as numbers. The daily memory deals every daily since
+     board #1, hundreds of boards on a visit a year out, and a slot that filtered its zone afresh and costed it through string
+     sets took about 1.6 ms a board; numbers draw the same question in a fraction of that. */
+  function byVersion(v) {
+    if (BYV[v]) return BYV[v];
+    const pack = (list) => {
+      const q = list.filter((x) => inBank(x, v));
+      return { q, d: q.map((x) => x.d), f: q.map((x) => FAM.get(x.f)), k: q.map((x) => TPL.get(x.k)), i: q.map((x) => IDX.get(x.id)), n: q.map((x) => (x.f === NORMALS ? 1 : 0)) };
+    };
+    const r = { all: pack(Object.values(BANK)), z: {}, none: pack([]) };
+    for (const z of Object.keys(BYZ)) r.z[z] = pack(BYZ[z]);
+    return (BYV[v] = r);
   }
   const question = (id) => BANK[id] || null;
   /* THE BANK GROWS IN VERSIONS (2026-10-18, David: "I kept getting ones I have seen"). A question added later carries b, the
@@ -283,46 +303,77 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
      compass, so all seven Atlas zones are on every board. Inner cells want 2 or 3 dots, outer cells 1 or 2, the compass
      3; no two tiles share a template; inside a wedge, families differ where they can. With a field, up to two tiles of
      each wedge (the third stays the zone's own) and the compass go to the field's questions where the zone has them,
-     about a third of the board; with none, the deal is the same draw for draw as before fields existed. */
-  function deal(seed, outPick, field, bank) {
+     about a third of the board; with none, the deal is the same draw for draw as before fields existed. A daily from
+     MEMORY_DAY on deals with mem, what the dailies before it dealt (memoryFor, below); without it the deal is as it was. */
+  function deal(seed, outPick, field, bank, mem) {
     const F = fieldOf(field);
     const rng = W.HURng.make(seed);
     const v = bank || 1;
-    const zone = (id) => (BYZ[id] || []).filter((q) => inBank(q, v));
-    const ready = ZONES.map((z) => zone(z.id).length >= MIN_ZONE);
+    const V = byVersion(v);
+    const zone = (id) => V.z[id] || V.none;
+    const ready = ZONES.map((z) => zone(z.id).q.length >= MIN_ZONE);
     let out = outPick == null ? rng.int(0, 6) : ((outPick % 7) + 7) % 7;
     // a zone that cannot fill its wedge sits out; with two such zones the second one's wedge borrows (choose, below)
     const thin = ZONES.map((z, i) => i).filter((i) => !ready[i]);
     if (thin.length && !thin.includes(out)) out = thin[0];
     const ring = ZONES.filter((z, i) => i !== out).map((z) => z.id);
-    const used = new Set();
-    const onBoard = new Set();   // families already on the board: from version 2 a board prefers a fresh one (2026-10-18)
+    const used = new Uint8Array(TPL.size);      // templates on the board
+    const onBoard = new Uint8Array(FAM.size);   // families already on the board: from version 2 a board prefers a fresh one (2026-10-18)
     const tiles = new Array(CELLS.length).fill(null);
+    const fell = [];   // the cells that took the question dealt longest ago, nothing fresh being left
+    const at = mem ? mem.at : null;
+    // normals: the board has its normal range, or a daily in the last NORMALS_APART - 1 days had one
+    let normals = mem && mem.norm > mem.n - NORMALS_APART ? 1 : 0, cell = -1;
+    // the memory keeps off the board what the dailies dealt in the last MEMORY_DAYS, and a normal range past its one; where
+    // nothing is left, the question dealt longest ago. A pool is places in P, a zone's list or the whole bank's.
+    function keepOff(P, pool) {
+      if (normals) { const rest = pool.filter((p) => !P.n[p]); if (rest.length) pool = rest; }
+      const fresh = pool.filter((p) => !at[P.i[p]]);
+      if (fresh.length) return fresh;
+      let old = Infinity;
+      for (const p of pool) old = Math.min(old, at[P.i[p]]);
+      fell.push(cell);
+      return pool.filter((p) => at[P.i[p]] === old);
+    }
     function choose(z, want, fams, lean) {
-      let pool = zone(z).filter((q) => !used.has(q.k));
-      if (lean && F) { const mine = pool.filter((q) => F.re.test(q.k)); if (mine.length) pool = mine; }
-      if (!pool.length) pool = Object.values(BANK).filter((q) => inBank(q, v) && !used.has(q.k));   // a thin zone borrows rather than leave a hole
-      // from version 2 a family already on the board costs as much as one already in the wedge; version 1 deals as it did
-      const cost = (q) => (want.includes(q.d) ? 0 : 2 + Math.abs(q.d - want[0])) + (fams.has(q.f) ? 1 : 0) + (v >= 2 && onBoard.has(q.f) ? 1 : 0);
-      let best = Infinity;
-      for (const q of pool) best = Math.min(best, cost(q));
-      const top = pool.filter((q) => cost(q) === best);
-      const q = top[Math.floor(rng() * top.length)];
-      used.add(q.k); fams.add(q.f); onBoard.add(q.f);
-      return q;
+      // the cost: off the dots wanted, a family already in the wedge, and from version 2 a family already on the board (it
+      // costs as much as one in the wedge; version 1 deals as it did). The cheapest win, in the bank's order.
+      const w0 = want[0], w1 = want[1], spread = v >= 2;
+      let P = zone(z), best = Infinity, top = [];
+      const take = (p) => {
+        const d = P.d[p], f = P.f[p], c = (d === w0 || d === w1 ? 0 : 2 + Math.abs(d - w0)) + fams[f] + (spread ? onBoard[f] : 0);
+        if (c < best) { best = c; top = [p]; } else if (c === best) top.push(p);
+      };
+      // the usual slot, in one pass: the zone's questions whose template is not on the board, and on a remembering board
+      // not dealt lately and not a second normal range. Where that finds none, the steps below find what it would have.
+      if (!(lean && F)) for (let p = 0; p < P.q.length; p++) if (!used[P.k[p]] && !(at && (at[P.i[p]] || (normals && P.n[p])))) take(p);
+      if (!top.length) {
+        let pool = [];
+        for (let p = 0; p < P.q.length; p++) if (!used[P.k[p]]) pool.push(p);
+        if (lean && F) { const mine = pool.filter((p) => F.re.test(P.q[p].k)); if (mine.length) pool = mine; }
+        if (!pool.length) { P = V.all; for (let p = 0; p < P.q.length; p++) if (!used[P.k[p]]) pool.push(p); }   // a thin zone borrows rather than leave a hole
+        if (mem) pool = keepOff(P, pool);
+        for (const p of pool) take(p);
+      }
+      const p = top[Math.floor(rng() * top.length)];
+      used[P.k[p]] = 1; fams[P.f[p]] = 1; onBoard[P.f[p]] = 1;
+      normals += P.n[p];
+      return P.q[p];
     }
     WEDGES.forEach((w, i) => {
-      const z = ring[i], fams = new Set();
+      const z = ring[i], fams = new Uint8Array(FAM.size);
       let lean = F ? 2 : 0;
-      for (const [cell, want] of [[w.inner, [3, 2]], [w.corner, [1, 2]], [w.edge, [1, 2]]]) {
+      for (const [c, want] of [[w.inner, [3, 2]], [w.corner, [1, 2]], [w.edge, [1, 2]]]) {
+        cell = c;
         const q = choose(z, want, fams, lean > 0);
         if (lean > 0 && F.re.test(q.k)) lean--;
-        tiles[cell] = { z, q: q.id, d: q.d };
+        tiles[c] = { z, q: q.id, d: q.d };
       }
     });
-    const cq = choose(ZONES[out].id, [3, 2], new Set(), !!F);
+    cell = CENTER;
+    const cq = choose(ZONES[out].id, [3, 2], new Uint8Array(FAM.size), !!F);
     tiles[CENTER] = { z: ZONES[out].id, q: cq.id, d: cq.d, c: 1 };
-    return { out: ZONES[out].id, tiles };
+    return { out: ZONES[out].id, tiles, ...(mem ? { fell } : {}) };
   }
 
   /* A NEW BOARD. o: { id, seed, mode ('day' | 'past' | 'practice' | 'made'), day, clock (seconds, 0 for none), misses,
@@ -333,7 +384,8 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     // the bank a board deals from: a dated board's day decides it, a made board's code; anything else takes the whole bank
     const dated = /^(?:day|past):(\d{4}-\d{2}-\d{2})$/.exec(String(o.id || ''));
     const bank = Math.min(o.bank != null ? o.bank | 0 || 1 : dated ? dayBank(dated[1]) : BANK_V, BANK_V);
-    const b = deal(o.seed, o.out, field, bank);
+    const k = memDay(o.id, o.mode);   // a daily from MEMORY_DAY on, today's or replayed, remembers; nothing else does
+    const b = deal(o.seed, o.out, field, bank, k ? memoryFor(k) : null);
     return { v: 1, id: o.id, seed: o.seed, mode: o.mode, day: o.day || 0, clock: o.clock | 0, misses: o.misses == null ? 3 : o.misses | 0, more: !!o.more,
       out: b.out, tiles: b.tiles, held: [], closed: [], ans: {}, open: -1, last: -1, phase: 'ready', t0: 0, t1: 0, end: '', path: [],
       ...(field ? { field } : {}), ...(bank > 1 ? { bank } : {}) };
@@ -463,6 +515,17 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     if (!t) return null;
     const used = new Set(G.tiles.map((x) => (question(x.q) || {}).k));
     let pool = (BYZ[t.z] || []).filter((q) => q.d === t.d && !used.has(q.k) && inBank(q, G.bank || 1));
+    // a remembering daily swaps as it deals: to a normal range only where the deal could have put one, and to a question
+    // not dealt in the last 60 days, or where none is left, to the one dealt longest ago
+    const k = memDay(G.id, G.mode);
+    if (k && pool.length) {
+      const mem = memoryFor(k), no = mem.norm > mem.n - NORMALS_APART || G.tiles.some((x, c) => c !== i && isNormal(x.q));
+      const rest = pool.filter((q) => !(no && q.f === NORMALS));
+      if (rest.length) pool = rest;
+      const fresh = pool.filter((q) => !mem.last.has(q.id));
+      if (fresh.length) pool = fresh;
+      else { const old = Math.min(...pool.map((q) => mem.last.get(q.id))); pool = pool.filter((q) => mem.last.get(q.id) === old); }
+    }
     const w = WEDGES.find((x) => [x.inner, x.corner, x.edge].includes(i));
     const fams = w ? [w.inner, w.corner, w.edge].filter((c) => c !== i).map((c) => (question(G.tiles[c].q) || {}).f) : [];
     const apart = pool.filter((q) => !fams.includes(q.f));
@@ -603,12 +666,63 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
   const dayNumber = (k) => Math.round((utc(k) - utc(DAY_ONE)) / 86400000) + 1;
   const daySeed = (k) => W.HURng.seedFrom('huddle|day|' + k);
   const dayOut = (k) => (dayNumber(k) - 1) % 7;
+  const dayAt = (n) => new Date(utc(DAY_ONE) + (n - 1) * 86400000).toISOString().slice(0, 10);   // board n's day
+
+  /* THE DAILY REMEMBERS (2026-10-20, DECISIONS DH12; David: "the daily remembers what it dealt from a board nobody has played
+     yet, the normals capped"; plan docs/HU-HUDDLE-MEMORY-PLAN-2026-10-20.md). From board #12 a daily keeps off its board
+     every question the dailies dealt in the 60 days before it; where a slot has nothing fresh left, it takes the question
+     dealt longest ago, so a board always fills. A board carries one normal range at most, and only when the three boards
+     before it carried none, so a daily player meets two a week at most (the memory and the one-a-board cap alone averaged
+     1.75 a week but bunched them, up to six in a week and then none for weeks; tmp/huddle-year/memory-numbers.md).
+     The memory is the dailies themselves: each one from board #1 is dealt again, in order, through
+     the same deal with its own day's bank (the boards before MEMORY_DAY as they were dealt, without a memory), so everyone
+     gets the same board, a past day replays as it was, and a bank version's questions join the memory only from its first
+     day. Board #12 remembers #1 to #11. Nothing is stored; the replay is kept for the visit.
+     "The same question" is the question, not its template: a zone deals about 164 tiles in 60 days and every zone but
+     Provider holds fewer templates than that (Medical Science 50), so a template memory fell back on most tiles of the year
+     check, where the question memory fell back on none. Boards before MEMORY_DAY, practice and made boards deal as they did
+     (tests/huddle-pins.json, tests/huddle-memory.test.js). */
+  const MEMORY_DAY = '2026-10-25', MEMORY_DAYS = 60, NORMALS = 'Normals', NORMALS_APART = 4;   // days from one normal range to the next, at the least
+  // the day a board remembers from: a daily or a replayed daily from MEMORY_DAY on, or ''
+  function memDay(id, mode) {
+    const m = /^(?:day|past):(\d{4}-\d{2}-\d{2})$/.exec(String(id || ''));
+    return m && (mode === 'day' || mode === 'past') && m[1] >= MEMORY_DAY ? m[1] : '';
+  }
+  // what the dailies dealt in the MEMORY_DAYS before day k: { n, last, at, norm }. last maps each question id to the board
+  // number it was last dealt on, at holds the same by the question's place in the bank (0 for none) for the deal, and norm
+  // is the last board that dealt a normal range (0 for none). MEM.boards[d - 1] holds the ids board d dealt, replayed once
+  // a visit and only as far as asked.
+  const isNormal = (id) => (BANK[id] || {}).f === NORMALS;
+  function memoryFor(k) {
+    const n = dayNumber(k), from = dayNumber(MEMORY_DAY);
+    MEM = MEM || { boards: [], win: null };
+    if (MEM.win && MEM.win.n === n) return MEM.win;
+    const windowAt = (m) => {
+      const w = { n: m, last: new Map(), at: new Int32Array(IDX.size), norm: 0 };
+      for (let d = Math.max(1, m - MEMORY_DAYS); d < m; d++) for (const id of MEM.boards[d - 1]) { w.last.set(id, d); w.at[IDX.get(id)] = d; if (isNormal(id)) w.norm = d; }
+      return w;
+    };
+    if (MEM.boards.length < n - 1) {
+      const roll = windowAt(MEM.boards.length + 1);
+      while (MEM.boards.length < n - 1) {
+        const d = MEM.boards.length + 1, dk = dayAt(d);
+        const ids = deal(daySeed(dk), dayOut(dk), '', dayBank(dk), d >= from ? roll : null).tiles.map((t) => t.q);
+        MEM.boards.push(ids);
+        // the window moves on a day: this board joins it, the one MEMORY_DAYS back leaves it
+        for (const id of ids) { roll.last.set(id, d); roll.at[IDX.get(id)] = d; if (isNormal(id)) roll.norm = d; }
+        const gone = d - MEMORY_DAYS;
+        if (gone >= 1) for (const id of MEM.boards[gone - 1]) if (roll.last.get(id) === gone) { roll.last.delete(id); roll.at[IDX.get(id)] = 0; }
+        roll.n = d + 1;
+      }
+    }
+    return (MEM.win = windowAt(n));
+  }
 
   W.HuddleEngine = { ZONES, zoneName, CELLS, CENTER, WEDGES, NB, TOP, BOTTOM, setBank, question, deal, newGame, limitMs, timeLeft, elapsed,
     BANK_DAYS, dayBank, bankVersion, ended, missCount, tilesLeft,
     crossing, canCross, judge, picks, dispatchAct, packSave, applySave, saveString, readSave, keepRecord, readRecord, CLOCKS, MISSES, madeCode, parseMade, shareText, clockText, stopwatch, FIELDS, fieldOf,
     LIFELINES, narrowKeep, hintOf, swapFor, lifeOn, lifeCount, canLife,
-    DAY_ONE, dayKey, dayNumber, daySeed, dayOut };
+    DAY_ONE, dayKey, dayNumber, daySeed, dayOut, dayAt, MEMORY_DAY, MEMORY_DAYS, memDay, memoryFor };
 })(this);
 </script>
 

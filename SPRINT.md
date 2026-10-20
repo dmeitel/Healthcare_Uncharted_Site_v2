@@ -67,16 +67,17 @@ Step statuses: NEXT · DOING · DONE · WAITING (say on what) · MOVED (say wher
 <!-- board:start (printed from data-build/board.json by `npm run board`; change the file, not this block) -->
 The board, printed. The picture of it is the hub: `npm run hub`, then /__hub. Stage names: Plan, Build, QA, Tweaks, Ship.
 
-### Focus · primary · Site 1.0 · stage: Ship
+### Focus · Daily Huddle remembers what it dealt · stage: QA
 
-Everything saved since the last push goes live together as the site’s 1.0: every live page reviewed night and day, every QA list and puzzle wall marked Good.
-Done looks like: The live site reports the 1.0 commit at /version.txt and the hub files this card under Done.
+A daily that stays fresh past the first month: no question back inside 60 days where its category has room, the normal ranges about twice a week, and Policy, Patient and Health Tech grown to 300 or more questions, every question with its explanation.
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
-| 106 | **The full check:** `npm run qa` over the whole site, every page at nine screen sizes. | Claude | It passes, and the hub shows the gate passed after the last change | DONE 2026-10-19 |
-| 107 | **Save and push:** commit what is left, then press Push origin. | David | origin/main carries the 1.0 commit | NEXT |
-| 108 | **The live check:** `npm run ship -- --live` waits for the live site to report the commit and files this card under Done. | Claude | The live site reports the 1.0 commit | NEXT |
+| 109 | **His yes on the plan:** docs/HU-HUDDLE-MEMORY-PLAN-2026-10-20.md, start board #12 (Sunday Oct 25, RC Week). | David | He says yes, or what to change | DONE 2026-10-20 |
+| 110 | **The memory:** the daily keeps 60 days of its own boards off the board, oldest first where a category runs short; every board before the start pinned; one normal range a board at most. | Claude | The year check with memory passes and the pins hold | DONE 2026-10-20 |
+| 111 | **The bank, version 3:** about 350 new questions for Policy, Patient and Health Tech from the site's own data, and an explanation line on every question (968 missing). | Claude | Each grown category at 300 or more; a test holds every question to an explanation | DONE 2026-10-20 |
+| 112 | **His sample sheet:** 20 new questions from each grown category with answers and explanations, Good or Needs a tweak. | David | All Good | DONE 2026-10-20 |
+| 113 | **Ship by the evening of Oct 24,** so the memory starts with board #12; later than that, the start moves to the first day after the ship. | David | The live site deals the start board with memory | DOING |
 
 ### Up next · A Routine Fracture
 
@@ -100,6 +101,18 @@ One home screen that answers what is left before the next push, what to look at 
 |---|---|---|---|---|
 | 104 | **A working prototype** at /__hub/home on real data: the next push, your next looks, your notes with Claude, decisions, the site this week, what changed. | Claude | It draws from the files with no errors at phone and desk; pictures filed | DONE 2026-10-18 |
 | 105 | **His yes:** make it the hub's front page, and what to trim from the other tabs. | David | He says yes, or what to change | NEXT |
+
+### Up next · Daily Huddle: new data sets (lab normals, drug classes)
+
+David, 2026-10-20: "as we look to improve daily huddle, I think we need to consider more data sets like lab normal, Drug Classifications etc." On the plan's outline: "yeah all of those sound good"
+Medical Science stops being mostly arithmetic: about 35 normal ranges and the drug classes clinicians use, then the rest of the ranked data sets, each as its own bank version.
+
+| # | Step | Owner | Done when | Status |
+|---|---|---|---|---|
+| 114 | **His yes on the plan:** docs/HU-HUDDLE-DATA-SETS-PLAN-2026-10-20.md, and the lab list (16 to about 35). | David | He says yes, or what to change | DONE 2026-10-20 |
+| 115 | **Bank version 4:** the new normals as drafts, the drug class feed from RxClass and Medicare Part D 2024, the normals spacing from version 4's first day. | Claude | The year check passes, the pins hold, the full check passes | NEXT |
+| 116 | **His check:** every new normal against the ABIM sheet, the class names list, a sample sheet of drug class questions. | David | Every item Good on the hub | NEXT |
+| 117 | **Ship version 4,** dealt from the day after the push. | David | Live, and today's board on his phone | NEXT |
 
 ### Inbox · parked, not dropped
 
@@ -130,13 +143,6 @@ Nothing here is worked until David promotes it.
 - **The Reference Appendix as a sortable list** His review 2026-10-11: as the site grows, the sources page may need a database-like way to sort and search. (added 2026-10-11)
 - **The About page for more than one author** His review 2026-10-11: plan the page shape for guest and staff authors now (no content change yet), and make the phone version simpler. (added 2026-10-11)
 - **The dev blog's voice and notes** His note 2026-10-12: the blog looks ok but the little one-liners read as AI; work on the dev notes and the blog's voice with him later. (added 2026-10-12)
-
-### Done since the last push
-
-- **A year of daily walls**, 2026-10-18, QA clear, ships as Site 1.0
-- **Heavier lines on the logo and the rose**, 2026-10-18, QA clear, ships as Site 1.0
-- **Phone play**, 2026-10-18, QA clear, ships as Site 1.0
-- **Daily Huddle**, 2026-10-18, QA clear, ships as Site 1.0
 <!-- board:end -->
 
 ---

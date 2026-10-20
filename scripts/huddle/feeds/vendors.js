@@ -139,7 +139,9 @@ function build() {
     const h = city ? `Its headquarters are in ${city}.` : undefined;
     const cityGives = h && p.o.some((o) => h.includes(o.replace(/^the /, '')));   // "Kansas City" next to a Kansas key, say
     out.push({ ...from(v, 'hq'), z: S.z, f: 'Home base', id: 'vd-hq-' + vdSlug(v.name), k: kOf('vd', 'hq', vdSlug(v.name)), d, t: 'choice',
-      q, o: p.o, a: p.a, why: city ? `${shown(v)} is based in ${city}, ${right}.` : undefined, h: cityGives ? undefined : h, see: see(v) });
+      // without a checked city the line names the state or country and the directory's group for it (2026-10-20, DH12)
+      q, o: p.o, a: p.a, why: city ? `${shown(v)} is based in ${city}, ${right}.` : `${shown(v)} is based in ${right}; the directory files it under ${V.sectorLabels[v.sector] || v.sector}.`,
+      h: cityGives ? undefined : h, see: see(v) });
   }
 
   // ── what kind of company ──
@@ -188,4 +190,5 @@ function build() {
   return out;
 }
 
-module.exports = { name: 'vendors', prefix: 'vd-', reads, build };
+// the sectors and the helpers are shared with vendor-facts.js (bank version 3), which asks other facts from the same checks
+module.exports = { name: 'vendors', prefix: 'vd-', reads, build, SECTORS, FIRSTS, PRODUCT, vdSlug, shown, gone, first };
