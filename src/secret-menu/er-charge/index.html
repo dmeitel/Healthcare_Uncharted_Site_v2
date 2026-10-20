@@ -176,6 +176,8 @@ eleventyExcludeFromCollections: true
 </div>
 
 <script src="/assets/js/hu-kit.js?v=20260923"></script>
+<script src="/assets/js/hu-rng.js?v=20261003"></script>
+<script src="/assets/js/hu-save.js?v=20261004"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -238,36 +240,58 @@ eleventyExcludeFromCollections: true
   if (!['easy','normal','hard'].includes(settings.difficulty)) settings.difficulty='normal';   // stored settings from anywhere
   const saveSettings=()=>{ try{ localStorage.setItem('er_settings', JSON.stringify(settings)); }catch(e){} };
 
+  // THE STATE (.claude/rules/games.md, The engine) is G, one plain object that survives JSON whole: a
+  // patient sits in exactly one place (the waiting room, a bed, or done), and the jobs and the upstairs
+  // queue name patients by id (ptOf). The run's difficulty (G.diff) and its dice (G.rng) ride in it.
   let G=null, timer=null, sel=null, lastRender=0;
-  function initShift(){
+  const DIFFS = ['easy','normal','hard'];
+  // THE DICE. Every roll in a shift comes off one seeded generator (hu-rng.js), never the browser's unseeded one.
+  // G.rng is its seed and how far it has rolled, so a restored shift rolls what it would have rolled
+  // and a test pins a seed. The generator is rebuilt from G.rng when they disagree (Uncharted Regional's).
+  let dice=null;
+  function diceOf(st){
+    if (!dice || dice.seed!==st.seed || dice.state().n!==st.n) dice=window.HURng.make(0).restore(st);
+    return dice;
+  }
+  const roll = () => { const d=diceOf(G.rng), v=d(); G.rng=d.state(); return v; };
+  function initShift(seed, diff){
+    dice = window.HURng.make(seed==null ? window.HURng.freshSeed() : seed);   // a new shift, new dice
+    const df = DIFFS.includes(diff) ? diff : settings.difficulty;
     G = {
-      t:0, over:false, paused:false, score:0, nextId:1,
-      beds:Array.from({length:CFG.beds[settings.difficulty]||9}, (_,i)=>({num:i+1, pt:null})),
+      t:0, over:false, paused:false, score:0, nextId:1, diff:df, rng:dice.state(),
+      beds:Array.from({length:CFG.beds[df]||9}, (_,i)=>({num:i+1, pt:null})),
       waiting:[], done:[],
       res:{}, pool:{}, extraRn:0, extraRnUntil:0,
       cards:{}, cardLog:[],
-      upNext: 40+Math.random()*30, upQueue:[], feed:[], feedUid:1,
-      nextArrival: 8, scripted:[{at:250+Math.random()*80, type:'stroke'},{at:480+Math.random()*80, type:'trauma'}],
+      upNext:0, upQueue:[], feed:[], feedUid:1, say:'', sayN:0,
+      nextArrival: 8, scripted:[],
       stats:{arrived:0, seen:0, dc:0, admit:0, lwbs:0, harm:0, crit:0, waitSum:0, waitN:0,
              resBusy:{}, resQwait:{}, batch:0},
       log:[],
     };
+    // the shift's first three rolls, in the order they always came: upstairs, the stroke, the trauma
+    G.upNext = 40+roll()*30;
+    G.scripted = [{at:250+roll()*80, type:'stroke'},{at:480+roll()*80, type:'trauma'}];
     RESOURCES.forEach(r=>{ G.res[r.id]={busy:[]}; G.stats.resBusy[r.id]=0; G.stats.resQwait[r.id]=0; });
     CARDS.forEach(c=>{ G.cards[c.id]=c.n; });
   }
+  const ptOf = id => { const b=G.beds.find(x=>x.pt && x.pt.id===id); return b ? b.pt : null; };   // a bedded patient by id
+  // A line for the hint strip, kept in the state; render shows each new one once (sayNew). The engine
+  // never touches the DOM.
+  function say(m){ G.say=m; G.sayN=(G.sayN||0)+1; }
   const resCap = id => (RESOURCES.find(r=>r.id===id).cap) + (id==='rn' && G.t<G.extraRnUntil ? 1 : 0);
   const fmtClock = t => { const m=Math.floor(t)%60, h=7+Math.floor(t/60); return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); };
 
   function spawn(typeId){
     const ty = typeId ? typeOf(typeId) : null;
     const t = ty || (()=>{ const pool=['flu','flu','ankle','ankle','lac','kid','cp','cp','abd','abd','sob','elder','elder'];
-      return typeOf(pool[Math.floor(Math.random()*pool.length)]); })();
-    const p = { id:G.nextId++, name:NAMES[Math.floor(Math.random()*NAMES.length)]+', '+(t.crit?55+Math.floor(Math.random()*30):18+Math.floor(Math.random()*70)),
+      return typeOf(pool[Math.floor(roll()*pool.length)]); })();
+    const p = { id:G.nextId++, name:NAMES[Math.floor(roll()*NAMES.length)]+', '+(t.crit?55+Math.floor(roll()*30):18+Math.floor(roll()*70)),
       type:t.id, acuity:t.acuity, crit:!!t.crit, patience:t.patience, maxPatience:t.patience,
-      admit: Math.random()<t.admit, stepIdx:0, prog:0, claimed:null, boarding:false, arrivedAt:G.t, beddedAt:null,
+      admit: roll()<t.admit, stepIdx:0, prog:0, claimed:null, boarding:false, arrivedAt:G.t, beddedAt:null,
       fastUntil:0, statLab:false, priCt:false, coded:false };
     G.waiting.push(p); G.stats.arrived++;
-    if (p.crit){ G.stats.crit++; G.log.push(fmtClock(G.t)+' '+t.label+' arrives'); hint(t.label+' in the waiting room. Bed them NOW.'); }
+    if (p.crit){ G.stats.crit++; G.log.push(fmtClock(G.t)+' '+t.label+' arrives'); say(t.label+' in the waiting room. Bed them NOW.'); }
     return p;
   }
   const stepOf = p => typeOf(p.type).steps[p.stepIdx] || null;
@@ -294,8 +318,8 @@ eleventyExcludeFromCollections: true
       if (G.nextArrival<=0){
         spawn();
         const base = G.t<120 ? 13 : G.t<360 ? 9 : G.t<600 ? 7 : 12;
-        G.nextArrival = (base + Math.random()*base*0.6) * (CFG.arrivalMult[settings.difficulty]||1);
-        if (settings.difficulty==='hard' && G.t>300 && Math.random()<0.06) spawn(Math.random()<0.5?'stroke':'trauma');
+        G.nextArrival = (base + roll()*base*0.6) * (CFG.arrivalMult[G.diff]||1);
+        if (G.diff==='hard' && G.t>300 && roll()<0.06) spawn(roll()<0.5?'stroke':'trauma');
       }
     }
     // waiting room pressure: patience drains; criticals deteriorate into harm instead of leaving
@@ -303,7 +327,7 @@ eleventyExcludeFromCollections: true
     G.waiting = G.waiting.filter(p=>{
       if (p.patience>0) return true;
       if (p.crit && !p.harmed){ p.harmed=true; p.patience=25; G.stats.harm++; G.score-=CFG.harmPenalty;
-        G.log.push(fmtClock(G.t)+' '+typeOf(p.type).label+' deteriorating in the waiting room'); hint('A critical patient is deteriorating unbedded. That costs.'); return true; }
+        G.log.push(fmtClock(G.t)+' '+typeOf(p.type).label+' deteriorating in the waiting room'); say('A critical patient is deteriorating unbedded. That costs.'); return true; }
       if (p.crit) return true;                                     // criticals never walk out; they just get worse
       G.stats.lwbs++; G.score-=CFG.lwbsPenalty;
       G.log.push(fmtClock(G.t)+' '+p.name.split(',')[0]+' left without being seen');
@@ -313,12 +337,13 @@ eleventyExcludeFromCollections: true
     RESOURCES.forEach(r=>{
       const R=G.res[r.id];
       R.busy = R.busy.filter(job=>{
-        const near = crisisNear(job.p);
+        const p=ptOf(job.pid); if (!p) return false;               // a job's patient is always in a bed
+        const near = crisisNear(p);
         job.left -= dt * job.speed * (near?CFG.adjSlow:1);
         if (near) G.stats.slowed = (G.stats.slowed||0) + dt;
         G.stats.resBusy[r.id] += dt;
         if (job.left>0) return true;
-        const p=job.p; p.claimed=null; p.stepIdx++; p.prog=0;
+        p.claimed=null; p.stepIdx++; p.prog=0;
         advance(p);
         return false;
       });
@@ -341,35 +366,36 @@ eleventyExcludeFromCollections: true
         let dur = s[1] * (same?CFG.batchBonus:1);
         if (same) G.stats.batch++;
         p.claimed=r.id;
-        R.busy.push({p, left:dur, speed, batched:same});
+        R.busy.push({pid:p.id, left:dur, speed, batched:same});
         free--; prev=p;
       }
     });
     // upstairs: a bed opens on its own schedule; the longest boarder goes up
     G.upNext -= dt;
     if (G.upNext<=0){
-      G.upNext = CFG.upstairsEvery[0] + Math.random()*(CFG.upstairsEvery[1]-CFG.upstairsEvery[0]);
+      G.upNext = CFG.upstairsEvery[0] + roll()*(CFG.upstairsEvery[1]-CFG.upstairsEvery[0]);
       releaseBoarder();
     }
-    if (G.t>=CFG.shiftMin){ endShift(); return; }
+    if (G.t>=CFG.shiftMin){ G.over=true; return; }                // 19:00; the end card is endShift's, after the beat
   }
   function advance(p){
     const s=stepOf(p);
     if (s) return;                                                 // more work: the queues will claim it
     // recipe complete: disposition
-    if (p.admit && !p.boarding){ p.boarding=true; p.boardedAt=G.t; G.upQueue.push(p); return; }
+    if (p.admit && !p.boarding){ p.boarding=true; p.boardedAt=G.t; G.upQueue.push(p.id); return; }
     finishPatient(p, 'dc');
   }
   function releaseBoarder(force){
-    G.upQueue.sort((a,b)=>a.boardedAt-b.boardedAt);
-    const p=G.upQueue.shift();
+    const at = id => (ptOf(id)||{}).boardedAt;
+    G.upQueue.sort((a,b)=>at(a)-at(b));
+    const p=ptOf(G.upQueue.shift());
     if (!p) return false;
     finishPatient(p, 'admit');
     return true;
   }
   function finishPatient(p, how){
     const b=G.beds.find(b=>b.pt===p); if (b) b.pt=null;
-    G.upQueue=G.upQueue.filter(x=>x!==p);
+    G.upQueue=G.upQueue.filter(x=>x!==p.id);
     G.done.push(p);
     const pts={1:12,2:8,3:5,4:3,5:2}[p.acuity]||2;
     const gain = pts + (how==='admit'?2:0);
@@ -396,7 +422,7 @@ eleventyExcludeFromCollections: true
     let ok=false, note='';
     /* a card acts on a step that is still ahead or running; a boarder has none, and a patient with no lab or CT step has nothing for those cards */
     const ahead = (p, res) => !p.boarding && typeOf(p.type).steps.slice(p.stepIdx).some(x=>x[0]===res);
-    const running = (p, res) => G.res[res] && G.res[res].busy.find(j=>j.p===p);
+    const running = (p, res) => G.res[res] && G.res[res].busy.find(j=>j.pid===p.id);
     if (cardId==='statlab' && bedded && ahead(bedded,'lab')){ const j=running(bedded,'lab'); if (j) j.speed*=4; else bedded.statLab=true; ok=true; note=queueFor('lab').length>=2?'good':'quiet'; }
     else if (cardId==='prict' && bedded && ahead(bedded,'ct')){ const j=running(bedded,'ct'); if (j) j.speed*=2; else bedded.priCt=true; ok=true; note=queueFor('ct').length>=2?'good':'quiet'; }
     else if (cardId==='fast' && bedded && !bedded.boarding && bedded.acuity>=4){ bedded.fastUntil=G.t+999; ok=true; note='good'; }
@@ -409,6 +435,47 @@ eleventyExcludeFromCollections: true
     G.log.push(fmtClock(G.t)+' Charge card: '+card.name+(note==='quiet'?' (quiet moment)':''));
     return true;
   }
+  // ── THE ONE DOOR (.claude/rules/games.md, The engine). Every change to a shift is a verb with plain
+  // data: clocking in, the clock's beat, a placement, a card, the pause. The handlers below call this and
+  // never edit G themselves, so a guest could send the same verb as an intent and a host apply it. A
+  // verb answers true when it changed the shift. A stopped or finished board takes no placement or card,
+  // the same rule the click and drag handlers already kept.
+  const VERBS = {
+    start:  d => { initShift(d.seed, d.difficulty); seedBacklog(); return true; },
+    tick:   d => { if (G.over || G.paused) return false; tick(Math.max(0, +d.dt||0)); return true; },
+    place:  d => !G.over && !G.paused && placePatient(+d.pid, +d.bed),
+    card:   d => !G.over && !G.paused && playCard(String(d.card), d.pid==null ? null : +d.pid),
+    pause:  () => { if (G.over) return false; G.paused=!G.paused; return true; },
+    resume: () => { if (G.over || !G.paused) return false; G.paused=false; return true; },
+    end:    () => { if (G.over) return false; G.over=true; return true; },
+  };
+  function dispatchAct(verb, data){
+    const fn = Object.prototype.hasOwnProperty.call(VERBS, verb) ? VERBS[verb] : null;
+    if (!fn || (!G && verb!=='start')) return false;
+    return !!fn(data||{});
+  }
+  // ── SAVES (.claude/rules/games.md, Saves and the wire). G is plain data by construction, so a shift
+  // packs whole and unpacks whole, headless. ER Charge has never kept a run between visits and still does
+  // not; this is the string form (hu-save.js, its own HUER1 prefix) a table or a test carries.
+  function packSave(){ return G ? {v:1, G:JSON.parse(JSON.stringify(G))} : null; }
+  function applySave(data){
+    const g = data && data.v===1 && data.G && typeof data.G==='object' ? JSON.parse(JSON.stringify(data.G)) : null;
+    const pts = g && Array.isArray(g.waiting) && Array.isArray(g.beds) ? g.waiting.concat(g.beds.map(b=>b && b.pt).filter(Boolean)) : null;
+    if (!pts || typeof g.t!=='number' || !g.stats || !g.cards || !pts.every(p=>p && typeOf(p.type))
+        || !RESOURCES.every(r=>g.res && g.res[r.id] && Array.isArray(g.res[r.id].busy))) throw new Error('bad save');
+    // The dice come back where they were. A run packed without them gets a seed made from its own
+    // contents, so the same string always restores to the same future.
+    const rs=g.rng;
+    g.rng = rs && typeof rs.seed==='number' && isFinite(rs.seed) && typeof rs.n==='number' && rs.n>=0 && rs.n<=1e6
+      ? {seed:rs.seed>>>0, n:Math.floor(rs.n)} : {seed:window.HURng.seedFrom(JSON.stringify(data.G)), n:0};
+    if (!DIFFS.includes(g.diff)) g.diff = {10:'easy', 9:'normal', 8:'hard'}[g.beds.length] || 'normal';
+    ['done','upQueue','feed','log','cardLog','scripted'].forEach(k=>{ if (!Array.isArray(g[k])) g[k]=[]; });
+    G=g; dice=null;
+    return G;
+  }
+  const saveCodec = () => window.HUSave.codec('HUER1.');
+  async function encodeSave(obj){ return saveCodec().encode(obj || packSave()); }
+  async function decodeSave(str){ return saveCodec().decode(str); }
   // ── SCORE + POSTMORTEM ────────────────────────────────────────────────
   function report(){
     const st=G.stats, shift=Math.min(G.t, CFG.shiftMin);
@@ -423,8 +490,12 @@ eleventyExcludeFromCollections: true
       avgWait, util, bottle1:bottle[0], bottle2:bottle[1], batch:st.batch, goodCards, quietCards, raw, final, grade,
       boarding:G.upQueue.length};
   }
+  // The end card. The engine's half is the 'end' verb (or the clock reaching 19:00 in tick); this stops
+  // the driver and paints the postmortem.
   function endShift(){
-    G.over=true; if (timer){ clearInterval(timer); timer=null; }
+    if (!G) return;
+    dispatchAct('end');
+    if (timer){ clearInterval(timer); timer=null; }
     const d=report();
     const tal=(l,v,cls)=>`<div class="${cls||''}">${l}<b>${v>0&&cls==='pos'?'+':''}${v}</b></div>`;
     $('er-overlay').innerHTML=`<div class="er-modal" role="dialog" aria-modal="true" aria-labelledby="er-mo-h"><h2 id="er-mo-h" tabindex="-1">SHIFT COMPLETE <span class="er-grade" style="color:${ACUITY_COLOR[{A:5,B:4,C:3,D:2,F:1}[d.grade]]}">${d.grade}</span></h2>
@@ -468,8 +539,16 @@ eleventyExcludeFromCollections: true
   // trap under WIRING). preventScroll keeps a sideways phone on the card's first line.
   function focusIn(s){ const el=document.querySelector && document.querySelector(s); if (el && el.focus) el.focus({preventScroll:true}); }
   function acuBadge(p){ return `<span class="p-a" style="color:${ACUITY_COLOR[p.acuity]};border:1px solid ${ACUITY_COLOR[p.acuity]}">A${p.acuity}</span>`; }
+  // What render has already shown of a shift's messages and toasts. A new or restored shift (a new G)
+  // starts with everything in it counted as shown.
+  let saidOf=null, saidN=0, fedOf=null, fedUid=0;
+  function sayNew(){
+    if (saidOf!==G){ saidOf=G; saidN=G.sayN||0; return; }
+    if ((G.sayN||0)!==saidN){ saidN=G.sayN||0; if (G.say) hint(G.say); }
+  }
   function render(){
     if (!G) return;
+    sayNew();                                             // the engine's line shows at once, held press or not, as it always did
     const fa=document.activeElement, fk=(fa && fa.dataset && fa.dataset.act && fa.closest && fa.closest('#er')) ? fa.dataset : null;
     if ((drag && drag.active) || pressing) return;       // the board holds still under a live drag or a held press
     const clock=$('er-clock'); clock.textContent=G.over?'19:00':fmtClock(G.t); clock.classList.toggle('late', G.t>560);
@@ -493,7 +572,7 @@ eleventyExcludeFromCollections: true
       const p=b.pt, ty=typeOf(p.type), s=stepOf(p);
       const stepTxt = p.boarding ? `<span class="b-step q">Boarding &middot; awaiting upstairs bed</span>`
         : s ? `<span class="b-step${p.claimed?'':' q'}">${p.claimed?s[2]:'Waiting: '+s[2]+' ('+RESOURCES.find(r=>r.id===s[0]).name+')'}</span>` : '';
-      const job = p.claimed ? G.res[p.claimed].busy.find(j=>j.p===p) : null;
+      const job = p.claimed ? G.res[p.claimed].busy.find(j=>j.pid===p.id) : null;
       const pctDone = job&&s ? Math.round(100*(1-job.left/s[1])) : 0;
       const next = !p.boarding && typeOf(p.type).steps[p.stepIdx+1] ? `<div class="b-next">then: ${typeOf(p.type).steps.slice(p.stepIdx+1).map(x=>x[2]).join(' &rarr; ')}${p.admit?' &rarr; ADMIT':''}</div>` : (p.admit&&!p.boarding?'<div class="b-next">then: ADMIT</div>':'');
       const near = crisisNear(p);
@@ -517,17 +596,20 @@ eleventyExcludeFromCollections: true
     }
   }
   // Disposition toasts: append each new event ONCE (uid-keyed) so its CSS fade runs uninterrupted
-  // by the 5-per-second render loop, then drain the queue. The DOM node removes itself.
+  // by the 5-per-second render loop. The feed stays in the state; render only remembers the last uid
+  // it showed. The DOM node removes itself.
   function renderFeed(){
-    const box=$('er-feed'); if (!box || !box.appendChild || !G.feed.length) return;
+    const box=$('er-feed'); if (!box || !box.appendChild) return;
+    if (fedOf!==G){ fedOf=G; fedUid=G.feedUid-1; }
     G.feed.forEach(f=>{
+      if (f.uid<=fedUid) return;
+      fedUid=f.uid;
       const el=document.createElement('div');
       el.className='fd'+(f.how==='admit'?' admit':'')+(f.crit?' crit':'');
       el.innerHTML=`${f.name} ${f.how==='admit'?'admitted &uarr;':'discharged'} <b>+${f.gain}</b>`;
       box.appendChild(el);
       setTimeout(()=>{ if (el.parentNode) el.parentNode.removeChild(el); }, 3000);
     });
-    G.feed=[];
   }
   function openStartMenu(keep){
     const seg=['easy','normal','hard'].map(k=>`<button data-act="diff" data-key="${k}" class="${settings.difficulty===k?'on':''}" aria-pressed="${settings.difficulty===k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('');
@@ -579,10 +661,11 @@ eleventyExcludeFromCollections: true
       if (drop){
         const under=document.elementFromPoint(e.clientX, e.clientY);
         const bed=under && under.closest('.er-bed.empty');
-        if (bed && G && !G.over && !G.paused) placePatient(drag.id, +bed.dataset.num);
+        if (bed && G && !G.over && !G.paused) dispatchAct('place', {pid:drag.id, bed:+bed.dataset.num});
       }
       if (drag.ghost) drag.ghost.remove();
       swallowClick=true; setTimeout(()=>{ swallowClick=false; }, 0);
+      drag=null;      // before the redraw: a live drag freezes render, and the board waited for the next beat (2026-10-19)
       render();
     }
     drag=null;
@@ -599,23 +682,23 @@ eleventyExcludeFromCollections: true
     if (act==='diff'){ settings.difficulty=t.dataset.key; saveSettings(); openStartMenu(t.dataset.key); return; }
     if (act==='start'){ saveSettings(); startShift(e.detail===0); return; }   // detail 0: pressed from the keyboard
     if (act==='restart'){ $('er-overlay').hidden=true; openStartMenu(); return; }
-    if (act==='pause'){ if (G&&!G.over){ G.paused=!G.paused; render(); } return; }
+    if (act==='pause'){ if (dispatchAct('pause')) render(); return; }
     if (!G||G.over) return;
     if (act==='pt'){ sel = (sel&&sel.kind==='pt'&&sel.id===+t.dataset.id) ? null : {kind:'pt', id:+t.dataset.id}; render(); return; }
     if (act==='bed'){
-      if (sel&&sel.kind==='pt'){ if (placePatient(sel.id, +t.dataset.num)) sel=null; render(); }
+      if (sel&&sel.kind==='pt'){ if (dispatchAct('place', {pid:sel.id, bed:+t.dataset.num})) sel=null; render(); }
       return;
     }
     if (act==='card'){
       const c=CARDS.find(x=>x.id===t.dataset.id); if (!c||!G.cards[c.id]) return;
-      if (c.target==='now'){ if (playCard(c.id)) hint(c.name+' played.'); else hint('Nothing for that card to do right now.'); sel=null; render(); return; }
+      if (c.target==='now'){ if (dispatchAct('card', {card:c.id})) hint(c.name+' played.'); else hint('Nothing for that card to do right now.'); sel=null; render(); return; }
       sel = (sel&&sel.kind==='card'&&sel.id===c.id) ? null : {kind:'card', id:c.id};
       if (sel) hint(c.name+': tap a patient in a bed.');
       render(); return;
     }
     if (act==='bedpt'){
       if (sel&&sel.kind==='card'){
-        if (playCard(sel.id, +t.dataset.id)) hint('Played.'); else hint('That card does not fit this patient.');
+        if (dispatchAct('card', {card:sel.id, pid:+t.dataset.id})) hint('Played.'); else hint('That card does not fit this patient.');
         sel=null; render();
       }
       return;
@@ -647,10 +730,10 @@ eleventyExcludeFromCollections: true
   // halfway through their patience. Day shift starts behind. It always does.
   function seedBacklog(){
     const mix=['flu','ankle','cp','lac','abd','sob','elder','kid'];
-    const n = CFG.backlog[settings.difficulty]||6;
+    const n = CFG.backlog[G.diff]||6;
     for (let i=0;i<n;i++){
       const p = spawn(mix[i%mix.length]);
-      const waited = p.maxPatience*(0.15+Math.random()*0.35);
+      const waited = p.maxPatience*(0.15+roll()*0.35);
       p.patience -= waited; p.arrivedAt = -waited;
     }
   }
@@ -662,11 +745,16 @@ eleventyExcludeFromCollections: true
   let erSet=null, erHelp=null, erMenu=null;
   function menuUp(){ const K=window.HUKit; return !!(K && K.dialog && K.dialog.anyOpen && K.dialog.anyOpen()); }
   const pace = () => (erSet && erSet.get('moreTime')) ? CFG.moreTime : 1;
-  function beat(){ if (menuUp()) return; tick(CFG.tickMs/1000 * CFG.simPerSec * pace()); render(); }
+  function beat(){
+    if (menuUp()) return;
+    const was = !G || G.over;
+    dispatchAct('tick', {dt:CFG.tickMs/1000 * CFG.simPerSec * pace()});
+    if (G && G.over && !was) endShift();                  // the beat that reached 19:00 brings up the end card
+    render();
+  }
   function startShift(fromKeys){
-    initShift();
+    dispatchAct('start', {seed:window.HURng.freshSeed(), difficulty:settings.difficulty});   // a new seed per shift
     $('er-overlay').hidden=true; $('er-overlay').innerHTML='';
-    seedBacklog();
     if (timer) clearInterval(timer);
     timer = setInterval(beat, CFG.tickMs);
     render();
@@ -699,7 +787,7 @@ eleventyExcludeFromCollections: true
     erMenu=K.gameMenu({ title:'ER Charge Nurse', help:erHelp, settings:erSet,
       restart:{ verb:'Restart the shift', title:'Restart the shift?', body:'The board starts over at 07:00, and this shift’s score is gone.', run:()=>startShift() },
       leave:{ href:'/secret-menu/' },
-      onResume:()=>{ if (G && !G.over && G.paused){ G.paused=false; render(); } },
+      onResume:()=>{ if (dispatchAct('resume')) render(); },
       escOpens:true });
     const menuBtn=erMenu.button(); menuBtn.setAttribute('aria-label','Menu');   // the word hides on a phone; the name stays
     $('erKit').append(erHelp.button(), menuBtn);   // into the game bar's kit span (components/game-bar.njk)
@@ -709,7 +797,9 @@ eleventyExcludeFromCollections: true
   if (typeof window!=='undefined' && window.__UG_TEST){ window.__er={ get G(){return G;}, get settings(){return settings;}, get sel(){return sel;},
     CFG, TYPES, RESOURCES, CARDS, typeOf, stepOf, queueFor, resCap,
     initShift, spawn, tick, placePatient, playCard, releaseBoarder, report, endShift, render, startShift, openStartMenu, fmtClock, seedBacklog, crisisNear,
-    beat, pace, menuUp, get kit(){ return {set:erSet, help:erHelp, menu:erMenu}; } }; }
+    beat, pace, menuUp, get kit(){ return {set:erSet, help:erHelp, menu:erMenu}; },
+    VERBS, dispatchAct, packSave, applySave, encodeSave, decodeSave, ptOf, roll,
+    get seed(){ return G && G.rng ? G.rng.seed : null; } }; }
 })();
 </script>
 {% endraw %}

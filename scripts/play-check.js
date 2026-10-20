@@ -9,22 +9,51 @@
 // matters for a floor full of floating panels: is anything covering anything else that a
 // player needs to read or press?
 //
-//   node scripts/play-check.js                      all widths, default page
-//   node scripts/play-check.js --widths 360,430     pick widths
+//   node scripts/play-check.js                      all sizes, default page, serving _site itself
+//   node scripts/play-check.js --widths 360,740x360 pick sizes (a width, or WIDTHxHEIGHT)
+//   node scripts/play-check.js --base http://localhost:8081   against a running server
 //   node scripts/play-check.js --ticks 400          play it further in
 //
 // Exit 1 if a real overlap is found.
 'use strict';
 const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
 
 const argv = process.argv.slice(2);
 const opt = (n, d) => { const i = argv.indexOf(n); return i > -1 ? argv[i + 1] : d; };
-const BASE = opt('--base', 'http://localhost:8080');
+// --base: a running server. Without it the check serves _site itself, the way scripts/phone-check.js does, so
+// `npm run qa` can run it with no server up (2026-10-19: it found Alarm Fatigue's late-game panels covering the
+// monitors on a phone, a fault no gate saw because nothing ran this check).
+let BASE = opt('--base', null);
+const SITE = path.join(__dirname, '..', '_site');
+const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.webp': 'image/webp', '.mp3': 'audio/mpeg' };
+function serveSite() {
+  return new Promise((resolve) => {
+    const srv = http.createServer((req, res) => {
+      let p = decodeURIComponent(req.url.split('?')[0]);
+      if (p.endsWith('/')) p += 'index.html';
+      let f = path.join(SITE, p);
+      if (!f.startsWith(SITE)) { res.writeHead(403); return res.end(); }
+      if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
+      if (!fs.existsSync(f)) { res.writeHead(404); return res.end('not found'); }
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' });
+      fs.createReadStream(f).pipe(res);
+    });
+    srv.listen(0, '127.0.0.1', () => resolve({ srv, url: 'http://127.0.0.1:' + /** @type {import('net').AddressInfo} */ (srv.address()).port }));
+  });
+}
 // ?afdev=full is the game's own tester hatch: it clocks in and buys the whole floor, so the
 // maxed-out unit (pumps, monitor bank, call board, every widget) is up in one load. Clicking
 // the button 4000 times never got there, because the panels are BOUGHT, not earned by taps.
 const PATH = opt('--path', '/fun/alarm-fatigue/?afdev=full');
-const WIDTHS = opt('--widths', '360,430,507,699').split(',').map(Number);
+// a width, or WIDTHxHEIGHT for a phone on its side (740x360); the height is 820 otherwise
+const SIZES = opt('--widths', '360,390,430,507,699,740x360,1280').split(',').map((t) => {
+  const m = String(t).trim().match(/^(\d+)(?:x(\d+))?$/);
+  return m ? { w: Number(m[1]), h: m[2] ? Number(m[2]) : 820 } : null;
+}).filter(Boolean);
 const TICKS = Number(opt('--ticks', '260'));
 
 // What a player has to be able to read or press. A toast that briefly covers a monitor is
@@ -87,12 +116,15 @@ const FIND_OVERLAPS = () => {
 };
 
 (async () => {
+  const local = BASE ? null : await serveSite();
+  if (local) BASE = local.url;
   const browser = await chromium.launch();
   let failed = false;
 
-  for (const w of WIDTHS) {
+  for (const { w, h } of SIZES) {
+    const phone = Math.min(w, h) <= 699;
     const ctx = await browser.newContext({ colorScheme: 'dark',
-      viewport: { width: w, height: 820 }, deviceScaleFactor: 2, isMobile: w <= 699, hasTouch: w <= 699
+      viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone
     });
     // a returning player: the how-to card opens by itself on a first visit only (the menus contract, 2026-09-23), and
     // left open it sat over the floor in every picture, so the overlaps were read through it
@@ -122,12 +154,12 @@ const FIND_OVERLAPS = () => {
 
     await page.waitForTimeout(500);
     const hits = await page.evaluate(FIND_OVERLAPS);
-    const shot = 'tmp/play-' + w + '.png';
+    const shot = 'tmp/play-' + w + (h !== 820 ? 'x' + h : '') + '.png';
     await page.screenshot({ path: shot }).catch(() => {});
 
     const bad = hits.length > 0 || errors.length > 0;
     if (bad) failed = true;
-    console.log('  ' + String(w).padStart(4) + 'px  ' + (bad ? 'FAIL' : 'ok  ') +
+    console.log('  ' + (String(w) + (h !== 820 ? 'x' + h : '')).padStart(7) + '  ' + (bad ? 'FAIL' : 'ok  ') +
       '  button: "' + started.label + '"  panels up: ' + started.visiblePanels + '/' + started.panels +
       '  overlaps: ' + hits.length + '  errors: ' + errors.length + '  shot: ' + shot);
     for (const h of hits) console.log('         COVERED ' + h.covered + '%: ' + h.target + '  by ' + h.by + '  (on top: ' + h.onTop + ')');
@@ -136,6 +168,7 @@ const FIND_OVERLAPS = () => {
   }
 
   await browser.close();
+  if (local) local.srv.close();
   console.log('');
   console.log(failed ? 'FAILED: a control or readout is covered while the shift is running.'
                      : 'CLEAN: nothing a player needs is covered, at any width tested.');

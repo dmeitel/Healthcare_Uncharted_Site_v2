@@ -8,6 +8,14 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { loadSystem, J } = require('./helpers/ug');
 
+/** The first seed whose first roll passes want: a test pins dice it can name, never Math.random. */
+function seedWhere(evalIn, want) {
+  const H = evalIn('window.HURng');
+  for (let s = 1; s < 100000; s++) if (want(H.make(s)())) return s;
+  throw new Error('no seed rolls that');
+}
+const pin = (hs, seed) => { hs.sys.rng = { seed, n: 0 }; };
+
 test('the region boots: three facilities, live demand, a sized goal', () => {
   const { hs } = loadSystem();
   assert.strictEqual(hs.sys.facilities.length, 3);
@@ -66,24 +74,27 @@ test('shared services change the physics for all three facilities', () => {
 test('goals are projection-anchored: standing pat clears the board on Easy', () => {
   const { hs, evalIn } = loadSystem();
   hs.settings.difficulty = 'easy';
-  evalIn('this.__r = Math.random; Math.random = () => 0');       // deterministic goal pick + event roll
   for (let i = 0; i < 6; i++) {
-    hs.sys.level = i + 1;
-    hs.sys.activeEvent = null;
-    const g = hs.makeSysGoal();
-    const r = hs.computeSystem(hs.sys, null);
-    if (g.kind !== 'rural') assert.ok(g.test(r), `standing pat clears a ${g.kind} goal on Easy`);
-    else assert.ok(g.target <= Math.round(r.zoneAccess.rural * 100) + 2, 'the rural goal is a two-point stretch, never a cliff');
+    for (let seed = 1; seed <= 6; seed++) {                     // six pinned seeds a level: every kind the deal makes
+      pin(hs, seed);
+      hs.sys.level = i + 1;
+      hs.sys.activeEvent = null;
+      const g = hs.makeSysGoal();
+      const r = hs.computeSystem(hs.sys, null);
+      if (g.kind !== 'rural') assert.ok(g.test(r), `standing pat clears a ${g.kind} goal on Easy`);
+      else assert.ok(g.target <= Math.round(r.zoneAccess.rural * 100) + 2, 'the rural goal is a two-point stretch, never a cliff');
+    }
   }
   // and the lean goal specifically: standing pat must clear it on Easy, and it never opens a term
-  evalIn('Math.random = () => 0.99');                            // pick the last pool entry: lean
+  const high = seedWhere(evalIn, v => v > 0.99);                // a first roll past 0.99 picks the last pool entry: lean
+  pin(hs, high);
   hs.sys.level = 2; hs.sys.activeEvent = null;
   const lean = hs.makeSysGoal();
   assert.strictEqual(lean.kind, 'lean', 'the 0.99 roll lands on lean');
   assert.ok(lean.test(hs.computeSystem(hs.sys, null)), 'standing pat clears lean on Easy');
   hs.sys.level = 1;
+  pin(hs, high);
   for (let i = 0; i < 4; i++) assert.notStrictEqual(hs.makeSysGoal().kind, 'lean', 'quarter one never opens on lean');
-  evalIn('Math.random = this.__r');
 });
 
 test('the payer table pays for market share, and hardball is a printed-odds bet', () => {
@@ -91,11 +102,10 @@ test('the payer table pays for market share, and hardball is a printed-odds bet'
   hs.sys.lastResult = hs.computeSystem(hs.sys, null);
   const rate0 = hs.sys.rateComm;
   const rev0 = hs.sys.lastResult.revenue;
-  evalIn('this.__r = Math.random; Math.random = () => 0');       // hardball wins at rolled 0
+  pin(hs, seedWhere(evalIn, v => v < 0.05));                   // hardball wins on a low roll
   hs.openNegotiation();
   assert.ok(hs.sys.pendingNeg && hs.sys.pendingNeg.winP > 0.3, 'leverage prices the odds');
   hs.resolveNeg(2);
-  evalIn('Math.random = this.__r');
   assert.ok(Math.abs(hs.sys.rateComm - (rate0 + 0.12)) < 1e-9, 'the win lands +0.12 on the commercial rate');
   assert.ok(hs.computeSystem(hs.sys, null).revenue > rev0, 'and revenue feels it');
 });
@@ -103,10 +113,9 @@ test('the payer table pays for market share, and hardball is a printed-odds bet'
 test('a full quarter runs: trust drifts, strain accrues, the term can end', () => {
   const { hs, evalIn } = loadSystem();
   hs.settings.difficulty = 'easy';
-  evalIn('this.__r = Math.random; Math.random = () => 0');
+  pin(hs, seedWhere(evalIn, v => v < 0.05));                   // the first pool entry: a net goal
   hs.sys.goal = hs.makeSysGoal();
   hs.runQuarter();
-  evalIn('Math.random = this.__r');
   assert.strictEqual(hs.sys.over, false, 'an Easy standing-pat quarter clears');
   assert.strictEqual(hs.sys.stats.q, 1, 'the record advanced');
   const d = hs.reportData();

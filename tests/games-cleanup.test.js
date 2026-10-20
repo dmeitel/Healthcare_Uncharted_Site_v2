@@ -59,7 +59,9 @@ function loadER(stored){
   const store = { _s: stored ? { er_settings: JSON.stringify(stored) } : {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); } };
   const ctx = { document: { getElementById: i => ids[i] || null, addEventListener() {}, querySelector() { return null; }, activeElement: null, body: {} },
     window: { __UG_TEST: true, addEventListener() {}, innerWidth: 1200, innerHeight: 800 }, navigator: {}, console, setTimeout, clearTimeout, setInterval: () => 0, clearInterval() {}, localStorage: store, Date, Math };
-  vm.createContext(ctx); new vm.Script(src).runInContext(ctx);
+  vm.createContext(ctx);
+  new vm.Script(fs.readFileSync(path.join(__dirname, '..', 'src', 'assets', 'js', 'hu-rng.js'), 'utf8')).runInContext(ctx);   // the page's seeded generator
+  new vm.Script(src).runInContext(ctx);
   return ctx.window.__er;
 }
 

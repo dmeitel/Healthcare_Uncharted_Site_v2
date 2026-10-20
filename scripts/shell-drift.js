@@ -29,19 +29,22 @@ const SRC = path.join(ROOT, 'src');
 
 /* Concepts the shell owns. A page declaring one of these has its own private copy of
    something that should be identical everywhere. Bespoke prefixes are NOT listed here on
-   purpose: a diagram, a board or a figure staying page-scoped is correct, not drift. */
+   purpose: a diagram, a board or a figure staying page-scoped is correct, not drift.
+   A prefix starts with a letter and may carry digits after it (2026-10-20): the letters-only
+   form never saw .a7-hero, .p4-hero or .m5v-card, so pages carrying a whole private header
+   read zero. */
 const OWNED = [
-  ['hero',       /\.[a-z]{2,6}-hero(-inner|-wrap)?\s*\{/g],
-  ['eyebrow',    /\.[a-z]{2,6}-(eyebrow|kick|kicker)\s*\{/g],
-  ['h1',         /\.[a-z]{2,6}-(h1|hero-h1)\s*\{/g],
-  ['h2',         /\.[a-z]{2,6}-h2\s*\{/g],
-  ['h3',         /\.[a-z]{2,6}-(h3|card-h)\s*\{/g],
-  ['standfirst', /\.[a-z]{2,6}-(hero-sub|standfirst|lede)\s*\{/g],
-  ['paragraph',  /\.[a-z]{2,6}-p\s*\{/g],
-  ['note',       /\.[a-z]{2,6}-(note|callout)\s*\{/g],
-  ['card',       /\.[a-z]{2,6}-card\s*\{/g],
-  ['grid',       /\.[a-z]{2,6}-grid\s*\{/g],
-  ['link',       /\.[a-z]{2,6}-links?\s*\{/g],
+  ['hero',       /\.[a-z][a-z0-9]{1,5}-hero(-inner|-wrap)?\s*\{/g],
+  ['eyebrow',    /\.[a-z][a-z0-9]{1,5}-(eyebrow|kick|kicker)\s*\{/g],
+  ['h1',         /\.[a-z][a-z0-9]{1,5}-(h1|hero-h1)\s*\{/g],
+  ['h2',         /\.[a-z][a-z0-9]{1,5}-h2\s*\{/g],
+  ['h3',         /\.[a-z][a-z0-9]{1,5}-(h3|card-h)\s*\{/g],
+  ['standfirst', /\.[a-z][a-z0-9]{1,5}-(hero-sub|standfirst|lede)\s*\{/g],
+  ['paragraph',  /\.[a-z][a-z0-9]{1,5}-p\s*\{/g],
+  ['note',       /\.[a-z][a-z0-9]{1,5}-(note|callout)\s*\{/g],
+  ['card',       /\.[a-z][a-z0-9]{1,5}-card\s*\{/g],
+  ['grid',       /\.[a-z][a-z0-9]{1,5}-grid\s*\{/g],
+  ['link',       /\.[a-z][a-z0-9]{1,5}-links?\s*\{/g],
 ];
 
 function walk(dir, out) {
@@ -53,9 +56,19 @@ function walk(dir, out) {
   return out;
 }
 
-/** A reading page is one that is not wearing the tool shell and is not a full-screen game. */
+/** A STANDALONE page writes its own whole document (its own <!DOCTYPE>, head and styles) and names no layout, so it
+ *  never loads hu-global.css and the shared shell cannot reach it. One exists, on David's call (DECISIONS CN1,
+ *  2026-10-20): the Camp Nauvoo vision, built as a pitch of its own. tests/reading-shell.test.js names every one, so a
+ *  page cannot leave the count by writing its own head. */
+function isStandalone(src) {
+  const fm = (src.match(/^---\r?\n([\s\S]*?)\r?\n---/) || [, ''])[1];
+  // a page that forwards (the /SM shortcut) is not a page of its own
+  return /<!DOCTYPE html>/i.test(src) && !/^layout:/m.test(fm) && !/http-equiv=["']refresh["']/i.test(src);
+}
+
+/** A reading page is one that is not wearing the tool shell, is not a full-screen game, and is not standalone. */
 function isReadingPage(src) {
-  return !/tool-bar|hu-shell|no_footer:\s*true/.test(src);
+  return !/tool-bar|hu-shell|no_footer:\s*true/.test(src) && !isStandalone(src);
 }
 
 function inlineCss(src) {
@@ -82,7 +95,12 @@ function scan() {
 
 const rows = scan();
 
-if (process.argv.includes('--json')) {
+if (process.argv.includes('--standalone')) {
+  // the pages left out of the count because they stand alone
+  // pages only: the layouts under _includes write the site's own document
+  process.stdout.write(JSON.stringify(walk(SRC, []).sort().filter((f) => !/[\\/]_includes[\\/]/.test(f) && isStandalone(fs.readFileSync(f, 'utf8')))
+    .map((f) => path.relative(ROOT, f).split(path.sep).join('/'))) + '\n');
+} else if (process.argv.includes('--json')) {
   const baseline = {};
   for (const r of rows) if (r.total) baseline[r.page] = r.total;
   process.stdout.write(JSON.stringify(baseline, null, 2) + '\n');

@@ -31,6 +31,8 @@ function loadER() {
     Date,
   };
   vm.createContext(ctx);
+  // the seeded generator loads first, the way the page's <script src> tag does
+  new vm.Script(fs.readFileSync(path.join(__dirname, '..', 'src', 'assets', 'js', 'hu-rng.js'), 'utf8'), { filename: 'hu-rng.js' }).runInContext(ctx);
   new vm.Script(src, { filename: 'er-charge.js' }).runInContext(ctx);
   assert.ok(ctx.window.__er, 'ER hook exported');
   return { er: ctx.window.__er, evalIn(code){ return new vm.Script(code).runInContext(ctx); } };
@@ -97,7 +99,7 @@ test('charge cards: STAT labs quadruple, Fast Track refuses the sick, Bed Reques
   assert.strictEqual(er.playCard('statlab', cp.id), true);
   assert.strictEqual(er.G.cards.statlab, 1, 'the card is spent');
   run(er, 50);                                           // reach and claim the lab step
-  const labJob = er.G.res.lab.busy.find(j => j.p === cp);
+  const labJob = er.G.res.lab.busy.find(j => j.pid === cp.id);
   assert.ok(labJob && labJob.speed === 4, 'the lab runs at four times speed');
   assert.strictEqual(er.playCard('bedreq'), false, 'Bed Request with nobody boarding is refused, not wasted');
   assert.strictEqual(er.G.cards.bedreq, 2, 'and the card is kept');
@@ -137,8 +139,8 @@ test('an active critical slows the beds NEXT to it, and only those', () => {
   assert.strictEqual(er.crisisNear(near), true, 'bed 1 feels the code in bed 2');
   assert.strictEqual(er.crisisNear(far), false, 'bed 5 does not');
   run(er, 10);
-  const jNear = er.G.res.rn.busy.find(j => j.p === near);
-  const jFar = er.G.res.rn.busy.find(j => j.p === far);
+  const jNear = er.G.res.rn.busy.find(j => j.pid === near.id);
+  const jFar = er.G.res.rn.busy.find(j => j.pid === far.id);
   assert.ok(jNear && jFar, 'both are still mid-triage');
   const progNear = 1 - jNear.left / 14, progFar = 1 - jFar.left / 16;
   assert.ok(progNear < progFar, 'the neighbor of the crisis is proportionally behind');

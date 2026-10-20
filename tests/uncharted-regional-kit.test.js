@@ -11,6 +11,15 @@ const assert = require('node:assert');
 const { loadSystem, J } = require('./helpers/ug');
 
 const dealtOf = hs => J({ kind: hs.sys.goal.kind, target: hs.sys.goal.target, label: hs.sys.goal.label, ev: hs.sys.activeEvent });
+/** The first seed whose first roll passes want: a test pins dice it can name, never Math.random. */
+function seedWhere(evalIn, want) {
+  const H = evalIn('window.HURng');
+  for (let s = 1; s < 100000; s++) if (want(H.make(s)())) return s;
+  throw new Error('no seed rolls that');
+}
+const pin = (hs, seed) => { hs.sys.rng = { seed, n: 0 }; };
+/** Math.random is not the engine's: anything that still calls it throws. */
+const noMathRandom = (evalIn, why) => evalIn(`Math.random = () => { throw new Error(${JSON.stringify(why)}); }`);
 const withRemove = evalIn => evalIn('localStorage.removeItem = function(k){ delete this._s[k]; }');   // the harness stub has no removeItem
 const storageOf = evalIn => evalIn('JSON.stringify(localStorage._s)');
 /** A second page load in the same browser: a fresh sandbox handed the first one's storage. */
@@ -22,43 +31,47 @@ function reload(json) {
 }
 
 test('a restore reproduces the dealt quarter: same goal, same event, and no dice are rolled', async () => {
-  for (const roll of [0.05, 0.3, 0.45, 0.7, 0.95]) {
+  let events = 0, quiet = 0;
+  for (let seed = 1; seed <= 10; seed++) {             // seeds 1 to 6 roll quiet, 7 to 9 deal an event
     const { hs, evalIn } = loadSystem();
     hs.settings.difficulty = 'normal';
-    evalIn(`Math.random = () => ${roll}`);
+    pin(hs, seed);
     hs.sys.level = 7;                                   // year two, quarter three: events and every goal kind in play
     hs.startQuarter();
-    const dealt = dealtOf(hs);
+    if (hs.sys.activeEvent) events++; else quiet++;
+    const dealt = dealtOf(hs), dice = J(hs.sys.rng);
     const verdict = hs.sys.goal.test(hs.computeSystem(hs.sys, hs.sys.activeEvent));
     const str = await hs.encodeSave(hs.packSave());
-    evalIn('Math.random = () => { throw new Error("a restore rolled the dice"); }');
+    noMathRandom(evalIn, 'a restore rolled the dice');
     const seen = new Set();
     for (let i = 0; i < 30; i++) {                      // the review's 30 restores of one position
       hs.dispatchAct('closego', { f: 'crossroads', l: 'mat' });   // wreck something between restores
       hs.applySave(await hs.decodeSave(str));
       seen.add(dealtOf(hs));
+      assert.strictEqual(J(hs.sys.rng), dice, `seed ${seed}: the dice came back where they were, not one roll on`);
       assert.strictEqual(hs.sys.goal.test(hs.computeSystem(hs.sys, hs.sys.activeEvent)), verdict,
         'the rebuilt goal judges the projection the way the dealt one did');
     }
-    assert.strictEqual(seen.size, 1, `roll ${roll}: 30 restores, one quarter`);
-    assert.strictEqual([...seen][0], dealt, `roll ${roll}: and it is the quarter that was dealt`);
+    assert.strictEqual(seen.size, 1, `seed ${seed}: 30 restores, one quarter`);
+    assert.strictEqual([...seen][0], dealt, `seed ${seed}: and it is the quarter that was dealt`);
   }
+  assert.ok(events && quiet, `the seeds dealt both an event and a quiet quarter (${events} and ${quiet})`);
 });
 
 test('goalOf rebuilds every goal kind the deal makes, label and test included', () => {
-  const { hs, evalIn } = loadSystem();
+  const { hs } = loadSystem();
   hs.settings.difficulty = 'normal';
   hs.sys.level = 7; hs.sys.activeEvent = null;
   const kinds = new Set();
-  for (const roll of [0, 0.3, 0.6, 0.99]) {
-    evalIn(`Math.random = () => ${roll}`);
+  for (let seed = 1; seed <= 12; seed++) {
+    pin(hs, seed);
     const g = hs.makeSysGoal(), again = hs.goalOf(g.kind, g.target);
     kinds.add(g.kind);
     assert.strictEqual(again.label, g.label, g.kind + ': same words');
     const r = hs.computeSystem(hs.sys, null);
     assert.strictEqual(again.test(r), g.test(r), g.kind + ': same verdict');
   }
-  assert.ok(kinds.size >= 3, 'the rolls reached at least three kinds: ' + [...kinds].join(', '));
+  assert.ok(kinds.size >= 3, 'the seeds reached at least three kinds: ' + [...kinds].join(', '));
   assert.strictEqual(hs.goalOf('mystery', 5), null, 'an unknown kind is not a goal');
   assert.strictEqual(hs.goalOf('net', NaN), null, 'nor is a target that is not a number');
 });
@@ -145,15 +158,15 @@ test('Continue: a live term survives a reload with its quarter as dealt, and a l
   b.hs.openStartMenu();
   assert.match(b.ids['hs-overlay'].innerHTML, /data-act="continuerun"[^>]*>Continue your term &middot; Year 1, Quarter&nbsp;3/, 'the start card offers Continue first');
   assert.ok(b.ids['hs-overlay'].innerHTML.indexOf('continuerun') < b.ids['hs-overlay'].innerHTML.indexOf('data-act="start"'), 'Continue comes before a new term');
-  b.evalIn('Math.random = () => { throw new Error("Continue rolled the dice"); }');
+  noMathRandom(b.evalIn, 'Continue rolled the dice');
   await b.hs.continueRun();
   assert.strictEqual(dealtOf(b.hs), dealt, 'the same goal and event came back');
+  assert.strictEqual(J(b.hs.sys.rng), J(hs.sys.rng), 'and the dice where they were');
   assert.strictEqual(b.hs.sys.cash, cash);
   assert.strictEqual(b.hs.sys.shared.gpo, true, 'and the change made after the deal');
   assert.strictEqual(b.hs.termLive, true);
 
   // lose it: insolvency ends the term and the string is gone at once
-  b.evalIn('Math.random = () => 0.5');
   b.hs.sys.cash = -99999;
   b.hs.dispatchAct('runq');
   assert.ok(b.hs.sys.over, 'the term ended');
@@ -166,8 +179,7 @@ test('a booked quarter continues into the next one, never a replay of the same o
   const { hs, evalIn } = loadSystem();
   withRemove(evalIn);
   hs.settings.difficulty = 'easy';
-  evalIn('Math.random = () => 0');                     // quarter one on Easy: a net goal standing pat clears
-  hs.dispatchAct('start');
+  hs.dispatchAct('start', { seed: seedWhere(evalIn, v => v < 0.05) });   // quarter one on Easy: a net goal standing pat clears
   hs.dispatchAct('runq');
   assert.strictEqual(hs.sys.over, false, 'cleared');
   assert.strictEqual(hs.sys.cleared, true, 'and booked');
@@ -204,7 +216,7 @@ test('the payer table survives a reload with the same odds, and the choice is no
   assert.strictEqual(b.hs.sys.stats.q, 1, 'the board review was not run again');
 
   // choose, then reload: the result is booked, so the next load is next year, not another try
-  b.evalIn('Math.random = () => 0.99');                // hardball loses
+  pin(b.hs, seedWhere(b.evalIn, v => v > 0.99));      // hardball loses on a high roll
   const rate = b.hs.sys.rateComm;
   b.hs.dispatchAct('neg', { i: '2' });
   assert.ok(b.hs.sys.rateComm < rate, 'hardball lost');

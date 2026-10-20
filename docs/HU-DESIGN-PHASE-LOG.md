@@ -1167,3 +1167,14 @@ for diagram structure, and the "1 hr" label on the day teal takes clinical white
 phone drawing beside the wide one (320 units, no label under 13.6 px at 360, two-line labels where needed), its pocket card
 wraps on a phone, and its arrowheads take their lines' colour. Three false positives in the gate's spill check went with it:
 an inline word's font room under a big title, a figure set wider than its column on purpose, and a hidden panel's empty box.
+
+## 2026-10-20 · Phase 1 cleared for 1.0 (several surfaces)
+
+David, 2026-10-19, on the page ledger's Phase 1 list: "can we get all of those phase 1 issues resolved before we push 1.0?"
+After the night's push, helpers worked the list; 64 of 65 pages reached Phase 2. The reading layout: the Learn header band, its
+glow and its aside became shared classes in hu-global.css (`.hu-read-band`, `--glow`, `.hu-read-hero-inner--aside`) with a flush
+pressable card (`.rn-card--flush`); 34 more pages moved onto the shared shell, and the drift counter learned digit prefixes (22
+declarations it had read as zero). Games (the "Reading load on all three games" phase, and maintenance on the others): the engine
+contract on Alarm Fatigue, ER Charge, Daily Huddle, Vital Stats and Uncharted Regional, with nothing a player sees changed; Alarm
+Fatigue's phone layout docks the cards that come to you above the button so nothing covers the monitors or the button in the late
+game, and decorative layers no longer take taps. The play check runs in `npm run qa`. Camp Nauvoo is left for his call (CN1).

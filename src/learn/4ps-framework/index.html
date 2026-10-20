@@ -85,15 +85,9 @@ date: 2026-04-27
 
   /* ===== Hero ===== */
   /* The brass look (2026-10-11): the module header is a featured panel, a face with a brass edge along its
-     foot, and its label takes the Learn region color. The panels below are faces; the player cards are
-     faces you press. The four player hues stay where they are data. */
-  .hero-wrap {
-    background: var(--face-bg);
-    border-bottom: 1px solid var(--brass-lo);
-    box-shadow: inset 0 -1px 0 var(--brass), 0 10px 22px var(--depth);
-    position: relative;
-    overflow: hidden;
-  }
+     foot, and its label takes the Learn region color. The panels below are faces; the player picks are
+     faces you press. The four player hues stay where they are data. The band is the shared reading layout's
+     (.hu-read-band, 2026-10-20). */
   .hero {
     max-width: 1080px;
     margin: 0 auto;
@@ -278,7 +272,9 @@ date: 2026-04-27
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
-  .player-card {
+  /* a player pick is a control, not a reading card: pressing one opens that player's view in the diagram below
+     (named for what it is 2026-10-20; it was .player-card) */
+  .player-pick {
     background: var(--face-bg);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -286,25 +282,25 @@ date: 2026-04-27
     box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 4px 0 var(--key-floor), 0 12px 22px var(--depth);
     cursor: pointer;
   }
-  .player-card:hover {
+  .player-pick:hover {
     transform: translateY(-2px);
     border-color: var(--accent);
   }
-  .player-card:active {
+  .player-pick:active {
     transform: translateY(2px);
     box-shadow: 0 1px 0 var(--key-floor), 0 4px 8px var(--depth);
   }
   @media (prefers-reduced-motion: no-preference) {
     /* the card and its arrow move together, and only when motion is welcome */
-    :is(.player-card, .player-card-cta .arrow) { transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+    :is(.player-pick, .player-pick-cta .arrow) { transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
   }
-  .player-card[data-p="patient"] { --accent: var(--p-patient); --accent-bg: var(--p-patient-bg); --accent-border: var(--p-patient-border); }
-  .player-card[data-p="provider"] { --accent: var(--p-provider); --accent-bg: var(--p-provider-bg); --accent-border: var(--p-provider-border); }
-  .player-card[data-p="payer"] { --accent: var(--p-payer); --accent-bg: var(--p-payer-bg); --accent-border: var(--p-payer-border); }
-  .player-card[data-p="policy"] { --accent: var(--p-policy); --accent-bg: var(--p-policy-bg); --accent-border: var(--p-policy-border); }
+  .player-pick[data-p="patient"] { --accent: var(--p-patient); --accent-bg: var(--p-patient-bg); --accent-border: var(--p-patient-border); }
+  .player-pick[data-p="provider"] { --accent: var(--p-provider); --accent-bg: var(--p-provider-bg); --accent-border: var(--p-provider-border); }
+  .player-pick[data-p="payer"] { --accent: var(--p-payer); --accent-bg: var(--p-payer-bg); --accent-border: var(--p-payer-border); }
+  .player-pick[data-p="policy"] { --accent: var(--p-policy); --accent-bg: var(--p-policy-bg); --accent-border: var(--p-policy-border); }
 
   /* Tinted card header band · map signature */
-  .player-card-head {
+  .player-pick-head {
     background: var(--accent-bg);
     border-bottom: 1px solid var(--accent-border);
     padding: 18px 22px 16px;
@@ -326,8 +322,8 @@ date: 2026-04-27
     line-height: 1;
     flex-shrink: 0;
   }
-  .player-card-head .text-block { flex: 1; min-width: 0; }
-  .player-card h3 {
+  .player-pick-head .text-block { flex: 1; min-width: 0; }
+  .player-pick h3 {
     font-family: 'DM Serif Display', serif;
     font-weight: 400;
     font-size: 24px;
@@ -342,14 +338,14 @@ date: 2026-04-27
     line-height: 1.4;
   }
 
-  .player-card-body { padding: 18px 22px 20px; }
-  .player-card p {
+  .player-pick-body { padding: 18px 22px 20px; }
+  .player-pick p {
     font-size:var(--t-sub);
     line-height: 1.6;
     color: var(--text-2);
     margin: 0 0 12px;
   }
-  .player-card p:last-child { margin-bottom: 0; }
+  .player-pick p:last-child { margin-bottom: 0; }
   .player-examples {
     margin-top: 16px;
     padding-top: 14px;
@@ -382,7 +378,7 @@ date: 2026-04-27
     margin-bottom: 4px;
   }
   /* Click hint at bottom of card */
-  .player-card-cta {
+  .player-pick-cta {
     border-top: 1px solid var(--line);
     padding: 12px 22px;
     font-family: 'IBM Plex Mono', monospace;
@@ -394,7 +390,7 @@ date: 2026-04-27
     justify-content: space-between;
     background: var(--bg);
   }
-  .player-card:hover .player-card-cta .arrow {
+  .player-pick:hover .player-pick-cta .arrow {
     transform: translateX(3px);
   }
 
@@ -491,13 +487,13 @@ date: 2026-04-27
   .pov-node-group.is-active .pov-node-sub { fill: var(--node-color); }
 
   /* Connecting lines fade in based on active state */
-  .pov-link {
+  .pov-edge {
     stroke: var(--dgm-line);
     stroke-width: 1.5;
     transition: stroke 0.25s ease, stroke-width 0.25s ease, opacity 0.25s ease; /* impeccable-disable-line layout-transition: SVG stroke-width is paint, not layout */
   }
-  .pov-stage.has-active .pov-link { opacity: 0.3; }
-  .pov-stage.has-active .pov-link.from-active { opacity: 1; stroke: var(--active-color); stroke-width: 1.6; }
+  .pov-stage.has-active .pov-edge { opacity: 0.3; }
+  .pov-stage.has-active .pov-edge.from-active { opacity: 1; stroke: var(--active-color); stroke-width: 1.6; }
 
   /* Each node maps to its color via data attr */
   .pov-node-group[data-p="patient"] { --node-color: var(--p-patient); --node-color-bg: var(--p-patient-bg); }
@@ -630,14 +626,6 @@ date: 2026-04-27
     position: relative;
     overflow: hidden;
   }
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
-    margin-bottom: 24px;
-    position: relative;
-    z-index: 1;
-  }
   .stat-cell {
     border-left: 2px solid var(--hu-accent-border);
     padding-left: 18px;
@@ -668,6 +656,7 @@ date: 2026-04-27
     text-transform: uppercase;
   }
   .stats-source {
+    margin-top: 16px;   /* the figures sit on the shared reading grid (.hu-read-grid), which keeps 8px under it */
     font-size:var(--t-fine);
     color: var(--text-3);
     font-family: 'IBM Plex Mono', monospace;
@@ -781,7 +770,6 @@ date: 2026-04-27
     .pov-svg-wrap { max-width: 468px; height: 468px; } /* square on mobile */
     .pov-detail { height: auto; min-height: 400px; }
     .pov-section, .tech-section { padding: 28px 20px; }
-    .stats-grid { grid-template-columns: 1fr; gap: 24px; }
     .stat-num { font-size: 36px; }
     .tech-table th, .tech-table td { padding: 12px 14px; font-size:var(--t-ui); }
     .tech-table td:first-child { width: auto; }
@@ -801,7 +789,7 @@ date: 2026-04-27
 </style>
 
 <!-- ===== HERO ===== -->
-<div class="hero-wrap">
+<div class="hu-read-band">
   <header class="hero">
     <div class="eyebrow"><span class="dot"></span>FRAMEWORK · CORE CONCEPT</div>
     <h1>The Four Players<br>of <em>U.S. Healthcare</em></h1>
@@ -837,15 +825,15 @@ date: 2026-04-27
 
   <div class="players-grid">
 
-    <article class="player-card" data-p="patient" tabindex="0" role="button" aria-label="Open the Patient perspective">
-      <div class="player-card-head">
+    <article class="player-pick" data-p="patient" tabindex="0" role="button" aria-label="Open the Patient perspective">
+      <div class="player-pick-head">
         <div class="player-icon">01</div>
         <div class="text-block">
           <h3>The Patient</h3>
           <p class="player-metaphor">The reason the system exists.</p>
         </div>
       </div>
-      <div class="player-card-body">
+      <div class="player-pick-body">
         <p>Every person becomes a patient at some point. The patient is shaped by clinical factors (demographics, insurance status, current and historical medical conditions) and is affected by every other part of the ecosystem, often without realizing it.</p>
         <div class="player-examples">
           <span class="examples-label">Who counts as a patient</span>
@@ -854,21 +842,21 @@ date: 2026-04-27
           <span class="tag-pill">Population Subject</span>
         </div>
       </div>
-      <div class="player-card-cta">
+      <div class="player-pick-cta">
         <span>See system from Patient view</span>
         <span class="arrow">→</span>
       </div>
     </article>
 
-    <article class="player-card" data-p="provider" tabindex="0" role="button" aria-label="Open the Provider perspective">
-      <div class="player-card-head">
+    <article class="player-pick" data-p="provider" tabindex="0" role="button" aria-label="Open the Provider perspective">
+      <div class="player-pick-head">
         <div class="player-icon">02</div>
         <div class="text-block">
           <h3>The Provider</h3>
           <p class="player-metaphor">The organs of the system: where care actually happens.</p>
         </div>
       </div>
-      <div class="player-card-body">
+      <div class="player-pick-body">
         <p>A provider is anyone, or any organization, that delivers clinical services to a patient. Hospitals, clinics, physicians, nurses, therapists, and other healthcare professionals all qualify. They are the front line: the place where care actually happens.</p>
         <div class="player-examples">
           <span class="examples-label">What counts as a provider</span>
@@ -879,21 +867,21 @@ date: 2026-04-27
           <span class="tag-pill">Individual Clinicians</span>
         </div>
       </div>
-      <div class="player-card-cta">
+      <div class="player-pick-cta">
         <span>See system from Provider view</span>
         <span class="arrow">→</span>
       </div>
     </article>
 
-    <article class="player-card" data-p="payer" tabindex="0" role="button" aria-label="Open the Payer perspective">
-      <div class="player-card-head">
+    <article class="player-pick" data-p="payer" tabindex="0" role="button" aria-label="Open the Payer perspective">
+      <div class="player-pick-head">
         <div class="player-icon">03</div>
         <div class="text-block">
           <h3>The Payer</h3>
           <p class="player-metaphor">The circulatory system, the financial blood flow.</p>
         </div>
       </div>
-      <div class="player-card-body">
+      <div class="player-pick-body">
         <p>The payer covers the cost of care. This includes private insurance companies, employer-sponsored plans, and large public programs like Medicare and Medicaid. Without payers moving money through the system, providers cannot operate and patients cannot afford care.</p>
         <div class="player-examples">
           <span class="examples-label">Who counts as a payer</span>
@@ -904,21 +892,21 @@ date: 2026-04-27
           <span class="tag-pill">VA</span>
         </div>
       </div>
-      <div class="player-card-cta">
+      <div class="player-pick-cta">
         <span>See system from Payer view</span>
         <span class="arrow">→</span>
       </div>
     </article>
 
-    <article class="player-card" data-p="policy" tabindex="0" role="button" aria-label="Open the Policymaker perspective">
-      <div class="player-card-head">
+    <article class="player-pick" data-p="policy" tabindex="0" role="button" aria-label="Open the Policymaker perspective">
+      <div class="player-pick-head">
         <div class="player-icon">04</div>
         <div class="text-block">
           <h3>The Policymaker</h3>
           <p class="player-metaphor">The brain: direction, oversight, and the rules everyone follows.</p>
         </div>
       </div>
-      <div class="player-card-body">
+      <div class="player-pick-body">
         <p>Federal and state officials set the rules every other player has to follow. Agencies like CMS, the FDA, and HHS establish standards, run audits, and enforce compliance. Their work is shaped by political process and budget cycles, but its effects ripple through every other part of the system.</p>
         <div class="player-examples">
           <span class="examples-label">Who counts as a policymaker</span>
@@ -929,7 +917,7 @@ date: 2026-04-27
           <span class="tag-pill">Congress</span>
         </div>
       </div>
-      <div class="player-card-cta">
+      <div class="player-pick-cta">
         <span>See system from Policy view</span>
         <span class="arrow">→</span>
       </div>
@@ -953,12 +941,12 @@ date: 2026-04-27
         <svg class="pov-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram of the four players in healthcare">
 
           <!-- Connecting lines (drawn first so nodes sit on top). 6 edges between 4 nodes. -->
-          <line class="pov-link" data-from="patient" data-to="provider" x1="200" y1="65" x2="80" y2="200"/>
-          <line class="pov-link" data-from="patient" data-to="payer" x1="200" y1="65" x2="320" y2="200"/>
-          <line class="pov-link" data-from="patient" data-to="policy" x1="200" y1="65" x2="200" y2="335"/>
-          <line class="pov-link" data-from="provider" data-to="payer" x1="80" y1="200" x2="320" y2="200"/>
-          <line class="pov-link" data-from="provider" data-to="policy" x1="80" y1="200" x2="200" y2="335"/>
-          <line class="pov-link" data-from="payer" data-to="policy" x1="320" y1="200" x2="200" y2="335"/>
+          <line class="pov-edge" data-from="patient" data-to="provider" x1="200" y1="65" x2="80" y2="200"/>
+          <line class="pov-edge" data-from="patient" data-to="payer" x1="200" y1="65" x2="320" y2="200"/>
+          <line class="pov-edge" data-from="patient" data-to="policy" x1="200" y1="65" x2="200" y2="335"/>
+          <line class="pov-edge" data-from="provider" data-to="payer" x1="80" y1="200" x2="320" y2="200"/>
+          <line class="pov-edge" data-from="provider" data-to="policy" x1="80" y1="200" x2="200" y2="335"/>
+          <line class="pov-edge" data-from="payer" data-to="policy" x1="320" y1="200" x2="200" y2="335"/>
 
           <!-- PATIENT node — top, center (200,65) -->
           <g class="pov-node-group" data-p="patient" tabindex="0" role="button" aria-label="View from the Patient's perspective">
@@ -1111,7 +1099,7 @@ date: 2026-04-27
   <p class="section-lede">The pieces move, but the players stay the same. Every healthcare conversation (clinical, financial, technological, political) is a conversation about how these four interact. The scale of those interactions is hard to overstate.</p>
 
   <div class="stats-band hu-ticks">
-    <div class="stats-grid">
+    <div class="hu-read-grid">
       <div class="stat-cell">
         <div class="stat-num">$5.3T</div>
         <div class="stat-label">U.S. healthcare spending</div>
@@ -1207,7 +1195,7 @@ date: 2026-04-27
   const detail = document.getElementById('povDetail');
   const svgWrap = document.querySelector('.pov-svg-wrap');
   const nodeGroups = document.querySelectorAll('.pov-node-group');
-  const allLinks = document.querySelectorAll('.pov-link');
+  const allLinks = document.querySelectorAll('.pov-edge');
   const allContent = document.querySelectorAll('.pov-detail-content');
 
   let activeP = null;
@@ -1267,7 +1255,7 @@ date: 2026-04-27
   });
 
   // Wire up the player cards in section 1 — clicking a card scrolls to and activates its POV
-  const playerCards = document.querySelectorAll('.player-card');
+  const playerCards = document.querySelectorAll('.player-pick');
   playerCards.forEach(card => {
     card.style.cursor = 'pointer';
     card.setAttribute('tabindex', '0');

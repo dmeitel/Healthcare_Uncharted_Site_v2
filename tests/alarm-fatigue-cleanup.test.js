@@ -47,8 +47,11 @@ test('a sideways phone measures the tab row before it places the console', () =>
 });
 
 test('staying for overtime does not rename the lunch; only a lunch does', () => {
-  assert.match(fnBody('resumeShift'), /const afterLunch = lastEndKind==='lunch'/);
-  assert.match(fnBody('endShift'), /lastEndKind=kind/);
+  // since 2026-10-20 resumeShift asks the dispatcher, and the 'resume' verb in the engine block decides
+  assert.match(fnBody('resumeShift'), /dispatchAct\('resume'\)/);
+  const verb = PAGE.slice(PAGE.indexOf('  resume(){'), PAGE.indexOf('/* SHIFT ENGINE END */'));
+  assert.match(verb, /const afterLunch = S\.lastEndKind==='lunch'/);
+  assert.match(fnBody('endShift'), /S\.lastEndKind=kind/);
 });
 
 test('the tech text lists only what a tech is allowed to clear', () => {
@@ -61,4 +64,34 @@ test('the tech text lists only what a tech is allowed to clear', () => {
 
 test('on a phone the heart rate is never cut to "♥ 1…" beside the rhythm', () => {
   assert.match(PAGE, /\.bank-tile \.hr, #bank\.wide \.bank-tile \.hr\{[^}]*overflow:visible/);
+});
+
+// 2026-10-20: the play check (scripts/play-check.js, the whole floor bought) found the button riding over the monitors
+// and the family and Joint Commission cards on the CHECK buttons and the button at 360 to 430. Walked for real by the
+// play check at 360, 390, 430 and 1280 and at 740x360; these pin the mechanism so it does not drift back.
+test('on a phone nothing floats over the console: the cards that come to you dock above the button', () => {
+  assert.match(PAGE, /<div class="af-dock" id="afDock">\s*<div class="reveal-tray" id="revealTray"/, 'the dock holds the waiting cards\' tray');
+  assert.match(PAGE, /\n  \.af-dock\{display:contents;\}/, 'off a phone the dock is no box, so the desktop console is as it was');
+  assert.match(PAGE, /#bank\.on ~ \.af-dock > \.reveal-tray\{grid-row:2;\}/, 'the laptop grid still finds the tray');
+  const dock = fnBody('dockCard');
+  assert.match(dock, /matchMedia\(PHONE_Q\)/);
+  assert.match(dock, /afDock\.appendChild\(w\)/);
+  assert.match(dock, /floor\.appendChild\(w\)/, 'and a card steps back onto the floor past a phone');
+  for (const [where, body] of [['the med card', fnBody('spawnMed')], ['the huddle', fnBody('popHuddle')],
+    ['the break reminder and the help offer', fnBody('placeAboveButton')], ['the family and the surveyor', fnBody('anchorAboveButton')]])
+    assert.match(body, /dockCard\(w\)/, where + ' docks on a phone');
+  // the phone's button is never sticky over the monitors, short screens included (the laptop short-window rule sets it)
+  const after = PAGE.slice(PAGE.indexOf('.stage:not(.af-scroll) > .clicker{'));
+  assert.match(after, /@media \(max-width:699px\), \(max-height:500px\)\{\s*\.stage\{[^}]*overflow:hidden;\}\s*\.clicker\{position:static;/);
+  // a helper only clears what shows: every scrolling box between a thing and the floor clips its target
+  assert.match(PAGE, /for\(let sc=o\.el\.parentElement; sc && sc!==floor; sc=sc\.parentElement\)/);
+});
+
+test('a helper or the pizza on the big button never takes its press, and a helper\'s bubble stays on the screen', () => {
+  // measured by real taps at 360x740: a resting helper or the pizza drawn on the button took the press meant for it
+  assert.match(PAGE, /e\.target\.closest\('\.sat-box, #bigBtn, \.af-dock button'\)\) return;/);
+  assert.match(fnBody('seatBubble'), /W-4-left-b\._w/, 'a bubble by the right wall slides left');
+  assert.match(fnBody('seatBubble'), /4-left/, 'and by the left wall slides right');
+  assert.match(PAGE, /\.af \.tech \.bub\{[^}]*translateX\(calc\(-50% \+ var\(--bx, 0px\)\)\)/);
+  assert.match(fnBody('techFrame'), /seatBubble\(techEl\(t\), t\.x, W\);/);
 });

@@ -128,6 +128,9 @@ if (!FAST) {
   }
   const uniq = [...new Set(failing)];
   if (uniq.length) console.log('       failing pages: ' + uniq.join(', '));
+  // THE PLAY CHECK (2026-10-19). Everything above reads pages sitting still; Alarm Fatigue's panels only exist once a
+  // shift is running, and its late game covered the monitors on a phone while every gate here said clean.
+  run('play check (Alarm Fatigue mid-shift)', 'node', ['scripts/play-check.js'], { timeout: 900000 });
 }
 
 console.log(bar('TIER 2 · MACHINE MEASURES, THE NUMBER ONLY GOES DOWN'));

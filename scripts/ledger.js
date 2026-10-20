@@ -137,7 +137,10 @@ function compute() {
     // BY KIND
     if (kind === 'reading' || kind === 'hub') {
       const n = drift[src] || 0;
-      add({ id: 'shell', label: 'On the shared reading layout', state: n ? 'fail' : 'pass', detail: n ? n + ' page-level style declarations the shared layout already owns' : 'None of its own.', rule: 'tests/reading-shell.test.js' });
+      // a standalone page (its own whole document, no layout; scripts/shell-drift.js isStandalone, DECISIONS CN1)
+      const fm = (srcText.match(/^---\r?\n([\s\S]*?)\r?\n---/) || [, ''])[1];
+      if (/<!DOCTYPE html>/i.test(srcText) && !/^layout:/m.test(fm)) add({ id: 'shell', label: 'On the shared reading layout', state: 'na', detail: 'A standalone page with its own document; the shared layout does not apply (DECISIONS CN1).', rule: 'tests/reading-shell.test.js' });
+      else add({ id: 'shell', label: 'On the shared reading layout', state: n ? 'fail' : 'pass', detail: n ? n + ' page-level style declarations the shared layout already owns' : 'None of its own.', rule: 'tests/reading-shell.test.js' });
       if (wr.register === 'rounds' && wr.piece.length) {
         const miss = wr.piece.filter((p) => p.state === 'miss').map((p) => p.label);
         add({ id: 'rounds', label: 'The Rounds checklist', state: 'judge', detail: miss.length ? 'Missing: ' + miss.join('; ') : 'Every item found; the judgment ones are yours.', rule: 'CLAUDE.md, Rounds-specific' });

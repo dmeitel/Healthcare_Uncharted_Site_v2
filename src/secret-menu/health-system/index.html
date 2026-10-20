@@ -275,6 +275,7 @@ eleventyExcludeFromCollections: true
 
 <script src="/assets/js/hu-kit.js?v=20260923"></script>
 <script src="/assets/js/hu-save.js?v=20260920"></script>
+<script src="/assets/js/hu-rng.js?v=20260920"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -360,9 +361,21 @@ eleventyExcludeFromCollections: true
   const tutShown = () => tutOpen===null ? (sys && sys.level===1) : tutOpen;
   const yearOf=l=>Math.ceil(l/4), qInYear=l=>((l-1)%4)+1, isBoss=l=>qInYear(l)===4;
 
-  function initSys(){
+  // ── THE DICE (.claude/rules/games.md, The engine). Every roll in a term comes off one seeded
+  // generator (hu-rng.js), never Math.random. sys.rng is its seed and how far it has rolled, plain
+  // data, so it rides the save: a restored term rolls what it would have rolled, and a test pins a
+  // seed instead of patching Math.random. The generator is rebuilt from sys.rng when they disagree.
+  let dice=null;
+  function diceOf(st){
+    if (!dice || dice.seed!==st.seed || dice.state().n!==st.n) dice=window.HURng.make(0).restore(st);
+    return dice;
+  }
+  const roll = () => { const d=diceOf(sys.rng), v=d(); sys.rng=d.state(); return v; };
+
+  function initSys(seed){
+    dice = window.HURng.make(seed==null ? window.HURng.freshSeed() : seed);   // a new term, new dice
     sys = {
-      level:1, cash:CFG.startCash, rateComm:1.0, over:false,
+      level:1, cash:CFG.startCash, rateComm:1.0, over:false, rng:dice.state(),
       zones:{}, facilities:FACS.map(f=>({id:f.id, name:f.name, zone:f.zone, staff:f.staff, strain:10, lines:Object.assign({},f.lines)})),
       shared:{ehr:false, float:false, gpo:false},
       goal:null, activeEvent:null, lastResult:null,
@@ -481,13 +494,13 @@ eleventyExcludeFromCollections: true
     if (p.net>0 && sys.level>1) pool.push(goalOf('lean', spendCap));
     const opening = sys.level===1 ? pool.filter(g=>g.kind==='net'||g.kind==='access') : pool;
     const pick = opening.length?opening:pool;
-    return pick[Math.floor(Math.random()*pick.length)];
+    return pick[Math.floor(roll()*pick.length)];
   }
   function makeSysEvent(){
     const boss=isBoss(sys.level);
     if (sys.level<2) return null;
-    if (!boss && Math.random()>0.5) return null;
-    const e = JSON.parse(JSON.stringify(EVENTS[Math.floor(Math.random()*EVENTS.length)]));
+    if (!boss && roll()>0.5) return null;
+    const e = JSON.parse(JSON.stringify(EVENTS[Math.floor(roll()*EVENTS.length)]));
     const m=evMult();
     if (e.cash) e.cash=Math.round(e.cash*m);
     if (e.wage) e.wage=e.wage*m;
@@ -569,8 +582,8 @@ eleventyExcludeFromCollections: true
   }
   function resolveNeg(i){
     const winP=(sys.pendingNeg&&sys.pendingNeg.winP)||0.5; sys.pendingNeg=null;
-    if (i===1) sys.rateComm += Math.random()<winP?0.06:0.02;
-    else if (i===2){ if (Math.random()<winP*0.7) sys.rateComm+=0.12; else { sys.rateComm=Math.max(0.9,sys.rateComm-0.04); ZONES.forEach(z=>{sys.zones[z.id].trust=clamp(sys.zones[z.id].trust-2,0,100);}); } }
+    if (i===1) sys.rateComm += roll()<winP?0.06:0.02;
+    else if (i===2){ if (roll()<winP*0.7) sys.rateComm+=0.12; else { sys.rateComm=Math.max(0.9,sys.rateComm-0.04); ZONES.forEach(z=>{sys.zones[z.id].trust=clamp(sys.zones[z.id].trust-2,0,100);}); } }
     closeOverlay();
     endScreen({passed:true, title:`YEAR ${yearOf(sys.level)} CLEARED`, sub:`Commercial rate for next year: <b style="color:var(--lt-blue,#6aadff)">&times;${sys.rateComm.toFixed(2)}</b>. The region grows either way.`});
   }
@@ -655,7 +668,7 @@ eleventyExcludeFromCollections: true
     else if (act==='neg') resolveNeg(parseInt(d.i,10));
     else if (act==='continue') advance();
     else if (act==='runq') runQuarter();
-    else if (act==='start'){ saveSettings(); initSys(); termLive=true; startQuarter(); closeOverlay(); const h=$('hs-runhint'); if (h) h.hidden=true; }
+    else if (act==='start'){ saveSettings(); initSys(d.seed); termLive=true; startQuarter(); closeOverlay(); const h=$('hs-runhint'); if (h) h.hidden=true; }
   }
 
   // ── RENDER ────────────────────────────────────────────────────────────
@@ -836,8 +849,12 @@ eleventyExcludeFromCollections: true
   function applySave(data){
     if (!data||data.v!==1||!data.sys||typeof data.sys.level!=='number') throw new Error('bad save');
     if (data.settings) { settings=Object.assign(settings,data.settings); cleanSettings(); saveSettings(); }
-    const g=data.sys.goal;
-    sys=data.sys; sys.over=false;
+    const g=data.sys.goal, rs=data.sys.rng;
+    // The dice come back where they were. A string from before the dice (2026-10-19) gets a seed made
+    // from its own contents, so the same old string restores to the same future every time.
+    const rng = rs && typeof rs.seed==='number' && isFinite(rs.seed) && typeof rs.n==='number' && rs.n>=0 && rs.n<=1e6
+      ? {seed:rs.seed>>>0, n:Math.floor(rs.n)} : {seed:window.HURng.seedFrom(JSON.stringify(data.sys)), n:0};
+    sys=data.sys; sys.over=false; sys.rng=rng;
     // The quarter comes back as it was dealt: the same event and the same goal. It used to re-roll
     // both, which made every bad quarter a free do-over (30 restores of one position gave 3 goal
     // types and 6 events). A saved event's permanent shift is already in the zone numbers.
@@ -1054,6 +1071,7 @@ eleventyExcludeFromCollections: true
   cleanSettings(); initSys(); startQuarter(); openStartMenu();
 
   if (typeof window!=='undefined' && window.__UG_TEST){ window.__hs={ get sys(){return sys;}, get settings(){return settings;}, get termLive(){return termLive;},
+    get seed(){ return sys&&sys.rng ? sys.rng.seed : null; }, get rng(){ return sys&&sys.rng ? diceOf(sys.rng) : null; }, roll,   // pin with sys.rng = {seed, n:0}
     CFG, LINES, ZONES, FACS, EVENTS, DIST, PAYER_RATE, lineOf, zoneOf, facOf,
     goalOf, trackOf, causeOf, autosave, autoMeta, forgetRun, continueRun, resumeTerm, renderAll, AUTO_KEY,
     initSys, startQuarter, runQuarter, computeSystem, makeSysGoal, makeSysEvent, dispatchAct,

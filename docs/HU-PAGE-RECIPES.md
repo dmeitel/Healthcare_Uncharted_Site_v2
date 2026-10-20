@@ -173,6 +173,10 @@ Rules that bite: `{% raw %}` around the script if it contains anything that look
 > `hu-read-h1`, `hu-read-standfirst`, `hu-read-body`, `hu-read-section`, `hu-read-kicker`,
 > `hu-read-h2`, `hu-read-h3`, `hu-read-p`, `hu-read-note`, `hu-read-grid`, `hu-read-card`,
 > `hu-read-links`, `hu-read-link`. A `<p>` inside `.hu-read` is already styled.
+> A header that is a featured panel (the brass band) is `hu-read-band` on the `<header>`; `hu-read-band--glow`
+> adds the two faint glows, tinted with `--hu-glow-a` and `--hu-glow-b`. A drawing, figure or number beside the
+> words is `hu-read-hero-inner--aside` on the inner box. A card you press whose band and foot run edge to edge is
+> `rn-card rn-card--flush` (2026-10-20).
 >
 > Worked example: `src/secret-menu/patient-journeys/index.html`, 19 lines of page CSS, and the
 > 19 are genuinely unique to it. Bespoke things (a diagram, a figure, a board) STAY page-scoped

@@ -20,8 +20,8 @@ const posts = [
     slug: 'launch-1-0',
     n: 2,
     title: 'Site 1.0 Launch: What Changed in the Final Week',
-    date: '2026-10-19',
-    summary: 'Eight days from the first full review to the launch, with two daily puzzles and a renamed game, and the two times a check passed something I could see was wrong.',
+    date: '2026-10-20',
+    summary: 'Nine days from the first full review to the launch, with two daily puzzles and a renamed game, and the two times a check passed something I could see was wrong.',
     feedback: [
       { heard: 'I couldn\'t plug things in or connect things very easily with my fingers.', from: 'David, playing Device Assembly on his phone', status: 'done', did: 'The game aims for your thumb: a part lands on the nearest place it fits, a hose on the nearest port that takes it. A thumb test plays it at four phone sizes before it ships.', when: '2026-10-12' },
       { heard: 'My finger still does not line up with the touch screen, and the cart of parts will not drop down.', from: 'David, playing the daily wall on his phone', status: 'done', did: 'A drag has two aims now, the part drawn above your thumb and the thumb itself, and a place the part fits wins. The parts row scrolls itself, and All parts opens the whole cart.', when: '2026-10-14' },
@@ -35,6 +35,7 @@ const posts = [
       { heard: 'People will not understand the compass in the middle of the board.', from: 'David, QA on Daily Huddle', status: 'done', did: 'The center tile says Wild card and shows its category once it is opened.', when: '2026-10-18' },
       { heard: 'Make the daily puzzles button bigger, or give it its own shelf.', from: 'David, on the Fun page', status: 'done', did: 'Today\'s puzzles has its own shelf at the top of the Fun page, both dailies side by side.', when: '2026-10-18' },
       { heard: 'The hub feels static; it is hard to see when things are updated or changed.', from: 'David, on the hub', status: 'planned', did: 'A Home screen prototype at the top of the hub, waiting on his yes.' },
+      { heard: 'Get all of the Phase 1 issues resolved before we push 1.0.', from: 'David, the night of the launch', status: 'done', did: 'All 65 pages meet the site’s standard: the shared reading layout, the game engine rules and the writing checks.', when: '2026-10-20' },
       { heard: 'Hold 1.0 until the faults the new phone check found are fixed.', from: 'David, the night of the launch', status: 'done', did: 'Request Routing\'s flowchart got a phone drawing, and the lines on the Laws and Paradoxes charts pass contrast.', when: '2026-10-19' }
     ]
   },

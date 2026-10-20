@@ -55,6 +55,8 @@ function loadER(kit) {
     Date, Math,
   };
   vm.createContext(ctx);
+  // the seeded generator loads first, the way the page's <script src> tag does
+  new vm.Script(fs.readFileSync(path.join(__dirname, '..', 'src', 'assets', 'js', 'hu-rng.js'), 'utf8'), { filename: 'hu-rng.js' }).runInContext(ctx);
   new vm.Script(src, { filename: 'er-charge.js' }).runInContext(ctx);
   return { er: ctx.window.__er, ids };
 }
@@ -161,6 +163,42 @@ test('er: the end card counts one batched step as one', () => {
   er.endShift();
   assert.match(ids['er-overlay'].innerHTML, /<b>1<\/b> batched step:/);
   assert.doesNotMatch(ids['er-overlay'].innerHTML, /1<\/b> batched steps/);
+});
+
+test('er: the board redraws the moment a drag drops, so a tap straight after reads the new board', () => {
+  // the page's own pointer handlers, recorded, and a pointer that drags the first waiting patient to bed 1
+  const on = { window: {}, er: {} };
+  const rec = where => (type, fn) => { (on[where][type] = on[where][type] || []).push(fn); };
+  const ids = {};
+  for (const m of HTML.slice(0, HTML.indexOf('<script>')).matchAll(/id="([^"]+)"/g)) ids[m[1]] = {
+    id: m[1], hidden: false, innerHTML: '', textContent: '', style: {}, dataset: {},
+    classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+    addEventListener: m[1] === 'er' ? rec('er') : () => {}, querySelector() { return null; },
+  };
+  const bed1 = { classList: { add() {} }, dataset: { num: '1' }, closest: s => (s === '.er-bed.empty' ? bed1 : null) };
+  const ctx = {
+    document: { getElementById: i => ids[i] || null, addEventListener() {}, querySelector() { return null; }, querySelectorAll: () => [],
+      createElement: () => ({ style: {}, remove() {} }), elementFromPoint: () => bed1, activeElement: null, body: { appendChild() {} } },
+    window: { __UG_TEST: true, addEventListener: rec('window'), innerWidth: 1200, innerHeight: 800 },
+    navigator: {}, console, setTimeout, clearTimeout, setInterval: () => 0, clearInterval() {},
+    localStorage: { _s: {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); } }, Date, Math,
+  };
+  vm.createContext(ctx);
+  new vm.Script(fs.readFileSync(path.join(__dirname, '..', 'src', 'assets', 'js', 'hu-rng.js'), 'utf8')).runInContext(ctx);
+  new vm.Script(HTML.slice(HTML.indexOf('<script>') + 8, HTML.lastIndexOf('</script>'))).runInContext(ctx);
+  const er = ctx.window.__er;
+  er.startShift();
+  const p = er.G.waiting[0];
+  const card = { dataset: { id: String(p.id) }, setPointerCapture() {} };
+  const fire = (type, x, y) => {
+    const e = { type, pointerType: 'mouse', pointerId: 1, clientX: x, clientY: y, cancelable: false, target: { closest: s => (/data-act/.test(s) ? card : null) } };
+    (on.window[type] || []).concat(on.er[type] || []).forEach(fn => fn(e));
+  };
+  assert.match(ids['er-wait'].innerHTML, new RegExp('data-id="' + p.id + '"'), 'the patient is in the waiting room');
+  fire('pointerdown', 10, 10); fire('pointermove', 40, 60); fire('pointerup', 300, 400);
+  assert.strictEqual(er.G.beds[0].pt && er.G.beds[0].pt.id, p.id, 'the drop placed them in bed 1');
+  assert.doesNotMatch(ids['er-wait'].innerHTML, new RegExp('data-id="' + p.id + '"'), 'with no beat in between, their card has left the waiting room');
+  assert.match(ids['er-beds'].innerHTML, new RegExp('data-act="bedpt" data-id="' + p.id + '"'), 'and is in the bed');
 });
 
 test('er: reduced motion stops every pulse the page runs', () => {

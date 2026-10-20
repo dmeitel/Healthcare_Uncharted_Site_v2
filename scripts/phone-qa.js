@@ -277,7 +277,7 @@ async function theArticle(browser) {
     await shot(phone, 'article-2-phone-sources');
     step(S, 'every source line is a link, plus the Reference Appendix', external >= 7 && appendix, external + ' external links');
 
-    const atlas = await phone.evaluate(() => Array.from(document.querySelectorAll('.afe-hero .card-fps a')).map(a => a.getAttribute('href')));
+    const atlas = await phone.evaluate(() => Array.from(document.querySelectorAll('.afe > header .card-fps a')).map(a => a.getAttribute('href')));
     step(S, 'the two Atlas links sit in the hero', atlas.includes('/atlas/#provider/nursing') && atlas.includes('/atlas/#provider/informatics'));
 
     await tap(phone, 'a.afe-btn');

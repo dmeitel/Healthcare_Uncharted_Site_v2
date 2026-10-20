@@ -388,6 +388,7 @@ dialog.hu-dlg.vs-big{ width:min(1400px, calc(100vw - 32px)); }
 <script src="/assets/js/vendor/supabase-2.115.0.min.js"></script>
 <script src="/assets/js/hu-kit.js?v=20260923"></script>
 <script src="/assets/js/hu-rng.js?v=20260920"></script>
+<script src="/assets/js/hu-save.js?v=20261004"></script>
 <script src="/assets/js/hu-table.js?v=20261001"></script>
 <script src="/assets/js/hu-qr.js?v=20261001"></script>
 
@@ -854,12 +855,26 @@ function tick(G, now){
   if (changed){ G.seq++; G.hostNow = now; }
   return changed;
 }
-/* the wire and the save are the same object: the bank rides once, as the questions this game dealt */
-function packState(G){ const out = JSON.parse(JSON.stringify(Object.assign({}, G, { bank:undefined }))); out.bank = undefined; delete out.bank; return out; }
-function applyState(G, data, bank){ const next = JSON.parse(JSON.stringify(data)); next.bank = bank || (G && G.bank) || null; return next; }
+/* THE SAVE (games.md, Saves and the wire). The wire and the save are the same object: packSave is the whole game but
+   the bank, which rides once, as the question up now. It is what the table kit carries to every guest and keeps as the
+   host's resume point, the same bytes the page sent before it had the name, so a room mid-game stays in step. applySave
+   takes one back and hangs this browser's bank on it, and refuses what is not a Vital Stats game. Neither touches the
+   page. The string form is the kit's codec (hu-save.js): HUVS1. and the deflated JSON, HUVS1R. when a browser cannot
+   deflate. */
+const SAVE_PREFIX = 'HUVS1.';
+function packSave(G){ const out = JSON.parse(JSON.stringify(Object.assign({}, G, { bank:undefined }))); delete out.bank; return out; }
+function applySave(G, data, bank){
+  if (!data || data.v !== 1 || typeof data.phase !== 'string' || !data.settings || !data.players || !Array.isArray(data.order) || !data.rng) throw new Error('not a Vital Stats save');
+  const next = JSON.parse(JSON.stringify(data)); next.bank = bank || (G && G.bank) || null; return next;
+}
+const codec = () => root.HUSave.codec(SAVE_PREFIX);
+function saveString(G){ return codec().encode(packSave(G)); }
+async function readSave(str, G, bank){ return applySave(G, await codec().decode(str), bank); }
 
 root.VitalStatsEngine = { CATS, SEATS, VERB_SEAT, SPEED, SECS, CLOSEST_BONUS, LOW_ODDS, MAX_PLAYERS, MAX_TEAMS, TEAM_NAMES, STATE_NAMES, STATES, REGIONS, poolFor, dealDeck, roundsIn, placeTurf, spreadFor,
-  newGame, addPlayer, dropPlayer, active, seated, membersOf, actorOf, seatPeople, placePeople, setTeams, setStyle, syncBots, slotsFor, oddsFor, winningSlot, settle, dispatchAct, tick, packState, applyState, finalRound, botEstimate,
+  newGame, addPlayer, dropPlayer, active, seated, membersOf, actorOf, seatPeople, placePeople, setTeams, setStyle, syncBots, slotsFor, oddsFor, winningSlot, settle, dispatchAct, tick, finalRound, botEstimate,
+  SAVE_PREFIX, packSave, applySave, saveString, readSave,
+  packState:packSave, applyState:applySave,   /* the old names, still read by scripts/backend-check-vital-stats.js */
   MAX_TRIVIA, TRIVIA_CLOSEST, triviaPoints, offWords, capOf, setupOf, setupQuery, setupFromQuery, applySetup };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
@@ -927,15 +942,15 @@ const T = window.HUTable.create({
      free plan (100 messages a second, each counted once per receiver) holds at about 40 a second whatever the size */
   inbox:true, spacing: n => n <= 8 ? 0 : n * 25,
   name: () => playerName() || 'Player',
-  envelope: () => ({ save: G ? E.packState(G) : null, ui: { kind: G ? G.phase : 'none', seq: G ? G.seq : 0 } }),
+  envelope: () => ({ save: G ? E.packSave(G) : null, ui: { kind: G ? G.phase : 'none', seq: G ? G.seq : 0 } }),
   onState: env => {
     if (!env.save) return;
     T.NET.lastUiSeq = env.ui ? env.ui.seq : 0;
-    G = E.applyState(G, env.save, BANK);
+    G = E.applySave(G, env.save, BANK);
     offset = (G.hostNow || Date.now()) - Date.now();
     render();
   },
-  onResume: env => { if (env.save){ G = E.applyState(G, env.save, BANK); mode = 'table'; syncRoster(); render(); ensureSystem(); } },
+  onResume: env => { if (env.save){ G = E.applySave(G, env.save, BANK); mode = 'table'; syncRoster(); render(); ensureSystem(); } },
   onRoster: () => { if (mode === 'table' && isHost()) syncRoster(); },
   lobby: note => { mode = 'table'; if (!G) showJoining(note); },
   dispatch: (act, data) => { if (!G) return; data = Object.assign({}, data || {}, { now: Date.now() }); if (E.dispatchAct(G, act, data)) render(); },
@@ -1787,8 +1802,10 @@ function wireMenus(){
   const mb = menu.button(); mb.setAttribute('aria-label', 'Menu'); $('vsKit').appendChild(mb);
 }
 
-/* __UG_TEST: the engine alone, for the vm tests. __VS_HOOK: the whole page running, for the relay check. */
-if (TEST || window.__VS_HOOK) window.__vs = { E, parseNum, readGuess, scaleOf, fmtVal, big, get G(){ return G; }, set G(v){ G = v; }, T, render, act, get mode(){ return mode; }, set mode(v){ mode = v; }, setBank(b){ BANK = b; if (G) G.bank = b; } };
+/* __UG_TEST: the engine alone, for the vm tests. __VS_HOOK: the whole page running, for the relay check. The save on
+   the live game: packSave and saveString read it, applySave and readSave replace it and draw nothing. */
+if (TEST || window.__VS_HOOK) window.__vs = { E, parseNum, readGuess, scaleOf, fmtVal, big, get G(){ return G; }, set G(v){ G = v; }, T, render, act, get mode(){ return mode; }, set mode(v){ mode = v; }, setBank(b){ BANK = b; if (G) G.bank = b; },
+  packSave: () => E.packSave(G), applySave: data => (G = E.applySave(G, data, BANK)), saveString: () => E.saveString(G), readSave: async str => (G = await E.readSave(str, G, BANK)) };
 if (!TEST){
   wireMenus();
   render();

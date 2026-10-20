@@ -32,31 +32,17 @@ const path = require('path');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'shell-drift.js');
 
-/* Refreshed 2026-09-22 after the first migration pass: 145 declarations across 19 of 31
-   reading pages, down from 225 across 26. What is LEFT is card, grid, hero, note and link,
-   which carry real page design (a gradient, a hover border, a column count) rather than pure
-   type. scripts/shell-convert.js refuses those on purpose; merging them is a design call. */
-const BASELINE = {
-  'src/learn/talks/arma-2026/index.html': 29,
-  'src/secret-menu/camp-nauvoo/index.html': 17,
-  'src/learn/index.html': 11,
-  'src/learn/talks/msrc-2026/index.html': 11,
-  'src/learn/process-engineering/index.html': 9,
-  'src/learn/laws-and-paradoxes/index.html': 8,
-  'src/rounds/index.html': 8,
-  'src/learn/alarm-fatigue/index.html': 7,
-  'src/learn/patient-data-record/index.html': 7,
-  'src/learn/request-routing/index.html': 6,
-  'src/secret-menu/index.html': 6,
-  'src/about/index.html': 2,   // 2026-10-11: the author cards on the shared reading grid (AB2)
-  'src/learn/4ps-framework/index.html': 5,
-  'src/tools/index.html': 5,
-  'src/learn/healthcare-data-sources/index.html': 4,
-  'src/404.html': 2,
-  'src/learn/home-respiratory-timeline/index.html': 2,
-  'src/learn/oxygen-payment-cuts/index.html': 2,
-  'src/index.html': 1,
-};
+/* Refreshed 2026-10-20. The first pass (2026-09-22) took 225 declarations across 26 pages to
+   145 across 19; the passes since moved every reading page onto the shared layout, the brass
+   header band, its glows and the aside columns included (.hu-read-band, .hu-read-hero-inner--aside).
+   The same day the counter learned that a prefix may carry digits (.a7-hero, .p4-hero); before
+   that, seven articles carrying a whole private header read zero.
+   The last one, Camp Nauvoo, stands alone on David's call (DECISIONS CN1, 2026-10-20) and is named below instead. */
+const BASELINE = {};
+
+/* Pages that write their own whole document and name no layout: the shared shell cannot reach them, so they are not
+   counted. Each one is here by name, on David's call, so a page cannot leave the count by writing its own head. */
+const STANDALONE = ['src/secret-menu/camp-nauvoo/index.html'];
 
 function current() {
   return JSON.parse(execFileSync(process.execPath, [SCRIPT, '--json'], { encoding: 'utf8' }));
@@ -76,6 +62,12 @@ test('no reading page gains its own copy of the shared shell', () => {
   assert.deepEqual(risen, [],
     'a reading page grew its own shell. The shared one is .hu-read in hu-global.css and its '
     + 'classes are listed in docs/HU-PAGE-RECIPES.md section 3.');
+});
+
+test('the standalone pages are the ones David named', () => {
+  const now = JSON.parse(execFileSync(process.execPath, [SCRIPT, '--standalone'], { encoding: 'utf8' }));
+  assert.deepEqual(now, STANDALONE, "a page writes its own document with no layout. Put it on base.njk, or, on David's call, "
+    + 'name it in STANDALONE with why.');
 });
 
 test('the shell migration only moves forward', () => {

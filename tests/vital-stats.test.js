@@ -17,12 +17,14 @@ const ROOT = path.join(__dirname, '..');
 const PAGE = fs.readFileSync(path.join(ROOT, 'src', 'fun', 'vital-stats', 'index.html'), 'utf8');
 const ENGINE = PAGE.match(/<script id="vs-engine">([\s\S]*?)<\/script>/)[1];
 
-function load() {
-  const ctx = { window: { addEventListener() {} }, navigator: {}, console, setTimeout, clearTimeout, Date, Promise, Math, JSON,
+/* the page's kits, in its order, and the web pieces the save string needs (raw: a browser that cannot deflate) */
+function load(raw) {
+  const ctx = { window: { addEventListener() {} }, navigator: {}, console, setTimeout, clearTimeout, Date, Promise, Math, JSON, Blob, Response, btoa, atob,
     localStorage: { _s: {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } } };
+  if (!raw) Object.assign(ctx, { CompressionStream, DecompressionStream });
   ctx.globalThis = ctx.window;
   vm.createContext(ctx);
-  for (const f of ['hu-rng.js', 'hu-table.js']) new vm.Script(fs.readFileSync(path.join(ROOT, 'src', 'assets', 'js', f), 'utf8'), { filename: f }).runInContext(ctx);
+  for (const f of ['hu-rng.js', 'hu-save.js', 'hu-table.js']) new vm.Script(fs.readFileSync(path.join(ROOT, 'src', 'assets', 'js', f), 'utf8'), { filename: f }).runInContext(ctx);
   ctx.HURng = ctx.window.HURng;
   new vm.Script(ENGINE, { filename: 'vs-engine' }).runInContext(ctx);
   return { E: ctx.window.VitalStatsEngine, K: ctx.window.HUTable, HURng: ctx.window.HURng };
@@ -388,11 +390,11 @@ test('a whole game against four bots runs to the final table on the clock, and r
   const A = playOut(E, 42), B = playOut(E, 42), C = playOut(E, 43);
   assert.strictEqual(A.phase, 'final');
   assert.strictEqual(A.round, A.settings.rounds);
-  assert.strictEqual(JSON.stringify(E.packState(A)), JSON.stringify(E.packState(B)), 'same seed, same verbs, same game');
+  assert.strictEqual(JSON.stringify(E.packSave(A)), JSON.stringify(E.packSave(B)), 'same seed, same verbs, same game');
   assert.notStrictEqual(JSON.stringify(A.deck), JSON.stringify(C.deck), 'another seed deals another deck');
   assert.ok(E.active(A).every(p => p.chips >= 0), 'chips never go negative');
   assert.ok(E.active(A).some(p => p.bot && p.chips > 0), 'the bots actually play');
-  assert.strictEqual(E.packState(A).bank, undefined, 'the bank never rides the wire');
+  assert.strictEqual(E.packSave(A).bank, undefined, 'the bank never rides the wire');
 });
 
 test('a phase ends early when everyone is in, and on the clock when someone is not', () => {
@@ -440,8 +442,8 @@ test('three browsers at one table on a fake bus: every guest\'s copy matches the
   let HG = null; const copies = {};
   const mk = (name, host) => {
     const T = K.create({ channelPrefix: 'vs-room-', memoKey: 'vs_room_' + name, backend: null, autoSeat: true, seats: E.SEATS, verbSeat: E.VERB_SEAT, wire: 'bp', name: () => name,
-      envelope: () => ({ save: HG ? E.packState(HG) : null, ui: { kind: HG ? HG.phase : 'none', seq: HG ? HG.seq : 0 } }),
-      onState: env => { T.NET.lastUiSeq = env.ui.seq; copies[name] = E.applyState(copies[name], env.save, BANK); },
+      envelope: () => ({ save: HG ? E.packSave(HG) : null, ui: { kind: HG ? HG.phase : 'none', seq: HG ? HG.seq : 0 } }),
+      onState: env => { T.NET.lastUiSeq = env.ui.seq; copies[name] = E.applySave(copies[name], env.save, BANK); },
       onRoster: () => { if (!host) return; const seats = T.NET.seats; E.SEATS.forEach(s => { if (seats[s.id]) E.addPlayer(HG, s.id, seats[s.id]); }); HG.seq++; T.broadcast(); },
       dispatch: (act, data) => { E.dispatchAct(HG, act, Object.assign({}, data, { now: 5000 })); },
       hint: () => {} });
@@ -451,7 +453,7 @@ test('three browsers at one table on a fake bus: every guest\'s copy matches the
   const H = mk('Host', true); H.host(); E.addPlayer(HG, 'p1', 'Host'); E.syncBots(HG);
   const A = mk('Ann'), B = mk('Bo');
   A.join(H.NET.room, 'Ann'); await flush(); B.join(H.NET.room, 'Bo'); await flush();
-  const same = () => { const h = JSON.stringify(E.packState(HG)); for (const n of ['Ann', 'Bo']) assert.strictEqual(JSON.stringify(E.packState(copies[n])), h, n + ' matches the host'); };
+  const same = () => { const h = JSON.stringify(E.packSave(HG)); for (const n of ['Ann', 'Bo']) assert.strictEqual(JSON.stringify(E.packSave(copies[n])), h, n + ' matches the host'); };
   await flush(); same();
   assert.strictEqual(E.active(HG).length, 4, 'host, two guests and a bot');
   H.act('start', {}); await flush(); same();
@@ -466,6 +468,67 @@ test('three browsers at one table on a fake bus: every guest\'s copy matches the
   H.act('next', {}); await flush(); same();
   assert.strictEqual(HG.phase, 'reveal');
   assert.ok(copies.Ann.last && copies.Ann.last.win >= 0, 'the guests see the result');
+});
+
+const J = (/** @type {any} */ v) => JSON.stringify(v);
+/** a game part way through a round: a guess in, the bots' plans made, chips on the table from a round already played */
+function midGame(E, seed) {
+  const G = game(E, seed, 3); G.settings.turf = false;
+  let now = 1000;
+  E.dispatchAct(G, 'start', { now });
+  for (let guard = 0; G.round < 2 && guard < 2000; guard++) {
+    const p = G.players.p1;
+    if (G.phase === 'answer' && !p.locked) { E.dispatchAct(G, 'answer', { seat: 'p1', val: Math.round(G.q.a * 1.1), now }); E.dispatchAct(G, 'lock', { seat: 'p1', now }); }
+    if (G.phase === 'bet' && !p.locked) { E.dispatchAct(G, 'bet', { seat: 'p1', i: 0, slot: 0, now }); E.dispatchAct(G, 'lock', { seat: 'p1', now }); }
+    now += 250; E.tick(G, now);
+  }
+  E.dispatchAct(G, 'answer', { seat: 'p1', val: 1234.5, now });
+  return { G, now };
+}
+/** the same moves and the same clock on two copies of a game, to the end */
+function finish(E, G, now) {
+  for (let guard = 0; G.phase !== 'final' && guard < 5000; guard++) {
+    const p = G.players.p1;
+    if (G.phase === 'answer' && !p.locked) E.dispatchAct(G, 'lock', { seat: 'p1', val: Math.round(G.q.a * 0.95), now });
+    if (G.phase === 'bet' && !p.locked) { E.dispatchAct(G, 'bet', { seat: 'p1', i: 1, slot: G.slots.length - 1, now }); E.dispatchAct(G, 'lock', { seat: 'p1', now }); }
+    now += 250; E.tick(G, now);
+  }
+  return G;
+}
+
+test('the save: a game mid-round packs to one object, goes out as a string and comes back identical, and plays on the same', async () => {
+  const { E } = load();
+  const { G, now } = midGame(E, 31);
+  assert.strictEqual(G.round, 2); assert.strictEqual(G.phase, 'answer');
+  assert.ok(E.active(G).some(p => p.chips > 0), 'chips from round one ride the save');
+  const packed = E.packSave(G);
+  assert.strictEqual(packed.bank, undefined, 'the bank stays home');
+  assert.strictEqual(J(packed), J(JSON.parse(J(Object.assign({}, G, { bank: undefined })))), 'every field but the bank, nothing lost through JSON');
+  const str = await E.saveString(G);
+  assert.ok(str.startsWith(E.SAVE_PREFIX) && E.SAVE_PREFIX === 'HUVS1.', 'the kit\'s codec, under the game\'s own prefix');
+  assert.ok(!/\s/.test(str));
+  const back = await E.readSave(str, null, BANK);
+  assert.strictEqual(back.bank, BANK, 'this browser\'s bank hangs on the copy');
+  assert.strictEqual(J(E.packSave(back)), J(packed), 'pack, string, apply: identical');
+  assert.strictEqual(J(E.packSave(E.applySave(null, packed, BANK))), J(packed), 'the object alone round-trips too');
+  assert.strictEqual(J(E.packSave(finish(E, back, now))), J(E.packSave(finish(E, G, now))), 'the dice ride the save: both copies play out the same game');
+  assert.strictEqual(back.phase, 'final');
+  // a string from a browser that cannot deflate reads anywhere
+  const R = load(true).E;
+  const rawStr = await R.saveString(G);
+  assert.ok(rawStr.startsWith('HUVS1R.'), 'the raw fallback prefix');
+  assert.strictEqual(J(E.packSave(await E.readSave(rawStr, null, BANK))), J(E.packSave(G)));
+});
+
+test('the save refuses what is not a Vital Stats game, and the page carries packSave on the wire', async () => {
+  const { E } = load();
+  for (const bad of [null, {}, { v: 2, phase: 'lobby', settings: {}, players: {}, order: [], rng: {} }, { v: 1, phase: 'lobby', settings: {}, players: {}, order: 'p1', rng: {} }])
+    assert.throws(() => E.applySave(null, bad, BANK), /not a Vital Stats save/);
+  await assert.rejects(E.readSave('HUG1.' + 'A'.repeat(20), null, BANK), 'another game\'s string');
+  await assert.rejects(E.readSave('not a save at all', null, BANK));
+  assert.match(PAGE, /<script src="\/assets\/js\/hu-save\.js[^"]*"><\/script>\s*<script src="\/assets\/js\/hu-table\.js/, 'the page loads the kit\'s codec');
+  assert.match(PAGE, /envelope: \(\) => \(\{ save: G \? E\.packSave\(G\) : null/, 'the envelope is the packed save');
+  assert.strictEqual((PAGE.match(/G = E\.applySave\(G, env\.save, BANK\)/g) || []).length, 2, 'a guest\'s copy and a host\'s resume both come back through applySave');
 });
 
 /** @param {string[]} names */
@@ -660,8 +723,8 @@ test('team play over a fake bus: two people on one team and one on the other, ev
   let HG = null; const copies = {};
   const mk = (name, host) => {
     const T = K.create({ channelPrefix: 'vs-room-', memoKey: 'vs_team_' + name, backend: null, autoSeat: true, seats: E.SEATS, verbSeat: E.VERB_SEAT, wire: 'vs', name: () => name, inbox: true,
-      envelope: () => ({ save: HG ? E.packState(HG) : null, ui: { kind: HG ? HG.phase : 'none', seq: HG ? HG.seq : 0 } }),
-      onState: env => { T.NET.lastUiSeq = env.ui.seq; copies[name] = E.applyState(copies[name], env.save, BANK); },
+      envelope: () => ({ save: HG ? E.packSave(HG) : null, ui: { kind: HG ? HG.phase : 'none', seq: HG ? HG.seq : 0 } }),
+      onState: env => { T.NET.lastUiSeq = env.ui.seq; copies[name] = E.applySave(copies[name], env.save, BANK); },
       onRoster: () => { if (!host) return; E.seatPeople(HG, T.NET.seats); HG.seq++; T.broadcast(); },
       dispatch: (act, data) => { E.dispatchAct(HG, act, Object.assign({}, data, { now: 5000 })); },
       hint: () => {} });
@@ -672,7 +735,7 @@ test('team play over a fake bus: two people on one team and one on the other, ev
   const A = mk('Ann'), B = mk('Bo');
   A.join(H.NET.room, 'Ann'); await flush(); B.join(H.NET.room, 'Bo'); await flush();
   H.act('set', { key: 'teams', val: 2 }); await flush();
-  const same = () => { const h = JSON.stringify(E.packState(HG)); for (const n of ['Ann', 'Bo']) assert.strictEqual(JSON.stringify(E.packState(copies[n])), h, n + ' matches the host'); };
+  const same = () => { const h = JSON.stringify(E.packSave(HG)); for (const n of ['Ann', 'Bo']) assert.strictEqual(JSON.stringify(E.packSave(copies[n])), h, n + ' matches the host'); };
   same();
   assert.deepStrictEqual(Array.from(E.membersOf(HG, 't1'), (/** @type {any} */ m) => m.name), ['Host', 'Bo']);
   H.act('start', {}); await flush(); same();

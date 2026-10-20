@@ -215,6 +215,7 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
 
 <script src="/assets/js/hu-kit.js?v=20260923"></script>
 <script src="/assets/js/hu-rng.js?v=20260920"></script>
+<script src="/assets/js/hu-save.js?v=20261004"></script>
 
 <!-- THE ENGINE. Plain data and verbs, no DOM (.claude/rules/games.md): one state object that serializes to JSON, every
      change through dispatchAct, the board dealt from the seeded generator, the clock passed in, never read. The page below
@@ -546,6 +547,18 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     if (o.life != null && (typeof o.life !== 'object' || Array.isArray(o.life))) return null;
     return packSave(o);
   }
+  /* THE SAVE STRING (2026-10-19, .claude/rules/games.md, Saves and the wire): the packed board through the kit's codec
+     (hu-save.js), 'HUDH1.' and the board deflated, or 'HUDH1R.' where a browser cannot deflate. This browser keeps each
+     board as a record: the string, and beside it the four fields the Fun shelf reads in the clear (src/assets/js/fun-today.js).
+     A board kept before the string was the plain state; it still reads, and its next save writes the record. */
+  const CODEC = W.HUSave ? W.HUSave.codec('HUDH1.') : null;
+  const saveString = async (G) => CODEC.encode(packSave(G));
+  async function readSave(str) { try { return applySave(await CODEC.decode(str)); } catch (e) { return null; } }
+  const keepRecord = async (G) => ({ save: await saveString(G), phase: G.phase, end: G.end, t0: G.t0, t1: G.t1 });
+  async function readRecord(rec) {
+    if (!rec || typeof rec !== 'object') return null;
+    return typeof rec.save === 'string' ? readSave(rec.save) : applySave(rec);
+  }
 
   /* MADE BOARDS travel as a short code: the seed, the clock, the misses and, when there is one, the field.
      my:k3x9q-180-3, my:k3x9q-180-3-rt. A code made before fields still opens the same board. */
@@ -593,7 +606,7 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
 
   W.HuddleEngine = { ZONES, zoneName, CELLS, CENTER, WEDGES, NB, TOP, BOTTOM, setBank, question, deal, newGame, limitMs, timeLeft, elapsed,
     BANK_DAYS, dayBank, bankVersion, ended, missCount, tilesLeft,
-    crossing, canCross, judge, picks, dispatchAct, packSave, applySave, CLOCKS, MISSES, madeCode, parseMade, shareText, clockText, stopwatch, FIELDS, fieldOf,
+    crossing, canCross, judge, picks, dispatchAct, packSave, applySave, saveString, readSave, keepRecord, readRecord, CLOCKS, MISSES, madeCode, parseMade, shareText, clockText, stopwatch, FIELDS, fieldOf,
     LIFELINES, narrowKeep, hintOf, swapFor, lifeOn, lifeCount, canLife,
     DAY_ONE, dayKey, dayNumber, daySeed, dayOut };
 })(this);
@@ -628,7 +641,25 @@ const store = {
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
 const saveKey = (id) => 'hd-run:' + id;
-function save(){ if (G) store.set(saveKey(G.id), E.packSave(G)); }
+/* THE BOARDS THIS BROWSER KEEPS, each as its save record (E.keepRecord). Making and reading a save string is async, so
+   boot reads every kept board once into RUNS and the page reads RUNS; a save puts the board in RUNS at once and in the
+   browser when its string is made, and a slow string never lands over a newer write. A board saved in another tab comes
+   in through the storage event (boot). */
+const RUNS = {}, writes = {};
+function keep(id, g){
+  const n = writes[id] = (writes[id] || 0) + 1, p = g ? E.packSave(g) : null;
+  RUNS[id] = p;
+  if (!p) { store.set(saveKey(id), null); return Promise.resolve(); }
+  return E.keepRecord(p).catch(() => p)   // no codec in this browser: the plain state, which still reads
+    .then((rec) => { if (writes[id] === n) store.set(saveKey(id), rec); });
+}
+const kept = (id) => E.applySave(RUNS[id] || null);
+function readKept(){
+  const ids = [];
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('hd-run:')) ids.push(k.slice(7)); } } catch (e) {}
+  return Promise.all(ids.map((id) => E.readRecord(store.get(saveKey(id))).catch(() => null).then((g) => { if (g && !writes[id]) RUNS[id] = g; })));
+}
+function save(){ if (G) keep(G.id, G); }
 
 /* ── where the site sends you to see a number (Vital Stats' format, scripts/build-vital-stats.js section 6) ── */
 const SEE_TOOLS = {
@@ -1011,7 +1042,7 @@ function render(){
 /* ── the start screen ── */
 function todayId(){ return 'day:' + E.dayKey(); }
 function doorHtml(){
-  const k = E.dayKey(), saved = E.applySave(store.get(saveKey(todayId())));
+  const k = E.dayKey(), saved = kept(todayId());
   const n = E.dayNumber(k);
   /* no clock on today's board or practice (David, 2026-10-16: "why is the daily huddle board timed?"; asked, "No limit, time is the score"):
      the clock counts up and the time to cross is the result. A team board can still have one. */
@@ -1104,7 +1135,7 @@ function startBoard(id){
   else if (id.startsWith('my:')) { const m = E.parseMade(id); if (!m) { toast('That board link did not read.'); return false; } o = { id, seed:m.seed, mode:'made', clock:m.clock, misses:m.misses, field:m.field, bank:m.bank || 1 }; }
   if (!o) return false;
   o.more = !!(prefs && prefs.get('more'));
-  const saved = E.applySave(store.get(saveKey(o.id)));
+  const saved = kept(o.id);
   G = saved || E.newGame(o);
   E.dispatchAct(G, 'tick', {}, Date.now());
   save();
@@ -1222,7 +1253,7 @@ function wireMenus(){
   prefs = HUKit.settings({ id:'hd', rows:[{ key:'more', label:'More time', help:'Half again as long on a board with a clock (a team board can have one), from your next board. The share line says so.', value:false }] });
   menu = HUKit.gameMenu({ title:'Daily Huddle', help, settings:prefs, escOpens: () => !(qDlg && qDlg.isOpen()),
     restart:{ verb:'Start over', title:'Start this board over?', body:'A fresh copy of this board with a new clock. Today’s daily result stays as it is.',
-      run: () => { if (!G) return; const id = G.mode === 'day' ? 'past:' + G.id.slice(4) : G.id; store.set(saveKey(id), null); stopTick(); startBoard(id); } },
+      run: () => { if (!G) return; const id = G.mode === 'day' ? 'past:' + G.id.slice(4) : G.id; keep(id, null); stopTick(); startBoard(id); } },
     leave:{ href:'/fun/' } });
   $('hdKit').appendChild(help.button());
   $('hdKit').appendChild(menu.button());
@@ -1258,6 +1289,13 @@ async function boot(){
     BANKLIST = bank.questions;
     E.setBank(BANKLIST, bank.versions);
   } catch (e) { $('hdMain').innerHTML = '<div class="hd-page"><p class="hd-line">The questions did not load. Check the connection and reload the page.</p></div>'; return; }
+  await readKept();   // after the bank: a kept board reads only if its questions are still in it
+  window.addEventListener('storage', (e) => {
+    if (e.key == null || !e.key.startsWith('hd-run:')) return;
+    const id = e.key.slice(7), n = writes[id] = (writes[id] || 0) + 1;
+    let rec = null; try { rec = JSON.parse(e.newValue || 'null'); } catch (err) {}
+    E.readRecord(rec).catch(() => null).then((g) => { if (writes[id] === n) RUNS[id] = g; });
+  });
   const p = new URLSearchParams(location.search);
   if (p.get('list')) { listKind = p.get('list'); mode = 'list'; render(); return; }
   const b = p.get('board');
@@ -1267,7 +1305,8 @@ async function boot(){
   if (reset) { setAddress(); toast('Every board is fresh again, as on a first visit.'); }
 }
 
-if (TEST) window.__hd = { E, readGuess, parseNum, get G(){ return G; }, set G(v){ G = v; }, render, startBoard, act };
+if (TEST) window.__hd = { E, readGuess, parseNum, get G(){ return G; }, set G(v){ G = v; }, render, startBoard, act,
+  packSave: E.packSave, applySave: E.applySave, keep, kept, readKept };
 else boot();
 })();
 </script>
