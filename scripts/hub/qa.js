@@ -26,6 +26,10 @@ const { ROOT, stamp, touchedPages, git } = require('../lib/session');
 const board = require('./board');
 
 const DIR = path.join(ROOT, 'data-build', 'qa');
+/* THE PUZZLE SHEET'S MARKS (Headwall's walls on the Puzzles tab) live in a file of their own, not on a board card. They were
+   kept under the card that started the sheet, so when that card shipped and left the board every mark failed with "No card
+   device-assembly" (David, 2026-10-18). The file keeps that name so his 48 marks carry over; no card is looked up for it. */
+const SHEET = 'device-assembly';
 const SHOTS = path.join(ROOT, 'tmp', 'hub', 'shots');
 const SITE = path.join(ROOT, '_site');
 
@@ -139,7 +143,8 @@ function counts(list) {
   return { total: list.length, todo: n('todo'), good: n('good'), tweak: n('tweak'), recheck: n('recheck'), clear: list.length > 0 && n('good') === list.length };
 }
 
-/** David's mark on an item. A tweak needs its note: the note is the work.
+/** David's mark on an item. A tweak needs its note: the note is the work. A Good can carry one too, as a remark that asks
+ *  for nothing (2026-10-18: "it looks fine, its not complex but thats ok" had nowhere to go but Needs a tweak).
  *  @param {string} cardId @param {string} itemId @param {string} mark @param {string} [note] @param {string} [dir] */
 function mark(cardId, itemId, mark, note = '', dir = DIR) {
   if (mark !== 'good' && mark !== 'tweak') throw new Error('A mark is good or tweak.');
@@ -150,7 +155,7 @@ function mark(cardId, itemId, mark, note = '', dir = DIR) {
   if (!marks.started) marks.started = stamp();
   const prev = marks.items[itemId];
   const history = prev ? [...(prev.history || []), { mark: prev.mark, note: prev.note || '', fix: prev.fix || '', at: prev.at || '' }] : [];
-  marks.items[itemId] = { mark, note: mark === 'tweak' ? note : '', at: stamp(), history };
+  marks.items[itemId] = { mark, note, at: stamp(), history };
   writeMarks(cardId, marks, dir);
   return marks.items[itemId];
 }
@@ -191,8 +196,16 @@ function cardFor(id) {
 function cli() {
   const args = process.argv.slice(2);
   const ci = args.indexOf('--card');
-  const card = cardFor(ci > -1 ? args[ci + 1] : undefined);
   const rest = args.filter((a, i) => i !== ci && i !== ci + 1);
+  // a wall on the Puzzles sheet is the sheet's own file, never a card (2026-10-18, the same fix as the hub's)
+  if ((ci > -1 && args[ci + 1] === SHEET) || /^wall:/.test(rest[1] || '')) {
+    if (rest[0] === 'fixed') { fixed(SHEET, rest[1], rest[2]); console.log('Back to David: ' + rest[1]); return; }
+    const open = Object.entries(readMarks(SHEET).items).filter(([, m]) => m.mark === 'tweak' || m.mark === 'recheck');
+    console.log(`\nPuzzles sheet · ${open.length} wall(s) with a note\n`);
+    for (const [id, m] of open) console.log(`  ${m.mark === 'tweak' ? 'TWEAK' : 'back '}  ${id.padEnd(30)} ${String(m.note || '').replace(/\n/g, ' ').slice(0, 90)}`);
+    return;
+  }
+  const card = cardFor(ci > -1 ? args[ci + 1] : undefined);
   if (rest[0] === 'fixed') {
     fixed(card.id, rest[1], rest[2]);
     console.log('Back to David: ' + rest[1]);
@@ -212,4 +225,4 @@ if (require.main === module) {
   try { cli(); } catch (e) { console.error(String(e && /** @type {Error} */ (e).message || e)); process.exit(1); }
 }
 
-module.exports = { DIR, SHOTS, SIZES, SIZE_NAME, slug, readMarks, pageMarks, items, counts, mark, fixed, pictures, cardFor, defaultCard };
+module.exports = { DIR, SHEET, SHOTS, SIZES, SIZE_NAME, slug, readMarks, pageMarks, items, counts, mark, fixed, pictures, cardFor, defaultCard };

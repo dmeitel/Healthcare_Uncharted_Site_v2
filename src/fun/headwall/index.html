@@ -2828,14 +2828,15 @@ function shiftPlan(code, opt){ opt=opt||{};
     const rng=window.HURng.make('da-shift-v'+SHIFT_V+'|'+code);
     for(let attempt=0; attempt<40; attempt++){
       const story=opt.story ? storyById(opt.story) : pickW(rng, SHIFT_STORIES), place=story.place||'hospital', roomName=rng.pick(['right','right','mirror','left']), base=ROOMS[roomName];
+      const steps=story.steps.slice(opt.from || 0);   /* a daily story can start one step in (yearStoryPlan); every other shift starts at the top */
       const room0 = place==='hospital' ? roomCopy(Object.assign({fixtures:[]}, base)) : place==='icu' ? roomCopy(icuRoom(ICU_TWISTS[0])) : place==='rehab' ? rehabRoom(rng, base, true).room : homeRoom(rng, base);
       /* every draw happens before the search, so the search order can never change what a code deals */
-      const orders=story.steps.map(spec=>{ const recipe=recipeOf(spec.r), ctx={src:'wall', cannula: place==='home' ? 'cannula' : 'cannula-14', mirror: place!=='hospital'};   /* the long cannula, so the patient's tubing still reaches when an outlet moves; at home, the 7 ft one and a connector */
+      const orders=steps.map(spec=>{ const recipe=recipeOf(spec.r), ctx={src:'wall', cannula: place==='home' ? 'cannula' : 'cannula-14', mirror: place!=='hospital'};   /* the long cannula, so the patient's tubing still reaches when an outlet moves; at home, the 7 ft one and a connector */
         const req=Object.assign({}, recipe.order(rng, ctx).req);
         if(spec.flow) req.flow=rng.pick(spec.flow); if(spec.fio2) req.fio2=rng.pick(spec.fio2);
         ctx.order={req, brief:orderBrief(recipe.id, req)}; return {recipe, ctx}; });
       /* a complication on every wall that one bites, each at most once a shift; none only when nothing bites */
-      const tries=story.steps.map((s,k)=>k===0 ? [SHIFT_COMPS[0]] : shuffleW(rng, SHIFT_COMPS.filter(c=>c.id!=='none' && c.places.includes(place))).concat([SHIFT_COMPS[0]]));
+      const tries=steps.map((s,k)=>k===0 ? [SHIFT_COMPS[0]] : shuffleW(rng, SHIFT_COMPS.filter(c=>c.id!=='none' && c.places.includes(place))).concat([SHIFT_COMPS[0]]));
       const walls=[];
       const solveWall=(k, room, compId)=>{ const {recipe, ctx}=orders[k], {c, build}=shiftWallBuild(place, room, recipe, ctx);
         const extras=place==='icu' ? icuExtras(recipe) : [];
@@ -2876,7 +2877,13 @@ function yearStoryPlan(code){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(k) || dayNumber(k)<YEAR_DAY) return null;
   const p=yearPlan(k), tw=p.t && YEAR_TWISTS[p.t], story=tw && tw.story ? (typeof tw.story==='function' ? tw.story(k) : tw.story) : null;
   if(!story || !storyById(story)) return null;
-  return shiftPlan(code, {story, len:3, daily:k, n:p.n, dayName:p.day, title:tw.name!=='A story' ? tw.name : null});
+  /* A DAILY WALL IS NEVER A TRAINING WALL (2026-10-18, David on daily #23: "we still want some level of challenge in the
+     daily puzzle compared to the training walls"). A story's first wall takes no complication, so a story that opens on
+     a plain cannula in a hospital or rehab room opened the day on Tutorial 1 to 3 again. The daily starts it one step in,
+     still three walls long: "A patient getting worse" runs humidified oxygen, a non-rebreather, then high flow. At home
+     the concentrator and its outlet are the wall, so a home story keeps its first step. */
+  const S=storyById(story), from=(S.place||'hospital')!=='home' && S.steps[0].r==='cannula' && S.steps.length>3 ? 1 : 0;
+  return shiftPlan(code, {story, len:3, from, daily:k, n:p.n, dayName:p.day, title:tw.name!=='A story' ? tw.name : null});
 }
 /* wall k of a shift as a level: the plan's order and rail, its par, its solution for the ghost */
 function shiftLevel(code, k){
@@ -5596,8 +5603,9 @@ function renderBoard(evIn){
     out+=`<g class="${cls}" data-port="${k}"><circle class="ring" cx="${x}" cy="${y}" r="${p.internal?13:11}"/>${face}${hit}</g>`;
   }
   /* free ends of hanging tubing: a lead-style ring you pick up */
-  for(const se of stubEnds){ const k=se.tb.uid+':to', isFrom=k===fromKey, st=TUBE_STYLE[se.tb.def.kind]||TUBE_STYLE.o2, pw=se.tb.def.t==='power';
-    out+=`<g class="pt lead free${pw?' power':''}${isFrom?' from':''}" data-port="${k}"><circle class="ring" cx="${se.xy[0]}" cy="${se.xy[1]}" r="13"/>${pw ? plugAt(se.xy[0], se.xy[1], se.fp.s, false, GS*0.8) : `<circle class="dot" cx="${se.xy[0]}" cy="${se.xy[1]}" r="7" style="fill:${st.col}"/>`}<circle class="hit" cx="${se.xy[0]}" cy="${se.xy[1]}" r="${HR}"/></g>`; }
+  const takes=pending && looseTakes();   /* a run from an open port can end on a loose end (looseTakes) */
+  for(const se of stubEnds){ const k=se.tb.uid+':to', isFrom=k===fromKey, st=TUBE_STYLE[se.tb.def.kind]||TUBE_STYLE.o2, pw=se.tb.def.t==='power', cand=takes && !isFrom && (!S.link.t || (se.tb.def.t||'gas')===S.link.t);
+    out+=`<g class="pt lead free${pw?' power':''}${isFrom?' from':''}${cand?' cand':''}" data-port="${k}"><circle class="ring" cx="${se.xy[0]}" cy="${se.xy[1]}" r="13"/>${pw ? plugAt(se.xy[0], se.xy[1], se.fp.s, false, GS*0.8) : `<circle class="dot" cx="${se.xy[0]}" cy="${se.xy[1]}" r="7" style="fill:${st.col}"/>`}<circle class="hit" cx="${se.xy[0]}" cy="${se.xy[1]}" r="${HR}"/></g>`; }
   out+=rb+'<g id="routePv"></g><g id="dropTag">'+pvTag(S.preview)+'</g>';   /* K6: the planned run, filled in place while it is pulled or hovered */
   /* keyboard cursor */
   if(S.kbNav) out+=`<rect class="kb" x="${S.cursor[0]*U+3}" y="${S.cursor[1]*U+3}" width="${U-6}" height="${U-6}" rx="6"/>`;
@@ -6109,8 +6117,17 @@ function startLink(aRef, armed){
   }
   S.hand=null; S.sel=null; S.link={from:aRef, pt:null, armed:!!armed, t:p.t}; render();
 }
+/* 2026-10-18 (daily #16, by thumb): a run from an open port with no tubing of its own ends on hung tubing's loose end, and
+   the free end goes onto that port (connectPorts turns the pair round). Tubing picked on the cart hangs on the nearer of
+   two barbs a square apart, so a press 20 px off the coupler's barb put it on the cylinder's outlet below. The player let
+   it go, pressed the barb and pulled to the loose end, and was told to do it the other way round. A lead, a loose end and
+   a run pulled off a port still refuse it: those bring tubing of their own. Returns the port the run started from. */
+function looseTakes(){
+  if(!S.link || S.link.replug || (S.material && S.cart[S.material]>0)) return null;
+  const fp=findPort(S, S.link.from); return fp && !fp.internal && !fp.stub ? fp : null;
+}
 function finishLink(bRef){
-  const bp=findPort(S,bRef); if(bp && bp.stub && !(S.link && S.link.stub)){ toast('bad','No','That is a loose end. Pick it up and run it to a port, or run this tubing to a port.'); return false; }
+  const bp=findPort(S,bRef); if(bp && bp.stub && !(S.link && S.link.stub) && !looseTakes()){ toast('bad','No','That is a loose end. Pick it up and run it to a port, or run this tubing to a port.'); return false; }
   const res=dispatchAct('connect', {a:S.link.from, b:bRef, mat:S.material});
   if(!res.ok){ toast('bad','No', res.why); shake(); return false; }
   armClock(); S.link=null;
@@ -6344,10 +6361,10 @@ function aimLanding(cands, def, ax, ay, bx, by){
    it does not: 20 px off, an oxygen hose went into the air outlet one square over. A port it does not fit still takes it
    when nothing that fits is in reach, so a wrong joint can be made on purpose and the test says why. */
 function portNear(ev, touch, thumb){
-  if(touch && S.link){ const r=$('board').getBoundingClientRect(), end=linkEnd(), at=[ev, thumb||ev]; let best=null, bd=REACH, miss=null, md=REACH;
+  if(touch && S.link){ const r=$('board').getBoundingClientRect(), end=linkEnd(), from=looseTakes(), at=[ev, thumb||ev]; let best=null, bd=REACH, miss=null, md=REACH;
     for(const g of $('board').querySelectorAll('.pt.cand[data-port]')){ const p=findPort(S, parsePort(g.dataset.port)); if(!p) continue;
       const q=p.stub ? stubEndXY(p) : portXY(p), x=r.left+(q[0]-VIEW.x)*scale, y=r.top+(q[1]-VIEW.y)*scale, d=Math.min(...at.map(a=>Math.hypot(x-a.clientX, y-a.clientY)));
-      if(end && compat(end, p).s==='bad'){ if(d<md){ md=d; miss=g; } } else if(d<bd){ bd=d; best=g; } }
+      if(p.stub ? !!from && compat(p, from).s==='bad' : (end && compat(end, p).s==='bad')){ if(d<md){ md=d; miss=g; } } else if(d<bd){ bd=d; best=g; } }   /* a loose end fits when it seats on the port the run came from */
     if(best || miss) return best || miss; }
   const el=document.elementFromPoint(ev.clientX, ev.clientY), pt=el && el.closest && el.closest('.pt[data-port]');
   return pt && !(S.link && pt.dataset.port===S.link.from.uid+':'+S.link.from.pi) ? pt : null;
@@ -7567,7 +7584,7 @@ const daHook=()=>({hasBag, hangBag, addBag, bagShift, airwayWall, buildCells, BA
     get S(){ return S; }, set S(v){ S=v; }, get progress(){ return progress; }, start(id, room){ S=newState(levelById(id), room); return S; },
     /* PHONE PLAY · the thumb test (scripts/da-thumb.js) aims through these: the wall's scale and view, where a port is,
        how far a held part rides above the thumb */
-    get scale(){ return scale; }, get routeKey(){ return routeKey; }, VIEW, U, dims, portXY, liftPx, REACH, TUBE_LIFT, landingsFor, aimLanding,
+    get scale(){ return scale; }, get routeKey(){ return routeKey; }, VIEW, U, dims, portXY, liftPx, REACH, TUBE_LIFT, landingsFor, aimLanding, looseTakes,
     T:RACE, get NET(){ return NET; }, race:()=>race, raceStart, raceDispatch, raceState, raceSubmit, netSync, raceLeave, raceRoster, setRaceName, raceName, setChannelFactory:fn=>RACE.setChannelFactory(fn),
     get raceSolo(){ return raceSolo; }, set raceGhost(v){ raceGhost=v; },
 });

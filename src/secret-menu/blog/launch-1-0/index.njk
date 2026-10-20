@@ -1,0 +1,129 @@
+---
+layout: base.njk
+section: secret
+title: "Site 1.0 Launch: What Changed in the Final Week"
+description: "Dev Blog, post 2. The eight days from the first full review to the launch, and the two times a check passed something I could see was wrong."
+navPage: secret
+noindex: true
+eleventyExcludeFromCollections: true
+---
+{#- DEV BLOG, POST 2 (2026-10-19, the 1.0 launch). Drafted by Claude from the repo's own record (the close notes of
+    2026-10-11 to 2026-10-19, the decisions log, the design phase log) for David's read; the words are his to change.
+    Counts as of the 1.0 full check: 73 pages in the ledger, this post included (scripts/ledger.js), 8 tools and 4 games (src/_data/tools.js),
+    2,771 Daily Huddle questions, 79 Headwall walls on the puzzle sheet, 124 commits before the 1.0 commit. -#}
+{% set post = devBlog.posts | selectattr("slug", "equalto", "launch-1-0") | first %}
+{% include "components/blog-style.njk" %}
+
+<div class="blog hu-read">
+  <header class="blog-hero"><div class="hu-read-hero-inner">
+    <div class="hu-read-eyebrow"><a class="blog-up" href="/secret-menu/blog/">Dev Blog</a> &middot; Post {{ post.n }}</div>
+    <h1 class="hu-read-h1">{{ post.title }}</h1>
+    <p class="hu-read-standfirst">Eight days from the first full review to the launch, with two daily puzzles and a
+    renamed game. Twice in that week a check passed something I could see was wrong.</p>
+    <div class="blog-by"><strong>By David Eitel</strong><time datetime="{{ post.date }}">{{ post.dateText }}</time></div>
+  </div></header>
+
+  <div class="hu-read-body">
+
+    <section class="hu-read-section" id="start">
+      <p class="hu-read-p">On October 12 I sat down with Device Assembly on my phone and couldn't plug a hose into an
+      outlet. Every check we had said the game worked on a phone. Every button on the page passed the 44 pixel touch rule,
+      and that was true. The wall itself, where you actually play, was 28 percent of an iPhone SE's screen with squares 11
+      pixels wide, and nothing was measuring in there.</p>
+      <p class="hu-read-p">Post 1 drew the line for 1.0 at the October 11 review. I thought the week after it would be
+      cleanup. It turned into two new daily puzzles and a pile of fixes to the way we check things.</p>
+    </section>
+
+    <section class="hu-read-section" id="numbers">
+      <div class="hu-read-kicker">At launch</div>
+      <h2 class="hu-read-h2">What's in 1.0</h2>
+      <div class="hu-stats" style="margin:4px 0 22px">
+        <div class="hu-stat"><div class="v">73</div><div class="k">pages</div></div>
+        <div class="hu-stat"><div class="v">8</div><div class="k">tools</div></div>
+        <div class="hu-stat"><div class="v">4</div><div class="k">games on Fun</div></div>
+        <div class="hu-stat"><div class="v">2</div><div class="k">daily puzzles</div></div>
+        <div class="hu-stat"><div class="v">2,771</div><div class="k">trivia questions</div></div>
+        <div class="hu-stat"><div class="v">124</div><div class="k">commits before this one</div></div>
+      </div>
+      <p class="hu-read-p">The page count takes in the secret menu, this blog included. The two daily puzzles are Headwall's
+      daily wall and Daily Huddle's board, and they sit side by side on Today's puzzles at the top of the Fun page.</p>
+    </section>
+
+    <section class="hu-read-section" id="week">
+      <div class="hu-read-kicker">Since post 1</div>
+      <h2 class="hu-read-h2">The week, day by day</h2>
+      <ol class="blog-tl">
+        <li><time datetime="2026-10-12">October 12</time><b>Device Assembly by thumb.</b> The game aims for your finger now, and a thumb test plays it at four phone sizes.</li>
+        <li class="big"><time datetime="2026-10-14">October 14</time><b>Daily Huddle</b>, planned and built to a working board in a day.</li>
+        <li><time datetime="2026-10-15">October 15</time><b>Device Assembly becomes Headwall</b>, and Daily Huddle moves to the Fun shelf.</li>
+        <li><time datetime="2026-10-16">October 16</time><b>A polish pass</b> over the games, the hubs and every Learn page, at a phone and a desk, night and day.</li>
+        <li><time datetime="2026-10-18">October 18</time><b>Today's puzzles</b>, a bigger question bank, and 504 vendor facts checked against their sources.</li>
+        <li class="big"><time datetime="2026-10-19">October 19</time><b>Launch.</b> The phone check opens every tab on a page before it passes it.</li>
+      </ol>
+    </section>
+
+    <section class="hu-read-section" id="checks">
+      <div class="hu-read-kicker">The process</div>
+      <h2 class="hu-read-h2">What the checks missed</h2>
+      <p class="hu-read-p">I'll grant the checks are good. Before every push, every page loads at nine screen sizes in both
+      themes and the tests read every page for patient details. Before a game ships, a script plays its daily wall by
+      thumb at four phone sizes. Most nights it all comes back clean and I believe it.</p>
+      <p class="hu-read-p">Twice this week it was clean and wrong. The phone game was the first. The second turned up on
+      October 16, when a review opened every tab of every Learn page. Nine of the ten charts on Laws and
+      Paradoxes drew their labels at 7 pixels on a phone, and the phone check had passed the page, because it only ever
+      read the tab that was open when the page loaded. Tonight it learned to open every tab. On its first run it found the
+      flowchart in Request Routing drawing 74 labels at 9 pixels on a phone, so we held the launch a few hours and fixed it.</p>
+      <p class="hu-read-p">So what else isn't it looking at? I don't know yet. Each of these checks exists because
+      something got past the last one, and I expect the list to keep growing after launch.</p>
+    </section>
+
+    <section class="hu-read-section" id="huddle">
+      <div class="hu-read-kicker">The new game</div>
+      <h2 class="hu-read-h2">Daily Huddle</h2>
+      <p class="hu-read-p">Daily Huddle is a board of 19 hex tiles you cross from top to bottom by answering healthcare
+      trivia. My first note on the demo was "this is all very hard, I have to google most of these." So it got easier.
+      There are three lifelines now, each free once a board, and every number question became four answers to pick from.
+      On October 16 the three minute clock went away too: your time to cross is the score, and since October 18 you can
+      keep playing the rest of the board after you cross.</p>
+      <p class="hu-read-p">The bank started at 1,057 questions and is 2,771 tonight. A lot of the new ones are written from
+      the site's own data, so when a map picks up a new measure or the career tool adds a job, the next build turns it into
+      questions. The clinical questions have rules. Drugs show up only as facts, and a dose question is math with every
+      number already in it. The normal ranges stayed drafts until I had checked each one myself.</p>
+      <p class="hu-read-p">There's a board for every day through next October, and every one of them can be crossed; we
+      dealt all 365 to check. The dealer doesn't remember yesterday, though. Someone who plays every day will meet a
+      question they've seen before within the first week, and by December about half of each board will be familiar.</p>
+      <p class="hu-read-p">Will anybody still be playing on day 40? I can't tell from here, and I'm not sure two dailies on
+      one shelf is the right number.</p>
+    </section>
+
+    <section class="hu-read-section" id="headwall">
+      <div class="hu-read-kicker">The renamed game</div>
+      <h2 class="hu-read-h2">Headwall</h2>
+      <p class="hu-read-p">Device Assembly is Headwall now, named for the panel of outlets over a hospital bed where the
+      whole game happens. Old links and saved walls carry over. It also learned a rule from the bedside on October 15: any
+      patient with an artificial airway gets a resuscitation bag on the headwall. The game didn't know that until I said
+      it, and now a wall with an ET tube or a trach won't pass without one.</p>
+      <p class="hu-read-p">It got quieter, too. My note was that it "should not jump to the hint section or say what the
+      last move is during the play," and the whole point is that it's a puzzle. Outside the five training walls, a move
+      that works says nothing now. The daily wall starts a year-long plan on October 25, the first day of RC Week, with a new
+      room each Monday and a three-wall story each Sunday.</p>
+    </section>
+
+    <section class="hu-read-section" id="next">
+      <div class="hu-read-kicker">After launch</div>
+      <h2 class="hu-read-h2">What's next</h2>
+      <p class="hu-read-p">The older tools still feel cluttered on a phone, and that phone pass is the next phase. The hub I
+      review pages on is getting a home screen, because right now I can't tell at a glance what changed since I last
+      looked. Four small look calls from this week's polish pass are waiting on me too, with pictures, once the launch is
+      out the door.</p>
+    </section>
+
+    <section class="hu-read-section" id="feedback">
+      <div class="hu-read-kicker">Feedback</div>
+      <h2 class="hu-read-h2">The feedback tracker</h2>
+      {%- set fbRows = post.feedback %}{% set fbLinkPosts = false %}
+      {% include "components/blog-feedback.njk" %}
+    </section>
+
+  </div>
+</div>

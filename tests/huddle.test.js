@@ -16,7 +16,8 @@ const vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 const PAGE = fs.readFileSync(path.join(ROOT, 'src', 'fun', 'daily-huddle', 'index.html'), 'utf8');
 const ENGINE = PAGE.match(/<script id="hd-engine">([\s\S]*?)<\/script>/)[1];
-const BANK = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'assets', 'data', 'huddle-questions.json'), 'utf8')).questions;
+const BANKFILE = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'assets', 'data', 'huddle-questions.json'), 'utf8'));
+const BANK = BANKFILE.questions;
 
 function load() {
   const ctx = { window: {}, console, Date, Math, JSON, Intl };
@@ -24,7 +25,7 @@ function load() {
   new vm.Script(fs.readFileSync(path.join(ROOT, 'src', 'assets', 'js', 'hu-rng.js'), 'utf8'), { filename: 'hu-rng.js' }).runInContext(ctx);
   new vm.Script(ENGINE, { filename: 'hd-engine' }).runInContext(ctx);
   const E = ctx.window.HuddleEngine;
-  E.setBank(BANK);
+  E.setBank(BANK, BANKFILE.versions);
   return E;
 }
 const E = load();
@@ -403,8 +404,10 @@ test('the share line counts the lifelines used, and a board that used none share
   const tail = (G) => E.shareText(G, '', 100).split('\n')[0].split(' · ').slice(2).join(' · ');   // after the board's name and how it ended
   const G = day('2026-10-30');
   assert.ok(!('life' in G), 'a new board carries no lifeline record');
-  assert.deepStrictEqual(Object.keys(G).sort(), ['ans', 'clock', 'closed', 'day', 'end', 'held', 'id', 'last', 'misses', 'mode', 'more', 'open', 'out', 'path', 'phase', 'seed', 't0', 't1', 'tiles', 'v'],
-    'the same fields a board had before lifelines, less the score (DH10)');
+  const FIELDS = ['ans', 'clock', 'closed', 'day', 'end', 'held', 'id', 'last', 'misses', 'mode', 'more', 'open', 'out', 'path', 'phase', 'seed', 't0', 't1', 'tiles', 'v'];
+  assert.deepStrictEqual(Object.keys(day('2026-10-19')).sort(), FIELDS, 'the same fields a board had before lifelines, less the score (DH10)');
+  // a board dealt from the grown bank (2026-10-18) says which bank, and nothing else is new
+  assert.deepStrictEqual(Object.keys(G).sort(), E.dayBank('2026-10-30') > 1 ? [...FIELDS, 'bank'].sort() : FIELDS);
   E.dispatchAct(G, 'open', { i: E.TOP[0] }, 0);
   E.dispatchAct(G, 'answer', { i: E.TOP[0], v: wrongAnswer(qOf(G, E.TOP[0])) }, 10);
   E.dispatchAct(G, 'stop', {}, 20);
@@ -435,4 +438,113 @@ test('today and practice have no time limit; a team board still can', () => {
   for (const s of starts) assert.match(s, /clock:0$/, 'starts with no clock: ' + s.slice(0, 60));
   assert.doesNotMatch(PAGE, /Board #\$\{n\} · 3 minutes/, 'the door card no longer promises three minutes');
   assert.ok(E.CLOCKS.includes(0) && E.CLOCKS.includes(300), 'a team board can still pick no clock or five minutes');
+});
+
+// THE BANK GROWS IN VERSIONS (2026-10-18, David: "I kept getting ones I have seen"). The boards already dealt on the live site
+// replay as they were played: a day before version 2's first day deals from the first bank, and so does a made link from before.
+const PINS = JSON.parse(fs.readFileSync(path.join(__dirname, 'huddle-pins.json'), 'utf8'));
+test('the boards already dealt replay as they were: days before the bank grew, and made links from before it', () => {
+  for (const [k, ids] of Object.entries(PINS.days)) {
+    assert.ok(k < E.BANK_DAYS[2], k + ' is before version 2');
+    assert.deepStrictEqual(plain(day(k).tiles.map((t) => t.q)), ids, k + ': today\'s board as it was dealt');
+    const past = E.newGame({ id: 'past:' + k, seed: E.daySeed(k), mode: 'past', day: E.dayNumber(k), clock: 0, misses: 0, out: E.dayOut(k) });
+    assert.deepStrictEqual(plain(past.tiles.map((t) => t.q)), ids, k + ': replayed as a past board');
+    assert.ok(!('bank' in day(k)), k + ': a first-bank board saves exactly as before');
+  }
+  for (const [code, ids] of Object.entries(PINS.made)) {
+    const m = E.parseMade(code);
+    assert.ok(!('bank' in m), code + ': an old code names no bank');
+    const G = E.newGame({ id: code, seed: m.seed, mode: 'made', clock: m.clock, misses: m.misses, field: m.field, bank: m.bank || 1 });
+    assert.deepStrictEqual(plain(G.tiles.map((t) => t.q)), ids, code + ': a made link from before opens the same board');
+  }
+});
+
+test('a day from version 2 on deals from the whole bank, and a made code carries the bank it was made on', () => {
+  const v = E.bankVersion();
+  assert.strictEqual(E.dayBank('2026-10-19'), 1);
+  assert.strictEqual(E.dayBank(E.BANK_DAYS[2]), Math.min(2, v));
+  const code = E.madeCode(123456789, 180, 3, 'rt', 2);
+  assert.match(code, /^my:[0-9a-z]+-180-3-rt-b2$/);
+  assert.deepStrictEqual(plain(E.parseMade(code)), { seed: 123456789, clock: 180, misses: 3, field: 'rt', bank: 2 });
+  assert.deepStrictEqual(plain(E.parseMade(E.madeCode(123456789, 180, 3, '', 2))), { seed: 123456789, clock: 180, misses: 3, bank: 2 });
+  assert.strictEqual(E.parseMade('my:abc-180-3-b1'), null, 'the first bank is the code with no version');
+  // a board dealt from a bank never holds a question from a later one, Swap included
+  for (let s = 1; s <= 40; s++) {
+    const G = E.newGame({ id: 'my:x', seed: s * 104729, mode: 'made', clock: 0, misses: 0, bank: 1 });
+    assert.ok(G.tiles.every((t) => !(E.question(t.q).b > 1)), 'seed ' + s + ': a first-bank board holds first-bank questions');
+    const i = E.TOP[1];
+    E.dispatchAct(G, 'open', { i }, 0);
+    E.dispatchAct(G, 'swap', { i }, 1);
+    assert.ok(!(E.question(G.tiles[i].q).b > 1), 'seed ' + s + ': Swap stays in the board\'s bank');
+  }
+});
+
+// PLAYING ON (2026-10-18, David: "a continuation button on daily huddle after they make a line incase they want to play the
+// whole board"): a finished board with tiles left plays on, and the result never moves
+test('Keep playing: the rest of the board after the crossing, with the result, the clock and the misses left as they were', () => {
+  const G = day('2026-10-22');
+  const path = [[0, -2], [0, -1], [0, 0], [0, 1], [0, 2]].map(([q, r]) => E.CELLS.findIndex((c) => c.q === q && c.r === r));
+  const miss = E.CELLS.findIndex((c) => c.q === -1 && c.r === 0);
+  E.dispatchAct(G, 'open', { i: miss }, 0);
+  E.dispatchAct(G, 'answer', { i: miss, v: wrongAnswer(qOf(G, miss)) }, 1000);
+  path.forEach((i, n) => { E.dispatchAct(G, 'open', { i }, 2000 + n * 1000); E.dispatchAct(G, 'answer', { i, v: rightAnswer(qOf(G, i)) }, 2500 + n * 1000); });
+  assert.strictEqual(G.end, 'crossed');
+  const head = E.shareText(G, '', 0).split('\n')[0], t = E.elapsed(G, 0);
+  assert.strictEqual(E.tilesLeft(G), 13);
+  E.dispatchAct(G, 'more', {}, 60000);
+  assert.strictEqual(G.phase, 'extra');
+  assert.ok(E.ended(G));
+  assert.ok(!E.canLife(G, 'narrow') && !E.canLife(G, 'hint'), 'no lifelines while playing on');
+  const rest = E.CELLS.map((c, i) => i).filter((i) => !G.held.includes(i) && !G.closed.includes(i));
+  rest.forEach((i, n) => {
+    E.dispatchAct(G, 'open', { i }, 70000 + n * 1000);
+    assert.strictEqual(G.open, i, 'a tile left opens');
+    E.dispatchAct(G, 'answer', { i, v: n % 3 ? rightAnswer(qOf(G, i)) : wrongAnswer(qOf(G, i)) }, 70500 + n * 1000);
+  });
+  assert.strictEqual(G.phase, 'done', 'the last tile ends playing on');
+  assert.strictEqual(E.tilesLeft(G), 0);
+  assert.strictEqual(G.end, 'crossed');
+  assert.strictEqual(E.elapsed(G, 999999), t, 'the time to cross does not move');
+  assert.strictEqual(E.missCount(G), 1, 'the misses are the ones before the crossing');
+  const right = G.held.length;
+  assert.strictEqual(E.shareText(G, '', 0).split('\n')[0], head + ` · ${right} of 19 right`, 'the share line adds the whole board after the result');
+  E.dispatchAct(G, 'more', {}, 99000);
+  assert.strictEqual(G.phase, 'done', 'nothing is left to play on');
+  assert.deepStrictEqual(plain(E.applySave(JSON.parse(JSON.stringify(G)))), plain(G), 'a board played on saves and restores');
+});
+
+test('playing on stops when asked, and a board can be played on again from its result', () => {
+  const G = day('2026-10-23');
+  const path = [[0, -2], [0, -1], [0, 0], [0, 1], [0, 2]].map(([q, r]) => E.CELLS.findIndex((c) => c.q === q && c.r === r));
+  path.forEach((i, n) => { E.dispatchAct(G, 'open', { i }, n * 1000); E.dispatchAct(G, 'answer', { i, v: rightAnswer(qOf(G, i)) }, n * 1000 + 500); });
+  const fresh = E.dispatchAct(day('2026-10-23'), 'more', {}, 0);
+  assert.strictEqual(fresh.phase, 'ready', 'a board in play cannot be played on');
+  E.dispatchAct(G, 'more', {}, 10000);
+  const i = E.TOP[1];   // TOP[0] is the crossing's first tile
+  E.dispatchAct(G, 'open', { i }, 11000);
+  E.dispatchAct(G, 'answer', { i, v: wrongAnswer(qOf(G, i)) }, 12000);
+  assert.strictEqual(E.missCount(G), 0, 'a miss while playing on is not a miss in the result');
+  assert.strictEqual(G.closed.length, 1, 'but its tile closes');
+  E.dispatchAct(G, 'stop', {}, 13000);
+  assert.strictEqual(G.phase, 'done');
+  E.dispatchAct(G, 'more', {}, 14000);
+  assert.strictEqual(G.phase, 'extra', 'back to the board from the result');
+  assert.deepStrictEqual(plain(G.x), { held: 5, closed: 0 }, 'the counts at the crossing are kept from the first time');
+  E.dispatchAct(G, 'tick', {}, 9e9);
+  assert.strictEqual(G.phase, 'extra', 'no clock runs while playing on');
+});
+
+// 2026-10-18: a practice board on the grown bank showed "Home base" three times. From version 2 a board prefers families it
+// does not hold yet, the way a wedge always has; version 1 deals exactly as it did (the pins above)
+test('from version 2 a board spreads its families: no family three times, and repeats are the exception', () => {
+  if (E.bankVersion() < 2) return;
+  let extra = 0;
+  for (let s = 1; s <= 200; s++) {
+    const G = E.newGame({ id: 'gen:x', seed: s * 7919, mode: 'practice', clock: 0, misses: 0 });
+    const c = {};
+    for (const t of G.tiles) { const f = E.question(t.q).f; c[f] = (c[f] || 0) + 1; }
+    assert.ok(Math.max(...Object.values(c)) <= 2, 'seed ' + s + ': a family three times: ' + JSON.stringify(c));
+    extra += Object.values(c).reduce((a, n) => a + n - 1, 0);
+  }
+  assert.ok(extra / 200 < 1.2, 'repeats per board: ' + (extra / 200).toFixed(2));
 });

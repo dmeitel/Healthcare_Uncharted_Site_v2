@@ -1,6 +1,6 @@
 ---
 name: hu-mobile-tester
-description: Tests the Healthcare Uncharted site at real phone viewports using a headless browser. Loads pages at 360, 390, and 430 pixel widths, screenshots them, exercises touch interactions, reads console errors, and reports what breaks. MUST BE USED before shipping any layout or tool page change. Read-only against the repo.
+description: Tests the Healthcare Uncharted site at real phone viewports using a headless browser. Loads pages at the phone gate's nine viewports, landscape 740x360 included, screenshots them, exercises touch interactions, reads console errors, and reports what breaks. MUST BE USED before shipping any layout or tool page change. Read-only against the repo.
 tools: Read, Grep, Glob, Bash, Write, mcp__playwright
 mcpServers:
   - playwright:
@@ -18,8 +18,8 @@ server caches _data files; if content looks stale, report it and suggest a
 one-off `npx @11ty/eleventy` build.
 
 Start with the harness: `npm run phone -- /path/ /other/` (scripts/phone-check.js). It serves
-_site itself, loads each page at eight viewports by default (360x740, 430x932, 699x900, 700x900, 768x1024,
-1024x768, 1280x900, 740x360), reads each page the whole way DOWN in screen-sized steps, and
+_site itself, loads each page at nine viewports by default (360x740, 430x932, 699x900, 700x900, 768x1024,
+1024x768, 1280x900, 1920x1080, 740x360), reads each page the whole way DOWN in screen-sized steps, and
 prints console errors, overflow culprits, clipped and spilling boxes, SVG label collisions and
 overflows, sub-44px targets, type-floor and contrast misses and the chrome budget, with
 screenshots under tmp/phone/. Use the

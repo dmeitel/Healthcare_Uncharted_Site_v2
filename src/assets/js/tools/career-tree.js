@@ -5682,7 +5682,7 @@ const hit = (e, sel) => /** @type {HTMLElement | null} */ (asEl(e.target).closes
     const tabsEl = document.getElementById('hct-tabs');
     tabsEl.setAttribute('role', 'tablist');
     tabsEl.setAttribute('aria-label', 'Views');
-    const tabBtns = qsa(tabsEl,'button');
+    const tabBtns = qsa(tabsEl,'button[data-view]');   // the views only: the Site menu button at the row's end is not a tab (2026-10-19)
     tabBtns.forEach(b => { b.setAttribute('role', 'tab'); const on = b.classList.contains('on'); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
     tabsEl.addEventListener('keydown', e => {
       const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : null;

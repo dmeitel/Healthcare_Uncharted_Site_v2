@@ -15,6 +15,16 @@
  *   - the hand-checked sets in scripts/data/huddle-curated.json (normals, laws, health IT, odd codes), each with
  *     its source, a verbatim quote and the date it was checked. Normals are drafts until David checks them (DH2).
  *
+ *   - the FEEDS (section 6, bank version 2, 2026-10-18): one small module per site data file in scripts/huddle/feeds/,
+ *     each asking about every row of its file: the map's state measures, the license compacts, the Assignment Compass's
+ *     taxes and living costs, the Vendor Directory, the credential exams, the hospital cost reports, the school file,
+ *     state pay, bedside math and the map's counties. Their questions carry b: 2.
+ *
+ * Adding a data set: when a site data file gains a row (a metric, a vendor, a credential, a school year), run
+ * npm run build:huddle and the feed that reads it turns the row into questions, no code change. A new FILE gets a new
+ * feed: copy the shortest one in scripts/huddle/feeds/, point it at the file, take src, yr and ck from the file's own
+ * metadata, and add it to the list in scripts/huddle/feeds/index.js. Then npm run huddle:report shows what it made.
+ *
  * Plan: docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md. Deterministic: the same inputs write the same file, apart from `built`.
  *
  * A question:
@@ -41,32 +51,11 @@ const VS = path.join(ROOT, 'src', 'assets', 'data', 'vital-stats-questions.json'
 const LIC = path.join(ROOT, 'src', '_data', 'licensure.json');
 const CURATED = path.join(ROOT, 'scripts', 'data', 'huddle-curated.json');
 
-/* ── a seeded generator (mulberry32, the same steps as hu-rng.js) so the bank never changes by itself ── */
-function rngFrom(str) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
-  let a = h >>> 0;
-  const next = () => {
-    a = (a + 0x6D2B79F5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-  next.int = (lo, hi) => lo + Math.floor(next() * (hi - lo + 1));
-  next.pick = (list) => list[Math.floor(next() * list.length)];
-  next.shuffle = (list) => { const a2 = list.slice(); for (let i = a2.length - 1; i > 0; i--) { const j = Math.floor(next() * (i + 1)); [a2[i], a2[j]] = [a2[j], a2[i]]; } return a2; };
-  return next;
-}
-
-const STATES = { AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado', CT: 'Connecticut',
-  DE: 'Delaware', DC: 'the District of Columbia', FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana',
-  IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan',
-  MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire',
-  NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma',
-  OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas',
-  UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming' };
-// an option names a state the way a person says it; DC reads "D.C." on a key
-const keyName = (st) => (st === 'DC' ? 'D.C.' : STATES[st]);
+// the seeded generator (mulberry32, the same steps as hu-rng.js) and the state names live in scripts/huddle/lib.js now,
+// shared with the feeds; they are the same functions, so every question below comes out as it did before
+const { rngFrom, STATES, keyName, versionBank } = require('./huddle/lib');
+const { today } = require('./lib/session');
+const { runFeeds } = require('./huddle/feeds');
 
 /* ── THE STATE TEMPLATES ─────────────────────────────────────────────────────────────────────────────────
    Vital Stats asks each of these about one state at a time. Here a template becomes three kinds of tile:
@@ -330,11 +319,37 @@ for (const c of curated.questions || []) {
     why: c.why, src: c.src, url: c.url, yr: c.year, ck: c.checked, quote: c.quote, draft: c.draft || undefined });
 }
 
+/* ── 6. The feeds: bank version 2 (2026-10-18) ──
+   Everything above is bank version 1. It keeps its words and its place at the head of the file, because boards #1 to #6
+   were dealt from it in file order. The feeds in scripts/huddle/feeds/ each read one of the site's data files and ask
+   about every row in it; a feed takes its source, year and check date from that file. Every question they make is held
+   to the bank's rules as it is made (scripts/huddle/lib.js, check), skips any question text the bank already asks, and
+   carries b: 2, so the page can deal the days before version 2 from version 1 alone. npm run huddle:report counts them. */
+const fed = runFeeds({ TEMPLATES, vs, old: out });
+/* the source line a player reads names the publisher and the release; a data file's own notes on how it was built
+   ("county-native, state = pop-weighted rollup") stay in the file (2026-10-18 spot check). Cut after the first closing
+   parenthesis when notes follow it. A line the data writes as a verdict ("The first try matters.") is dropped. */
+const playerSrc = (src) => String(src || '').replace(/^([^()]*\([^()]*\)),\s.*$/, '$1');
+const plainWhy = (why) => (why ? String(why).replace(/\s*The first try matters\.?$/, '') : why);
+for (const q of fed.questions) add({ ...q, src: playerSrc(q.src), why: plainWhy(q.why), b: 2 });
+
+/* ── 7. Versions: every question keeps the version and the place it joined with (2026-10-18) ──
+   A live board is dealt from its version in file order, so the build is merged into the bank as it was
+   (scripts/huddle/lib.js, versionBank): new questions join a new version that first deals on --from=YYYY-MM-DD (by
+   default three days on, in Mountain time, after a push can land), and a question a source no longer makes stays, frozen
+   and marked gone, so no past board changes and no saved run loses its tiles; a version whose first day has not come is
+   still open and changes freely. The page reads the versions from the bank. */
+const built = out.map((q) => Object.fromEntries(Object.entries(q).filter(([, v]) => v !== undefined && v !== '')));
+const PREV = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : null;
+const fromArg = (process.argv.find((a) => a.startsWith('--from=')) || '').slice(7);
+const soon = new Date(Date.now() + 3 * 86400000);
+const V = versionBank(PREV, built, { from: /^\d{4}-\d{2}-\d{2}$/.test(fromArg) ? fromArg : today(soon), today: today() });
+
 /* ── write ── */
-const clean = out.map((q) => Object.fromEntries(Object.entries(q).filter(([, v]) => v !== undefined && v !== '')));
+const clean = V.questions;
 const zones = {};
 for (const q of clean) { const z = zones[q.z] = zones[q.z] || { n: 0, d1: 0, d2: 0, d3: 0 }; z.n++; z['d' + q.d]++; }
-const file = { v: 1, built: new Date().toISOString().slice(0, 10), zones, questions: clean };
+const file = { v: 1, built: new Date().toISOString().slice(0, 10), versions: V.versions, zones, questions: clean };
 // --check: build in memory and fail if the committed bank is stale (tests/huddle-questions.test.js runs it)
 if (process.argv.includes('--check')) {
   const was = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : null;
@@ -344,4 +359,11 @@ if (process.argv.includes('--check')) {
 }
 fs.writeFileSync(OUT, JSON.stringify(file));
 console.log(`huddle-questions.json: ${clean.length} questions, ${(fs.statSync(OUT).size / 1024).toFixed(0)} KB`);
+const top = Math.max(...Object.keys(V.versions).map(Number));
+if (V.added.length) console.log(`  ${V.added.length} new questions join version ${top}, first dealt ${V.versions[top]} (change it with --from=YYYY-MM-DD)`);
+if (V.dropped.length) console.log(`  ${V.dropped.length} questions left version ${top} before its first day: ${V.dropped.slice(0, 12).join(', ')}`);
+if (V.gone.length) console.log(`  ${V.gone.length} questions no source makes any more, kept frozen and dealt by no newer version: ${V.gone.slice(0, 12).join(', ')}${V.gone.length > 12 ? ' ...' : ''}`);
 for (const [z, s] of Object.entries(zones)) console.log(`  ${z.padEnd(4)} ${String(s.n).padStart(4)}  1 dot ${s.d1}, 2 dots ${s.d2}, 3 dots ${s.d3}`);
+for (const F of fed.report) {
+  console.log(`  feed ${F.name.padEnd(14)} ${String(F.n).padStart(4)} questions, ${String(F.templates).padStart(3)} templates${F.dropped.length ? `, ${F.dropped.length} dropped as repeats` : ''}`);
+}

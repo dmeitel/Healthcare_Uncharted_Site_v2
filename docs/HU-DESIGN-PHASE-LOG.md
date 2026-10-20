@@ -1050,3 +1050,120 @@ anything and fixed the defects only. By surface:
 Left for David, look decisions held until his review: Headwall's slim parts row cuts long names; the path crumb reads
 "Ventilators 3" where the panel says "Ventilator 2"; Make a board's clock still defaults to 3 minutes after DH11; a phone table
 as cards on 4Ps (the site has no shared pattern; the fracture post has a page one).
+
+## 2026-10-18 · Daily Huddle, the hex trivia board · round 9, Keep playing, a bigger bank, today's puzzles
+David, after his phone QA of both dailies ("I have tested both on phone and they are working well"): "a continuation button on
+daily huddle after they make a line incase they want to play the whole board"; "I kept getting ones I have seen ... expand the
+list a large amount and build a process to add to that list as we incorporate new data to the site"; "a page on fun that has a
+link of all the daily puzzles of today, like the NYT app".
+- KEEP PLAYING. A finished board with tiles left offers Keep playing on its result. The board plays on in a phase of its own
+  (`extra`): the clock stays where the board ended, no lifelines, and the result never moves (`G.x` keeps the counts at the
+  end; `missCount`, `tilesLeft`, `ended`). The finish adds "Whole board: N of 19 right", and the share line adds "N of 19
+  right" after the result. On a phone the status bar carries the way back, See the result. Reopening a board played on goes to
+  its result. tests/huddle.test.js.
+- THE BANK GROWS IN VERSIONS. A question added later carries `b`, the version it joined; a board deals only from its own
+  version: dated boards from `BANK_DAYS` (version 2 from 2026-10-20, board #7), made codes from their `-b2` ending, practice
+  from the whole bank. New questions go at the end of the bank, so old deals draw the same. The six boards already dealt live
+  (Oct 14 to 19) and two old made codes are pinned in tests/huddle-pins.json.
+- THE BANK, 2,764 questions in 1,008 kinds (was 1,057 in 323), every zone at 150 or more and 40 kinds or more (Health
+  Tech 188, was 16). Ten feeds in scripts/huddle/feeds/ read the site's own data files (the map's state and county
+  measures, the license compacts, taxes and living costs, credentials and pass rates, hospital cost reports, schools, state
+  pay, bedside math, the Vendor Directory), each taking its source and check date from its file; `npm run huddle:report`.
+  The spot checks dropped two impossible cost-report rows (Hennepin's 5,152 residents on 347 beds), cut build notes out of
+  the source lines, and called Louisiana's parishes parishes. VENDOR FACTS WERE NEVER SOURCED, so 504 were checked live
+  (scripts/data/vendor-checks.json): 426 agreed, and a vendor question is made only from a checked fact, with its source.
+  The ones that disagreed are errors on the live Vendor Directory page, proposed as their own task.
+- THE VERSION RULE (`versionBank`): a question keeps its version and place once its version has dealt a daily; one no
+  source makes any more stays frozen as `gone`; new data opens a new version three days out (`--from=`). A version whose
+  first day has not come is open and changes freely. The page reads each version's first day from the bank.
+- TILE NAMES FIT AND SPREAD. A practice board's picture showed the new "Headquarters" running out of its hex (a phone keeps
+  the type floor, so a label never shrinks there) and three of them on one board. Five names became two short words (Home
+  base, Health orgs, Exam boards, Who accredits, Household size), measured in the board's font against "Workforce" (68.5
+  units, the widest single word that fits); a test holds every name to it. From version 2 a deal also prefers a family the
+  board does not hold yet, as a wedge always has: repeats fell from 1.83 to 0.85 a board and none shows three times.
+- TODAY'S PUZZLES at /fun/today/: the Fun shelf's own card for each daily (Headwall's wall, Daily Huddle's board), today's
+  number and where you stand on it from what each game saves (Not played yet, In progress, Solved with a streak, Crossed in
+  m:ss), and a brass button that opens today's puzzle itself. The Fun shelf's hero links to it. The shelf card's styles moved
+  to components/fun-shelf-style.njk so both pages draw the same card. tests/fun-today.test.js.
+- THE SHELF (same day, David: "can we make that button a bit bigger or give it its own shelf"): the Fun page's hero button
+  became a Today's puzzles shelf of compact cards (no picture; two across on a phone) above an All the games shelf, labeled
+  in the Tools page's layout with the shared kicker. Cards and script are shared with /fun/today/: src/_data/dailies.js,
+  components/fun-today.njk (dailyCard), assets/js/fun-today.js.
+
+## 2026-10-18 · The hub · Puzzles marks save again, and finished work folds away
+David: "the QA and puzzles zones on the Hub page seem to not be working correctly ... it feels like stuff we have discussed is
+still front and center and not being put away or pushed into like an archive folder."
+- The Puzzles sheet kept its marks under the card that started it (device-assembly); that card shipped and left the board, so
+  every mark failed with "No card device-assembly". The sheet's marks now go straight to their own file (`qaLib.SHEET`, the
+  same file, so his 48 marks carry over); no card is looked up. A Good can carry a remark (his "it looks fine, its not complex
+  but thats ok" had nowhere to go but Needs a tweak): type it, press Good.
+- What is finished folds away by itself, read from the files: a David QA step on a card whose list is clear counts as done
+  and leaves Waiting on you (`qaDone`); a card that passed QA shows Ship on its track; done steps fold under "N steps done";
+  the Inbox shows its newest five; the QA tab opens on a list with something left and folds clear lists into Finished lists;
+  the Puzzles sheet leads with groups that have walls left and folds finished groups; answered ideas fold under each section.
+  One fold look, the Good fold's (`fold`, `.hub-good`; `.hub-shut` is the Up next fold's look).
+
+## 2026-10-18 · Headwall expansion · a daily wall is never a training wall
+David's note on the Puzzles sheet, daily #23 (Sunday 2026-10-25, Respiratory Care Week): "it looks fine, its not complex but
+thats ok, but we still want some level of challenge in the daily puzzle compared to the training walls." Measured over the
+year: Monday to Saturday every daily wall carries a twist, but a Sunday story's first wall takes no complication, and four
+of the year's stories opened on a plain cannula (Tutorial 1 to 3 again). `yearStoryPlan` now starts a hospital or rehab
+story that opens on a plain cannula one step in, still three walls (`shiftPlan`'s `from`): Respiratory Care Week runs
+humidified oxygen, a non-rebreather, then heated high flow; the rehab cough Sundays start on humidified oxygen. Home stories
+keep their cannula (the concentrator and its outlet are the wall), random shifts start at the top as before, and walls #1 to
+#22 are untouched (the pins hold). Re-dealt: Sundays Oct 25, Nov 22, Nov 29, Dec 13 and later Sundays with those stories.
+tests/device-assembly-daily.test.js holds it. The hub's command line sends a puzzle wall back without a board card too.
+
+## 2026-10-18 · Daily Huddle, the hex trivia board · round 10, the center tile is the Wild card
+David's QA note on Keep playing: "in general i think we need to fix the compass in the center, i do not think people will
+understand that." The center tile was solid brass with a small compass needle and no words, the one tile on the board that
+did not say what it was. Two options were mocked on board #5 at phone and desk (tmp/compass/): an ordinary tile with its
+category name inside a brass ring, or the solid brass tile labeled Wild card. Claude recommended the ring, since a wild card
+counts as anything in most games and this tile does not; David picked the Wild card ("the center stays solid brass and says
+Wild card, with the category shown once it's opened"). The tile reads Wild card on two lines like any two-word tile; the
+question card's title, the side card's kicker and the list after the board read "Wild card: <category>"; the screen reader
+label is "Wild card, <zone>, <state>". The deal is untouched (the center still holds the zone out of the ring), so every
+board already played replays as it was. The compass needle drawing and its .hd-ink rule are gone; a held center tile's
+check mark takes the brass ink. The share line still marks a held center tile in yellow.
+
+## 2026-10-18 · Headwall game feel · a run from a barb ends on hung tubing's loose end
+
+`npm run da:qa`'s quick pass failed on today's daily, #16 (day:2026-10-18), at the SE, the iPhone 15, the small Android and
+the tall Android, in the drag where the player watches the end above the thumb and misses by 20 px. The Pro Max passed: its
+squares are bigger. The 7 ft oxygen tubing never joined the coupler's barb to the portable cylinder's outlet. The two barbs
+face the same way a square apart (27 px at 393 x 659), and tubing picked on the cart hangs on the nearer one when it is
+pressed: 20 px off the coupler's barb was 19 px from the cylinder's outlet, so the tubing went on the cylinder. The test's
+player saw the run start from the wrong end, let it go, pressed the coupler's barb again and pulled to the cylinder. Its
+outlet had the tubing on it, so the end found the loose end, and the wall refused it ("That is a loose end. Pick it up and
+run it to a port"). A phone player could do exactly that today. The engine already joined a port to a loose end
+(`connectPorts` turns the pair round); the refusal was the page's, and the loose end was never offered as a target. Now a
+run from an open port, with no tubing of its own, ends on hung tubing's loose end: the loose end rings as a target the way
+an open port does, the aim weighs it like one (`portNear`; it fits when it seats on the port the run came from), and its
+free end goes onto the port the run started from (`looseTakes`, `finishLink`). A lead's own tubing, a loose end and a run
+pulled off a port still refuse it: each brings tubing of its own, and two ends of tubing need a coupler. Claude's call; the
+test is unchanged. tests/device-assembly-phone.test.js holds it. Gates: `npm run da:thumb` 136 of 136 gated runs and 60 of
+60 checks at six sizes; its ungated 20 px rows still miss on Tutorials 3 to 5 and Level 2, the same walls they missed with the
+fix taken out (tried at the SE on a copy of the built page), and the thumb-on-the-place row now rebuilds today's daily;
+`npm run da:qa` 79 of 79 walls, 305 breaks located, 5 of 5 screens; tests/device-assembly-*.test.js 192 of 192.
+
+## 2026-10-19 · Daily Huddle, the hex trivia board · the normals checked, and a bank that is never cached
+From the 1.0 analysis, on David's yes. His QA check dh-normals read "The normals are drafts for your check as an RRT... mark any
+range you would change", and he marked it Good with no changes on 2026-10-18, so under DH2 the sixteen normals are checked: their
+draft flags are gone from scripts/data/huddle-curated.json, and the answer card no longer prints "A draft value, still being
+checked before launch." The rebuilt bank differs only in those flags (2,771 questions, same order, version 2 still first deals
+Oct 20). tests/huddle-questions.test.js now names the sixteen he checked and holds any normal added later to draft until he checks
+it. The bank fetch takes cache:'no-cache', as Vital Stats' does: /assets/data caches for an hour plus seven days of
+stale-while-revalidate, so a returning player's first board on a new version's first day could have dealt from the old bank.
+
+## 2026-10-19 · the phone gate reads every view; what it found (Laws and Paradoxes, Request Routing)
+
+The gate (`npm run phone`) had only ever read the view a page shows as it loads, so the nine Laws and Paradoxes charts at
+7 px found by eye on 2026-10-16 had all passed it. It now shows each view hidden at load and reads it with the same checks
+(scripts/lib/view-walk.js), at the phone sizes, the first phone size in day and 1280; tests/view-walk.test.js holds it, and
+tests/view-switch.test.js holds every page of views to a switch the walk can find (Laws and Paradoxes' plain buttons carry
+`data-views`). David held 1.0 for what it found. Fixed as defects on the parked reading surface: Laws and Paradoxes' chart
+lines, box edges, connectors and arrowheads move from the border colour (1.4:1) to `--dgm-line`, the token hu-global.css made
+for diagram structure, and the "1 hr" label on the day teal takes clinical white (4.6:1); Request Routing's flowchart gets a
+phone drawing beside the wide one (320 units, no label under 13.6 px at 360, two-line labels where needed), its pocket card
+wraps on a phone, and its arrowheads take their lines' colour. Three false positives in the gate's spill check went with it:
+an inline word's font room under a big title, a figure set wider than its column on purpose, and a hidden panel's empty box.

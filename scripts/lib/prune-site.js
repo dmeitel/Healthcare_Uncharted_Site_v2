@@ -33,6 +33,9 @@ function pruneSite(o) {
   if (!fs.existsSync(out)) return { removed: [], refused: '' };
   const keep = new Set(o.written.filter(Boolean).map((p) => path.resolve(o.root, p)));
   if (!keep.size) return { removed: [], refused: 'the build wrote nothing, so nothing was removed' };
+  // A build sent somewhere else (`--output tmp/x`) still names this folder as its output, and wrote nothing in it, so
+  // every page here read as left behind: one such build emptied _site under a running full check (2026-10-19).
+  if ([...keep].some((p) => !p.startsWith(out + path.sep))) return { removed: [], refused: 'the build wrote outside ' + out + ', so nothing there was removed' };
   const pass = o.passthrough.map(([src, dst]) => [path.resolve(o.root, src), dst.replace(/\\/g, '/').replace(/^\.?\/+|\/+$/g, '')]);
 
   /** @type {string[]} */

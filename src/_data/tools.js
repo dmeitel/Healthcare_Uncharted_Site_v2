@@ -10,7 +10,7 @@ module.exports = [
     status:      'live',
     featured:    true,
     title:       'U.S. Population Health Map',
-    desc:        'U.S. state and county healthcare data: 72 metrics across seven lens groups, from patient outcomes to payer mix to policy. One map, every angle.',
+    desc:        'U.S. state and county healthcare data: 67 metrics across seven lens groups, from patient outcomes to payer mix to policy. One map, every angle.',
     url:         '/tools/multi-lens-map/',
     type:        'interactive',
     badge:       'Interactive',

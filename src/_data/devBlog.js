@@ -17,6 +17,28 @@ const long = (d) => { const [y, m, day] = d.split('-').map(Number); return MONTH
 
 const posts = [
   {
+    slug: 'launch-1-0',
+    n: 2,
+    title: 'Site 1.0 Launch: What Changed in the Final Week',
+    date: '2026-10-19',
+    summary: 'Eight days from the first full review to the launch, with two daily puzzles and a renamed game, and the two times a check passed something I could see was wrong.',
+    feedback: [
+      { heard: 'I couldn\'t plug things in or connect things very easily with my fingers.', from: 'David, playing Device Assembly on his phone', status: 'done', did: 'The game aims for your thumb: a part lands on the nearest place it fits, a hose on the nearest port that takes it. A thumb test plays it at four phone sizes before it ships.', when: '2026-10-12' },
+      { heard: 'My finger still does not line up with the touch screen, and the cart of parts will not drop down.', from: 'David, playing the daily wall on his phone', status: 'done', did: 'A drag has two aims now, the part drawn above your thumb and the thumb itself, and a place the part fits wins. The parts row scrolls itself, and All parts opens the whole cart.', when: '2026-10-14' },
+      { heard: 'Daily Huddle is all very hard; I have to google most of these.', from: 'David, QA on the demo', status: 'done', did: 'Three lifelines, each free once a board, every number question as four answers to pick, and a field picker for practice boards.', when: '2026-10-15' },
+      { heard: 'Daily Huddle should not sit on the secret menu.', from: 'David, QA on the demo', status: 'done', did: 'It moved to the Fun shelf at /fun/daily-huddle/; the old link forwards.', when: '2026-10-15' },
+      { heard: 'Change the name of Device Assembly to Headwall.', from: 'David', status: 'done', did: 'Headwall everywhere a player sees it, at /fun/headwall/; old links and saved walls carry over.', when: '2026-10-15' },
+      { heard: 'It should not jump to the hint or say what the last move was during play.', from: 'David, reading Headwall on the hub', status: 'done', did: 'Outside the five training walls a move that works says nothing, and the bedside screen is down to the order and the hint.', when: '2026-10-15' },
+      { heard: 'Any patient with an artificial airway has to have a bag on the headwall.', from: 'David', status: 'done', did: 'Every wall with an ET tube or a trach needs a resuscitation bag, from the cart or already hanging.', when: '2026-10-15' },
+      { heard: 'Why is the daily huddle board timed?', from: 'David', status: 'done', did: 'No time limit. The clock counts up and your time to cross is the score.', when: '2026-10-16' },
+      { heard: 'The vent should show a vent waveform, not an EKG.', from: 'David, on a screenshot of Headwall', status: 'done', did: 'The ventilator screen draws a moving breath trace.', when: '2026-10-16' },
+      { heard: 'People will not understand the compass in the middle of the board.', from: 'David, QA on Daily Huddle', status: 'done', did: 'The center tile says Wild card and shows its category once it is opened.', when: '2026-10-18' },
+      { heard: 'Make the daily puzzles button bigger, or give it its own shelf.', from: 'David, on the Fun page', status: 'done', did: 'Today\'s puzzles has its own shelf at the top of the Fun page, both dailies side by side.', when: '2026-10-18' },
+      { heard: 'The hub feels static; it is hard to see when things are updated or changed.', from: 'David, on the hub', status: 'planned', did: 'A Home screen prototype at the top of the hub, waiting on his yes.' },
+      { heard: 'Hold 1.0 until the faults the new phone check found are fixed.', from: 'David, the night of the launch', status: 'done', did: 'Request Routing\'s flowchart got a phone drawing, and the lines on the Laws and Paradoxes charts pass contrast.', when: '2026-10-19' }
+    ]
+  },
+  {
     slug: 'site-1-0',
     n: 1,
     title: 'Site 1.0: How This Site Got Built',

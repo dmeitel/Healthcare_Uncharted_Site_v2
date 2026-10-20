@@ -165,7 +165,10 @@ function page(only) {
   const block = (/** @type {{id:string,title:string,line?:string}} */ s) => {
     const its = bySection(s.id);
     if (!its.length) return '';
-    return `<h2 class="obs-h2" id="g-${esc(s.id)}">${esc(s.title)} <small>${its.length}${left(its) ? ' · ' + left(its) + ' to answer' : ' · answered'}</small></h2>${s.line ? `<p class="hub-idea-line">${esc(s.line)}</p>` : ''}<ul class="hub-qa">${its.map(one).join('')}</ul>`;
+    /* answered ideas fold under the open ones (2026-10-18: "stuff we have discussed is still front and center") */
+    const open = its.filter((i) => i.state === 'todo'), done = its.filter((i) => i.state !== 'todo');
+    const fold = done.length ? `<details class="hub-good"><summary><span class="obs-h2">Answered <small>${done.length} · folded; open to change an answer</small></span></summary><ul class="hub-qa">${done.map(one).join('')}</ul></details>` : '';
+    return `<h2 class="obs-h2" id="g-${esc(s.id)}">${esc(s.title)} <small>${its.length}${left(its) ? ' · ' + left(its) + ' to answer' : ' · answered'}</small></h2>${s.line ? `<p class="hub-idea-line">${esc(s.line)}</p>` : ''}${open.length ? `<ul class="hub-qa">${open.map(one).join('')}</ul>` : ''}${fold}`;
   };
   const shown = pick ? [sections.find((s) => s.id === pick)] : sections.filter((s) => s.id !== 'start');
   /* the design direction, when there is one, leads the page ahead of the shortlist (2026-10-11) */

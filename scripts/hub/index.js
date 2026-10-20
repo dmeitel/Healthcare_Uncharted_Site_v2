@@ -98,6 +98,8 @@ function handle(req, res, ctx) {
     if (!sameOrigin(req)) { json(res, 403, { error: 'That came from another site.' }); return true; }
     body(req).then((b) => {
       if (url === '/__hub/api/qa') {
+        // a wall on the Puzzles sheet is marked in the sheet's own file, whatever card is on the board
+        if (/^wall:/.test(String(b.item || ''))) return json(res, 200, { ok: true, saved: qaLib.mark(qaLib.SHEET, String(b.item), String(b.mark || ''), String(b.note || '')) });
         const card = qaLib.cardFor(String(b.card || ''));
         const saved = qaLib.mark(card.id, String(b.item || ''), String(b.mark || ''), String(b.note || ''));
         return json(res, 200, { ok: true, saved, counts: qaLib.counts(qaLib.items(card)) });
@@ -152,6 +154,7 @@ function handle(req, res, ctx) {
       html(res, pages.board({ port: ctx.port, lan: addrs, screens }));
     });
   }
+  if (url === '/__hub/home') return guard(() => html(res, require('./home').page(ctx)));
   if (url === '/__hub/run') return guard(() => html(res, pages.run()));
   if (url === '/__hub/qa') {
     const q = new URL(req.url || '', 'http://x').searchParams, pick = q.get('card') || '', folder = q.get('group') || '';

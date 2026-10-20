@@ -1,3 +1,19 @@
+---
+paths:
+  - "src/fun/**"
+  - "src/secret-menu/**"
+  - "src/assets/js/hu-kit.js"
+  - "src/assets/js/hu-table.js"
+  - "src/assets/js/hu-save.js"
+  - "src/assets/js/hu-rng.js"
+  - "src/_includes/components/game-bar.njk"
+  - "scripts/backend-check.js"
+  - "tests/game-shell.test.js"
+  - "tests/backend-host.test.js"
+  - "tests/hu-kit.menu.test.js"
+  - "tests/device-assembly-*"
+---
+
 # Games · the engine contract
 
 Applies to every game page under src/fun/ and src/secret-menu/, and to the shared game kit under

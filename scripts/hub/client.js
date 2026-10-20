@@ -154,7 +154,8 @@
         if (!box.hidden) box.querySelector('textarea').focus();
         return;
       }
-      send(item, 'good', '');
+      /* a note typed in the open box goes with the Good, as a remark that asks for nothing (2026-10-18) */
+      send(item, 'good', box.hidden ? '' : String(box.querySelector('textarea').value || '').trim());
       return;
     }
     var s = t.closest('[data-send]');
@@ -227,4 +228,67 @@
   /* ── the Library: the "i" on a block opens its longer note (the site's own peek card) ── */
   var kitJs = /** @type {any} */ (window).HUKit;
   if (kitJs && kitJs.peek) kitJs.peek({ root: '.obs-hub' });
+
+  /* ── the Home (2026-10-18): times as "2 h ago", New since the last visit, a fresh read on coming back, the site's week ── */
+  var hubHome = document.getElementById('hubHome');
+  if (hubHome) {
+    var SEEN = 'hub-home-seen';
+    var seen = 0;
+    try { seen = Number(localStorage.getItem(SEEN) || 0); } catch (e) { /* private window: nothing is marked New */ }
+    var rel = function (/** @type {number} */ t) {
+      var m = Math.round((Date.now() - t) / 60000);
+      if (m < 1) return 'just now';
+      if (m < 60) return m + ' min ago';
+      var h = Math.round(m / 60);
+      if (h < 24) return h + ' h ago';
+      var d = Math.round(h / 24);
+      return d === 1 ? 'yesterday' : d + ' days ago';
+    };
+    Array.prototype.forEach.call(hubHome.querySelectorAll('time[data-t]'), function (/** @type {any} */ el) {
+      var t = Number(el.getAttribute('data-t'));
+      if (t) { el.title = el.textContent; el.textContent = rel(t); }
+    });
+    var fresh = 0;
+    Array.prototype.forEach.call(hubHome.querySelectorAll('li[data-t]'), function (/** @type {any} */ li) {
+      var t = Number(li.getAttribute('data-t'));
+      if (seen && t > seen) { li.classList.add('is-new'); fresh++; }
+    });
+    var nc = document.getElementById('hhNewCount');
+    if (nc) nc.textContent = !seen ? 'your first visit' : fresh ? fresh + ' new since your last visit' : 'nothing new since your last visit';
+    /* the visit counts once he has been here a moment, so New stays on screen while he reads it */
+    var away = 0;
+    setTimeout(function () { try { localStorage.setItem(SEEN, String(Date.now())); } catch (e) { /* nothing to keep */ } }, 4000);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') { away = Date.now(); return; }
+      if (away && Date.now() - away > 60000) { leaving = true; location.reload(); }   // back after a minute: read the files again
+    });
+
+    /* the site's week, from GoatCounter in this browser (the read-only token the Traffic tab carries) */
+    var box = document.getElementById('hhTraffic');
+    var TOKEN = 'hi0s4v09socmdl8tzqruui3v131szb2yjri7i1r2568z3ith7c';
+    var API = 'https://healthcareuncharted.goatcounter.com/api/v0';
+    var day = function (/** @type {number} */ back) { var d = new Date(); d.setUTCDate(d.getUTCDate() - back); return d.toISOString().slice(0, 10); };
+    var get = function (/** @type {string} */ p) {
+      return fetch(API + p, { headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    };
+    var escH = function (/** @type {any} */ s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return /** @type {any} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
+    if (box) {
+      var qs = '?start=' + day(14) + '&end=' + day(-1);
+      get('/stats/total' + qs).then(function (/** @type {any} */ total) {
+        var days = (total.stats || []).map(function (/** @type {any} */ s) { return s.daily != null ? s.daily : (s.hourly || []).reduce(function (/** @type {number} */ a, /** @type {number} */ b) { return a + b; }, 0); });
+        var week = days.slice(-7).reduce(function (/** @type {number} */ a, /** @type {number} */ b) { return a + b; }, 0);
+        var before = days.slice(-14, -7).reduce(function (/** @type {number} */ a, /** @type {number} */ b) { return a + b; }, 0);
+        var change = before ? Math.round((week - before) / before * 100) : null;
+        return new Promise(function (r) { setTimeout(r, 350); }).then(function () { return get('/stats/hits?start=' + day(7) + '&end=' + day(-1) + '&limit=5'); }).then(function (/** @type {any} */ hits) {
+          var rows = (hits.hits || []).map(function (/** @type {any} */ h) { return '<li><span>' + escH(String(h.title || h.path).replace(/\s*·\s*Healthcare Uncharted\s*$/, '')) + '</span><b>' + escH(h.count) + '</b></li>'; }).join('');
+          if (box) box.innerHTML = '<p class="hh-big"><b>' + week.toLocaleString('en-US') + '</b> views in the last 7 days'
+            + (change == null ? '' : '<span class="w">' + (change >= 0 ? '+' : '') + change + '% on the week before (' + before.toLocaleString('en-US') + ')</span>') + '</p>'
+            + (rows ? '<p class="hh-sub">Most opened this week</p><ol class="hh-top">' + rows + '</ol>' : '');
+        });
+      }).catch(function () {
+        if (box) box.innerHTML = '<p class="w">GoatCounter did not answer. An ad blocker is the usual reason; the Traffic tab says more.</p>';
+      });
+    }
+  }
 })();

@@ -95,6 +95,27 @@ test('a hushed click still disarms a run started beside its port', () => {
   assert.match(src, /if\(suppressClick\)\{ if\(S\.link && S\.link\.byNear && S\.link\.armed\)\{ S\.link\.armed=false; S\.link\.byNear=false; \} return; \}/);
 });
 
+/* 2026-10-18: on daily #16 the coupler's barb sits a square above the cylinder's outlet. Tubing picked on the cart hangs on the
+   nearer of the two, so a press 20 px off the barb hung it on the outlet; the player let it go, pressed the barb and pulled
+   to the loose end, and the wall refused it (the SE, the iPhone 15 and the small Android). Now the free end goes onto the barb. */
+test('a run from an open port ends on hung tubing\'s loose end, and a lead\'s run still does not', () => {
+  const S = da.start('day:2026-10-18'), sol = JSON.parse(S.level.solution);
+  for (const def of ['cyl-portable', 'cannula', 'coupler']) { const i = sol.items.find((x) => x.def === def); assert.ok(da.place(S, def, i.x, i.y, i.r || 0, !!i.f).ok, def + ' places'); }
+  const cyl = S.items.find((i) => i.def.id === 'cyl-portable'), cp = S.items.find((i) => i.def.id === 'coupler'), can = S.items.find((i) => i.def.id === 'cannula');
+  const h = da.hangTube(S, 'tube-o2-7', { uid: cyl.uid, pi: 0 });
+  assert.ok(h.ok, 'the tubing hangs on the cylinder outlet');
+  S.link = { from: { uid: cp.uid, pi: 0 }, pt: null, armed: false, t: 'gas' };
+  assert.ok(da.looseTakes(), 'a run from the coupler barb can end on the loose end');
+  S.link = { from: { uid: can.uid, pi: 'lead' }, pt: null, armed: false, t: 'gas' };
+  assert.strictEqual(da.looseTakes(), null, 'the cannula\'s own tubing cannot: two ends of tubing need a coupler');
+  S.link = null;
+  const res = da.connectPorts(S, { uid: cp.uid, pi: 0 }, { uid: h.tube.uid, pi: 'to' }, null);
+  assert.ok(res.ok, res.why);
+  assert.strictEqual(res.tube.def.id, 'tube-o2-7', 'the hung tubing makes the run');
+  const ends = [res.tube.from, res.tube.to].map((r) => r.uid + ':' + r.pi).sort();
+  assert.deepStrictEqual(ends, [cyl.uid + ':0', cp.uid + ':0'].sort(), 'cylinder outlet to coupler barb');
+});
+
 test('a tubing tile and a circuit bag have no landings: runs aim at ports, a bag lays itself', () => {
   const S = da.start('l2');
   assert.deepStrictEqual(da.landingsFor(S, da.DB['tube-o2-7'], 0, false, null).length, 0);

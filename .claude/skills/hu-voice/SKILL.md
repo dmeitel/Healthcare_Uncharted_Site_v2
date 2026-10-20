@@ -25,9 +25,10 @@ below), this file wins for prose work.
 - Casual transitions only: "So," "Well," "Now,". Never "Furthermore,"
   "Moreover," "In conclusion," "It's worth noting,".
 - ALL CAPS for emphasis. Not bold, not italic.
-- Analogies come from lived work: clinical practice, books, gaming.
+- Analogies come off the voice profile's two shelves: physiological and structural, games and strategy.
   Sustained across a few sentences, never decorative one-liners.
-- Ask a question out loud mid-thought when the argument earns it.
+- Ask a real question out loud when the argument earns it, one the piece leaves open. A rhetorical
+  question that sets up the next paragraph is a fail.
 - Lists read like someone talking themselves through a problem, not a
   corporate outline with parallel stems.
 - One flat closer per piece, maximum. No antithesis flips, noun-phrase

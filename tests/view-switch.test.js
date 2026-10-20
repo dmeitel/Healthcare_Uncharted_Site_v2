@@ -19,7 +19,7 @@ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 /* views that run for many phone screens: the dock */
 const DOCKED = {
-  'src/secret-menu/a-routine-fracture/index.html': { row: '.vw-row', why: 'three views, the story alone about 19 phone screens' },
+  'src/secret-menu/a-routine-fracture/index.html': { row: '.vw-row', why: 'four views, the story alone about 19 phone screens' },
   'src/learn/laws-and-paradoxes/index.html': { row: '.lp-tabs', why: 'ten laws, about 13 phone screens' },
   'src/learn/request-routing/index.html': { row: '.rr-topnav', why: 'four sections, about 14 phone screens' },
 };
@@ -50,6 +50,15 @@ test('every page with a tab switch has said which kind of switch it is', () => {
   const unsorted = found.filter((f) => !lists[f]);
   assert.deepStrictEqual(unsorted, [], 'add each to DOCKED, SHORT or OWN in this test, with the reason');
   for (const f of Object.keys(lists)) assert.ok(fs.existsSync(path.join(ROOT, f)), f + ' is listed here and gone from src');
+});
+
+// The phone gate shows each view hidden at load and reads it (scripts/lib/view-walk.js, 2026-10-19): it finds a switch by
+// role="tablist", or by data-views where the switch is plain buttons. A page of views it cannot find is measured on one view
+// only, which is how nine Laws and Paradoxes charts passed with 7 px labels.
+test('every page of views carries a switch the phone gate can walk', () => {
+  for (const f of [...Object.keys(DOCKED), ...Object.keys(SHORT)]) {
+    assert.match(read(f), /role="tablist"|\bdata-views\b/, f + ': mark its switch role="tablist" (with role="tab" buttons) or data-views');
+  }
 });
 
 test('a page with long views loads the switch, docks it on a phone, and hands each view to the next', () => {

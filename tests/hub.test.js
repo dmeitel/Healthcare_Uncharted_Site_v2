@@ -291,6 +291,20 @@ test('a QA item goes: to look at, needs a tweak, back for another look, good', (
   assert.equal(saved.items['check:one'].history.length, 2, 'the tweak and the fix are kept as history');
 });
 
+// 2026-10-18 (David: "the QA and puzzles zones on the Hub page seem to not be working correctly"): the Puzzles sheet saved its
+// marks under the card that started it, so once that card shipped every mark failed with "No card device-assembly"
+test('a wall on the Puzzles sheet is marked in a file of the sheet, with no card on the board, and a Good keeps a remark', () => {
+  const dir = path.dirname(tmp('x'));
+  const b = JSON.parse(fs.readFileSync(path.join(ROOT, 'data-build/board.json'), 'utf8'));
+  assert.ok(!b.cards.some((c) => c.id === qa.SHEET), 'the sheet is not a card, so nothing on the board can take it away');
+  const m = qa.mark(qa.SHEET, 'wall:day:2026-10-25', 'good', 'it looks fine, its not complex but thats ok', dir);
+  assert.equal(m.mark, 'good');
+  assert.equal(m.note, 'it looks fine, its not complex but thats ok', 'a remark rides on a Good');
+  assert.equal(qa.readMarks(qa.SHEET, dir).items['wall:day:2026-10-25'].note, m.note);
+  const api = fs.readFileSync(path.join(ROOT, 'scripts/hub/index.js'), 'utf8');
+  assert.ok(api.indexOf('/^wall:/') > -1 && api.indexOf('/^wall:/') < api.indexOf('qaLib.cardFor('), 'a wall is marked before any card is looked up');
+});
+
 test('a page looked at on one list counts on every list the push carries, until it changes again', () => {
   const dir = path.dirname(tmp('x'));
   /** @type {import('../scripts/hub/board.js').Card} */
@@ -435,7 +449,7 @@ test('the hub answers at /__hub and refuses what it should', { skip: !BUILT }, a
     const b = JSON.parse(fs.readFileSync(path.join(ROOT, 'data-build/board.json'), 'utf8'));
     const withQa = b.cards.find((c) => c.lane === 'focus' && (c.qa || []).length > 1 && new Set(c.qa.map((q) => q.group)).size > 1);
     if (withQa) {
-      const g = withQa.qa[0].group, slug = g.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const g = /** @type {string} */ (withQa.qa.find((q) => q.group).group), slug = g.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');   // a list can mix grouped and ungrouped checks
       const html = await (await fetch(at + '/__hub/qa?card=' + withQa.id + '&group=' + slug)).text();
       assert.ok(html.includes('hub-folders'), 'the folders row');
       const shown = (html.match(/<li class="hub-qa-item"/g) || []).length;

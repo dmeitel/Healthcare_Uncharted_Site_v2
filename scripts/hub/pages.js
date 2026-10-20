@@ -40,6 +40,7 @@ function icon(name) {
 }
 
 const TABS = [
+  { id: 'home', label: 'Home', href: '/__hub/home' },   // 2026-10-18: the dashboard, a prototype at its own address until David's yes
   { id: 'board', label: 'Board', href: '/__hub' },
   { id: 'run', label: 'Run sheet', href: '/__hub/run' },
   { id: 'qa', label: 'QA', href: '/__hub/qa' },
@@ -102,8 +103,9 @@ ${p.kitJs ? '<script src="/assets/js/hu-kit.js"></script>' : ''}
 
 /* ── pieces ─────────────────────────────────────────────────────────────── */
 
-/** @param {import('./board').Step} s */
-function stepRow(s) {
+/** @param {import('./board').Step} s @param {boolean} [clear] the card's QA list is clear */
+function stepRow(s, clear) {
+  if (qaDone(s, !!clear)) s = { ...s, status: 'done', at: 'your list is clear' };
   const label = { done: 'Done', doing: 'Doing', next: 'Next', waiting: 'Waiting' }[/** @type {'done'} */ (s.status)] || s.status;
   const tail = s.status === 'waiting' ? ' on ' + esc(s.on || 'David') : s.status === 'done' && s.at ? ' ' + esc(s.at) : '';
   return `<li class="is-${esc(s.status)}">
@@ -124,6 +126,18 @@ function qaLine(c) {
   return `${plural(c.todo, 'to look at', 'to look at')}, ${c.good} good, ${c.tweak} with Claude, ${c.recheck} back for another look`;
 }
 
+/* WHAT IS STILL OPEN (2026-10-18, David: "it feels like stuff we have discussed is still front and center and not being put
+   away or pushed into like an archive folder"). The hub works out what is finished from the files and folds it away by
+   itself, each screen the same way: a card whose QA list is clear has passed QA and its QA step is done; done steps fold
+   under one line; a list, a group of walls or a section of ideas with nothing left moves into a Finished fold at the foot. */
+/** a fold at the foot of a screen, the Good fold's look @param {string} title @param {string} sub @param {string} inner */
+const fold = (title, sub, inner) => `<details class="hub-good"><summary><span class="obs-h2">${title} <small>${sub}</small></span></summary>${inner}</details>`;
+/** his QA step on a card whose list is clear: the list says it is done, whatever the board file still says
+ *  @param {import('./board').Step} s @param {boolean} clear */
+const qaDone = (s, clear) => clear && s.status !== 'done' && /^David/.test(s.who) && /\bQA\b/.test(s.text);
+/** is a card's QA list clear? (a card with no list is not) @param {import('./board').Card} c */
+const listClear = (c) => ((c.qa || []).length > 0 || c.qaPages !== false) && qaLib.counts(qaLib.items(c)).clear;
+
 /* ── the board ──────────────────────────────────────────────────────────── */
 
 /** @param {{port:number, lan:string[], screens:{name:string, up:boolean, where:string, how:string}[]}} ctx */
@@ -132,7 +146,10 @@ function board(ctx) {
   const bad = boardLib.problems(b);
   const lane = (/** @type {string} */ l) => b.cards.filter((c) => c.lane === l);
   const focus = lane('focus'), next = lane('next'), inbox = lane('inbox'), done = lane('done');
-  const wait = boardLib.waiting(b);
+  const wait = boardLib.waiting(b).filter((w) => {
+    const c = b.cards.find((x) => x.id === w.cardId), s = c && (c.steps || []).find((x) => x.n === w.n);
+    return !(c && s && qaDone(s, listClear(c)));
+  });
   const decisions = boardLib.decisions();
   const questions = decisions.filter((d) => d.id !== 'to do');
   const todos = decisions.filter((d) => d.id === 'to do');
@@ -142,6 +159,9 @@ function board(ctx) {
     const q = qaLib.counts(list);
     const inQa = c.stage === 'QA' || c.stage === 'Tweaks';
     const playtest = c.stage === 'Plan' && (c.qa || []).length > 0;
+    const passed = inQa && q.clear;   // his list is clear: the card has passed QA, so the track shows Ship
+    const steps = c.steps || [];
+    const shut = steps.filter((s) => s.status === 'done' || qaDone(s, q.clear)), open = steps.filter((s) => !shut.includes(s));
     return `<section class="hub-focus" aria-labelledby="f-${esc(c.id)}">
   <div class="hub-focus-head">
     <div>
@@ -149,12 +169,13 @@ function board(ctx) {
       <h2 id="f-${esc(c.id)}">${esc(c.title)}</h2>
       ${c.goal ? `<p class="goal">${esc(c.goal)}</p>` : ''}
     </div>
-    ${track(c.stage)}
+    ${track(passed ? 'Ship' : c.stage)}
   </div>
   ${c.done ? `<p class="hub-done"><b>Done looks like:</b> ${esc(c.done)}</p>` : ''}
   ${c.plan ? `<p class="hub-done"><a href="/__hub/plan?card=${esc(c.id)}">Read the plan</a> <span class="w">${esc(c.plan)}</span></p>` : ''}
-  ${inQa || playtest ? `<p class="hub-done"><a href="/__hub/qa?card=${esc(c.id)}">${playtest ? 'The playtest list' : 'The QA list'}</a>: ${qaLine(q)}.</p>` : ''}
-  <ol class="hub-steps">${(c.steps || []).map(stepRow).join('')}</ol>
+  ${passed ? `<p class="hub-alert is-good">${icon('circle-check')} Your QA list is clear. Next is Ship: Claude runs the full check, then you push.</p>` : inQa || playtest ? `<p class="hub-done"><a href="/__hub/qa?card=${esc(c.id)}">${playtest ? 'The playtest list' : 'The QA list'}</a>: ${qaLine(q)}.</p>` : ''}
+  ${open.length ? `<ol class="hub-steps">${open.map((s) => stepRow(s, q.clear)).join('')}</ol>` : ''}
+  ${shut.length ? `<details class="hub-shut"><summary>${plural(shut.length, 'step')} done</summary><ol class="hub-steps">${shut.map((s) => stepRow(s, q.clear)).join('')}</ol></details>` : ''}
 </section>`;
   }).join('\n');
 
@@ -164,7 +185,7 @@ function board(ctx) {
   ${c.role ? `<span class="hub-badge is-${esc(c.role)}">${esc(c.role)}</span>` : ''}
   <h3>${esc(c.title)}</h3>
   ${c.says ? `<p>${esc(c.says)}</p>` : ''}${c.goal ? `<p>${esc(c.goal)}</p>` : ''}
-  ${c.steps && c.steps.length ? `<details><summary>${plural(open, 'open step')}</summary><ol class="hub-steps">${c.steps.map(stepRow).join('')}</ol></details>` : ''}
+  ${c.steps && c.steps.length ? `<details><summary>${plural(open, 'open step')}</summary><ol class="hub-steps">${c.steps.map((s) => stepRow(s)).join('')}</ol></details>` : ''}
 </article>`;
   }).join('\n');
 
@@ -175,11 +196,15 @@ ${questions.length > 3 ? `<p class="hub-more">${questions.length - 3} more wait 
   const todoHtml = todos.length ? `<p class="obs-lab hub-gap">Yours to do, no decision needed</p>
 <ul class="hub-wait">${todos.map((d) => `<li><span class="n">${icon('circle')}</span><span class="x">${esc(d.text)}</span></li>`).join('')}</ul>` : '';
 
-  const inboxHtml = `<ul class="hub-inbox">${inbox.map((c) => `<li class="hub-inbox-item">
+  /* the newest five face up; older ideas wait in a fold (they are not dropped, only put away) */
+  const newest = inbox.slice().sort((x, y) => String(y.added || '').localeCompare(String(x.added || '')));
+  const idea = (/** @type {import('./board').Card} */ c) => `<li class="hub-inbox-item">
   <b>${esc(c.title)}</b>
   ${c.line ? `<p>${esc(c.line)}</p>` : ''}
   <div class="hub-row"><span class="w">${c.added ? 'added ' + esc(c.added) : ''}</span><button class="hub-btn" type="button" data-promote="${esc(c.id)}">Promote to Up next</button></div>
-</li>`).join('')}</ul>
+</li>`;
+  const inboxHtml = `<ul class="hub-inbox">${newest.slice(0, 5).map(idea).join('')}</ul>
+${newest.length > 5 ? `<details class="hub-shut"><summary>${plural(newest.length - 5, 'older idea')}</summary><ul class="hub-inbox">${newest.slice(5).map(idea).join('')}</ul></details>` : ''}
 <form class="hub-form" id="hubInbox">
   <label class="obs-lab" for="hubIdea">A new idea</label>
   <input class="hub-input" id="hubIdea" name="title" maxlength="80" placeholder="Leaderboard for the daily wall" autocomplete="off">
@@ -313,7 +338,7 @@ function qaItem(it, cardId) {
   const pics = qaLib.SIZES.map((z) => fig(p.before[z], 'before, ' + name(z), z) + fig(p.after[z], 'now, ' + name(z), z)).join('');
   const how = it.how ? `<p class="hub-try"><b>Try:</b> ${md(it.how)}</p>` : '';
   const look = it.look ? `<p class="hub-try"><b>Look for:</b> ${md(it.look)}</p>` : '';
-  const said = it.note && (it.state === 'tweak' || it.state === 'recheck') ? `<p class="hub-said"><b>You said:</b> ${esc(it.note)}</p>` : '';
+  const said = it.note ? `<p class="hub-said"><b>${it.state === 'good' ? 'Your note' : 'You said'}:</b> ${esc(it.note)}</p>` : '';
   const fix = it.state === 'recheck' && it.fix ? `<p class="hub-fix"><b>What changed:</b> ${esc(it.fix)}</p>` : '';
   const tid = 'n-' + qaLib.slug(it.id);
   return `<li class="hub-qa-item" data-state="${esc(it.state)}" data-item="${esc(it.id)}" data-card="${esc(cardId)}">
@@ -330,7 +355,7 @@ function qaItem(it, cardId) {
   <div class="hub-tweak" hidden>
     <label class="obs-lab" for="${tid}">What should change?</label>
     <textarea class="hub-input" id="${tid}" rows="3" maxlength="2000">${it.state === 'tweak' ? esc(it.note) : ''}</textarea>
-    <div class="hub-row"><span class="hub-err" role="alert"></span><button class="hub-btn hub-btn--go" type="button" data-send>Send to Claude</button></div>
+    <div class="hub-row"><span class="hub-err" role="alert"></span><span class="w">A remark, not a change? Press Good and it goes with it.</span><button class="hub-btn hub-btn--go" type="button" data-send>Send to Claude</button></div>
   </div>
 </li>`;
 }
@@ -344,18 +369,25 @@ const groupSlug = (/** @type {string} */ g) => g.toLowerCase().replace(/[^a-z0-9
 /** @param {string} [pick] a card id from ?card= @param {string} [folder] a group slug from ?group= */
 function qa(pick, folder) {
   const b = boardLib.load();
-  const card = (pick && b.cards.find((c) => c.id === pick)) || qaLib.defaultCard(b);
-  if (!card) return layout({ title: 'QA', tab: 'qa', body: '<div class="obs-head"><h1>QA list</h1><p>Nothing is in focus, so there is nothing to check yet.</p></div>' });
+  /* the lists: every card in focus, and a card up next that is at QA or past it; a list with no items is not a list */
+  const memo = new Map();
+  const cnt = (/** @type {import('./board').Card} */ x) => { if (!memo.has(x.id)) memo.set(x.id, qaLib.counts(qaLib.items(x))); return memo.get(x.id); };
+  const lists = b.cards.filter((x) => ((x.qa || []).length || x.qaPages !== false) && (x.lane === 'focus' || (x.lane === 'next' && ['QA', 'Tweaks', 'Ship'].includes(x.stage || ''))) && cnt(x).total > 0)
+    .sort((x, y) => Number(y.lane === 'focus') - Number(x.lane === 'focus'));   // the lists in focus first, as before
+  const openNow = (/** @type {import('./board').Card} */ x) => !cnt(x).clear;
+  const card = (pick && b.cards.find((c) => c.id === pick)) || lists.find(openNow) || null;
+  const finished = lists.filter((x) => !openNow(x) && x !== card);
+  const archive = finished.length ? fold('Finished lists', `${finished.length} · every item marked Good; open one to look again`, `<nav class="hub-switch" aria-label="Finished lists">${finished.map((x) => `<a class="toggle-chip" href="/__hub/qa?card=${esc(x.id)}">${esc(x.title)} · clear</a>`).join('')}</nav>`) : '';
+  if (!card) return layout({ title: 'QA', tab: 'qa', body: `<div class="obs-head"><h1>QA list</h1><p>Nothing to look at right now. A list shows up here when a milestone reaches QA, and a finished one moves to the fold below.</p></div>${archive}` });
   const list = qaLib.items(card);
   const c = qaLib.counts(list);
   const g = runLib.read().gate;
   const playtest = card.stage === 'Plan' && (card.qa || []).length > 0;
   const building = card.stage === 'Build' || (card.stage === 'Plan' && !playtest);
-  // with two cards in focus, each list is one tap away; so is a finished card's list the same push carries
-  const rides = (/** @type {any} */ x) => x.lane === 'focus' || (x.lane === 'next' && ['QA', 'Tweaks', 'Ship'].includes(x.stage) && (x === card || !qaLib.counts(qaLib.items(x)).clear));
-  const lists = b.cards.filter((x) => rides(x) && ((x.qa || []).length || x.qaPages !== false));
-  const switcher = lists.length > 1 ? `<nav class="hub-switch" aria-label="Which list">${lists.map((x) => {
-    const n = qaLib.counts(qaLib.items(x));
+  // with two lists open, each is one tap away; a finished list waits in the fold at the foot
+  const shownLists = lists.filter((x) => openNow(x) || x === card);
+  const switcher = shownLists.length > 1 ? `<nav class="hub-switch" aria-label="Which list">${shownLists.map((x) => {
+    const n = cnt(x);
     return `<a class="toggle-chip${x.id === card.id ? ' on' : ''}" href="/__hub/qa?card=${esc(x.id)}"${x.id === card.id ? ' aria-current="page"' : ''}>${esc(x.title)} · ${n.clear ? 'clear' : n.todo + n.recheck + ' to look at'}</a>`;
   }).join('')}</nav>` : '';
   /* the folders: one chip per group of the list, with what is left to look at in each; a chip shows that group alone */
@@ -395,7 +427,8 @@ ${c.clear ? `<p class="hub-alert is-good">${icon('circle-check')} ${playtest ? '
 ${group('recheck', 'Back for another look', 'fixed since your note')}
 ${group('todo', 'To look at', '')}
 ${group('tweak', 'With Claude', 'your notes')}
-${group('good', 'Good', '')}`;
+${group('good', 'Good', '')}
+${archive}`;
   return layout({ title: playtest ? 'Playtest' : 'QA list', tab: 'qa', body });
 }
 
@@ -414,7 +447,7 @@ function puzzles(only) {
   if (!fs.existsSync(file)) return layout({ title: 'Puzzles', tab: 'puzzles', body: head('The sheet has not run on this computer yet. Claude runs it with <code>npm run da:qa</code>; it takes a few minutes.') });
   /** @type {any} */
   const rep = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const marks = qaLib.readMarks('device-assembly').items || {};
+  const marks = qaLib.readMarks(qaLib.SHEET).items || {};
   const ok = (/** @type {boolean|null} */ v, /** @type {string} */ yes, /** @type {string} */ no) => v === null || v === undefined ? '' : `<span class="obs-pill ${v ? 'is-good' : 'is-bad'}">${v ? icon('check') : icon('x')} ${esc(v ? yes : no)}</span>`;
   const fig = (/** @type {string} */ src, /** @type {string} */ cap, /** @type {string} */ what) => src ? `<figure><a href="${esc(src)}"><img src="${esc(src)}" alt="${esc(cap)}" loading="lazy" class="is-${what}"></a><figcaption>${esc(cap)}</figcaption></figure>` : '';
   /** @param {any} w */
@@ -428,12 +461,12 @@ function puzzles(only) {
       w.breaks ? ok(!w.breaks.vague.length, w.breaks.located + ' of ' + w.breaks.total + ' breaks say where', w.breaks.vague.length + ' breaks do not say where') : '',
       w.cart ? ok(!w.cart.length, 'its cart holds the answer', 'cart short: ' + w.cart[0]) : ''].join(' ');
     const tid = 'w-' + qaLib.slug(w.id);
-    return `<li class="hub-qa-item" data-state="${state}" data-item="wall:${esc(w.id)}" data-card="device-assembly">
+    return `<li class="hub-qa-item" data-state="${state}" data-item="wall:${esc(w.id)}" data-card="${esc(qaLib.SHEET)}">
   <div class="hub-qa-top"><h3>${esc((w.kicker || w.id) + ' · ' + (w.title || ''))}</h3><span class="obs-pill">${esc(w.group || '')}</span></div>
   <p class="hub-try">${esc(w.order || '')}</p>
   <p class="hub-wallchecks">${checks}</p>
   <a class="go" href="${esc(w.link)}" target="_blank" rel="noopener">Play it ${icon('arrow-right')}</a>
-  ${m.note && (state === 'tweak' || state === 'recheck') ? `<p class="hub-said"><b>You said:</b> ${esc(m.note)}</p>` : ''}
+  ${m.note ? `<p class="hub-said"><b>${state === 'good' ? 'Your note' : 'You said'}:</b> ${esc(m.note)}</p>` : ''}
   ${state === 'recheck' && m.fix ? `<p class="hub-fix"><b>What changed:</b> ${esc(m.fix)}</p>` : ''}
   <div class="hub-pair">${fig(w.phone.shots.empty, 'phone, empty', 'phone')}${fig(w.phone.shots.built, 'phone, built', 'phone')}${fig(w.desktop.shots.empty, 'desk, empty', 'desktop')}${fig(w.desktop.shots.built, 'desk, built', 'desktop')}</div>
   <div class="hub-actions">
@@ -444,7 +477,7 @@ function puzzles(only) {
   <div class="hub-tweak" hidden>
     <label class="obs-lab" for="${tid}">What should change?</label>
     <textarea class="hub-input" id="${tid}" rows="3" maxlength="2000">${state === 'tweak' ? esc(m.note || '') : ''}</textarea>
-    <div class="hub-row"><span class="hub-err" role="alert"></span><button class="hub-btn hub-btn--go" type="button" data-send>Send to Claude</button></div>
+    <div class="hub-row"><span class="hub-err" role="alert"></span><span class="w">A remark, not a change? Press Good and it goes with it.</span><button class="hub-btn hub-btn--go" type="button" data-send>Send to Claude</button></div>
   </div>
 </li>`;
   };
@@ -458,6 +491,16 @@ function puzzles(only) {
   const chip = (/** @type {string} */ label, /** @type {string} */ slug, /** @type {any[]} */ ws) => { const on = slug === (only || ''), n = left(ws);
     return `<a class="toggle-chip${on ? ' on' : ''}" href="/__hub/puzzles${slug ? '?group=' + esc(slug) : ''}"${on ? ' aria-current="page"' : ''}>${esc(label)} · ${n ? n + ' left' : 'done'}</a>`; };
   const chips = `<nav class="hub-switch hub-folders" aria-label="Groups">${chip('All', '', walls)}${all.map((x) => chip(x.g, groupSlug(x.g), x.ws)).join('')}</nav>`;
+  const isGood = (/** @type {any} */ w) => (marks['wall:' + w.id] || {}).mark === 'good';
+  const section = (/** @type {{g:string, ws:any[]}} */ x) => {
+    const open = x.ws.filter((w) => !isGood(w)), good = x.ws.filter(isGood);
+    const goods = `<ul class="hub-good-list">${good.map(card).join('')}</ul>`;
+    return `<h2 class="obs-h2">${esc(x.g)} <small>${open.length ? open.length + ' to look at' : 'all good'}${open.length && good.length ? ' · ' + good.length + ' good' : ''}</small></h2>`
+      + (open.length ? `<ul class="hub-qa">${open.map(card).join('')}</ul>` + (good.length ? fold('Marked good', `${good.length} · folded; open one to change its mark`, goods) : '') : goods);
+  };
+  const live = groups.filter((x) => x.ws.some((w) => !isGood(w))), done = groups.filter((x) => x.ws.every(isGood));
+  const sheet = live.map(section).join('') + (done.length ? (only ? done.map(section).join('') : fold('Finished groups', `${done.length} · every wall marked good`, done.map(section).join(''))) : '')
+    || '<p class="hub-empty">No walls in this group.</p>';
   const t = rep.touch;
   const body = `${head('Every wall the game has, and a spread of dealt ones, opened by its link at a phone and at a desk, pictured empty and built, and broken one part at a time to check that the test says where it stops. A new wall is here by itself the next time the sheet runs. Look when you want to; mark a wall Needs a tweak, with a note, when one needs work.')}
 <div class="obs-cards hub-qa-sum">
@@ -468,7 +511,7 @@ function puzzles(only) {
   <div class="obs-card"><p class="obs-lab">The sheet ran</p><p>${esc(rep.at || '')}. The engine half runs in every verify: every dealt wall solves, every break says where, no hint tells a thumb to right-click.</p></div>
 </div>
 ${chips}
-${groups.map((x) => `<h2 class="obs-h2">${esc(x.g)} <small>${x.ws.length}</small></h2><ul class="hub-qa">${x.ws.map(card).join('')}</ul>`).join('')}`;
+${sheet}`;
   return layout({ title: 'Puzzles', tab: 'puzzles', body });
 }
 

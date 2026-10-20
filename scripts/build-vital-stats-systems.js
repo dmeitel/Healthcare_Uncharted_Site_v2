@@ -584,4 +584,4 @@ if (require.main === module) {
   for (const r of index.filter((x) => x.f)) console.log(`  ${r.name}: ${r.n} hospitals in ${r.st.join(' ')}, ${r.q} questions`);
 }
 
-module.exports = { build, buildCard, CARD_OUT, OUT_DIR, shortName, SYS_LINKS };
+module.exports = { build, buildCard, CARD_OUT, OUT_DIR, shortName, SYS_LINKS, RENAMED };

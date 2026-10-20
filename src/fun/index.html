@@ -1,7 +1,7 @@
 ---
 layout: base.njk
-title: Fun
-description: Four free browser games about how healthcare runs, built on the same real data as the site's tools. Play on a phone or a desk, with no account.
+title: Healthcare games and daily puzzles
+description: "Four free browser games, two with a new puzzle every day: a med-surg shift, respiratory equipment setups and trivia from real health data. No account needed."
 navPage: fun
 og_image: /assets/images/og/card-fun.png
 ---
@@ -9,40 +9,23 @@ og_image: /assets/images/og/card-fun.png
      brass instruments look. Every card rides tools.js (cluster "fun"); nothing here is hand-listed. A card is the
      game's picture on a glass screen, its name, one number (the catalog's third tag) and a brass Play. -->
 
-<style>
-.fn-shelf { max-width:1100px; margin:0 auto; padding:26px clamp(24px,4vw,36px) 72px; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:20px; }
-.fn-game { display:flex; flex-direction:column; border:2px solid transparent; border-radius:16px; text-decoration:none; color:inherit;
-  background:var(--face-bg) padding-box, var(--frame-bg) border-box; box-shadow:var(--panel-lift); }
-.fn-game:hover { border-color:transparent; }
-.fn-game:focus-visible { outline:2px solid var(--teal); outline-offset:3px; }
-[data-theme="light"] .fn-game:focus-visible { outline-color:var(--teal-dk); }
-.fn-screen { margin:14px 14px 0; border-radius:12px; padding:8px; background:var(--glass); box-shadow:var(--glass-well); }
-.fn-thumb { aspect-ratio:1280/440; border-radius:7px; background-image:var(--thumb); background-size:cover; background-position:center; }
-[data-theme="light"] .fn-thumb { background-image:var(--thumb-l, var(--thumb)); }
-.fn-body { display:flex; flex-direction:column; gap:8px; flex:1; padding:14px 16px 16px; }
-.fn-row { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-.fn-name { font-family:var(--display); font-size:22px; font-weight:800; line-height:1.15; color:var(--t1); }
-.fn-tag { font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.1em; text-transform:uppercase;
-  padding:3px 8px; border-radius:6px; color:var(--brass-ink); background:var(--brass-bg); }
-.fn-n { font-family:var(--mono); font-size:var(--t-fine); font-weight:600; letter-spacing:.04em; color:var(--brass-text); }
-.fn-desc { font-size:var(--t-sub); line-height:1.6; color:var(--t2); margin:0; flex:1; }
-.fn-play { align-self:stretch; margin-top:6px; }
-@media (prefers-reduced-motion: no-preference) {
-  .fn-game { transition:transform .12s ease, box-shadow .12s ease; }
-  .fn-game:hover { transform:translateY(-2px); }
-  .fn-game:active { transform:translateY(1px); box-shadow:0 6px 12px var(--depth); }
-}
-@media (max-width:1023px) and (min-width:700px) { .fn-shelf { grid-template-columns:repeat(2, minmax(0,1fr)); } }
-@media (max-width:699px), (max-height:500px) {
-  .fn-shelf { grid-template-columns:1fr; padding-top:18px; }
-}
-</style>
+{% include "components/fun-shelf-style.njk" %}
+{% from "components/fun-today.njk" import dailyCard %}
 
 <header class="hu-read-hero--hub"><div class="hu-read-hero-inner">
   <div class="hu-read-eyebrow" style="color:var(--region-fun)"><span class="dot" aria-hidden="true"></span>Fun</div>
-  <h1 class="hu-read-h1">Games about how care runs</h1>
+  <h1 class="hu-read-h1">Healthcare games and daily puzzles</h1>
 </div></header>
 
+<!-- TODAY'S PUZZLES, a shelf of its own (2026-10-18, David: "can we make that button a bit bigger or give it its own
+     shelf"): every daily as a compact card that opens today's puzzle, then the games. The shelf labels are the Tools
+     page's (a kicker, a note at the right, a rule under them); the cards and their script are shared with /fun/today/. -->
+<div class="fn-shelf-h"><div><h2 class="hu-read-kicker"><a href="/fun/today/">Today’s puzzles</a></h2><span class="n" id="fnDate">A new set every day</span></div></div>
+<section class="fn-shelf fn-days fn-days-compact" aria-label="Today's puzzles">
+  {%- for d in dailies %}{{ dailyCard(d, true) }}{% endfor %}
+</section>
+
+<div class="fn-shelf-h"><div><h2 class="hu-read-kicker">All the games</h2></div></div>
 <section class="fn-shelf" aria-label="The games">
   {%- for tool in tools %}{% if tool.status == 'live' and tool.cluster == 'fun' %}
   <a class="fn-game" href="{{ tool.url }}">
@@ -56,3 +39,5 @@ og_image: /assets/images/og/card-fun.png
   </a>
   {% endif %}{%- endfor %}
 </section>
+
+<script src="/assets/js/fun-today.js?v=20261018"></script>

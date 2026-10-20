@@ -169,18 +169,19 @@ window.HU_STORY = {
     ] },
 
     { n: 6, short: 'Ahead', title: 'What comes next', ahead: true, scenes: [
-      { id: 's16', d: 'Thursday', t: 'two weeks out', title: 'The follow-up', pa: null, ahead: true,
-        story: ['Dave sees the surgeon again two weeks after the injury. The operative report says no X-rays are planned for that visit.'],
-        L: { med: ['Surgeon follow-up', 'Wound check', 'No X-rays planned'],
+      { id: 's16', d: 'Three weeks', t: 'after the injury', title: 'The follow-up', pa: null,
+        story: ['Three weeks after the injury, Dave saw the orthopedic clinic again and the staples came out.',
+          'The arm stays in a brace until the bones are confirmed healed, at about six weeks. Physical therapy starts after that.'],
+        L: { med: ['Orthopedic follow-up', 'Staples removed', 'A brace until the bones heal'],
           ppr: ['Another registration'],
           rec: ['Encounter 6'],
           mon: ['The surgeon’s fee usually covers it'],
-          ask: ['Is this visit part of the surgery’s payment, or billed on its own?', 'Do the stitches and the splint come off today, or at another visit?'] } },
+          ask: ['Is this visit part of the surgery’s payment, or billed on its own?', 'How will the healing be checked at six weeks, and does that take another X-ray?'] } },
 
-      { id: 's17', d: 'About two weeks', t: 'after surgery', title: 'Therapy', pa: null, ahead: true,
-        story: ['If the surgical findings allow it, the splint comes off about two weeks after surgery and Dave moves to a sling and range-of-motion therapy.'],
+      { id: 's17', d: 'About six weeks', t: 'after the injury', title: 'Therapy', pa: null, ahead: true,
+        story: ['The operative report planned a splint for about two weeks after surgery, then a sling and range-of-motion therapy. At the three-week visit the plan was a brace until the bones are confirmed healed, at about six weeks, and physical therapy after that.'],
         chart: '“Splint immobilization is anticipated for about 2 weeks, followed by sling use and initiation of range-of-motion therapy if appropriate.”',
-        L: { med: ['Splint off', 'Sling', 'Range-of-motion therapy'],
+        L: { med: ['Brace off once the bones heal', 'Physical therapy'],
           ppr: ['Therapy referral', 'Therapy appointments'],
           mon: ['Therapy authorization?', 'Therapy copays'],
           ask: ['Does my plan limit therapy visits, and do they need approval?'] } },
@@ -246,8 +247,8 @@ window.HU_STORY.lines = {
   s13: 'Three to four and a half hours from the time Dave went back, then home.',
   s14: 'Sleep, and new prescriptions from the surgeon. The patient portal has the reports and none of the images.',
   s15: 'A check on mood and sleep, and Dave doing fine.',
-  s16: 'A wound check with the surgeon, with no X-rays planned.',
-  s17: 'The splint comes off, then a sling and range-of-motion therapy.',
+  s16: 'The staples out at the orthopedic clinic, and a brace until the bones heal.',
+  s17: 'The brace comes off once the bones heal, then physical therapy.',
   s18: 'Strengthening, with full extension uncertain.',
   s19: 'A possible second surgery to remove the plate.',
   s20: 'Nothing from the insurer yet.'
@@ -330,7 +331,12 @@ window.HU_STORY.figs = {
     imgs: [['/assets/images/rounds/routine-fracture/04-ct-after-reduction.jpg', 1400, 1300, '3D CT after the second reduction, the joint back in line and a fracture still through the ulna.']] },
   s13: { ar: '5 / 4', cap: 'Intraoperative X-rays from the surgery, before and after the plate, photographed from the surgeon’s screen at the surgery center after surgery.',
     imgs: [['/assets/images/rounds/routine-fracture/05-surgery-before.jpg', 948, 770, 'X-ray from surgery before the repair, the top of the ulna broken.'],
-      ['/assets/images/rounds/routine-fracture/05-surgery-side.jpg', 1400, 1090, 'X-ray from surgery after the repair, a plate and screws along the ulna.']] }
+      ['/assets/images/rounds/routine-fracture/05-surgery-side.jpg', 1400, 1090, 'X-ray from surgery after the repair, a plate and screws along the ulna.']] },
+  /* lead: the first picture takes the full row, the rest share the row under it (added 2026-10-19 for the three-week visit) */
+  s16: { lead: true, ar: '4 / 7', cap: 'The three-week visit at the orthopedic clinic: the staples coming out, and the incision once they were out.',
+    imgs: [['/assets/images/rounds/routine-fracture/06-staple-removal.jpg', 1400, 875, 'A gloved hand using a staple remover at the back of a left elbow, a few staples still in.'],
+      ['/assets/images/rounds/routine-fracture/06-incision-after-a.jpg', 650, 1220, 'The healing incision along the elbow once the staples are out, the marks they left on either side.'],
+      ['/assets/images/rounds/routine-fracture/06-incision-after-b.jpg', 700, 1220, 'The same incision from another angle.']] }
 };
 
 /* Lookups and the guard: every layer key is known, every scene has a story. */

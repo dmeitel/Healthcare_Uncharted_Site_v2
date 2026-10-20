@@ -67,38 +67,16 @@ Step statuses: NEXT · DOING · DONE · WAITING (say on what) · MOVED (say wher
 <!-- board:start (printed from data-build/board.json by `npm run board`; change the file, not this block) -->
 The board, printed. The picture of it is the hub: `npm run hub`, then /__hub. Stage names: Plan, Build, QA, Tweaks, Ship.
 
-### Focus · primary · Phone play · stage: QA
+### Focus · primary · Site 1.0 · stage: Ship
 
-Device Assembly plays by thumb on a real phone: the game aims for you, every move works with taps, and the wall gets most of the screen; the twelve rules behind it hold every game.
-Done looks like: The thumb test passes at four real phone screens (10 and 20 px misses, drag and taps alone), the wall is at least 55% of the screen on the SE and iPhone 15, and David marks his phone play good on the hub's QA list.
-Plan: docs/HU-PHONE-PLAY-PLAN-2026-10-12.md
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 83 | **The thumb test, first:** a touch test that misses like a person (10 and 20 px, eight directions), by drag and by taps alone, at 375x548, 393x659, 360x640 and 430x746, plus the layout checks; it replaces the robot test in da:qa. | Claude | It runs and its first report shows today's failures on the hub | DONE 2026-10-12 |
-| 84 | **The bottom of the screen:** the order as one line, the tray as one slim row that turns into the picked part's buttons and the Back to cart zone, Undo beside Complete; nothing floats over the wall. | Claude | The wall is at least 55% of the screen at 375x548 and 393x659 (today 28% and 41%); nothing over the wall while a part is held; no scroll | DONE 2026-10-13 |
-| 85 | **A tap is a tap:** touch drags start after 10 px; a tubed port unplugs only when pulled; press areas go to the nearest port or part; the tray swipe scrolls without a ghost. | Claude | The thumb test's wobble checks pass | DONE 2026-10-13 |
-| 86 | **The game aims for you:** a held part or tubing end lands on the nearest place it fits within 44 px, only those places lit; the bottom rows reachable. | Claude | Every drag in the thumb test lands with a 20 px miss | DONE 2026-10-13 |
-| 87 | **Everything by taps:** tap a part or tubing on the tray, tap a lit place; tap a wall part to move it; the phone hints teach the tap way. | Claude | Tutorials 1 to 5 and Level 2 solve with zero drags at all four phone screens | DONE 2026-10-13 |
-| 88 | **The feel of a connection:** the snap checked on touch at the new sizes; a buzz on phones that can, with a Settings row, on by default. | Claude | The setting is remembered; pictures filed | DONE 2026-10-13 |
-| 89 | **Write the standard down, then measure the other games:** the twelve rules into the hu-game-shell skill and games.md, the thumb test made shareable, Uncharted General, Alarm Fatigue and Vital Stats measured. | Claude | The skill section is in and the three-game report is filed | DONE 2026-10-13 |
-| 90 | **His QA:** he plays it on his phone over the home wifi and marks the hub's QA list. | David | His QA list is clear | NEXT |
-
-### Focus · secondary · Daily Huddle · stage: QA
-
-The daily trivia board: the day's 19 tiles in the Atlas zones, cross from the top row to the bottom with no time limit and no miss limit, your time and misses as the result, three lifelines, a share line, practice, past boards and team boards, on one phone screen, on the Fun shelf.
-Done looks like: David plays today's board on his phone and a desk, and marks the hub's QA list; his notes start the refinement rounds.
-Plan: docs/HU-HEX-TRIVIA-PLAN-2026-10-14.md
+Everything saved since the last push goes live together as the site’s 1.0: every live page reviewed night and day, every QA list and puzzle wall marked Good.
+Done looks like: The live site reports the 1.0 commit at /version.txt and the hub files this card under Done.
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
-| 91 | **The question bank:** scripts/build-huddle.js turns Vital Stats' bank, the license compacts, clinical math and the hand-checked sets (normals, laws, health tech, odd codes) into tile questions, each with its source and check date. | Claude | tests/huddle-questions.test.js passes and every zone can fill its tiles every day | DONE 2026-10-14 |
-| 92 | **The engine:** the board dealt by date (six zones around the compass, the seventh in the compass), crossing, misses, the clock, the dots score, save and resume, all plain data through one dispatcher. | Claude | tests/huddle.test.js passes: the same date deals the same board, every board can be crossed, a save restores | DONE 2026-10-14 |
-| 93 | **The page:** the start screen, the board, the question card, the answer with its source, the finish card and the share line, on one phone screen; the board reads the exact press point. | Claude | npm run phone clean at nine viewports and a scripted play-through at phone and desk | DONE 2026-10-14 |
-| 94 | **Make a board, practice and past boards:** a link carries the board, the clock and the misses; practice is any board, untimed if you like; past days replay as practice. | Claude | A made link opens the same board in a fresh browser | DONE 2026-10-14 |
-| 95 | **Menus from the kit:** the how-to, the game menu, Settings with More time, and a question list for checking the bank. | Claude | tests/game-shell.test.js passes with the new game in it | DONE 2026-10-14 |
-| 96 | **The QA list and pictures** on the hub. | Claude | The card's QA list shows on /__hub/qa with phone and desk pictures | DONE 2026-10-14 |
-| 97 | **His QA:** he plays today's board on his phone and a desk and marks the hub's QA list. | David | Every check marked Good or Needs a tweak with a note | NEXT |
+| 106 | **The full check:** `npm run qa` over the whole site, every page at nine screen sizes. | Claude | It passes, and the hub shows the gate passed after the last change | DONE 2026-10-19 |
+| 107 | **Save and push:** commit what is left, then press Push origin. | David | origin/main carries the 1.0 commit | NEXT |
+| 108 | **The live check:** `npm run ship -- --live` waits for the live site to report the commit and files this card under Done. | Claude | The live site reports the 1.0 commit | NEXT |
 
 ### Up next · A Routine Fracture
 
@@ -110,39 +88,18 @@ The broken arm Rounds piece, a review draft in the secret menu since 2026-10-03.
 | 13 | **DECISIONS R1 and the rest of R6:** whether places and people are named, and three details only he knows. | David | Answered | NEXT |
 | 14 | **The fifth panel's notes,** then the publish-to-Rounds checklist at the top of the page. | Claude, when he says | The piece is in Rounds on his yes | WAITING on steps 12 and 13 |
 
-### Up next · A year of daily walls
-
-David, 2026-10-11: "yes to the daily walls, start oct 25" (DY2). On his DY1 answers of 2026-10-10: a weekly climb (easy Monday, hard Saturday, Sunday a story day), joke days on Saturdays only, a one-wall teach the first time a new mode shows up, one or two new modes a month.
-A year of daily walls for Device Assembly that change what the puzzle asks you to do, not only where the oxygen comes from.
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 37 | **The plan:** the first month of dailies laid out day by day on the weekly climb, the modes it needs built first, and the teaching wall for each new rule, with pictures of a Monday and a Saturday. | Claude | His yes to the plan | DONE 2026-10-11 |
-| 38 | **His yes** to the first month. | David | His yes in the chat | DONE 2026-10-11 |
-| 54 | **The calendar and the climb, and the month sheet** (plan pieces 1 and 2): the year turns on at wall #23, the weekday picks the kind, the dealer re-deals until the wall sits in its band, today's dealer is the fallback; tests pin walls #1 to #22 and hold every day of the month. | Claude | Walls #1 to #22 unchanged by test; every day #23 to #51 deals, solves, sits in its band and differs from the others; verify green | DONE 2026-10-11 |
-| 55 | **Mondays and Tuesdays** (pieces 3 and 4): the bed in the middle, the far bed, the split rail, dead outlets; just enough, supply dumped everything, the labels fell off, expired. | Claude | Each one deals on its day in the month sheet; pictures filed | DONE 2026-10-11 |
-| 56 | **Wednesdays and Thursdays** (pieces 5 and 6): shorthand, read the chart, written beats verbal; the sink, the sterile field, the curtain. | Claude | Each one deals on its day in the month sheet; pictures filed | DONE 2026-10-11 |
-| 57 | **Mode 1, find the fault** (piece 7): the daily breaks a solved wall with the shift's faults, two faults, the hand-off, and its teach wall. | Claude | Oct 30, Nov 6, Nov 13 and Nov 20 deal and their faults are findable; the teach wall plays first the first time | DONE 2026-10-11 |
-| 58 | **Saturdays** (piece 8): twists that stack, a bottle that feeds a real build, the Halloween dressing. | Claude | Every Saturday of the month is 5 parts or more, or stacked; pictures filed | DONE 2026-10-11 |
-| 59 | **Sundays** (piece 9): three walls from the shift's stories (and Going home) as one daily with one result card. | Claude | Every Sunday deals three walls and counts once toward the streak | DONE 2026-10-11 |
-| 60 | **Mode 2, the goal, not the device** (piece 10), and its teach wall, for World COPD Day. | Claude | Nov 18 accepts any setup that meets the target and explains a working miss; the teach wall plays first | DONE 2026-10-11 |
-| 61 | **The daily card and the teach shelf** (piece 11), the month on the hub's Puzzles screen, the phone gate on the game. | Claude | The card names the day; npm run da:qa pictures the month; npm run phone clean on /fun/device-assembly/ | DONE 2026-10-11 |
-| 62 | **His QA** of the month on the hub's Puzzles screen, by Oct 20 to ride the refresh push (Oct 22 at the latest). | David | His QA list is clear | WAITING on his QA of the month on the hub's Puzzles screen (group The daily year) and the card's pictures, by Oct 20 |
-
-### Up next · Heavier lines on the logo and the rose
-
-His yes on the Ideas card line-weights, 2026-10-11 ("yeah lets make the change", then "Lets move forward with these changes"). Its QA rides the site-wide refresh review.
-The logo mark reads as one object at the sizes the site draws it small, and the home rose answers a tap where it is drawn.
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 39 | **The logo mark:** the hex outline from 18 to 26 of 512 units in hu-mark, hu-mark-dark, hu-mark-outline and favicon.svg, their PNGs, the favicons and app icons regenerated, and the icon cache stamps bumped. | Claude | The new outline shows in the bars, the tool pages and the browser tab; verify green | DONE 2026-10-11 |
-| 40 | **The home rose on a phone:** the tap area lines up with the rose the canvas draws (today it sits 14 px higher). | Claude | Measured at 360, 390, 740x360 and 1280: the centers match; the phone gate clean on / | DONE 2026-10-11 |
-| 41 | **A rose drawn big:** its lines grow with it (1.6 times in the dial), written into the design direction for the brass look, and the dial mockup defaults to the heavier lines. | Claude | Written down; the mockup shows it | DONE 2026-10-11 |
-| 42 | **His QA** on the hub: the logo in the bars and the tab, the home rose on his phone. | David | His QA list is clear | WAITING on his QA list on the hub |
-
 ### Up next · The other games by thumb
 
+
+### Up next · The hub home
+
+David, 2026-10-18: "the board run sheet QA puzzles and ideas are all kind of static and it's hard to see when things are updated or changed ... what I need is a dashboard that shows me actual items and information that I can make decisions on post review and to get us to our final checkdowns for our next pushes".
+One home screen that answers what is left before the next push, what to look at next, what changed since the last visit, and how the site is doing, with the background left to the other tabs.
+
+| # | Step | Owner | Done when | Status |
+|---|---|---|---|---|
+| 104 | **A working prototype** at /__hub/home on real data: the next push, your next looks, your notes with Claude, decisions, the site this week, what changed. | Claude | It draws from the files with no errors at phone and desk; pictures filed | DONE 2026-10-18 |
+| 105 | **His yes:** make it the hub's front page, and what to trim from the other tabs. | David | He says yes, or what to change | NEXT |
 
 ### Inbox · parked, not dropped
 
@@ -173,6 +130,13 @@ Nothing here is worked until David promotes it.
 - **The Reference Appendix as a sortable list** His review 2026-10-11: as the site grows, the sources page may need a database-like way to sort and search. (added 2026-10-11)
 - **The About page for more than one author** His review 2026-10-11: plan the page shape for guest and staff authors now (no content change yet), and make the phone version simpler. (added 2026-10-11)
 - **The dev blog's voice and notes** His note 2026-10-12: the blog looks ok but the little one-liners read as AI; work on the dev notes and the blog's voice with him later. (added 2026-10-12)
+
+### Done since the last push
+
+- **A year of daily walls**, 2026-10-18, QA clear, ships as Site 1.0
+- **Heavier lines on the logo and the rose**, 2026-10-18, QA clear, ships as Site 1.0
+- **Phone play**, 2026-10-18, QA clear, ships as Site 1.0
+- **Daily Huddle**, 2026-10-18, QA clear, ships as Site 1.0
 <!-- board:end -->
 
 ---

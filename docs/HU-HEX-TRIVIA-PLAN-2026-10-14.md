@@ -142,7 +142,9 @@ The game starts on data we have, so Stage 1 needs no new pull. From the inventor
   home respiratory timeline. Their facts carry no source line today, so each gets an entry in the sources ledger before it
   becomes a question.
 - **Not for questions:** the POS staff counts (wrong for hospitals David knows), the hand-entered state measures the Vital
-  Stats builder already refuses (Utah's hospital count reads 37 against CMS's 52), the vendor directory (no sources),
+  Stats builder already refuses (Utah's hospital count reads 37 against CMS's 52), the vendor directory (no sources;
+  since 2026-10-18 a vendor question is made only from a fact checked live, scripts/data/vendor-checks.json, with that
+  check's source and date),
   Utah-only prices for a national board, the Career Tree's rough pay.
 
 ## 5. New datasets, ranked

@@ -16,6 +16,10 @@
 //   OUT OF THE WHEEL'S REACH, added 2026-10-14: at every size above a phone, anything below the
 //     window that no real mouse wheel can scroll into view (scripts/lib/wheel-reach.js). --no-wheel
 //     skips it.
+//   EVERY VIEW, added 2026-10-19: on a page with views, each view hidden at load is shown in turn and
+//     read with the same checks (scripts/lib/view-walk.js), and a failing one is named by its tab. It
+//     walks at the phone sizes, the first phone size in the second theme too, and 1280. --views all
+//     walks every viewport; --no-views skips it.
 // Screenshots land in tmp/phone/<slug>-<width>.png. Exit code 1 on any console error or
 // overflow, so it can gate a build. Usage:
 //   npm run phone -- /tools/ai-skills/ /tools/skill-demo/        (serves _site itself)
@@ -28,6 +32,7 @@ const path = require('path');
 const http = require('http');
 const { chromium } = require('playwright');
 const { wheelReach } = require('./lib/wheel-reach');
+const { walkViews } = require('./lib/view-walk');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = path.join(ROOT, '_site');
@@ -72,6 +77,17 @@ const THEMES = THEME_ARG === 'both' ? ['dark', 'light'] : [THEME_ARG === 'light'
 const NO_SLOW = argv.includes('--no-slow');
 const SLOW_MS = 2000;
 const NO_WHEEL = argv.includes('--no-wheel');
+// EVERY VIEW (2026-10-19). Which readings also walk the views a page hides at load: a phone is where the faults lived
+// (Laws and Paradoxes, 7 px labels in nine views), the day colours change the contrast checks, and the desk is where a
+// chart's wide drawing and a switch's own width show. Walking all eighteen readings tripled a page like Laws for nothing
+// those six do not see. --views all walks every reading; --no-views none.
+const VIEWS = argv.includes('--no-views') ? 'none' : opt('--views', 'some');
+const FIRST_PHONE = viewports.find((v) => Math.min(v.w, v.h) <= 699);
+const walksViews = (w, h, theme, phone) => VIEWS === 'all' || (VIEWS !== 'none' && (theme === THEMES[0]
+  ? (phone || w === 1280)
+  : !!FIRST_PHONE && w === FIRST_PHONE.w && h === FIRST_PHONE.h));
+// --no-ledger: a run that measures fixtures, not pages (tests/view-walk.test.js), leaves the page ledger alone
+const NO_LEDGER = argv.includes('--no-ledger');
 const DATA_FILE = /\.(json|geojson|topojson|csv|tsv|pbf)$/i;
 if (!paths.length) paths.push('/', '/tools/', '/learn/');
 
@@ -611,7 +627,22 @@ function inspect({ phone, deviceWidth }) {
     let out = null;
     for (const k of el.children) {
       const kr = k.getBoundingClientRect();
-      if (kr.bottom > r.bottom + 4 || kr.right > r.right + 4) { out = k; break; }
+      // a child that takes no space (display:none) measures as a box at 0,0, which is "below" any box scrolled above
+      // the window: the fracture post's hidden story panel read as spilling out of the whole map's view (2026-10-19)
+      if (!kr.width && !kr.height) continue;
+      if (kr.bottom > r.bottom + 4 || kr.right > r.right + 4) {
+        // An inline word's box is its font's whole height, taller than a tight line-height by design, so an italic word
+        // in an 86 px title reaches 9 px under the title's box with nothing there (Laws and Paradoxes' titles, seen once
+        // the gate read every view, 2026-10-19). Within a quarter of its own type size that is the font, not a fault;
+        // that is 4 px at body size, as before.
+        const kcs = getComputedStyle(k);
+        if (kcs.display === 'inline' && kr.right <= r.right + 4 && kr.bottom - r.bottom < 0.25 * parseFloat(kcs.fontSize)) continue;
+        // A BREAKOUT is not a spill either: a figure set wider than its column on purpose reaches past BOTH sides (the
+        // fracture post's whole map, 1120 px wide from a 712 px column, centred, 2026-10-19). Content too wide for its
+        // box runs off one side. The page-edge checks (overflow, clipped) still judge where a breakout ends.
+        if (kr.bottom <= r.bottom + 4 && kr.left < r.left - 4 && kr.right > r.right + 4) continue;
+        out = k; break;
+      }
     }
     if (!out) continue;
     let contained = false;
@@ -905,14 +936,16 @@ function inspect({ phone, deviceWidth }) {
     return out;
   };
 
-  const readWholePage = async (page, arg, fallback) => {
+  // `from`: where on the page to start reading. A view lies below its switch, so a view is read from there down.
+  const readWholePage = async (page, arg, fallback, from = 0) => {
     const geom = await page.evaluate(() => ({ vh: window.innerHeight, doc: document.documentElement.scrollHeight }))
       .catch(() => ({ vh: 800, doc: 800 }));
-    const steps = Math.max(1, Math.min(12, Math.ceil(geom.doc / Math.max(1, geom.vh))));
+    from = Math.max(0, Math.min(from, geom.doc - geom.vh));
+    const steps = Math.max(1, Math.min(12, Math.ceil((geom.doc - from) / Math.max(1, geom.vh))));
     let merged = null;
     for (let i = 0; i < steps; i++) {
-      if (i) {
-        await page.evaluate((y) => window.scrollTo(0, y), i * geom.vh).catch(() => {});
+      if (i || from) {
+        await page.evaluate((y) => window.scrollTo(0, y), from + i * geom.vh).catch(() => {});
         await page.waitForTimeout(280);   // sticky transitions and any reveal-on-scroll settle
       }
       const r = await page.evaluate(inspect, arg).catch((e) => Object.assign({}, fallback, { evalError: e.message }));
@@ -922,6 +955,35 @@ function inspect({ phone, deviceWidth }) {
     await page.waitForTimeout(150);
     return { r: merged, steps };
   };
+
+  // What a reading found wrong with the layout, in the ledger's words; empty means it passes. One list, so a view
+  // fails on exactly what the page fails on. The type floor and the chrome budget are Tier 1 physics (DESIGN.md, "The
+  // Two Surfaces"), so they fail the gate rather than warning. softCount, the band between the absolute and the
+  // functional floor, only reports: it is the migration backlog, not a defect.
+  const faultsOf = (r, phone) => {
+    const overBudget = phone && (r.chromePct > 20 || r.topBars > 1);
+    return [
+      r.overflow && 'sideways scroll',
+      r.collideCount && r.collideCount + ' colliding labels', r.spillCount && r.spillCount + ' spilling boxes',
+      r.unhiddenCount && r.unhiddenCount + ' hidden but shown', r.burstCount && r.burstCount + ' labels past their box',
+      r.floatsCount && r.floatsCount + ' floating over a control', r.cutCount && r.cutCount + ' cut by a container',
+      phone && r.tinyCount && r.tinyCount + ' under the type floor', phone && r.faintCount && r.faintCount + ' faint lines',
+      phone && r.dimCount && r.dimCount + ' dim labels', overBudget && 'chrome ' + r.chromePct + '%' + (r.topBars > 1 ? ', ' + r.topBars + ' top bars' : ''),
+    ].filter(Boolean).map(String);
+  };
+  // the detail lines under a failing view, the same words the page's own lines use, the first few of each
+  const viewDetail = (r, phone) => [
+    ...(r.culprits || []).slice(0, 3).map(([px, s]) => 'overflows by ' + px + 'px: ' + s),
+    ...(phone ? (r.tiny || []) : []).slice(0, 4).map(([px, s, txt]) => 'UNDER THE TYPE FLOOR at ' + px + 'px: ' + s + (txt ? ' "' + txt + '"' : '')),
+    ...(r.collide || []).slice(0, 4).map(([pct, a, b]) => 'LABELS COLLIDE, ' + pct + '% overlap: "' + a + '"  x  "' + b + '"'),
+    ...(r.burst || []).slice(0, 4).map(([over, txt, tw, bw]) => 'LABEL PAST ITS BOX by ' + over + 'px: "' + txt + '" is ' + tw + 'px in a ' + bw + 'px box'),
+    ...(r.spill || []).slice(0, 3).map(([who, box, content, sy, sx, kid, txt]) => 'SPILL ' + who + ' box ' + box + ' holds ' + content + (sy ? ', ' + sy + 'px below' : '') + (sx ? ', ' + sx + 'px right' : '') + ' -> ' + kid + (txt ? ' "' + txt + '"' : '')),
+    ...(r.floats || []).slice(0, 3).map(([px, who, txt, ctl]) => 'FLOATING OVER A CONTROL by ' + px + 'px: ' + who + ' "' + txt + '" sits on ' + ctl),
+    ...(r.cut || []).slice(0, 3).map(([px, who, txt, how]) => 'CUT BY ITS CONTAINER by ' + px + 'px: ' + who + (txt ? ' "' + txt + '"' : '') + ' (' + how + ')'),
+    ...(r.unhidden || []).slice(0, 3).map(([who, disp]) => 'HIDDEN BUT SHOWN ' + who + ' renders as display:' + disp),
+    ...(phone ? (r.dim || []) : []).slice(0, 3).map((t) => 'LABEL UNDER THE INK FLOOR, ' + t),
+    ...(phone ? (r.faint || []) : []).slice(0, 3).map((t) => 'LINE UNDER THE STROKE FLOOR, ' + t),
+  ];
 
   let failed = false;
   /* THE PAGE LEDGER (2026-10-03). Every run also keeps its verdict per page and viewport, with the
@@ -999,6 +1061,12 @@ function inspect({ phone, deviceWidth }) {
         ? await wheelReach(page).catch((e) => ({ checked: 0, lost: [], error: e.message.split('\n')[0] }))
         : null;
       const lostN = reach && !reach.unfinished ? reach.lost.length : 0;
+      // EVERY VIEW (2026-10-19, scripts/lib/view-walk.js): each view the page hides at load, shown and read the same way,
+      // from its switch down. After the picture and the wheel, so both are of the page as it loads.
+      const walk = walksViews(w, h, theme, phone)
+        ? await walkViews(page, (from) => readWholePage(page, { phone, deviceWidth: w }, EMPTY, from).then((x) => x.r)).catch((e) => ({ switches: 0, views: [], error: e.message.split('\n')[0] }))
+        : null;
+      const viewFaults = walk ? walk.views.filter((v) => v.r).map((v) => ({ name: v.name, r: v.r, why: faultsOf(v.r, phone) })).filter((v) => v.why.length) : [];
       // A generic "Failed to load resource" console line is the echo of a 4xx we
       // already classified. Discount one per serverless 404 so the gate does not
       // fail on something it cannot serve.
@@ -1015,23 +1083,17 @@ function inspect({ phone, deviceWidth }) {
         (cantReach && /Failed to load resource|ERR_FAILED|ERR_CONNECTION|net::/i.test(e)) ||
         (offOrigin.length > 0 && /Access to fetch at|blocked by CORS|Cross-Origin/i.test(e));
       const realErrors = errors.filter((e) => !excusable(e)).length;
-      // The type floor and the chrome budget are Tier 1 physics (DESIGN.md, "The
-      // Two Surfaces"), so they fail the gate rather than warning. softCount, the
-      // band between the absolute and the functional floor, only reports: it is
-      // the migration backlog, not a defect.
       const overBudget = phone && (r.chromePct > 20 || r.topBars > 1);
-      const bad = realErrors > 0 || r.overflow || r.collideCount > 0 || r.spillCount > 0 || r.unhiddenCount > 0 || r.burstCount > 0 || r.floatsCount > 0 || r.cutCount > 0 || (phone && r.tinyCount > 0) || (phone && r.faintCount > 0) || (phone && r.dimCount > 0) || overBudget || lostN > 0;
+      const layout = faultsOf(r, phone);
+      const bad = realErrors > 0 || layout.length > 0 || lostN > 0 || viewFaults.length > 0;
       if (bad) failed = true;
       LEDGER[p].viewports[label] = { ok: !bad, why: [
-        realErrors && realErrors + ' console error' + (realErrors > 1 ? 's' : ''), r.overflow && 'sideways scroll',
-        r.collideCount && r.collideCount + ' colliding labels', r.spillCount && r.spillCount + ' spilling boxes',
-        r.unhiddenCount && r.unhiddenCount + ' hidden but shown', r.burstCount && r.burstCount + ' labels past their box',
-        r.floatsCount && r.floatsCount + ' floating over a control', r.cutCount && r.cutCount + ' cut by a container',
-        phone && r.tinyCount && r.tinyCount + ' under the type floor', phone && r.faintCount && r.faintCount + ' faint lines',
-        phone && r.dimCount && r.dimCount + ' dim labels', overBudget && 'chrome ' + r.chromePct + '%' + (r.topBars > 1 ? ', ' + r.topBars + ' top bars' : ''),
+        realErrors && realErrors + ' console error' + (realErrors > 1 ? 's' : ''), ...layout,
         lostN && lostN + " out of the wheel's reach",
+        ...viewFaults.map((v) => 'view "' + v.name + '": ' + v.why.join(', ')),
       ].filter(Boolean).map(String) };
-      console.log(`  ${label.padStart(12)}  ${bad ? 'FAIL' : 'ok  '}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  out of the wheel's reach: ${reach ? (reach.unfinished ? '?' : lostN) + ' of ' + reach.checked : 'n/a'}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
+      const viewsRead = walk ? walk.views.filter((v) => v.r).length : 0;
+      console.log(`  ${label.padStart(12)}  ${bad ? 'FAIL' : 'ok  '}  views: ${walk ? (viewsRead - viewFaults.length) + ' of ' + viewsRead + ' hidden views clean' : 'n/a'}  read: ${steps} screen${steps === 1 ? '' : 's'}  console errors: ${realErrors}  overflow: ${r.overflow ? r.scrollWidth + ' > ' + r.vw : 'none'}  clipped: ${r.clippedCount}  sub-44px targets: ${phone ? r.smallCount : 'n/a'}  under type floor: ${phone ? r.tinyCount : 'n/a'}  colliding labels: ${r.collideCount}  spilling boxes: ${r.spillCount}  hidden but shown: ${r.unhiddenCount}  labels past their box: ${r.burstCount}  floating over a control: ${r.floatsCount}  cut by its container: ${r.cutCount}  out of the wheel's reach: ${reach ? (reach.unfinished ? '?' : lostN) + ' of ' + reach.checked : 'n/a'}  faint lines: ${phone ? r.faintCount : 'n/a'}  dim labels: ${phone ? r.dimCount : 'n/a'}  chrome: ${phone ? r.chromeH + 'px/' + r.chromePct + '%' : 'n/a'}  100vh rules: ${r.vh.length}  shot: ${path.relative(ROOT, shot)}`);
       for (const s of [...new Set(serverless)]) console.log('         (not a defect) serverless route absent from the static harness: ' + s);
       for (const u of [...new Set(offOrigin)]) console.log('         (not a defect) third-party origin the harness may not call: ' + u);
       for (const e of errors.slice(0, 5)) console.log('         error: ' + e.slice(0, 160));
@@ -1058,6 +1120,12 @@ function inspect({ phone, deviceWidth }) {
         + '  [' + r.chromeBars.join(' ') + ']');
       for (const s of r.vh) console.log('         100vh without dvh: ' + s);
       if (r.evalError) console.log('         inspect failed: ' + r.evalError);
+      for (const v of viewFaults) {
+        console.log('         IN THE VIEW "' + v.name + '" (hidden at load): ' + v.why.join(', '));
+        for (const d of viewDetail(v.r, phone)) console.log('           ' + d);
+      }
+      if (walk && walk.error) console.log('         the view walk failed to run: ' + walk.error);
+      for (const v of (walk ? walk.views.filter((x) => x.skipped) : [])) console.log('         (not read) the view "' + v.name + '": its tab could not be pressed');
       await ctx.close();
     }
 
@@ -1122,12 +1190,12 @@ function inspect({ phone, deviceWidth }) {
   await browser.close();
   if (local) local.srv.close();
   // a run against another server (--base) still measured these pages, so it counts too
-  try {
+  if (!NO_LEDGER) try {
     const file = path.join(ROOT, 'tmp', 'ledger', 'phone.json');
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const prev = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
     fs.writeFileSync(file, JSON.stringify(Object.assign(prev, LEDGER), null, 1));
   } catch (e) { console.log('  (could not write the ledger record: ' + e.message + ')'); }
-  console.log('\n' + (failed ? 'FAILED: see console errors, overflow, type floor, chrome budget or wheel reach above.' : 'CLEAN: no console errors, no overflow, no text under the type floor, chrome inside budget.') + ' Screenshots in ' + path.relative(ROOT, OUT) + '/');
+  console.log('\n' + (failed ? 'FAILED: see console errors, overflow, type floor, chrome budget, wheel reach or a hidden view above.' : 'CLEAN: no console errors, no overflow, no text under the type floor, chrome inside budget.') + ' Screenshots in ' + path.relative(ROOT, OUT) + '/');
   process.exit(failed ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });

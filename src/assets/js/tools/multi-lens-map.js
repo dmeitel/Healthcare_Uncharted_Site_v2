@@ -1515,7 +1515,7 @@ window.DATA_YEARS = mlmData('mlm-data-years');
     syncInsets();
     await applyURLState();   // old v1 links land exactly where they pointed
     urlCtl.mark(scopeKey());  // the first drill after load must PUSH, not replace
-    signal('✓ Seven lens groups, 72 metrics · tap a state');
+    signal('✓ Seven lens groups, 67 metrics · tap a state');
     signalDone(3000);
   });
   map.on('error', ev => { if (!map.loaded()) signal('Basemap failed to load. Check the connection'); if (ev && ev.error) console.warn('maplibre', ev.error); });

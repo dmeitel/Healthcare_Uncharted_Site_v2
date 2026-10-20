@@ -25,7 +25,8 @@ const roseAt = roseSrc.indexOf('<svg class="hv-rose hv-rose-night"');
 const rose = roseSrc.slice(roseAt, roseSrc.indexOf('</svg>', roseAt) + 6);
 if (roseAt < 0 || !rose.endsWith('</svg>')) throw new Error('the night rose was not found in compass-rose.njk');
 const hospitals = require(path.join(ROOT, 'src', 'assets', 'data', 'us-hospitals.json')).hospitals.length;
-const games = fs.readdirSync(path.join(ROOT, 'src', 'fun'), { withFileTypes: true }).filter((d) => d.isDirectory()).length;
+// the games on the Fun shelf, from the catalog: a folder under src/fun is not always a game (/fun/today/, 2026-10-18)
+const games = require(path.join(ROOT, 'src', '_data', 'tools.js')).filter((t) => t.cluster === 'fun' && t.status === 'live').length;
 const toolCount = fs.readdirSync(path.join(ROOT, 'src', 'tools'), { withFileTypes: true }).filter((d) => d.isDirectory())
   .filter((d) => /^section:\s*(tool|lab)\s*$/m.test(fs.readFileSync(path.join(ROOT, 'src', 'tools', d.name, fs.readdirSync(path.join(ROOT, 'src', 'tools', d.name)).find((f) => /^index\./.test(f))), 'utf8'))).length;
 
@@ -33,7 +34,7 @@ const CARDS = [
   { file: 'card-home', kicker: 'Healthcare Uncharted', title: 'Healthcare doesn’t come with a map', line: 'Free tools, games and plain writing on how American healthcare runs.', dial: true },
   { file: 'card-me', kicker: 'Healthcare Uncharted', title: 'David Eitel', line: 'RRT, MHA, MSRT, RRT-ACCS. Clinical informatics team manager and founder of Healthcare Uncharted.', dial: true },
   { file: 'card-tools', kicker: 'Tools', title: 'The instruments', line: 'Every interactive tool on the site, grouped by the job it does.', n: String(toolCount), unit: 'tools', key: 'Open' },
-  { file: 'card-fun', kicker: 'Fun', title: 'Games about how care runs', line: 'Free browser games built on real healthcare data, with no account.', n: String(games), unit: 'games', key: 'Play' },
+  { file: 'card-fun', kicker: 'Fun', title: 'Healthcare games and daily puzzles', line: 'A med-surg shift, respiratory equipment setups, and trivia on real health data. Free, with no account.', n: String(games), unit: 'games', key: 'Play' },
   { file: 'card-alarm-fatigue', kicker: 'Game', title: 'Alarm Fatigue', line: 'A med-surg shift as an idle clicker. Somewhere in the noise is the alarm that matters.', n: '10 to 20', unit: 'minutes', key: 'Play' },
   { file: 'card-vital-stats', kicker: 'Game · Multiplayer', title: 'Vital Stats', line: 'A trivia game about the real numbers in American healthcare. Play the bots, or a whole room.', n: '2 to 48', unit: 'players', key: 'Play' },
   { file: 'card-device-assembly', kicker: 'Game · Beta', title: 'Headwall', line: 'Set up oxygen, high flow and ventilators on the wall behind the bed, with real connectors.', n: 'Daily', unit: 'a new wall', key: 'Play' },

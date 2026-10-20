@@ -311,3 +311,24 @@ test('the door names the day and the wall, and the walls list keeps a teach wall
   const before = loadOn('2026-10-11');
   assert.ok(!/Monday|Sunday|Saturday/.test(before.doorA().split('Today’s wall')[1].slice(0, 30)), 'a day before the year keeps the old card');
 });
+
+// A DAILY WALL IS NEVER A TRAINING WALL (2026-10-18, David on daily #23: "we still want some level of challenge in the
+// daily puzzle compared to the training walls"). A Sunday story that opened on a plain cannula opened the day on Tutorial 1
+// to 3 again; the daily now starts such a story one step in. Home stories keep theirs (the concentrator is the wall), and a
+// shift dealt outside the daily still starts at the top.
+test('a Sunday story never opens on a plain cannula in a hospital or rehab room, and still runs three walls', () => {
+  let sundays = 0;
+  for (let n = 23; n < 23 + 7 * 52; n++) {
+    const k = dayOf(n);
+    if (new Date(k + 'T12:00:00Z').getUTCDay() !== 0) continue;
+    const L = da.genLevel('day:' + k);
+    if (!L || !L.story) continue;
+    sundays++;
+    const plan = da.shiftPlanOf(L.story.code);
+    assert.strictEqual(plan.walls.length, 3, k + ': three walls');
+    if ((plan.place || 'hospital') !== 'home') assert.notStrictEqual(plan.walls[0].recipe, 'cannula', k + ': ' + plan.storyName + ' opens on a training wall');
+  }
+  assert.ok(sundays >= 40, 'the year has its Sundays: ' + sundays);
+  assert.strictEqual(da.shiftPlan('TESTWORSE', { story: 'worse' }).walls[0].recipe, 'cannula', 'a shift outside the daily still starts at the top of its story');
+  assert.strictEqual(da.shiftPlanOf('Y20261025').walls.map((w) => w.recipe).join(' '), 'humid nrb hfnc', 'Respiratory Care Week opens on humidified oxygen and ends on high flow');
+});

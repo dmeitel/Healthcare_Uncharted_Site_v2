@@ -41,6 +41,15 @@ test('it stops without removing anything when the list is suspiciously long, or 
   assert.match(pruneSite(Object.assign({}, f, { written: [] })).refused, /wrote nothing/);
 });
 
+test('a build sent to another folder leaves this one alone (2026-10-19: one emptied _site under a running full check)', () => {
+  const f = fixture();
+  const elsewhere = ['tmp/preview/index.html', 'tmp/preview/fun/game/index.html'].map((p) => path.join(f.root, p));
+  const r = pruneSite(Object.assign({}, f, { written: elsewhere }));
+  assert.match(r.refused, /wrote outside/);
+  assert.deepStrictEqual(r.removed, []);
+  assert.ok(fs.existsSync(path.join(f.out, 'index.html')) && fs.existsSync(path.join(f.out, 'fun/game/index.html')), 'every page is still here');
+});
+
 test('the build log names a removed page by its address', () => {
   assert.strictEqual(pageOf('secret-menu/device-assembly/index.html'), '/secret-menu/device-assembly/');
   assert.strictEqual(pageOf('index.html'), '/');

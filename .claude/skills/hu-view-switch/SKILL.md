@@ -60,6 +60,12 @@ Then add the page to DOCKED, SHORT or OWN in tests/view-switch.test.js; a page w
 fails it. The reference builds: the fracture post (three views, layers), Laws and Paradoxes (ten, the stepping dock),
 Request Routing (four sections, the region follows the section on screen).
 
+The switch is `role="tablist"` with `role="tab"` buttons (aria-selected on the one showing), or, where it is plain
+buttons, marked `data-views` (the one showing carries `.active`). That is how the phone gate finds it: since 2026-10-19
+`npm run phone` shows each view hidden at load and reads it with the same checks (scripts/lib/view-walk.js), and the
+test above fails a page of views whose switch it cannot find. Before that, nine Laws and Paradoxes charts passed the
+gate at 7 px on a phone, because the gate only ever saw the first view.
+
 ## Watch for
 
 - A page with the phone's bottom bar (`.hu-bbar`, the home page): the dock would sit on it. None has both today.
