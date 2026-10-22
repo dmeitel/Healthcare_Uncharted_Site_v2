@@ -322,8 +322,8 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     const tiles = new Array(CELLS.length).fill(null);
     const fell = [];   // the cells that took the question dealt longest ago, nothing fresh being left
     const at = mem ? mem.at : null;
-    // normals: the board has its normal range, or a daily in the last NORMALS_APART - 1 days had one
-    let normals = mem && mem.norm > mem.n - NORMALS_APART ? 1 : 0, cell = -1;
+    // normals: the board has its normal range, or a daily in the last normalsApart(v) - 1 days had one
+    let normals = mem && mem.norm > mem.n - normalsApart(v) ? 1 : 0, cell = -1;
     // the memory keeps off the board what the dailies dealt in the last MEMORY_DAYS, and a normal range past its one; where
     // nothing is left, the question dealt longest ago. A pool is places in P, a zone's list or the whole bank's.
     function keepOff(P, pool) {
@@ -519,7 +519,7 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     // not dealt in the last 60 days, or where none is left, to the one dealt longest ago
     const k = memDay(G.id, G.mode);
     if (k && pool.length) {
-      const mem = memoryFor(k), no = mem.norm > mem.n - NORMALS_APART || G.tiles.some((x, c) => c !== i && isNormal(x.q));
+      const mem = memoryFor(k), no = mem.norm > mem.n - normalsApart(dayBank(k)) || G.tiles.some((x, c) => c !== i && isNormal(x.q));
       const rest = pool.filter((q) => !(no && q.f === NORMALS));
       if (rest.length) pool = rest;
       const fresh = pool.filter((q) => !mem.last.has(q.id));
@@ -674,6 +674,7 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
      dealt longest ago, so a board always fills. A board carries one normal range at most, and only when the three boards
      before it carried none, so a daily player meets two a week at most (the memory and the one-a-board cap alone averaged
      1.75 a week but bunched them, up to six in a week and then none for weeks; tmp/huddle-year/memory-numbers.md).
+     From bank version 4 (DECISIONS DH13), with thirty-six normal ranges, the board before is enough (normalsApart).
      The memory is the dailies themselves: each one from board #1 is dealt again, in order, through
      the same deal with its own day's bank (the boards before MEMORY_DAY as they were dealt, without a memory), so everyone
      gets the same board, a past day replays as it was, and a bank version's questions join the memory only from its first
@@ -682,7 +683,10 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
      Provider holds fewer templates than that (Medical Science 50), so a template memory fell back on most tiles of the year
      check, where the question memory fell back on none. Boards before MEMORY_DAY, practice and made boards deal as they did
      (tests/huddle-pins.json, tests/huddle-memory.test.js). */
-  const MEMORY_DAY = '2026-10-25', MEMORY_DAYS = 60, NORMALS = 'Normals', NORMALS_APART = 4;   // days from one normal range to the next, at the least
+  const MEMORY_DAY = '2026-10-25', MEMORY_DAYS = 60, NORMALS = 'Normals';
+  // days from one normal range to the next, at the least: four from board #12, when there were sixteen; two from bank
+  // version 4's first day (2026-10-20, DECISIONS DH13), when they grew to thirty-six, so about every other daily has one
+  const normalsApart = (v) => (v >= 4 ? 2 : 4);
   // the day a board remembers from: a daily or a replayed daily from MEMORY_DAY on, or ''
   function memDay(id, mode) {
     const m = /^(?:day|past):(\d{4}-\d{2}-\d{2})$/.exec(String(id || ''));
@@ -722,7 +726,7 @@ dialog.hd-qdlg .hd-card{ padding:0; box-shadow:none; background:none; }
     BANK_DAYS, dayBank, bankVersion, ended, missCount, tilesLeft,
     crossing, canCross, judge, picks, dispatchAct, packSave, applySave, saveString, readSave, keepRecord, readRecord, CLOCKS, MISSES, madeCode, parseMade, shareText, clockText, stopwatch, FIELDS, fieldOf,
     LIFELINES, narrowKeep, hintOf, swapFor, lifeOn, lifeCount, canLife,
-    DAY_ONE, dayKey, dayNumber, daySeed, dayOut, dayAt, MEMORY_DAY, MEMORY_DAYS, memDay, memoryFor };
+    DAY_ONE, dayKey, dayNumber, daySeed, dayOut, dayAt, MEMORY_DAY, MEMORY_DAYS, normalsApart, memDay, memoryFor };
 })(this);
 </script>
 

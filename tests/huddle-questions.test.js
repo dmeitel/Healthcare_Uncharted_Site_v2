@@ -70,13 +70,16 @@ test('the words follow the voice rules: no em or en dashes, none of the banned w
 });
 
 // DH2: a normal is a draft until David checks it. He checked these sixteen on 2026-10-18 (the hub's QA check
-// dh-normals, Good with no changes); a normal added later stays a draft until he checks it too.
+// dh-normals, Good with no changes), and the eighteen of bank version 4 on 2026-10-20 (DH13, one check each on the card
+// daily-huddle-new-data-sets-lab-normals-d, all Good); a normal added later stays a draft until he checks it too.
 const CHECKED_NORMALS = new Set(['norm-ph', 'norm-paco2', 'norm-pao2', 'norm-hco3', 'norm-spo2', 'norm-rr', 'norm-hr', 'norm-bp',
-  'norm-glucose', 'norm-sodium', 'norm-potassium', 'norm-chloride', 'norm-bun', 'norm-hgb-women', 'norm-wbc', 'norm-platelets']);
+  'norm-glucose', 'norm-sodium', 'norm-potassium', 'norm-chloride', 'norm-bun', 'norm-hgb-women', 'norm-wbc', 'norm-platelets',
+  'norm-pt', 'norm-aptt', 'norm-albumin', 'norm-calcium', 'norm-magnesium', 'norm-phosphorus', 'norm-creat-women', 'norm-creat-men',
+  'norm-hgb-men', 'norm-hct-women', 'norm-hct-men', 'norm-bilirubin', 'norm-lactate', 'norm-chol', 'norm-ldl', 'norm-hdl', 'norm-trig', 'norm-a1c']);
 
 test('DH2: normals are drafts until David checks them, every hand-checked fact quotes its source, no question asks for a dose', () => {
   for (const q of Q) {
-    if (q.f === 'Normals') assert.strictEqual(!!q.draft, !CHECKED_NORMALS.has(q.id), q.id + (CHECKED_NORMALS.has(q.id) ? ': checked by David on 2026-10-18, so not a draft' : ': a new normal is a draft until David checks it'));
+    if (q.f === 'Normals') assert.strictEqual(!!q.draft, !CHECKED_NORMALS.has(q.id), q.id + (CHECKED_NORMALS.has(q.id) ? ': checked by David, so not a draft' : ': a new normal is a draft until David checks it'));
     if (/^(norm|pol|tec|icd)-/.test(q.id)) { assert.ok(q.url && q.quote, q.id + ': a hand-checked fact carries its URL and a quote'); }
     assert.ok(!/\b(what is the|what's the|usual|standard|recommended|maximum|max) (adult |daily |starting )?dose\b|\bdose of\b/i.test(q.q), q.id + ': asks for a dose');
     if (q.f === 'Clinical math') {
@@ -123,10 +126,12 @@ test('the hints sit where the data supplies one: every state choice, the bedside
 // BANK VERSION 2 (2026-10-18, David: "I kept getting ones I have seen"): the feeds in scripts/huddle/feeds/ grow the bank
 // from the site's own data files. Version 1 keeps its place at the head of the file, since the boards already dealt drew
 // from it in file order; every feed question carries its version (2 on) and its source, year and check date. Version 3
-// (2026-10-25, DH12) joined at the end, after version 2, the same way.
+// (2026-10-25, DH12) joined at the end, after version 2, the same way. Version 4 (DH13) also carries eighteen hand-checked
+// normal ranges from scripts/data/huddle-curated.json, held to DH2 below with the first sixteen, not to the feeds' rules.
 const { FEEDS } = require('../scripts/huddle/feeds');
 const { FIELD_RES } = require('../scripts/huddle/lib');
-const V2 = Q.filter((q) => q.b >= 2);
+const HAND = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'data', 'huddle-curated.json'), 'utf8')).questions.map((q) => q.id));
+const V2 = Q.filter((q) => q.b >= 2 && !HAND.has(q.id));
 
 test('version 1 comes first and unmarked; after it each version follows the one before', () => {
   const first = Q.findIndex((q) => q.b === 2);
@@ -203,6 +208,19 @@ test('a rebuild: a question keeps its version and place once it has dealt, and a
   assert.deepStrictEqual(early.questions.map((q) => [q.id, q.b || 1]), [['a', 1], ['c', 2], ['d', 2]]);
   assert.deepStrictEqual(early.versions, { 2: '2026-10-20' }, 'no new version while one is still open');
   assert.deepStrictEqual([early.added, early.gone, early.dropped], [['d'], [], ['b']]);
+
+  // pushed before its first day (version 3 went live 2026-10-20, dealing from 2026-10-25): the live site has it, so it is
+  // closed, and new questions open the next version after it
+  const pushed = versionBank(prev, built, { from: '2026-10-22', today: '2026-10-18', live: new Set([2]) });
+  assert.deepStrictEqual(pushed.questions.map((q) => [q.id, q.b || 1, q.gone || 0]), [['a', 1, 0], ['b', 2, 2], ['c', 2, 0], ['d', 3, 0]]);
+  assert.deepStrictEqual(pushed.versions, { 2: '2026-10-20', 3: '2026-10-22' });
+  assert.throws(() => versionBank(prev, built, { from: '2026-10-19', today: '2026-10-18', live: new Set([2]) }), /not after version 2/,
+    'a new version never deals before the one it follows');
+  assert.throws(() => versionBank(prev, built, { from: '2026-10-18', today: '2026-10-18', live: new Set([2]) }), /not after today/);
+  // an open version moves only when asked, and never to before the version it follows
+  const moved = versionBank(pushed, built, { from: '2026-10-29', today: '2026-10-18', live: new Set([2]), redate: true });
+  assert.deepStrictEqual(moved.versions, { 2: '2026-10-20', 3: '2026-10-29' });
+  assert.deepStrictEqual(versionBank(pushed, built, { from: '2026-10-29', today: '2026-10-18', live: new Set([2]) }).versions, pushed.versions);
 });
 
 // a tile's name has to fit its hex on a phone, where the label keeps the type floor and never shrinks (2026-10-18: the new

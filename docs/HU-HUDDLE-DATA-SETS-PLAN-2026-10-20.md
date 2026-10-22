@@ -96,3 +96,24 @@ Every source is checked live again when its milestone is built, and every questi
 - A wrong answer teaches the wrong thing. Wrong answers are real classes and never the right one's parent or child, and
   your QA reads the class list whole.
 - ABIM's archived copy differs from the live sheet. You read each value against the real sheet before it ships.
+
+## Built, version 4 (2026-10-20, after his yes)
+
+- 269 new questions, first dealt Friday Oct 30 (board #17). Medical Science goes from 228 to 497.
+- The drug classes: 251 questions, 159 of "which class is it in" and 92 of "which of these is", from the 200 drugs
+  Medicare filled most (scripts/huddle/pull-drug-classes.js, `npm run huddle:drugs`; the feed is
+  scripts/huddle/feeds/drug-classes.js). RxClass needed one fix the first pull missed: it files some drugs under a precise
+  form ("lisinopril anhydrous"), so those count and a different ingredient does not. 120 tile names in
+  scripts/data/huddle-drug-class-names.json. Left out on purpose: trazodone, carbamazepine and penicillin V (the reasons
+  are in the file).
+- The normals: 18 more as drafts, 34 in all. Every one cites a public page read live today (tmp/huddle-v4/normals-quotes.md),
+  NCBI Bookshelf, NHLBI or MedlinePlus, with the ABIM value beside it for his read. Where the sources disagree on a range
+  (calcium, magnesium, phosphate, hematocrit), the wrong answers sit far from all of them. AST and ALT are left out: the
+  sources give 5 to 30 and 4 to 36, ABIM 10 to 40, and the lab decides. Bilirubin and lactate are asked as the line the
+  source draws (under 1 mg/dL; above 2 mmol/L is hyperlactatemia), since no source gives a two-ended range.
+- The spacing: from version 4's first day a normal range can come every other board. A year from Oct 30: 3.0 a week on
+  average, 4 at most, all 34 dealt; about one drug class tile a board; no question back inside 60 days.
+- Boards #12 to #48 are pinned as version 3 deals them (tests/huddle-pins.json, memoryDays); every one before version 4's
+  first day is held. A version the live site has is now closed even before its first day (scripts/huddle/lib.js
+  versionBank), the gap this ship would otherwise have fallen into.
+- If the push lands after Oct 29, the first day moves with `npm run build:huddle -- --from=<the day after the push>`.

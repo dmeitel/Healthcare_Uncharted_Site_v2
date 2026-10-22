@@ -11,6 +11,7 @@ From here on, steps finished in a window go at the top, under "Since the split",
 
 ## Since the split
 
+- 2026-10-20 · **Daily Huddle remembers what it dealt** shipped on 2357035. Steps: 109 His yes on the plan; 110 The memory; 111 The bank; 112 His sample sheet; 113 Ship by the evening of Oct 24.
 - 2026-10-20 · **Site 1.0** shipped on ed53942. Steps: 106 The full check; 107 Save and push; 108 The live check.
 - 2026-10-20 · **A year of daily walls** shipped on ed53942. Steps: 37 The plan; 38 His yes to the first month; 54 The calendar and the climb; 55 Mondays and Tuesdays (pieces 3 and 4); 56 Wednesdays and Thursdays (pieces 5 and 6); 57 Mode 1; 58 Saturdays (piece 8); 59 Sundays (piece 9); 60 Mode 2; 61 The daily card and the teach shelf (piece 11); 62 His QA of the month on the hub's Puzzles screen.
 - 2026-10-20 · **Heavier lines on the logo and the rose** shipped on ed53942. Steps: 39 The logo mark; 40 The home rose on a phone; 41 A rose drawn big; 42 His QA on the hub.

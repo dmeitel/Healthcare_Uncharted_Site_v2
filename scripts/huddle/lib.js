@@ -226,14 +226,18 @@ function check(q, feed) {
    - a question this build no longer makes simply leaves an open version; from a version that has dealt, it stays, frozen
      as it was and marked `gone` with the last version that deals it, so the old deals hold and no newer one deals it.
    The first bank (no `versions` in it) is version 1 for questions without b and version 2 from 2026-10-20 for the rest.
+   A version the live site already has is CLOSED too, even before its first day (2026-10-20: version 3 was pushed five days
+   before it dealt, and a build in those days would have put version 4's questions into it, changing boards people then
+   played). A new version deals after the newest one; `redate` moves an open version's first day, after the one before it.
    @param {{questions:any[], versions?:Record<string,string>}|null} prev the bank as it was
    @param {any[]} built this build's questions, in build order
-   @param {{from:string, today:string}} o the first day a new version deals, and today (YYYY-MM-DD, Mountain time)
+   @param {{from:string, today:string, live?:Set<number>|null, redate?:boolean}} o the first day a new version deals, today
+     (YYYY-MM-DD, Mountain time), the versions in the bank the live site serves, and whether `from` moves an open version
    @returns {{questions:any[], versions:Record<string,string>, added:string[], gone:string[], dropped:string[]}} */
 function versionBank(prev, built, o) {
   const versions = { ...((prev && prev.versions) || { 2: '2026-10-20' }) };
   if (!prev) return { questions: built, versions, added: [], gone: [], dropped: [] };
-  const open = (v) => v > 1 && !!versions[v] && versions[v] > o.today;
+  const open = (v) => v > 1 && !!versions[v] && versions[v] > o.today && !(o.live && o.live.has(v));
   const now = new Map(built.map((q) => [q.id, q]));
   const had = new Set(prev.questions.map((q) => q.id));
   const added = built.filter((q) => !had.has(q.id)).map((q) => q.id);
@@ -242,7 +246,13 @@ function versionBank(prev, built, o) {
   const gone = leaving.filter((q) => !open(q.b || 1)).map((q) => q.id);
   const last = Math.max(1, ...Object.keys(versions).map(Number));
   let into = open(last) ? last : 0;
-  if (!into && (added.length || gone.length)) { into = last + 1; versions[into] = o.from; }
+  const after = (v) => {
+    if (!(o.from > o.today)) throw new Error(`version ${v} would first deal on ${o.from}, which is not after today (${o.today})`);
+    if (versions[v - 1] && !(o.from > versions[v - 1])) throw new Error(`version ${v} would first deal on ${o.from}, not after version ${v - 1} (${versions[v - 1]}): pass --from= a later day`);
+    versions[v] = o.from;
+  };
+  if (!into && (added.length || gone.length)) { into = last + 1; after(into); }
+  else if (into && o.redate && o.from !== versions[into]) after(into);
   const keep = (q, b) => { const c = { ...q }; delete c.b; return b > 1 ? { ...c, b } : c; };
   const questions = [];
   for (const p of prev.questions) {

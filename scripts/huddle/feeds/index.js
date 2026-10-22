@@ -31,7 +31,9 @@ const FEEDS = [
   require('./compass-more'),
   require('./vendor-facts'),
   require('./care-sites'),
-  require('./state-more')
+  require('./state-more'),
+  // bank version 4 (2026-10-20, DECISIONS DH13): Medical Science past arithmetic, the classes of the drugs Medicare fills most
+  require('./drug-classes')
 ];
 
 /**

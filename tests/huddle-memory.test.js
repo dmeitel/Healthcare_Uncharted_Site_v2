@@ -79,6 +79,19 @@ test('boards #1 to #11, dealt before the memory, replay exactly as they were pla
   assert.deepStrictEqual(plain([...m.last.entries()]).sort(), [...want.entries()].sort());
 });
 
+test('the remembering dailies dealt from bank version 3 replay exactly as the push of 2357035 dealt them', () => {
+  const days = Object.keys(PINS.memoryDays).sort();
+  assert.strictEqual(E.dayNumber(days[0]), FIRST, 'the pins start at board #12');
+  let held = 0;
+  for (const k of days) {
+    if (E.dayBank(k) > 3) continue;   // a later version's days deal its new questions, and the test below holds the days before it
+    assert.deepStrictEqual(ids(daily(E, k)), PINS.memoryDays[k], k + ': board #' + E.dayNumber(k) + ' as version 3 dealt it');
+    assert.deepStrictEqual(ids(daily(E, k, 'past')), PINS.memoryDays[k], k + ': replayed as a past board');
+    held++;
+  }
+  assert.ok(held >= 4, 'every board from #12 to the day before version 4 is held: ' + held);
+});
+
 test('a year of remembering dailies from board #12: 19 tiles that cross on right answers, nothing back inside 60 days but by the oldest-first fallback, one normal range at most', () => {
   const last = new Map();   // question id -> the last board it was on, from board #1
   let lastNorm = 0, fell = 0, tiles = 0;
@@ -100,7 +113,8 @@ test('a year of remembering dailies from board #12: 19 tiles that cross on right
     fell += r.fell.length; tiles += 19;
     const norms = b.filter(isNorm).length;
     assert.ok(norms <= 1, k + ': ' + norms + ' normal ranges');
-    if (norms) { assert.ok(d - lastNorm >= 4, k + ': a normal range ' + (d - lastNorm) + ' days after the last'); lastNorm = d; }
+    const apart = E.normalsApart(E.dayBank(k));   // four boards apart from #12, two from bank version 4 (DH13)
+    if (norms) { assert.ok(d - lastNorm >= apart, k + ': a normal range ' + (d - lastNorm) + ' days after the last, ' + apart + ' at the least'); lastNorm = d; }
     b.forEach((id) => last.set(id, d));
   }
   console.log(`# memory fallbacks: ${fell} of ${tiles} tiles over 365 boards from #${FIRST}`);
@@ -134,7 +148,7 @@ test('Swap on a remembering daily takes a question not dealt lately where one is
       if (!m.last.has(to)) return;
       // a swap to a question dealt lately: only where every question it could have taken was dealt lately too, and the oldest
       stale++;
-      const no = m.norm > d - 4 || G.tiles.some((x, c) => c !== i && isNorm(x.q));   // where the deal could not have put a normal range
+      const no = m.norm > d - E.normalsApart(v) || G.tiles.some((x, c) => c !== i && isNorm(x.q));   // where the deal could not have put a normal range
       let could = BANKFILE.questions.filter((x) => x.z === t.z && x.d === t.d && !onBoard.has(x.k) && (x.b || 1) <= v && !(x.gone && v > x.gone));
       if (no && could.some((x) => !isNorm(x.id))) could = could.filter((x) => !isNorm(x.id));
       assert.ok(could.every((x) => m.last.has(x.id)), k + ': swapped to ' + to + ' with a fresh question left');

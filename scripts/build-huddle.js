@@ -358,7 +358,16 @@ const built = out.map((q) => Object.fromEntries(Object.entries(q).filter(([, v])
 const PREV = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : null;
 const fromArg = (process.argv.find((a) => a.startsWith('--from=')) || '').slice(7);
 const soon = new Date(Date.now() + 3 * 86400000);
-const V = versionBank(PREV, built, { from: /^\d{4}-\d{2}-\d{2}$/.test(fromArg) ? fromArg : today(soon), today: today() });
+// the versions the live site serves: the bank as last pushed (origin/main), closed even before their first day
+function liveVersions() {
+  try {
+    const b = JSON.parse(require('child_process').execSync('git show origin/main:src/assets/data/huddle-questions.json',
+      { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }));
+    return new Set(Object.keys(b.versions || {}).map(Number));
+  } catch (e) { return null; }
+}
+const fromOK = /^\d{4}-\d{2}-\d{2}$/.test(fromArg);
+const V = versionBank(PREV, built, { from: fromOK ? fromArg : today(soon), today: today(), live: liveVersions(), redate: fromOK });
 
 /* ── write ── */
 const clean = V.questions;

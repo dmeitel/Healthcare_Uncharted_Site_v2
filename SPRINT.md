@@ -67,17 +67,16 @@ Step statuses: NEXT · DOING · DONE · WAITING (say on what) · MOVED (say wher
 <!-- board:start (printed from data-build/board.json by `npm run board`; change the file, not this block) -->
 The board, printed. The picture of it is the hub: `npm run hub`, then /__hub. Stage names: Plan, Build, QA, Tweaks, Ship.
 
-### Focus · Daily Huddle remembers what it dealt · stage: QA
+### Focus · Daily Huddle: new data sets (lab normals, drug classes) · stage: QA
 
-A daily that stays fresh past the first month: no question back inside 60 days where its category has room, the normal ranges about twice a week, and Policy, Patient and Health Tech grown to 300 or more questions, every question with its explanation.
+Medical Science stops being mostly arithmetic: about 35 normal ranges and the drug classes clinicians use, then the rest of the ranked data sets, each as its own bank version.
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
-| 109 | **His yes on the plan:** docs/HU-HUDDLE-MEMORY-PLAN-2026-10-20.md, start board #12 (Sunday Oct 25, RC Week). | David | He says yes, or what to change | DONE 2026-10-20 |
-| 110 | **The memory:** the daily keeps 60 days of its own boards off the board, oldest first where a category runs short; every board before the start pinned; one normal range a board at most. | Claude | The year check with memory passes and the pins hold | DONE 2026-10-20 |
-| 111 | **The bank, version 3:** about 350 new questions for Policy, Patient and Health Tech from the site's own data, and an explanation line on every question (968 missing). | Claude | Each grown category at 300 or more; a test holds every question to an explanation | DONE 2026-10-20 |
-| 112 | **His sample sheet:** 20 new questions from each grown category with answers and explanations, Good or Needs a tweak. | David | All Good | DONE 2026-10-20 |
-| 113 | **Ship by the evening of Oct 24,** so the memory starts with board #12; later than that, the start moves to the first day after the ship. | David | The live site deals the start board with memory | DOING |
+| 114 | **His yes on the plan:** docs/HU-HUDDLE-DATA-SETS-PLAN-2026-10-20.md, and the lab list (16 to about 35). | David | He says yes, or what to change | DONE 2026-10-20 |
+| 115 | **Bank version 4:** the new normals as drafts, the drug class feed from RxClass and Medicare Part D 2024, the normals spacing from version 4's first day. | Claude | The year check passes, the pins hold, the full check passes | DONE 2026-10-20 |
+| 116 | **His check:** every new normal against the ABIM sheet, the class names list, a sample sheet of drug class questions. | David | Every item Good on the hub | DONE 2026-10-20 |
+| 117 | **Ship version 4,** dealt from the day after the push. | David | Live, and today's board on his phone | DOING |
 
 ### Up next · A Routine Fracture
 
@@ -92,27 +91,18 @@ The broken arm Rounds piece, a review draft in the secret menu since 2026-10-03.
 ### Up next · The other games by thumb
 
 
-### Up next · The hub home
+### Up next · The hub redesign
 
-David, 2026-10-18: "the board run sheet QA puzzles and ideas are all kind of static and it's hard to see when things are updated or changed ... what I need is a dashboard that shows me actual items and information that I can make decisions on post review and to get us to our final checkdowns for our next pushes".
-One home screen that answers what is left before the next push, what to look at next, what changed since the last visit, and how the site is doing, with the background left to the other tabs.
+David, 2026-10-20: "I think we are ready to refresh the hub design and build. The board and run sheet no longer seem to show relevant information, and the QA and Puzzles screens overlap in usage too." On 2026-10-18: "what I need is a dashboard that shows me actual items and information that I can make decisions on post review and to get us to our final checkdowns for our next pushes".
+One hub that shows what is relevant now: Today as the front door (the home prototype, finished), Look for QA and Puzzles as one list, the Board as the plan of work with Ideas beside it, and the run sheet as a Log under More.
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
 | 104 | **A working prototype** at /__hub/home on real data: the next push, your next looks, your notes with Claude, decisions, the site this week, what changed. | Claude | It draws from the files with no errors at phone and desk; pictures filed | DONE 2026-10-18 |
-| 105 | **His yes:** make it the hub's front page, and what to trim from the other tabs. | David | He says yes, or what to change | NEXT |
-
-### Up next · Daily Huddle: new data sets (lab normals, drug classes)
-
-David, 2026-10-20: "as we look to improve daily huddle, I think we need to consider more data sets like lab normal, Drug Classifications etc." On the plan's outline: "yeah all of those sound good"
-Medical Science stops being mostly arithmetic: about 35 normal ranges and the drug classes clinicians use, then the rest of the ranked data sets, each as its own bank version.
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 114 | **His yes on the plan:** docs/HU-HUDDLE-DATA-SETS-PLAN-2026-10-20.md, and the lab list (16 to about 35). | David | He says yes, or what to change | DONE 2026-10-20 |
-| 115 | **Bank version 4:** the new normals as drafts, the drug class feed from RxClass and Medicare Part D 2024, the normals spacing from version 4's first day. | Claude | The year check passes, the pins hold, the full check passes | NEXT |
-| 116 | **His check:** every new normal against the ABIM sheet, the class names list, a sample sheet of drug class questions. | David | Every item Good on the hub | NEXT |
-| 117 | **Ship version 4,** dealt from the day after the push. | David | Live, and today's board on his phone | NEXT |
+| 105 | **His yes on the redesign plan:** docs/HU-HUB-REDESIGN-PLAN-2026-10-20.md (DECISIONS HB1), pictures on the hub at /__hub/mocks/hub-redesign/index.html. It answers the old question of the home as the front page and what to trim. | David | He says yes, or what to change | DONE 2026-10-21 |
+| 118 | **Today and the row:** Today at /__hub, the five-place row with More, the Board as the plan of work with Ideas as its second view. | Claude | Today draws from the files at phone and desk with no errors; every old address forwards; pictures filed | WAITING on Daily Huddle: new data sets (lab normals, drug classes) |
+| 119 | **Look and the Log:** QA and Puzzles as one list in three folders, a mark that belongs to the thing marked, the run sheet as the Log. | Claude | Every mark on file still shows where it was; a mark from a page loaded before its card existed saves; pictures filed | NEXT |
+| 120 | **His QA** on the hub's own Look list, phone and desk. | David | Every item Good | WAITING on steps 118 and 119 |
 
 ### Inbox · parked, not dropped
 
@@ -148,6 +138,10 @@ Nothing here is worked until David promotes it.
 ---
 
 ## CHANGES
+
+- 2026-10-20, late · **The hub redesign is agreed and moves to Build, on David's yes to HB1** ("Yes to HB1, all three: Today as the front door, Look for QA and Puzzles as one list, the run sheet as a Log under More. Build it after version 4 ships."). Step 105 done; step 118 waits on the Daily Huddle card and opens when version 4 ships; then the card moves into focus. Nothing moved or dropped.
+
+- 2026-10-20 · **The hub home card becomes The hub redesign, still Up next at Plan, on David's ask** ("I think we are ready to refresh the hub design and build. The board and run sheet no longer seem to show relevant information, and the QA and Puzzles screens overlap in usage too"). Same card (`hub-home`), no second home: plan docs/HU-HUB-REDESIGN-PLAN-2026-10-20.md, his yes is step 105 (DECISIONS HB1), build steps 118 and 119, his QA step 120. Nothing moved or dropped.
 
 - 2026-10-14 · **Daily Huddle moves into focus as secondary, at Build, on David's "Yes this all looks awesome, Lets build its core functions out get me a functional demo and QA list/Review test list on the hub"** (DH1 to DH3 answered with the recommendations). Steps 91 to 97; his QA is step 97. A year of daily walls stays in Up next with its QA step 62 (by Oct 20) unchanged; it gives up the secondary label because focus and Up next hold one secondary.
 
