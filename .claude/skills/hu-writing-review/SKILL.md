@@ -45,7 +45,7 @@ experience".
 When David says "run the reviewer panel on X":
 
 1. Find X. A saved draft lives in `private/writing/drafts/<name>.json` (the screen saves there);
-   a page is a path like `/secret-menu/a-routine-fracture/`.
+   a page is a path like `/rounds/a-routine-fracture/`.
 2. Write the text as read, with its fingerprint, to the private folder (git ignores it; a draft
    can hold exactly the patient detail this exists to catch, and the repo is public):
    `node scripts/writing-check.js <X> --text > private/writing/panel/<id>.text.md`

@@ -120,6 +120,23 @@ const learn = {
     },
 
     {
+      id:       'ai-standard-work',
+      num:      'M04',
+      category: 'Method',
+      ps:       'P2a / P2b',
+      title:    'AI and Standard Work for Healthcare Teams',
+      desc:     'Bring AI into routine work by starting from a workflow you already understand, then adding what AI needs across four levels. Ends with a planning card for one task of your own.',
+      url:      '/learn/ai-standard-work/',
+      tags:     ['AI', 'Standard Work', 'Agents', 'Interactive'],
+      status:   'live',
+      featured: false,
+      atlasLinks: [
+        { label: 'Clinical Informatics', zone: 'provider', to: 'provider/informatics' },
+        { label: 'CDSS & AI Tools',      zone: 'provider', to: 'provider/cdss' }
+      ]
+    },
+
+    {
       id:       'alarm-fatigue',
       num:      '11',
       category: 'Clinical Safety',
@@ -440,6 +457,7 @@ learn.readingOrder = [
   '/learn/process-engineering/',
   '/learn/healthcare-data-sources/',
   '/learn/request-routing/',
+  '/learn/ai-standard-work/',
   '/learn/oxygen-payment-cuts/',
   '/learn/home-respiratory-timeline/',
   '/learn/alarm-fatigue/'

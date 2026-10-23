@@ -1,4 +1,4 @@
-/* Tracing a broken arm: the data behind the draft at /secret-menu/a-routine-fracture/.
+/* Tracing a broken arm: the data behind Rounds 06 at /rounds/a-routine-fracture/ (a secret-menu draft until 2026-10-22).
    One patient's week as 20 scenes in six parts. Each scene carries the patient's story (always shown) and
    layers a reader can turn on: med (medical care), ppr (paperwork), rec (records), mon (money) and ask
    (questions a patient could ask). The paper trail reads orderFlow and records; the whole map reads every
@@ -200,7 +200,7 @@ window.HU_STORY = {
           mon: ['Prior authorization?', 'Another set of bills, likely in a new plan year with the deductible reset'] } },
 
       { id: 's20', d: 'Any day', t: 'now', title: 'The bills', pa: null, ahead: true,
-        story: ['Nothing has arrived yet, from the insurer or from any of the places that registered Dave. What the week cost is still an open question.'],
+        story: ['As of October 22, four weeks out, nothing has arrived from the insurer or from any of the places that registered Dave. What the week cost is still an open question.'],
         L: { mon: ['Claims to the insurer', 'Explanations of benefits', 'Statements', 'A refund, if the max was met or the estimate ran high'],
           ask: ['Does every bill match an explanation of benefits from my insurer?'] } }
     ] }

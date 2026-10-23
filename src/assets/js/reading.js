@@ -63,6 +63,9 @@
       }
     } else if (p > 0.03) {
       m[path] = { p: Math.round(p * 100) / 100, t: Date.now(), title: title };
+      /* with the contents on, the section too: a phone's folds change the page's height, so a share of it lands wrong */
+      var sec = window.HUContents && window.HUContents.current();
+      if (sec) m[path].s = sec;
     } else {
       return;   /* arrived and bounced: not reading yet, nothing to remember */
     }
@@ -87,6 +90,8 @@
         window.addEventListener(ev, function () { userMoved = true; }, { passive: true, once: true });
       });
       var jump = function () {
+        var at = entry.s && window.HUContents && window.HUContents.reveal(entry.s);
+        if (at) { at.scrollIntoView(); return; }
         var max = document.documentElement.scrollHeight - window.innerHeight;
         if (max > 0) window.scrollTo(0, entry.p * max);
       };

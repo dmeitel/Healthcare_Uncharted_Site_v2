@@ -129,7 +129,27 @@ Closing = the merged band into DESIGN.md Tier 3.
 
 **Learn + Rounds reading surface · PARKED 2026-08-24 by David** ("complete rewrites and tooling in
 the future"). Rounds 1 and 2 shipped and stand (keep-reading handoff, progress hairline, nav yield,
-reading memory, continue card, share, finish-ticks). No reading-surface work until he reopens it.
+reading memory, continue card, share, finish-ticks). No reading-surface work until he reopens it,
+EXCEPT the contents and folds below, which he opened 2026-10-21.
+
+**Reading surface: contents and phone folds · OPEN 2026-10-21.** David, with Wikipedia's article and mobile pages
+beside him: "if the page is loaded on a computer or larger screen i want it to have a scrolling contents bar similar to
+how WIKIs work. when you scroll down it shows what section you are on. I also want some sort of colasapble section or at
+least make it smaller for phone readers. this is a standard i want to apply to learn modules and rounds articles going
+forward." Surface: the contents and the section folds on Learn modules and Rounds articles (src/assets/js/reading-contents.js,
+THE CONTENTS block in hu-global.css, the `contents` flag base.njk reads), proved first on the AI and standard work module
+(src/learn/ai-standard-work/, which began as the AI systems thinking module). The rest of the parked reading surface stays parked. Then, the same day: "Keep the
+contents for new modules and articles only for now." So a NEW Learn module or Rounds article turns it on (`contents:
+true`; recipe in docs/HU-PAGE-RECIPES.md), and the pages already live stay as they are until he says otherwise. Rounds
+articles are flat (h2s straight in article.rounds-post); since 2026-10-22 the script reads them, first on the fracture
+draft, now Rounds 06 (src/rounds/a-routine-fracture/, posted 2026-10-22; David: "can we update the routine fracture to have the wiki like function"):
+each eyebrow and h2 is a section, a `data-toc` block lists its views and their h2s under it, and the rail hangs in the
+margin from 1300 wide, with a `data-wide` block (the whole map) starting to the right of it. On a phone the fracture
+draft's view dock is its switch and carries the contents (hu-views.js `contents: true, bar: true`; David: "the phone
+navigation is also really bad", then "maybe the bottom should just keep the tabs there instead of in the body"): Contents
+and the four views as tabs while the views are on screen, each view keeping its place; the page's own switch steps aside
+(never display:none, the gate walks views through it); outside the views, the name of where you are, which opens the outline. Closing = the
+contents grammar into DESIGN.md Tier 3.
 
 **The hub and the Data Observatory · OPEN 2026-10-04.** Two surfaces. ON THE SITE: src/secret-menu/data-observatory/,
 two tabs, Data map and Traffic (the Goat Tracker, moved in; the old address 301s), observatory.css, the obs-*.njk
@@ -162,7 +182,7 @@ Closing = the back-office grammar into DESIGN.md Tier 3.
 pictures", then "dock and A, go ahead and build both"). His note that opened it, on the fracture post in production: the
 buttons between the story, the paper trail and the whole map "are not really easy to see or are easy to lose as things
 scroll", and pages with layers give no sign there is more behind them. Surface: the control that moves between a page's
-views or layers, and only that, on src/secret-menu/a-routine-fracture/, src/learn/laws-and-paradoxes/,
+views or layers, and only that, on src/rounds/a-routine-fracture/ (in the secret menu until 2026-10-22), src/learn/laws-and-paradoxes/,
 src/learn/process-engineering/, src/learn/request-routing/ and the home page's tool groups (src/index.html). The rest of
 the parked Learn and Rounds reading surface stays parked. BUILT 2026-10-06, at his QA: the boxed switch (`.hu-seg`,
 `wrap-phone` two by two), never pinned on a phone; where views run long (the fracture post, Laws and Paradoxes, Request

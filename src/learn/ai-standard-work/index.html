@@ -1,0 +1,880 @@
+---
+layout: base.njk
+section: learn
+title: "AI and Standard Work for Healthcare Teams"
+description: "For healthcare leaders and operations staff: bring AI into routine work by starting from a workflow you already understand and adding what AI needs one level at a time."
+navPage: learn
+contents: true
+status: published
+date: 2026-10-21
+---
+<style>
+  /* ── AI and standard work (M04) · page-scoped: the task planner, the worked plan and the figures. The rest is the shared shell. The class names
+     (.ast-recipe, .ast-pantry, .ast-plate) are from the recipe draft, renamed in the words only on 2026-10-22. ── */
+  .ast-recipe{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 18px 8px; margin:22px 0 26px; max-width:78ch; }
+  .ast .ast-recipe-title{ font-family:var(--mono); font-size:var(--t-label); letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text, var(--t3)); margin:0 0 12px; }
+  .ast-recipe dl{ margin:0; }
+  .ast-recipe dt{ font-family:var(--mono); font-size:var(--t-label); letter-spacing:.12em; text-transform:uppercase; color:var(--t3); margin:14px 0 4px; }
+  .ast-recipe dt:first-child{ margin-top:0; }
+  .ast-recipe dd{ margin:0; font-size:var(--t-sub); line-height:1.6; color:var(--t1); }
+  .ast-recipe .ast-lv{ border-top:1px solid var(--border); padding-top:12px; margin-top:14px; }
+  .ast-recipe .ast-lv:first-of-type{ border-top:0; padding-top:0; margin-top:0; }
+  .ast-recipe .ast-lv-name{ font-family:var(--display); font-weight:700; font-size:var(--t-ui); color:var(--t1); margin:0 0 4px; }
+
+  /* THE TASK PLANNER (2026-10-21, David: "it should be a core area and then you select additional stuff to add"): the
+     workflow is level 1, always there; the parts wait on two shelves as chips (the site's chip, pressed when it is in
+     the plan) and each one added lands below as its own card with quick adds. The fields are on
+     the field tokens, glass at night and white in day, like every place you type on this site. */
+  .ast-builder{ max-width:78ch; margin:22px 0 10px; }
+  .ast-base, .ast-pantry, .ast-tray{ background:var(--surface); border:1px solid var(--dgm-line); border-radius:12px; padding:16px 18px; margin:0 0 14px; }
+  .ast .ast-builder-h{ font-family:var(--display); font-weight:700; font-size:var(--t-ui); color:var(--t1); margin:0 0 12px; }
+  .ast .ast-builder-h span{ display:block; font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--dgm-ink); margin-bottom:3px; }
+  .ast-builder label, .ast-steps-in legend{ display:block; font-size:var(--t-sub); line-height:1.45; color:var(--t1); font-weight:600; margin:14px 0 6px; padding:0; }
+  .ast-builder label span, .ast-steps-in legend span{ display:block; color:var(--dgm-ink); font-weight:400; }
+  .ast-builder input[type="text"], .ast-builder textarea{
+    display:block; box-sizing:border-box; width:100%; padding:10px 12px; font:inherit; font-size:var(--t-prose); line-height:1.5;
+    color:var(--field-ink, var(--t1)); background:var(--field-bg); box-shadow:var(--field-well); border:1px solid transparent; border-radius:10px; }
+  .ast-builder textarea{ min-height:72px; resize:vertical; }
+  .ast-builder input[type="text"]:focus-visible, .ast-builder textarea:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  .ast-builder button{ font:inherit; cursor:pointer; }
+  .ast-builder button:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
+  .ast-examples{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 4px; }
+  .ast .ast-ex-label{ flex:1 0 100%; font-size:var(--t-sub); color:var(--dgm-ink); margin:0; }
+  .ast-steps-in{ border:0; margin:0; padding:0; min-width:0; }
+  .ast-steps-in ol{ list-style:none; counter-reset:ast-step; margin:0 0 10px; padding:0; }
+  .ast-steps-in li{ counter-increment:ast-step; display:grid; grid-template-columns:28px minmax(0,1fr) 44px; align-items:center; gap:8px; margin:0 0 8px; }
+  .ast-steps-in li::before{ content:counter(ast-step); font-family:var(--mono); font-size:var(--t-label); font-weight:600; color:var(--dgm-flow); text-align:center; }
+  .ast-step-x{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:10px; background:var(--raised); color:var(--t2); font-size:var(--t-ui); line-height:1; }
+  .ast-step-x:hover{ color:var(--t1); border-color:var(--teal); }
+
+  .ast-shelf{ margin:0 0 12px; }
+  .ast .ast-shelf-h{ font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--dgm-ink); margin:0 0 8px; }
+  .ast-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .ast-chips .hu-chip::before{ content:'+'; font-weight:700; }
+  .ast-chips .hu-chip[aria-pressed="true"]::before{ content:'\2713'; }
+
+  .ast-plate{ margin:0 0 14px; }
+  .ast-ing{ background:var(--surface); border:1px solid var(--dgm-line); border-left:3px solid var(--dgm-flow); border-radius:12px; padding:12px 16px 14px; margin:0 0 10px; }
+  .ast-ing-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .ast .ast-ing-name{ font-family:var(--display); font-weight:700; font-size:var(--t-ui); color:var(--t1); margin:0; }
+  .ast .ast-ing-name span{ display:block; font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--dgm-ink); margin-bottom:2px; }
+  .ast-ing-x{ min-height:44px; padding:0 12px; border:1px solid var(--border); border-radius:10px; background:var(--raised); color:var(--t2); font-size:var(--t-sub); }
+  .ast-ing-x:hover{ color:var(--t1); border-color:var(--teal); }
+  .ast-ing label{ font-weight:400; color:var(--dgm-ink); margin:8px 0 6px; }
+  .ast-picks{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 0; }
+  .ast-pick{ min-height:36px; padding:6px 12px; border:1px dashed var(--dgm-line); border-radius:12px; background:none; color:var(--t2); font-size:var(--t-sub); text-align:left; }
+  .ast-pick:hover{ color:var(--t1); border-color:var(--teal); border-style:solid; }
+
+  .ast .ast-level{ font-family:var(--display); font-weight:700; font-size:var(--t-ui); color:var(--t1); margin:0 0 4px; }
+  .ast .ast-level span{ display:block; font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--dgm-ink); margin-bottom:2px; }
+  .ast-missing{ margin:8px 0 0; padding:8px 0 0 12px; border-left:3px solid var(--amber); }
+  .ast .ast-missing p{ font-size:var(--t-sub); line-height:1.5; color:var(--t1); margin:0 0 8px; }
+  .ast-missing-do{ display:flex; flex-wrap:wrap; gap:8px; }
+  .ast-card-do{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:16px 0 8px; }
+  .ast-card-do button{ font-size:var(--t-ui); }
+  .ast .ast-card-said{ font-size:var(--t-sub); color:var(--dgm-ink); margin:0; min-height:1.5em; }
+  @media (max-width:699px), (max-height:500px){
+    .ast-base, .ast-pantry, .ast-tray{ padding:14px; }
+    .ast-pick{ min-height:44px; }
+  }
+
+  /* THE FIGURES (redrawn 2026-10-22, David: "i think the visuals could be improved"): page-scoped drawings on the
+     diagram tokens (--dgm-line for structure, --dgm-flow for movement, --dgm-ink for the quiet text inside a figure).
+     The two vocabularies and the levels are HTML, so they reflow; the loop is a drawing with a wide and a tall version
+     (.hu-chart-wide and .hu-chart-tall, the site's swap at the phone line), its type at 14 units drawn near 1:1. */
+  .ast-fig{ margin:26px 0 28px; max-width:80ch; }
+  .ast-fig figcaption{ font-size:var(--t-sub); line-height:1.5; color:var(--dgm-ink); margin:12px 0 0; }
+  .ast-panel{ background:var(--surface); border:1px solid var(--dgm-line); border-radius:12px; padding:16px 18px; }
+  .ast .ast-panel-h{ font-family:var(--display); font-weight:700; font-size:var(--t-ui); color:var(--t1); margin:0 0 4px; }
+  .ast .ast-panel-sub{ font-size:var(--t-sub); line-height:1.45; color:var(--dgm-ink); margin:0 0 12px; }
+
+  /* the two vocabularies: one panel, a row a pair */
+  .ast-map{ width:100%; border-collapse:collapse; font-size:var(--t-sub); line-height:1.45; }
+  .ast-map caption{ display:none; }
+  .ast-map th{ font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--dgm-ink); text-align:left; padding:0 10px 10px; border-bottom:2px solid var(--dgm-line); }
+  .ast-map td{ padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .ast-map tr:last-child td{ border-bottom:0; }
+  .ast-map td:first-child{ color:var(--t2); width:46%; }
+  .ast-map td:last-child{ color:var(--t1); font-weight:600; }
+  .ast-map .ast-map-to{ width:30px; padding:11px 0 0; text-align:center; color:var(--dgm-flow); font-weight:700; }
+  .ast-map th.ast-map-to{ border-bottom:2px solid var(--dgm-line); }
+
+  /* rules beside AI with a check */
+  .ast-two{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:stretch; }
+  .ast-rules{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:minmax(0,1fr) 22px auto; }
+  .ast-rules li{ grid-column:1 / -1; display:grid; grid-template-columns:subgrid; align-items:center; gap:8px; padding:9px 0; border-top:1px solid var(--border); font-size:var(--t-sub); line-height:1.35; }
+  .ast-rules li:first-child{ border-top:0; }
+  .ast-if{ color:var(--t2); }
+  .ast-if b{ font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.1em; color:var(--dgm-ink); margin-right:6px; }
+  .ast-arrow{ color:var(--dgm-flow); font-weight:700; text-align:center; }
+  .ast-then{ justify-self:start; padding:4px 10px; border:1px solid var(--dgm-line); border-radius:8px; color:var(--t1); font-weight:600; white-space:nowrap; }
+  .ast-rules li.ast-miss .ast-arrow{ color:var(--dgm-line); }
+  .ast-rules li.ast-miss .ast-then{ border-style:dashed; border-color:var(--red); color:var(--red); white-space:normal; }
+  [data-theme="light"] .ast-rules li.ast-miss .ast-then{ border-color:var(--red-dk); color:var(--red-dk); }
+
+  .ast-flow{ list-style:none; margin:0; padding:0 34px 0 0; position:relative; }
+  .ast-flow li{ position:relative; background:var(--raised); border:1px solid var(--dgm-line); border-radius:10px; padding:8px 12px; margin:0 0 22px; font-size:var(--t-sub); line-height:1.4; color:var(--t1); }
+  .ast-flow li:last-child{ margin-bottom:0; }
+  .ast-flow li b{ display:block; font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--dgm-ink); }
+  .ast-flow li:not(:last-child)::after{ content:''; position:absolute; left:22px; bottom:-20px; height:16px; border-left:2px solid var(--dgm-flow); }
+  .ast-flow li:not(:last-child)::before{ content:''; position:absolute; left:17px; bottom:-21px; border-left:6px solid transparent; border-right:6px solid transparent; border-top:7px solid var(--dgm-flow); }
+  /* the person's step: brass as a line, --brass-text, which holds 3:1 on the day ground where --brass is 1.6:1 */
+  .ast-flow li.ast-human{ border:2px solid var(--brass-text); }
+  /* the review feeds the instructions: a return line up the right side */
+  .ast-flow-back{ position:absolute; right:6px; top:calc(25% + 6px); bottom:calc(12% - 2px); width:20px; border:2px solid var(--dgm-flow); border-left:0; border-radius:0 10px 10px 0; }
+  .ast-flow-back::after{ content:''; position:absolute; left:-8px; top:-6px; border-top:5px solid transparent; border-bottom:5px solid transparent; border-right:8px solid var(--dgm-flow); }
+
+  /* what to count in a pilot: three columns, the vocabulary table's rules; on a phone each row reads down */
+  .ast-measure{ width:100%; border-collapse:collapse; font-size:var(--t-sub); line-height:1.45; }
+  .ast-measure caption{ display:none; }
+  .ast-measure th{ font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--dgm-ink); text-align:left; padding:0 10px 10px; border-bottom:2px solid var(--dgm-line); }
+  .ast-measure td{ padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--t2); }
+  .ast-measure tr:last-child td{ border-bottom:0; }
+  .ast-measure td:first-child{ color:var(--t1); font-weight:600; width:26%; }
+
+  /* the levels: a stepper, each level standing on the one before */
+  .ast-stepper{ list-style:none; margin:0; padding:0; counter-reset:ast-lv; }
+  .ast-stepper > li{ counter-increment:ast-lv; position:relative; display:grid; grid-template-columns:44px minmax(0,1fr); gap:14px; padding:0 0 18px; }
+  .ast-stepper > li::before{ content:counter(ast-lv); width:40px; height:40px; border-radius:50%; border:2px solid var(--dgm-flow); background:var(--surface); color:var(--t1); font-family:var(--display); font-weight:700; font-size:var(--t-ui); display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
+  .ast-stepper > li:not(:last-child)::after{ content:''; position:absolute; left:21px; top:42px; bottom:0; border-left:2px solid var(--dgm-line); }
+  .ast-stepper > li:last-child{ padding-bottom:0; }
+  .ast-step-card{ background:var(--surface); border:1px solid var(--dgm-line); border-radius:12px; padding:10px 14px 12px; }
+  .ast .ast-step-name{ font-family:var(--display); font-weight:700; font-size:var(--t-ui); color:var(--t1); margin:0 0 6px; }
+  .ast-step-adds{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+  .ast-step-adds li{ padding:3px 9px; border:1px solid var(--border); border-radius:6px; background:var(--raised); font-size:var(--t-sub); color:var(--t2); }
+
+  /* the prompt, numbered, with its key */
+  .ast-prompt-wrap{ display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:16px; align-items:start; }
+  .ast-prompt-box{ background:var(--field-bg); color:var(--field-ink, var(--t1)); box-shadow:var(--field-well); border-radius:10px; padding:14px 16px; font-size:var(--t-sub); line-height:1.65; }
+  .ast .ast-prompt-box p{ font-size:var(--t-sub); line-height:1.65; margin:0 0 8px; color:inherit; }
+  .ast .ast-prompt-box p:last-child{ margin:0; }
+  .ast-n{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; margin-right:6px; border-radius:50%; background:var(--dgm-flow); color:var(--surface); font-family:var(--mono); font-size:var(--t-label); font-weight:700; vertical-align:1px; }
+  .ast-n.ast-n--you{ background:var(--brass); color:var(--brass-ink); }
+  .ast-key{ list-style:none; margin:0; padding:0; font-size:var(--t-sub); line-height:1.4; }
+  .ast-key li{ display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px solid var(--border); color:var(--t1); }
+  .ast-key li:first-child{ border-top:0; }
+  .ast-key .ast-n{ flex:none; margin:0; }
+  .ast .ast-prompt-after{ margin:10px 0 0; font-size:var(--t-sub); color:var(--t1); }
+
+  /* the loop drawing */
+  .ast-loop-svg{ display:block; width:100%; height:auto; }
+  .ast-loop-svg .nd{ fill:var(--surface); stroke:var(--dgm-line); stroke-width:1.5; }
+  .ast-loop-svg .nd.you{ stroke:var(--brass-text); stroke-width:2.5; }
+  .ast-loop-svg .ln{ fill:none; stroke:var(--dgm-flow); stroke-width:2; }
+  .ast-loop-svg .ah{ fill:var(--dgm-flow); }
+  .ast-loop-svg text{ font-family:var(--font); font-size:14px; fill:var(--t1); }
+  .ast-loop-svg .n{ font-family:var(--mono); font-size:13px; font-weight:600; fill:var(--dgm-ink); }
+  .ast-loop-svg .mid{ font-family:var(--display); font-size:16px; font-weight:700; }
+  .ast-loop-svg .mid2{ fill:var(--dgm-ink); }
+  .ast-tall-svg{ max-width:340px; }
+  .ast .ast-loop-note{ font-size:var(--t-sub); color:var(--t1); margin:12px 0 0; padding-left:12px; border-left:2px dashed var(--dgm-line); }
+
+  /* a phone: the panels stack, the pairs read down, the key sits under the prompt */
+  @media (max-width:699px), (max-height:500px){
+    .ast-two, .ast-prompt-wrap{ grid-template-columns:minmax(0,1fr); }
+    .ast-map, .ast-map tbody, .ast-map tr, .ast-map td{ display:block; width:auto; }
+    .ast-map thead{ display:none; }
+    .ast-map caption{ display:block; text-align:left; font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--dgm-ink); padding:0 0 6px; }
+    .ast-map tr{ padding:10px 0; border-bottom:1px solid var(--border); }
+    .ast-map tr:last-child{ border-bottom:0; }
+    .ast-map td{ padding:0; border:0; }
+    .ast-map td:first-child{ width:auto; }
+    .ast-map td.ast-map-to{ display:none; }
+    .ast-map td:last-child::before{ content:'\2192\00a0'; color:var(--dgm-flow); font-weight:700; }
+    .ast-measure, .ast-measure tbody, .ast-measure tr, .ast-measure td{ display:block; width:auto; }
+    .ast-measure thead{ display:none; }
+    .ast-measure tr{ padding:10px 0; border-bottom:1px solid var(--border); }
+    .ast-measure tr:last-child{ border-bottom:0; }
+    .ast-measure td{ padding:0; border:0; }
+    .ast-measure td:first-child{ width:auto; }
+    .ast-measure td + td{ margin-top:4px; }
+    .ast-measure td:last-child::before{ content:attr(data-h) ': '; font-family:var(--mono); font-size:var(--t-label); font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--dgm-ink); }
+    /* a rule reads as two lines: the condition, then where it goes */
+    .ast-rules{ display:block; }
+    .ast-rules li{ display:flex; flex-wrap:wrap; gap:6px 8px; }
+    .ast-if{ flex:1 1 100%; }
+    .ast-then{ white-space:normal; }
+    .ast-stepper > li{ grid-template-columns:34px minmax(0,1fr); gap:10px; }
+    .ast-stepper > li::before{ width:32px; height:32px; }
+    .ast-stepper > li:not(:last-child)::after{ left:16px; top:34px; }
+    .ast-step-adds li{ padding:3px 8px; }
+    .ast .ast-prompt-box p{ line-height:1.55; }
+  }
+
+</style>
+
+<div class="ast hu-read">
+
+  <header class="hu-read-band hu-read-band--glow">
+    <div class="hu-read-hero-inner">
+      <div class="hu-read-eyebrow">
+        <span class="dot"></span>
+        <span>Method</span>
+        <span class="sep"></span>
+        <span>AI and standard work</span>
+      </div>
+      <h1 class="hu-read-h1">AI and standard <em>work</em>.</h1>
+      <p class="hu-read-standfirst">A guide for healthcare leaders and operations staff on bringing AI into routine work. It starts from a workflow you already know, adds what AI needs one level at a time, and ends with a planning card for one task of your own.</p>
+      <div class="card-fps hu-flavor" style="margin-top:18px;margin-bottom:0">
+        <a class="fp fp-provider" href="/atlas/#provider/informatics">Clinical Informatics</a>
+        <a class="fp fp-provider" href="/atlas/#provider/cdss">CDSS &amp; AI Tools</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="hu-read-body">
+
+    <section class="hu-read-section" id="start" data-toc="A Monday task">
+      <div class="hu-read-kicker hu-flavor">Before the levels</div>
+      <h2 class="hu-read-h2">A Monday task</h2>
+      <p>Take a unit manager who builds the same page every Monday before the 0700 staffing huddle. The weekend's call-offs come from the scheduling system and the census from another screen; then the week's open shifts, the float pool's list, and a note or two from the night charge nurse. Most of the forty minutes goes to copying numbers from one screen into another, and the page has looked the same for three years.</p>
+      <p>That page is standard work, even if nobody on the unit calls it that. It has a job (the huddle needs a staffing picture), a set of steps, and a known way of going wrong: the call-off that came in at 0500, after the page was built. It is also the kind of task people now hand to AI, sometimes well and often badly. What decides which is whether the person handing it over could write the steps down.</p>
+      <p>AI works best on a workflow the team already understands. Added to one nobody understands, it repeats that workflow's mistakes faster. So the first level is the work itself, before any tool, and each level after it adds what AI needs to a task the team could already do by hand.</p>
+    </section>
+
+    <section class="hu-read-section" id="process" data-toc="A prompt is a workflow">
+      <div class="hu-read-kicker hu-flavor">Why it works this way</div>
+      <h2 class="hu-read-h2">What a prompt and a workflow share</h2>
+      <p>Prompt engineering is the name for writing the instructions an AI model works from, and the name makes it sound like a technical specialty. Read a prompt that works well, though, and most of it would be at home in a policy or a new hire's training. It says what the work is for, what to read and what good looks like; it gives the steps and what to do when something is unusual; and it says what to hand over at the end.</p>
+      <p>That list is a workflow. Process improvement already has a name for each part of it, and AI work has a second name for most of them.</p>
+
+      <figure class="ast-fig">
+        <div class="ast-panel">
+          <table class="ast-map">
+            <caption>Each pair: in a workflow, then in AI work</caption>
+            <thead><tr><th scope="col">In a workflow</th><th class="ast-map-to" aria-hidden="true"></th><th scope="col">In AI work</th></tr></thead>
+            <tbody>
+              <tr><td>What starts the work: a request arrives, or it is 0630 on Monday</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>The request typed to the tool, or the event that starts an agent</td></tr>
+              <tr><td>Inputs: the screens and reports the steps pull from</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>Context: the files and data it is allowed to read</td></tr>
+              <tr><td>The standard: what good work looks like, often a past example</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>Examples of good work, given with the request</td></tr>
+              <tr><td>The sequence of steps</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>The instructions</td></tr>
+              <tr><td>Decision points, where a person picks a path</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>Rules for each case, and limits on what it may do</td></tr>
+              <tr><td>The handoff: what the next person receives, and in what form</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>The output format</td></tr>
+              <tr><td>Inspection before the work moves on</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>The check: a person, or a test, reviews what it made</td></tr>
+              <tr><td>Exceptions that go to a supervisor</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>Stop points that hand the case to a person</td></tr>
+              <tr><td>Measurement, and the plan-do-study-act loop</td><td class="ast-map-to" aria-hidden="true">&#8594;</td><td>The record it keeps, and the changes made from it</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <figcaption class="hu-flavor">The same parts under two names: the vocabulary of process improvement, then the vocabulary of prompts and agents.</figcaption>
+      </figure>
+
+      <p>The overlap is the reason people who write good standard work tend to write good prompts on their first try. Most of the prompt already exists in their procedure. A team that has never written its work down hands the tool nothing to follow, whatever the tool costs.</p>
+      <p>It also explains the most common failure. People type a request the way they would ask a colleague, and they leave out what the colleague would already know: which unit, which template, which deadline, who reads the result. A colleague fills those gaps from experience. A model fills them with whatever sounds most likely.</p>
+      <p>Agents add the parts of a workflow that happen between people. An agent can be given tools to collect its own inputs, it can take several steps in a row, and it can pass work to the next role. Each of those is a workflow decision before it is a technical one: who may touch which system, where the work stops for a person, and what gets written down along the way. Informatics teams make those decisions about every build already, and an agent is one more thing to build that way.</p>
+    </section>
+
+    <section class="hu-read-section" id="rules" data-toc="Rules and AI">
+      <div class="hu-read-kicker hu-flavor">Rules and AI</div>
+      <h2 class="hu-read-h2">Where a rule is enough</h2>
+      <p>A flowchart is the usual way to draw a process, and it suits work that follows rules. Every case is listed ahead of time and each one has a path. Software built from rules does the same thing every time, which is its strength, and it has no answer for a case nobody listed.</p>
+      <p>A language model earns its place on exactly those cases: the request written in a hurry, the note that mixes three problems in one paragraph, the policy question phrased a way nobody has phrased it before. The same flexibility means it can answer one request two ways on two different days. Work built on a model has to expect variation and catch it, every time.</p>
+      <p>So AI work gets written down the way standard work does: the inputs it reads, the instructions, a check on every result before it is used, and a review that changes the instructions when the check keeps catching the same problem. A written standard also moves well. The unit down the hall can use the same instructions with its own reports and templates swapped in.</p>
+
+      <figure class="ast-fig">
+        <div class="ast-two">
+          <div class="ast-panel">
+            <p class="ast-panel-h">Rules: triage by keywords</p>
+            <p class="ast-panel-sub">Every case is written ahead of time.</p>
+            <ol class="ast-rules">
+              <li><span class="ast-if"><b>IF</b>it says "broken" or "error"</span><span class="ast-arrow" aria-hidden="true">&#8594;</span><span class="ast-then">Break / fix</span></li>
+              <li><span class="ast-if"><b>IF</b>it names a report that does not exist</span><span class="ast-arrow" aria-hidden="true">&#8594;</span><span class="ast-then">Net new</span></li>
+              <li><span class="ast-if"><b>IF</b>it asks for a new field on a form</span><span class="ast-arrow" aria-hidden="true">&#8594;</span><span class="ast-then">Enhancement</span></li>
+              <li class="ast-miss"><span class="ast-if"><b>ELSE</b>worded any other way</span><span class="ast-arrow" aria-hidden="true">&#8594;</span><span class="ast-then">No path</span></li>
+            </ol>
+          </div>
+          <div class="ast-panel">
+            <p class="ast-panel-h">AI with a check: the same triage</p>
+            <p class="ast-panel-sub">A person checks every draft, and the review fixes what the checks keep catching.</p>
+            <div style="position:relative">
+              <ol class="ast-flow">
+                <li><b>Inputs</b>The routing standard and ten classified examples</li>
+                <li><b>Instructions</b>Run the three tests; draft a class and a reason</li>
+                <li class="ast-human"><b>Check, a person</b>The analyst reviews the draft before it is assigned</li>
+                <li><b>Review, weekly</b>What the check caught goes back into the instructions</li>
+              </ol>
+              <span class="ast-flow-back" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+        <figcaption class="hu-flavor">The rules cover the requests someone thought of in advance. The AI covers the rest, because a person checks every result before it is used.</figcaption>
+      </figure>
+
+      <div class="hu-read-note"><p class="hu-read-p">Rules still win where the work never varies. A lookup against a fixed table, or a calculation with every number known, is safer and cheaper as a plain rule, and a good plan says which of its steps are rules.</p></div>
+    </section>
+
+    <section class="hu-read-section" id="levels" data-toc="The four levels">
+      <div class="hu-read-kicker hu-flavor">The four levels</div>
+      <h2 class="hu-read-h2">What each level adds</h2>
+      <p>Each level keeps everything from the one before it and adds its own parts. A team can stop at any level, and plenty of tasks never need the last two.</p>
+
+      <figure class="ast-fig">
+        <ol class="ast-stepper">
+          <li><div class="ast-step-card"><p class="ast-step-name">Know the workflow</p><ul class="ast-step-adds"><li>The job and who reads it</li><li>What done looks like</li><li>The steps</li><li>Where it goes wrong</li><li>How long it takes now</li></ul></div></li>
+          <li><div class="ast-step-card"><p class="ast-step-name">AI on your own task</p><ul class="ast-step-adds"><li>What it reads</li><li>What stays out</li><li>An example of good work</li><li>Facts apart from guesses</li><li>The check</li></ul></div></li>
+          <li><div class="ast-step-card"><p class="ast-step-name">Agents in a team workflow</p><ul class="ast-step-adds"><li>What it may touch</li><li>Where it stops</li><li>Who signs off</li><li>What it records</li></ul></div></li>
+          <li><div class="ast-step-card"><p class="ast-step-name">AI across a department</p><ul class="ast-step-adds"><li>A list of every AI task in use</li><li>An owner for each</li><li>Evidence it works</li><li>A date to review it</li></ul></div></li>
+        </ol>
+        <figcaption class="hu-flavor">Each level stands on the one before it.</figcaption>
+      </figure>
+    </section>
+
+    <section class="hu-read-section" id="level-1" data-toc="Level 1 · Know the workflow">
+      <div class="hu-read-kicker">Level 1</div>
+      <h2 class="hu-read-h2">Know the workflow</h2>
+      <p>Standard work is the current best-known way to do a routine task, written down so that anyone on the team who follows it gets the same result. The idea comes from Lean, and AHRQ's Patient Safety Network carries it into health care in those terms. It is never finished. When someone finds a better way, the standard changes and everyone moves to it. <a href="/learn/process-engineering/">Process Engineering</a> covers how to map a workflow and improve it; this level asks only whether you can describe one.</p>
+      <p>Four answers come first, and none of them involve AI. The first is the job and who it is for. The huddle page exists so the charge nurse can move staff before 0730, which makes the charge nurse its reader and 0730 its deadline.</p>
+      <p>Second, what done looks like, written as a check someone else could run. "Every open shift for the next seven days, with the float pool names beside each" can be checked against the schedule. "A good staffing picture" cannot be checked by anyone but the person who wrote it.</p>
+      <p>Then the steps as they happen now, workarounds included. If the census comes from a report that refreshes at 0600, that refresh belongs in the steps, because a page built at 0550 carries yesterday's numbers. Last, where the task goes wrong today. Every routine task has its known failures, and they are the first thing a later level has to guard against.</p>
+      <p>Then count the task as it runs now, before any tool touches it. For two weeks, write down how long it takes and each time it goes wrong; on the Monday page that might be forty minutes a week and one late call-off missed. Those numbers are the baseline. Without them nobody can say later whether AI made the task better, and the section on measuring, after level 3, is built on them.</p>
+      <div class="hu-read-note"><p class="hu-read-p">A useful test before going further: hand the written steps to a new hire. If they cannot build the page from them, an AI tool will struggle too, and it will produce something that looks finished anyway.</p></div>
+      <p class="hu-flavor">The planning card at the end of this module starts with these four answers and the baseline. Filling them in for one of your own tasks takes about ten minutes, and the counting takes the two weeks.</p>
+    </section>
+
+    <section class="hu-read-section" id="level-2" data-toc="Level 2 · AI on your own task">
+      <div class="hu-read-kicker">Level 2</div>
+      <h2 class="hu-read-h2">AI on your own task</h2>
+      <p>Most people start here, one person using a general AI assistant on their own task. AI is already in the room: in the American Medical Association's survey of early 2026, 72 percent of physicians said they use at least one of 17 named kinds of AI in their practice, most often to summarize medical research. At this level the person controls everything that goes in, and five parts matter more than the choice of tool.</p>
+      <p>The tool knows nothing about your unit. What it reads is all it has, so the context is the staffing policy, last Monday's page, and the template the charge nurses expect. Given those, it works from your facts. Given nothing, it fills the gaps with facts that sound right, which NIST's profile for generative AI calls confabulation: content stated with confidence that turns out to be false.</p>
+      <p>Context has a second half, which is what stays out. Patient information goes only into tools your organization has approved for it, and a general assistant someone signed up for at home is not one of them. Ask your informatics or privacy team which tools are approved before the first patient name goes anywhere. The Joint Commission's 2026 review guide for its AI certification looks for exactly that rule, a policy that keeps protected health information out of public AI tools.</p>
+      <p>An example of good work does more than a page of instructions. One staffing page the charge nurses liked, or ten requests a senior analyst classified with the reason for each, shows the tool the standard in a form it can copy. When the output feels generic, this is usually what is missing.</p>
+      <p>Ask it to keep what it found apart from what it worked out. A number copied from the call-off list can be checked against the call-off list. A number the tool inferred, or filled in because the list was a row short, needs a person's judgment, and on the page the two look the same unless the instructions ask for them to be marked. This is the everyday guard against confabulation: the tool says when it is guessing, and a missing number is written as missing.</p>
+      <p>Then check it before using it. The check you wrote at level 1 becomes the gate: compare the draft against its sources before it reaches the huddle. A draft that is right nine Mondays out of ten is wrong on the tenth, and that tenth error lands on a unit that is already short a nurse.</p>
+      <p>Put together for the Monday page, those parts make a prompt like this one. The numbers match the key beside it.</p>
+
+      <figure class="ast-fig">
+        <div class="ast-prompt-wrap">
+          <div class="ast-prompt-box">
+            <p><span class="ast-n" aria-hidden="true">1</span>You are helping a unit manager build the staffing page for the 0700 Monday huddle. The charge nurse reads it to move staff before 0730.</p>
+            <p><span class="ast-n" aria-hidden="true">2</span>Use only the four attached files: the weekend call-off list, the 0600 census report, the open shift list for the next seven days, and the float pool list.</p>
+            <p><span class="ast-n" aria-hidden="true">3</span>Last Monday's page is attached to show the layout the charge nurses want. Match it.</p>
+            <p><span class="ast-n" aria-hidden="true">4</span>List every open shift for the next seven days, with the float pool names that can cover each one. Put call-offs received after 0500 at the top.</p>
+            <p><span class="ast-n" aria-hidden="true">5</span>Leave out patient names and room numbers if any appear in the files.</p>
+            <p><span class="ast-n" aria-hidden="true">6</span>If a number is missing from the files, write "not found" in its place. Mark anything you worked out yourself, so I can check it.</p>
+          </div>
+          <ol class="ast-key" aria-label="What each line of the prompt carries">
+            <li><span class="ast-n" aria-hidden="true">1</span>The job and its reader</li>
+            <li><span class="ast-n" aria-hidden="true">2</span>What it reads</li>
+            <li><span class="ast-n" aria-hidden="true">3</span>An example of good work</li>
+            <li><span class="ast-n" aria-hidden="true">4</span>The steps</li>
+            <li><span class="ast-n" aria-hidden="true">5</span>What stays out</li>
+            <li><span class="ast-n" aria-hidden="true">6</span>Facts apart from guesses</li>
+            <li><span class="ast-n ast-n--you" aria-hidden="true">7</span>The check, done by a person</li>
+          </ol>
+        </div>
+        <p class="ast-prompt-after"><span class="ast-n ast-n--you" aria-hidden="true">7</span>Not typed to the tool: before the huddle, the manager compares the draft with the schedule and the census report.</p>
+        <figcaption class="hu-flavor">Levels 1 and 2 of the planning card, written as instructions. The check stays with a person.</figcaption>
+      </figure>
+
+      <p>Each missing part fails in its own way, which turns out to be useful. Output that could have been written for any hospital usually means there was no example. Numbers that appear in no source mean the tool had no context and filled the space. An error that reaches the huddle is a missing check.</p>
+      <p>In informatics the same level looks like an analyst pasting a new request into an assistant along with the routing standard and a handful of classified examples, then asking for a draft class: break / fix, net new, enhancement, or optimization. The analyst still makes the call. The draft saves the reading, and the classes come from <a href="/learn/request-routing/">Informatics Work: Routing Requests</a>.</p>
+
+      <h3 class="hu-read-h3">Using AI to think a problem through</h3>
+      <p>Everything above uses the assistant to make something: a page, a summary, a draft class. The same assistant can be used earlier, before anything is made, to think a problem through. Given a plain description of the problem, it can say the problem back in other words, which shows whether you described it well. It can list what you seem to be assuming, argue for the option you were about to drop, and name what would have to be true for your plan to fail.</p>
+
+      <figure class="ast-fig">
+        <div class="ast-prompt-box">
+          <p>Here is how I build the Monday staffing page now, and the Monday last month when a 0500 call-off never made it onto the page. Before I change anything, tell me what I seem to be assuming about when call-offs arrive.</p>
+          <p>What would a page built at 0630 still miss?</p>
+          <p>Then give me the strongest case for leaving the page as it is.</p>
+        </div>
+        <figcaption class="hu-flavor">A prompt for thinking a problem through. It asks for assumptions and objections, and no finished page.</figcaption>
+      </figure>
+
+      <p>Used this way, the answer is a set of arguments for a person to weigh, and the decision stays with that person. Ask for the case against your plan along with the case for it, since an answer that only agrees with you adds nothing you did not already have. NIST's generative AI profile lists over-reliance among the risks of how people and AI systems work together, and it applies to an argument as much as to a draft: one that sounds right still has to be held up against what you know about the unit.</p>
+    </section>
+
+    <section class="hu-read-section" id="level-3" data-toc="Level 3 · Agents in a team workflow">
+      <div class="hu-read-kicker">Level 3</div>
+      <h2 class="hu-read-h2">Agents in a team workflow</h2>
+      <p>An agent is software that takes steps toward a goal someone set. It reads, looks things up, writes drafts, and uses other systems through tools. At level 2 a person stood between every step and the result. At level 3 the agent works through several steps on its own before anyone looks, so the plan needs parts that say what it may do and where it has to stop.</p>
+      <p>Start with what it may touch. Reading the request queue is one permission. Assigning a ticket is another, and sending the requester a message is a third, and each one gets granted on purpose. The safest agent reads widely and writes only drafts, and most teams should stay there until the record says otherwise.</p>
+      <p>Where it stops is written down too. Some cases always go to a person: anything the agent cannot place with confidence, anything marked urgent, anything that touches a clinical workflow. A good stop list is short and specific, and it grows when the record shows a case the agent should have handed over.</p>
+      <p>Sign-off belongs to a named role, such as the analyst on queue duty, so it is clear who owns a mistake. NIST's AI Risk Management Framework asks for the same thing in its own terms: human oversight that is defined, with roles kept distinct. And the agent keeps a record: each draft, the reason it gave, and whether the person kept it or changed it. That record is how the instructions improve, through the same Plan-Do-Study-Act cycle a team already runs on its own work, the testing loop of IHI's Model for Improvement.</p>
+      <p>The check and the sign-off are never optional at this level. Leave either out, and the agent's mistakes reach production without anyone seeing them first.</p>
+      <p>Running, the request queue plan is a loop, and a person closes it on every request.</p>
+
+      <figure class="ast-fig">
+        <svg class="ast-loop-svg hu-chart-wide" viewBox="0 0 760 330" role="img" aria-labelledby="ast-loop-wt ast-loop-wd">
+          <title id="ast-loop-wt">The request queue, as a loop</title>
+          <desc id="ast-loop-wd">Six steps in a loop. A new request lands in the queue. The agent reads it with the standard. It drafts a class, a reason and a question. The analyst keeps or changes the draft, then assigns it. The record keeps the draft and the decision. The weekly review edits the instructions, and the next request runs on them.</desc>
+          <defs><marker id="ast-ah-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+          <rect class="nd" x="20" y="20" width="210" height="66" rx="10"/>
+          <text x="34" y="40" class="n">STEP 1</text><text x="34" y="60">A new request lands</text><text x="34" y="76">in the queue</text>
+          <rect class="nd" x="275" y="20" width="210" height="66" rx="10"/>
+          <text x="289" y="40" class="n">STEP 2</text><text x="289" y="60">The agent reads it</text><text x="289" y="76">with the standard</text>
+          <rect class="nd" x="530" y="20" width="210" height="66" rx="10"/>
+          <text x="544" y="40" class="n">STEP 3</text><text x="544" y="60">It drafts a class,</text><text x="544" y="76">a reason, a question</text>
+          <rect class="nd you" x="530" y="244" width="210" height="66" rx="10"/>
+          <text x="544" y="264" class="n">STEP 4 · A PERSON</text><text x="544" y="284">The analyst keeps or</text><text x="544" y="300">changes it, then assigns</text>
+          <rect class="nd" x="275" y="244" width="210" height="66" rx="10"/>
+          <text x="289" y="264" class="n">STEP 5</text><text x="289" y="284">The record keeps the</text><text x="289" y="300">draft and the decision</text>
+          <rect class="nd" x="20" y="244" width="210" height="66" rx="10"/>
+          <text x="34" y="264" class="n">STEP 6</text><text x="34" y="284">The weekly review</text><text x="34" y="300">edits the instructions</text>
+          <line class="ln" x1="232" y1="53" x2="271" y2="53" marker-end="url(#ast-ah-w)"/>
+          <line class="ln" x1="487" y1="53" x2="526" y2="53" marker-end="url(#ast-ah-w)"/>
+          <line class="ln" x1="635" y1="88" x2="635" y2="240" marker-end="url(#ast-ah-w)"/>
+          <line class="ln" x1="528" y1="277" x2="489" y2="277" marker-end="url(#ast-ah-w)"/>
+          <line class="ln" x1="273" y1="277" x2="234" y2="277" marker-end="url(#ast-ah-w)"/>
+          <line class="ln" x1="125" y1="242" x2="125" y2="90" marker-end="url(#ast-ah-w)"/>
+          <text x="380" y="156" text-anchor="middle" class="mid">A person decides every request.</text>
+          <text x="380" y="182" text-anchor="middle" class="mid2">The weekly review is how the instructions improve.</text>
+        </svg>
+        <svg class="ast-loop-svg ast-tall-svg hu-chart-tall" viewBox="0 0 320 590" role="img" aria-labelledby="ast-loop-tt ast-loop-td">
+          <title id="ast-loop-tt">The request queue, as a loop</title>
+          <desc id="ast-loop-td">Six steps in a loop. A new request lands in the queue. The agent reads it with the standard. It drafts a class, a reason and a question. The analyst keeps or changes the draft, then assigns it. The record keeps the draft and the decision. The weekly review edits the instructions, and the next request runs on them.</desc>
+          <defs><marker id="ast-ah-t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+          <rect class="nd" x="10" y="10" width="250" height="66" rx="10"/>
+          <text x="24" y="30" class="n">STEP 1</text><text x="24" y="50">A new request lands</text><text x="24" y="66">in the queue</text>
+          <rect class="nd" x="10" y="106" width="250" height="66" rx="10"/>
+          <text x="24" y="126" class="n">STEP 2</text><text x="24" y="146">The agent reads it</text><text x="24" y="162">with the standard</text>
+          <rect class="nd" x="10" y="202" width="250" height="66" rx="10"/>
+          <text x="24" y="222" class="n">STEP 3</text><text x="24" y="242">It drafts a class,</text><text x="24" y="258">a reason, a question</text>
+          <rect class="nd you" x="10" y="298" width="250" height="66" rx="10"/>
+          <text x="24" y="318" class="n">STEP 4 · A PERSON</text><text x="24" y="338">The analyst keeps or</text><text x="24" y="354">changes it, then assigns</text>
+          <rect class="nd" x="10" y="394" width="250" height="66" rx="10"/>
+          <text x="24" y="414" class="n">STEP 5</text><text x="24" y="434">The record keeps the</text><text x="24" y="450">draft and the decision</text>
+          <rect class="nd" x="10" y="490" width="250" height="66" rx="10"/>
+          <text x="24" y="510" class="n">STEP 6</text><text x="24" y="530">The weekly review</text><text x="24" y="546">edits the instructions</text>
+          <line class="ln" x1="135" y1="78" x2="135" y2="102" marker-end="url(#ast-ah-t)"/>
+          <line class="ln" x1="135" y1="174" x2="135" y2="198" marker-end="url(#ast-ah-t)"/>
+          <line class="ln" x1="135" y1="270" x2="135" y2="294" marker-end="url(#ast-ah-t)"/>
+          <line class="ln" x1="135" y1="366" x2="135" y2="390" marker-end="url(#ast-ah-t)"/>
+          <line class="ln" x1="135" y1="462" x2="135" y2="486" marker-end="url(#ast-ah-t)"/>
+          <path class="ln" d="M262 523 H300 V43 H266" marker-end="url(#ast-ah-t)"/>
+        </svg>
+        <p class="ast-loop-note">Urgent, unclear or clinical requests skip the draft and go straight to the analyst.</p>
+        <figcaption class="hu-flavor">The loop closes with a person on every request.</figcaption>
+      </figure>
+      <p>A prior authorization packet shows the pattern outside informatics. An agent gathers what the payer's form asks for from the chart and drafts the packet; a person reviews it and submits it. The volume is why it matters: in an AMA survey fielded in December 2025, physicians who handle prior authorizations reported an average of 40 a week, taking about 13 hours of physician and staff time.</p>
+      <p>Written out with all three levels filled in, the request queue looks like the card below. It is the same planning card that waits at the end of this module, completed for one informatics task.</p>
+
+      <div class="ast-recipe" role="group" aria-label="A finished planning card: triaging the informatics request queue">
+        <p class="ast-recipe-title">Task plan · Triaging the request queue</p>
+        <div class="ast-lv">
+          <p class="ast-lv-name">Level 1 · Know the workflow</p>
+          <dl>
+            <dt>The task</dt><dd>Read each new request in the informatics queue, give it a class and an owning team, and ask the requester for anything missing.</dd>
+            <dt>Who it is for, and what done looks like</dt><dd>The requester and the team that will build it. Done: every request has a class, an owner and a next step within one business day, and the requester knows what happens next.</dd>
+            <dt>The steps as they happen now</dt><dd>Read the request. Check for a duplicate. Run the three tests in order to get the class. Name the domain and the team. Ask for what is missing. Assign it.</dd>
+            <dt>Where it goes wrong today</dt><dd>Requests sit unread on busy days, the same problem gets filed three times, and a request for something new is worked as a fix.</dd>
+            <dt>How long it takes now</dt><dd>Counted for two weeks: a median of two business days to a first reply, and about one request in ten worked under the wrong class at first.</dd>
+          </dl>
+        </div>
+        <div class="ast-lv">
+          <p class="ast-lv-name">Level 2 · AI on your own task</p>
+          <dl>
+            <dt>What it reads</dt><dd>The routing standard, the team list, and the last month of classified requests.</dd>
+            <dt>What it is never given</dt><dd>Patient identifiers a requester pasted in by mistake; the request is redacted before it is read.</dd>
+            <dt>An example of good work</dt><dd>Ten requests a senior analyst classified, each with the reason.</dd>
+            <dt>Facts apart from guesses</dt><dd>The draft quotes the words in the request that decided its class, and says so when it is guessing.</dd>
+            <dt>The check before it is used</dt><dd>The analyst compares the draft class against the three tests before anything is assigned.</dd>
+          </dl>
+        </div>
+        <div class="ast-lv">
+          <p class="ast-lv-name">Level 3 · Agents in a team workflow</p>
+          <dl>
+            <dt>What it may touch</dt><dd>It reads the queue and writes a draft class and a draft question for the requester. It may not assign, close, or message anyone.</dd>
+            <dt>Where it stops</dt><dd>Anything it cannot class with confidence, anything marked urgent, and anything that changes a clinical workflow go straight to the analyst.</dd>
+            <dt>Who signs off</dt><dd>The analyst on queue duty.</dd>
+            <dt>What it records</dt><dd>Its draft, its reason, and whether the analyst kept or changed it, reviewed by the team each week.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <p>Some work stays with people whatever the level. Clinical decisions do. So does anything that cannot be undone, like sending, deleting or ordering, and an agent should never see patient information its task does not need. Deciding which AI tasks a department allows in the first place is a governance question, and <a href="/learn/leading-the-ai-transition/">Leading the AI Transition</a> takes it up.</p>
+    </section>
+
+    <section class="hu-read-section" id="measure" data-toc="Measuring whether it works">
+      <div class="hu-read-kicker hu-flavor">Before level 4</div>
+      <h2 class="hu-read-h2">Measuring whether it works</h2>
+      <p>A task can feel faster with AI and take longer, because the time saved on the draft moves into the check. The only way to tell is to compare it with the task as it ran by hand, which is why level 1 ends with a baseline. IHI's Model for Improvement makes this one of its three questions: how will we know that a change is an improvement?</p>
+      <p>The test itself is a pilot: one task, one team, a few weeks, and every result checked before it is used. It is the small-scale test of the Plan-Do-Study-Act cycle, and it is cheap to stop if it goes badly. The check produces most of the numbers on its own, since each time a person keeps, changes or throws out a draft, that is a count.</p>
+
+      <figure class="ast-fig">
+        <div class="ast-panel">
+          <table class="ast-measure">
+            <caption>What to count in a pilot, with the Monday page as the example</caption>
+            <thead><tr><th scope="col">What to count</th><th scope="col">How to count it</th><th scope="col">On the Monday page</th></tr></thead>
+            <tbody>
+              <tr><td>Time for the whole task</td><td>Minutes from start to finished, the check included</td><td data-h="Monday page">Forty minutes by hand, against the draft and the check together</td></tr>
+              <tr><td>Corrections at the check</td><td>How often the person keeps, changes or throws out the draft</td><td data-h="Monday page">Lines the manager fixed before 0700</td></tr>
+              <tr><td>Errors that get through</td><td>Mistakes found after the work has moved on</td><td data-h="Monday page">A call-off missing from the page at the huddle</td></tr>
+              <tr><td>Actions without approval</td><td>Anything done that the plan does not allow</td><td data-h="Monday page">Zero: nothing shared before the manager compared it</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <figcaption class="hu-flavor">Four counts, taken the same way before the pilot and during it.</figcaption>
+      </figure>
+
+      <p>Corrections are usually the first number to move. When they fall over the pilot, the instructions and the example are doing their job. Flat corrections usually mean a part of the plan is missing, most often the example or the context. A count that never falls says the task may be better as a plain rule, or may not suit AI.</p>
+      <p>Time needs a second look. IHI calls a measure that watches for new problems in another part of a system a balancing measure, and here the check is that measure. A draft that saves thirty minutes and takes twenty-five to check has saved five. If people start skipping the check to keep those minutes, the errors that get through will show it a few weeks later.</p>
+      <p>Kept through the pilot and after it, these counts are the evidence that level 4 asks each AI task to carry.</p>
+    </section>
+
+    <section class="hu-read-section" id="level-4" data-toc="Level 4 · AI across a department">
+      <div class="hu-read-kicker">Level 4</div>
+      <h2 class="hu-read-h2">AI across a department</h2>
+      <p>Once one team's AI-supported workflow works, other teams ask for it. A department then needs what a pharmacy already keeps for medications: a list of every AI task in use, an owner for each, the evidence that it works, and a date to look at it again. Leading the AI Transition makes the case for running it like a formulary. Public guidance points the same way. In September 2025 the Joint Commission and the Coalition for Health AI asked health systems for AI governance, ongoing monitoring, and training for the people who use the tools. NIST's framework sorts the same work into four functions: govern, map, measure and manage. Building that list one department at a time is the subject of the modules that follow this one.</p>
+      <p>How many AI tasks a department can run before the list itself needs a person to keep it is an open question, and probably a different number for every department.</p>
+    </section>
+
+    <section class="hu-read-section" id="card" data-toc="Your task plan">
+      <div class="hu-read-kicker hu-flavor">Your plan</div>
+      <h2 class="hu-read-h2">Plan AI support for one task</h2>
+      <p>Start with the workflow, one routine task from your own team as it runs by hand. Then add what the AI needs, a part at a time. The card shows which level the plan has reached, and it says when a level is missing something it cannot run without.</p>
+      <p>Nothing you type is saved or sent anywhere. It stays on this page until you close it, so save the plan file or copy it before you go.</p>
+      <p class="hu-flavor">The file is Markdown, plain text with headings, so it opens in any text editor or notes app.</p>
+
+      <div class="ast-builder" id="ast-card">
+        <div class="ast-base">
+          <p class="ast-builder-h"><span>The workflow</span>Level 1 · Know the workflow</p>
+          <div class="ast-examples" role="group" aria-labelledby="ast-ex-label">
+            <p class="ast-ex-label" id="ast-ex-label">Start from an example, or type your own. An example fills only what is still empty.</p>
+            <button type="button" class="hu-chip" data-ex="huddle">Monday staffing page</button>
+            <button type="button" class="hu-chip" data-ex="queue">Request queue triage</button>
+            <button type="button" class="hu-chip" data-ex="pa">Prior authorization packet</button>
+          </div>
+          <label for="ast-task">The task<span>One routine task your team does the same way every time.</span></label>
+          <input id="ast-task" type="text" autocomplete="off">
+          <label for="ast-reader">Who reads it, and by when</label>
+          <input id="ast-reader" type="text" autocomplete="off">
+          <label for="ast-done">What done looks like<span>Written as a check someone else could run.</span></label>
+          <textarea id="ast-done"></textarea>
+          <fieldset class="ast-steps-in">
+            <legend>The steps as they happen now<span>One line each, workarounds included.</span></legend>
+            <ol id="ast-steps"></ol>
+            <button type="button" class="hu-read-link" id="ast-add-step">Add a step</button>
+          </fieldset>
+          <label for="ast-wrong">Where it goes wrong today</label>
+          <textarea id="ast-wrong"></textarea>
+          <label for="ast-now">How long it takes now, and how often it goes wrong<span>The baseline, counted for two weeks before any tool touches it.</span></label>
+          <textarea id="ast-now"></textarea>
+        </div>
+
+        <div class="ast-pantry">
+          <p class="ast-builder-h"><span>Add what the AI needs</span>Pick the parts this task needs</p>
+          <div class="ast-shelf" role="group" aria-labelledby="ast-shelf-2">
+            <p class="ast-shelf-h" id="ast-shelf-2">Level 2 · AI on your own task</p>
+            <div class="ast-chips" data-shelf="2"></div>
+          </div>
+          <div class="ast-shelf" role="group" aria-labelledby="ast-shelf-3">
+            <p class="ast-shelf-h" id="ast-shelf-3">Level 3 · Agents in a team workflow</p>
+            <div class="ast-chips" data-shelf="3"></div>
+          </div>
+        </div>
+
+        <div class="ast-plate" id="ast-plate"></div>
+
+        <div class="ast-tray">
+          <p class="ast-level" id="ast-level"></p>
+          <div class="ast-missing" id="ast-missing" hidden></div>
+          <div class="ast-card-do">
+            <button type="button" class="hu-read-link" id="ast-save">Save the plan file</button>
+            <button type="button" class="hu-read-link" id="ast-copy">Copy the plan</button>
+          </div>
+          <p class="ast-card-said" id="ast-said" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="hu-read-section" id="sources">
+      <div class="hu-read-kicker hu-flavor">Sources</div>
+      <h2 class="hu-read-h2">The sources</h2>
+      <p>The numbers and frameworks above trace to these, each read on the date shown. Full citations, with everything else this site cites, live in the <a href="/learn/sources/">Reference Appendix</a>.</p>
+      <details class="hu-fold hu-src-fold">
+        <summary>Show all 9 sources</summary>
+        <p class="hu-read-p"><em>American Medical Association (2026)</em> · <a href="https://www.ama-assn.org/system/files/physician-ai-sentiment-report.pdf" target="_blank" rel="noopener">Physician survey on augmented intelligence</a> · fielded January and February 2026, 1,692 physicians; 72% incorporate one or more of 17 named AI use cases, self-reported. Checked 2026-10-21.</p>
+        <p class="hu-read-p"><em>American Medical Association (2026)</em> · <a href="https://www.ama-assn.org/system/files/prior-authorization-survey.pdf" target="_blank" rel="noopener">2025 prior authorization physician survey</a> · fielded December 2025, published May 2026, 1,000 physicians who complete prior authorizations; 40 a week, 13 hours of physician and staff time. An AMA advocacy survey. Checked 2026-10-21.</p>
+        <p class="hu-read-p"><em>Plsek, AHRQ Patient Safety Network (2015)</em> · <a href="https://psnet.ahrq.gov/perspective/innovation-and-lean-thinking-mutually-supportive-partners-transformation-health-care" target="_blank" rel="noopener">Innovation and Lean thinking: mutually supportive partners in the transformation of health care</a> · standard work as "the current best-known way to do something." Checked 2026-10-21.</p>
+        <p class="hu-read-p"><em>Institute for Healthcare Improvement</em> · <a href="https://www.ihi.org/resources/how-to-improve" target="_blank" rel="noopener">How to improve: the Model for Improvement</a> · three questions, among them "how will we know that a change is an improvement?", and the Plan-Do-Study-Act cycle, testing a change on a small scale. Checked 2026-10-22.</p>
+        <p class="hu-read-p"><em>Institute for Healthcare Improvement</em> · <a href="https://www.ihi.org/library/model-for-improvement/establishing-measures" target="_blank" rel="noopener">Model for Improvement: establishing measures</a> · outcome, process and balancing measures; a balancing measure asks whether a change to one part of a system is causing new problems in other parts. Checked 2026-10-22.</p>
+        <p class="hu-read-p"><em>NIST (2023)</em> · <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf" target="_blank" rel="noopener">AI Risk Management Framework 1.0 (NIST AI 100-1)</a> · the govern, map, measure and manage functions; human oversight in GOVERN 3.2 and MAP 3.5. Voluntary; NIST says it is being revised, as of October 2026. Checked 2026-10-21.</p>
+        <p class="hu-read-p"><em>NIST (2024)</em> · <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf" target="_blank" rel="noopener">Generative Artificial Intelligence Profile (NIST AI 600-1)</a> · confabulation, human-AI configuration (over-reliance among it) and data privacy among its twelve risks. Written under an executive order since rescinded; still posted as of October 2026. Checked 2026-10-22.</p>
+        <p class="hu-read-p"><em>The Joint Commission and the Coalition for Health AI (2025)</em> · <a href="https://www.jointcommission.org/en-us/knowledge-library/news/2025-09-jc-and-chai-release-initial-guidance-to-support-responsible-ai-adoption" target="_blank" rel="noopener">The responsible use of AI in health care</a> · seven elements, among them governance, monitoring, and education and training. Voluntary guidance. Checked 2026-10-21.</p>
+        <p class="hu-read-p"><em>The Joint Commission (2026)</em> · <a href="https://digitalassets.jointcommission.org/api/public/content/7bd26620a3e54c0ead2138afa37fc167?v=5f349b78" target="_blank" rel="noopener">Responsible use of AI in health care: certification review process guide</a> · expects a policy that keeps protected health information out of public AI tools. Checked 2026-10-21.</p>
+      </details>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  /* THE TASK PLANNER (2026-10-21, the recipe builder until David's plain-language call of 2026-10-22: "lets get it
+     straight and to the point first and then we can add in metaphor and style"). David: "it should be a core area and then
+     you select additional stuff to add". The workflow (level 1) is always on the card; the parts wait on two shelves and
+     each one picked lands below with its own field and quick adds. The card says which level the plan has reached and what
+     that level cannot run without (from level 2 the check, at level 3 a sign-off as well). Save makes a Markdown file in
+     this browser ("it should create a mark down file"); nothing typed is stored or sent anywhere. */
+  (function () {
+    var root = document.getElementById('ast-card');
+    if (!root) return;
+    var $ = function (id) { return document.getElementById(id); };
+    // a field grows with what is in it, so an example or a quick add never hides behind a scroll
+    var fit = function (ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; };
+    var fitAll = function () { root.querySelectorAll('textarea').forEach(fit); };
+    var LEVELS = { 1: 'Know the workflow', 2: 'AI on your own task', 3: 'Agents in a team workflow' };
+    var ING = [
+      { id: 'reads', lv: 2, name: 'What it reads', hint: 'The policies, templates and past work it needs, and nothing more.',
+        picks: ['The policy or standard for this task', 'Last week\'s finished version', 'The template the reader expects'] },
+      { id: 'never', lv: 2, name: 'What stays out', hint: 'What it is never given, whatever tool it is.',
+        picks: ['Patient names and record numbers', 'Anything outside the files you attach', 'Staff personal details'] },
+      { id: 'example', lv: 2, name: 'An example of good work', hint: 'One finished piece the reader liked, or a handful of past cases with the reason for each.',
+        picks: ['Last week\'s version, which the reader liked', 'Ten past cases with the reason for each'] },
+      { id: 'facts', lv: 2, name: 'Facts apart from guesses', hint: 'How it marks what it found in the sources and what it worked out.',
+        picks: ['Mark anything it worked out itself', 'Write "not found" when something is missing', 'Quote the line each answer came from'] },
+      { id: 'format', lv: 2, name: 'The output format', hint: 'What the next person receives, and in what form.',
+        picks: ['One page in the layout the reader knows', 'A draft for me to edit before it goes anywhere', 'A list sorted by what is most urgent'] },
+      { id: 'check', lv: 2, name: 'The check', hint: 'What a person compares it against before it is used.', must: 2,
+        picks: ['Compare the draft with the source before it goes out', 'A second person reads it first'] },
+      { id: 'touch', lv: 3, name: 'What it may touch', hint: 'What it may read, what it may only draft, and what it may never do.',
+        picks: ['Read only', 'Write drafts, never send', 'May not assign, close or delete anything'] },
+      { id: 'stop', lv: 3, name: 'Where it stops', hint: 'The cases it hands to a person.',
+        picks: ['Anything marked urgent', 'Anything it cannot place with confidence', 'Anything that changes a clinical workflow'] },
+      { id: 'sign', lv: 3, name: 'Who signs off', hint: 'A named role, such as the analyst on duty.', must: 3,
+        picks: ['The analyst on queue duty', 'The charge nurse', 'The manager who owns the task'] },
+      { id: 'record', lv: 3, name: 'What it records', hint: 'What is kept, and who reads it.',
+        picks: ['Each draft, its reason, and the person\'s decision', 'Read by the team each week'] }
+    ];
+    var EX = {
+      huddle: { task: 'Build the Monday staffing page for the 0700 huddle', reader: 'The charge nurse, before 0730',
+        done: 'Every open shift for the next seven days, with the float pool names that can cover each one.',
+        steps: ['Pull the weekend call-offs from the scheduling system', 'Pull the 0600 census report', 'List the open shifts for the next seven days', 'Match float pool names to each open shift'],
+        wrong: 'Call-offs that come in after the page is built; a census pulled before the 0600 refresh.',
+        now: 'About forty minutes every Monday. Counted for two weeks: one late call-off missed.',
+        ing: { reads: 'The four files: the call-off list, the 0600 census, the open shift list and the float pool list.', never: 'Patient names and room numbers.',
+          example: 'Last Monday\'s page, which the charge nurses liked.', facts: 'Write "not found" for a missing number, and mark anything it worked out itself.',
+          format: 'One page in the same layout as last Monday\'s.',
+          check: 'Compare the draft with the schedule and the census before the huddle.' } },
+      queue: { task: 'Triage each new request in the informatics queue', reader: 'The requester and the team that builds it, within one business day',
+        done: 'Every request has a class, an owner and a next step, and the requester knows what happens next.',
+        steps: ['Read the request', 'Check for a duplicate', 'Run the three tests to get the class', 'Name the domain and the team', 'Ask the requester for anything missing'],
+        wrong: 'Requests sit unread on busy days, the same problem gets filed three times, and a request for something new is worked as a fix.',
+        now: 'A median of two business days to a first reply; about one request in ten worked under the wrong class at first.',
+        ing: { reads: 'The routing standard, the team list, and the last month of classified requests.', never: 'Patient identifiers a requester pasted in by mistake.',
+          example: 'Ten requests a senior analyst classified, each with the reason.',
+          facts: 'Quote the words in the request that decided the class, and say so when it is guessing.', check: 'The analyst compares the draft class against the three tests before anything is assigned.',
+          touch: 'It reads the queue and writes a draft class and a draft question. It may not assign, close, or message anyone.',
+          stop: 'Anything it cannot class with confidence, anything marked urgent, and anything that changes a clinical workflow.',
+          sign: 'The analyst on queue duty.', record: 'Its draft, its reason, and whether the analyst kept or changed it, read by the team each week.' } },
+      pa: { task: 'Assemble the prior authorization packet for an ordered imaging study', reader: 'The prior authorization coordinator, before the payer\'s deadline',
+        done: 'Every item on the payer\'s form is answered from the chart, with the source of each answer.',
+        steps: ['Open the payer\'s form for the order', 'Find each answer in the chart', 'Attach the notes the form asks for', 'Submit and record the reference number'],
+        wrong: 'A missing note sends the packet back, and a deadline passes while it waits in a queue.',
+        now: 'About thirty minutes a packet. Counted for two weeks: three of twenty came back for a missing note.',
+        ing: { reads: 'The order, the payer\'s form, and the notes in the chart that the form asks about.', never: 'Anything in the chart the form does not ask for.',
+          facts: 'Name the note each answer came from, and write "not in the chart" where the chart does not answer.',
+          check: 'The coordinator reads every answer against the chart before it is submitted.', touch: 'It reads the chart and drafts the packet. It never submits.',
+          stop: 'Any question on the form that the chart does not answer.', sign: 'The prior authorization coordinator.',
+          record: 'The draft, the source of each answer, and whether the payer approved it.' } }
+    };
+
+    /* ── the workflow: the steps list ── */
+    var stepsOl = $('ast-steps');
+    function renumber() {
+      Array.prototype.forEach.call(stepsOl.children, function (li, i) {
+        li.querySelector('input').setAttribute('aria-label', 'Step ' + (i + 1));
+        li.querySelector('button').setAttribute('aria-label', 'Remove step ' + (i + 1));
+      });
+    }
+    function addStep(text, focus) {
+      var li = document.createElement('li');
+      var inp = document.createElement('input');
+      inp.type = 'text'; inp.autocomplete = 'off'; inp.value = text || '';
+      var x = document.createElement('button');
+      x.type = 'button'; x.className = 'ast-step-x'; x.textContent = '×';
+      x.addEventListener('click', function () {
+        var next = li.nextElementSibling || li.previousElementSibling;
+        stepsOl.removeChild(li); renumber(); update();
+        if (next) next.querySelector('input').focus(); else $('ast-add-step').focus();
+      });
+      inp.addEventListener('input', update);
+      li.appendChild(inp); li.appendChild(x);
+      stepsOl.appendChild(li); renumber();
+      if (focus) inp.focus();
+      return inp;
+    }
+    for (var s = 0; s < 3; s++) addStep('');
+    $('ast-add-step').addEventListener('click', function () { addStep('', true); update(); });
+    ['ast-task', 'ast-reader', 'ast-done', 'ast-wrong', 'ast-now'].forEach(function (id) {
+      $(id).addEventListener('input', function () { if ($(id).tagName === 'TEXTAREA') fit($(id)); update(); });
+    });
+
+    /* ── the parts: a chip on its shelf, a card below ── */
+    var plate = $('ast-plate'), kept = {}, on = {};
+    function chipOf(id) { return root.querySelector('.ast-chips [data-ing="' + id + '"]'); }
+    ING.forEach(function (g) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'hu-chip'; b.setAttribute('data-ing', g.id); b.setAttribute('aria-pressed', 'false');
+      b.textContent = g.name;
+      b.addEventListener('click', function () { if (on[g.id]) remove(g.id); else add(g.id); });
+      root.querySelector('.ast-chips[data-shelf="' + g.lv + '"]').appendChild(b);
+    });
+    function add(id, focus, value) {
+      if (on[id]) { if (focus) on[id].querySelector('textarea').focus(); return on[id]; }
+      var g = ING.filter(function (x) { return x.id === id; })[0];
+      var card = document.createElement('div');
+      card.className = 'ast-ing'; card.setAttribute('data-ing', id);
+      var top = document.createElement('div'); top.className = 'ast-ing-top';
+      var nm = document.createElement('p'); nm.className = 'ast-ing-name';
+      nm.innerHTML = '<span>Level ' + g.lv + '</span>';
+      nm.appendChild(document.createTextNode(g.name));
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'ast-ing-x'; x.textContent = 'Remove';
+      x.setAttribute('aria-label', 'Remove ' + g.name);
+      x.addEventListener('click', function () { remove(id); var c = chipOf(id); if (c) c.focus(); });
+      top.appendChild(nm); top.appendChild(x);
+      var lab = document.createElement('label'); lab.htmlFor = 'ast-i-' + id; lab.textContent = g.hint;
+      var ta = document.createElement('textarea'); ta.id = 'ast-i-' + id;
+      ta.value = value != null ? value : (kept[id] || '');
+      ta.addEventListener('input', function () { fit(ta); update(); });
+      var picks = document.createElement('div'); picks.className = 'ast-picks';
+      picks.setAttribute('role', 'group'); picks.setAttribute('aria-label', 'Quick adds for ' + g.name);
+      g.picks.forEach(function (t) {
+        var p = document.createElement('button'); p.type = 'button'; p.className = 'ast-pick'; p.textContent = '+ ' + t;
+        p.addEventListener('click', function () {
+          var v = ta.value.replace(/\s+$/, '');
+          if (v.split('\n').indexOf(t) < 0) ta.value = (v ? v + '\n' : '') + t;
+          fit(ta); update();
+        });
+        picks.appendChild(p);
+      });
+      card.appendChild(top); card.appendChild(lab); card.appendChild(ta); card.appendChild(picks);
+      // the cards keep the shelves' order, whatever order the parts were picked in
+      var after = null;
+      ING.some(function (o) { if (o.id === id) return true; if (on[o.id]) after = on[o.id]; return false; });
+      plate.insertBefore(card, after ? after.nextSibling : plate.firstChild);
+      on[id] = card;
+      var c = chipOf(id); c.setAttribute('aria-pressed', 'true'); c.classList.add('on');
+      fit(ta);
+      if (focus) ta.focus();
+      update();
+      return card;
+    }
+    function remove(id) {
+      var card = on[id]; if (!card) return;
+      kept[id] = card.querySelector('textarea').value;   // a removed part comes back with what you typed
+      plate.removeChild(card); delete on[id];
+      var c = chipOf(id); c.setAttribute('aria-pressed', 'false'); c.classList.remove('on');
+      update();
+    }
+
+    /* ── an example fills only what is still empty ── */
+    root.querySelectorAll('[data-ex]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var e = EX[b.getAttribute('data-ex')];
+        [['ast-task', e.task], ['ast-reader', e.reader], ['ast-done', e.done], ['ast-wrong', e.wrong], ['ast-now', e.now]].forEach(function (f) { if (!$(f[0]).value.trim()) $(f[0]).value = f[1]; });
+        var inputs = stepsOl.querySelectorAll('input');
+        if (!Array.prototype.some.call(inputs, function (i) { return i.value.trim(); })) {
+          stepsOl.innerHTML = '';
+          e.steps.forEach(function (t) { addStep(t); });
+        }
+        Object.keys(e.ing).forEach(function (id) {
+          if (!on[id]) add(id, false, kept[id] ? kept[id] : e.ing[id]);
+          else if (!on[id].querySelector('textarea').value.trim()) on[id].querySelector('textarea').value = e.ing[id];
+        });
+        fitAll(); update();
+        $('ast-said').textContent = 'The example filled what was empty. Change anything to make it yours.';
+      });
+    });
+
+    /* ── the level reached, and what that level cannot run without ── */
+    function level() { var l = 1; Object.keys(on).forEach(function (id) { ING.forEach(function (g) { if (g.id === id && g.lv > l) l = g.lv; }); }); return l; }
+    function missing() {
+      var l = level();
+      return ING.filter(function (g) { return g.must && l >= g.must && !on[g.id]; });
+    }
+    function update() {
+      var l = level();
+      var n = Object.keys(on).length;
+      $('ast-level').innerHTML = '<span>Your plan so far</span>Level ' + l + ' · ' + LEVELS[l] + (n ? ', with ' + n + ' part' + (n === 1 ? '' : 's') : ', the workflow alone');
+      var miss = missing(), box = $('ast-missing');
+      if (!miss.length) { box.hidden = true; box.innerHTML = ''; return; }
+      box.hidden = false;
+      var said = miss.map(function (g) { return g.id === 'sign' ? 'a sign-off' : 'the check'; }).join(' or ');
+      box.innerHTML = '<p>' + (l >= 3 ? 'A level 3 plan cannot run without ' + said + '.' : 'From level 2 up, every plan needs the check: what a person compares it against before it is used.') + '</p>';
+      var row = document.createElement('div'); row.className = 'ast-missing-do';
+      miss.forEach(function (g) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'hu-read-link'; b.textContent = 'Add ' + g.name.charAt(0).toLowerCase() + g.name.slice(1);
+        b.addEventListener('click', function () { add(g.id, true); });
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+    }
+    update();
+
+    /* ── the plan file ── */
+    function today() {
+      var d = new Date(), p = function (k) { return (k < 10 ? '0' : '') + k; };
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    }
+    function title() {
+      var t = $('ast-task').value.trim();
+      return t.length > 80 ? t.slice(0, 77).trim() + '...' : t;
+    }
+    // a name inside a sentence: lower its first letter, unless the word is an acronym ("AI on your own task")
+    function inline(t) { return /^[A-Z][a-z]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t; }
+    function markdown() {
+      var l = level();
+      var or = function (v) { return v.trim() || 'Not filled in yet.'; };
+      var out = ['# AI task plan: ' + (title() || 'one routine task'), '',
+        'From AI and Standard Work, a Healthcare Uncharted Learn module: ' + location.origin + location.pathname,
+        'Filled in ' + today() + '. This plan is at level ' + l + ', ' + inline(LEVELS[l]) + '.', '',
+        '## The workflow: level 1, know the workflow', '',
+        '### The task', '', or($('ast-task').value), '',
+        '### Who reads it, and by when', '', or($('ast-reader').value), '',
+        '### What done looks like', '', or($('ast-done').value), '',
+        '### The steps as they happen now', ''];
+      var steps = Array.prototype.map.call(stepsOl.querySelectorAll('input'), function (i) { return i.value.trim(); }).filter(Boolean);
+      if (steps.length) steps.forEach(function (t, i) { out.push((i + 1) + '. ' + t); }); else out.push('Not filled in yet.');
+      out.push('', '### Where it goes wrong today', '', or($('ast-wrong').value));
+      out.push('', '### How long it takes now (the baseline)', '', or($('ast-now').value));
+      [2, 3].forEach(function (lv) {
+        var here = ING.filter(function (g) { return g.lv === lv && on[g.id]; });
+        if (!here.length) return;
+        out.push('', '## Level ' + lv + ', ' + inline(LEVELS[lv]));
+        here.forEach(function (g) {
+          var v = on[g.id].querySelector('textarea').value.trim();
+          out.push('', '### ' + g.name, '');
+          if (!v) out.push('Not filled in yet.');
+          else v.split('\n').map(function (t) { return t.trim(); }).filter(Boolean).forEach(function (t, i, all) { out.push(all.length > 1 ? '- ' + t : t); });
+        });
+      });
+      var miss = missing();
+      if (miss.length) {
+        out.push('', '## Still to add', '');
+        miss.forEach(function (g) { out.push('- ' + g.name + ': ' + g.hint); });
+      }
+      return out.join('\n') + '\n';
+    }
+    function fileName() {
+      var slug = title().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      if (slug.length > 48) slug = slug.slice(0, 48).replace(/-[^-]*$/, '');   // whole words only
+      return 'ai-task-plan' + (slug ? '-' + slug : '') + '.md';
+    }
+    function tell(msg) { $('ast-said').textContent = msg; }
+    $('ast-save').addEventListener('click', function () {
+      var name = fileName();
+      var url = URL.createObjectURL(new Blob([markdown()], { type: 'text/markdown;charset=utf-8' }));
+      var a = document.createElement('a');
+      a.href = url; a.download = name; a.hidden = true;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      tell('Saved as ' + name + ' in your downloads. It opens in any text editor or notes app.');
+    });
+    $('ast-copy').addEventListener('click', function () {
+      var t = markdown();
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(t).then(function () { tell('Copied. Paste it wherever you keep your notes.'); },
+          function () { tell('The browser would not copy it. Save the plan file instead.'); });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = t; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        tell(ok ? 'Copied. Paste it wherever you keep your notes.' : 'The browser would not copy it. Save the plan file instead.');
+      }
+    });
+  })();
+</script>

@@ -67,26 +67,25 @@ Step statuses: NEXT · DOING · DONE · WAITING (say on what) · MOVED (say wher
 <!-- board:start (printed from data-build/board.json by `npm run board`; change the file, not this block) -->
 The board, printed. The picture of it is the hub: `npm run hub`, then /__hub. Stage names: Plan, Build, QA, Tweaks, Ship.
 
-### Focus · Daily Huddle: new data sets (lab normals, drug classes) · stage: QA
+### Focus · A Routine Fracture · stage: Ship
 
-Medical Science stops being mostly arithmetic: about 35 normal ranges and the drug classes clinicians use, then the rest of the ranked data sets, each as its own bank version.
-
-| # | Step | Owner | Done when | Status |
-|---|---|---|---|---|
-| 114 | **His yes on the plan:** docs/HU-HUDDLE-DATA-SETS-PLAN-2026-10-20.md, and the lab list (16 to about 35). | David | He says yes, or what to change | DONE 2026-10-20 |
-| 115 | **Bank version 4:** the new normals as drafts, the drug class feed from RxClass and Medicare Part D 2024, the normals spacing from version 4's first day. | Claude | The year check passes, the pins hold, the full check passes | DONE 2026-10-20 |
-| 116 | **His check:** every new normal against the ABIM sheet, the class names list, a sample sheet of drug class questions. | David | Every item Good on the hub | DONE 2026-10-20 |
-| 117 | **Ship version 4,** dealt from the day after the push. | David | Live, and today's board on his phone | DOING |
-
-### Up next · A Routine Fracture
-
-The broken arm Rounds piece, a review draft in the secret menu since 2026-10-03.
 
 | # | Step | Owner | Done when | Status |
 |---|---|---|---|---|
 | 12 | **Outside the repo:** his manager's read, his follow-up visit (the "What comes next" cards), the explanations of benefits (a dated cost update). | David | He says each has happened | NEXT |
 | 13 | **DECISIONS R1 and the rest of R6:** whether places and people are named, and three details only he knows. | David | Answered | NEXT |
-| 14 | **The fifth panel's notes,** then the publish-to-Rounds checklist at the top of the page. | Claude, when he says | The piece is in Rounds on his yes | WAITING on steps 12 and 13 |
+| 14 | **The fifth panel's notes,** then the publish-to-Rounds checklist at the top of the page. | Claude, when he says | The piece is in Rounds on his yes | DONE 2026-10-22 |
+
+### Focus · Learn: AI and standard work for healthcare teams · stage: QA
+
+A leader or operations lead can look at one routine task of their own team and name what an agent would need to do it to standard.
+
+| # | Step | Owner | Done when | Status |
+|---|---|---|---|---|
+| 121 | **His answers and his yes on the plan:** docs/HU-AI-SYSTEMS-THINKING-PLAN-2026-10-21.md, DECISIONS AS1 to AS3. | David | He answers AS1 to AS3 and says yes, or what to change | DONE 2026-10-21 |
+| 122 | **Write and build the module:** the sections, the worked recipe, the sources read live, the recipe card if AS3 says so. | Claude | The writing checker and the phone gate clean, registered in learn.js | DONE 2026-10-21 |
+| 123 | **His QA on the hub:** the page at phone and desktop. | David | Every item Good | WAITING on his marks on the hub's QA list |
+| 124 | **Ship:** his push. | David | Live | NEXT |
 
 ### Up next · The other games by thumb
 
@@ -100,7 +99,7 @@ One hub that shows what is relevant now: Today as the front door (the home proto
 |---|---|---|---|---|
 | 104 | **A working prototype** at /__hub/home on real data: the next push, your next looks, your notes with Claude, decisions, the site this week, what changed. | Claude | It draws from the files with no errors at phone and desk; pictures filed | DONE 2026-10-18 |
 | 105 | **His yes on the redesign plan:** docs/HU-HUB-REDESIGN-PLAN-2026-10-20.md (DECISIONS HB1), pictures on the hub at /__hub/mocks/hub-redesign/index.html. It answers the old question of the home as the front page and what to trim. | David | He says yes, or what to change | DONE 2026-10-21 |
-| 118 | **Today and the row:** Today at /__hub, the five-place row with More, the Board as the plan of work with Ideas as its second view. | Claude | Today draws from the files at phone and desk with no errors; every old address forwards; pictures filed | WAITING on Daily Huddle: new data sets (lab normals, drug classes) |
+| 118 | **Today and the row:** Today at /__hub, the five-place row with More, the Board as the plan of work with Ideas as its second view. | Claude | Today draws from the files at phone and desk with no errors; every old address forwards; pictures filed | NEXT |
 | 119 | **Look and the Log:** QA and Puzzles as one list in three folders, a mark that belongs to the thing marked, the run sheet as the Log. | Claude | Every mark on file still shows where it was; a mark from a page loaded before its card existed saves; pictures filed | NEXT |
 | 120 | **His QA** on the hub's own Look list, phone and desk. | David | Every item Good | WAITING on steps 118 and 119 |
 
@@ -138,6 +137,8 @@ Nothing here is worked until David promotes it.
 ---
 
 ## CHANGES
+
+- 2026-10-22 · **A Routine Fracture moves into focus as secondary, at QA, on David's word** ("once everything is done and QA passes lets move it to the rounds page and date it for 10/22 4 weeks after the initial event"). The contents, the rail beside the whole map and the phone tab bar were built for it this window; step 14 (the publish-to-Rounds checklist, posted 2026-10-22) runs once his QA list is clear. Steps 12 and 13 (his manager's read, the follow-up and EOB updates, DECISIONS R1 and R6) are his to close or waive. Nothing moved out or dropped. Later the same night, after his QA mark: MOVED to Rounds (Rounds 06, /rounds/a-routine-fracture/, posted 2026-10-22; the old address forwards), step 14 marked done and the card at Ship. Step 14 also named the fifth panel's notes (2026-10-04); those were NOT applied, and stay his call.
 
 - 2026-10-20, late · **The hub redesign is agreed and moves to Build, on David's yes to HB1** ("Yes to HB1, all three: Today as the front door, Look for QA and Puzzles as one list, the run sheet as a Log under More. Build it after version 4 ships."). Step 105 done; step 118 waits on the Daily Huddle card and opens when version 4 ships; then the card moves into focus. Nothing moved or dropped.
 

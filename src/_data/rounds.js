@@ -20,6 +20,25 @@ const rounds = {
   entries: [
 
     {
+      slug:            'a-routine-fracture',
+      title:           'Tracing a Broken Arm Through the Healthcare System',
+      posted:          '2026-10-22',
+      summary:         'One patient’s elbow fracture followed through two EDs, a surgery center and three EHRs, with the records, paperwork and costs each step set off.',
+      tags:            ['patient-experience', 'care-coordination', 'clinical-informatics', 'interoperability', 'price-transparency'],
+      fourPs:          ['patient', 'provider-p2a', 'payer'],
+      readMinutes:     15,
+      featured:        true,
+      status:          'published',
+      map_node:        'rounds-a-routine-fracture',
+      map_connections: ['provider-ed', 'patient-care-transitions', 'techeco-interop-mid'],
+      atlasLinks: [
+        { label: 'Emergency Dept',   zone: 'provider', to: 'provider/ed' },
+        { label: 'Care Transitions', zone: 'patient',  to: 'patient/care-transitions' },
+        { label: 'Interoperability', zone: 'techeco',  to: 'techeco/interop-mid' }
+      ]
+    },
+
+    {
       slug:            'task-list-only-grows',
       title:           'The Bedside Task List Only Grows',
       posted:          '2026-09-10',

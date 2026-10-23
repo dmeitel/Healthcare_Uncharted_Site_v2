@@ -3,7 +3,8 @@
 /**
  * qa.js — ONE command for the whole gate.
  *
- *   npm run qa                     everything, the pre-commit pass
+ *   npm run qa                     everything, the pre-commit pass; the sweep reads the pages this push touches
+ *   npm run qa -- --full           the same, with the sweep over every page (before a big release)
  *   npm run qa -- /learn/new/      one page, the pass a new page needs
  *   npm run qa -- --fast           skip the build and the viewport sweep
  *
@@ -32,6 +33,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const argv = process.argv.slice(2);
 const FAST = argv.includes('--fast');
+const FULL = argv.includes('--full');
 const paths = argv.filter((a) => a.startsWith('/'));
 
 const t0 = Date.now();
@@ -84,9 +86,26 @@ if (!FAST) run('build', 'npm', ['run', 'build']);
 run('types', 'npm', ['run', 'check']);
 run('tests', 'npm', ['test']);
 
+/* THE SWEEP FOLLOWS THE CHANGE (2026-10-21, David: "do we really need to do that/?", then "Yes, make the check sweep only
+   the pages a change touches, with the whole site when a shared file changes"). The sweep is nearly all of the hour, and
+   it read all 63 pages for a push that changed one. scripts/lib/sweep-scope.js reads what changed since the last push
+   and names the pages it can move: a file every page loads, the gate itself, or anything it cannot place, means every
+   page. --full sweeps every page whatever changed. */
+let scope = null;
+let sweepNote = 'every page';
 if (!FAST) {
   let sweepPaths = paths;
-  if (!sweepPaths.length) {
+  if (!sweepPaths.length && !FULL) {
+    scope = require('./lib/sweep-scope').sweepScope();
+    console.log('  the sweep: ' + (scope.whole ? 'every page' : scope.pages.length ? scope.pages.length + ' page(s) this push touches' : 'no page; nothing a visitor sees changed') + ', from ' + scope.files + ' changed file(s)');
+    scope.why.slice(0, 12).forEach((w) => console.log('    ' + w));
+    if (scope.why.length > 12) console.log('    and ' + (scope.why.length - 12) + ' more (node scripts/lib/sweep-scope.js)');
+    if (!scope.whole) {
+      sweepPaths = scope.pages;
+      sweepNote = scope.pages.length ? 'the ' + (scope.pages.length === 1 ? 'page' : scope.pages.length + ' pages') + ' this push touches (' + (scope.pages.length <= 4 ? scope.pages.join(', ') : scope.pages.slice(0, 3).join(', ') + ' and ' + (scope.pages.length - 3) + ' more') + ')' : '';
+    }
+  }
+  if (!sweepPaths.length && (FULL || !scope || scope.whole)) {
     const site = path.join(ROOT, '_site');
     const walk = (d, o = []) => {
       for (const e of fs.readdirSync(d, { withFileTypes: true })) {
@@ -112,8 +131,8 @@ if (!FAST) {
     const ghosts = built.filter((p) => !live.has(p));
     if (ghosts.length) console.log('  (left out, built pages with no source any more: ' + ghosts.join(', ') + ')');
   }
-  const out = run('viewport sweep (' + sweepPaths.length + ' pages x 9, both themes)', 'node',
-    ['scripts/phone-batches.js', ...sweepPaths], { timeout: 7200000 });
+  const out = sweepPaths.length ? run('viewport sweep (' + sweepPaths.length + ' pages x 9, both themes)', 'node',
+    ['scripts/phone-batches.js', ...sweepPaths], { timeout: 7200000 }) : (console.log('  ' + 'viewport sweep'.padEnd(34) + ' ...  skipped, no page to read'), '');
   // 60 minutes, raised from 30 on 2026-09-23: the whole-page read of 50 pages at nine viewports
   // outgrew 30 and the gate reported FAIL on a sweep that had found nothing, killed mid-page.
   // 2026-10-12: both themes doubled it (19 of 60 pages in 32 minutes), so the sweep runs in three
@@ -130,7 +149,9 @@ if (!FAST) {
   if (uniq.length) console.log('       failing pages: ' + uniq.join(', '));
   // THE PLAY CHECK (2026-10-19). Everything above reads pages sitting still; Alarm Fatigue's panels only exist once a
   // shift is running, and its late game covered the monitors on a phone while every gate here said clean.
-  run('play check (Alarm Fatigue mid-shift)', 'node', ['scripts/play-check.js'], { timeout: 900000 });
+  // it plays one game, so it runs when that game or what every page loads could have moved
+  if (!scope || scope.whole || scope.pages.includes('/fun/alarm-fatigue/')) run('play check (Alarm Fatigue mid-shift)', 'node', ['scripts/play-check.js'], { timeout: 900000 });
+  else console.log('  ' + 'play check (Alarm Fatigue)'.padEnd(34) + ' ...  skipped, Alarm Fatigue did not change');
 }
 
 console.log(bar('TIER 2 · MACHINE MEASURES, THE NUMBER ONLY GOES DOWN'));
@@ -167,13 +188,17 @@ if (failed) {
 }
 /* THE WHOLE GATE GOES ON THE RUN SHEET (2026-10-04). A milestone's QA is the machine first, then
    David, and his QA list shows whether the machine has been. Only a full run counts: one page, or
-   --fast, proves less than the list says. */
+   --fast, proves less than the list says. A run whose sweep followed the change counts (2026-10-21), and its summary
+   names the pages it read, so the list never says "the whole site" for a sweep that was not. */
 if (!FAST && !paths.length) {
   const bad = results.filter((x) => !x.ok).map((x) => x.label.trim());
   require('./hub/run').gate({
     ok: !failed,
     minutes: Math.max(1, Math.round((Date.now() - t0) / 60000)),
-    summary: failed ? 'Failed: ' + (bad.join(', ') || 'a number that may only go down went up') + '.' : results.length + ' checks over the whole site, every page at nine screen sizes.',
+    summary: failed ? 'Failed: ' + (bad.join(', ') || 'a number that may only go down went up') + '.'
+      : sweepNote === 'every page' ? results.length + ' checks over the whole site, every page at nine screen sizes.'
+      : sweepNote ? results.length + ' checks; the sweep read ' + sweepNote + ' at nine screen sizes in both themes, since nothing every page loads changed.'
+      : results.length + ' checks; nothing a visitor sees changed since the last push, so no page needed the sweep.',
   });
 }
 process.exit(failed ? 1 : 0);

@@ -153,4 +153,4 @@ function touchedPages(ref) {
   return { changed, pages: [...pages].filter((u) => u !== '/404.html').sort(), shared, when };
 }
 
-module.exports = { ROOT, TZ, git, readJson, today, stamp, daysAgo, ago, sideTrees, changedFiles, urlOf, pageBeside, touchedPages, SHARED };
+module.exports = { ROOT, TZ, git, readJson, today, stamp, daysAgo, ago, sideTrees, changedFiles, urlOf, pageBeside, touchedPages, SHARED, PARTS };

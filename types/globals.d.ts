@@ -247,14 +247,19 @@ interface CompassEngineApi {
 interface HUViewsDock { sync(): void; place(): void; close(fromBack?: boolean): void; el: HTMLElement; }
 interface HUViewsApi {
   dock(o: { row: HTMLElement; region: HTMLElement | (() => HTMLElement); names: string[]; tabs?: HTMLElement[]; label?: string; key?: string; many?: boolean;
-    current(): number; select(i: number): void; layers?: { el: HTMLElement; label?: string; on(i: number): boolean } }): HUViewsDock;
+    current(): number; select(i: number): void; layers?: { el: HTMLElement; label?: string; on(i: number): boolean }; contents?: boolean; bar?: boolean }): HUViewsDock;
   slide(panel: HTMLElement, forward: boolean): void;
   next(panel: HTMLElement, o: { kicker: string; title: string; text?: string; button: string; go(): void }): HTMLElement;
   PHONE: MediaQueryList;
 }
+/** The contents and the section folds (src/assets/js/reading-contents.js, 2026-10-21): which section you are in, and a
+    way to open the fold that holds one, for reading.js's "Continue reading". */
+interface HUContentsEntry { id: string; label: string; depth: number; }
+interface HUContentsApi { current(): string; reveal(id: string): HTMLElement | null; outline(): HUContentsEntry[]; here(): HUContentsEntry | null; go(id: string): void; }
 interface Window {
   HUKit?: HUKitApi;
   HUViews?: HUViewsApi;
+  HUContents?: HUContentsApi;
   HUSearch?: unknown;
   CompassEngine?: CompassEngineApi;
   /** icon renderer, loaded site-wide from the CDN by base.njk */

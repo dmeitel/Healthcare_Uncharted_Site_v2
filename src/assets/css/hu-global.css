@@ -1394,7 +1394,7 @@ nav.nav-yield:focus-within { transform: none; }
   .hu-vdock .seg { flex:1 1 auto; display:flex; gap:2px; min-width:0; }
   .hu-vdock .seg button { flex:1 1 0; min-width:0; padding:0 4px; border:0; background:none; color:var(--t2); white-space:nowrap; transition:background-color .15s, color .15s; }
   .hu-vdock .seg button[aria-current="true"] { background:var(--teal); color:#062024; }
-  .hu-vdock .step, .hu-vdock .lay { flex:none; display:inline-flex; align-items:center; justify-content:center; width:44px; padding:0;
+  .hu-vdock .step, .hu-vdock .lay, .hu-vdock .toc { flex:none; display:inline-flex; align-items:center; justify-content:center; width:44px; padding:0;
     border:1px solid var(--border2); background:var(--raised); color:var(--t1); }
   .hu-vdock .step:disabled { opacity:.4; cursor:default; }
   .hu-vdock .lay[hidden] { display:none; }
@@ -1415,6 +1415,25 @@ nav.nav-yield:focus-within { transform: none; }
   .hu-vpanel .list button span { flex:none; width:22px; font-family:var(--mono); font-size:var(--t-label); color:var(--t3); }
   .hu-vpanel .list button.on { border-color:var(--teal); font-weight:600; }
   .hu-vpanel .list button:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; }
+  /* a dock that carries the page's contents (hu-views.js o.contents): outside the views it is the name alone, and its
+     panel is the article's outline, stepped in by depth, the part you are in on the brass edge the desk rail uses */
+  .hu-vdock.solo .step, .hu-vdock.solo .lay { display:none; }
+  /* a dock that is the page's switch on a phone (o.bar): every view a tab as wide as its name needs, two-word names on
+     two lines, the Contents button first; outside the views the name of where you are, alone */
+  .hu-vdock.bar { gap:4px; }
+  .hu-vdock.bar .seg button { flex:1 1 auto; min-width:min-content; padding:2px 4px; white-space:normal; line-height:1.1; }   /* never narrower than its longest word */
+  .hu-vdock.bar .name { display:none; }
+  .hu-vdock.bar.solo .name { display:flex; }
+  .hu-vdock.bar.solo .seg, .hu-vdock.bar.solo .toc { display:none; }
+  .hu-vdock .toc[aria-expanded="true"] { border-color:var(--teal); }
+  /* and the page's own switch steps aside, still in the page for a keyboard, a screen reader and the gate's view walk;
+     a keyboard landing in it brings it back */
+  .hu-vrow-bar:not(:focus-within) { height:1px; padding:0; margin:0; border:0; overflow:hidden; clip-path:inset(50%); box-shadow:none; }
+  .hu-vpanel .list.toc { gap:0; }
+  .hu-vpanel .list.toc button { border-radius:4px; }
+  .hu-vpanel .list.toc button.d1 { padding-left:26px; }
+  .hu-vpanel .list.toc button.d2 { padding-left:42px; }
+  .hu-vpanel .list.toc button.on { border-color:transparent; box-shadow:inset 3px 0 0 var(--brass); }
 }
 @media (prefers-reduced-motion: reduce) {
   .hu-v-nudge, .hu-v-in-r, .hu-v-in-l { animation:none; }
@@ -1795,8 +1814,8 @@ nav.nav-yield:focus-within { transform: none; }
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .hu-read { color:var(--t2); font-family:var(--font); line-height:1.78; }
-.hu-read a:not(.toggle-chip):not(.tb-brand):not(.hu-read-link):not(.fp) { color:var(--teal); }   /* .fp lens pills keep their own ink */
-[data-theme="light"] .hu-read a:not(.toggle-chip):not(.tb-brand):not(.hu-read-link):not(.fp) { color:var(--teal-ink); }
+.hu-read a:not(.toggle-chip):not(.tb-brand):not(.hu-read-link):not(.fp):not(.hu-toc-a) { color:var(--teal); }   /* .fp lens pills and the contents keep their own ink */
+[data-theme="light"] .hu-read a:not(.toggle-chip):not(.tb-brand):not(.hu-read-link):not(.fp):not(.hu-toc-a) { color:var(--teal-ink); }
 
 .hu-read-hero-inner {
   max-width:1100px; margin:0 auto;
@@ -1974,6 +1993,115 @@ nav.nav-yield:focus-within { transform: none; }
 .hu-src-fold { margin-top:6px; }
 .hu-src-fold[open] > summary { margin-bottom:10px; }
 :is(.jp-sources, .pdr-sources) > .hu-src-fold { border-top:0; }
+
+/* ═════════════════════════════════════════════════════════════════════
+   THE CONTENTS AND THE SECTION FOLDS (2026-10-21), a Learn module or a Rounds article with `contents: true`
+   (src/assets/js/reading-contents.js builds both from the page's own sections).
+
+   David, with Wikipedia beside him: "if the page is loaded on a computer or larger screen i want it to have a scrolling
+   contents bar similar to how WIKIs work. when you scroll down it shows what section you are on. I also want some sort
+   of colasapble section or at least make it smaller for phone readers."
+
+   One list: a rail beside the text on a wide screen that stays in view and marks the section you are in with the brass
+   edge (brass is the section you are in, DESIGN.md); a closed fold at the top of the text on a tablet; nothing on a
+   phone, where the sections fold instead and read as a list of headings to open.
+   ═════════════════════════════════════════════════════════════════════ */
+.hu-toc { display:none; }
+.hu-toc-list { list-style:none; margin:0; padding:6px 0 10px; }
+.hu-toc-list li { margin:0; }
+.hu-toc-a {
+  display:flex; align-items:center; min-height:36px; padding:5px 10px 5px 12px; border-left:2px solid var(--border);
+  color:var(--t2); text-decoration:none; font-size:var(--t-sub); line-height:1.35;
+}
+.hu-toc-a:hover { color:var(--t1); border-left-color:var(--t3); }
+.hu-toc-a[aria-current] { color:var(--t1); font-weight:600; border-left-color:var(--brass); }
+.hu-toc-a:focus-visible { outline:2px solid var(--teal); outline-offset:-2px; border-radius:4px; }
+/* a section's own parts (a Rounds article's views, and the story's days), stepped in under it */
+.hu-toc-list .hu-toc-list { padding:0; }
+.hu-toc-list .hu-toc-list .hu-toc-a { min-height:32px; padding-left:26px; }
+.hu-toc-list .hu-toc-list .hu-toc-list .hu-toc-a { padding-left:40px; }
+/* inside a Rounds article the list keeps its own look: rounds.css numbers every `ol li` in a circle and paints every
+   link teal with an underline (.rounds-post ol li, .rounds-post a, both 0,1,1, both outranked here) */
+.rounds-post .hu-toc-list { padding:6px 0 10px; margin:0; counter-reset:none; }
+.rounds-post .hu-toc-list .hu-toc-list { padding:0; }
+.rounds-post .hu-toc-list li { counter-increment:none; margin:0; padding:0; }
+.rounds-post .hu-toc-list li::before { content:none; }
+.rounds-post .hu-toc-a { color:var(--t2); border-bottom:0; }
+.rounds-post .hu-toc-a:hover { color:var(--t1); border-left-color:var(--t3); }
+.rounds-post .hu-toc-a[aria-current] { color:var(--t1); border-left-color:var(--brass); }
+/* and in day, past rounds.css's teal-ink for every link ([data-theme="light"] .rounds-post a:not(.fp), 0,3,1) */
+[data-theme="light"] .rounds-post .hu-toc .hu-toc-a { color:var(--t2); }
+[data-theme="light"] .rounds-post .hu-toc .hu-toc-a:hover,
+[data-theme="light"] .rounds-post .hu-toc .hu-toc-a[aria-current] { color:var(--t1); }
+/* a Rounds article (flat; the script wraps each kicker and h2 in .hu-flat-sec): a link lands below the site bar */
+.rounds-post > [data-toc], .rounds-post > details.refs { scroll-margin-top:calc(var(--nav-h, 64px) + 16px); }
+.hu-flat-sec h2 { scroll-margin-top:calc(var(--nav-h, 64px) + 56px); }   /* room for the eyebrow above it */
+/* a tablet: the list as a closed fold at the top of the text */
+@media (min-width:700px) and (min-height:501px) {
+  .hu-toc { display:block; max-width:70ch; margin:clamp(32px,5vw,48px) 0 0; }
+}
+/* a wide screen: the rail beside the text, held in view as you read */
+@media (min-width:1100px) and (min-height:501px) {
+  .hu-read-body.has-toc {
+    display:grid; grid-template-columns:200px minmax(0,1fr); column-gap:clamp(32px,4vw,56px);
+    align-items:start; max-width:1180px;
+  }
+  .hu-read-body.has-toc > * { grid-column:2; min-width:0; }
+  .hu-read-body.has-toc > .hu-toc {
+    grid-column:1; grid-row:1 / span 60; position:sticky; top:calc(var(--nav-h) + 24px);
+    max-height:calc(100vh - var(--nav-h) - 48px); max-height:calc(100dvh - var(--nav-h) - 48px);
+    overflow-y:auto; overscroll-behavior:contain;
+    margin:clamp(40px,6vw,64px) 0 0; max-width:none;
+  }
+  .hu-toc-fold { border-top:0; }
+  .hu-toc-fold > summary { border-bottom:1px solid var(--border); margin-bottom:6px; }
+}
+/* a Rounds article keeps its 760 column and its centre (its whole map runs out to 1120 from it), so the list sits under
+   the title block as a closed fold until there is a margin wide enough to hang the rail in, from 1300 */
+@media (min-width:700px) and (min-height:501px) {
+  .rounds-post > .hu-toc { max-width:none; margin:0 0 32px; }
+  /* under the meta line it belongs to the title block: 32 below the meta (which keeps 80 under it), 48 before the text */
+  .rounds-post > .rounds-meta + .hu-toc { margin:-48px 0 48px; }
+}
+@media (min-width:1300px) and (min-height:501px) {
+  .rounds-post.has-toc { position:relative; }
+  .rounds-post > .hu-toc { position:absolute; top:64px; bottom:120px; right:calc(100% + 8px); width:220px; margin:0; z-index:23; }
+  .rounds-post > .hu-toc > .hu-toc-fold {
+    position:sticky; top:calc(var(--nav-h) + 24px); border-top:0;
+    max-height:calc(100vh - var(--nav-h) - 48px); max-height:calc(100dvh - var(--nav-h) - 48px);
+    overflow-y:auto; overscroll-behavior:contain;
+  }
+  .rounds-post > .hu-toc > .hu-toc-fold > summary { border-bottom:1px solid var(--border); margin-bottom:6px; }
+  /* a block that runs past the column (data-wide, the whole map) starts 24px right of the rail and runs to 40px from the
+     window's edge, capped at its own 1120; centred on the column it would run under the rail. The rail's right edge is
+     8px left of the article, (100vw - 760px) / 2 - 8px; the block's parent starts at the article's 24px padding. */
+  .rounds-post.has-toc [data-wide] { width:min(1120px, calc(50vw + 324px)); margin-left:-8px; }
+}
+
+/* a phone: every section after the first folds shut, its kicker and heading the summary */
+.hu-read-section:has(> .hu-sec-fold) { margin-top:0; }
+.hu-sec-fold > summary {
+  display:flex; align-items:center; gap:12px; min-height:56px; padding:12px 0; cursor:pointer; list-style:none;
+  border-bottom:1px solid var(--border);
+}
+.hu-sec-fold > summary::-webkit-details-marker { display:none; }
+.hu-sec-fold > summary::before {
+  content:'\25B8'; color:var(--teal); font-size:var(--t-sub); line-height:1; flex-shrink:0; width:14px; transition:transform .16s ease;
+}
+[data-theme="light"] .hu-sec-fold > summary::before { color:var(--teal-ink); }
+.hu-sec-fold[open] > summary::before { transform:rotate(90deg); }
+.hu-sec-fold[open] > summary { border-bottom-color:transparent; }
+.hu-sec-fold > summary:focus-visible { outline:2px solid var(--teal); outline-offset:2px; border-radius:6px; }
+.hu-sec-fold-head { display:block; min-width:0; }
+.hu-sec-fold-head .hu-read-kicker { margin-bottom:4px; letter-spacing:.14em; }   /* a phone keeps "Level 2 · One cook, one recipe" on one line */
+.hu-sec-fold-head .hu-read-h2 { margin:0; font-size:clamp(22px,6vw,28px); }
+.hu-sec-fold-body { padding:4px 0 8px; }
+/* the same fold in a Rounds article's own type: the eyebrow and h2 lose the space they keep between open sections, and
+   the first folded heading after an open block keeps its distance from it */
+.rounds-post .hu-sec-fold-head .section-eyebrow { margin:0 0 4px; }
+.rounds-post .hu-sec-fold-head h2 { margin:0; font-size:clamp(22px,6vw,28px); }
+.rounds-post > :not(.hu-flat-sec:has(> .hu-sec-fold)) + .hu-flat-sec:has(> .hu-sec-fold) { margin-top:56px; }
+@media (prefers-reduced-motion:reduce) { .hu-sec-fold > summary::before { transition:none; } }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    THE GAME MENUS. HUKit.dialog, .gameMenu, .settings, .howTo and .confirm.
@@ -2419,7 +2547,7 @@ nav[aria-label="Primary"] {
   .hu-seg.wrap-phone > button { border-left-width:1px; }
   .hu-vdock { background:var(--face-bg); border:1px solid color-mix(in srgb, var(--brass-lo) 45%, var(--border)); box-shadow:var(--panel-lift); }
   .hu-vdock .seg button[aria-current="true"] { background:var(--brass-bg); color:var(--brass-ink); }
-  .hu-vdock .step, .hu-vdock .lay { background:var(--key-bg); color:var(--key-ink); border:1px solid transparent; border-top-color:var(--brass-rim); box-shadow:0 2px 0 var(--key-floor); }
+  .hu-vdock .step, .hu-vdock .lay, .hu-vdock .toc { background:var(--key-bg); color:var(--key-ink); border:1px solid transparent; border-top-color:var(--brass-rim); box-shadow:0 2px 0 var(--key-floor); }
   .hu-vpanel { background:var(--face-bg); border-color:color-mix(in srgb, var(--brass-lo) 45%, var(--border)); box-shadow:var(--panel-lift); }
 }
 

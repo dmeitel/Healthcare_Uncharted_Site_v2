@@ -1178,3 +1178,25 @@ declarations it had read as zero). Games (the "Reading load on all three games" 
 contract on Alarm Fatigue, ER Charge, Daily Huddle, Vital Stats and Uncharted Regional, with nothing a player sees changed; Alarm
 Fatigue's phone layout docks the cards that come to you above the button so nothing covers the monitors or the button in the late
 game, and decorative layers no longer take taps. The play check runs in `npm run qa`. Camp Nauvoo is left for his call (CN1).
+
+## 2026-10-22 · Reading surface: contents and phone folds · first round shipped
+
+Opened 2026-10-21 on David's ask, with Wikipedia beside him: "if the page is loaded on a computer or larger screen i want it
+to have a scrolling contents bar similar to how WIKIs work... I also want some sort of colasapble section or at least make it
+smaller for phone readers"; then "Keep the contents for new modules and articles only for now." Shipped: reading-contents.js and
+THE CONTENTS block in hu-global.css, turned on by `contents: true`. A Learn module: a rail beside the text from 1100 wide that
+marks the section you are in on the brass edge, a closed Contents fold on a tablet, every section after the first folded on a
+phone (AI and Standard Work, the first). A flat Rounds article (A Routine Fracture, the first): each eyebrow and h2 a section, the
+views and the story's days listed under their block, the rail hanging in the margin from 1300 wide with the whole map beside it
+(his QA: "the contents bar diseapears when i go through the different tabs"). Still open; closing writes the contents grammar
+into DESIGN.md Tier 3.
+
+## 2026-10-22 · Pages with views: the switch · the bar as the phone switch
+
+On the fracture post only (hu-views.js `bar: true`, `contents: true`), from David's phone QA: "the phone navigation is also
+really bad", then "selection the arrows from the bottem bar shoots you back to the top and not just moves you to the differnt
+tab, maybe the bottom should just keep the tabs there instead of in the body like the web versions". On a phone the bottom bar
+is the switch: Contents and the four views as tabs from the moment the views reach the screen, Layers on the story, each view
+keeping its place; the page's own switch steps aside, kept in the page for a keyboard, a screen reader and the gate's view walk;
+outside the views the bar names where you are and opens the outline. The other docked pages (Laws and Paradoxes, Request
+Routing) are unchanged. Still open.

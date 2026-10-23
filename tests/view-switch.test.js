@@ -19,7 +19,7 @@ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 /* views that run for many phone screens: the dock */
 const DOCKED = {
-  'src/secret-menu/a-routine-fracture/index.html': { row: '.vw-row', why: 'four views, the story alone about 19 phone screens' },
+  'src/rounds/a-routine-fracture/index.html': { row: '.vw-row', why: 'four views, the story alone about 19 phone screens' },
   'src/learn/laws-and-paradoxes/index.html': { row: '.lp-tabs', why: 'ten laws, about 13 phone screens' },
   'src/learn/request-routing/index.html': { row: '.rr-topnav', why: 'four sections, about 14 phone screens' },
 };
@@ -76,7 +76,7 @@ test('a page with long views loads the switch, docks it on a phone, and hands ea
 
 test('the boxed look is on every listed switch', () => {
   for (const f of Object.keys(SHORT)) assert.match(read(f), /class="[^"]*\bhu-seg\b/, f + ' carries .hu-seg');
-  for (const f of ['src/secret-menu/a-routine-fracture/index.html', 'src/learn/request-routing/index.html']) assert.match(read(f), /class="[^"]*\bhu-seg\b/, f + ' carries .hu-seg');
+  for (const f of ['src/rounds/a-routine-fracture/index.html', 'src/learn/request-routing/index.html']) assert.match(read(f), /class="[^"]*\bhu-seg\b/, f + ' carries .hu-seg');
 });
 
 test('the dock is a phone thing and every motion stops under reduced motion', () => {

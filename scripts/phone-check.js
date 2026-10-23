@@ -1067,6 +1067,20 @@ function inspect({ phone, deviceWidth }) {
         ? await walkViews(page, (from) => readWholePage(page, { phone, deviceWidth: w }, EMPTY, from).then((x) => x.r)).catch((e) => ({ switches: 0, views: [], error: e.message.split('\n')[0] }))
         : null;
       const viewFaults = walk ? walk.views.filter((v) => v.r).map((v) => ({ name: v.name, r: v.r, why: faultsOf(v.r, phone) })).filter((v) => v.why.length) : [];
+      // THE FOLDS OPEN (2026-10-21): on a phone a page with contents folds its sections shut (reading-contents.js), so
+      // the read above saw their headings only. Every fold is opened and the page read again from the top, so what sits
+      // inside a fold is checked at a phone too; a fault there is reported as the view "the folds open".
+      const folded = await page.evaluate(() => {
+        const d = /** @type {HTMLDetailsElement[]} */ ([...document.querySelectorAll('details.hu-sec-fold:not([open])')]);
+        d.forEach((x) => { x.open = true; });
+        window.scrollTo(0, 0);
+        return d.length;
+      }).catch(() => 0);
+      const foldRead = folded ? await readWholePage(page, { phone, deviceWidth: w }, EMPTY).catch(() => null) : null;
+      if (foldRead) {
+        const why = faultsOf(foldRead.r, phone);
+        if (why.length) viewFaults.push({ name: 'the folds open', r: foldRead.r, why });
+      }
       // A generic "Failed to load resource" console line is the echo of a 4xx we
       // already classified. Discount one per serverless 404 so the gate does not
       // fail on something it cannot serve.
